@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { PeriodStatus } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { coreKeys } from "./core-keys";
@@ -23,9 +22,13 @@ export interface AccountingPeriod {
   name: string;
   startDate: string;
   endDate: string;
-  status: PeriodStatus;
-  closedBy: string | null;
+  status: string;
+  closedByMembershipId: number | null;
   closedAt: string | null;
+  lockedByMembershipId: number | null;
+  lockedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PeriodChecklistItem {
@@ -49,8 +52,8 @@ export interface OpeningBalanceLine {
   accountId: number;
   accountCode: string;
   accountName: string;
-  debit: string;
-  credit: string;
+  debit: string | null;
+  credit: string | null;
 }
 
 export interface OpeningBalanceEntry {
@@ -135,7 +138,7 @@ export function useLockPeriod(periodId: number) {
 
 export function useReopenPeriod(periodId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:reopen", {
+  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:periods:reopen", {
     mutationKey: [...coreKeys.all, "reopen-period", periodId],
     mutationFn: () =>
       apiClient.post(`/accounting/periods/${periodId}/reopen`, undefined, undefined, reopenPeriodContract),

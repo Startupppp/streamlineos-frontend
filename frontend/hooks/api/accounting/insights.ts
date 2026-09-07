@@ -15,7 +15,7 @@ export type AnomalySeverity = "info" | "warning" | "critical";
 
 export interface AnomalyDrill {
   type: string;
-  params: Record<string, string>;
+  params: Record<string, string | number>;
 }
 
 export interface Anomaly {
@@ -38,8 +38,8 @@ export interface CategorizeSuggestInput {
 }
 
 export interface CategorizeSuggestResult {
-  categoryId: number;
-  categoryName: string;
+  categoryId: number | null;
+  categoryName: string | null;
   confidence: number;
   basis: "history" | "none";
 }

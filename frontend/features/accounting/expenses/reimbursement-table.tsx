@@ -5,15 +5,8 @@ import Link from "next/link";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { FinReimbursementBatch, ReimbursementBatchStatus } from "@/types/accounting/expenses";
-import type { FinanceStatus } from "@/features/accounting/shared";
+import type { FinReimbursementBatch } from "@/types/accounting/expenses";
 import { formatShortDate } from "@/lib/date-utils";
-
-const STATUS_MAP: Record<ReimbursementBatchStatus, FinanceStatus> = {
-  DRAFT: "DRAFT",
-  APPROVED: "APPROVED",
-  PAID: "PAID",
-};
 
 interface ReimbursementTableProps {
   data: FinReimbursementBatch[];
@@ -60,7 +53,7 @@ const COLUMNS: DataTableColumn<FinReimbursementBatch>[] = [
   {
     key: "status",
     header: "Status",
-    cell: (row) => <FinanceStatusBadge status={STATUS_MAP[row.status]} />,
+    cell: (row) => <FinanceStatusBadge status={row.status} />,
   },
 ];
 

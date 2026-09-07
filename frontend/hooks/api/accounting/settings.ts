@@ -6,6 +6,7 @@ import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-s
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
+  ApprovalDecisionResult,
   ApprovalPolicy,
   ApprovalRecordType,
   ApprovalRequest,
@@ -157,7 +158,7 @@ interface ApprovalDecisionInput {
 
 export function useApproveRequest(requestId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
+  return useAuthorizedMutation<ApprovalDecisionResult, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "approve", requestId],
     mutationFn: (data) =>
       apiClient.post(
@@ -172,7 +173,7 @@ export function useApproveRequest(requestId: number) {
 
 export function useRejectRequest(requestId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
+  return useAuthorizedMutation<ApprovalDecisionResult, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "reject", requestId],
     mutationFn: (data) =>
       apiClient.post(

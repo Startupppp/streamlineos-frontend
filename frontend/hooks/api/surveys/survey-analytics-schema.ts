@@ -15,7 +15,7 @@ export const surveyResponseSessionRowContract = z.object({
   passed: z.boolean().nullable(),
   segment: z.string().nullable(),
   metadata: z.record(z.string(), z.unknown()),
-  status: z.enum(["in_progress", "submitted", "abandoned", "expired"]),
+  status: z.enum(["in_progress", "submitted", "invalid", "excluded", "deleted_by_policy"]),
 });
 
 export const surveyResponseListContract = z.object({

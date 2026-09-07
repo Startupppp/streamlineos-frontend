@@ -404,7 +404,7 @@ export default function DealsPage() {
                     {kanbanStages.map((s) => (
                       <KanbanColumn
                         key={s.key}
-                        stage={{ key: s.key, label: s.label, color: s.color }}
+                        stage={{ key: s.key, label: s.label, color: s.color ?? undefined }}
                         deals={dealsByStage[s.key] ?? []}
                         onStageChange={handleStageChange}
                         onDelete={setDealToDelete}

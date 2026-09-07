@@ -3,7 +3,7 @@ import { z } from "zod";
 export const calendarEventContract = z.object({
   id: z.number(),
   orgId: z.string(),
-  month: z.string(),
+  month: z.string().nullable(),
   type: z.string(),
   date: z.string(),
   title: z.string(),

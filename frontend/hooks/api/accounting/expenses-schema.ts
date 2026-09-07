@@ -134,17 +134,20 @@ export const reimbursementBatchDetailContract = z.object({
   items: z.array(reimbursementExpenseItemContract),
 });
 
-export const reimbursementBatchCreatedContract = reimbursementBatchContract;
+export const reimbursementBatchCreatedContract = reimbursementBatchContract.omit({
+  creator: true,
+  approver: true,
+});
 
 export const reimbursementApproveContract = z.object({ success: z.literal(true) });
 
 export const reimbursementPayContract = z.object({
   success: z.literal(true),
   replayed: z.boolean(),
-  entryId: z.number(),
+  entryId: z.number().nullable(),
 });
 
-export const expensePolicyCreatedContract = expensePolicyContract;
+export const expensePolicyCreatedContract = expensePolicyContract.omit({ category: true });
 
 export const expensePolicyUpdatedContract = z.object({ success: z.literal(true) });
 

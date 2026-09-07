@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+// lines is jsonb, but the only writer uses z.number() for debit/credit, so money here is a JSON number, not a decimal string.
+const recurringJournalLineContract = z.object({
+  accountId: z.number(),
+  debit: z.number(),
+  credit: z.number(),
+  description: z.string().optional(),
+});
+
 const recurringJournalTemplateContract = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -10,7 +18,7 @@ const recurringJournalTemplateContract = z.object({
   lastRunDate: z.string().nullable(),
   endDate: z.string().nullable(),
   isActive: z.boolean(),
-  lines: z.array(z.record(z.string(), z.unknown())),
+  lines: z.array(recurringJournalLineContract),
   createdBy: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),

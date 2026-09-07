@@ -56,7 +56,7 @@ export interface VendorStatement {
 }
 
 export interface SalesByCustomerRow {
-  clientId: number;
+  clientId: number | null;
   clientName: string;
   invoiceCount: number;
   totalBilled: string;
@@ -65,8 +65,8 @@ export interface SalesByCustomerRow {
 }
 
 export interface SalesByItemRow {
-  description: string;
-  totalQuantity: number;
+  description: string | null;
+  totalQuantity: string;
   totalAmount: string;
   invoiceCount: number;
 }
@@ -74,12 +74,12 @@ export interface SalesByItemRow {
 export interface ProfitabilityRow {
   projectId?: number;
   projectName?: string;
-  departmentId?: number;
+  departmentId?: number | null;
   departmentName?: string;
   revenue: string;
   cost: string;
   margin: string;
-  marginPct: number;
+  marginPct: string;
 }
 
 export interface WorkingCapital {
@@ -87,7 +87,7 @@ export interface WorkingCapital {
   currentAssets: string;
   currentLiabilities: string;
   workingCapital: string;
-  ratio: number;
+  ratio: string | null;
 }
 
 export interface BurnRateReport {

@@ -13,9 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Money } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/lib/person-display";
 import { useCreateReimbursementBatch, usePendingForBatch } from "@/hooks/api/accounting/expenses";
-import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import type { ExpensePageDataRow } from "@/types/accounting/expenses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const batchSchema = z.object({
@@ -41,7 +40,7 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     defaultValues: { name: "" },
   });
 
-  const pendingExpenses = useMemo<ExpenseWithRelations[]>(
+  const pendingExpenses = useMemo<ExpensePageDataRow[]>(
     () => pendingQuery.data?.expenses ?? [],
     [pendingQuery.data],
   );
@@ -201,8 +200,8 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
                   className="shrink-0"
                 />
                 <div className="min-w-0 flex-1">
-                  <TruncatedText text={getUserDisplayName(expense.user)} className="text-sm" />
-                  <TruncatedText text={`${expense.category} · ${expense.expenseDate}`} className="text-xs text-muted-foreground" />
+                  <TruncatedText text={expense.category} className="text-sm" />
+                  <TruncatedText text={expense.expenseDate} className="text-xs text-muted-foreground" />
                 </div>
                 <Money value={parseFloat(expense.amount)} className="text-sm font-medium shrink-0" />
               </label>

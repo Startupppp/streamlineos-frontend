@@ -24,13 +24,16 @@ export type RecurringFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | 
 
 export interface RecurringJournal {
   id: number;
+  orgId: string;
   name: string;
   description: string | null;
-  frequency: RecurringFrequency;
-  nextRunDate: string;
+  frequency: string;
+  nextRunDate: string | null;
+  lastRunDate: string | null;
   endDate: string | null;
   lines: RecurringJournalLine[];
   isActive: boolean;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -107,12 +107,7 @@ const ruleActionShapeContract = z.discriminatedUnion("type", [
 
 const DEFAULT_RULE_ACTION = { type: "fee" as const };
 
-/**
- * `conditions`/`action` are jsonb the backend does not strictly type on the
- * way out; these transforms parse against the same shapes its own create
- * schema enforces on the way in, falling back to an empty condition list /
- * the safest no-op action rather than surfacing `unknown` to every renderer.
- */
+// conditions/action are jsonb; parse against the create schema's shapes and fall back to a safe empty/no-op value.
 export const reconRuleContract = z.object({
   id: z.number(),
   orgId: z.string(),

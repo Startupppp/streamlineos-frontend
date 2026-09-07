@@ -67,6 +67,25 @@ export interface VendorCreditDetail extends VendorCreditSummary {
   items: VendorCreditItem[];
 }
 
+export interface VendorCreditCreateResult {
+  id: number;
+  orgId: string;
+  vendorCreditNumber: string;
+  vendorId: number | null;
+  billId: number | null;
+  status: VendorCreditStatus;
+  reason: string | null;
+  subtotal: string;
+  taxAmount: string;
+  total: string;
+  appliedAmount: string;
+  currency: string;
+  notes: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface RecurringBillPayloadItem {
   description: string;
   hsnSacCode?: string;
@@ -95,12 +114,13 @@ export interface RecurringBillTemplate {
   orgId: string;
   name: string;
   vendorId: number | null;
-  frequency: RecurringFrequency;
+  vendorName?: string | null;
+  frequency: string;
   nextRunDate: string | null;
   lastRunDate: string | null;
   endDate: string | null;
   isActive: boolean;
-  payload: RecurringBillPayload;
+  payload: Record<string, unknown>;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -189,7 +209,7 @@ export function useVendorCredit(creditId: number) {
 
 export function useCreateVendorCredit() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<VendorCreditSummary, Error, CreateVendorCreditInput>("accounting:vendor-credits:create", {
+  return useAuthorizedMutation<VendorCreditCreateResult, Error, CreateVendorCreditInput>("accounting:vendor-credits:create", {
     mutationKey: ["create-vendor-credit"],
     mutationFn: (body) =>
       apiClient.post("/accounting/vendor-credits", body, undefined, vendorCreditCreatedContract),

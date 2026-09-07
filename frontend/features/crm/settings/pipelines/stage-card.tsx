@@ -40,7 +40,7 @@ export function StageCard({
   onDeleteRequest: (id: string) => void;
 }) {
   const updateStage = useUpdateStage();
-  const { dotClass } = getCrmTokenClasses(stage.color);
+  const { dotClass } = getCrmTokenClasses(stage.color ?? "");
   const slaRef = useRef<HTMLInputElement>(null);
 
   const handleProbChange = useCallback((delta: number) => {

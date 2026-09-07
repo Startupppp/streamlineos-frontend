@@ -29,7 +29,7 @@ const issueFieldSpecSchema = z.object({
   currencyField: z.string().optional(),
   editOnly: z.boolean().optional(),
   createOnly: z.boolean().optional(),
-  visibleWhen: z.object({ field: z.string(), values: z.array(z.string()) }).optional(),
+  visibleWhen: z.object({ field: z.string(), equals: z.array(z.string()) }).optional(),
 });
 
 const issueLayoutSchema = z.object({
@@ -60,10 +60,12 @@ const issueRecordRowSchema = z.object({
   recordType: z.enum(["issue", "task", "complaint"] as const),
 }).catchall(z.unknown());
 
+const issueStageEnum = z.enum(["open", "acknowledged", "escalated", "resolved", "dismissed"] as const);
+
 const issueTransitionSchema = z.object({
   issueStageTransitionId: z.string(),
-  fromStage: z.string().nullable(),
-  toStage: z.string(),
+  fromStage: issueStageEnum.nullable(),
+  toStage: issueStageEnum,
   actorKind: z.string(),
   actorLabel: z.string().nullable(),
   actorUserId: z.string().nullable(),
@@ -92,8 +94,8 @@ export const issueTransitionsListContract = z.array(issueTransitionSchema);
 
 export const issueTransitionResultContract = z.object({
   issueRecordId: z.string(),
-  fromStage: z.string().nullable(),
-  toStage: z.string(),
+  fromStage: issueStageEnum.nullable(),
+  toStage: issueStageEnum,
   issueStageTransitionId: z.string().nullable(),
 });
 

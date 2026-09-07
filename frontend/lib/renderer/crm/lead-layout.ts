@@ -195,7 +195,8 @@ const OPTION_TONES: Record<string, FieldTone> = {
  * beside their toned neighbours — a badge that lost its badge. Informational is
  * the weaker failure.
  */
-function toneForOptionColor(color: string): FieldTone {
+function toneForOptionColor(color: string | null): FieldTone {
+  if (color === null) return "info";
   return OPTION_TONES[color] ?? "info";
 }
 

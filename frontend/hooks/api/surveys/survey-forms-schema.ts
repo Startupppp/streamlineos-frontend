@@ -80,7 +80,7 @@ export const surveyAttemptRowContract = z.object({
   participantId: z.number().nullable(),
   sessionId: z.number().nullable(),
   attemptNumber: z.number(),
-  status: z.enum(["pending", "in_progress", "passed", "failed", "expired"]),
+  status: z.enum(["not_started", "in_progress", "submitted", "passed", "failed", "expired"]),
   score: z.number().nullable(),
   passed: z.boolean().nullable(),
   startedAt: z.string().nullable(),

@@ -11,12 +11,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import type { FinExpenseItem } from "@/types/accounting/expenses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 import { formatShortDate } from "@/lib/date-utils";
 
-type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string };
+type ExpenseWithExtras = FinExpenseItem;
 
 const EXPENSE_STATUS_VALUES: ReadonlyArray<string> = ["DRAFT", "SUBMITTED", "APPROVED", "REIMBURSEMENT_PENDING", "REIMBURSED", "REJECTED"];
 

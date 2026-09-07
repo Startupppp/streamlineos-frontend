@@ -136,9 +136,9 @@ export interface BuildCustomersPage {
 
 export interface CrmOrganizationFilters {
   search?: string;
-  industry?: string;
-  page?: number;
-  limit?: number;
+  q?: string;
+  cursor?: string;
+  pageSize?: number;
 }
 
 export interface CreateCrmOrganizationInput {

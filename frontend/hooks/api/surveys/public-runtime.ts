@@ -12,9 +12,6 @@ const surveyPublicSurveyC = lazyContract(() =>
 const surveyPublicSessionRowC = lazyContract(() =>
   import("./survey-public-schema").then((m) => m.surveyPublicSessionRowContract),
 );
-const publicSuccessC = lazyContract(() =>
-  import("./survey-public-schema").then((m) => m.publicSuccessContract),
-);
 
 export interface PublicSurveyQuestionChoice {
   id: number;
@@ -104,11 +101,11 @@ export function useSubmitSurveySession(collectorToken: string, sessionId: number
   return useMutation({
     mutationKey: ["surveys", "public", "submit", collectorToken, sessionId] as const,
     mutationFn: (answers?: Array<{ questionId: number } & AnswerValue>) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post<StartSessionResponse>(
         `/public/surveys/${collectorToken}/session/${sessionId}/submit`,
         { answers },
         undefined,
-        publicSuccessC,
+        surveyPublicSessionRowC,
       ),
   });
 }

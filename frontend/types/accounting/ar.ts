@@ -156,7 +156,7 @@ export interface CollectionAgingBucket {
 }
 
 export interface TopRiskCustomer {
-  clientId: number;
+  clientId: number | null;
   overdueAmount: number;
   totalInvoiced: number;
   maxDaysOverdue: number;

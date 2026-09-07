@@ -29,9 +29,7 @@ export const crmOrgsListContract = z.object({
   totalCount: z.number().int().optional(),
 });
 
-export const crmOrgDetailContract = crmOrgSchema.extend({
-  contacts: z.array(z.unknown()).optional(),
-});
+export const crmOrgDetailContract = crmOrgSchema;
 
 const potentialDuplicateSchema = z.object({
   id: z.number().int(),

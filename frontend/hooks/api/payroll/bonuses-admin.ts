@@ -7,8 +7,8 @@ import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-const bonusC = lazyContract(() =>
-  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.bonusContract),
+const bonusCreatedC = lazyContract(() =>
+  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.bonusCreatedContract),
 );
 const bonusListC = lazyContract(() =>
   import("@/hooks/api/payroll/bonuses-schema").then((m) => m.bonusListContract),
@@ -85,7 +85,7 @@ export function useCreateBonus() {
   return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "create"],
     mutationFn: (body: CreateBonusBody) =>
-      apiClient.post<Bonus>("/hr/bonuses", body, undefined, bonusC),
+      apiClient.post<Bonus>("/hr/bonuses", body, undefined, bonusCreatedC),
     onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bonuses() }),
   });
 }
@@ -105,7 +105,7 @@ export function useUpdateBonus() {
   return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "update"],
     mutationFn: ({ id, status }: { id: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
-      apiClient.patch<Bonus>(`/hr/bonuses/${id}`, { status }, undefined, bonusC),
+      apiClient.patch<Bonus>(`/hr/bonuses/${id}`, { status }, undefined, bonusCreatedC),
     onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bonuses() }),
   });
 }

@@ -38,7 +38,9 @@ const testRuleLazy = lazyContract(() =>
 );
 interface AutomationRunsResponse {
   runs: AutomationRun[];
-  total: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+  total?: number;
 }
 
 interface TestRuleInput {
@@ -178,13 +180,13 @@ export function useTestCrmAutomationRule() {
   });
 }
 
-export function useCrmAutomationRuns(ruleId: number, page: number) {
+export function useCrmAutomationRuns(ruleId: number, cursor?: string) {
   return useGatedQuery("crm:automations:manage", {
-    queryKey: queryKeys.crmAutomations.runs(ruleId, page),
+    queryKey: queryKeys.crmAutomations.runs(ruleId, cursor),
     queryFn: ({ signal }) =>
       apiClient.get<AutomationRunsResponse>(
         `/crm/automations/${ruleId}/runs`,
-        { page, limit: 20 },
+        cursor ? { cursor } : undefined,
         signal,
         automationRunsLazy,
       ),

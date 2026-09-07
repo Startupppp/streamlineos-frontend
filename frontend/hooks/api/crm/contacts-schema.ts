@@ -44,7 +44,7 @@ const crmOrganizationSchema = z.object({
   name: z.string(),
   domain: z.string().nullable(),
   industry: z.string().nullable(),
-  size: z.string().nullable(),
+  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"] as const).nullable(),
   website: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   description: z.string().nullable(),

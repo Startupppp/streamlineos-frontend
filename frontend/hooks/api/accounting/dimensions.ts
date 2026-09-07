@@ -30,6 +30,16 @@ export interface AccountingDimension {
   valueCount: number;
 }
 
+export interface AccountingDimensionRecord {
+  id: number;
+  orgId: string;
+  name: string;
+  key: string;
+  requiredForAccountTypes: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface AccountingDimensionValue {
   id: number;
   orgId: string;
@@ -74,7 +84,7 @@ export function useDimensions() {
 
 export function useCreateDimension() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<AccountingDimension, Error, CreateDimensionInput>("accounting:dimensions:manage", {
+  return useAuthorizedMutation<AccountingDimensionRecord, Error, CreateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "create"],
     mutationFn: (body) =>
       apiClient.post("/accounting/dimensions", body, undefined, dimensionCreatedContract),
@@ -86,7 +96,7 @@ export function useCreateDimension() {
 
 export function useUpdateDimension(dimensionId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<AccountingDimension, Error, UpdateDimensionInput>("accounting:dimensions:manage", {
+  return useAuthorizedMutation<AccountingDimensionRecord, Error, UpdateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "update", dimensionId],
     mutationFn: (body) =>
       apiClient.patch(`/accounting/dimensions/${dimensionId}`, body, undefined, dimensionUpdatedContract),

@@ -6,7 +6,7 @@ import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
-export type AssessmentAttemptStatus = "pending" | "in_progress" | "passed" | "failed" | "expired";
+export type AssessmentAttemptStatus = "not_started" | "in_progress" | "submitted" | "passed" | "failed" | "expired";
 
 const surveyAttemptListC = lazyContract(() =>
   import("./survey-forms-schema").then((m) => m.surveyAttemptListContract),

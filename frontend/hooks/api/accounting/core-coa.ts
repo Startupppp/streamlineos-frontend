@@ -58,7 +58,7 @@ export function useSetupStatus() {
 
 export function useDeactivateAccount(accountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; isActive: false }, Error, void>("accounting:accounts:manage", {
+  return useAuthorizedMutation<{ id: number; isActive: boolean }, Error, void>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "deactivate-account", accountId],
     mutationFn: () =>
       apiClient.post(`/accounting/coa/${accountId}/deactivate`, undefined, undefined, coaAccountStatusContract),
@@ -71,7 +71,7 @@ export function useDeactivateAccount(accountId: number) {
 
 export function useActivateAccount(accountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; isActive: true }, Error, void>("accounting:accounts:manage", {
+  return useAuthorizedMutation<{ id: number; isActive: boolean }, Error, void>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "activate-account", accountId],
     mutationFn: () =>
       apiClient.post(`/accounting/coa/${accountId}/activate`, undefined, undefined, coaAccountStatusContract),
@@ -113,7 +113,7 @@ export function useApplyTemplate() {
 
 export function useSubmitJournalApproval(entryId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:journal:create", {
+  return useAuthorizedMutation<{ entryId: number; status: string }, Error, void>("accounting:journal:create", {
     mutationKey: [...coreKeys.all, "submit-approval", entryId],
     mutationFn: () =>
       apiClient.post(`/accounting/journal/${entryId}/submit-approval`, undefined, undefined, journalApprovalSubmitContract),
@@ -126,7 +126,7 @@ export function useSubmitJournalApproval(entryId: number) {
 
 export function useApproveJournal(entryId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; status: string }, Error, { note?: string }>("accounting:journal:approve", {
+  return useAuthorizedMutation<{ entryId: number; decision: string; entryStatus: string }, Error, { note?: string }>("accounting:journal:approve", {
     mutationKey: [...coreKeys.all, "approve-journal", entryId],
     mutationFn: (body) =>
       apiClient.post(`/accounting/journal/${entryId}/approve`, body, undefined, journalApprovalDecisionContract),
@@ -139,7 +139,7 @@ export function useApproveJournal(entryId: number) {
 
 export function useRejectJournal(entryId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; status: string }, Error, { note?: string }>("accounting:journal:approve", {
+  return useAuthorizedMutation<{ entryId: number; decision: string; entryStatus: string }, Error, { note?: string }>("accounting:journal:approve", {
     mutationKey: [...coreKeys.all, "reject-journal", entryId],
     mutationFn: (body) =>
       apiClient.post(`/accounting/journal/${entryId}/reject`, body, undefined, journalApprovalDecisionContract),

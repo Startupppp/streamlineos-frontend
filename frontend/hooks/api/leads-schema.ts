@@ -178,7 +178,15 @@ export const leadsDuplicateGroupsContract = z.object({
 });
 
 export const leadsCheckDuplicatesContract = z.object({
-  duplicates: z.array(z.record(z.string(), z.unknown())),
+  duplicates: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    email: z.string().nullable(),
+    phone: z.string().nullable(),
+    company: z.string().nullable(),
+    status: z.string(),
+    createdAt: z.string().nullable(),
+  })),
 });
 
 export const leadsMergeContract = z.object({

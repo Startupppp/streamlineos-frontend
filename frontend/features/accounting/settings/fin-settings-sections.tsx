@@ -18,7 +18,7 @@ import {
   PolicyDialog,
   RateDialog,
 } from "./fin-settings-dialogs";
-import { PURPOSE_LABELS } from "./fin-settings-labels";
+import { PURPOSE_LABELS, getPurposeLabel } from "./fin-settings-labels";
 export { PURPOSE_LABELS };
 
 export { PaymentTermsSection } from "./payment-terms-section";
@@ -128,15 +128,19 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
       {
         key: "purpose",
         header: "Purpose",
-        cell: (row) => <span className="text-xs">{PURPOSE_LABELS[row.purpose]}</span>,
+        cell: (row) => <span className="text-xs">{getPurposeLabel(row.purpose)}</span>,
       },
       {
         key: "account",
         header: "Mapped account",
         cell: (row) =>
-          row.account ? (
+          row.mapped ? (
             <span className="text-xs font-mono">
-              {row.account.code} – {row.account.name}
+              {row.accountCode} – {row.accountName}
+            </span>
+          ) : row.suggestedAccountId ? (
+            <span className="text-xs text-status-warning-ink font-medium">
+              Not mapped — suggested {row.suggestedAccountCode} – {row.suggestedAccountName}
             </span>
           ) : (
             <span className="text-xs text-status-warning-ink font-medium">Not mapped</span>

@@ -126,13 +126,7 @@ const DEFAULT_SCENARIO_ASSUMPTIONS = {
   plannedSpend: [] as { label: string; amount: number; startWeek: number; recurringWeekly: boolean }[],
 };
 
-/**
- * The wire type is `unknown | null` (a jsonb column the backend does not
- * strictly type on the way out); this transform parses it against the same
- * shape the backend's own create/update schema enforces on the way in, and
- * falls back to the backend's own defaults rather than surfacing `unknown`
- * to every consumer that renders a scenario's assumptions.
- */
+// Wire type is `unknown | null`; parse against the create schema's shape and fall back to its defaults.
 const scenarioAssumptionsContract = z.unknown().nullable().transform((value) => {
   const parsed = scenarioAssumptionsShapeContract.safeParse(value);
   return parsed.success ? parsed.data : DEFAULT_SCENARIO_ASSUMPTIONS;

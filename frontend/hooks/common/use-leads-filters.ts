@@ -13,7 +13,6 @@ export interface LeadsFilters {
   sourceFilter: string | undefined;
   sortColumn: string;
   sortDirection: "asc" | "desc";
-  tablePage: number;
   pageSize: number;
 }
 
@@ -24,7 +23,6 @@ export interface UseLeadsFiltersReturn extends LeadsFilters {
   setPriorityFilter: (p: string | undefined) => void;
   setSourceFilter: (s: string | undefined) => void;
   setSort: (col: string, dir: "asc" | "desc") => void;
-  setTablePage: (page: number) => void;
   setPageSize: (size: number) => void;
   clearFilters: () => void;
   isPending: boolean;
@@ -47,7 +45,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
   const sourceFilter = parseOptional(searchParams.get("source"));
   const sortColumn = searchParams.get("sortBy") || "createdAt";
   const sortDirection = (searchParams.get("order") as "asc" | "desc") || "desc";
-  const tablePage = Number(searchParams.get("page")) || 1;
   const pageSize = Number(searchParams.get("size")) || 50;
 
   const update = useCallback(
@@ -77,42 +74,37 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
   );
 
   const setSearchQuery = useCallback(
-    (q: string) => update({ q: q || null, page: null }),
+    (q: string) => update({ q: q || null }),
     [update],
   );
 
   const setStatusFilter = useCallback(
-    (s: string | undefined) => update({ status: s || null, page: null }),
+    (s: string | undefined) => update({ status: s || null }),
     [update],
   );
 
   const setPriorityFilter = useCallback(
-    (p: string | undefined) => update({ priority: p || null, page: null }),
+    (p: string | undefined) => update({ priority: p || null }),
     [update],
   );
 
   const setSourceFilter = useCallback(
-    (s: string | undefined) => update({ source: s || null, page: null }),
+    (s: string | undefined) => update({ source: s || null }),
     [update],
   );
 
   const setSort = useCallback(
-    (col: string, dir: "asc" | "desc") => update({ sortBy: col, order: dir, page: null }),
-    [update],
-  );
-
-  const setTablePage = useCallback(
-    (page: number) => update({ page: String(page) }),
+    (col: string, dir: "asc" | "desc") => update({ sortBy: col, order: dir }),
     [update],
   );
 
   const setPageSize = useCallback(
-    (size: number) => update({ size: String(size), page: null }),
+    (size: number) => update({ size: String(size) }),
     [update],
   );
 
   const clearFilters = useCallback(
-    () => update({ status: null, priority: null, source: null, q: null, page: null }),
+    () => update({ status: null, priority: null, source: null, q: null }),
     [update],
   );
 
@@ -124,7 +116,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
     sourceFilter,
     sortColumn,
     sortDirection,
-    tablePage,
     pageSize,
     setView,
     setSearchQuery,
@@ -132,7 +123,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
     setPriorityFilter,
     setSourceFilter,
     setSort,
-    setTablePage,
     setPageSize,
     clearFilters,
     isPending,

@@ -12,8 +12,8 @@ import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
 const taxDeclarationListC = lazyContract(() =>
   import("@/hooks/api/payroll/tax-schema").then((m) => m.taxDeclarationListContract),
 );
-const taxDeclarationListItemC = lazyContract(() =>
-  import("@/hooks/api/payroll/tax-schema").then((m) => m.taxDeclarationListItemContract),
+const taxDeclarationRowC = lazyContract(() =>
+  import("@/hooks/api/payroll/tax-schema").then((m) => m.taxDeclarationRowContract),
 );
 
 export function useTaxDeclarationsAdmin(params: {
@@ -38,7 +38,7 @@ export function useApproveDeclaration() {
         `/payroll/tax/declarations/${declarationId}/approve`,
         undefined,
         undefined,
-        taxDeclarationListItemC,
+        taxDeclarationRowC,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });
@@ -55,7 +55,7 @@ export function useRejectDeclaration() {
         `/payroll/tax/declarations/${declarationId}/reject`,
         { note },
         undefined,
-        taxDeclarationListItemC,
+        taxDeclarationRowC,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });

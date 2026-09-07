@@ -87,9 +87,9 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
   );
 
   const handleApplySuggestion = useCallback(() => {
-    if (!suggestion) return;
+    if (!suggestion || suggestion.categoryId === null) return;
     form.setValue("categoryId", suggestion.categoryId);
-    toast.success(`Category set to ${suggestion.categoryName}`);
+    toast.success(`Category set to ${suggestion.categoryName ?? "Unknown"}`);
   }, [form, suggestion]);
 
   const handleSubmit = useCallback(

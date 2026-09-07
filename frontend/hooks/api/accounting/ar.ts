@@ -183,7 +183,7 @@ export function useCreateCreditNote() {
 export function usePostCreditNote() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
-    { id: number; status: string; needsApproval?: boolean },
+    { needsApproval: true; creditNoteId: number } | { success: true; creditNoteNumber: string },
     Error,
     { creditNoteId: number }
   >("accounting:credit-notes:manage", {
@@ -208,7 +208,7 @@ export function usePostCreditNote() {
 export function useApplyCreditNote() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
-    { id: number; invoiceId: number; appliedAmount: number },
+    { success: true },
     Error,
     { creditNoteId: number } & ApplyCreditNoteInput
   >("accounting:credit-notes:manage", {

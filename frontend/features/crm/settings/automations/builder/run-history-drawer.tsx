@@ -34,7 +34,7 @@ const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.Com
 };
 
 export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, onOpenChange }: RunHistoryDrawerProps) {
-  const { data, isLoading, error, refetch, access } = useCrmAutomationRuns(ruleId, 1);
+  const { data, isLoading, error, refetch, access } = useCrmAutomationRuns(ruleId);
   const runs = data?.runs ?? [];
 
   const handleRetry = useCallback(() => {

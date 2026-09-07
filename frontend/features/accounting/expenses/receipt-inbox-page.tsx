@@ -39,7 +39,7 @@ export function ReceiptInboxPage() {
   const handlePrev = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
   const handleNext = useCallback(() => setPage((p) => p + 1), []);
 
-  const items = query.data?.data ?? [];
+  const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
 

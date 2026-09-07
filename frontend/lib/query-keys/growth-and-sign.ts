@@ -54,8 +54,8 @@ export const growthAndSignQueryKeys = {
     list: () => [...base, "crmAutomations", "list"] as const,
     events: () => [...base, "crmAutomations", "events"] as const,
     actions: () => [...base, "crmAutomations", "actions"] as const,
-    runs: (ruleId: number, page: number) =>
-      [...base, "crmAutomations", "runs", ruleId, page] as const,
+    runs: (ruleId: number, cursor?: string) =>
+      [...base, "crmAutomations", "runs", ruleId, cursor] as const,
   },
 
   crmSequences: {
@@ -63,8 +63,8 @@ export const growthAndSignQueryKeys = {
     list: () => [...base, "crmSequences", "list"] as const,
     steps: (sequenceId: string) =>
       [...base, "crmSequences", "steps", sequenceId] as const,
-    enrollments: (sequenceId: string, page: number) =>
-      [...base, "crmSequences", "enrollments", sequenceId, page] as const,
+    enrollments: (sequenceId: string, cursor?: string) =>
+      [...base, "crmSequences", "enrollments", sequenceId, cursor] as const,
   },
 
   crmInbox: {

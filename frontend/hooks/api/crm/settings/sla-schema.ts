@@ -4,16 +4,17 @@ const slaPolicySchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
-  appliesTo: z.string(),
-  priority: z.string(),
+  appliesTo: z.enum(["lead", "deal", "both"] as const),
+  priority: z.enum(["low", "medium", "high", "urgent"] as const),
   firstResponseHours: z.number().int(),
   resolutionHours: z.number().int(),
-  conditions: z.unknown(),
+  conditions: z.record(z.string(), z.unknown()).nullable(),
   targetMinutes: z.number().int().nullable(),
   businessHours: z.boolean(),
   appliesToText: z.string().nullable(),
   priorityText: z.string().nullable(),
-  createdAt: z.string(),
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 export const slaPoliciesListContract = z.array(slaPolicySchema);

@@ -73,18 +73,17 @@ export interface TaxDashboard {
 }
 
 export interface TaxReportLine {
-  id: number;
   sourceType: string;
   sourceId: number;
   docNumber: string;
+  date: string;
   partyName: string;
-  taxableAmount: string;
-  rate: string;
+  taxableValue: string;
+  gstRate: string;
   cgst: string;
   sgst: string;
   igst: string;
   total: string;
-  date: string;
 }
 
 export interface LiabilitySummaryMonth {
@@ -139,33 +138,42 @@ export type ApprovalRecordType =
 
 export interface ApprovalPolicy {
   id: number;
-  recordType: ApprovalRecordType;
+  orgId: string;
+  recordType: string;
   minAmount: string | null;
   approverRole: string | null;
   approverUserId: string | null;
+  approverMembershipId: number | null;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-export interface ApprovalRequest {
+export interface ApprovalDecisionResult {
   id: number;
+  orgId: string;
   recordType: string;
   recordId: number;
   status: ApprovalStatus;
   requestedBy: string;
-  requesterDisplayName: string;
-  recordLabel: string | null;
-  recordAmount: string | null;
+  note: string | null;
   decidedBy: string | null;
   decidedAt: string | null;
   decisionComment: string | null;
   createdAt: string;
 }
 
+export interface ApprovalRequest extends ApprovalDecisionResult {
+  requesterDisplayName: string;
+  recordLabel: string | null;
+  recordAmount: string | null;
+}
+
 export interface ExchangeRate {
   id: number;
+  orgId: string;
   fromCurrency: string;
   toCurrency: string;
   rate: string;

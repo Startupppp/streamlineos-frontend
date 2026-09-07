@@ -38,6 +38,26 @@ const settingsSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
+function toFormValues(settings: InventorySettings): SettingsFormValues {
+  const parsed = settingsSchema.safeParse(settings);
+  if (parsed.success) return parsed.data;
+  return {
+    allowNegativeStock: settings.allowNegativeStock,
+    allowBackorders: settings.allowBackorders,
+    reservationStrategy: "MANUAL",
+    defaultCostingMethod: "FIFO",
+    expiryReservationPolicy: "WARN",
+    inspectionOnReceipt: settings.inspectionOnReceipt,
+    inspectionOnReturn: settings.inspectionOnReturn,
+    overReceiptTolerancePct: settings.overReceiptTolerancePct,
+    requirePoApproval: settings.requirePoApproval,
+    adjustmentApprovalThreshold: settings.adjustmentApprovalThreshold,
+    autoReserveOnConfirm: settings.autoReserveOnConfirm,
+    allowPartialShipment: settings.allowPartialShipment,
+    packageRequiredForShipping: settings.packageRequiredForShipping,
+  };
+}
+
 function SettingsLoadingSkeleton() {
   return (
     <div className="space-y-4">
@@ -62,7 +82,7 @@ export function InventorySettingsClient() {
   React.useEffect(
     function populateForm() {
       if (settings) {
-        reset(settings);
+        reset(toFormValues(settings));
       }
     },
     [settings, reset],

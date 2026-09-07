@@ -22,6 +22,8 @@ export const bonusContract = z.object({
 
 export const bonusListContract = cursorPageContract(bonusContract);
 
+export const bonusCreatedContract = bonusContract.omit({ userName: true, userEmail: true });
+
 const incentiveSalesRepContract = z.object({
   id: z.string(),
   name: z.string().nullable(),

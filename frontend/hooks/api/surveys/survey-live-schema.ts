@@ -32,25 +32,7 @@ export const liveSessionResultsContract = z.object({
   }).nullable(),
 });
 
-const surveyResponseSessionRowContract = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  surveyId: z.number(),
-  versionId: z.number(),
-  collectorId: z.number().nullable(),
-  participantId: z.number().nullable(),
-  anonymous: z.boolean(),
-  startedAt: z.string(),
-  submittedAt: z.string().nullable(),
-  durationSeconds: z.number().nullable(),
-  score: z.number().nullable(),
-  passed: z.boolean().nullable(),
-  segment: z.string().nullable(),
-  metadata: z.record(z.string(), z.unknown()),
-  status: z.enum(["in_progress", "submitted", "abandoned", "expired"]),
-});
-
-export const surveyPublicLiveSessionContract = surveyResponseSessionRowContract.and(
+export const surveyPublicLiveSessionContract = surveyLiveSessionRowContract.and(
   z.object({
     currentQuestion: z.object({
       id: z.number(),

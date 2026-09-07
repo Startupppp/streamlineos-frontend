@@ -34,11 +34,11 @@ const crmPeopleSlugsLazy = lazyContract(() => import("@/hooks/api/crm/organizati
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useGatedQuery<PaginatedCrmOrganizations>("crm:organizations:view", {
-    queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
+    queryKey: queryKeys.crmOrganizations.list(filters),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>(
         "/crm/organizations",
-        filters as Record<string, unknown>,
+        filters,
         signal,
         crmOrgsListLazy,
       ),
@@ -53,8 +53,7 @@ export function useCrmOrganizationsForPicker(search?: string) {
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
-        page: 1,
-        limit: 100,
+        pageSize: 100,
         search: search ?? undefined,
       }, signal, crmOrgsListLazy),
     staleTime: 2 * 60_000,

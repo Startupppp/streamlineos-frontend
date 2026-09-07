@@ -8,7 +8,7 @@ const quoteRowSchema = z.object({
   quoteNumber: z.string(),
   subject: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"] as const),
   currency: z.string(),
   totalAmount: z.string(),
   taxAmount: z.string(),

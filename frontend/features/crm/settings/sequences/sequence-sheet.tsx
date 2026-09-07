@@ -271,7 +271,7 @@ function SequenceSteps({ sequenceId }: { sequenceId: string }) {
 
 function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
   const layout = useTenantLayout(SEQUENCE_ENROLLMENT_LAYOUT);
-  const { data, isLoading, isError, refetch, access } = useCrmSequenceEnrollments(sequenceId, 1);
+  const { data, isLoading, isError, refetch, access } = useCrmSequenceEnrollments(sequenceId);
   const stopEnrollment = useStopEnrollment(sequenceId);
 
   const enrolments = data?.enrollments ?? [];

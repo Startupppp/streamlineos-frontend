@@ -13,7 +13,7 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useApproveExpense, useRejectExpense } from "@/hooks/api/accounting/expenses";
-import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import type { FinExpenseItem } from "@/types/accounting/expenses";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 import { parseExpenseReceipts } from "@/lib/expense-receipts";
 import { formatShortDate } from "@/lib/date-utils";
@@ -30,7 +30,7 @@ function isExpenseStatus(s: string): s is ExpenseStatus {
   return EXPENSE_STATUS_VALUES.includes(s);
 }
 
-type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string; receiptNumber?: string };
+type ExpenseWithExtras = FinExpenseItem;
 
 export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetailSheetProps) {
   const [rejectMode, setRejectMode] = useState(false);
@@ -212,8 +212,8 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
 
         {expense.approvedAt && (
           <div className="pt-2 border-t border-border/50">
-            <p className="text-dense text-muted-foreground mb-0.5">Approved by</p>
-            <p className="text-sm">{getUserDisplayName(expense.approver)} · {formatShortDate(String(expense.approvedAt)) || "—"}</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Approved</p>
+            <p className="text-sm">{formatShortDate(String(expense.approvedAt)) || "—"}</p>
           </div>
         )}
 

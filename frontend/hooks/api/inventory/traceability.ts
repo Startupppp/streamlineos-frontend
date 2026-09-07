@@ -234,7 +234,7 @@ export function useExpiryItems(params?: { days?: number }) {
   return useQuery<ExpiryItem[], Error>({
     queryKey: queryKeys.inventory.expiry(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }, signal, expiryItemsArrayContract),
+      apiClient.get<ExpiryItem[]>("/inventory/expiry", { withinDays: params?.days }, signal, expiryItemsArrayContract),
     staleTime: 30_000,
     enabled: canView,
   });

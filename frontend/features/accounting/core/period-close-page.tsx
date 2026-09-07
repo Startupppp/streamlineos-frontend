@@ -42,9 +42,9 @@ function PeriodButton({ period, isSelected, onSelect }: PeriodButtonProps) {
       <p className="text-xs text-muted-foreground mt-0.5">
         {formatShortDate(period.startDate) || ""} — {formatShortDate(period.endDate) || ""}
       </p>
-      {period.closedBy && period.closedAt && (
+      {period.closedAt && (
         <p className="text-xs text-muted-foreground mt-0.5">
-          Closed by {period.closedBy}
+          Closed on {formatShortDate(period.closedAt)}
         </p>
       )}
     </button>

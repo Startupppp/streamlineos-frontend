@@ -26,6 +26,10 @@ const STATUS_LABEL: Record<PurchaseBillStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+function isPurchaseBillStatus(value: string): value is PurchaseBillStatus {
+  return Object.prototype.hasOwnProperty.call(STATUS_LABEL, value);
+}
+
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   bank_transfer: "Bank transfer",
   upi: "UPI",
@@ -215,9 +219,9 @@ export function BillDetailView({
             <div>
               <p className="text-dense font-medium text-muted-foreground mb-1">Status</p>
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${STATUS_CLASS[bill.status]}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${isPurchaseBillStatus(bill.status) ? STATUS_CLASS[bill.status] : "bg-muted text-muted-foreground border-border"}`}
               >
-                {STATUS_LABEL[bill.status]}
+                {isPurchaseBillStatus(bill.status) ? STATUS_LABEL[bill.status] : bill.status}
               </span>
             </div>
             <div>

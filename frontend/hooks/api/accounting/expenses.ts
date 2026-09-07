@@ -11,16 +11,20 @@ import { useCan } from "@/hooks/api/access";
 import type {
   FinReceiptInboxItem,
   FinReimbursementBatch,
+  FinReimbursementBatchCreateResult,
   FinReimbursementBatchDetail,
   FinExpensePolicy,
+  FinExpensePolicyCreateResult,
   ListResponse,
+  ItemsResponse,
   CreateBatchInput,
   PayBatchInput,
   PatchReceiptInput,
   CreatePolicyInput,
   UpdatePolicyInput,
+  ExpensePageDataRow,
 } from "@/types/accounting/expenses";
-import type { ExpenseWithRelations, ExpenseStats, ExpenseCategoryRecord } from "@/types/hr/expenses";
+import type { ExpenseStats, ExpenseCategoryRecord } from "@/types/hr/expenses";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   expensePolicyListContract,
@@ -69,7 +73,7 @@ export interface TeamExpensesParams {
 }
 
 interface TeamExpensesResponse {
-  expenses: ExpenseWithRelations[];
+  expenses: ExpensePageDataRow[];
   stats: ExpenseStats | null;
   categories: ExpenseCategoryRecord[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
@@ -81,7 +85,7 @@ export function useTeamExpenses(params: TeamExpensesParams = {}) {
   return useQuery<TeamExpensesResponse, Error>({
     queryKey: expenseKeys.team(params),
     queryFn: ({ signal }) =>
-      apiClient.get("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true }), signal, hrExpensePageDataResponseContract),
+      apiClient.get("/hr/expenses/page-data", toQuery(params), signal, hrExpensePageDataResponseContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: can,
@@ -95,7 +99,7 @@ export interface ReceiptInboxParams {
 
 export function useReceiptInbox(params: ReceiptInboxParams = {}) {
   const can = useCan("accounting:reimbursements:read");
-  return useQuery<ListResponse<FinReceiptInboxItem>, Error>({
+  return useQuery<ItemsResponse<FinReceiptInboxItem>, Error>({
     queryKey: expenseKeys.receipts(params),
     queryFn: ({ signal }) =>
       apiClient.get("/accounting/expenses/receipts", toQuery(params), signal, receiptInboxListContract),
@@ -147,7 +151,7 @@ export function useReimbursementBatch(batchId: number) {
 
 export function useCreateReimbursementBatch() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<FinReimbursementBatch, Error, CreateBatchInput>("accounting:reimbursements:manage", {
+  return useAuthorizedMutation<FinReimbursementBatchCreateResult, Error, CreateBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "create"],
     mutationFn: (data) =>
       apiClient.post("/accounting/reimbursements", data, undefined, reimbursementBatchCreatedContract),
@@ -174,7 +178,7 @@ export function useApproveBatch(batchId: number) {
 
 export function usePayBatch(batchId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean; entryId?: number }, Error, PayBatchInput>("accounting:reimbursements:manage", {
+  return useAuthorizedMutation<{ success: boolean; replayed: boolean; entryId: number | null }, Error, PayBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "pay", batchId],
     mutationFn: (data) =>
       apiClient.post(`/accounting/reimbursements/${batchId}/pay`, data, undefined, reimbursementPayContract),
@@ -188,15 +192,12 @@ export function usePayBatch(batchId: number) {
 
 export function usePendingForBatch() {
   const can = useCan("accounting:reimbursements:manage");
-  return useQuery<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }, Error>({
+  return useQuery<{ expenses: ExpensePageDataRow[]; pagination: { total: number } }, Error>({
     queryKey: expenseKeys.pendingForBatch(),
     queryFn: ({ signal }) =>
       apiClient.get("/hr/expenses/page-data", {
         status: "REIMBURSEMENT_PENDING",
         pageSize: "200",
-        includeStats: "false",
-        includePending: "false",
-        includeCategories: "false",
       }, signal, hrExpensePageDataResponseContract),
     staleTime: 30_000,
     enabled: can,
@@ -215,7 +216,7 @@ export function useExpensePolicies() {
 
 export function useCreateExpensePolicy() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<FinExpensePolicy, Error, CreatePolicyInput>("accounting:reimbursements:manage", {
+  return useAuthorizedMutation<FinExpensePolicyCreateResult, Error, CreatePolicyInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "create"],
     mutationFn: (data) => apiClient.post("/accounting/expenses/policies", data, undefined, expensePolicyCreatedContract),
     onSuccess: () => {

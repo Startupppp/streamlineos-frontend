@@ -46,7 +46,15 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   YEARLY: "Yearly",
 };
 
-function formatDate(value: string): string {
+function isRecurringFrequency(value: string): value is RecurringFrequency {
+  return Object.prototype.hasOwnProperty.call(FREQUENCY_LABELS, value);
+}
+
+function getFrequencyLabel(value: string): string {
+  return isRecurringFrequency(value) ? FREQUENCY_LABELS[value] : value;
+}
+
+function formatDate(value: string | null): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
@@ -131,7 +139,7 @@ const COLUMNS: DataTableColumn<RecurringJournal>[] = [
     className: "w-[120px]",
     cell: (row) => (
       <Badge variant="outline" className="text-xs">
-        {FREQUENCY_LABELS[row.frequency]}
+        {getFrequencyLabel(row.frequency)}
       </Badge>
     ),
   },

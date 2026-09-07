@@ -33,22 +33,21 @@ export interface FinExpenseItem {
   receiptNumber: string | null;
   taxAmount: string | null;
   paymentMethod: string | null;
-  status: ExpenseStatus;
+  status: string;
   approverId: string | null;
   approvedAt: string | null;
   rejectionReason: string | null;
   paidAt: string | null;
-  policyFlag: PolicyFlag | null;
+  policyFlag: string | null;
   expenseDate: string;
   createdAt: string;
   updatedAt: string;
-  user: FinExpenseUser | null;
-  approver: FinExpenseUser | null;
-  expenseCategory: FinExpenseCategory | null;
+  user?: FinExpenseUser | null;
+  expenseCategory?: FinExpenseCategory | null;
 }
 
 export interface FinReceiptInboxItem extends FinExpenseItem {
-  policyFlag: PolicyFlag;
+  policyFlag: string;
 }
 
 export interface ReimbursementBatchItem {
@@ -57,7 +56,7 @@ export interface ReimbursementBatchItem {
   category: string;
   expenseDate: string;
   description: string | null;
-  status: ExpenseStatus;
+  status: string;
   userId: string;
   userName: string | null;
   userEmail: string | null;
@@ -75,7 +74,7 @@ export interface FinReimbursementBatch {
   id: number;
   orgId: string;
   name: string;
-  status: ReimbursementBatchStatus;
+  status: string;
   totalAmount: string;
   paidDate: string | null;
   journalEntryId: number | null;
@@ -87,6 +86,8 @@ export interface FinReimbursementBatch {
   creator: ReimbursementBatchCreator | null;
   approver: ReimbursementBatchCreator | null;
 }
+
+export type FinReimbursementBatchCreateResult = Omit<FinReimbursementBatch, "creator" | "approver">;
 
 export interface FinReimbursementBatchDetail {
   batch: FinReimbursementBatch;
@@ -107,8 +108,18 @@ export interface FinExpensePolicy {
   category: FinExpenseCategory | null;
 }
 
+export type FinExpensePolicyCreateResult = Omit<FinExpensePolicy, "category">;
+
 export interface ListResponse<T> {
   data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ItemsResponse<T> {
+  items: T[];
   page: number;
   pageSize: number;
   total: number;
@@ -142,3 +153,36 @@ export interface CreatePolicyInput {
 }
 
 export type UpdatePolicyInput = Partial<CreatePolicyInput>;
+
+export interface ExpensePageDataRow {
+  id: number;
+  orgId: string;
+  userId: string;
+  categoryId: number | null;
+  category: string;
+  amount: string;
+  currency: string;
+  description: string | null;
+  receiptUrl: string | null;
+  receiptFileName: string | null;
+  merchant: string | null;
+  receiptNumber: string | null;
+  receiptHash: string | null;
+  taxAmount: string | null;
+  paymentMethod: string | null;
+  projectId: number | null;
+  status: string;
+  userMembershipId: number | null;
+  approverId: string | null;
+  approverMembershipId: number | null;
+  approvedAt: string | null;
+  rejectionReason: string | null;
+  paidAt: string | null;
+  transactionRef: string | null;
+  reimbursementBatchId: number | null;
+  postedJournalEntryId: number | null;
+  policyFlag: string | null;
+  expenseDate: string;
+  createdAt: string;
+  updatedAt: string;
+}

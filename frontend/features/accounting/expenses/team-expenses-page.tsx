@@ -12,7 +12,7 @@ import { ExpenseStatsGrid } from "@/features/accounting/expenses/expense-stats";
 import { ExpenseFiltersBar, type StatusFilter } from "@/features/accounting/expenses/expense-filters-bar";
 import { ExpenseTable } from "@/features/accounting/expenses/expense-table";
 import { ExpenseDetailSheet } from "@/features/accounting/expenses/expense-detail-sheet";
-import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import type { ExpensePageDataRow } from "@/types/accounting/expenses";
 
 export function TeamExpensesPage() {
   const [search, setSearch] = useState("");
@@ -20,7 +20,7 @@ export function TeamExpensesPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<ExpenseWithRelations | null>(null);
+  const [selected, setSelected] = useState<ExpensePageDataRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -34,7 +34,7 @@ export function TeamExpensesPage() {
     endDate: endDate || undefined,
   });
 
-  const handleRowClick = useCallback((row: ExpenseWithRelations) => {
+  const handleRowClick = useCallback((row: ExpensePageDataRow) => {
     setSelected(row);
     setSheetOpen(true);
   }, []);

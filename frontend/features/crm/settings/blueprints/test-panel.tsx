@@ -164,9 +164,9 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
             <div className="font-semibold">
               {testTransition.data.allowed ? "Transition allowed" : "Transition blocked"}
             </div>
-            {!testTransition.data.allowed && testTransition.data.missing.length > 0 && (
+            {!testTransition.data.allowed && testTransition.data.missingFields.length > 0 && (
               <ul className="list-disc list-inside space-y-0.5">
-                {testTransition.data.missing.map((m) => (
+                {testTransition.data.missingFields.map((m) => (
                   <li key={m} className="text-dense">
                     {m}
                   </li>

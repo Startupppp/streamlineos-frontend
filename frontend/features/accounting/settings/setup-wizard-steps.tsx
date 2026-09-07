@@ -28,7 +28,12 @@ import {
 } from "@/hooks/api/accounting/fin-settings";
 import { useCoaTemplates, useApplyTemplate, useGeneratePeriods } from "@/hooks/api/accounting/core";
 import { SystemAccountMapDialog } from "@/features/accounting/settings/fin-settings-dialogs";
-import { PURPOSE_LABELS } from "@/features/accounting/settings/fin-settings-sections";
+import { getPurposeLabel } from "@/features/accounting/settings/fin-settings-labels";
+import {
+  isAccountingBasis,
+  readTaxRegistrationField,
+  mergeTaxRegistration,
+} from "@/features/accounting/settings/accounting-settings-schema";
 import type { SystemAccountMapping } from "@/types/accounting/fin-settings";
 import type { CoaTemplate } from "@/hooks/api/accounting/core";
 
@@ -67,7 +72,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
       ? {
           baseCurrency: settings.baseCurrency,
           fiscalYearStartMonth: String(settings.fiscalYearStartMonth),
-          accountingBasis: settings.accountingBasis,
+          accountingBasis: isAccountingBasis(settings.accountingBasis) ? settings.accountingBasis : "ACCRUAL",
         }
       : undefined,
   });
@@ -158,9 +163,9 @@ export function StepTaxRegistration({ onComplete, onSkip }: StepProps) {
     resolver: zodResolver(taxSchema),
     values: settings
       ? {
-          gstin: String(settings.taxRegistration?.gstin ?? ""),
-          pan: String(settings.taxRegistration?.pan ?? ""),
-          stateCode: String(settings.taxRegistration?.stateCode ?? ""),
+          gstin: readTaxRegistrationField(settings.taxRegistration, "gstin"),
+          pan: readTaxRegistrationField(settings.taxRegistration, "pan"),
+          stateCode: readTaxRegistrationField(settings.taxRegistration, "stateCode"),
         }
       : undefined,
   });
@@ -168,12 +173,11 @@ export function StepTaxRegistration({ onComplete, onSkip }: StepProps) {
   function handleSave(values: TaxFormValues) {
     updateSettings.mutate(
       {
-        taxRegistration: {
-          ...(settings?.taxRegistration ?? {}),
+        taxRegistration: mergeTaxRegistration(settings?.taxRegistration, {
           gstin: values.gstin,
           pan: values.pan,
           stateCode: values.stateCode,
-        },
+        }),
       },
       {
         onSuccess: () => { toast.success("Tax registration saved"); onComplete(); },
@@ -298,7 +302,7 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
 export function StepSystemAccounts({ onComplete, onSkip }: StepProps) {
   const [editMapping, setEditMapping] = useState<SystemAccountMapping | null>(null);
   const systemAccountsQuery = useSystemAccounts();
-  const accounts = systemAccountsQuery.data?.items ?? [];
+  const accounts = systemAccountsQuery.data ?? [];
 
   function handleCloseMappingDialog(v: boolean): void {
     if (!v) setEditMapping(null);
@@ -320,9 +324,9 @@ export function StepSystemAccounts({ onComplete, onSkip }: StepProps) {
             {accounts.map((m) => (
               <div key={m.purpose} className="flex items-center justify-between px-3 py-2 hover:bg-muted/30">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">{PURPOSE_LABELS[m.purpose]}</p>
-                  {m.account ? (
-                    <p className="text-xs text-muted-foreground font-mono">{m.account.code} — {m.account.name}</p>
+                  <p className="text-xs font-medium text-foreground">{getPurposeLabel(m.purpose)}</p>
+                  {m.mapped ? (
+                    <p className="text-xs text-muted-foreground font-mono">{m.accountCode} — {m.accountName}</p>
                   ) : (
                     <Badge variant="secondary" className="text-micro mt-0.5 text-status-warning-ink bg-status-warning-surface border-status-warning-rule">Not mapped</Badge>
                   )}

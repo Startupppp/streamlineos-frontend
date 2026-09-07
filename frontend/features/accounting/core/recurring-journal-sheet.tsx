@@ -53,6 +53,10 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   YEARLY: "Yearly",
 };
 
+function isRecurringFrequency(value: string): value is RecurringFrequency {
+  return Object.prototype.hasOwnProperty.call(FREQUENCY_LABELS, value);
+}
+
 const lineSchema = z.object({
   accountId: z.string().min(1, "Account required"),
   debit: z.string(),
@@ -95,8 +99,8 @@ function getDefaultValues(template?: RecurringJournal | null): RecurringFormValu
   return {
     name: template.name,
     description: template.description ?? "",
-    frequency: template.frequency,
-    nextRunDate: template.nextRunDate,
+    frequency: isRecurringFrequency(template.frequency) ? template.frequency : "MONTHLY",
+    nextRunDate: template.nextRunDate ?? "",
     endDate: template.endDate ?? "",
     lines: template.lines.map((l) => ({
       accountId: String(l.accountId),

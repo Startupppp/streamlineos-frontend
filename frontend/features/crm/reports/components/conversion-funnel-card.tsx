@@ -24,7 +24,7 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((opt) => {
-      const cls = getCrmTokenClasses(opt.color);
+      const cls = getCrmTokenClasses(opt.color ?? "");
       return {
         key: opt.key,
         label: opt.label,

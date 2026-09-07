@@ -3,13 +3,13 @@ import { queryKeyBase as base } from "./base";
 export const customerWorkQueryKeys = {
   leads: {
     all: [...base, "leads"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: object) =>
       params === undefined
         ? ([...base, "leads", "list"] as const)
         : ([...base, "leads", "list", params] as const),
     board: () => [...base, "leads", "board"] as const,
     detail: (leadId: number) => [...base, "leads", "detail", leadId] as const,
-    stats: (params?: Record<string, unknown>) =>
+    stats: (params?: object) =>
       params === undefined
         ? ([...base, "leads", "stats"] as const)
         : ([...base, "leads", "stats", params] as const),
@@ -18,7 +18,7 @@ export const customerWorkQueryKeys = {
     timeline: (leadId: number) =>
       [...base, "leads", "timeline", leadId] as const,
     slaAlerts: () => [...base, "leads", "slaAlerts"] as const,
-    analyticsSummary: (params?: Record<string, unknown>) =>
+    analyticsSummary: (params?: object) =>
       params === undefined
         ? ([...base, "leads", "analyticsSummary"] as const)
         : ([...base, "leads", "analyticsSummary", params] as const),

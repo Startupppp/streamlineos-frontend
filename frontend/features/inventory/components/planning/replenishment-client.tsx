@@ -204,7 +204,7 @@ export function ReplenishmentClient() {
       generatePO.mutate(input, {
         onSuccess: (result) => {
           toast.success("Draft PO created", {
-            description: `PO #${result.purchaseOrderNumber} created successfully.`,
+            description: `PO #${result.poNumber} created successfully.`,
           });
           setSelectedIds(new Set());
         },

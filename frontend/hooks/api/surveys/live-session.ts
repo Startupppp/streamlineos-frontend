@@ -41,17 +41,15 @@ export interface PublicLiveSession {
   orgId: string;
   surveyId: number;
   versionId: number;
-  collectorId: number | null;
-  participantId: number | null;
-  anonymous: boolean;
-  startedAt: string;
-  submittedAt: string | null;
-  durationSeconds: number | null;
-  score: number | null;
-  passed: boolean | null;
-  segment: string | null;
-  metadata: Record<string, unknown>;
-  status: "in_progress" | "submitted" | "abandoned" | "expired";
+  hostUserId: string | null;
+  hostMembershipId: number | null;
+  sessionCode: string;
+  status: LiveSessionStatus;
+  currentQuestionId: number | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  settings: Record<string, unknown>;
+  createdAt: string;
   currentQuestion: PublicLiveQuestion | null;
 }
 

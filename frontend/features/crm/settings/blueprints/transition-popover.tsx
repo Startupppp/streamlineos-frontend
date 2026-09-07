@@ -199,7 +199,7 @@ export function TransitionPopover({
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Auto Tasks</span>
             <Badge variant="outline" className="text-micro h-4 px-1.5">
-              {transition.autoTaskTemplates.length} task{transition.autoTaskTemplates.length !== 1 ? "s" : ""}
+              {(transition.autoTaskTemplates ?? []).length} task{(transition.autoTaskTemplates ?? []).length !== 1 ? "s" : ""}
             </Badge>
           </div>
         )}

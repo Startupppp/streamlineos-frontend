@@ -104,7 +104,7 @@ export function LeadDetailSheet({
   const statusList = statusOptions.map((o) => ({
     key: o.key,
     label: o.label,
-    border: getCrmTokenClasses(o.color).badgeClass,
+    border: getCrmTokenClasses(o.color ?? "").badgeClass,
   }));
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");

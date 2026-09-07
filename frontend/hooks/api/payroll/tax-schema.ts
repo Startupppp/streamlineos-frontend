@@ -28,6 +28,8 @@ export const taxDeclarationListItemContract = z.object({
 
 export const taxDeclarationListContract = cursorPageContract(taxDeclarationListItemContract);
 
+export const taxDeclarationRowContract = taxDeclarationListItemContract.omit({ userName: true, userEmail: true });
+
 export const taxWindowContract = z.object({
   id: z.number(),
   orgId: z.string(),

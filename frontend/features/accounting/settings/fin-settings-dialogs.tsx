@@ -36,7 +36,7 @@ import { useAllAccounts } from "@/hooks/api/accounting";
 import { AccountListNotice } from "@/features/accounting/shared";
 import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
-import { PURPOSE_LABELS } from "./fin-settings-labels";
+import { getPurposeLabel } from "./fin-settings-labels";
 
 const RECORD_TYPES: ReadonlyArray<string> = [
   "MANUAL_JOURNAL", "PURCHASE_BILL", "VENDOR_PAYMENT",
@@ -181,7 +181,7 @@ export function SystemAccountMapDialog({
     <EntityFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`Map account — ${PURPOSE_LABELS[mapping.purpose]}`}
+      title={`Map account — ${getPurposeLabel(mapping.purpose)}`}
       resolver={zodResolver(systemAccountSchema)}
       defaultValues={{ accountId: mapping.accountId ? String(mapping.accountId) : "" }}
       onSubmit={handleSubmit}

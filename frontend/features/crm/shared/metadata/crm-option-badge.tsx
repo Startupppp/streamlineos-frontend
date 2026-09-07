@@ -12,7 +12,7 @@ interface CrmOptionBadgeProps {
 }
 
 export function CrmOptionBadge({ option, size = "table", className }: CrmOptionBadgeProps) {
-  const { badgeClass } = getCrmTokenClasses(option.color);
+  const { badgeClass } = getCrmTokenClasses(option.color ?? "");
 
   return (
     <Badge

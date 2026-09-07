@@ -98,5 +98,7 @@ const automationRunSchema = z.object({
 
 export const automationRunsPageContract = z.object({
   runs: z.array(automationRunSchema),
-  total: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+  total: z.number().int().optional(),
 });

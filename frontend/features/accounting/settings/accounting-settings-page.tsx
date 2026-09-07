@@ -41,6 +41,9 @@ import {
   type CompanyFormValues,
   taxSchema,
   type TaxFormValues,
+  isAccountingBasis,
+  readTaxRegistrationField,
+  mergeTaxRegistration,
 } from "./accounting-settings-schema";
 
 const MONTHS = [
@@ -65,7 +68,9 @@ export function AccountingSettingsPage() {
       ? {
           baseCurrency: settingsQuery.data.baseCurrency,
           fiscalYearStartMonth: String(settingsQuery.data.fiscalYearStartMonth),
-          accountingBasis: settingsQuery.data.accountingBasis,
+          accountingBasis: isAccountingBasis(settingsQuery.data.accountingBasis)
+            ? settingsQuery.data.accountingBasis
+            : "ACCRUAL",
         }
       : undefined,
   });
@@ -74,9 +79,9 @@ export function AccountingSettingsPage() {
     resolver: zodResolver(taxSchema),
     values: settingsQuery.data
       ? {
-          gstin: String(settingsQuery.data.taxRegistration?.gstin ?? ""),
-          pan: String(settingsQuery.data.taxRegistration?.pan ?? ""),
-          stateCode: String(settingsQuery.data.taxRegistration?.stateCode ?? ""),
+          gstin: readTaxRegistrationField(settingsQuery.data.taxRegistration, "gstin"),
+          pan: readTaxRegistrationField(settingsQuery.data.taxRegistration, "pan"),
+          stateCode: readTaxRegistrationField(settingsQuery.data.taxRegistration, "stateCode"),
         }
       : undefined,
   });
@@ -98,12 +103,11 @@ export function AccountingSettingsPage() {
   function handleSaveTax(values: TaxFormValues) {
     updateSettings.mutate(
       {
-        taxRegistration: {
-          ...(settingsQuery.data?.taxRegistration ?? {}),
+        taxRegistration: mergeTaxRegistration(settingsQuery.data?.taxRegistration, {
           gstin: values.gstin,
           pan: values.pan,
           stateCode: values.stateCode,
-        },
+        }),
       },
       {
         onSuccess: () => toast.success("Tax registration saved"),
@@ -135,7 +139,7 @@ export function AccountingSettingsPage() {
     );
 
   const sequences = sequencesQuery.data?.items ?? [];
-  const systemAccounts = systemAccountsQuery.data?.items ?? [];
+  const systemAccounts = systemAccountsQuery.data ?? [];
   const policies = policiesQuery.data?.data ?? [];
   const rates = ratesQuery.data?.data ?? [];
   const paymentTerms = settingsQuery.data?.paymentTerms ?? [];

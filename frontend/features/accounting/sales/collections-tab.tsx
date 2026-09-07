@@ -307,20 +307,21 @@ export function CollectionsTab() {
     {
       key: "owner",
       header: "Owner",
-      cell: (row) => (
-        <CollectionOwnerPopover
-          clientId={row.clientId}
-          currentOwner={null}
-          invoiceId={null}
-        />
-      ),
+      cell: (row) =>
+        row.clientId !== null ? (
+          <CollectionOwnerPopover
+            clientId={row.clientId}
+            currentOwner={null}
+            invoiceId={null}
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
     },
     {
       key: "promise",
       header: "Promise Date",
-      cell: (row) => (
-        <PromiseDatePopover invoiceId={null} currentDate={null} key={row.clientId} />
-      ),
+      cell: (row) => <PromiseDatePopover invoiceId={null} currentDate={null} />,
     },
     {
       key: "actions",
@@ -376,7 +377,7 @@ export function CollectionsTab() {
           className="flex-1 min-h-0"
           data={topRisk}
           columns={riskColumns}
-          getRowKey={(row) => row.clientId}
+          getRowKey={(row, index) => row.clientId ?? index}
           isLoading={summary.isLoading}
           emptyState={
             <EmptyState

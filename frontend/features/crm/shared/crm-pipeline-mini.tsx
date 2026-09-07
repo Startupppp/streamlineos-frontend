@@ -41,7 +41,7 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
             const count = byStatus[option.key] ?? 0;
             const pct = total > 0 ? ((count / total) * 100).toFixed(0) : "0";
             const scaleTarget = count / maxCount;
-            const dotClass = getCrmTokenClasses(option.color).dotClass;
+            const dotClass = getCrmTokenClasses(option.color ?? "").dotClass;
             return (
               <div key={option.key} className="space-y-0.5">
                 <div className="flex items-center justify-between text-micro">

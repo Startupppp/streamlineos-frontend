@@ -15,14 +15,7 @@ import { PayBatchDialog } from "@/features/accounting/expenses/pay-batch-dialog"
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatShortDate } from "@/lib/date-utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import type { ReimbursementBatchStatus, ReimbursementBatchItem } from "@/types/accounting/expenses";
-import type { FinanceStatus } from "@/features/accounting/shared";
-
-const STATUS_MAP: Record<ReimbursementBatchStatus, FinanceStatus> = {
-  DRAFT: "DRAFT",
-  APPROVED: "APPROVED",
-  PAID: "PAID",
-};
+import type { ReimbursementBatchItem } from "@/types/accounting/expenses";
 
 const batchItemColumns: DataTableColumn<ReimbursementBatchItem>[] = [
   {
@@ -122,7 +115,7 @@ export function ReimbursementBatchDetailPage({ batchId: batchIdStr }: Reimbursem
       title={batch.name}
       subtitle={`Created by ${getUserDisplayName(batch.creator)} · ${formatShortDate(batch.createdAt) || "—"}`}
       backHref="/accounting/expenses/reimbursements"
-      badge={<FinanceStatusBadge status={STATUS_MAP[batch.status]} size="chip" />}
+      badge={<FinanceStatusBadge status={batch.status} size="chip" />}
       actions={
         <>
           {showApprove && (

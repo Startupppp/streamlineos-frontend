@@ -121,7 +121,7 @@ export const accessAndCrmQueryKeys = {
 
   crmOrganizations: {
     all: [...base, "crmOrganizations"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: object) =>
       params === undefined
         ? ([...base, "crmOrganizations", "list"] as const)
         : ([...base, "crmOrganizations", "list", params] as const),

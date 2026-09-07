@@ -8,7 +8,6 @@ import { useCan } from "@/hooks/api/access";
 import type {
   AccountingSettings,
   NumberSequence,
-  PaymentTerm,
   SetupStatus,
   SystemAccountMapping,
   UpdatePaymentTermsInput,
@@ -93,7 +92,7 @@ export function useUpdateNumberSequence(entityType: string) {
 
 export function useSystemAccounts() {
   const can = useCan("accounting:settings:read");
-  return useQuery<{ items: SystemAccountMapping[] }, Error>({
+  return useQuery<SystemAccountMapping[], Error>({
     queryKey: finSettingsKeys.systemAccounts(),
     queryFn: ({ signal }) =>
       apiClient.get("/accounting/settings/system-accounts", undefined, signal, systemAccountListContract),
@@ -104,7 +103,7 @@ export function useSystemAccounts() {
 
 export function useUpsertSystemAccount(purpose: string) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<SystemAccountMapping, Error, { accountId: number }>("accounting:settings:manage", {
+  return useAuthorizedMutation<{ purpose: string; accountId: number }, Error, { accountId: number }>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "system-accounts", purpose, "upsert"],
     mutationFn: (data) =>
       apiClient.put(
@@ -119,7 +118,7 @@ export function useUpsertSystemAccount(purpose: string) {
 
 export function useUpdatePaymentTerms() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ terms: PaymentTerm[] }, Error, UpdatePaymentTermsInput>("accounting:settings:manage", {
+  return useAuthorizedMutation<AccountingSettings, Error, UpdatePaymentTermsInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "payment-terms", "update"],
     mutationFn: (data) =>
       apiClient.patch("/accounting/settings/payment-terms", data, undefined, updatePaymentTermsContract),

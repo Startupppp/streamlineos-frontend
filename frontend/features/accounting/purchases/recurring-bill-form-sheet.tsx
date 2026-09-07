@@ -39,6 +39,7 @@ const recurringBillFormSchema = z.object({
 });
 
 type RecurringBillFormValues = z.infer<typeof recurringBillFormSchema>;
+type RecurringBillFrequency = RecurringBillFormValues["frequency"];
 
 interface RecurringBillFormSheetProps {
   open: boolean;
@@ -48,6 +49,39 @@ interface RecurringBillFormSheetProps {
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function isRecurringBillFrequency(value: string): value is RecurringBillFrequency {
+  return value === "DAILY" || value === "WEEKLY" || value === "MONTHLY" || value === "QUARTERLY" || value === "YEARLY";
+}
+
+function readString(payload: Record<string, unknown> | undefined, key: string, fallback: string): string {
+  const value = payload?.[key];
+  return typeof value === "string" ? value : fallback;
+}
+
+interface FirstBillItem {
+  description: string;
+  quantity: string;
+  rate: string;
+  gstRate: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readFirstItem(payload: Record<string, unknown> | undefined): FirstBillItem | undefined {
+  const items = payload?.["items"];
+  if (!Array.isArray(items) || items.length === 0) return undefined;
+  const first: unknown = items[0];
+  if (!isRecord(first)) return undefined;
+  const record = first;
+  const description = typeof record.description === "string" ? record.description : "";
+  const quantity = record.quantity !== undefined ? String(record.quantity) : "";
+  const rate = record.rate !== undefined ? String(record.rate) : "";
+  const gstRate = record.gstRate !== undefined ? String(record.gstRate) : "";
+  return { description, quantity, rate, gstRate };
 }
 
 export function RecurringBillFormSheet({
@@ -61,22 +95,22 @@ export function RecurringBillFormSheet({
   const vendorsQuery = useVendorsOutstanding({ limit: 200 });
   const vendors = vendorsQuery.data?.data ?? [];
 
-  const firstItem = template?.payload?.items?.[0];
+  const firstItem = readFirstItem(template?.payload);
 
   const defaultValues: RecurringBillFormValues = useMemo(
     () => ({
       name: template?.name ?? "",
       vendorId: template?.vendorId != null ? String(template.vendorId) : "",
-      frequency: template?.frequency ?? "MONTHLY",
+      frequency: template && isRecurringBillFrequency(template.frequency) ? template.frequency : "MONTHLY",
       nextRunDate: template?.nextRunDate ?? "",
       isActive: template?.isActive ?? true,
-      billDate: template?.payload?.billDate ?? todayIso(),
-      expenseAccountCode: template?.payload?.expenseAccountCode ?? "5990",
-      notes: template?.payload?.notes ?? "",
+      billDate: readString(template?.payload, "billDate", todayIso()),
+      expenseAccountCode: readString(template?.payload, "expenseAccountCode", "5990"),
+      notes: readString(template?.payload, "notes", ""),
       lineDescription: firstItem?.description ?? "",
-      lineQuantity: firstItem ? String(firstItem.quantity) : "",
-      lineRate: firstItem ? String(firstItem.rate) : "",
-      lineGstRate: firstItem ? String(firstItem.gstRate) : "",
+      lineQuantity: firstItem?.quantity ?? "",
+      lineRate: firstItem?.rate ?? "",
+      lineGstRate: firstItem?.gstRate ?? "",
     }),
     [template, firstItem],
   );

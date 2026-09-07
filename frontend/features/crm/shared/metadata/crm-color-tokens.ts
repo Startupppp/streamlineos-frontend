@@ -87,6 +87,11 @@ const FALLBACK_TOKEN: CrmTokenClasses = {
   chartHex: "#64748b",
 };
 
-export function getCrmTokenClasses(token: string): CrmTokenClasses {
-  return TOKEN_MAP[token as CrmColorToken] ?? FALLBACK_TOKEN;
+function isCrmColorToken(token: string): token is CrmColorToken {
+  return Object.hasOwn(TOKEN_MAP, token);
+}
+
+export function getCrmTokenClasses(token: string | null): CrmTokenClasses {
+  if (token === null || !isCrmColorToken(token)) return FALLBACK_TOKEN;
+  return TOKEN_MAP[token];
 }

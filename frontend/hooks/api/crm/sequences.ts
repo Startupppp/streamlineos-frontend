@@ -32,6 +32,8 @@ interface StepsResponse {
 
 interface EnrollmentsResponse {
   enrollments: CrmSequenceEnrollment[];
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export function useCrmSequences() {
@@ -122,11 +124,11 @@ export function useDeleteCrmSequenceStep(sequenceId: string) {
   });
 }
 
-export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
+export function useCrmSequenceEnrollments(sequenceId: string, cursor?: string) {
   return useGatedQuery("crm:sequences:manage", {
-    queryKey: queryKeys.crmSequences.enrollments(sequenceId, page),
+    queryKey: queryKeys.crmSequences.enrollments(sequenceId, cursor),
     queryFn: ({ signal }) =>
-      apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, { page }, signal, enrollmentsListLazy),
+      apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, cursor ? { cursor } : undefined, signal, enrollmentsListLazy),
     enabled: !!sequenceId,
     staleTime: 30_000,
   });

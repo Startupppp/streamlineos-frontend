@@ -112,7 +112,7 @@ export interface LeadFilters {
   search?: string;
   sortBy?: "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt";
   sortOrder?: "asc" | "desc";
-  page?: number;
+  cursor?: string;
   limit?: number;
   dateFrom?: string;
   dateTo?: string;

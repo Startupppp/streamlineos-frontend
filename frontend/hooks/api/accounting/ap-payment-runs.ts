@@ -39,6 +39,7 @@ export interface PaymentRunSummary {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  itemCount?: number;
 }
 
 export interface PaymentRunItem {
@@ -202,7 +203,7 @@ export function useUpdatePaymentRunItem(runId: number, itemId: number) {
 
 export function useCreateVendorPaymentAllocation() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, CreateVendorPaymentAllocationInput>("accounting:payables:manage", {
+  return useAuthorizedMutation<{ vendorPaymentId: number; allocated: number }, Error, CreateVendorPaymentAllocationInput>("accounting:payables:manage", {
     mutationKey: ["create-vendor-payment-allocation"],
     mutationFn: (body) =>
       apiClient.post("/accounting/vendor-payments/allocations", body, undefined, vendorPaymentAllocateContract),

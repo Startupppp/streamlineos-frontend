@@ -50,9 +50,9 @@ const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: customerWorkQueryKeys.leads.list(filters as Record<string, unknown>),
+    queryKey: customerWorkQueryKeys.leads.list(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>, signal, leadListLazy),
+      apiClient.get<PaginatedLeads>("/leads", filters, signal, leadListLazy),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
@@ -80,7 +80,7 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.stats(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>, signal, leadStatsLazy),
+      apiClient.get<LeadStats>("/leads/stats", filters, signal, leadStatsLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -110,7 +110,7 @@ export function useLeadAnalyticsSummary(filters?: {
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.analyticsSummary(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>, signal, leadsAnalyticsLazy),
+      apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters, signal, leadsAnalyticsLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -291,23 +291,11 @@ export function useSalesTeamCapacity() {
   });
 }
 
-interface DuplicateCheckResult {
-  duplicates: Array<{
-    id: number;
-    name: string;
-    email: string | null;
-    phone: string | null;
-    company: string | null;
-    status: string;
-    createdAt: string | null;
-  }>;
-}
-
 export function useCheckLeadDuplicates(params: { email?: string; phone?: string }, options?: { enabled?: boolean }) {
   const hasParams = !!(params.email || params.phone);
   return useQuery({
     queryKey: [...customerWorkQueryKeys.leads.all, "duplicateCheck", params] as const,
-    queryFn: ({ signal }) => apiClient.get<DuplicateCheckResult>("/leads/check-duplicates", params as Record<string, unknown>, signal, leadsDuplicateLazy),
+    queryFn: ({ signal }) => apiClient.get("/leads/check-duplicates", params, signal, leadsCheckDuplicatesLazy),
     enabled: hasParams && (options?.enabled !== false),
     staleTime: 30_000,
   });

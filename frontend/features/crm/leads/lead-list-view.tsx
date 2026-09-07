@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useLeadLayout } from "./use-lead-layout";
@@ -40,10 +41,13 @@ const LostModal = dynamic(
 
 interface LeadListViewProps {
   leads: Lead[];
-  totalCount: number;
-  page: number;
+  totalCount: number | undefined;
+  cursorPage: number;
+  hasMore: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  onResetPage: () => void;
   pageSize: number;
-  onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   isLoading: boolean;
   isError: boolean;
@@ -66,10 +70,12 @@ interface PendingLead {
 
 export function LeadListView({
   leads,
-  totalCount,
-  page,
+  cursorPage,
+  hasMore,
+  onPrevious,
+  onNext,
+  onResetPage,
   pageSize,
-  onPageChange,
   onPageSizeChange,
   isLoading,
   isError,
@@ -142,10 +148,10 @@ export function LeadListView({
   const handleBulkDelete = useCallback(
     (leadIds: number[]) => {
       mutations.bulkDelete(leadIds, () => {
-        if (page > 1) onPageChange(1);
+        if (cursorPage > 1) onResetPage();
       });
     },
-    [mutations, page, onPageChange],
+    [mutations, cursorPage, onResetPage],
   );
 
   const handleConversionClose = useCallback(() => setConverting(null), []);
@@ -246,16 +252,21 @@ export function LeadListView({
         money={money}
         minWidth="1280px"
         className={CONTENT_FILL_PANEL}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize,
-          total: totalCount,
-          onPageChange,
-          onPageSizeChange,
-          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-        }}
+        pagination={{ pageSize }}
       />
+
+      {(cursorPage > 1 || hasMore) ? (
+        <CursorPageControls
+          page={cursorPage}
+          hasNext={hasMore}
+          disabled={isLoading}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          pageSize={pageSize}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+        />
+      ) : null}
 
       {selectedIds.size > 0 && (
         <BulkActionsBar

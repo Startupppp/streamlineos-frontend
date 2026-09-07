@@ -25,10 +25,12 @@ export interface AccountingSettings {
   orgId: string;
   baseCurrency: string;
   fiscalYearStartMonth: number;
-  accountingBasis: AccountingBasis;
-  taxRegistration: Record<string, unknown> | null;
+  accountingBasis: string;
+  taxRegistration: unknown;
   coaTemplate: string | null;
-  paymentTerms?: PaymentTerm[];
+  setupCompletedAt: string | null;
+  retainedEarningsAccountId: number | null;
+  paymentTerms: PaymentTerm[];
   createdAt: string;
   updatedAt: string;
 }
@@ -40,7 +42,7 @@ export interface SetupStatus {
 export interface NumberSequence {
   id: number | null;
   orgId: string;
-  entityType: SequenceEntityType;
+  entityType: string;
   prefix: string;
   padding: number;
   nextNumber: number;
@@ -68,14 +70,15 @@ export type SystemAccountPurpose =
   | "ASSET_DISPOSAL_GAIN_LOSS";
 
 export interface SystemAccountMapping {
-  purpose: SystemAccountPurpose;
+  purpose: string;
+  mapped: boolean;
   accountId: number | null;
-  account: {
-    id: number;
-    code: string;
-    name: string;
-    accountType: string;
-  } | null;
+  accountCode: string | null;
+  accountName: string | null;
+  accountType: string | null;
+  suggestedAccountId: number | null;
+  suggestedAccountCode: string | null;
+  suggestedAccountName: string | null;
 }
 
 export interface UpdateSettingsInput {

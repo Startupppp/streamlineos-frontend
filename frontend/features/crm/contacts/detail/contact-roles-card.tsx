@@ -73,7 +73,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
     and nothing else, rather than an empty picker or a 403 on submit.
   */
   const { data: deals = [] } = useDeals({ limit: 100 });
-  const { data: orgsData } = useCrmOrganizations({ page: 1, limit: 100 });
+  const { data: orgsData } = useCrmOrganizations({ pageSize: 100 });
 
   const entityOptions = useMemo<ComboboxOption[]>(
     () => [
