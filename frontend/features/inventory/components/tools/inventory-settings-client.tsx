@@ -28,9 +28,9 @@ const settingsSchema = z.object({
   expiryReservationPolicy: z.enum(["BLOCK", "WARN", "ALLOW"]),
   inspectionOnReceipt: z.boolean(),
   inspectionOnReturn: z.boolean(),
-  overReceiptTolerancePct: z.number().min(0).max(100),
+  overReceiptTolerancePct: z.string(),
   requirePoApproval: z.boolean(),
-  adjustmentApprovalThreshold: z.number().min(0),
+  adjustmentApprovalThreshold: z.string().nullable(),
   autoReserveOnConfirm: z.boolean(),
   allowPartialShipment: z.boolean(),
   packageRequiredForShipping: z.boolean(),
@@ -62,7 +62,7 @@ export function InventorySettingsClient() {
   React.useEffect(
     function populateForm() {
       if (settings) {
-        reset(settings as SettingsFormValues);
+        reset(settings);
       }
     },
     [settings, reset],
@@ -83,7 +83,7 @@ export function InventorySettingsClient() {
 
   async function onSubmit(values: SettingsFormValues): Promise<void> {
     try {
-      await updateMutation.mutateAsync(values as InventorySettings);
+      await updateMutation.mutateAsync(values);
       toast.success("Settings saved.");
       reset(values);
     } catch (err) {

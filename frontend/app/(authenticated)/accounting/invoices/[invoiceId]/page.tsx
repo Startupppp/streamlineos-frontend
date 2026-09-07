@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { use } from "react";
 import { InvoiceDetailContent } from "@/features/accounting/sales/invoice-detail-view";

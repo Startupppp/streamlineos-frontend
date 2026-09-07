@@ -32,15 +32,19 @@ const STEP_LABELS: Record<Step, string> = {
   done: "4. Done",
 };
 
+function isJobStatus(s: string): s is JobStatus {
+  return s === "PENDING" || s === "PROCESSING" || s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
+}
+
 interface ImportJobRow {
   id: number;
-  importType: string;
-  status: JobStatus;
+  jobType: string;
+  status: string;
   totalRows: number;
   processedRows: number;
-  errorCount: number;
+  errorRows: number;
   createdAt: string;
-  completedAt: string | null;
+  updatedAt: string;
 }
 
 const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
@@ -51,17 +55,17 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => job.id,
   },
   {
-    key: "importType",
+    key: "jobType",
     header: "Type",
     className: "text-xs capitalize",
-    cell: (job) => job.importType,
+    cell: (job) => job.jobType,
   },
   {
     key: "status",
     header: "Status",
     cell: (job) => (
-      <Badge className={JOB_STATUS_BADGE[job.status]}>
-        {JOB_STATUS_LABEL[job.status]}
+      <Badge className={isJobStatus(job.status) ? JOB_STATUS_BADGE[job.status] : ""}>
+        {isJobStatus(job.status) ? JOB_STATUS_LABEL[job.status] : job.status}
       </Badge>
     ),
   },
@@ -78,11 +82,11 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => job.processedRows,
   },
   {
-    key: "errorCount",
+    key: "errorRows",
     header: "Errors",
     cell: (job) => (
-      <span className={`text-xs ${job.errorCount > 0 ? "text-status-danger-ink font-medium" : ""}`}>
-        {job.errorCount}
+      <span className={`text-xs ${job.errorRows > 0 ? "text-status-danger-ink font-medium" : ""}`}>
+        {job.errorRows}
       </span>
     ),
   },
@@ -93,10 +97,10 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => new Date(job.createdAt).toLocaleDateString(),
   },
   {
-    key: "completedAt",
-    header: "Completed",
+    key: "updatedAt",
+    header: "Updated",
     className: "text-xs text-muted-foreground",
-    cell: (job) => (job.completedAt ? new Date(job.completedAt).toLocaleDateString() : "—"),
+    cell: (job) => new Date(job.updatedAt).toLocaleDateString(),
   },
 ];
 

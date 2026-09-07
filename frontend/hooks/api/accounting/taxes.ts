@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   TaxCode,
+  TaxType,
   TaxDashboard,
   TaxReportLine,
   LiabilitySummaryResponse,
@@ -86,7 +87,7 @@ export interface CreateTaxCodeInput {
   name: string;
   code: string;
   rate: string;
-  taxType: TaxCode["taxType"];
+  taxType: TaxType;
   isReverseCharge?: boolean;
   collectedAccountId?: number;
   paidAccountId?: number;
@@ -225,7 +226,7 @@ export function useCreateTaxPayment() {
 
 export function useDeleteTaxPayment() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("accounting:taxes:pay", {
+  return useAuthorizedMutation<{ archived: boolean }, Error, number>("accounting:taxes:pay", {
     mutationKey: ["accounting", "taxes", "payments", "delete"],
     mutationFn: (paymentId) =>
       apiClient.delete(`/accounting/taxes/payments/${paymentId}`, undefined, undefined, taxPaymentDeleteContract),
@@ -237,7 +238,7 @@ export function useDeleteTaxPayment() {
 
 export function useCreateTaxAdjustment() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ journalEntryId: number; entryNumber: string }, Error, CreateTaxAdjustmentInput>("accounting:taxes:manage", {
+  return useAuthorizedMutation<{ entryId: number; entryNumber: string }, Error, CreateTaxAdjustmentInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "taxes", "adjustments", "create"],
     mutationFn: (data) =>
       apiClient.post(

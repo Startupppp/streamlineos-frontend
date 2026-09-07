@@ -141,7 +141,7 @@ export function ForecastPage() {
   const [compareIds, setCompareIds] = useState<Set<number>>(new Set());
 
   const scenariosQuery = useScenarios();
-  const scenarios = scenariosQuery.data?.items ?? [];
+  const scenarios = scenariosQuery.data ?? [];
 
   const forecastQuery = useForecast({
     weeks,

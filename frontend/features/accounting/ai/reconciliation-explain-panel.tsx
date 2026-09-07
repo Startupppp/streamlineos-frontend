@@ -4,29 +4,16 @@ import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiDraftCard, AiGeneratedLabel, AiFailureBody } from "@/components/ai";
 import { useExplainReconciliation } from "@/hooks/api/accounting/accounting-ai";
-import type { AiNarrationFactor } from "@/hooks/api/accounting/accounting-ai";
 
 interface ReconciliationExplainPanelProps {
   matchId: number;
   className?: string;
 }
 
-function FactorRow({ factor }: { factor: AiNarrationFactor }) {
+function FactorRow({ factor }: { factor: string }) {
   return (
     <li className="flex items-start gap-2 text-xs">
-      <span
-        className={cn(
-          "mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-micro font-medium",
-          factor.isFactual
-            ? "bg-status-success-surface text-status-success-ink"
-            : "bg-status-warning-surface text-status-warning-ink",
-        )}
-      >
-        {factor.isFactual ? "Fact" : "Inference"}
-      </span>
-      <span className="text-muted-foreground leading-relaxed">
-        <span className="font-medium text-foreground">{factor.label}:</span> {factor.value}
-      </span>
+      <span className="text-muted-foreground leading-relaxed">{factor}</span>
     </li>
   );
 }

@@ -21,18 +21,11 @@ export function depreciationRunColumns(
       ),
     },
     {
-      key: "assetCount",
-      header: "Assets",
-      className: "text-right tabular-nums",
-      headerClassName: "text-right",
-      cell: (run) => run.assetCount,
-    },
-    {
-      key: "totalDepreciation",
+      key: "totalAmount",
       header: "Total Depr.",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (run) => <Money value={parseFloat(run.totalDepreciation)} />,
+      cell: (run) => <Money value={parseFloat(run.totalAmount)} />,
     },
     {
       key: "status",
@@ -58,11 +51,11 @@ export function depreciationRunColumns(
         ),
     },
     {
-      key: "postedBy",
-      header: "Posted By",
+      key: "createdBy",
+      header: "Created By",
       className: "hidden lg:table-cell text-muted-foreground",
       headerClassName: "hidden lg:table-cell",
-      cell: (run) => run.postedBy ?? "—",
+      cell: (run) => run.createdBy,
     },
     {
       key: "postedAt",

@@ -22,33 +22,17 @@ const physicalAuditDetailContract = lazyContract(() =>
 
 export interface CycleCountLine {
   id: number;
-  countId: number;
   productVariantId: number;
-  locationId: number | null;
+  locationId: number;
   lotId: number | null;
-  serialId: number | null;
   systemQty: string;
   countedQty: string | null;
-  variance: string | null;
-  notes: string | null;
-  productVariant?: { id: number; name: string; sku: string };
+  varianceQty: string | null;
+  productVariant?: { id: number; name: string; sku: string; product: { id: number; name: string; sku: string } };
   location?: { id: number; name: string; code: string };
 }
 
-export interface PhysicalAuditLine {
-  id: number;
-  auditId: number;
-  productVariantId: number;
-  locationId: number | null;
-  lotId: number | null;
-  serialId: number | null;
-  systemQty: string;
-  countedQty: string | null;
-  variance: string | null;
-  notes: string | null;
-  productVariant?: { id: number; name: string; sku: string };
-  location?: { id: number; name: string; code: string };
-}
+export type PhysicalAuditLine = CycleCountLine;
 
 interface CycleCount {
   id: number;

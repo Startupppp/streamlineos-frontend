@@ -244,7 +244,7 @@ export function ReconciliationClient() {
                             <p className="text-dense text-muted-foreground tabular-nums">
                               {txn.txnDate}
                             </p>
-                            <TruncatedText text={txn.description} className="text-xs font-medium text-foreground mt-0.5" />
+                            <TruncatedText text={txn.description ?? ""} className="text-xs font-medium text-foreground mt-0.5" />
                           </div>
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <Money

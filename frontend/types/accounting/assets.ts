@@ -11,6 +11,7 @@ export type DepreciationMethod =
 
 export interface AssetCategory {
   id: number;
+  orgId: string;
   name: string;
   assetAccountId: number;
   depreciationExpenseAccountId: number;
@@ -18,6 +19,7 @@ export interface AssetCategory {
   defaultMethod: DepreciationMethod;
   defaultUsefulLifeMonths: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCategoryInput {
@@ -35,11 +37,12 @@ export interface UpdateCategoryInput {
   depreciationExpenseAccountId?: number;
   accumulatedDepreciationAccountId?: number;
   defaultMethod?: DepreciationMethod;
-  defaultUsefulLifeMonths?: number | null;
+  defaultUsefulLifeMonths?: number;
 }
 
 export interface Asset {
   id: number;
+  orgId: string;
   assetNumber: string;
   name: string;
   categoryId: number;
@@ -47,16 +50,16 @@ export interface Asset {
   acquisitionCost: string;
   salvageValue: string;
   usefulLifeMonths: number;
-  depreciationMethod: string;
-  accumulatedDepreciation: string;
+  depreciationMethod: DepreciationMethod;
+  vendorId: number | null;
+  billId: number | null;
   status: AssetStatus;
-  vendorId?: number;
-  billId?: number;
-  activatedAt: string | null;
+  accumulatedDepreciation: string;
   disposedAt: string | null;
-  disposalProceeds: string | null;
-  disposalGainLoss: string | null;
+  disposalAmount: string | null;
+  disposalJournalEntryId: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface AssetListItem {
@@ -66,38 +69,38 @@ export interface AssetListItem {
 
 export interface DepreciationScheduleRow {
   id: number;
+  orgId: string;
+  assetId: number;
   periodKey: string;
   amount: string;
+  runId: number | null;
+  journalEntryId: number | null;
   status: "SCHEDULED" | "POSTED";
-  journalEntryId?: number;
 }
 
-export interface AssetDetail extends Asset {
-  schedule: DepreciationScheduleRow[];
+export interface AssetDetail {
+  asset: Asset;
+  category: AssetCategory | null;
+  schedules: DepreciationScheduleRow[];
 }
 
 export interface CreateAssetInput {
-  assetNumber?: string;
   name: string;
   categoryId: number;
   acquisitionDate: string;
-  acquisitionCost: number;
-  salvageValue: number;
+  acquisitionCost: string;
+  salvageValue?: string;
   usefulLifeMonths: number;
-  depreciationMethod: DepreciationMethod;
+  depreciationMethod?: DepreciationMethod;
   vendorId?: number;
   billId?: number;
 }
 
 export interface UpdateAssetInput {
   name?: string;
-  acquisitionDate?: string;
-  acquisitionCost?: number;
-  salvageValue?: number;
+  categoryId?: number;
+  salvageValue?: string;
   usefulLifeMonths?: number;
-  depreciationMethod?: DepreciationMethod;
-  vendorId?: number;
-  billId?: number;
 }
 
 export interface DisposeAssetInput {
@@ -105,21 +108,32 @@ export interface DisposeAssetInput {
   amount: string;
 }
 
-export type DepreciationRunStatus = "PENDING" | "COMPLETED" | "REVERSED";
+export interface AssetDisposeResult {
+  assetId: number;
+  journalEntryId: number;
+  entryNumber: string;
+}
+
+export type DepreciationRunStatus = "DRAFT" | "POSTED";
 
 export interface DepreciationRun {
   id: number;
+  orgId: string;
   periodKey: string;
-  assetCount: number;
-  totalDepreciation: string;
   status: DepreciationRunStatus;
+  totalAmount: string;
   journalEntryId: number | null;
-  postedBy: string | null;
+  createdBy: string;
   postedAt: string | null;
-  reversedAt: string | null;
   createdAt: string;
 }
 
 export interface CreateRunInput {
   periodKey: string;
+}
+
+export interface DepreciationRunReverseResult {
+  runId: number;
+  reversalEntryId: number;
+  reversalEntryNumber: string;
 }

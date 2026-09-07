@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const importProgressContract = z.object({
   crmImportId: z.string(),
-  status: z.string(),
+  status: z.enum(["previewing", "committing", "committed", "reverting", "reverted", "failed"] as const),
   workflowRunId: z.string().nullable(),
   runStatus: z.string().nullable(),
   complete: z.boolean(),

@@ -29,6 +29,7 @@ const orgTimelineLazy = lazyContract(() => import("@/hooks/api/crm/organizations
 const orgRelatedLeadsLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgRelatedLeadsContract));
 const orgMergeResultLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgMergeResultContract));
 const deleteOrgLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.deleteOrgContract));
+const crmPeopleSlugsLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.crmPeopleSlugsContract));
 
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
@@ -153,7 +154,7 @@ export function useCrmPeopleSlugs() {
   const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.crm.peopleSlugs(),
-    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs", undefined, signal, crmOrgDetailLazy),
+    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs", undefined, signal, crmPeopleSlugsLazy),
     staleTime: 2 * 60_000,
     enabled: canView,
   });

@@ -60,13 +60,26 @@ const CHANNEL_TYPE_LABELS: Record<string, string> = {
   THREE_PL: "3PL",
 };
 
+type ChannelTypeValue = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
+const VALID_CHANNEL_TYPES: readonly ChannelTypeValue[] = ["INTERNAL", "SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"];
+
+function toChannelType(v: string | undefined): ChannelTypeValue {
+  const found = VALID_CHANNEL_TYPES.find((t) => t === v);
+  return found ?? "INTERNAL";
+}
+
+function toChannelStatus(v: string | undefined): "ACTIVE" | "PAUSED" {
+  if (v === "ACTIVE" || v === "PAUSED") return v;
+  return "ACTIVE";
+}
+
 function buildDefaultValues(channel?: Channel): ChannelFormValues {
   return {
     name: channel?.name ?? "",
-    channelType: channel?.channelType ?? "INTERNAL",
-    status: channel?.status ?? "ACTIVE",
-    safetyBuffer: channel?.safetyBuffer != null ? String(channel.safetyBuffer) : "",
-    publishThreshold: channel?.publishThreshold != null ? String(channel.publishThreshold) : "",
+    channelType: toChannelType(channel?.type),
+    status: toChannelStatus(channel?.status),
+    safetyBuffer: channel?.safetyBuffer ?? "",
+    publishThreshold: channel?.publishThreshold ?? "",
     warehouseIds: channel?.warehouseIds ?? [],
   };
 }

@@ -1,4 +1,4 @@
-﻿export const KNOWLEDGE_ROOT = "/knowledge";
+export const KNOWLEDGE_ROOT = "/knowledge";
 export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
 
 export function pageHref(id: number): string {

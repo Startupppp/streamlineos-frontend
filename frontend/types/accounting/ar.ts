@@ -1,16 +1,6 @@
 import type { ArPayment } from "@/hooks/api/accounting/ar-schema";
 export type { ArPayment };
 
-export type ArInvoiceStatus =
-  | "DRAFT"
-  | "ISSUED"
-  | "SENT"
-  | "PARTIALLY_PAID"
-  | "PAID"
-  | "OVERDUE"
-  | "FAILED"
-  | "VOIDED";
-
 export type ArPaymentMethod =
   | "bank_transfer"
   | "upi"
@@ -18,36 +8,6 @@ export type ArPaymentMethod =
   | "cash"
   | "card"
   | "other";
-
-export interface ArInvoiceClient {
-  id: number;
-  name: string;
-}
-
-export interface ArInvoiceProject {
-  id: number;
-  name: string;
-}
-
-export interface ArInvoice {
-  id: number;
-  invoiceNumber: string;
-  orgId: number;
-  clientId: number | null;
-  projectId: number | null;
-  status: ArInvoiceStatus;
-  total: string;
-  amountPaid: string;
-  currency: string;
-  dueDate: string | null;
-  createdAt: string;
-  collectionOwnerId: string | null;
-  promiseToPayDate: string | null;
-  client: ArInvoiceClient | null;
-  project: ArInvoiceProject | null;
-  creator: { id: number; name: string } | null;
-  payments?: ArPayment[];
-}
 
 export interface PaymentAllocation {
   invoiceId: number;
@@ -102,16 +62,18 @@ export type RecurringFrequency =
 export interface RecurringInvoiceTemplate {
   id: number;
   name: string;
-  orgId: number;
+  orgId: string;
   clientId: number | null;
-  frequency: RecurringFrequency;
+  frequency: string;
   nextRunDate: string | null;
   endDate: string | null;
   lastRunDate: string | null;
   payload: Record<string, unknown>;
   isActive: boolean;
-  createdBy: number | null;
+  archivedAt: string | null;
+  createdBy: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateRecurringTemplateInput {
@@ -131,13 +93,15 @@ export type ReminderChannel = "EMAIL" | "WHATSAPP";
 
 export interface ReminderPolicy {
   id: number;
-  orgId: number;
+  orgId: string;
   name: string;
   offsets: number[];
   channel: ReminderChannel;
   template: string | null;
   isActive: boolean;
+  archivedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateReminderPolicyInput {
@@ -153,24 +117,27 @@ export type UpdateReminderPolicyInput = Partial<CreateReminderPolicyInput> & {
 
 export interface ReminderLogEntry {
   id: number;
-  orgId: number;
+  orgId: string;
   invoiceId: number;
-  channel: string;
+  scheduledAt: string;
+  sentAt: string | null;
+  paidAt: string | null;
+  channel: ReminderChannel;
   offsetDays: number;
   status: string;
-  sentAt: string | null;
 }
 
 export type CollectionActivityType = "NOTE" | "PROMISE_TO_PAY" | "CALL" | "EMAIL";
 
 export interface CollectionActivity {
   id: number;
-  orgId: number;
+  orgId: string;
   clientId: number;
   invoiceId: number | null;
-  type: CollectionActivityType;
+  type: string;
   note: string | null;
   promisedDate: string | null;
+  createdBy: string;
   createdAt: string;
 }
 

@@ -66,8 +66,7 @@ function SequenceRow({
 
   return (
     <TableRow>
-      <TableCell className="text-xs font-mono text-muted-foreground">{seq.sequenceType}</TableCell>
-      <TableCell className="text-xs">{seq.label}</TableCell>
+      <TableCell className="text-xs font-mono text-muted-foreground">{seq.docType}</TableCell>
       <TableCell>
         <Input
           value={state.prefix}
@@ -151,7 +150,6 @@ export function NumberSequencesCard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Type</TableHead>
-                  <TableHead>Label</TableHead>
                   <TableHead>Prefix</TableHead>
                   <TableHead>Padding</TableHead>
                   <TableHead>Next #</TableHead>
@@ -160,12 +158,13 @@ export function NumberSequencesCard() {
               </TableHeader>
               <TableBody>
                 {(sequences ?? []).map(function renderSeq(seq) {
+                  const id = seq.id ?? 0;
                   return (
                     <SequenceRow
-                      key={seq.id}
+                      key={id}
                       seq={seq}
-                      onSave={(data) => handleSave(seq.id, data)}
-                      isSaving={savingId === seq.id}
+                      onSave={(data) => handleSave(id, data)}
+                      isSaving={savingId === id}
                     />
                   );
                 })}

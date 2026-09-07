@@ -113,7 +113,7 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
           toast.success("Draft PO created", {
             description: (
               <span>
-                PO #{result.purchaseOrderNumber} created for {group.vendorName}.{" "}
+                PO #{result.poNumber} created for {group.vendorName}.{" "}
                 <Link
                   href="/inventory/purchase-orders"
                   className="underline text-primary"

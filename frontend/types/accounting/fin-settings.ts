@@ -1,4 +1,4 @@
-﻿export type AccountingBasis = "ACCRUAL" | "CASH";
+export type AccountingBasis = "ACCRUAL" | "CASH";
 
 export type SequenceEntityType =
   | "journal"

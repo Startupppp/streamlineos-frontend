@@ -150,7 +150,7 @@ export function useApproveBudget(id: number) {
 
 export function useBudgetRevisions(id: number) {
   const can = useCan("accounting:budgets:read");
-  return useQuery<{ items: BudgetRevision[] }, Error>({
+  return useQuery<BudgetRevision[], Error>({
     queryKey: planningKeys.budgetRevisions(id),
     queryFn: ({ signal }) => apiClient.get(`/accounting/budgets/${id}/revisions`, undefined, signal, budgetRevisionListContract),
     staleTime: 30_000,

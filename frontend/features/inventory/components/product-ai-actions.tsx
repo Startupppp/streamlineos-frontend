@@ -23,7 +23,13 @@ interface ProductAiActionsProps {
   product: InventoryProduct;
 }
 
-function narrationToText(narration: InsightNarration): string {
+interface NarrationInput {
+  explanation: string;
+  factors: { label: string; value: string; isFactual: boolean }[];
+  suggestedActions: string[];
+}
+
+function narrationToText(narration: NarrationInput): string {
   const factual = narration.factors.filter((f) => f.isFactual);
   const suggestions = narration.factors.filter((f) => !f.isFactual);
 
@@ -114,8 +120,8 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
               reason: string;
               variantSku: string;
             };
-            explanation: InsightNarration;
-            proposal: { proposalId: string; expiresAt: string };
+            explanation: NarrationInput;
+            proposal: { proposalId: number; token: string; expiresAt: string };
           }>(
             "/inventory/ai/reorder-proposal",
             { variantId: String(firstVariant.id) },
@@ -136,7 +142,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
 
           const narration = narrationToText(response.explanation);
 
-          const draftNote = `\n\nDraft PO: Proposal ${response.proposal.proposalId.slice(0, 8)}… expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
+          const draftNote = `\n\nDraft PO: Proposal ${String(response.proposal.proposalId).slice(0, 8)}… expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
 
           return { text: `${evidenceText}\n\n${narration}${draftNote}` };
         },

@@ -19,7 +19,7 @@ import type { ChartDatum } from "@/features/accounting/taxes/tax-rate-chart";
 import { useTaxDashboard } from "@/hooks/api/accounting/taxes";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { TaxPayment, TaxRateGroup, TaxType } from "@/types/accounting/taxes";
+import type { RecentTaxPayment, TaxRateGroup, TaxType } from "@/types/accounting/taxes";
 
 const TaxRateChart = dynamic(
   () => import("@/features/accounting/taxes/tax-rate-chart").then((m) => ({ default: m.TaxRateChart })),
@@ -63,6 +63,14 @@ const TAX_TYPE_LABELS: Record<TaxType, string> = {
   ZERO_RATED: "Zero Rated",
 };
 
+function isTaxType(taxType: string): taxType is TaxType {
+  return Object.prototype.hasOwnProperty.call(TAX_TYPE_LABELS, taxType);
+}
+
+function getTaxTypeLabel(taxType: string): string {
+  return isTaxType(taxType) ? TAX_TYPE_LABELS[taxType] : taxType;
+}
+
 interface DueDateCardProps {
   label: string;
   dueDate: string;
@@ -92,7 +100,7 @@ function DueDateCard({ label, dueDate, href }: DueDateCardProps) {
 }
 
 interface RecentPaymentRowProps {
-  payment: TaxPayment;
+  payment: RecentTaxPayment;
 }
 
 function RecentPaymentRow({ payment }: RecentPaymentRowProps) {
@@ -100,7 +108,7 @@ function RecentPaymentRow({ payment }: RecentPaymentRowProps) {
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-2">
         <Badge variant="secondary" className="text-micro shrink-0">
-          {TAX_TYPE_LABELS[payment.taxType]}
+          {getTaxTypeLabel(payment.taxType)}
         </Badge>
         <span className="text-xs text-muted-foreground">
           {payment.periodStart} – {payment.periodEnd}

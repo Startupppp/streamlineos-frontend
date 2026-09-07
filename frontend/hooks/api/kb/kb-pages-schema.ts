@@ -39,6 +39,12 @@ const kbPageBaseContract = z.object({
   sourceArticleId: z.number().int().nullable(),
 });
 
+export const kbPageContract = kbPageBaseContract;
+
+export const kbPageListItemContract = kbPageBaseContract.omit({ content: true, contentText: true });
+
+export const kbPageListContract = z.array(kbPageListItemContract);
+
 export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),

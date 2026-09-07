@@ -8,6 +8,9 @@ import { lazyContract } from "@/lib/api-envelope";
 const publicNpsSurveyLazy = lazyContract(() =>
   import("@/hooks/api/crm/nps-schema").then((m) => m.publicNpsSurveyContract),
 );
+const submitNpsResponseLazy = lazyContract(() =>
+  import("@/hooks/api/crm/nps-schema").then((m) => m.submitNpsResponseContract),
+);
 
 export type NpsSurveyStatus = "draft" | "active" | "closed";
 

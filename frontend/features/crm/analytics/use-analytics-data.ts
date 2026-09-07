@@ -103,11 +103,11 @@ export function useAnalyticsData(dateRange: DateRange) {
   const funnelData = useMemo((): FunnelEntry[] => {
     if (!leadStats) return [];
     return [
-      { name: "New", value: leadStats.byStatus.NEW, fill: "#3B82F6" },
-      { name: "Contacted", value: leadStats.byStatus.CONTACTED, fill: "#0EA5E9" },
-      { name: "Interested", value: leadStats.byStatus.INTERESTED, fill: "#F59E0B" },
-      { name: "Qualified", value: leadStats.byStatus.QUALIFIED, fill: "#60a5fa" },
-      { name: "Converted", value: leadStats.byStatus.CONVERTED, fill: "#10B981" },
+      { name: "New", value: leadStats.byStatus.NEW ?? 0, fill: "#3B82F6" },
+      { name: "Contacted", value: leadStats.byStatus.CONTACTED ?? 0, fill: "#0EA5E9" },
+      { name: "Interested", value: leadStats.byStatus.INTERESTED ?? 0, fill: "#F59E0B" },
+      { name: "Qualified", value: leadStats.byStatus.QUALIFIED ?? 0, fill: "#60a5fa" },
+      { name: "Converted", value: leadStats.byStatus.CONVERTED ?? 0, fill: "#10B981" },
     ].filter((s) => s.value > 0);
   }, [leadStats]);
 

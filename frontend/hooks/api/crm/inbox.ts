@@ -14,6 +14,9 @@ const inboxLazy = lazyContract(() =>
 const inboxCountsLazy = lazyContract(() =>
   import("@/hooks/api/crm/inbox-schema").then((m) => m.inboxCountsContract),
 );
+const dismissInboxItemLazy = lazyContract(() =>
+  import("@/hooks/api/crm/inbox-schema").then((m) => m.dismissInboxItemContract),
+);
 
 export function useInbox() {
   return useGatedQuery("crm:leads:view", {

@@ -1,4 +1,4 @@
-﻿import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
 

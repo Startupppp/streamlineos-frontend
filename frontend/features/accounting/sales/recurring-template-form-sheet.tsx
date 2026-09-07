@@ -37,6 +37,10 @@ const recurringTemplateSchema = z.object({
 
 type TemplateFormValues = z.infer<typeof recurringTemplateSchema>;
 
+function isRecurringFrequency(value: string): value is TemplateFormValues["frequency"] {
+  return value === "DAILY" || value === "WEEKLY" || value === "MONTHLY" || value === "QUARTERLY" || value === "YEARLY";
+}
+
 interface RecurringTemplateFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -55,7 +59,7 @@ export function RecurringTemplateFormSheet({
   const customersData = customersQuery.data;
   const customerOptions: ComboboxOption[] = (customersData?.data ?? []).map((c) => ({
     value: String(c.clientId),
-    label: c.clientName,
+    label: c.clientName ?? "Unnamed customer",
   }));
 
   const defaultValues: TemplateFormValues = useMemo(
@@ -66,7 +70,7 @@ export function RecurringTemplateFormSheet({
       return {
         name: template?.name ?? "",
         clientId: template?.clientId != null ? String(template.clientId) : "",
-        frequency: template?.frequency ?? "MONTHLY",
+        frequency: template && isRecurringFrequency(template.frequency) ? template.frequency : "MONTHLY",
         nextRunDate: template?.nextRunDate ?? "",
         endDate: template?.endDate ?? "",
         currency: payloadCurrency,

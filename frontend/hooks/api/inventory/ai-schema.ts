@@ -4,14 +4,12 @@ const insightContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   insightType: z.string(),
-  title: z.string(),
-  description: z.string(),
   severity: z.string(),
-  status: z.string(),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
-  resolvedAt: z.string().nullable(),
+  title: z.string(),
+  body: z.string(),
+  sourceRefs: z.record(z.string(), z.unknown()).nullable(),
+  status: z.enum(["NEW", "ACKNOWLEDGED", "DISMISSED"]),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const listInsightsContract = z.object({
@@ -34,16 +32,17 @@ export const generateInsightsContract = z.object({
 
 export const updateInsightStatusContract = insightContract;
 
+const explainFactorContract = z.object({
+  label: z.string(),
+  value: z.string(),
+  isFactual: z.boolean(),
+});
+
 export const explainInsightContract = z.object({
-  insightId: z.number().int(),
   explanation: z.string(),
-  recommendations: z.array(z.string()),
-  aiUsage: z.object({
-    promptTokens: z.number().int(),
-    completionTokens: z.number().int(),
-    totalTokens: z.number().int(),
-    creditsCharged: z.number(),
-  }).optional(),
+  factors: z.array(explainFactorContract),
+  suggestedActions: z.array(z.string()),
+  evidenceSnapshot: z.record(z.string(), z.unknown()),
 });
 
 export const digestContract = z.object({
@@ -58,40 +57,52 @@ export const digestContract = z.object({
 });
 
 export const reorderProposalContract = z.object({
-  proposals: z.array(z.object({
-    variantId: z.number().int(),
-    variantSku: z.string(),
-    variantName: z.string(),
-    productName: z.string(),
-    currentStock: z.number(),
-    suggestedOrderQty: z.number(),
-    suggestedVendorId: z.number().int().nullable(),
+  evidence: z.object({
+    currentOnHand: z.number(),
+    forecasted: z.number(),
+    suggestedQty: z.number(),
+    leadTimeDays: z.number(),
+    expectedDate: z.string().nullable(),
     reason: z.string(),
-  })),
-  aiUsage: z.object({
-    promptTokens: z.number().int(),
-    completionTokens: z.number().int(),
-    totalTokens: z.number().int(),
-    creditsCharged: z.number(),
-  }).optional(),
+    variantSku: z.string(),
+  }),
+  explanation: z.object({
+    explanation: z.string(),
+    factors: z.array(explainFactorContract),
+    suggestedActions: z.array(z.string()),
+  }),
+  proposal: z.object({
+    proposalId: z.number().int(),
+    token: z.string(),
+    expiresAt: z.string(),
+  }),
+});
+
+const vendorPerformanceContract = z.object({
+  vendorId: z.number().int(),
+  onTimeRate: z.number(),
+  fillRate: z.number(),
+  avgLeadTimeDays: z.number(),
+  returnRate: z.number(),
+  openPoCount: z.number().int(),
+  totalSpend: z.string(),
+});
+
+const vendorInsightItemContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  body: z.string(),
+  severity: z.string(),
 });
 
 export const supplierDelayBriefingContract = z.object({
-  briefing: z.string(),
-  affectedOrders: z.array(z.object({
-    poId: z.number().int(),
-    poNumber: z.string(),
+  vendors: z.array(z.object({
+    vendorId: z.number().int(),
     vendorName: z.string(),
-    expectedDeliveryDate: z.string().nullable(),
-    items: z.array(z.object({
-      variantSku: z.string(),
-      quantity: z.string(),
-    })),
+    insightCount: z.number().int(),
+    insights: z.array(vendorInsightItemContract),
+    performance: vendorPerformanceContract,
   })),
-  aiUsage: z.object({
-    promptTokens: z.number().int(),
-    completionTokens: z.number().int(),
-    totalTokens: z.number().int(),
-    creditsCharged: z.number(),
-  }).optional(),
+  narration: z.string(),
+  generatedAt: z.string(),
 });

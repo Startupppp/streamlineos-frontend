@@ -188,7 +188,7 @@ export function WebhookCreateSheet({ open, editingWebhook, onOpenChange }: Webho
                         <EventCheckbox
                           key={evt}
                           evt={evt}
-                          label={WEBHOOK_EVENT_LABELS[evt]}
+                          label={WEBHOOK_EVENT_LABELS[evt] ?? evt}
                           mono={evt}
                           checked={field.value.includes(evt)}
                           onToggle={handleEventToggle}

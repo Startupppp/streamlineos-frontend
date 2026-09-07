@@ -7,6 +7,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CrmMetadataRaw,
   CrmMetadataResponse,
+  CrmPipeline,
   CrmPipelineWithStages,
   CrmPipelineStage,
   CrmOption,
@@ -134,7 +135,7 @@ export function useCreatePipeline() {
   return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "create"] as const,
     mutationFn: (input: Omit<CrmPipelineWithStages, "id" | "stages">) =>
-      apiClient.post<CrmPipelineWithStages>("/crm/pipelines", input, undefined, pipelineLazy),
+      apiClient.post<CrmPipeline>("/crm/pipelines", input, undefined, pipelineLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
     },
@@ -146,7 +147,7 @@ export function useUpdatePipeline() {
   return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
-      apiClient.patch<CrmPipelineWithStages>(`/crm/pipelines/${id}`, data, undefined, pipelineLazy),
+      apiClient.patch<CrmPipeline>(`/crm/pipelines/${id}`, data, undefined, pipelineLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
     },
@@ -312,7 +313,7 @@ export function useTestValidationRules() {
       pipelineId?: string;
       stageKey?: string;
       sourceKey?: string;
-    }) => apiClient.post<{ errors: Record<string, string> }>("/crm/validation-rules/test", input, undefined, testValidationLazy),
+    }) => apiClient.post<{ valid: boolean; errors: { field: string; ruleType: string; message: string }[] }>("/crm/validation-rules/test", input, undefined, testValidationLazy),
   });
 }
 
@@ -424,7 +425,7 @@ export function useTestTransition(blueprintId: string) {
       fromStageKey: string;
       toStageKey: string;
       sampleFields: Record<string, string>;
-    }) => apiClient.post<{ allowed: boolean; missing: string[] }>(`/crm/blueprints/${blueprintId}/test`, input, undefined, testTransitionLazy),
+    }) => apiClient.post<{ allowed: boolean; requiresApproval: boolean; missingFields: string[] }>(`/crm/blueprints/${blueprintId}/test`, input, undefined, testTransitionLazy),
   });
 }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";

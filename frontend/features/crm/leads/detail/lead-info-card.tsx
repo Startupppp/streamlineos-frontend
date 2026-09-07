@@ -126,7 +126,7 @@ export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadI
         </section>
       ) : null}
 
-      <CustomFieldsSection entityType="lead" values={lead.customFields ?? {}} />
+      <CustomFieldsSection entityType="lead" values={(lead.customData ?? {}) as Record<string, unknown>} />
     </div>
   );
 }

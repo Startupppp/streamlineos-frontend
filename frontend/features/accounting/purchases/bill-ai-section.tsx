@@ -21,24 +21,13 @@ interface BillAiSectionProps {
 function narrationToText(result: VarianceExplainResult): string {
   const parts: string[] = [];
 
-  const factual = result.factors.filter((f) => f.isFactual);
-  const inferred = result.factors.filter((f) => !f.isFactual);
-
-  if (factual.length > 0) {
+  if (result.factors.length > 0) {
     parts.push(
-      "Evidence (Factual):\n" +
-        factual.map((f) => `• ${f.label}: ${f.value}`).join("\n"),
+      "Contributing factors:\n" + result.factors.map((f) => `• ${f}`).join("\n"),
     );
   }
 
   parts.push(`AI Narration:\n${result.narration}`);
-
-  if (inferred.length > 0) {
-    parts.push(
-      "Inferences:\n" +
-        inferred.map((f) => `• ${f.label}: ${f.value}`).join("\n"),
-    );
-  }
 
   if (result.suggestedInvestigations.length > 0) {
     parts.push(

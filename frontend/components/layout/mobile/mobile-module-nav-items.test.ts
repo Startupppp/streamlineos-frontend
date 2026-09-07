@@ -1,4 +1,4 @@
-﻿import {
+import {
   LayoutDashboard,
   Inbox,
   CheckSquare,

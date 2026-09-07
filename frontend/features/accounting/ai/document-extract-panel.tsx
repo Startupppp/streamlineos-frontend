@@ -138,6 +138,12 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
     low: "text-status-danger-ink",
   };
 
+  function confidenceTier(confidence: number): "high" | "medium" | "low" {
+    if (confidence >= 0.8) return "high";
+    if (confidence >= 0.5) return "medium";
+    return "low";
+  }
+
   return (
     <div className={cn("space-y-4", className)}>
       {!mutation.data && (
@@ -184,15 +190,15 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               <span
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-micro font-medium border",
-                  mutation.data.confidence === "high"
+                  confidenceTier(mutation.data.confidence) === "high"
                     ? "border-status-success-rule bg-status-success-surface"
-                    : mutation.data.confidence === "medium"
+                    : confidenceTier(mutation.data.confidence) === "medium"
                       ? "border-status-warning-rule bg-status-warning-surface"
                       : "border-status-danger-rule bg-status-danger-surface",
-                  confidenceColors[mutation.data.confidence],
+                  confidenceColors[confidenceTier(mutation.data.confidence)],
                 )}
               >
-                {mutation.data.confidence} confidence
+                {Math.round(mutation.data.confidence * 100)}% confidence
               </span>
             </div>
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";

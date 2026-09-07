@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   EmptyChartIllustration,
@@ -10,6 +11,8 @@ import {
 } from "@/components/illustrations";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { Money, downloadCsv } from "@/features/accounting/shared";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney } from "@/lib/format-utils";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,6 +151,7 @@ interface LiabilitySectionProps {
 
 function LiabilitySection({ from, to }: LiabilitySectionProps) {
   const { data, isLoading, isError, refetch } = useTaxLiabilitySummary(from, to);
+  const display = useOrgDisplay();
 
   function handleRetryLiability(): void {
     void refetch();
@@ -156,7 +160,7 @@ function LiabilitySection({ from, to }: LiabilitySectionProps) {
   if (isError) return <ErrorState onRetry={handleRetryLiability} compact />;
   if (isLoading) return <LoadingState variant="table" />;
 
-  const rows = data?.rows ?? [];
+  const rows = data?.months ?? [];
 
   if (rows.length === 0) {
     return (
@@ -177,6 +181,13 @@ function LiabilitySection({ from, to }: LiabilitySectionProps) {
 
   return (
     <div className="space-y-4">
+      <StatCardGrid cols={4}>
+        <StatCard label="Output Tax" value={formatMoney(data?.totalOutputTax, display)} />
+        <StatCard label="Input Tax" value={formatMoney(data?.totalInputTax, display)} />
+        <StatCard label="Net Liability" value={formatMoney(data?.totalNetLiability, display)} />
+        <StatCard label="Payable Balance" value={formatMoney(data?.taxPayableBalance, display)} />
+      </StatCardGrid>
+
       <div>
         <p className="text-sm font-semibold mb-2">Monthly Breakdown</p>
         <DataTable
@@ -207,6 +218,13 @@ function LiabilitySection({ from, to }: LiabilitySectionProps) {
               key: "netLiability",
               header: "Net Liability",
               cell: (r) => <Money value={parseFloat(r.netLiability)} />,
+              className: "text-right",
+              headerClassName: "text-right",
+            },
+            {
+              key: "cumulativeUnpaid",
+              header: "Cumulative Unpaid",
+              cell: (r) => <Money value={parseFloat(r.cumulativeUnpaid)} />,
               className: "text-right",
               headerClassName: "text-right",
             },

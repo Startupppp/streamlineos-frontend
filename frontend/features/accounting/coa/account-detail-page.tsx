@@ -57,6 +57,14 @@ const STATUS_VARIANT: Record<
   PENDING_APPROVAL: "secondary",
 };
 
+function isJournalEntryStatus(status: string): status is JournalEntryStatus {
+  return Object.prototype.hasOwnProperty.call(STATUS_VARIANT, status);
+}
+
+function isAccountType(accountType: string): accountType is AccountType {
+  return Object.prototype.hasOwnProperty.call(TYPE_BADGE_CLASSES, accountType);
+}
+
 interface EditAccountDialogProps {
   account: Account;
   open: boolean;
@@ -232,7 +240,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
       key: "status",
       header: "Status",
       cell: (entry) => (
-        <Badge variant={STATUS_VARIANT[entry.status]}>{entry.status}</Badge>
+        <Badge variant={isJournalEntryStatus(entry.status) ? STATUS_VARIANT[entry.status] : "secondary"}>{entry.status}</Badge>
       ),
     },
     {
@@ -309,7 +317,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
                     </p>
                     <Badge
                       variant="outline"
-                      className={`mt-1.5 ${TYPE_BADGE_CLASSES[account.accountType]}`}
+                      className={`mt-1.5 ${isAccountType(account.accountType) ? TYPE_BADGE_CLASSES[account.accountType] : ""}`}
                     >
                       {account.accountType}
                     </Badge>

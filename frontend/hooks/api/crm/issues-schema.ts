@@ -1,26 +1,54 @@
 import { z } from "zod";
 
+const columnSpecSchema = z.object({
+  field: z.string(),
+  primary: z.boolean().optional(),
+  sortable: z.boolean().optional(),
+  width: z.string().optional(),
+  subtitle: z.string().optional(),
+});
+
+const sectionSpecSchema = z.object({
+  title: z.string(),
+  fields: z.array(z.string()),
+});
+
 const issueFieldSpecSchema = z.object({
   name: z.string(),
   label: z.string(),
-  type: z.string(),
+  kind: z.enum(["text", "email", "phone", "url", "number", "money", "percent", "date", "dateTime", "select", "badge", "boolean", "longText", "reference"] as const),
   required: z.boolean().optional(),
-  editable: z.boolean().optional(),
+  readOnly: z.boolean().optional(),
+  options: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
+  hint: z.string().optional(),
+  numeric: z.boolean().optional(),
+  sign: z.enum(["gain", "cost"] as const).optional(),
+  referenceTo: z.string().optional(),
+  referenceToField: z.string().optional(),
+  referenceLabel: z.string().optional(),
+  currencyField: z.string().optional(),
+  editOnly: z.boolean().optional(),
+  createOnly: z.boolean().optional(),
+  visibleWhen: z.object({ field: z.string(), values: z.array(z.string()) }).optional(),
 });
 
 const issueLayoutSchema = z.object({
   key: z.string(),
-  recordType: z.string(),
+  recordType: z.enum(["issue", "task", "complaint"] as const),
   singular: z.string(),
   plural: z.string(),
   titleField: z.string(),
   fields: z.array(issueFieldSpecSchema),
   list: z.object({
+    columns: z.array(columnSpecSchema),
     searchPlaceholder: z.string(),
-    columns: z.array(z.string()),
   }),
-  detail: z.record(z.string(), z.unknown()),
-  form: z.record(z.string(), z.unknown()),
+  detail: z.object({
+    sections: z.array(sectionSpecSchema),
+  }),
+  form: z.object({
+    sections: z.array(sectionSpecSchema),
+  }),
 });
 
 export const issueRecordTypesContract = z.object({
@@ -29,23 +57,8 @@ export const issueRecordTypesContract = z.object({
 
 const issueRecordRowSchema = z.object({
   issueRecordId: z.string(),
-  recordType: z.string(),
-  title: z.string(),
-  severity: z.string(),
-  stage: z.string(),
-  ownerUserId: z.string().nullable(),
-  partyId: z.string().nullable(),
-  partyName: z.string().nullable(),
-  dealId: z.number().int().nullable(),
-  dealTitle: z.string().nullable(),
-  dueAt: z.string().nullable(),
-  openedAt: z.string(),
-  acknowledgedAt: z.string().nullable(),
-  closedAt: z.string().nullable(),
-  ageDays: z.number(),
-  details: z.string().nullable(),
-  reference: z.string().nullable(),
-});
+  recordType: z.enum(["issue", "task", "complaint"] as const),
+}).catchall(z.unknown());
 
 const issueTransitionSchema = z.object({
   issueStageTransitionId: z.string(),

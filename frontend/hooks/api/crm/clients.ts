@@ -36,6 +36,9 @@ const clientOpportunitiesLazy = lazyContract(() =>
 const onboardingItemsLazy = lazyContract(() =>
   import("@/hooks/api/crm/clients-schema").then((m) => m.onboardingItemsListContract),
 );
+const onboardingItemLazy = lazyContract(() =>
+  import("@/hooks/api/crm/clients-schema").then((m) => m.onboardingItemContract),
+);
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useGatedQuery("crm:clients:read", {
     queryKey: queryKeys.clients.list(filters as Record<string, unknown>),
@@ -102,7 +105,7 @@ export function useToggleOnboardingItem() {
     mutationFn: ({ id, completed }: { id: number; completed: boolean; clientId: number }) =>
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
-      }, undefined, onboardingItemsLazy),
+      }, undefined, onboardingItemLazy),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }

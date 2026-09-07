@@ -6,14 +6,16 @@ const crmOrgSchema = z.object({
   name: z.string(),
   domain: z.string().nullable(),
   industry: z.string().nullable(),
-  size: z.string().nullable(),
+  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"] as const).nullable(),
   website: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   description: z.string().nullable(),
+  healthScore: z.number().nullable(),
   parentId: z.number().int().nullable(),
-  mergedIntoId: z.null().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  notes: z.string().nullable(),
+  mergedIntoId: z.number().int().nullable(),
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 const crmOrgWithOpenRequestsSchema = crmOrgSchema.extend({
@@ -58,14 +60,16 @@ export const crmOrgDuplicatesContract = z.object({
 
 export const crmOrgPotentialDuplicatesContract = z.array(potentialDuplicateSchema);
 
-export const orgHierarchyNodeSchema: z.ZodType<{
+interface OrgHierarchyNodeShape {
   id: number;
   name: string;
   industry: string | null;
   healthScore: number | null;
   parentId: number | null;
-  children: unknown[];
-}> = z.lazy(() =>
+  children: OrgHierarchyNodeShape[];
+}
+
+export const orgHierarchyNodeSchema: z.ZodType<OrgHierarchyNodeShape> = z.lazy(() =>
   z.object({
     id: z.number().int(),
     name: z.string(),
@@ -113,7 +117,9 @@ export const orgMergeResultContract = z.object({
   survivorId: z.number().int(),
   mergedId: z.number().int(),
   partyMergeId: z.string(),
-  conflicts: z.unknown(),
+  conflicts: z.record(z.string(), z.object({ kept: z.unknown(), discarded: z.unknown() })),
 });
+
+export const crmPeopleSlugsContract = z.record(z.string(), z.string());
 
 export const deleteOrgContract = z.object({ success: z.boolean() });

@@ -79,9 +79,10 @@ function NumberField({
   suffix?: string;
 }) {
   const { watch, setValue } = useFormContext<InventorySettings>();
-  const value = watch(name) as number;
+  const rawValue = watch(name);
+  const displayValue = rawValue !== null && rawValue !== undefined && rawValue !== false ? String(rawValue) : "";
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setValue(name, parseFloat(e.target.value) || 0, { shouldDirty: true });
+    setValue(name, String(parseFloat(e.target.value) || 0), { shouldDirty: true });
   }
   return (
     <div className="flex items-center justify-between py-2">
@@ -89,7 +90,7 @@ function NumberField({
       <div className="flex items-center gap-1.5">
         <Input
           type="number"
-          value={value}
+          value={displayValue}
           onChange={handleChange}
           className="w-28 text-right"
         />

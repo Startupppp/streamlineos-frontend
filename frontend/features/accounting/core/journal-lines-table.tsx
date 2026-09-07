@@ -4,7 +4,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { JournalLine } from "@/types/accounting";
 
-function parseAmount(value: string): number {
+function parseAmount(value: string | null): number {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }

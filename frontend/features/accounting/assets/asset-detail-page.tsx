@@ -32,7 +32,6 @@ import {
   useAsset,
   useActivateAsset,
   useDisposeAsset,
-  useAssetCategories,
 } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
@@ -86,7 +85,7 @@ const scheduleColumns: DataTableColumn<DepreciationScheduleRow>[] = [
     key: "journal",
     header: "Journal",
     cell: (row) =>
-      row.journalEntryId !== undefined ? (
+      row.journalEntryId !== null ? (
         <Link
           href={`/accounting/journal/${row.journalEntryId}`}
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
@@ -104,9 +103,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
   const canUpdate = useCan("accounting:assets:update");
   const canManage = useCan("accounting:assets:manage");
 
-  const { data: asset, isLoading, error, refetch } = useAsset(assetId);
-  const categoriesQuery = useAssetCategories({ limit: 100 });
-  const categories = categoriesQuery.data?.data ?? [];
+  const { data: assetDetail, isLoading, error, refetch } = useAsset(assetId);
 
   const activateMutation = useActivateAsset(assetId);
   const disposeMutation = useDisposeAsset(assetId);
@@ -172,7 +169,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
     );
   }
 
-  if (!asset) {
+  if (!assetDetail) {
     return (
       <PageWrapper title="Asset" backHref="/accounting/assets">
         <EmptyState
@@ -186,6 +183,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
     );
   }
 
+  const asset = assetDetail.asset;
   const acquisitionCost = parseFloat(asset.acquisitionCost);
   const accumulatedDepr = parseFloat(asset.accumulatedDepreciation);
   const salvageValue = parseFloat(asset.salvageValue);
@@ -194,7 +192,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
     ? (acquisitionCost - salvageValue) / asset.usefulLifeMonths
     : 0;
 
-  const categoryName = categories.find((c) => c.id === asset.categoryId)?.name ?? "—";
+  const categoryName = assetDetail.category?.name ?? "—";
 
   return (
     <>
@@ -270,28 +268,16 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
                 <p className="text-dense text-muted-foreground">Depr. Method</p>
                 <p className="text-sm font-medium mt-0.5">{asset.depreciationMethod.replace(/_/g, " ")}</p>
               </div>
-              {asset.activatedAt && (
-                <div>
-                  <p className="text-dense text-muted-foreground">Activated</p>
-                  <p className="text-sm font-medium mt-0.5">{formatShortDate(asset.activatedAt) || "—"}</p>
-                </div>
-              )}
               {asset.disposedAt && (
                 <div>
                   <p className="text-dense text-muted-foreground">Disposed</p>
                   <p className="text-sm font-medium mt-0.5">{formatShortDate(asset.disposedAt) || "—"}</p>
                 </div>
               )}
-              {asset.disposalProceeds && (
+              {asset.disposalAmount && (
                 <div>
                   <p className="text-dense text-muted-foreground">Disposal Proceeds</p>
-                  <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalProceeds)} /></p>
-                </div>
-              )}
-              {asset.disposalGainLoss && (
-                <div>
-                  <p className="text-dense text-muted-foreground">Gain / Loss</p>
-                  <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalGainLoss)} /></p>
+                  <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalAmount)} /></p>
                 </div>
               )}
             </div>
@@ -299,7 +285,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
 
           <div>
             <h2 className="text-sm font-semibold text-foreground mb-3">Depreciation Schedule</h2>
-            {asset.schedule.length === 0 ? (
+            {assetDetail.schedules.length === 0 ? (
               <EmptyState
                 compact
                 illustrationPreset="calendar"
@@ -308,7 +294,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
               />
             ) : (
               <DataTable
-                data={asset.schedule}
+                data={assetDetail.schedules}
                 columns={scheduleColumns}
                 getRowKey={(row) => row.id}
                 minWidth="480px"
@@ -342,7 +328,7 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
         <EditAssetSheet
           open={editOpen}
           onOpenChange={setEditOpen}
-          asset={asset}
+          asset={assetDetail}
           onSuccess={handleEditSuccess}
         />
       )}

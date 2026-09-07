@@ -147,22 +147,22 @@ export const recordExerciseContract = z.object({
 });
 
 export const costSummaryContract = z.object({
-  total_headcount: z.unknown().nullable(),
-  total_annual_ctc_cents: z.unknown().nullable(),
-  total_monthly_cost_cents: z.unknown().nullable(),
-}).nullable();
+  totalHeadcount: z.number().int(),
+  totalAnnualCtcCents: z.number(),
+  totalMonthlyCostCents: z.number(),
+});
 
 export const costByDepartmentContract = z.array(z.object({
-  department_id: z.unknown().nullable(),
-  department_name: z.unknown().nullable(),
-  headcount: z.unknown().nullable(),
-  monthly_cost_cents: z.unknown().nullable(),
+  departmentId: z.string().nullable(),
+  departmentName: z.string().nullable(),
+  headcount: z.number().int(),
+  monthlyCostCents: z.number(),
 }));
 
 export const costByLocationContract = z.array(z.object({
-  location_id: z.unknown().nullable(),
-  headcount: z.unknown().nullable(),
-  monthly_cost_cents: z.unknown().nullable(),
+  locationId: z.string(),
+  headcount: z.number().int(),
+  monthlyCostCents: z.number(),
 }));
 
 export const voidContract = z.undefined();

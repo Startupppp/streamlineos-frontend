@@ -245,7 +245,7 @@ export const dealActivityContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   dealId: z.number().int(),
-  type: z.string(),
+  type: z.enum(["note", "call", "email", "meeting", "document", "stage_change"] as const),
   previousValue: z.string().nullable(),
   newValue: z.string().nullable(),
   subject: z.string().nullable(),

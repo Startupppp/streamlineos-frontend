@@ -169,7 +169,7 @@ export function useTimeDevices(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrDevicesAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/devices", { params }, signal, _listDevicesContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/devices", params, signal, _listDevicesContract),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -209,7 +209,7 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseSyncLogsAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/devices/sync-logs", { params }, signal, _listSyncLogsContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/devices/sync-logs", params, signal, _listSyncLogsContract),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
   });
@@ -235,7 +235,7 @@ export function useCompCycles(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/planning/cycles", { params }, signal, _listCompCyclesContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/planning/cycles", params, signal, _listCompCyclesContract),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -267,7 +267,7 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompRecsAll, cycleId, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }, signal, _listRecommendationsContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/planning/recommendations", { ...params, ...(cycleId ? { cycleId } : {}) }, signal, _listRecommendationsContract),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });
@@ -301,7 +301,7 @@ export function useEquityGrants(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/equity/grants", { params }, signal, _listGrantsContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/equity/grants", params, signal, _listGrantsContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -356,7 +356,7 @@ export function useCostByDepartment(periodKey: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCostingAll, "byDepartment", periodKey],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }, signal, _costByDepartmentContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/by-department", { periodKey }, signal, _costByDepartmentContract),
     staleTime: 5 * 60_000,
     enabled: !!periodKey && canRead && hrEnabled,
   });

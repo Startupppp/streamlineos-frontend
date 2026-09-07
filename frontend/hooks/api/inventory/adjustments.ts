@@ -81,8 +81,8 @@ interface RawAdjustment {
   status: string;
   notes: string | null;
   createdAt: string;
-  creator: { id: string; name: string | null } | null;
-  lines: Array<{ id: number }>;
+  creator?: { id: string; name: string | null } | null;
+  lines?: Array<{ id: number }>;
 }
 
 function toAdjStatus(s: string): AdjustmentStatus {

@@ -89,13 +89,43 @@ export const reconWorkspaceContract = z.object({
   bankBalance: z.string(),
 });
 
+const ruleConditionShapeContract = z.object({
+  field: z.enum(["description", "counterparty", "amount"]),
+  op: z.enum(["contains", "equals", "gt", "lt"]),
+  value: z.string(),
+});
+
+const ruleActionShapeContract = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("categorize"),
+    accountPurposeOrId: z.union([z.string(), z.number()]),
+    memo: z.string().optional(),
+  }),
+  z.object({ type: z.literal("transfer") }),
+  z.object({ type: z.literal("fee") }),
+]);
+
+const DEFAULT_RULE_ACTION = { type: "fee" as const };
+
+/**
+ * `conditions`/`action` are jsonb the backend does not strictly type on the
+ * way out; these transforms parse against the same shapes its own create
+ * schema enforces on the way in, falling back to an empty condition list /
+ * the safest no-op action rather than surfacing `unknown` to every renderer.
+ */
 export const reconRuleContract = z.object({
   id: z.number(),
   orgId: z.string(),
   name: z.string(),
   priority: z.number(),
-  conditions: z.unknown(),
-  action: z.unknown(),
+  conditions: z.unknown().transform((value) => {
+    const parsed = z.array(ruleConditionShapeContract).safeParse(value);
+    return parsed.success ? parsed.data : [];
+  }),
+  action: z.unknown().transform((value) => {
+    const parsed = ruleActionShapeContract.safeParse(value);
+    return parsed.success ? parsed.data : DEFAULT_RULE_ACTION;
+  }),
   isActive: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),

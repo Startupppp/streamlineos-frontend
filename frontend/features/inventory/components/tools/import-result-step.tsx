@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useImportJob } from "@/hooks/api/inventory/admin";
-import type { JobStatus } from "@/features/inventory/lib";
-import { JOB_STATUS_BADGE, JOB_STATUS_LABEL } from "@/features/inventory/lib";
+import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
 
-const POLLING_STATUSES: JobStatus[] = ["PENDING", "PROCESSING"];
+function isJobStatus(s: string): s is JobStatus {
+  return s === "PENDING" || s === "PROCESSING" || s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
+}
+
+const POLLING_STATUSES: readonly JobStatus[] = ["PENDING", "PROCESSING"] as const;
 
 interface ImportResultStepProps {
   jobId: number;
@@ -47,7 +50,7 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
   React.useEffect(
     function stopPollingOnCompletion() {
       if (!job) return;
-      if (!POLLING_STATUSES.includes(job.status)) {
+      if (!POLLING_STATUSES.some((s) => s === job.status)) {
         setIsPolling(false);
       }
     },
@@ -63,7 +66,7 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
     );
   }
 
-  const isRunning = POLLING_STATUSES.includes(job.status);
+  const isRunning = POLLING_STATUSES.some((s) => s === job.status);
   const isCompleted = job.status === "COMPLETED";
   const isFailed = job.status === "FAILED";
 
@@ -75,15 +78,15 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
         {isRunning && <Loader2 className="h-5 w-5 animate-spin text-status-warning-ink" />}
         {isCompleted && <CheckCircle className="h-5 w-5 text-status-success-ink" />}
         {isFailed && <XCircle className="h-5 w-5 text-status-danger-ink" />}
-        <Badge className={JOB_STATUS_BADGE[job.status]}>
-          {JOB_STATUS_LABEL[job.status]}
+        <Badge className={isJobStatus(job.status) ? JOB_STATUS_BADGE[job.status] : ""}>
+          {isJobStatus(job.status) ? JOB_STATUS_LABEL[job.status] : job.status}
         </Badge>
       </div>
 
       <StatCardGrid cols={3}>
         <StatCard label="Total rows" value={job.totalRows} icon={Hash} tone="default" />
         <StatCard label="Processed" value={job.processedRows} icon={BarChart2} tone="emerald" />
-        <StatCard label="Errors" value={job.errorCount} icon={AlertCircle} tone={job.errorCount > 0 ? "red" : "default"} />
+        <StatCard label="Errors" value={job.errorRows} icon={AlertCircle} tone={job.errorRows > 0 ? "red" : "default"} />
       </StatCardGrid>
 
       {errorData.length > 0 && (

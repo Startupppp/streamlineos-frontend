@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
-import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
+import type { ReconciliationTxn, ReconciliationSuggestedMatch } from "@/hooks/api/accounting/banking";
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return <TooltipProvider>{children}</TooltipProvider>;
@@ -32,37 +32,44 @@ jest.mock("./bank-txn-status-badge", () => ({
 
 const baseTxn: ReconciliationTxn = {
   id: 1,
+  orgId: "org_1",
   bankAccountId: 1,
+  importId: null,
   txnDate: "2024-01-15",
   description: "Test transaction",
   reference: null,
   counterparty: null,
   amount: "1000",
+  balanceAfter: null,
+  fingerprint: "fp-1",
   status: "SUGGESTED",
-  matchType: null,
-  matchedRecordId: null,
+  matchedJournalEntryId: null,
   createdAt: "2024-01-15T00:00:00.000Z",
   suggestedMatches: [],
 };
+
+function makeSuggestedMatch(confidence: string): ReconciliationSuggestedMatch {
+  return {
+    id: 42,
+    orgId: "org_1",
+    bankTransactionId: 1,
+    journalEntryId: null,
+    matchedType: "CUSTOMER_PAYMENT",
+    matchedRecordId: null,
+    amount: "1000",
+    confidence,
+    isConfirmed: false,
+    confirmedByMembershipId: null,
+    confirmedAt: null,
+    createdAt: "2024-01-15T00:00:00.000Z",
+  };
+}
 
 describe("ReconciliationMatchPanel — confidence bar", () => {
   it("does not render a bar or percentage when confidence is NaN", () => {
     const txn: ReconciliationTxn = {
       ...baseTxn,
-      suggestedMatches: [
-        {
-          id: 42,
-          bankTransactionId: 1,
-          journalEntryId: null,
-          matchedType: "CUSTOMER_PAYMENT",
-          matchedRecordId: null,
-          amount: "1000",
-          confidence: "NaN",
-          isConfirmed: false,
-          confirmedBy: null,
-          confirmedAt: null,
-        },
-      ],
+      suggestedMatches: [makeSuggestedMatch("NaN")],
     };
     const { container } = render(
       <ReconciliationMatchPanel txn={txn} bankAccountId={1} onClose={jest.fn()} />,
@@ -75,20 +82,7 @@ describe("ReconciliationMatchPanel — confidence bar", () => {
   it("renders the bar at the correct scale when confidence is a valid percentage", () => {
     const txn: ReconciliationTxn = {
       ...baseTxn,
-      suggestedMatches: [
-        {
-          id: 42,
-          bankTransactionId: 1,
-          journalEntryId: null,
-          matchedType: "CUSTOMER_PAYMENT",
-          matchedRecordId: null,
-          amount: "1000",
-          confidence: "85",
-          isConfirmed: false,
-          confirmedBy: null,
-          confirmedAt: null,
-        },
-      ],
+      suggestedMatches: [makeSuggestedMatch("85")],
     };
     const { container } = render(
       <ReconciliationMatchPanel txn={txn} bankAccountId={1} onClose={jest.fn()} />,
@@ -103,20 +97,7 @@ describe("ReconciliationMatchPanel — confidence bar", () => {
   it("renders the bar at 0 scale when confidence is 0", () => {
     const txn: ReconciliationTxn = {
       ...baseTxn,
-      suggestedMatches: [
-        {
-          id: 42,
-          bankTransactionId: 1,
-          journalEntryId: null,
-          matchedType: "CUSTOMER_PAYMENT",
-          matchedRecordId: null,
-          amount: "1000",
-          confidence: "0",
-          isConfirmed: false,
-          confirmedBy: null,
-          confirmedAt: null,
-        },
-      ],
+      suggestedMatches: [makeSuggestedMatch("0")],
     };
     const { container } = render(
       <ReconciliationMatchPanel txn={txn} bankAccountId={1} onClose={jest.fn()} />,

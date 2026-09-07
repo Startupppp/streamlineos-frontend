@@ -7,7 +7,6 @@ import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
-  ArInvoice,
   ReminderPolicy,
   ReminderLogEntry,
   CollectionActivity,
@@ -17,6 +16,7 @@ import type {
   CreateCollectionActivityInput,
   UpdateInvoiceCollectionInput,
 } from "@/types/accounting/ar";
+import type { Invoice } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import {
@@ -143,7 +143,7 @@ export function useUpdateReminderPolicy() {
 
 export function useDeleteReminderPolicy() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, { policyId: number }>("accounting:reminders:manage", {
+  return useAuthorizedMutation<{ success: true }, Error, { policyId: number }>("accounting:reminders:manage", {
     mutationKey: ["delete-reminder-policy"],
     mutationFn: ({ policyId }) =>
       apiClient.delete(
@@ -173,7 +173,7 @@ export function useCreateCollectionActivity() {
 
 type InvoiceCollectionSnapshot = [
   readonly unknown[],
-  ListResponse<ArInvoice> | undefined,
+  ListResponse<Invoice> | undefined,
 ];
 
 interface InvoiceCollectionContext {
@@ -183,7 +183,7 @@ interface InvoiceCollectionContext {
 export function useUpdateInvoiceCollection() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
-    { id: number; updated: boolean },
+    { success: true },
     Error,
     { invoiceId: number } & UpdateInvoiceCollectionInput,
     InvoiceCollectionContext
@@ -196,12 +196,12 @@ export function useUpdateInvoiceCollection() {
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.invoice.all });
-      const snapshots = queryClient.getQueriesData<ListResponse<ArInvoice>>({
+      const snapshots = queryClient.getQueriesData<ListResponse<Invoice>>({
         queryKey: platformCoreQueryKeys.invoice.all,
       });
       for (const [key, data] of snapshots) {
         if (!data) continue;
-        queryClient.setQueryData<ListResponse<ArInvoice>>(key as readonly unknown[], {
+        queryClient.setQueryData<ListResponse<Invoice>>(key as readonly unknown[], {
           ...data,
           items: data.items.map((inv) =>
             inv.id === variables.invoiceId

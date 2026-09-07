@@ -165,7 +165,7 @@ export function useEngagementOverview() {
 export function useMyMoodHistory() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<MoodCheckin[]>({
+  return useQuery({
     queryKey: hrEngagementQueryKeys.hrEngagementHub.moodHistory(),
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/history", undefined, signal, _moodHistoryContract),
     staleTime: 60_000,
@@ -232,7 +232,7 @@ export function useLeaderboard(top = 20) {
 export function useEngagementPolls() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<HrPoll[]>({
+  return useQuery({
     queryKey: hrEngagementQueryKeys.hrEngagementHub.polls(),
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/polls", undefined, signal, _listPollsContract),
     staleTime: 60_000,
@@ -339,7 +339,7 @@ export function useLeaveCommunity() {
 export function useEngagementCampaigns() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<HrCampaign[]>({
+  return useQuery({
     queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns(),
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/campaigns", undefined, signal, _listCampaignsContract),
     staleTime: 2 * 60_000,

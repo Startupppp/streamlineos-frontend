@@ -9,14 +9,44 @@ import { lazyContract } from "@/lib/api-envelope";
 const supplierDelayBriefingContract = lazyContract(() =>
   import("@/hooks/api/inventory/ai-schema").then((m) => m.supplierDelayBriefingContract),
 );
-import type { SupplierDelayBriefing } from "@/hooks/api/inv-ai-explain";
 
 interface VendorAiActionsProps {
   vendorId: number;
   vendorName: string;
 }
 
-function briefingToText(briefing: SupplierDelayBriefing): string {
+interface LocalVendorPerformance {
+  vendorId: number;
+  onTimeRate: number;
+  fillRate: number;
+  avgLeadTimeDays: number;
+  returnRate: number;
+  openPoCount: number;
+  totalSpend: string;
+}
+
+interface LocalVendorInsight {
+  id: number;
+  title: string;
+  body: string;
+  severity: string;
+}
+
+interface LocalVendor {
+  vendorId: number;
+  vendorName: string;
+  insightCount: number;
+  insights: LocalVendorInsight[];
+  performance: LocalVendorPerformance;
+}
+
+interface SupplierDelayResponse {
+  vendors: LocalVendor[];
+  narration: string;
+  generatedAt: string;
+}
+
+function briefingToText(briefing: SupplierDelayResponse): string {
   const parts: string[] = [];
 
   if (briefing.narration) {
@@ -55,7 +85,7 @@ export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) 
         label: "Supplier-delay briefing",
         description: "AI narrates delivery performance evidence",
         run: async (signal?: AbortSignal) => {
-          const briefing = await apiClient.get<SupplierDelayBriefing>(
+          const briefing = await apiClient.get<SupplierDelayResponse>(
             "/inventory/ai/supplier-delay",
             { vendorId: String(vendorId) },
             signal,

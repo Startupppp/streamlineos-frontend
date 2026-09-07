@@ -7,7 +7,11 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-type StockoutRisk = "HIGH" | "MEDIUM" | "LOW";
+function toNumber(value: string | number | null | undefined): number {
+  if (value == null) return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 export interface ReplenishmentRule {
   id: number;
@@ -15,7 +19,7 @@ export interface ReplenishmentRule {
   variantSku: string;
   productName: string;
   warehouseId: number;
-  warehouseName: string;
+  warehouseName: string | null;
   minQty: number;
   maxQty: number;
   reorderQty: number;
@@ -27,8 +31,69 @@ export interface ReplenishmentRule {
   createdAt: string;
 }
 
+interface RawReplenishmentRule {
+  id: number;
+  orgId: string;
+  productVariantId: number;
+  warehouseId: number | null;
+  minQty: string;
+  maxQty: string | null;
+  reorderQty: string | null;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+  safetyStock: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  productVariant: { id: number; name: string; sku: string; product: { id: number; name: string; sku: string } };
+  warehouse: { id: number; name: string } | null;
+}
+
+interface RawReplenishmentRuleDetail {
+  id: number;
+  orgId: string;
+  productVariantId: number;
+  warehouseId: number | null;
+  minQty: string;
+  maxQty: string | null;
+  reorderQty: string | null;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+  safetyStock: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapRule(raw: RawReplenishmentRule): ReplenishmentRule {
+  return {
+    id: raw.id,
+    variantId: raw.productVariantId,
+    variantSku: raw.productVariant.sku,
+    productName: raw.productVariant.product.name,
+    warehouseId: raw.warehouseId ?? 0,
+    warehouseName: raw.warehouse?.name ?? null,
+    minQty: toNumber(raw.minQty),
+    maxQty: toNumber(raw.maxQty),
+    reorderQty: toNumber(raw.reorderQty),
+    safetyStock: raw.safetyStock != null ? toNumber(raw.safetyStock) : null,
+    leadTimeDays: raw.leadTimeDays,
+    vendorId: raw.vendorId,
+    vendorName: null,
+    isActive: raw.isActive,
+    createdAt: raw.createdAt,
+  };
+}
+
 interface ReplenishmentRuleListResponse {
   items: ReplenishmentRule[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface RawReplenishmentRuleListResponse {
+  items: RawReplenishmentRule[];
   total: number;
   page: number;
   totalPages: number;
@@ -104,8 +169,21 @@ export interface GeneratePOInput {
 }
 
 interface GeneratePOResult {
-  purchaseOrderId: number;
-  purchaseOrderNumber: string;
+  id: number;
+  poNumber: string;
+}
+
+interface RawForecastItem {
+  variantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  onHand: number;
+  onOrder: number;
+  avgWeeklyDemand: number;
+  weeksOfStock: number | null;
+  stockoutRisk: string;
+  projectedWeeks: { week: number; projectedDemand: number; projectedStock: number }[];
 }
 
 export interface ForecastRow {
@@ -114,7 +192,7 @@ export interface ForecastRow {
   productName: string;
   weeklyDemand: number | null;
   projection: { week: number; projectedQty: number }[];
-  stockoutRisk: StockoutRisk;
+  stockoutRisk: string;
   currentStock: number;
 }
 
@@ -123,6 +201,25 @@ interface ForecastListResponse {
   total: number;
   page: number;
   totalPages: number;
+}
+
+interface RawForecastListResponse {
+  items: RawForecastItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function mapForecastRow(raw: RawForecastItem): ForecastRow {
+  return {
+    variantId: raw.variantId,
+    variantSku: raw.variantSku,
+    productName: raw.productName,
+    weeklyDemand: raw.avgWeeklyDemand,
+    projection: raw.projectedWeeks.map((w) => ({ week: w.week, projectedQty: w.projectedStock })),
+    stockoutRisk: raw.stockoutRisk,
+    currentStock: raw.onHand,
+  };
 }
 
 interface ReplenishmentRuleParams {
@@ -158,12 +255,14 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
   const canView = useCan("inventory:replenishment:manage");
   return useQuery<ReplenishmentRuleListResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentRules(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<ReplenishmentRuleListResponse>("/inventory/replenishment/rules", {
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<RawReplenishmentRuleListResponse>("/inventory/replenishment/rules", {
         ...(params?.isActive !== undefined ? { isActive: String(params.isActive) } : {}),
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal, listRulesContract),
+      }, signal, listRulesContract);
+      return { items: raw.items.map(mapRule), total: raw.total, page: raw.page, totalPages: raw.totalPages };
+    },
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -171,10 +270,10 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
 
 export function useCreateReplenishmentRule() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>("inventory:replenishment:manage", {
+  return useAuthorizedMutation<RawReplenishmentRuleDetail, Error, CreateReplenishmentRuleInput>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "create"],
     mutationFn: (data) =>
-      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data, undefined, ruleDetailContract),
+      apiClient.post<RawReplenishmentRuleDetail>("/inventory/replenishment/rules", data, undefined, ruleDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -184,13 +283,13 @@ export function useCreateReplenishmentRule() {
 export function useUpdateReplenishmentRule() {
   const qc = useQueryClient();
   return useAuthorizedMutation<
-    ReplenishmentRule,
+    RawReplenishmentRuleDetail,
     Error,
     { ruleId: number; data: Partial<CreateReplenishmentRuleInput> }
   >("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "update"],
     mutationFn: ({ ruleId, data }) =>
-      apiClient.patch<ReplenishmentRule>(`/inventory/replenishment/rules/${ruleId}`, data, undefined, ruleDetailContract),
+      apiClient.patch<RawReplenishmentRuleDetail>(`/inventory/replenishment/rules/${ruleId}`, data, undefined, ruleDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -260,11 +359,13 @@ export function useForecasting(params?: ForecastParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<ForecastListResponse, Error>({
     queryKey: queryKeys.inventory.forecasting(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<ForecastListResponse>("/inventory/forecasting", {
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<RawForecastListResponse>("/inventory/forecasting", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal, listForecastingContract),
+      }, signal, listForecastingContract);
+      return { items: raw.items.map(mapForecastRow), total: raw.total, page: raw.page, totalPages: raw.totalPages };
+    },
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

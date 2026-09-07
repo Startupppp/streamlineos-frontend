@@ -1,9 +1,4 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+export { cn } from "cn";
 
 const ABSOLUTE_SOURCE = /^(?:https?:|data:|blob:)/i;
 const ORG_ID_SEGMENT =

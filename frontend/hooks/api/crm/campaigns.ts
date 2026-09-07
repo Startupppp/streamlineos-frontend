@@ -98,7 +98,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
-    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal, campaignLeadsLazy),
+    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; hasMore: boolean; nextCursor: string | null; total?: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal, campaignLeadsLazy),
     staleTime: 60_000,
   });
 }

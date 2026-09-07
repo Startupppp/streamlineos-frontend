@@ -31,12 +31,7 @@ export interface AccountingOverview {
   reconciliationGaps: number;
   openApprovals: number;
   monthlyTrend: Array<{ month: string; revenue: string; expenses: string }>;
-  drill: {
-    arOverdue: DrillLink;
-    apDueNext7: DrillLink;
-    reconGaps: DrillLink;
-    openApprovals: DrillLink;
-  };
+  drill: Record<string, DrillLink>;
   period: { from: string; to: string };
 }
 

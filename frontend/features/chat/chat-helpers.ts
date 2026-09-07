@@ -1,4 +1,4 @@
-﻿import { format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import {
   getUserDisplayName,
   type NamedUser,

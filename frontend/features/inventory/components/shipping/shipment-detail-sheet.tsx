@@ -63,7 +63,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
   const carrierOptions: ComboboxOption[] = (carriersQuery.data ?? []).map((c) => ({
     value: String(c.id),
     label: c.name,
-    sublabel: c.code,
+    sublabel: c.code ?? undefined,
   }));
 
   function handleRefetchShipment(): void {

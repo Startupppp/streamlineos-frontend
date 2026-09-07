@@ -58,6 +58,14 @@ const TAX_TYPE_BADGE: Record<TaxType, string> = {
   ZERO_RATED: "border-status-success-rule text-status-success-ink bg-status-success-surface",
 };
 
+function isTaxType(taxType: string): taxType is TaxType {
+  return Object.prototype.hasOwnProperty.call(TAX_TYPE_BADGE, taxType);
+}
+
+function getTaxTypeBadgeClass(taxType: string): string {
+  return isTaxType(taxType) ? TAX_TYPE_BADGE[taxType] : "border-border text-muted-foreground bg-muted/30";
+}
+
 interface EditState {
   open: boolean;
   code: TaxCode | null;
@@ -71,7 +79,7 @@ function buildDefaultValues(code: TaxCode | null): TaxCodeFormValues {
       code: code.code,
       name: code.name,
       rate: code.rate,
-      taxType: code.taxType,
+      taxType: isTaxType(code.taxType) ? code.taxType : "GST",
       isReverseCharge: code.isReverseCharge,
       isActive: code.isActive,
     };
@@ -190,7 +198,7 @@ export function TaxCodesPage() {
       key: "taxType",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className={TAX_TYPE_BADGE[row.taxType]}>
+        <Badge variant="outline" className={getTaxTypeBadgeClass(row.taxType)}>
           {TAX_TYPE_OPTIONS.find((o) => o.value === row.taxType)?.label ?? row.taxType}
         </Badge>
       ),

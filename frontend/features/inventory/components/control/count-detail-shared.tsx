@@ -27,11 +27,15 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CycleCountLine } from "@/hooks/api/inventory/counts";
 
+function isCycleCountStatus(s: string | undefined): s is CycleCountStatus {
+  return s === "PLANNED" || s === "COUNTING" || s === "REVIEW" || s === "POSTED" || s === "CANCELLED";
+}
+
 export interface CountDetailSharedProps {
   entityNoun: string;
   backHref: string;
   entityNumber: string | undefined;
-  status: CycleCountStatus | undefined;
+  status: string | undefined;
   lines: CycleCountLine[];
   isLoading: boolean;
   error: Error | null;
@@ -47,10 +51,11 @@ export interface CountDetailSharedProps {
   cancelPending: boolean;
 }
 
-function VarianceCell({ value }: { value: number | null }) {
+function VarianceCell({ value }: { value: string | null }) {
   if (value === null) return <span className="text-muted-foreground">—</span>;
-  if (value === 0) return <span className="tabular-nums">0</span>;
-  if (value > 0) return <span className="tabular-nums text-status-success-ink">+{value}</span>;
+  const num = parseFloat(value);
+  if (Number.isNaN(num) || num === 0) return <span className="tabular-nums">{value}</span>;
+  if (num > 0) return <span className="tabular-nums text-status-success-ink">+{value}</span>;
   return <span className="tabular-nums text-status-danger-ink">{value}</span>;
 }
 
@@ -60,10 +65,10 @@ const DebouncedQtyInput = memo(function DebouncedQtyInput({
   onSave,
 }: {
   lineId: number;
-  initial: number | null;
+  initial: string | null;
   onSave: (lineId: number, qty: number) => void;
 }) {
-  const [value, setValue] = useState(initial !== null ? String(initial) : "");
+  const [value, setValue] = useState(initial !== null ? initial : "");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(function clearPendingTimerOnUnmount() {
@@ -171,7 +176,7 @@ export function CountDetailShared({
         key: "product",
         header: "Product",
         cell: (row) => (
-          <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
+          <TruncatedText text={row.productVariant?.name ?? "—"} className="text-sm font-medium text-foreground" />
         ),
       },
       {
@@ -179,14 +184,14 @@ export function CountDetailShared({
         header: "SKU",
         headerClassName: "w-[130px]",
         className: "font-mono text-xs text-muted-foreground",
-        cell: (row) => row.variantSku,
+        cell: (row) => row.productVariant?.sku ?? "—",
       },
       {
         key: "location",
         header: "Location",
         headerClassName: "w-[130px]",
         className: "text-muted-foreground",
-        cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-sm text-muted-foreground" />,
+        cell: (row) => <TruncatedText text={row.location?.name ?? "—"} className="text-sm text-muted-foreground" />,
       },
       {
         key: "systemQty",
@@ -218,7 +223,7 @@ export function CountDetailShared({
         className: "text-right",
         cell: (row) =>
           isReview ? (
-            <VarianceCell value={row.variance} />
+            <VarianceCell value={row.varianceQty} />
           ) : (
             <span className="text-muted-foreground tabular-nums">—</span>
           ),
@@ -249,9 +254,9 @@ export function CountDetailShared({
           status ? (
             <Badge
               variant="outline"
-              className={`text-micro h-5 px-2 ${CYCLE_COUNT_STATUS_BADGE[status]}`}
+              className={`text-micro h-5 px-2 ${isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_BADGE[status] : ""}`}
             >
-              {CYCLE_COUNT_STATUS_LABEL[status]}
+              {isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_LABEL[status] : status}
             </Badge>
           ) : undefined
         }

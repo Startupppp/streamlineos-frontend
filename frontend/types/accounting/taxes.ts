@@ -13,13 +13,13 @@ export interface TaxCode {
   name: string;
   code: string;
   rate: string;
-  taxType: TaxType;
+  taxType: string;
   isReverseCharge: boolean;
-  collectedAccountId?: number;
-  paidAccountId?: number;
+  collectedAccountId: number | null;
+  paidAccountId: number | null;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface TaxRateGroup {
@@ -34,15 +34,26 @@ export interface TaxRateGroup {
 
 export interface TaxPayment {
   id: number;
-  taxType: TaxType;
+  taxType: string;
   periodStart: string;
   periodEnd: string;
   amount: string;
   paidDate: string;
-  reference: string;
-  notes?: string;
-  journalEntryId?: number;
-  createdAt: string;
+  reference: string | null;
+  notes: string | null;
+  journalEntryId: number | null;
+  createdBy: string;
+  createdAt: string | null;
+}
+
+export interface RecentTaxPayment {
+  id: number;
+  taxType: string;
+  amount: string;
+  paidDate: string;
+  reference: string | null;
+  periodStart: string;
+  periodEnd: string;
 }
 
 export interface TaxDashboard {
@@ -57,7 +68,7 @@ export interface TaxDashboard {
     taxPayableBalance: string;
     taxReceivableBalance: string;
   };
-  recentPayments: TaxPayment[];
+  recentPayments: RecentTaxPayment[];
   nextDue: { gstr1: string; gstr3b: string };
 }
 
@@ -76,13 +87,21 @@ export interface TaxReportLine {
   date: string;
 }
 
+export interface LiabilitySummaryMonth {
+  month: string;
+  outputTax: string;
+  inputTax: string;
+  netLiability: string;
+  cumulativeUnpaid: string;
+}
+
 export interface LiabilitySummaryResponse {
-  rows: Array<{
-    month: string;
-    outputTax: string;
-    inputTax: string;
-    netLiability: string;
-  }>;
+  period: { from: string; to: string };
+  months: LiabilitySummaryMonth[];
+  totalOutputTax: string;
+  totalInputTax: string;
+  totalNetLiability: string;
+  taxPayableBalance: string;
 }
 
 export interface TaxPaymentInput {
@@ -93,7 +112,6 @@ export interface TaxPaymentInput {
   paidDate: string;
   reference: string;
   notes?: string;
-  journalEntryId?: number;
 }
 
 export interface AdjustmentLine {

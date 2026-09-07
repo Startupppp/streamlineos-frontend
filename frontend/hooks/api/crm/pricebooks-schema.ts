@@ -18,6 +18,7 @@ export const pricebookContract = pricebookSchema;
 
 const pricebookEntryWithProductSchema = z.object({
   id: z.string(),
+  pricebookId: z.string(),
   productId: z.number().int(),
   unitPriceCents: z.number().int(),
   minQuantity: z.number().int(),
@@ -35,6 +36,9 @@ const pricebookEntrySchema = z.object({
   productId: z.number().int(),
   unitPriceCents: z.number().int(),
   minQuantity: z.number().int(),
+  productName: z.string().nullable(),
+  productSku: z.string().nullable(),
+  productCurrency: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

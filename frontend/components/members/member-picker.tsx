@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { Check, User } from "lucide-react";

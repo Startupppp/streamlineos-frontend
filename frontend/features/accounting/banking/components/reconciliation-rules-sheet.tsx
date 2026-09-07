@@ -36,6 +36,7 @@ import type {
   ReconciliationRuleCondition,
   ReconciliationRuleAction,
 } from "@/hooks/api/accounting/banking";
+import { useAllAccounts } from "@/hooks/api/accounting";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -64,6 +65,7 @@ interface RuleFormState {
   priority: string;
   conditions: ReconciliationRuleCondition[];
   actionType: ReconciliationRuleAction["type"];
+  categorizeAccountId: string;
   isActive: boolean;
 }
 
@@ -72,6 +74,7 @@ const DEFAULT_FORM: RuleFormState = {
   priority: "10",
   conditions: [{ field: "description", op: "contains", value: "" }],
   actionType: "categorize",
+  categorizeAccountId: "",
   isActive: true,
 };
 
@@ -88,6 +91,8 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
   const rulesQuery = useReconciliationRules(bankAccountId);
   const createRule = useCreateReconciliationRule(bankAccountId);
   const deleteRule = useDeleteReconciliationRule(bankAccountId);
+  const accountsQuery = useAllAccounts();
+  const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   const rules = rulesQuery.data?.data ?? [];
 
@@ -139,6 +144,10 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
     setForm((prev) => ({ ...prev, actionType: value }));
   }
 
+  function handleCategorizeAccountChange(value: string) {
+    setForm((prev) => ({ ...prev, categorizeAccountId: value }));
+  }
+
   function handleIsActiveChange(checked: boolean) {
     setForm((prev) => ({ ...prev, isActive: checked }));
   }
@@ -152,13 +161,20 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
     setAddingRule(false);
   }
 
+  function buildRuleAction(): ReconciliationRuleAction {
+    if (form.actionType === "categorize") {
+      return { type: "categorize", accountPurposeOrId: parseInt(form.categorizeAccountId, 10) };
+    }
+    return { type: form.actionType };
+  }
+
   function handleSaveRule() {
     createRule.mutate(
       {
         name: form.name,
         priority: parseInt(form.priority, 10) || 10,
         conditions: form.conditions,
-        action: { type: form.actionType },
+        action: buildRuleAction(),
         isActive: form.isActive,
       },
       {
@@ -399,6 +415,24 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
               </Select>
             </div>
 
+            {form.actionType === "categorize" && (
+              <div className="space-y-1">
+                <Label className="text-xs">Category Account *</Label>
+                <Select value={form.categorizeAccountId} onValueChange={handleCategorizeAccountChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ledgerAccounts.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.code} — {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <Switch
                 id="rule-active"
@@ -419,7 +453,11 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                 className="flex-1"
                 isPending={createRule.isPending}
                 loadingText="Saving…"
-                disabled={!form.name || form.conditions.some((c) => !c.value)}
+                disabled={
+                  !form.name ||
+                  form.conditions.some((c) => !c.value) ||
+                  (form.actionType === "categorize" && !form.categorizeAccountId)
+                }
                 onClick={handleSaveRule}
               >
                 Save Rule

@@ -11,38 +11,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { useUpdateAsset } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { AssetDetail, DepreciationMethod } from "@/types/accounting/assets";
+import type { AssetDetail } from "@/types/accounting/assets";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
-
-const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }> = [
-  { value: "STRAIGHT_LINE", label: "Straight Line" },
-  { value: "DECLINING_BALANCE", label: "Declining Balance" },
-  { value: "UNITS_OF_PRODUCTION", label: "Units of Production" },
-];
-
-const DEPRECIATION_METHODS_LIST: ReadonlyArray<string> = ["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"];
-
-function isDepreciationMethod(v: string): v is DepreciationMethod {
-  return DEPRECIATION_METHODS_LIST.includes(v);
-}
 
 const editAssetSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  acquisitionDate: z.string().min(1, "Date is required"),
-  acquisitionCost: z.number().min(0),
   salvageValue: z.number().min(0),
   usefulLifeMonths: z.number().min(1, "Useful life required"),
-  depreciationMethod: z.enum(["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"]),
 });
 
 export type EditAssetFormValues = z.infer<typeof editAssetSchema>;
@@ -55,17 +33,24 @@ interface EditAssetSheetProps {
 }
 
 export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAssetSheetProps) {
-  const updateMutation = useUpdateAsset(asset.id);
+  const updateMutation = useUpdateAsset(asset.asset.id);
 
   function handleSubmit(values: EditAssetFormValues): void {
-    updateMutation.mutate(values, {
-      onSuccess: () => {
-        toast.success("Asset updated");
-        onSuccess();
-        onOpenChange(false);
+    updateMutation.mutate(
+      {
+        name: values.name,
+        salvageValue: String(values.salvageValue),
+        usefulLifeMonths: values.usefulLifeMonths,
       },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+      {
+        onSuccess: () => {
+          toast.success("Asset updated");
+          onSuccess();
+          onOpenChange(false);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
   }
 
   return (
@@ -75,24 +60,16 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
       title="Edit Asset"
       resolver={zodResolver(editAssetSchema)}
       defaultValues={{
-        name: asset.name,
-        acquisitionDate: asset.acquisitionDate.slice(0, 10),
-        acquisitionCost: parseFloat(asset.acquisitionCost),
-        salvageValue: parseFloat(asset.salvageValue),
-        usefulLifeMonths: asset.usefulLifeMonths,
-        depreciationMethod: isDepreciationMethod(asset.depreciationMethod) ? asset.depreciationMethod : "STRAIGHT_LINE",
+        name: asset.asset.name,
+        salvageValue: parseFloat(asset.asset.salvageValue),
+        usefulLifeMonths: asset.asset.usefulLifeMonths,
       }}
       onSubmit={handleSubmit}
       isSubmitting={updateMutation.isPending}
       submitLabel="Update Asset"
       resetOnOpen
     >
-      {(form) => {
-        function handleDepreciationMethodChange(v: string): void {
-          if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v, { shouldValidate: true });
-        }
-
-        return (
+      {(form) => (
         <>
           <FormField
             control={form.control}
@@ -107,40 +84,7 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="acquisitionDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Acquisition Date <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input id="edit-date" type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="acquisitionCost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Acquisition Cost</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="edit-cost"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      {...field}
-                      onChange={numericFieldChangeOr(field.onChange, 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="salvageValue"
@@ -161,8 +105,6 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                 </FormItem>
               )}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
               name="usefulLifeMonths"
@@ -182,32 +124,9 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="depreciationMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Depreciation Method</FormLabel>
-                  <Select value={field.value} onValueChange={handleDepreciationMethodChange}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {METHOD_OPTIONS.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
         </>
-        );
-      }}
+      )}
     </EntityFormSheet>
   );
 }

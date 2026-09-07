@@ -28,7 +28,7 @@ function formatDateTime(value: Date): string {
   });
 }
 
-function parseAmount(value: string): number {
+function parseAmount(value: string | null): number {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }

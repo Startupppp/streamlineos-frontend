@@ -26,9 +26,10 @@ const layerContract = z.object({
   costingMethod: z.string(),
   quantity: z.string(),
   unitCost: z.string(),
-  totalCost: z.string(),
-  referenceType: z.string().nullable(),
-  referenceId: z.string().nullable(),
+  totalValue: z.string(),
+  remainingQuantity: z.string(),
+  sourceType: z.string().nullable(),
+  sourceId: z.string().nullable(),
   createdAt: z.string(),
 });
 

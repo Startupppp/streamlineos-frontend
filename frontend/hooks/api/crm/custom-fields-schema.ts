@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const customFieldSchema = z.object({
   id: z.number().int(),
+  orgId: z.string(),
   entityType: z.enum(["lead", "deal", "contact"]),
   name: z.string(),
   label: z.string(),

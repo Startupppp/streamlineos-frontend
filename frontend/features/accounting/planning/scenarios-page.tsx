@@ -61,7 +61,7 @@ export function ScenariosPage() {
   const canManage = useCan("accounting:forecast:manage");
 
   const scenariosQuery = useScenarios();
-  const items = scenariosQuery.data?.items ?? [];
+  const items = scenariosQuery.data ?? [];
 
   const createMutation = useCreateScenario();
   const updateMutation = useUpdateScenario(editScenario?.id ?? 0);

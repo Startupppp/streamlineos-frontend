@@ -120,7 +120,7 @@ export interface ReorderReportRow {
 
 export interface MovementReportRow {
   id: number;
-  type: MovementType;
+  type: string;
   productName: string;
   sku: string;
   warehouseId: number | null;
@@ -137,7 +137,7 @@ export interface MovementReportRow {
 
 export interface InventoryDashboardMovement {
   id: number;
-  transactionType: MovementType;
+  transactionType: string;
   quantityChange: number;
   createdAt: string;
   notes: string | null;
@@ -166,23 +166,6 @@ export interface InventoryDashboard {
   recentInsights: AiInsight[];
 }
 
-export interface RawProductRef {
-  id: number;
-  name: string;
-  sku: string;
-  costPrice?: string | null;
-  reorderPoint?: string | null;
-  minStockLevel?: string | null;
-}
-
-export interface RawVariantRef {
-  id: number;
-  name: string;
-  sku: string;
-  costPrice: string | null;
-  product: RawProductRef | null;
-}
-
 export interface RawWarehouseRef {
   id: number;
   name: string;
@@ -191,44 +174,90 @@ export interface RawWarehouseRef {
 export interface RawLocationRef {
   id: number;
   name: string;
-  code: string;
+  code?: string;
   warehouse?: RawWarehouseRef | null;
 }
 
 export interface RawUserRef {
   id: string;
-  name: string;
-}
-
-export interface RawStockLevelRow {
-  id: number;
-  onHand: string;
-  committed: string;
-  onOrder: string;
-  productVariant: RawVariantRef | null;
-  location: RawLocationRef | null;
+  name: string | null;
 }
 
 export interface RawTransactionRow {
   id: number;
-  transactionType: MovementType;
+  transactionType: string;
   quantityChange: string;
   quantityAfter: string | null;
   referenceType: string | null;
   referenceId: string | null;
-  notes: string | null;
+  notes?: string | null;
   createdAt: string;
-  productVariant: RawVariantRef | null;
-  location: RawLocationRef | null;
-  creator: RawUserRef | null;
+  productVariant?: {
+    id: number;
+    name: string;
+    sku: string;
+    product?: { id: number; name: string; sku: string } | null;
+  } | null;
+  location?: RawLocationRef | null;
+  creator?: RawUserRef | null;
+}
+
+export interface RawFlatStockItem {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productId: number;
+  productName: string;
+  onHand: string;
+  committed: string;
+  available: string;
+  onOrder: string;
+  averageCost?: string | null;
+  totalValue?: number;
+  reorderPoint?: string | null;
+  isLowStock?: boolean;
+}
+
+export interface RawFlatMovementItem {
+  id: number;
+  transactionType: string;
+  quantityChange: string;
+  createdAt: string;
+  productVariantId?: number;
+  variantSku?: string;
+  variantName?: string;
+}
+
+export interface RawSlowMovingItem {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productId: number;
+  productName: string;
+  onHand: string;
+  lastMovementDate: string | null;
+  daysSinceMovement: number | null;
+  totalValue: string | null;
+}
+
+export interface RawExpiryItem {
+  lotId: number;
+  lotNumber: string;
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  expiryDate: string | null;
+  daysUntilExpiry: number | null;
+  totalOnHand: string;
 }
 
 export interface RawDashboardResponse {
-  stockSummary: {
+  stockSummary?: {
     totalSkus: number;
-    totalOnHand: number;
-    totalCommitted: number;
-    totalOnOrder: number;
+    totalOnHand: string;
+    totalCommitted: string;
+    totalOnOrder: string;
   } | null;
   lowStockCount: number;
   draftPoCount: number;
@@ -245,7 +274,7 @@ export interface RawDashboardResponse {
 }
 
 export interface RawStockSummaryEnvelope {
-  items: RawStockLevelRow[];
+  items: RawFlatStockItem[];
   total: number;
   page: number;
   totalPages: number;
@@ -257,19 +286,11 @@ export interface RawReorderRow {
   variantName: string;
   productId: number;
   productName: string;
-  productSku: string;
-  onHand: number;
-  onOrder: number;
-  committed: number;
-  reorderPoint: number;
-  minStockLevel: number;
-  reorderRuleId: number | null;
-  minQty: number | null;
-  maxQty: number | null;
-  reorderQty: number | null;
-  suggestedQty: number;
-  vendorId: number | null;
-  leadTimeDays: number | null;
+  onHand: string;
+  reorderPoint: string;
+  suggestedQty?: number;
+  vendorId?: number | null;
+  vendorName?: string | null;
 }
 
 export interface RawReorderEnvelope {
@@ -280,7 +301,7 @@ export interface RawReorderEnvelope {
 }
 
 export interface RawMovementsEnvelope {
-  items: RawTransactionRow[];
+  items: RawFlatMovementItem[];
   total: number;
   page: number;
   totalPages: number;

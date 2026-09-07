@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, MessageSquare, Shield, BookOpen } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";

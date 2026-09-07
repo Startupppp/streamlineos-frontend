@@ -29,7 +29,7 @@ interface RevisionsSheetProps {
 
 export function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
   const query = useBudgetRevisions(budgetId);
-  const revisions = query.data?.items ?? [];
+  const revisions = query.data ?? [];
 
   function handleRetry(): void {
     void query.refetch();

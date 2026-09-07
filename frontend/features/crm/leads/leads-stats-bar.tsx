@@ -9,7 +9,7 @@ interface LeadsStatsBarProps {
   stats: {
     total: number;
     thisMonth: number;
-    byStatus: { QUALIFIED: number; CONVERTED: number; [key: string]: number };
+    byStatus: Record<string, number>;
     conversionRate: number;
     unassigned: number;
     totalPotentialValue: number;

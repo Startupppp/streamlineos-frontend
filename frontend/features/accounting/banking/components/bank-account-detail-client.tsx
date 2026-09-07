@@ -79,7 +79,7 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
     key: "description",
     header: "Description",
     cell: (row) => (
-      <TruncatedText text={row.description} className="text-dense" />
+      <TruncatedText text={row.description ?? ""} className="text-dense" />
     ),
   },
   {

@@ -50,6 +50,10 @@ const MATCH_TYPE_ICONS: Record<MatchType, React.ElementType> = {
   TRANSFER: ArrowLeftRight,
 };
 
+function isMatchType(value: string): value is MatchType {
+  return Object.prototype.hasOwnProperty.call(MATCH_TYPE_ICONS, value);
+}
+
 export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props) {
   const [journalDialogOpen, setJournalDialogOpen] = useState(false);
   const [counterAccountId, setCounterAccountId] = useState("");
@@ -70,8 +74,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Enter" && suggestions.length > 0) {
       const s = suggestions[selectedSuggestionIndex];
-      if (s) {
-        handleConfirmSuggestion(s.id, s.matchedType);
+      if (s && isMatchType(s.matchedType)) {
+        handleConfirmSuggestion(s.matchedRecordId, s.matchedType);
       }
     }
     if (e.key === "ArrowDown") {
@@ -82,14 +86,14 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
     }
   }
 
-  function handleConfirmSuggestion(matchedRecordId: number, matchType: MatchType) {
+  function handleConfirmSuggestion(matchedRecordId: number | null, matchType: MatchType) {
     confirmMatch.mutate(
-      { transactionId: txn.id, matchType, matchedRecordId },
+      { transactionId: txn.id, matchType, matchedRecordId: matchedRecordId ?? undefined },
       { onSuccess: onClose },
     );
   }
 
-  function makeConfirmSuggestion(matchedRecordId: number, matchType: MatchType) {
+  function makeConfirmSuggestion(matchedRecordId: number | null, matchType: MatchType) {
     return (event: MouseEvent) => {
       event.stopPropagation();
       handleConfirmSuggestion(matchedRecordId, matchType);
@@ -179,8 +183,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
         <div className="mb-4 space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Suggested matches</p>
           {suggestions.map((s, i) => {
-            const Icon = MATCH_TYPE_ICONS[s.matchedType] ?? DollarSign;
-            const rawConfidence = parseFloat(s.confidence);
+            const Icon = isMatchType(s.matchedType) ? MATCH_TYPE_ICONS[s.matchedType] : DollarSign;
+            const rawConfidence = parseFloat(s.confidence ?? "");
             const confidencePct = Number.isFinite(rawConfidence) ? rawConfidence : null;
             const matchLabel = s.matchedType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
             return (
@@ -222,8 +226,12 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                   <Button
                     size="sm"
                     className="h-6 text-dense px-2"
-                    onClick={makeConfirmSuggestion(s.id, s.matchedType)}
-                    disabled={confirmMatch.isPending}
+                    onClick={
+                      isMatchType(s.matchedType)
+                        ? makeConfirmSuggestion(s.matchedRecordId, s.matchedType)
+                        : undefined
+                    }
+                    disabled={confirmMatch.isPending || !isMatchType(s.matchedType)}
                   >
                     Confirm
                   </Button>

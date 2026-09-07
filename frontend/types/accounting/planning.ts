@@ -169,5 +169,5 @@ export interface UpdateScenarioInput {
 export interface ScenarioCompareResponse {
   scenarioIds: number[];
   scenarios: Array<{ id: number; name: string; kind: string }>;
-  weeks: Array<{ weekIndex: number; weekStart: string; closingCash: Record<number, string> }>;
+  weeks: Array<{ weekIndex: number; weekStart: string; closingCash: Record<string, string> }>;
 }

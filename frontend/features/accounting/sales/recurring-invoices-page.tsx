@@ -35,6 +35,14 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   YEARLY: "Yearly",
 };
 
+function isRecurringFrequency(value: string): value is RecurringFrequency {
+  return Object.prototype.hasOwnProperty.call(FREQUENCY_LABELS, value);
+}
+
+function getFrequencyLabel(value: string): string {
+  return isRecurringFrequency(value) ? FREQUENCY_LABELS[value] : value;
+}
+
 export function RecurringInvoicesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringInvoiceTemplate | undefined>();
@@ -96,7 +104,7 @@ export function RecurringInvoicesPage() {
       header: "Frequency",
       cell: (row) => (
         <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 bg-primary/5 text-foreground border-primary/20">
-          {FREQUENCY_LABELS[row.frequency]}
+          {getFrequencyLabel(row.frequency)}
         </Badge>
       ),
     },

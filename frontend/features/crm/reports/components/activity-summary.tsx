@@ -1,26 +1,7 @@
-import { Phone, Mail, Video } from "lucide-react";
+import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { SalesLeaderboardEntry } from "@/types/leads";
-
-interface ActivityTotals {
-  calls: number;
-  emails: number;
-  meetings: number;
-}
-
-function computeActivityTotals(
-  leaderboard: SalesLeaderboardEntry[],
-): ActivityTotals {
-  return leaderboard.reduce(
-    (acc, rep) => ({
-      calls: acc.calls + rep.totalCalls,
-      emails: acc.emails + rep.totalEmails,
-      meetings: acc.meetings + rep.totalMeetings,
-    }),
-    { calls: 0, emails: 0, meetings: 0 },
-  );
-}
 
 interface ActivitySummaryProps {
   leaderboard: SalesLeaderboardEntry[] | undefined;
@@ -31,7 +12,10 @@ export function ActivitySummary({
   leaderboard,
   periodLabel,
 }: ActivitySummaryProps) {
-  const totals = leaderboard ? computeActivityTotals(leaderboard) : null;
+  const totalLeads = leaderboard
+    ? leaderboard.reduce((acc, rep) => acc + rep.count, 0)
+    : null;
+  const totalReps = leaderboard?.length ?? null;
 
   return (
     <Card className="shadow-sm">
@@ -44,27 +28,20 @@ export function ActivitySummary({
         </p>
       </CardHeader>
       <CardContent>
-        <StatCardGrid cols={3}>
+        <StatCardGrid cols={2}>
           <StatCard
-            label="Calls"
-            value={totals ? totals.calls.toLocaleString() : "—"}
-            icon={Phone}
+            label="Total Leads"
+            value={totalLeads !== null ? totalLeads.toLocaleString() : "—"}
+            icon={Users}
             color="blue"
             index={0}
           />
           <StatCard
-            label="Emails"
-            value={totals ? totals.emails.toLocaleString() : "—"}
-            icon={Mail}
-            color="blue"
+            label="Active Reps"
+            value={totalReps !== null ? totalReps.toLocaleString() : "—"}
+            icon={Users}
+            color="emerald"
             index={1}
-          />
-          <StatCard
-            label="Meetings"
-            value={totals ? totals.meetings.toLocaleString() : "—"}
-            icon={Video}
-            color="amber"
-            index={2}
           />
         </StatCardGrid>
       </CardContent>

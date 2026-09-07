@@ -2,19 +2,29 @@ import { z } from "zod";
 
 const userRefContract = z.object({ id: z.string(), name: z.string().nullable() });
 
+const countLineProductVariantContract = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  sku: z.string(),
+  product: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }),
+});
+
+const countLineLocationContract = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  code: z.string(),
+});
+
 const cycleCountLineContract = z.object({
   id: z.number().int(),
-  countId: z.number().int(),
   productVariantId: z.number().int(),
-  locationId: z.number().int().nullable(),
+  locationId: z.number().int(),
   lotId: z.number().int().nullable(),
-  serialId: z.number().int().nullable(),
   systemQty: z.string(),
   countedQty: z.string().nullable(),
-  variance: z.string().nullable(),
-  notes: z.string().nullable(),
-  productVariant: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }).optional(),
-  location: z.object({ id: z.number().int(), name: z.string(), code: z.string() }).optional(),
+  varianceQty: z.string().nullable(),
+  productVariant: countLineProductVariantContract.optional(),
+  location: countLineLocationContract.optional(),
 });
 
 export const cycleCountContract = z.object({
@@ -48,15 +58,13 @@ const auditLineContract = z.object({
   id: z.number().int(),
   auditId: z.number().int(),
   productVariantId: z.number().int(),
-  locationId: z.number().int().nullable(),
+  locationId: z.number().int(),
   lotId: z.number().int().nullable(),
-  serialId: z.number().int().nullable(),
   systemQty: z.string(),
   countedQty: z.string().nullable(),
-  variance: z.string().nullable(),
-  notes: z.string().nullable(),
-  productVariant: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }).optional(),
-  location: z.object({ id: z.number().int(), name: z.string(), code: z.string() }).optional(),
+  varianceQty: z.string().nullable(),
+  productVariant: countLineProductVariantContract.optional(),
+  location: countLineLocationContract.optional(),
 });
 
 const physicalAuditContract = z.object({

@@ -1,16 +1,34 @@
 import { z } from "zod";
 
+const soStatusEnum = z.enum([
+  "DRAFT",
+  "CONFIRMED",
+  "PARTIALLY_RESERVED",
+  "RESERVED",
+  "PICKED",
+  "PACKED",
+  "PARTIALLY_SHIPPED",
+  "SHIPPED",
+  "INVOICED",
+  "CLOSED",
+  "CANCELLED",
+]);
+
 const soLineContract = z.object({
   id: z.number().int(),
   soId: z.number().int(),
   productVariantId: z.number().int(),
   quantity: z.string(),
   unitPrice: z.string(),
-  totalPrice: z.string(),
-  fulfilledQty: z.string(),
-  shippedQty: z.string(),
-  notes: z.string().nullable(),
-  productVariant: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }).optional(),
+  amount: z.string(),
+  taxRate: z.string().nullable(),
+  productVariant: z.object({
+    product: z.object({
+      id: z.number().int(),
+      name: z.string().nullable(),
+      sku: z.string().nullable(),
+    }).nullable(),
+  }).nullable().optional(),
 });
 
 const salesOrderContract = z.object({
@@ -19,20 +37,25 @@ const salesOrderContract = z.object({
   soNumber: z.string(),
   clientId: z.number().int().nullable(),
   warehouseId: z.number().int().nullable(),
-  status: z.string(),
-  totalAmount: z.string(),
+  status: soStatusEnum,
+  total: z.string(),
+  subtotal: z.string().optional(),
   currency: z.string().nullable(),
-  expectedDeliveryDate: z.string().nullable(),
+  orderDate: z.string().nullable(),
+  requiredDate: z.string().nullable(),
   confirmedAt: z.string().nullable(),
-  fulfilledAt: z.string().nullable(),
-  cancelledAt: z.string().nullable(),
+  shippedAt: z.string().nullable(),
   notes: z.string().nullable(),
+  shippingAddress: z.string().nullable().optional(),
   createdBy: z.string(),
   createdByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  invoiceId: z.number().int().nullable().optional(),
   lines: z.array(soLineContract).optional(),
-  client: z.object({ id: z.number().int(), name: z.string() }).nullable().optional(),
+  client: z.object({ id: z.number().int(), name: z.string().nullable() }).nullable().optional(),
+  warehouse: z.object({ id: z.number().int(), name: z.string().nullable() }).nullable().optional(),
+  invoice: z.object({ id: z.number().int(), invoiceNumber: z.string().nullable() }).nullable().optional(),
   creator: z.object({ id: z.string(), name: z.string().nullable() }).optional(),
 });
 
@@ -46,6 +69,20 @@ export const listSalesOrdersContract = z.object({
 export const getSalesOrderContract = salesOrderContract;
 
 export const salesOrderMutationContract = salesOrderContract;
+
+export const invoiceContract = z.object({
+  id: z.number().int(),
+  invoiceNumber: z.string(),
+});
+
+export const reserveSoContract = z.object({
+  status: soStatusEnum,
+  shortfalls: z.array(z.object({
+    soLineId: z.number().int(),
+    requested: z.number(),
+    available: z.number(),
+  })).optional(),
+});
 
 export const rawAtpArrayContract = z.array(z.object({
   productVariantId: z.number().int(),

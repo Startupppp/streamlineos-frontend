@@ -277,7 +277,7 @@ export function useSalesLeaderboard() {
   return useQuery({
     queryKey: accessAndCrmQueryKeys.salesLeaderboard.list(),
     queryFn: ({ signal }) =>
-      apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard", undefined, signal, leadsAnalyticsLazy),
+      apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard", undefined, signal, leadsSalesLeaderboardLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -286,7 +286,7 @@ export function useSalesTeamCapacity() {
   return useQuery({
     queryKey: accessAndCrmQueryKeys.salesTeamCapacity.list(),
     queryFn: ({ signal }) =>
-      apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity", undefined, signal, leadsAnalyticsLazy),
+      apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity", undefined, signal, leadsSalesTeamCapacityLazy),
     staleTime: 2 * 60_000,
   });
 }

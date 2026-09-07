@@ -12,7 +12,6 @@ import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -35,8 +34,7 @@ const configPairSchema = z.object({
 
 const connectionSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  providerKey: z.string().min(1, "Provider key is required"),
-  isActive: z.boolean(),
+  provider: z.string().min(1, "Provider is required"),
   configPairs: z.array(configPairSchema),
 });
 
@@ -48,15 +46,16 @@ interface ThreePlConnectionSheetProps {
   connection?: ThreePlConnection;
 }
 
+function skuMappingToPairs(mapping: Record<string, string> | null): Array<{ key: string; value: string }> {
+  if (!mapping) return [];
+  return Object.entries(mapping).map(([key, value]) => ({ key, value }));
+}
+
 function buildDefaultValues(connection?: ThreePlConnection): ConnectionFormValues {
-  const pairs = connection?.config
-    ? Object.entries(connection.config).map(([key, value]) => ({ key, value }))
-    : [];
   return {
     name: connection?.name ?? "",
-    providerKey: connection?.providerKey ?? "",
-    isActive: connection?.isActive ?? true,
-    configPairs: pairs,
+    provider: connection?.provider ?? "",
+    configPairs: skuMappingToPairs(connection?.skuMapping ?? null),
   };
 }
 
@@ -109,6 +108,12 @@ export function ThreePlConnectionSheet({
     append({ key: "", value: "" });
   }
 
+  const showNotConnectedBanner =
+    isEdit &&
+    connection.lastSyncStatus !== null &&
+    connection.lastSyncStatus !== undefined &&
+    connection.lastSyncStatus.toLowerCase().includes("not_connected");
+
   async function onSubmit(values: ConnectionFormValues): Promise<void> {
     const config = configToRecord(values.configPairs);
     try {
@@ -116,14 +121,13 @@ export function ThreePlConnectionSheet({
         await updateMutation.mutateAsync({
           connectionId: connection.id,
           name: values.name.trim(),
-          isActive: values.isActive,
           config: Object.keys(config).length > 0 ? config : undefined,
         });
         toast.success("Connection updated");
       } else {
         await createMutation.mutateAsync({
           name: values.name.trim(),
-          providerKey: values.providerKey.trim(),
+          provider: values.provider.trim(),
           config: Object.keys(config).length > 0 ? config : undefined,
         });
         toast.success("Connection created");
@@ -136,10 +140,6 @@ export function ThreePlConnectionSheet({
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-  const showNotConnectedBanner =
-    isEdit &&
-    connection.lastSyncError !== null &&
-    connection.lastSyncError.toLowerCase().includes("not connected");
 
   return (
     <AppSheet
@@ -195,10 +195,10 @@ export function ThreePlConnectionSheet({
 
           <FormField
             control={form.control}
-            name="providerKey"
+            name="provider"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Provider key *</FormLabel>
+                <FormLabel>Provider *</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g. flexport, shipbob"
@@ -211,28 +211,9 @@ export function ThreePlConnectionSheet({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Checkbox
-                    id="3pl-active"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel htmlFor="3pl-active" className="text-sm font-normal cursor-pointer">
-                  Active
-                </FormLabel>
-              </FormItem>
-            )}
-          />
-
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Configuration</span>
+              <span className="text-sm font-medium">SKU Mapping</span>
               <AnimatedIconButton
                 type="button"
                 icon={PlusIcon}
@@ -243,7 +224,7 @@ export function ThreePlConnectionSheet({
                 className="text-xs gap-1.5"
                 onClick={handleAddConfig}
               >
-                Add config
+                Add mapping
               </AnimatedIconButton>
             </div>
 
@@ -262,7 +243,7 @@ export function ThreePlConnectionSheet({
                           <FormItem className="flex-1">
                             <FormControl>
                               <Input
-                                placeholder="Config key"
+                                placeholder="SKU key"
                                 className="text-xs"
                                 {...field}
                               />
@@ -277,7 +258,7 @@ export function ThreePlConnectionSheet({
                           <FormItem className="flex-1">
                             <FormControl>
                               <Input
-                                placeholder="Config value"
+                                placeholder="SKU value"
                                 className="text-xs"
                                 {...field}
                               />
@@ -292,7 +273,7 @@ export function ThreePlConnectionSheet({
                         variant="ghost"
                         size="icon"
                         className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                        aria-label="Remove connection"
+                        aria-label="Remove mapping"
                         onClick={handleRemove}
                       />
                     </div>

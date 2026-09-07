@@ -1,4 +1,4 @@
-﻿import { format } from "date-fns";
+import { format } from "date-fns";
 import { fetchAllAssetsForExport } from "@/hooks/api/hr/assets";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Employee } from "@/types/hr";

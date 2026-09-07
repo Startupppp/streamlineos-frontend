@@ -48,7 +48,7 @@ export function ReverseDepreciationRunButton({
     if (!reverseMutation.isPending) setConfirmOpen(open);
   }
 
-  const canReverse = canManage && run.status === "COMPLETED";
+  const canReverse = canManage && run.status === "POSTED";
 
   return (
     <>
@@ -72,8 +72,7 @@ export function ReverseDepreciationRunButton({
             </AlertDialogTitle>
             <AlertDialogDescription>
               This will reverse the journal entry and mark this run as reversed.
-              This affects {run.assetCount} asset
-              {run.assetCount !== 1 ? "s" : ""}. This action cannot be undone.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

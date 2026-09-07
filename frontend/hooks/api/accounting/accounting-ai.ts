@@ -22,15 +22,9 @@ export interface VarianceExplainBody {
   notes?: string;
 }
 
-export interface AiNarrationFactor {
-  label: string;
-  value: string;
-  isFactual: boolean;
-}
-
 export interface VarianceExplainResult {
   narration: string;
-  factors: AiNarrationFactor[];
+  factors: string[];
   suggestedInvestigations: string[];
   evidenceSnapshot: Record<string, unknown>;
   generatedAt: string;
@@ -42,7 +36,7 @@ export interface ReconciliationExplainBody {
 
 export interface ReconciliationExplainResult {
   narration: string;
-  factors: AiNarrationFactor[];
+  factors: string[];
   evidenceSnapshot: Record<string, unknown>;
   generatedAt: string;
 }
@@ -77,7 +71,7 @@ export interface ExtractDocumentResult {
   draft: ExtractedDocumentDraft;
   sourceDocumentName: string;
   mimeType: string;
-  confidence: "high" | "medium" | "low";
+  confidence: number;
   reviewRequired: true;
   warningMessage: string;
   generatedAt: string;

@@ -11,6 +11,12 @@ import { lazyContract } from "@/lib/api-envelope";
 const crmProductsLazy = lazyContract(() =>
   import("@/hooks/api/crm/products-schema").then((m) => m.crmProductsListContract),
 );
+const crmProductLazy = lazyContract(() =>
+  import("@/hooks/api/crm/products-schema").then((m) => m.crmProductContract),
+);
+const deleteProductLazy = lazyContract(() =>
+  import("@/hooks/api/crm/products-schema").then((m) => m.deleteProductContract),
+);
 
 export function useProducts(search?: string) {
   return useGatedQuery("crm:products:manage", {

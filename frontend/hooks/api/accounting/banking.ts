@@ -39,29 +39,34 @@ export type { BankAccountRecord as BankAccount } from "@/hooks/api/accounting/ba
 
 export interface BankTransaction {
   id: number;
+  orgId: string;
   bankAccountId: number;
+  importId: number | null;
   txnDate: string;
-  description: string;
+  description: string | null;
   reference: string | null;
   counterparty: string | null;
   amount: string;
+  balanceAfter: string | null;
+  fingerprint: string;
   status: BankTxnStatus;
-  matchType: MatchType | null;
-  matchedRecordId: number | null;
+  matchedJournalEntryId: number | null;
   createdAt: string;
 }
 
 export interface ReconciliationSuggestedMatch {
   id: number;
+  orgId: string;
   bankTransactionId: number;
   journalEntryId: number | null;
-  matchedType: MatchType;
+  matchedType: string;
   matchedRecordId: number | null;
   amount: string;
-  confidence: string;
+  confidence: string | null;
   isConfirmed: boolean;
-  confirmedBy: string | null;
+  confirmedByMembershipId: number | null;
   confirmedAt: string | null;
+  createdAt: string;
 }
 
 export interface ReconciliationTxn extends BankTransaction {
@@ -72,7 +77,7 @@ export interface ReconciliationWorkspace {
   unmatched: ReconciliationTxn[];
   suggested: ReconciliationTxn[];
   reconciledCount: number;
-  ledgerBalance: string;
+  ledgerBalance: string | null;
   bankBalance: string;
 }
 
@@ -82,31 +87,33 @@ export interface ReconciliationRuleCondition {
   value: string;
 }
 
-export interface ReconciliationRuleAction {
-  type: "categorize" | "transfer" | "fee";
-  counterAccountId?: number;
-  memo?: string;
-}
+export type ReconciliationRuleAction =
+  | { type: "categorize"; accountPurposeOrId: string | number; memo?: string }
+  | { type: "transfer" }
+  | { type: "fee" };
 
 export interface ReconciliationRule {
   id: number;
-  bankAccountId: number;
+  orgId: string;
   name: string;
   priority: number;
   conditions: ReconciliationRuleCondition[];
   action: ReconciliationRuleAction;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface BankTransfer {
   id: number;
+  orgId: string;
   fromBankAccountId: number;
   toBankAccountId: number;
   amount: string;
   transferDate: string;
   reference: string | null;
-  description: string | null;
+  journalEntryId: number | null;
+  createdByMembershipId: number | null;
   createdAt: string;
 }
 
@@ -280,7 +287,7 @@ interface OptimisticContext {
 
 export function useConfirmMatch(bankAccountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, ConfirmMatchInput, OptimisticContext>("accounting:banking:reconcile", {
+  return useAuthorizedMutation<{ success: true }, Error, ConfirmMatchInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "confirmMatch", bankAccountId],
     mutationFn: (data) =>
       apiClient.post(`/finance/reconciliation/${bankAccountId}/match`, data, undefined, reconSuccessContract),
@@ -318,7 +325,7 @@ interface UnmatchInput {
 
 export function useUnmatch(bankAccountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, UnmatchInput, OptimisticContext>("accounting:banking:reconcile", {
+  return useAuthorizedMutation<{ success: true }, Error, UnmatchInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "unmatch", bankAccountId],
     mutationFn: (data) =>
       apiClient.post(`/finance/reconciliation/${bankAccountId}/unmatch`, data, undefined, reconSuccessContract),
@@ -363,7 +370,7 @@ interface IgnoreInput {
 
 export function useIgnoreTransaction(bankAccountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, IgnoreInput, OptimisticContext>("accounting:banking:reconcile", {
+  return useAuthorizedMutation<{ success: true }, Error, IgnoreInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "ignore", bankAccountId],
     mutationFn: (data) =>
       apiClient.post(`/finance/reconciliation/${bankAccountId}/ignore`, data, undefined, reconSuccessContract),
@@ -442,7 +449,7 @@ export function useCreateReconciliationRule(bankAccountId: number) {
 
 export function useDeleteReconciliationRule(bankAccountId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("accounting:banking:reconcile", {
+  return useAuthorizedMutation<{ success: true }, Error, number>("accounting:banking:reconcile", {
     mutationKey: ["banking", "deleteRule", bankAccountId],
     mutationFn: (ruleId) =>
       apiClient.delete(

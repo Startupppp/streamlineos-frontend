@@ -66,7 +66,7 @@ export const assetCreatedContract = assetContract;
 
 export const assetUpdatedContract = assetContract;
 
-export const assetActivateContract = assetContract;
+export const assetActivateContract = assetDetailContract;
 
 export const assetDisposeContract = z.object({
   assetId: z.number(),

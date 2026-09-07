@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { Users, UserCheck, Briefcase, ListChecks } from "lucide-react";

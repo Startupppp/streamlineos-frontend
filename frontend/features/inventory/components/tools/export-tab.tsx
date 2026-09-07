@@ -19,7 +19,11 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { JOB_STATUS_BADGE, JOB_STATUS_LABEL } from "@/features/inventory/lib";
+import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
+
+function isJobStatus(s: string): s is JobStatus {
+  return s === "PENDING" || s === "PROCESSING" || s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
+}
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -51,7 +55,7 @@ function useExportJobsWithPolling() {
   });
 }
 
-const EXPORT_TYPE_META: Record<ExportType, { label: string; description: string }> = {
+const EXPORT_TYPE_META: Record<string, { label: string; description: string } | undefined> = {
   products: { label: "Products", description: "All products, variants, SKUs, and prices" },
   stock: { label: "Stock Levels", description: "Current on-hand, committed, and on-order quantities" },
   movements: { label: "Stock Movements", description: "Full transaction history up to 10,000 rows" },
@@ -70,6 +74,8 @@ interface ExportTypeCardProps {
 
 function ExportTypeCard({ exportType, isSelected, onSelect }: ExportTypeCardProps) {
   const meta = EXPORT_TYPE_META[exportType];
+  const label = meta?.label ?? exportType;
+  const description = meta?.description ?? "";
 
   function handleClick(): void {
     onSelect(exportType);
@@ -85,8 +91,8 @@ function ExportTypeCard({ exportType, isSelected, onSelect }: ExportTypeCardProp
           : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
       }`}
     >
-      <p className="text-xs font-semibold text-foreground">{meta.label}</p>
-      <p className="text-dense text-muted-foreground mt-0.5">{meta.description}</p>
+      <p className="text-xs font-semibold text-foreground">{label}</p>
+      <p className="text-dense text-muted-foreground mt-0.5">{description}</p>
     </button>
   );
 }
@@ -129,8 +135,8 @@ function buildExportJobsColumns(
       key: "status",
       header: "Status",
       cell: (job) => (
-        <Badge className={JOB_STATUS_BADGE[job.status]}>
-          {JOB_STATUS_LABEL[job.status]}
+        <Badge className={isJobStatus(job.status) ? JOB_STATUS_BADGE[job.status] : ""}>
+          {isJobStatus(job.status) ? JOB_STATUS_LABEL[job.status] : job.status}
         </Badge>
       ),
     },
@@ -277,10 +283,10 @@ export function ExportTab() {
             <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
               <div>
                 <p className="text-xs font-semibold text-foreground">
-                  Ready to export: {EXPORT_TYPE_META[selectedExportType].label}
+                  Ready to export: {EXPORT_TYPE_META[selectedExportType]?.label ?? selectedExportType}
                 </p>
                 <p className="text-dense text-muted-foreground">
-                  {EXPORT_TYPE_META[selectedExportType].description}
+                  {EXPORT_TYPE_META[selectedExportType]?.description ?? ""}
                 </p>
               </div>
               <LoadingButton
