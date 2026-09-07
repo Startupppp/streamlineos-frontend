@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { scopedQueryKeyHashFn, authenticatedScope } from "@/lib/query-scope";
-import { useHrHubSnapshot, type HrHubSnapshot } from "./hub";
+import { useHrHubSnapshot } from "./hub";
+import type { HrHubSnapshot } from "./hub-types";
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn(),

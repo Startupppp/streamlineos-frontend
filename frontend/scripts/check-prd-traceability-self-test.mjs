@@ -430,7 +430,7 @@ const cases = [
       write(
         root,
         REL_MANIFEST,
-        read(root, REL_MANIFEST).split("\n").filter((l) => !/^- Ticket 12: \d+$/.test(l)).join("\n"),
+        read(root, REL_MANIFEST).split("\n").filter((l) => !/^- Ticket 12: \d+\r?$/.test(l)).join("\n"),
       );
     },
     expect: "COVERAGE ROW MISSING",
