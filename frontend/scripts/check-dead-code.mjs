@@ -301,6 +301,17 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
 const DEPENDENCY_GROUPS = ["unlisted", "dependencies", "devDependencies", "optionalPeerDependencies", "unresolved", "binaries"];
 const SYMBOL_GROUPS = ["exports", "types", "enumMembers", "namespaceMembers", "duplicates"];
 
+/**
+ * knip's `duplicates` group is an array of arrays: several exports in one file bound to the
+ * same value. Those members have no `item.name`, so a bare String(item) printed
+ * "[object Object],[object Object]" and the gate could not name what it had found.
+ */
+function symbolName(item) {
+  if (item && typeof item === "object" && !Array.isArray(item) && item.name !== undefined) return item.name;
+  if (Array.isArray(item)) return item.map(symbolName).join("|");
+  return String(item);
+}
+
 /** The ledger key for a finding: dependencies are package-scoped, everything else file-scoped. */
 function verdictKey(item) {
   return item.depKey ? `dep:${item.name}` : `${item.file}:${item.name}`;
@@ -546,6 +557,13 @@ function runSelfTest() {
   assert(verdictKey({ file: "hooks/api/x.ts", name: "useX" }) === "hooks/api/x.ts:useX",
     "(z) a source finding keys into the file:symbol space");
 
+  assert(symbolName({ name: "useX", line: 3 }) === "useX",
+    "(z1) a plain knip finding is named by its own name");
+  assert(symbolName([{ name: "aContract" }, { name: "bContract" }]) === "aContract|bContract",
+    "(z2) a duplicates group names every member, not [object Object]");
+  assert(!symbolName([{ name: "a" }, { name: "b" }]).includes("[object Object]"),
+    "(z3) no finding may print [object Object] — a gate that cannot name a finding cannot be acted on");
+
   const staleDep = checkStaleVerdicts(new Map([["dep:sharp", { verdict: "KEEP", reason: "r" }]]), new Set());
   assert(staleDep.length === 1 && staleDep[0] === "dep:sharp",
     `(aa) BITE: a dep: verdict knip no longer reports goes stale → expected [dep:sharp], got [${staleDep.join(",")}]`);
@@ -685,12 +703,12 @@ async function runMain() {
       for (const item of issue[group] ?? [])
         deadExportItems.push({
           file: issue.file,
-          name: item.name ?? String(item),
+          name: symbolName(item),
           kind: group === "exports" ? "export" : group === "types" ? "type" : group.replace(/s$/, ""),
         });
     for (const group of DEPENDENCY_GROUPS)
       for (const item of issue[group] ?? [])
-        deadExportItems.push({ file: issue.file, name: item.name ?? String(item), kind: group, depKey: true });
+        deadExportItems.push({ file: issue.file, name: symbolName(item), kind: group, depKey: true });
   }
 
   const knipDeadSet = new Set(deadFileRels);
