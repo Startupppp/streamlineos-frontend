@@ -60,7 +60,7 @@ export default async function ApplicationStatusPage({ params }: Props) {
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-lg border px-3 py-2.5">
                 <p className="text-muted-foreground mb-0.5">Applied On</p>
-                <p className="font-medium">{format(new Date(data.appliedAt), "dd MMM yyyy")}</p>
+                <p className="font-medium">{data.appliedAt ? format(new Date(data.appliedAt), "dd MMM yyyy") : "—"}</p>
               </div>
               <div className="rounded-lg border px-3 py-2.5">
                 <p className="text-muted-foreground mb-0.5">Last Updated</p>

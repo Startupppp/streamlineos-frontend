@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { publicJobListContract } from "@/lib/public-schema";
+import type { z } from "zod";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,30 +9,7 @@ import { publicGet } from "@/lib/public-fetch";
 
 type Props = { params: Promise<{ orgSlug: string }> };
 
-interface OrgPublicInfo {
-  id: number;
-  name: string;
-  logo: string | null;
-  industry: string | null;
-}
-
-interface JobPublicItem {
-  id: number;
-  title: string;
-  location: string | null;
-  type: string | null;
-  experience: string | null;
-  salaryMin: string | null;
-  salaryMax: string | null;
-  openings: number;
-  applicationDeadline: string | null;
-  createdAt: string;
-}
-
-interface CareersPageData {
-  org: OrgPublicInfo;
-  jobs: JobPublicItem[];
-}
+type CareersPageData = z.infer<typeof publicJobListContract>;
 
 const typeLabels: Record<string, string> = {
   FULL_TIME: "Full-time",
@@ -70,7 +48,7 @@ export default async function CareersPage({ params }: Props) {
         <div className="max-w-3xl mx-auto px-4 py-10">
           <div className="flex items-center gap-4 mb-4">
             {org.logo && (
-              <Image src={org.logo} alt={org.name} width={56} height={56} className="rounded-lg object-contain border" />
+              <Image src={org.logo} alt={org.name ?? ""} width={56} height={56} className="rounded-lg object-contain border" />
             )}
             <div>
               <h1 className="text-2xl font-bold">{org.name}</h1>
