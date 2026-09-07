@@ -37,7 +37,7 @@ export function useGenerateCalendarMonth() {
   return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "generate"],
     mutationFn: ({ month }: { month: string }) =>
-      apiClient.post<{ ok: boolean }>(`/payroll/calendar/generate?month=${encodeURIComponent(month)}`, undefined, undefined, generateCalendarResponseC),
+      apiClient.post(`/payroll/calendar/generate?month=${encodeURIComponent(month)}`, undefined, undefined, generateCalendarResponseC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.calendarAll });
     },

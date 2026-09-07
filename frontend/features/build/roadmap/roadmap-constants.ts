@@ -28,10 +28,7 @@ export const CHANGELOG_TYPE_OPTIONS: { value: ChangelogType; label: string }[] =
   { value: "fix", label: "Fix" },
 ];
 
-export const FEEDBACK_STATUS_VARIANT: Record<
-  FeedbackStatus,
-  "secondary" | "default" | "outline" | "destructive"
-> = {
+export const FEEDBACK_STATUS_VARIANT: Record<string, "secondary" | "default" | "outline" | "destructive"> = {
   open: "secondary",
   planned: "outline",
   in_progress: "default",
@@ -39,10 +36,7 @@ export const FEEDBACK_STATUS_VARIANT: Record<
   declined: "destructive",
 };
 
-export const CHANGELOG_TYPE_VARIANT: Record<
-  ChangelogType,
-  "default" | "secondary" | "outline"
-> = {
+export const CHANGELOG_TYPE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   feature: "default",
   improvement: "secondary",
   fix: "outline",

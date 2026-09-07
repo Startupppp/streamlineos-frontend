@@ -121,7 +121,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   const handleTicketClickForTable = useCallback(
     (ticketId: number) => {
       const ticket = tickets.find((t) => t.id === ticketId);
-      if (!ticket) return;
+      if (!ticket || ticket.projectId === null) return;
       router.push(
         getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
       );

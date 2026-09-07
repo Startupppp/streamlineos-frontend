@@ -60,12 +60,14 @@ const EDIT_DEFAULTS: EditFormValues = {
   status: "active",
 };
 
+const MANAGED_PRODUCT_STATUSES = ["active", "archived"] as const;
+
 function toEditForm(p: ManagedProduct): EditFormValues {
   return {
     name: p.name,
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
-    status: p.status,
+    status: MANAGED_PRODUCT_STATUSES.find((v) => v === p.status) ?? "active",
   };
 }
 

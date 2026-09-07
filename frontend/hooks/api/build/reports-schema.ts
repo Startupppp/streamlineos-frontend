@@ -18,44 +18,49 @@ export const analyticsContract = z.object({
   }),
 });
 
-export const burnupDataContract = z.object({
-  dates: z.array(z.string()),
-  completed: z.array(z.number().int()),
-  added: z.array(z.number().int()),
-  total: z.array(z.number().int()).optional(),
-  scope: z.array(z.number().int()).optional(),
-}).passthrough();
+export const velocityContract = z.array(z.object({
+  sprintId: z.number().int(),
+  name: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  committedPoints: z.number().int(),
+  completedPoints: z.number().int(),
+  committedCount: z.number().int(),
+  completedCount: z.number().int(),
+}));
+
+export const burnupDataContract = z.array(z.object({
+  date: z.string(),
+  scope: z.number(),
+  completed: z.number(),
+}));
 
 export const cfdDataContract = z.object({
   dates: z.array(z.string()),
-  statuses: z.array(z.string()),
-  data: z.array(z.array(z.number().int())),
-}).passthrough();
+  groups: z.array(z.string()),
+  series: z.array(z.object({
+    date: z.string(),
+    backlog: z.number(),
+    unstarted: z.number(),
+    started: z.number(),
+    completed: z.number(),
+    cancelled: z.number(),
+  })),
+});
 
 export const criticalPathContract = z.object({
-  tasks: z.array(z.object({
-    id: z.number().int(),
+  criticalPath: z.array(z.object({
+    ticketId: z.number().int(),
     title: z.string(),
-    duration: z.number().int(),
-    earlyStart: z.number().int(),
-    earlyFinish: z.number().int(),
-    lateStart: z.number().int(),
-    lateFinish: z.number().int(),
-    slack: z.number().int(),
-    isCritical: z.boolean(),
-  })).optional(),
-  criticalPath: z.array(z.number().int()).optional(),
-}).passthrough();
-
-export const velocityContract = z.object({
-  sprints: z.array(z.object({
-    sprintId: z.number().int(),
-    sprintName: z.string(),
-    committed: z.number().int(),
-    completed: z.number().int(),
-  })).optional(),
-  avgVelocity: z.number().optional(),
-}).passthrough();
+    estimate: z.number(),
+    earliestStart: z.number(),
+    earliestFinish: z.number(),
+  })),
+  totalDuration: z.number(),
+  nodeCount: z.number().int(),
+  edgeCount: z.number().int(),
+  hasCycle: z.boolean(),
+});
 
 export const cycleTimeContract = z.array(z.object({
   week: z.string(),
@@ -77,6 +82,7 @@ export const snapshotResultContract = z.object({
 
 const customerListItemContract = z.object({
   id: z.number().int(),
+  orgId: z.string().optional().default(""),
   name: z.string(),
   domain: z.string().nullable(),
   industry: z.string().nullable(),
@@ -84,7 +90,12 @@ const customerListItemContract = z.object({
   website: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   description: z.string().nullable(),
-  createdAt: z.string(),
+  healthScore: z.number().nullable().optional(),
+  parentId: z.number().int().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  openRequestCount: z.number().int().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
 });
 
 export const customerPageContract = z.object({

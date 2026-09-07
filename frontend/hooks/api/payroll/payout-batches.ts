@@ -40,10 +40,10 @@ import type {
 
 export function usePayoutValidation(runId: number) {
   const canManage = useCan("payroll:bank:manage");
-  return useQuery<ValidationItem[]>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.bankValidation(runId),
     queryFn: ({ signal }) =>
-      apiClient.get<ValidationItem[]>(
+      apiClient.get(
         `/payroll/runs/${runId}/payout/validation`, undefined, signal, payoutValidationC,
       ),
     staleTime: 30_000,
@@ -58,10 +58,10 @@ type PayoutBatchesPage = {
 
 export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
-  return useQuery<PayoutBatchesPage>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.bankBatches(runId),
     queryFn: ({ signal }) =>
-      apiClient.get<PayoutBatchesPage>(
+      apiClient.get(
         "/payroll/payout/batches",
         runId ? { runId } : undefined, signal, batchListC,
       ),
@@ -72,10 +72,10 @@ export function usePayoutBatches(runId?: number) {
 
 export function usePayoutBatch(batchId: number) {
   const canManage = useCan("payroll:bank:manage");
-  return useQuery<GetBatchResult>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.bankBatch(batchId),
     queryFn: ({ signal }) =>
-      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`, undefined, signal, batchDetailC),
+      apiClient.get(`/payroll/payout/batches/${batchId}`, undefined, signal, batchDetailC),
     staleTime: 30_000,
     enabled: canManage && batchId > 0,
   });
@@ -83,14 +83,12 @@ export function usePayoutBatch(batchId: number) {
 
 export function useCreatePayoutBatch() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<
-    CreateBatchResult,
-    Error,
-    { runId: number; format?: BatchFormat; idempotencyKey?: string }
-  >("payroll:bank:manage", {
+  return useAuthorizedMutation(
+    "payroll:bank:manage",
+    {
     mutationKey: ["payroll", "create-batch"],
-    mutationFn: ({ runId, format, idempotencyKey }) =>
-      apiClient.post<CreateBatchResult>(
+    mutationFn: ({ runId, format, idempotencyKey }: { runId: number; format?: BatchFormat; idempotencyKey?: string }) =>
+      apiClient.post(
         `/payroll/runs/${runId}/payout/batches`,
         format ? { format } : {},
         idempotencyKey
@@ -252,14 +250,10 @@ export function useImportBankReturn() {
   const qc = useQueryClient();
   const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
   const operation = useIdempotentOperation();
-  return useAuthorizedMutation<
-    BankReturnImportResult,
-    Error,
-    { batchId: number; csv: string; runId?: number }
-  >("payroll:bank:manage", {
+  return useAuthorizedMutation("payroll:bank:manage", {
     mutationKey: ["payroll", "import-bank-return"],
-    mutationFn: (variables) =>
-      apiClient.post<BankReturnImportResult>(
+    mutationFn: (variables: { batchId: number; csv: string; runId?: number }) =>
+      apiClient.post(
         `/payroll/payout/batches/${variables.batchId}/import-return`,
         { csv: variables.csv },
         operation.configFor(variables),
@@ -280,10 +274,10 @@ export function useEmployeeBankDetails(
   enabled = false,
 ) {
   const canView = useCan("payroll:bank:view");
-  return useQuery<EmployeeBankDetails>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.employeeBank(employeeUserId),
     queryFn: ({ signal }) =>
-      apiClient.get<EmployeeBankDetails>(
+      apiClient.get(
         `/payroll/employees/${employeeUserId}/bank`, undefined, signal, payoutBankDetailsC,
       ),
     staleTime: 0,

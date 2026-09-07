@@ -24,7 +24,7 @@ export const testCaseRowContract = z.object({
   caseNumber: z.number().int(),
   title: z.string(),
   preconditions: z.string().nullable(),
-  steps: z.unknown(),
+  steps: z.array(z.object({ action: z.string(), expected: z.string() })).nullable(),
   expectedResult: z.string().nullable(),
   priority: z.string(),
   component: z.string().nullable(),
@@ -57,6 +57,14 @@ const testRunRowContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
+  counts: z.object({
+    total: z.number().int(),
+    passed: z.number().int(),
+    failed: z.number().int(),
+    blocked: z.number().int(),
+    skipped: z.number().int(),
+    notRun: z.number().int(),
+  }).optional(),
 });
 
 const testRunListItemContract = testRunRowContract.extend({
@@ -76,7 +84,7 @@ export const testRunResultRowContract = z.object({
   projectId: z.number().int(),
   runId: z.number().int(),
   testCaseId: z.number().int(),
-  status: z.string(),
+  status: z.enum(["not_run", "passed", "failed", "blocked", "skipped"]),
   notes: z.string().nullable(),
   executedBy: z.string().nullable(),
   executedAt: z.string().nullable(),

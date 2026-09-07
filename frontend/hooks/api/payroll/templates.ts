@@ -46,7 +46,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.templates(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResult<TemplateRow>>(
+      apiClient.get(
         "/payroll/templates",
         params as Record<string, unknown> | undefined, signal, templateListC,
       ),
@@ -87,7 +87,7 @@ export function useDuplicateTemplate() {
   return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "duplicate"],
     mutationFn: ({ templateId, name, description }: DuplicateInput) =>
-      apiClient.post<TemplateRow>(
+      apiClient.post(
         `/payroll/templates/${templateId}/duplicate`,
         { name, description },
         undefined,

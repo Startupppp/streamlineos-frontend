@@ -5,7 +5,7 @@ const publicationItemContract = z.object({
   userId: z.string().nullable(),
   workerId: z.string().nullable(),
   runEmployeeId: z.number(),
-  status: z.string(),
+  status: z.enum(["PENDING", "PUBLISHED", "FAILED"]),
   channel: z.string().nullable().optional(),
   pdfUrl: z.string().nullable(),
   publishedAt: z.string().nullable(),
@@ -38,3 +38,4 @@ export const retryOnePublishResponseContract = retryPublishResponseContract.exte
 });
 
 export type PublicationList = z.infer<typeof publicationListContract>;
+export type PublicationItem = z.infer<typeof publicationItemContract>;

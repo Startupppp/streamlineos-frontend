@@ -20,9 +20,9 @@ const payslipTemplateC = lazyContract(() =>
 
 export function usePayslipTemplates() {
   const canView = useCan("payroll:payslips:view");
-  return useQuery<PayslipTemplate[]>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.payslipTemplates(),
-    queryFn: ({ signal }) => apiClient.get<PayslipTemplate[]>("/payroll/payslip-templates", undefined, signal, payslipTemplateListC),
+    queryFn: ({ signal }) => apiClient.get("/payroll/payslip-templates", undefined, signal, payslipTemplateListC),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -42,45 +42,43 @@ export function usePreviewPayslipTemplate() {
 
 export function useCreatePayslipTemplate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<
-    PayslipTemplate,
-    Error,
+  return useAuthorizedMutation(
+    "payroll:payslips:manage",
     {
-      name: string;
-      layout: PayslipLayout;
-      config: PayslipTemplateConfig;
-      isDefault?: boolean;
-    }
-  >("payroll:payslips:manage", {
-    mutationKey: ["payroll", "create-template"],
-    mutationFn: (body) =>
-      apiClient.post<PayslipTemplate>("/payroll/payslip-templates", body, undefined, payslipTemplateC),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.payslipTemplates() });
+      mutationKey: ["payroll", "create-template"],
+      mutationFn: (body: {
+        name: string;
+        layout: PayslipLayout;
+        config: PayslipTemplateConfig;
+        isDefault?: boolean;
+      }) =>
+        apiClient.post("/payroll/payslip-templates", body, undefined, payslipTemplateC),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.payslipTemplates() });
+      },
     },
-  });
+  );
 }
 
 export function useUpdatePayslipTemplate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<
-    PayslipTemplate,
-    Error,
+  return useAuthorizedMutation(
+    "payroll:payslips:manage",
     {
-      templateId: number;
-      name?: string;
-      layout?: PayslipLayout;
-      config?: Partial<PayslipTemplateConfig>;
-      isDefault?: boolean;
-    }
-  >("payroll:payslips:manage", {
-    mutationKey: ["payroll", "update-template"],
-    mutationFn: ({ templateId, ...body }) =>
-      apiClient.patch<PayslipTemplate>(`/payroll/payslip-templates/${templateId}`, body, undefined, payslipTemplateC),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.payslipTemplates() });
+      mutationKey: ["payroll", "update-template"],
+      mutationFn: ({ templateId, ...body }: {
+        templateId: number;
+        name?: string;
+        layout?: PayslipLayout;
+        config?: Partial<PayslipTemplateConfig>;
+        isDefault?: boolean;
+      }) =>
+        apiClient.patch(`/payroll/payslip-templates/${templateId}`, body, undefined, payslipTemplateC),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.payslipTemplates() });
+      },
     },
-  });
+  );
 }
 
 export function useDeletePayslipTemplate() {

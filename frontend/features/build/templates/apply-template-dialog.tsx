@@ -142,8 +142,8 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
               />
             </div>
             <div className="rounded-md border p-3 space-y-1 text-sm">
-              <p className="font-medium">{template.tickets.length} tasks will be created:</p>
-              {template.tickets.slice(0, 5).map((t) => (
+              <p className="font-medium">{(template.tickets ?? []).length} tasks will be created:</p>
+              {(template.tickets ?? []).slice(0, 5).map((t) => (
                 <div key={t.id} className="flex items-center gap-2 text-muted-foreground">
                   <Badge variant="outline" className="text-micro">{t.type}</Badge>
                   <span className="truncate">{t.title}</span>
@@ -152,8 +152,8 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
                   )}
                 </div>
               ))}
-              {template.tickets.length > 5 && (
-                <p className="text-xs text-muted-foreground">+{template.tickets.length - 5} more</p>
+              {(template.tickets ?? []).length > 5 && (
+                <p className="text-xs text-muted-foreground">+{(template.tickets ?? []).length - 5} more</p>
               )}
             </div>
             <DialogFooter>

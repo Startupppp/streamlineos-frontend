@@ -1,7 +1,8 @@
 "use client";
 import type { z } from "zod";
-import type { gitConnectionUpdateContract as gitConnectionUpdateContractDef } from "@/hooks/api/git-integration-schema";
+import type { gitConnectionListContract as gitConnectionListContractDef } from "@/hooks/api/git-integration-schema";
 import type { gitConnectionCreateContract as gitConnectionCreateContractDef } from "@/hooks/api/git-integration-schema";
+import type { gitConnectionUpdateContract as gitConnectionUpdateContractDef } from "@/hooks/api/git-integration-schema";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -28,7 +29,9 @@ const ticketGitLinksContract = lazyContract(() =>
 
 export type GitProvider = "github" | "gitlab" | "bitbucket";
 
-export type GitConnection = z.infer<typeof gitConnectionUpdateContractDef>;
+export type GitConnection = z.infer<typeof gitConnectionListContractDef>["data"][number];
+
+export type GitConnectionUpdated = z.infer<typeof gitConnectionUpdateContractDef>;
 
 export type CreatedGitConnection = z.infer<typeof gitConnectionCreateContractDef>;
 
@@ -56,7 +59,7 @@ export function useGitConnections() {
   // stayed empty.
   return useGatedQuery("integrations:git:view", {
     queryKey: accountingAndSupportQueryKeys.gitIntegration.connections(),
-    queryFn: ({ signal }) => apiClient.get<GitConnection[]>("/settings/integrations/git", undefined, signal, gitConnectionListContract),
+    queryFn: ({ signal }) => apiClient.get("/settings/integrations/git", undefined, signal, gitConnectionListContract),
     staleTime: 60_000,
   });
 }
@@ -76,7 +79,7 @@ export function useUpdateGitConnection() {
   return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["update", "git", "connection"],
     mutationFn: ({ id, ...input }: UpdateGitConnectionInput) =>
-      apiClient.patch<GitConnection>(`/settings/integrations/git/${id}`, input, undefined, gitConnectionUpdateContract),
+      apiClient.patch<GitConnectionUpdated>(`/settings/integrations/git/${id}`, input, undefined, gitConnectionUpdateContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }

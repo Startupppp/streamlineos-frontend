@@ -18,7 +18,7 @@ export const loanContract = z.object({
   emiAmount: z.string().nullable(),
   totalEmis: z.number().nullable(),
   paidEmis: z.number(),
-  status: z.string(),
+  status: z.enum(["PENDING", "APPROVED", "ACTIVE", "REPAID", "REJECTED"]),
   userMembershipId: z.number().nullable(),
   approvedBy: z.string().nullable(),
   approvedAt: z.string().nullable(),

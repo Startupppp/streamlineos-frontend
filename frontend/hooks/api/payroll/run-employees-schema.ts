@@ -1,6 +1,52 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
+const calcExplainStepContract = z.object({
+  steps: z.array(z.string()),
+  note: z.string().optional(),
+});
+
+const calculationSnapshotLineContract = z.object({
+  code: z.string(),
+  name: z.string(),
+  category: z.enum(["EARNING", "DEDUCTION", "EMPLOYER_CONTRIBUTION", "REIMBURSEMENT", "TAX", "ADJUSTMENT"]),
+  amount: z.string(),
+  calcMethod: z.string(),
+  taxable: z.boolean(),
+  sortOrder: z.number(),
+  explain: calcExplainStepContract,
+});
+
+export const calculationSnapshotContract = z.object({
+  policyVersionId: z.number().nullable(),
+  computedAt: z.string(),
+  currency: z.string(),
+  scheduledDays: z.string(),
+  paidDays: z.string(),
+  lopDays: z.string(),
+  overtimeHours: z.string(),
+  lines: z.array(calculationSnapshotLineContract),
+  totals: z.object({
+    gross: z.string(),
+    deductions: z.string(),
+    employerContributions: z.string(),
+    net: z.string(),
+  }),
+  variance: z.object({
+    previousRunId: z.number().nullable(),
+    previousNet: z.string().nullable(),
+    netDelta: z.string().nullable(),
+    netDeltaPercent: z.number().nullable(),
+    changedComponents: z.array(z.object({
+      code: z.string(),
+      previous: z.string().nullable(),
+      current: z.string().nullable(),
+    })),
+  }).nullable().optional(),
+}).nullable();
+
+export type CalculationSnapshot = z.infer<typeof calculationSnapshotContract>;
+
 export const runEmployeeListItemContract = z.object({
   id: z.number(),
   userId: z.string().nullable(),
@@ -27,7 +73,7 @@ export const runEmployeeDetailContract = z.object({
   net: z.string(),
   status: z.string(),
   holdReason: z.string().nullable(),
-  calculationSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  calculationSnapshot: calculationSnapshotContract,
   userName: z.string().nullable(),
   userEmail: z.string(),
 });

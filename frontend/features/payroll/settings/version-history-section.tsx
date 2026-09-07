@@ -4,13 +4,13 @@ import { PageSection } from "@/components/ui/page-wrapper";
 import { usePolicyVersions } from "@/hooks/api/payroll";
 import { PayrollStatusBadge, formatMonth } from "@/features/payroll/shared";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import type { VersionRow } from "@/types/payroll/setup";
+import type { PolicyVersionRow } from "@/hooks/api/payroll/policies-schema";
 
 type VersionHistorySectionProps = {
   policyId: number;
 };
 
-const columns: DataTableColumn<VersionRow>[] = [
+const columns: DataTableColumn<PolicyVersionRow>[] = [
   {
     key: "version",
     header: "Version",

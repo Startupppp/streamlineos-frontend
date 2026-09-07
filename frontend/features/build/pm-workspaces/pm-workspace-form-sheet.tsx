@@ -50,8 +50,10 @@ type EditFormValues = z.infer<typeof editSchema>;
 const CREATE_DEFAULTS: CreateFormValues = { name: "", slug: "" };
 const EDIT_DEFAULTS: EditFormValues = { name: "", status: "active" };
 
+const PM_WORKSPACE_STATUSES = ["active", "archived"] as const;
+
 function toEditForm(w: PmWorkspace): EditFormValues {
-  return { name: w.name, status: w.status };
+  return { name: w.name, status: PM_WORKSPACE_STATUSES.find((v) => v === w.status) ?? "active" };
 }
 
 interface CreateProps {

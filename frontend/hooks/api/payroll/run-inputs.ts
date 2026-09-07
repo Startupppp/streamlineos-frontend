@@ -32,7 +32,7 @@ export function useRunInputs(runId: number, params?: { userId?: string }) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.runInputs(runId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<RunInput[]>(`/payroll/runs/${runId}/inputs`, params, signal, inputsListC),
+      apiClient.get(`/payroll/runs/${runId}/inputs`, params, signal, inputsListC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

@@ -18,10 +18,10 @@ const publishResponseC = lazyContract(() =>
 
 export function useRunPublications(runId: number) {
   const canView = useCan("payroll:payslips:view");
-  return useQuery<PayslipPublication[]>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.runPublications(runId),
     queryFn: ({ signal }) =>
-      apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`, undefined, signal, publicationListC),
+      apiClient.get(`/payroll/runs/${runId}/payslips`, undefined, signal, publicationListC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });
@@ -29,10 +29,10 @@ export function useRunPublications(runId: number) {
 
 export function usePublishPayslips() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PublishResult, Error, { runId: number; userIds?: string[] }>("payroll:payslips:manage", {
+  return useAuthorizedMutation("payroll:payslips:manage", {
     mutationKey: ["payroll", "publish-payslips"],
-    mutationFn: ({ runId, userIds }) =>
-      apiClient.post<PublishResult>(`/payroll/runs/${runId}/payslips/publish`, {
+    mutationFn: ({ runId, userIds }: { runId: number; userIds?: string[] }) =>
+      apiClient.post(`/payroll/runs/${runId}/payslips/publish`, {
         userIds,
       }, undefined, publishResponseC),
     onSuccess: (_, { runId }) => {

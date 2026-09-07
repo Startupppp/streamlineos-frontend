@@ -171,7 +171,7 @@ export function ComponentsPageContent() {
       <PageWrapper
         title="Component Catalog"
         subtitle="Manage salary components used in payroll runs"
-        badge={data?.total ?? 0}
+        badge={data?.items.length}
         filters={filters}
         actions={
           canManage ? (
@@ -200,7 +200,7 @@ export function ComponentsPageContent() {
               mode: "server",
               page,
               pageSize: 20,
-              total: data?.total ?? 0,
+              total: data?.pagination ? (data.pagination.hasMore ? (page * 20) + 1 : (page - 1) * 20 + (data.items.length)) : 0,
               onPageChange: handlePageChange,
             }}
             emptyState={

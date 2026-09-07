@@ -89,13 +89,15 @@ export const workflowExecutionTriggerContract = workflowExecutionRowSchema;
 
 export const workflowExecutionCancelContract = workflowExecutionRowSchema;
 
+const approvalStatusEnum = z.enum(["pending", "approved", "rejected", "delegated", "expired"]);
+
 export const workflowPendingApprovalsContract = z.array(
   z.object({
     id: z.string().uuid(),
     executionId: z.string().uuid(),
     stepId: z.string().uuid(),
     approverId: z.string(),
-    status: z.string(),
+    status: approvalStatusEnum,
     comment: z.string().nullable(),
     approvedAt: z.string().nullable(),
     rejectedAt: z.string().nullable(),
@@ -110,7 +112,7 @@ export const workflowApprovalActionContract = z.object({
   executionId: z.string().uuid(),
   stepId: z.string().uuid(),
   approverId: z.string(),
-  status: z.string(),
+  status: approvalStatusEnum,
   comment: z.string().nullable(),
   approvedAt: z.string().nullable(),
   rejectedAt: z.string().nullable(),
@@ -194,8 +196,9 @@ const workflowTemplateSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  category: z.string().optional(),
-  definitionJson: z.record(z.string(), z.unknown()).optional(),
+  category: z.string(),
+  definitionJson: z.record(z.string(), z.unknown()),
+  createdAt: wireDate(),
 });
 
 export const workflowTemplateListContract = z.array(workflowTemplateSchema);

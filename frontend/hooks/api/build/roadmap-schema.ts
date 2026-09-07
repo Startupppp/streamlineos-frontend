@@ -100,20 +100,25 @@ export const templateRowContract = z.object({
   createdBy: z.string().nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
+  tickets: z.array(z.object({
+    id: z.number().int(),
+    templateId: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    type: z.string(),
+    priority: z.string(),
+    estimatedHours: z.string().nullable(),
+    order: z.number().int(),
+    phase: z.string().nullable(),
+  })).optional(),
 });
 
 export const templateListContract = z.array(templateRowContract);
 
 export const applyTemplateResultContract = z.object({
-  project: z.object({
-    id: z.number().int(),
-    name: z.string(),
-    key: z.string(),
-  }),
-  tickets: z.array(z.object({
-    id: z.number().int(),
-    title: z.string(),
-  })),
+  projectId: z.number().int(),
+  key: z.string(),
+  ticketsCreated: z.number().int(),
 });
 
 export const roadmapSuccessContract = z.object({ success: z.literal(true) });

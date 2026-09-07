@@ -266,7 +266,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onConfirm={handleDelegate}
         isPending={updateApproval.isPending}
         members={members}
-        currentApproverId={delegateTarget?.approverId}
+        currentApproverId={delegateTarget?.requestedById ?? undefined}
       />
       <ConfirmDialog
         open={!!cancelTarget}

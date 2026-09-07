@@ -48,13 +48,15 @@ const CREATE_DEFAULTS: DecisionFormValues = {
   status: "proposed", ownerId: "", decidedAt: "", revisitAt: "", linkedTicketId: "",
 };
 
+const DECISION_STATUS_VALUES: ReadonlyArray<"proposed" | "accepted" | "superseded" | "revisit"> = ["proposed", "accepted", "superseded", "revisit"];
+
 function decisionToFormValues(d: Decision): DecisionFormValues {
   return {
     title: d.title,
     context: d.context ?? "",
     decision: d.decision ?? "",
     optionsConsidered: d.optionsConsidered ?? "",
-    status: d.status,
+    status: DECISION_STATUS_VALUES.find((v) => v === d.status) ?? "proposed",
     ownerId: d.ownerId ?? "",
     decidedAt: d.decidedAt ? d.decidedAt.slice(0, 10) : "",
     revisitAt: d.revisitAt ? d.revisitAt.slice(0, 10) : "",

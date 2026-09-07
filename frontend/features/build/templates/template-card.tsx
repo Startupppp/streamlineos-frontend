@@ -118,9 +118,9 @@ export const TemplateCard = memo(function TemplateCard({
   const dotColor = getColorSafe(categoryDotColors, category);
   const avatarTint = getColorSafe(categoryAvatarTints, category);
   const initials = getTemplateInitials(template.name);
-  const taskCount = template.tickets.length;
+  const taskCount = (template.tickets ?? []).length;
   const hasTasks = taskCount > 0;
-  const { preview, overflow } = getPreviewTickets(template.tickets);
+  const { preview, overflow } = getPreviewTickets(template.tickets ?? []);
 
   return (
     <motion.div

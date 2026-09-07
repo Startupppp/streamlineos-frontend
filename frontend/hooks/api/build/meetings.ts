@@ -197,7 +197,7 @@ export function useConvertActionItemToTask(projectId: number, meetingId: number)
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "convert"],
     mutationFn: (itemId: number) =>
-      apiClient.post<ActionItem>(
+      apiClient.post<{ actionItem: ActionItem; ticketId: number }>(
         `/build/${projectId}/meetings/${meetingId}/action-items/${itemId}/convert-to-task`,
         {},
         undefined,

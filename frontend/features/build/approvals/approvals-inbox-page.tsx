@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
-import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
+import type { ApprovalInboxItem, ApprovalStatus, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +34,8 @@ interface DecideTarget {
   projectId: number;
   title: string;
 }
+
+const APPROVAL_STATUS_VALUES: ApprovalStatus[] = ["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"];
 
 export function ApprovalsInboxPage() {
   const canDecide = useCan("build:approvals:decide");
@@ -68,7 +70,7 @@ export function ApprovalsInboxPage() {
   }, [members]);
 
   const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
-    setDecideTarget({ approvalId: item.id, projectId: item.projectId, title: item.title });
+    setDecideTarget({ approvalId: item.id, projectId: item.projectId ?? 0, title: item.title });
   }, []);
 
   const handleDecideConfirm = useCallback((input: DecideApprovalInput) => {
@@ -103,7 +105,7 @@ export function ApprovalsInboxPage() {
           className="max-w-[6rem] text-dense font-medium text-primary hover:underline min-w-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <TruncatedText text={row.projectKey} />
+          <TruncatedText text={row.projectKey ?? "—"} />
         </Link>
       ),
     },
@@ -161,7 +163,10 @@ export function ApprovalsInboxPage() {
     {
       key: "status",
       header: "Status",
-      cell: (row) => <ApprovalStatusBadge status={row.status} />,
+      cell: (row) => {
+        const s = APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
+        return <ApprovalStatusBadge status={s} />;
+      },
     },
     {
       key: "actions",

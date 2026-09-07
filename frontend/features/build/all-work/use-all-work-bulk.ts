@@ -49,6 +49,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const ticketsByProject = useMemo(() => {
     const map = new Map<number, number[]>();
     for (const t of selectedTickets) {
+      if (t.projectId === null) continue;
       const existing = map.get(t.projectId);
       if (existing) {
         existing.push(t.id);

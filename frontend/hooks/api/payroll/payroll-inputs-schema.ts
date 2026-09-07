@@ -5,7 +5,7 @@ export const payrollPeriodContract = z.object({
   id: z.number(),
   orgId: z.string(),
   periodKey: z.string(),
-  status: z.string(),
+  status: z.enum(["open", "building", "built", "locked"]),
   cutoffDate: z.string().nullable(),
   builtAt: z.string().nullable(),
   lockedAt: z.string().nullable(),

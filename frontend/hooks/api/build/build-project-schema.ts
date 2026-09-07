@@ -91,7 +91,21 @@ const projectDetailMemberSchema = z.object({
       image: z.string().nullable(),
     }),
   }),
-});
+}).transform((m) => ({
+  id: m.id,
+  projectId: m.projectId,
+  userId: m.user.user.id,
+  role: m.role,
+  joinedAt: null as null,
+  user: {
+    id: m.user.user.id,
+    name: m.user.user.name,
+    firstName: m.user.user.firstName,
+    lastName: m.user.user.lastName,
+    email: m.user.user.email,
+    image: m.user.user.image,
+  },
+}));
 
 const projectDetailSchema = projectRowSchema.extend({
   statuses: z.array(projectStatusRowSchema),

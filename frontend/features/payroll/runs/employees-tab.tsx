@@ -8,7 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useRunEmployees } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { BreakdownSheet } from "./breakdown-sheet";
-import type { RunEmployee } from "@/types/payroll/runs";
+import type { RunEmployeeListItem } from "@/hooks/api/payroll/run-employees-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const WORKER_TYPE_COLORS: Record<string, string> = {
@@ -24,13 +24,13 @@ interface EmployeesTabProps {
   isLocked?: boolean;
 }
 
-const COLUMNS: DataTableColumn<RunEmployee>[] = [
+const COLUMNS: DataTableColumn<RunEmployeeListItem>[] = [
   {
     key: "employee",
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <TruncatedText text={row.userName} className="text-dense font-medium" />
+        <TruncatedText text={row.userName ?? ""} className="text-dense font-medium" />
         <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
       </div>
     ),
@@ -90,16 +90,16 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
 export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState("");
-  const [selectedRunEmployeeId, setSelectedRunEmployeeId] = useState<number | null>(null);
+  const [selectedRunEmployeeListItemId, setSelectedRunEmployeeListItemId] = useState<number | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useRunEmployees(runId, { cursor, limit: 20, search: search || undefined });
 
-  function handleRowClick(row: RunEmployee) {
-    setSelectedRunEmployeeId(row.id);
+  function handleRowClick(row: RunEmployeeListItem) {
+    setSelectedRunEmployeeListItemId(row.id);
   }
 
   function handleSheetClose() {
-    setSelectedRunEmployeeId(null);
+    setSelectedRunEmployeeListItemId(null);
   }
 
   function handleSearchChange(val: string) {
@@ -184,7 +184,7 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
 
       <BreakdownSheet
         runId={runId}
-        runEmployeeId={selectedRunEmployeeId}
+        runEmployeeId={selectedRunEmployeeListItemId}
         onClose={handleSheetClose}
         isLocked={isLocked}
       />

@@ -85,3 +85,6 @@ export const policyActivateResponseContract = z.object({
 
 export type PayrollPolicyRow = z.infer<typeof payrollPolicyRowContract>;
 export type PolicyCurrentResponse = z.infer<typeof policyCurrentResponseContract>;
+export type PolicyVersionRow = z.infer<typeof payrollPolicyVersionRowContract>;
+export type PolicyActivateResult = z.infer<typeof policyActivateResponseContract>;
+export type PolicyToggleImpact = z.infer<typeof policyToggleImpactResponseContract>;

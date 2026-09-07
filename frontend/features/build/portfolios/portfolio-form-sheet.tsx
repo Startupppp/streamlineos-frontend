@@ -30,13 +30,16 @@ const DEFAULTS: FormValues = {
   name: "", description: "", ownerId: "", status: "active", health: "", strategicGoal: "",
 };
 
+const PORTFOLIO_STATUSES = ["active", "on_hold", "completed", "archived"] as const;
+const PORTFOLIO_HEALTHS = ["", "on_track", "at_risk", "off_track"] as const;
+
 function toForm(p: Portfolio): FormValues {
   return {
     name: p.name,
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
-    status: p.status,
-    health: p.health ?? "",
+    status: PORTFOLIO_STATUSES.find((v) => v === p.status) ?? "active",
+    health: PORTFOLIO_HEALTHS.find((v) => v === (p.health ?? "")) ?? "",
     strategicGoal: p.strategicGoal ?? "",
   };
 }

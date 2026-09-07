@@ -35,16 +35,16 @@ import {
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
-const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
+const LEVEL_LABEL: Record<string, string> = { low: "Low", medium: "Medium", high: "High" };
+const LEVEL_STYLE: Record<string, string> = {
   low: "text-muted-foreground border-border",
   medium: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   high: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
 };
-const STATUS_LABEL: Record<RiskStatus, string> = {
+const STATUS_LABEL: Record<string, string> = {
   open: "Open", mitigating: "Mitigating", monitoring: "Monitoring", accepted: "Accepted", closed: "Closed",
 };
-const STATUS_STYLE: Record<RiskStatus, string> = {
+const STATUS_STYLE: Record<string, string> = {
   open: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   mitigating: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   monitoring: "text-primary border-border bg-primary/5 dark:bg-primary/10",

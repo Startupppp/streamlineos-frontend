@@ -17,16 +17,16 @@ interface ReportVarianceProps {
   month: string;
 }
 
-function formatDelta(value: string): string {
-  const n = parseFloat(value);
+function formatDelta(value: number | string): string {
+  const n = typeof value === "number" ? value : parseFloat(value);
   const abs = formatMoney(Math.abs(n));
   if (n > 0) return `+${abs}`;
   if (n < 0) return `−${abs}`;
   return abs;
 }
 
-function getDeltaClass(value: string): string {
-  const n = parseFloat(value);
+function getDeltaClass(value: number | string): string {
+  const n = typeof value === "number" ? value : parseFloat(value);
   if (n > 0) return "text-status-success-ink";
   if (n < 0) return "text-status-danger-ink";
   return "text-muted-foreground";

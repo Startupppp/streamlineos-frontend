@@ -71,7 +71,8 @@ export const ticketDetailContract = ticketRowContract.extend({
     .object({
       user: userSummarySchema,
     })
-    .nullable(),
+    .nullable()
+    .transform((a) => a?.user ?? null),
   reporter: userSummarySchema,
   members: z.array(
     z.object({
@@ -82,6 +83,14 @@ export const ticketDetailContract = ticketRowContract.extend({
     z.object({
       user: userSummarySchema,
     }),
+  ).transform((items) =>
+    items.map((w, i) => ({
+      id: i,
+      ticketId: 0,
+      userId: w.user?.id ?? null,
+      createdAt: null as null,
+      user: w.user,
+    })),
   ),
   attachments: z.array(
     z.object({
@@ -90,6 +99,19 @@ export const ticketDetailContract = ticketRowContract.extend({
       url: z.string(),
       uploader: userSummarySchema,
     }),
+  ).transform((items) =>
+    items.map((a) => ({
+      id: a.id,
+      orgId: "",
+      ticketId: 0,
+      fileUrl: a.url,
+      fileName: a.filename,
+      fileSize: null as null,
+      mimeType: null as null,
+      uploadedBy: a.uploader?.id ?? null,
+      createdAt: null as null,
+      uploader: a.uploader ?? undefined,
+    })),
   ),
   labels: z.array(
     z.object({
@@ -97,6 +119,14 @@ export const ticketDetailContract = ticketRowContract.extend({
       name: z.string(),
       color: z.string().nullable(),
     }),
+  ).transform((items) =>
+    items.map((l) => ({
+      id: l.id,
+      ticketId: 0,
+      labelId: l.id,
+      createdAt: null as null,
+      label: { id: l.id, orgId: "", name: l.name, color: l.color, createdAt: null as null },
+    })),
   ),
 });
 
@@ -155,7 +185,7 @@ const ticketRelationRelatedTicketSchema = z.object({
 
 const ticketRelationSchema = z.object({
   id: z.number().int(),
-  relationType: z.string(),
+  relationType: z.enum(["blocks", "blocked_by", "duplicate_of", "relates_to"]),
   relatedTicket: ticketRelationRelatedTicketSchema,
   direction: z.enum(["outgoing", "incoming"]),
 });
@@ -198,7 +228,7 @@ const checklistRowSchema = z.object({
   title: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  items: z.array(checklistItemSchema).optional(),
+  items: z.array(checklistItemSchema).default([]),
 });
 
 export const checklistRowContract = checklistRowSchema;
@@ -310,7 +340,7 @@ const allWorkItemSchema = z.object({
   labels: z.array(z.object({
     id: z.number().int(),
     name: z.string(),
-    color: z.string().nullable(),
+    color: z.string().nullable().transform((v) => v ?? ""),
   })),
 });
 

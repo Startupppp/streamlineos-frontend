@@ -51,14 +51,14 @@ const createBugFromResultSchema = z.object({
 
 type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
 
-const STATUS_STYLES: Record<TestRunStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
   in_progress: "text-status-info-ink border-status-info-rule",
   completed: "text-status-success-ink border-status-success-rule",
   aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
-const STATUS_LABELS: Record<TestRunStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",

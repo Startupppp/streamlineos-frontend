@@ -61,7 +61,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
 
   const grouped = useMemo(() => {
-    const map: Record<RoadmapStatus, RoadmapItem[]> = {
+    const map: Record<string, RoadmapItem[]> = {
       planned: [],
       in_progress: [],
       completed: [],

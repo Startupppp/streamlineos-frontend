@@ -82,7 +82,7 @@ export function usePayrollPolicyCurrent() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.policy(),
-    queryFn: ({ signal }) => apiClient.get<PolicyCurrentResult>("/payroll/policies/current", undefined, signal, policyCurrentC),
+    queryFn: ({ signal }) => apiClient.get("/payroll/policies/current", undefined, signal, policyCurrentC),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -93,7 +93,7 @@ export function useToggleImpact(toggle: string, enabled = false) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.toggleImpact(toggle),
     queryFn: ({ signal }) =>
-      apiClient.get<ToggleImpactResult>("/payroll/policies/toggle-impact", {
+      apiClient.get("/payroll/policies/toggle-impact", {
         toggle,
       }, signal, policyToggleImpactC),
     staleTime: 30_000,
@@ -141,7 +141,7 @@ export function useActivatePolicy() {
   return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "activate"],
     mutationFn: ({ policyId, ...data }: ActivatePolicyInput) =>
-      apiClient.post<ActivateResult>(
+      apiClient.post(
         `/payroll/policies/${policyId}/activate`,
         data,
         undefined,
@@ -157,7 +157,7 @@ export function usePolicyVersions(policyId: number, enabled = true) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.policyVersions(policyId),
     queryFn: ({ signal }) =>
-      apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`, undefined, signal, policyVersionsListC),
+      apiClient.get(`/payroll/policies/${policyId}/versions`, undefined, signal, policyVersionsListC),
     staleTime: 2 * 60_000,
     enabled: enabled && policyId > 0 && canView,
   });
@@ -168,7 +168,7 @@ export function useCreatePolicyVersion() {
   return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "version", "create"],
     mutationFn: ({ policyId, ...data }: CreateVersionInput) =>
-      apiClient.post<VersionRow>(
+      apiClient.post(
         `/payroll/policies/${policyId}/versions`,
         data,
         undefined,

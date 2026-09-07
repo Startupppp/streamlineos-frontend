@@ -7,7 +7,7 @@ import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workf
 import { useCan } from "@/hooks/api/access";
 import type {
   Workflow,
-  WorkflowVersion,
+  WorkflowPublishResult,
   WorkflowCursorPage,
   WorkflowListParams,
 } from "./workflows-types";
@@ -118,7 +118,7 @@ export function usePublishWorkflow() {
     mutationKey: ["workflows", "publish"],
     mutationFn: ({ id, ...input }: PublishWorkflowInput & { id: string }) => {
       assertPermission(canPublish);
-      return apiClient.post<WorkflowVersion>(`/workflows/${id}/publish`, input, undefined, workflowPublishContract);
+      return apiClient.post<WorkflowPublishResult>(`/workflows/${id}/publish`, input, undefined, workflowPublishContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });

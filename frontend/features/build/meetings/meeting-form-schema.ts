@@ -70,28 +70,36 @@ export const CREATE_DEFAULTS: MeetingFormValues = {
   recurrenceEndDate: "",
 };
 
+const MEETING_TYPES = ["meeting", "standup", "retro", "planning", "review"] as const;
+const MEETING_STATUSES = ["scheduled", "in_progress", "completed", "cancelled"] as const;
+
+function isRecurrenceRule(r: unknown): r is { frequency: MeetingFormValues["recurrenceFrequency"]; endDate?: string | null } {
+  return typeof r === "object" && r !== null && "frequency" in r;
+}
+
 export function meetingToFormValues(m: {
   title: string;
-  type: MeetingFormValues["type"];
-  status: MeetingFormValues["status"];
+  type: string;
+  status: string;
   agenda?: string | null;
   scheduledAt?: string | null;
   endAt?: string | null;
   durationMinutes?: number | null;
   timezone?: string | null;
-  recurrenceRule?: { frequency: MeetingFormValues["recurrenceFrequency"]; endDate?: string | null } | null;
+  recurrenceRule?: unknown;
 }): MeetingFormValues {
+  const rule = isRecurrenceRule(m.recurrenceRule) ? m.recurrenceRule : null;
   return {
     title: m.title,
-    type: m.type,
-    status: m.status,
+    type: MEETING_TYPES.find((v) => v === m.type) ?? "meeting",
+    status: MEETING_STATUSES.find((v) => v === m.status) ?? "scheduled",
     agenda: m.agenda ?? "",
     scheduledAt: m.scheduledAt ? m.scheduledAt.slice(0, 16) : "",
     endAt: m.endAt ? m.endAt.slice(0, 16) : "",
     durationMinutes: m.durationMinutes != null ? String(m.durationMinutes) : "",
     timezone: m.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-    recurrenceEnabled: !!m.recurrenceRule,
-    recurrenceFrequency: m.recurrenceRule?.frequency ?? "weekly",
-    recurrenceEndDate: m.recurrenceRule?.endDate ?? "",
+    recurrenceEnabled: !!rule,
+    recurrenceFrequency: rule?.frequency ?? "weekly",
+    recurrenceEndDate: rule?.endDate ?? "",
   };
 }

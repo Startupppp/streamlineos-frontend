@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
+const CR_STATUS_LABELS: Record<string, string> = {
   submitted: "Submitted",
   under_review: "Under Review",
   estimated: "Estimated",
@@ -37,7 +37,7 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
   completed: "Completed",
 };
 
-const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
+const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border bg-muted/40",
   under_review:
     "text-status-info-ink border-status-info-rule bg-status-info-surface",

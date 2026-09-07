@@ -77,34 +77,37 @@ export function EssDisciplinarySection() {
         Acknowledgment confirms receipt only — not agreement. Contact HR with questions.
       </p>
       <ul className="min-h-0 w-full flex-1 divide-y divide-border overflow-y-auto rounded-xl border border-border bg-card">
-        {rows.map((row) => (
-          <li
-            key={row.id}
-            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
-          >
-            <div className="min-w-0">
-              <p className="text-xs font-medium">
-                {ACTION_LABEL[row.actionType] ?? row.actionType}
-              </p>
-              <p className="text-dense text-muted-foreground">
-                Effective {String(row.effectiveDate).slice(0, 10)}
-                {row.acknowledgedAt
-                  ? ` · Acknowledged ${String(row.acknowledgedAt).slice(0, 10)}`
-                  : " · Pending acknowledgment"}
-              </p>
-            </div>
-            {!row.acknowledgedAt && (
-              <LoadingButton
-                size="sm"
-                className="h-7 text-xs"
-                isPending={acknowledge.isPending}
-                onClick={handleAcknowledge(row.id)}
-              >
-                Acknowledge receipt
-              </LoadingButton>
-            )}
-          </li>
-        ))}
+        {rows.map((row) => {
+          const acked = "acknowledgedAt" in row ? row.acknowledgedAt : null;
+          return (
+            <li
+              key={row.id}
+              className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-medium">
+                  {ACTION_LABEL[row.actionType] ?? row.actionType}
+                </p>
+                <p className="text-dense text-muted-foreground">
+                  Effective {String(row.effectiveDate).slice(0, 10)}
+                  {acked
+                    ? ` · Acknowledged ${String(acked).slice(0, 10)}`
+                    : " · Pending acknowledgment"}
+                </p>
+              </div>
+              {!acked && (
+                <LoadingButton
+                  size="sm"
+                  className="h-7 text-xs"
+                  isPending={acknowledge.isPending}
+                  onClick={handleAcknowledge(row.id)}
+                >
+                  Acknowledge receipt
+                </LoadingButton>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

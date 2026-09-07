@@ -38,10 +38,10 @@ export function useRunEmployees(
   params?: { cursor?: string; limit?: number; search?: string; status?: string; workerType?: string },
 ) {
   const canView = useCan("payroll:runs:view");
-  return useQuery<RunEmployeesPage, Error>({
+  return useQuery({
     queryKey: payrollQueryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<RunEmployeesPage>(
+      apiClient.get(
         `/payroll/runs/${runId}/employees`,
         params as Record<string, string | number> | undefined, signal, runListEmployeesC,
       ),
@@ -55,7 +55,7 @@ export function useRunEmployee(runId: number, runEmployeeId: number) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.runEmployee(runId, runEmployeeId),
     queryFn: ({ signal }) =>
-      apiClient.get<RunEmployeeDetail>(`/payroll/runs/${runId}/employees/${runEmployeeId}`, undefined, signal, runEmployeeDetailC),
+      apiClient.get(`/payroll/runs/${runId}/employees/${runEmployeeId}`, undefined, signal, runEmployeeDetailC),
     staleTime: 30_000,
     enabled: canView && runId > 0 && runEmployeeId > 0,
   });

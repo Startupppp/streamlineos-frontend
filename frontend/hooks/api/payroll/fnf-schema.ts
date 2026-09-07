@@ -11,7 +11,7 @@ export const fnfRowContract = z.object({
   deductions: z.string(),
   loanRecovery: z.string(),
   netPayable: z.string(),
-  status: z.string(),
+  status: z.enum(["PENDING", "HR_REVIEW", "FINANCE_REVIEW", "APPROVED", "PAID"]),
   userMembershipId: z.number().nullable(),
   approvedBy: z.string().nullable(),
   notes: z.string().nullable(),
@@ -64,3 +64,5 @@ export const updateFnfResultContract = z.discriminatedUnion("ok", [
 ]);
 
 export type FnfRow = z.infer<typeof fnfRowContract>;
+export type FnfGetOne = z.infer<typeof fnfGetOneContract>;
+export type FnfWithUser = z.infer<typeof fnfWithUserContract>;

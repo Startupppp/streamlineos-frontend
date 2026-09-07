@@ -58,7 +58,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
       <div>
         <div className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{comp.name}</span>
-          {comp.isOverride && (
+          {(comp.calcMethodOverride !== null || comp.formulaOverride !== null) && (
             <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
               override
             </span>

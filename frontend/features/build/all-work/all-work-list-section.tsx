@@ -30,7 +30,7 @@ function toListTicket(t: AllWorkTicket) {
     priority: t.priority,
     points: t.points,
     ticketNumber: t.ticketNumber,
-    sequenceId: t.sequenceId,
+    sequenceId: undefined,
     assigneeId: t.assigneeId,
     cycleId: t.cycleId,
     sprintId: t.sprintId,

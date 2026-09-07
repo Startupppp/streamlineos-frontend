@@ -93,7 +93,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
                 )}
               </div>
               <span className="shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-                {t.tickets.length} tickets
+                {(t.tickets ?? []).length} tickets
               </span>
             </div>
           </div>

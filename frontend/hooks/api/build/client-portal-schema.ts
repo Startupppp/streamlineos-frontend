@@ -41,6 +41,8 @@ export const portalProjectOverviewContract = z.object({
 
 export const portalChangeRequestItemContract = z.object({
   id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
   crNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
@@ -50,7 +52,12 @@ export const portalChangeRequestItemContract = z.object({
   budgetImpactCents: z.number().int().nullable(),
   timelineImpactDays: z.number().int().nullable(),
   decisionComment: z.string().nullable(),
+  requestedById: z.string().nullable(),
+  approvalOwnerId: z.string().nullable(),
+  decidedAt: z.string().nullable(),
+  deletedAt: z.string().nullable(),
   createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export const portalChangeRequestListContract = z.array(portalChangeRequestItemContract);
@@ -71,8 +78,7 @@ export const visibilitySummaryContract = z.object({
 });
 
 export const toggleVisibilityContract = z.object({
-  id: z.number().int(),
-  clientVisible: z.boolean(),
+  success: z.boolean(),
 });
 
 export const changeRequestRowContract = z.object({

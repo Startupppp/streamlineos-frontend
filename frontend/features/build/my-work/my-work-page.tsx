@@ -220,9 +220,9 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                         const items =
                           dueBuckets?.[bucket]?.map((t) => ({
                             id: t.id,
-                            projectId: t.projectId,
-                            projectName: t.projectName,
-                            projectKey: t.projectKey,
+                            projectId: t.projectId ?? 0,
+                            projectName: t.projectName ?? "",
+                            projectKey: t.projectKey ?? "",
                             ticketNumber: t.ticketNumber,
                             title: t.title,
                             status: t.status,

@@ -1,10 +1,33 @@
 "use client";
 
 export type WorkflowStatus = "draft" | "published" | "disabled" | "archived";
-export type ExecutionStatus = "pending" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "timed_out";
+export type ExecutionStatus =
+  | "pending"
+  | "running"
+  | "waiting"
+  | "completed"
+  | "failed"
+  | "cancelled"
+  | "timed_out"
+  | "dead_lettered";
 export type TriggerType = "event" | "schedule" | "webhook" | "api" | "manual";
-export type ApprovalStatus = "pending" | "approved" | "rejected" | "delegated" | "expired";
-export type NodeType = "trigger" | "condition" | "approval" | "action" | "delay" | "loop" | "ai_action" | "integration" | "script" | "end";
+export type ApprovalStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "delegated"
+  | "expired";
+export type NodeType =
+  | "trigger"
+  | "condition"
+  | "approval"
+  | "action"
+  | "delay"
+  | "loop"
+  | "ai_action"
+  | "integration"
+  | "script"
+  | "end";
 export type WorkflowSortField = "updatedAt" | "createdAt";
 export type SortDirection = "asc" | "desc";
 
@@ -88,6 +111,11 @@ export interface WorkflowTemplate {
   category: string;
   definitionJson: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface WorkflowPublishResult {
+  workflow: Workflow;
+  version: WorkflowVersion;
 }
 
 export interface WorkflowVariable {

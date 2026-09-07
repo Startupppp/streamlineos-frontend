@@ -137,9 +137,14 @@ export const generateChecklistContract = z.object({
 });
 
 export const ticketHandoffContract = z.object({
-  summary: z.string(),
-  openItems: z.array(z.string()),
-  context: z.string(),
+  currentState: z.string(),
+  keyDecisions: z.array(z.string()),
+  nextAction: z.string(),
+  blockers: z.array(z.string()),
+  citations: z.array(z.object({
+    source: z.enum(["description", "comment", "decision"]),
+    excerpt: z.string(),
+  })),
 });
 
 export const suggestDraftTitleContract = z.object({ title: z.string() });
@@ -147,7 +152,7 @@ export const suggestDraftTitleContract = z.object({ title: z.string() });
 export const improveDraftDescriptionContract = z.object({ description: z.string() });
 
 export const suggestDraftFieldsContract = z.object({
-  priority: z.string().optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   points: z.number().int().optional(),
   labelIds: z.array(z.number().int()),
   labelNames: z.array(z.string()),

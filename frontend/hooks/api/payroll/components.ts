@@ -57,7 +57,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.components(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResult<SalaryComponent>>(
+      apiClient.get(
         "/payroll/components",
         params as Record<string, unknown> | undefined, signal, componentListC,
       ),

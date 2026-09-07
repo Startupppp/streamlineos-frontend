@@ -4,7 +4,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { CommandCenterData, PayrollExceptionSeverity, VarianceSummary } from "@/types/payroll/runs";
+import type { PayrollExceptionSeverity, VarianceSummary } from "@/types/payroll/runs";
+import type { CommandCenterData } from "@/hooks/api/payroll/command-center-schema";
 
 const SEVERITY_COLORS: Record<PayrollExceptionSeverity, string> = {
   BLOCKER: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
@@ -220,7 +221,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
                   >
                     {event.date}
                   </span>
-                  <TruncatedText text={event.label} className="text-foreground flex-1" />
+                  <TruncatedText text={event.title} className="text-foreground flex-1" />
                 </div>
               );
             })}

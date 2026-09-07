@@ -12,6 +12,8 @@ export const validationItemContract = z.object({
   scheme: z.string(),
   schemeLabel: z.string(),
   errors: z.array(z.string()),
+  warnings: z.array(z.string()).optional().default([]),
+  onHold: z.boolean().optional().default(false),
 });
 
 export const payoutValidationResponseContract = z.array(validationItemContract);
@@ -21,8 +23,8 @@ const batchRowContract = z.object({
   orgId: z.string(),
   runId: z.number(),
   batchNumber: z.string(),
-  status: z.string(),
-  format: z.string(),
+  status: z.enum(["DRAFT", "GENERATED", "SENT", "PARTIALLY_PAID", "PAID", "FAILED"]),
+  format: z.enum(["NEFT_CSV", "RTGS_CSV", "GENERIC_CSV", "ACH_CSV", "SEPA_CSV"]),
   totalAmount: z.string(),
   itemCount: z.number(),
   generatedBy: z.string().nullable(),
@@ -43,7 +45,7 @@ const batchItemRowContract = z.object({
   amount: z.string(),
   accountMasked: z.string(),
   ifsc: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["PENDING", "SENT", "PAID", "FAILED", "HELD"]),
   transactionRef: z.string().nullable(),
   failureReason: z.string().nullable(),
   paidAt: z.string().nullable(),
@@ -53,11 +55,8 @@ export const batchDetailContract = z.object({
   batch: batchRowContract,
   items: z.object({
     data: z.array(batchItemRowContract),
-    pagination: z.object({
-      limit: z.number(),
-      hasMore: z.boolean(),
-      nextCursor: z.string().nullable(),
-    }),
+    hasMore: z.boolean(),
+    nextCursor: z.number().nullable(),
   }),
 });
 
@@ -108,7 +107,7 @@ export const importBankReturnResponseContract = z.object({
   paid: z.number(),
   failed: z.number(),
   skipped: z.number(),
-  parseErrors: z.array(z.string()),
+  parseErrors: z.array(z.object({ line: z.number(), message: z.string() })),
   honestyNote: z.string().optional(),
   mode: z.literal("export_manual"),
 });
@@ -117,3 +116,4 @@ export const batchOperationResponseContract = z.object({ success: z.boolean() })
 
 export type BatchRow = z.infer<typeof batchRowContract>;
 export type BatchDetail = z.infer<typeof batchDetailContract>;
+export type BatchItemRow = z.infer<typeof batchItemRowContract>;

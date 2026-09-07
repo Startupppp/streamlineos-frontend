@@ -16,23 +16,23 @@ import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { TestCase, TestCasePriority, TestCaseAutomationStatus } from "@/types/projects";
 
-const PRIORITY_STYLES: Record<TestCasePriority, string> = {
+const PRIORITY_STYLES: Record<string, string> = {
   low: "text-muted-foreground border-border",
   medium: "text-status-warning-ink border-status-warning-rule",
   high: "text-status-danger-ink border-status-danger-rule",
 };
 
-const AUTOMATION_STYLES: Record<TestCaseAutomationStatus, string> = {
+const AUTOMATION_STYLES: Record<string, string> = {
   manual: "text-muted-foreground border-border",
   automated: "text-status-success-ink border-status-success-rule",
   planned: "text-status-info-ink border-status-info-rule",
 };
 
-function priorityLabel(p: TestCasePriority) {
+function priorityLabel(p: string) {
   return p.charAt(0).toUpperCase() + p.slice(1);
 }
 
-function automationLabel(a: TestCaseAutomationStatus) {
+function automationLabel(a: string) {
   return a.charAt(0).toUpperCase() + a.slice(1);
 }
 

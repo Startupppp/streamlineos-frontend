@@ -43,7 +43,7 @@ const periodReconCheckContract = z.object({
   key: z.string(),
   label: z.string(),
   ok: z.boolean(),
-  severity: z.string(),
+  severity: z.enum(["blocker", "warning", "info"]),
   detail: z.string(),
   expected: z.string().optional(),
   actual: z.string().optional(),

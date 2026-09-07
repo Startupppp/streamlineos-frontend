@@ -20,7 +20,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfDetailSheet } from "./fnf-detail-sheet";
-import type { FnfSettlement, FnfStatus } from "@/types/payroll";
+import type { FnfStatus } from "@/types/payroll";
+import type { FnfWithUser } from "@/hooks/api/payroll/fnf-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_OPTIONS: { value: FnfStatus; label: string }[] = [
@@ -33,14 +34,14 @@ const STATUS_OPTIONS: { value: FnfStatus; label: string }[] = [
 
 const SENTINEL = "all";
 
-const columns: DataTableColumn<FnfSettlement>[] = [
+const columns: DataTableColumn<FnfWithUser>[] = [
   {
     key: "employee",
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <TruncatedText text={row.userName} className="text-dense font-medium" />
-        <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
+        <TruncatedText text={row.user?.name ?? ""} className="text-dense font-medium" />
+        <TruncatedText text={row.user?.email ?? ""} className="text-micro text-muted-foreground" />
       </div>
     ),
   },
@@ -111,7 +112,7 @@ export function FnfTable() {
     router.replace(`?${params.toString()}`);
   }
 
-  function handleRowClick(row: FnfSettlement) {
+  function handleRowClick(row: FnfWithUser) {
     setSelectedId(row.id);
   }
 

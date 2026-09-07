@@ -31,7 +31,8 @@ import { usePayrollRuns } from "@/hooks/api/payroll";
 import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
-import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
+import type { PublicationStatus } from "@/types/payroll";
+import type { PublicationItem } from "@/hooks/api/payroll/publications-schema";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 import { formatMonth } from "@/features/payroll/shared";
 import { formatShortDate } from "@/lib/date-utils";
@@ -125,7 +126,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const { data: publications, isLoading: pubsLoading } = useRunPublications(activeRunId);
 
   const userIds = useMemo(
-    () => [...new Set((publications ?? []).map((p) => p.userId))],
+    () => [...new Set((publications?.items ?? []).map((p) => p.userId).filter((id): id is string => id !== null))],
     [publications],
   );
   const { data: membersData } = useOrgMembersByIds(userIds);
@@ -161,12 +162,12 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
     setPublishOpen(true);
   }
 
-  const columns = useMemo<DataTableColumn<PayslipPublication>[]>(
+  const columns = useMemo<DataTableColumn<PublicationItem>[]>(
     () => [
       {
         key: "userId",
         header: "Employee",
-        cell: (row) => <span className="text-dense">{getUserDisplayName(memberById.get(row.userId))}</span>,
+        cell: (row) => <span className="text-dense">{getUserDisplayName(row.userId ? memberById.get(row.userId) : undefined)}</span>,
       },
       {
         key: "status",
@@ -253,7 +254,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
       {activeRunId > 0 && (
         <DataTable
           className="flex-1 min-h-0"
-          data={publications ?? []}
+          data={publications?.items ?? []}
           columns={columns}
           getRowKey={(row) => row.id}
           isLoading={pubsLoading}

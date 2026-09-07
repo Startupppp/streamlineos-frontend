@@ -39,7 +39,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useCan } from "@/hooks/api/access";
 import { useRunInputs, usePatchInput, useReimportInputs } from "@/hooks/api/payroll/run-inputs";
-import type { RunInput, PayrollInputSource } from "@/types/payroll/runs";
+import type { InputItem } from "@/hooks/api/payroll/run-inputs-schema";
+import type { PayrollInputSource } from "@/types/payroll/runs";
 
 const SOURCE_COLORS: Record<PayrollInputSource, string> = {
   ATTENDANCE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
@@ -59,7 +60,7 @@ const overrideSchema = z.object({
 });
 type OverrideForm = z.infer<typeof overrideSchema>;
 
-function getWarningMessage(row: RunInput): string | null {
+function getWarningMessage(row: InputItem): string | null {
   if (row.isOverride) {
     return row.overrideReason ? `Override: ${row.overrideReason}` : "Manually overridden";
   }
@@ -85,7 +86,7 @@ interface InputsTabProps {
   isLocked?: boolean;
 }
 
-const COLUMNS: DataTableColumn<RunInput>[] = [
+const COLUMNS: DataTableColumn<InputItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -164,7 +165,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
 ];
 
 export function InputsTab({ runId, isLocked }: InputsTabProps) {
-  const [selectedInput, setSelectedInput] = useState<RunInput | null>(null);
+  const [selectedInput, setSelectedInput] = useState<InputItem | null>(null);
   const [showReimport, setShowReimport] = useState(false);
   const canUpdate = useCan("payroll:runs:update");
 
@@ -177,7 +178,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
     defaultValues: { reason: "" },
   });
 
-  function handleRowClick(row: RunInput) {
+  function handleRowClick(row: InputItem) {
     if (!canUpdate || isLocked) return;
     setSelectedInput(row);
     form.reset({

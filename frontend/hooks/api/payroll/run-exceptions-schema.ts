@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const runExceptionContract = z.object({
   id: z.number(),
+  runId: z.number(),
+  runEmployeeId: z.number().nullable(),
   code: z.string(),
   severity: z.enum(["BLOCKER", "WARNING", "INFO"]),
   status: z.enum(["OPEN", "RESOLVED", "OVERRIDDEN"]),

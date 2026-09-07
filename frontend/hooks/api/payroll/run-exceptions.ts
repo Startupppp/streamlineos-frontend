@@ -23,7 +23,7 @@ export function useRunExceptions(
   return useQuery({
     queryKey: payrollQueryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params, signal, runExceptionsListC),
+      apiClient.get(`/payroll/runs/${runId}/exceptions`, params, signal, runExceptionsListC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

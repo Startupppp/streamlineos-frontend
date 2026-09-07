@@ -29,14 +29,14 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestRunSheet } from "./test-run-sheet";
 
-const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
+const RUN_STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
   in_progress: "text-status-info-ink border-status-info-rule",
   completed: "text-status-success-ink border-status-success-rule",
   aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
-const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {
+const RUN_STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",

@@ -262,8 +262,8 @@ export function EssTaxSection({
                 ? `Declaration window open — FY ${openWindow?.financialYear}`
                 : "Declaration window closed — contact HR to make changes"}
             </p>
-            {windowOpen && data?.closesAt && (
-              <p className="text-xs text-status-success-ink mt-0.5">Closes {formatDate(data.closesAt)}</p>
+            {openWindow?.closesAt && (
+              <p className="text-xs text-status-success-ink mt-0.5">Closes {formatDate(openWindow.closesAt)}</p>
             )}
           </div>
           {!windowOpen && <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />}

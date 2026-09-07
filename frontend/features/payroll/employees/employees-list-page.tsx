@@ -240,7 +240,7 @@ export function EmployeesListPage() {
             mode: "server",
             page,
             pageSize: 20,
-            total: data?.total ?? 0,
+            total: data?.pagination ? (data.pagination.hasMore ? (page * 20) + 1 : (page - 1) * 20 + data.data.length) : 0,
             onPageChange: handlePageChange,
           }}
           mobileCard={(row) => {

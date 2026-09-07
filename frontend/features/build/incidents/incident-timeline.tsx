@@ -21,12 +21,12 @@ import {
 import { useAddIncidentUpdate } from "@/hooks/api/build/incidents";
 import type { IncidentUpdate, IncidentStatus } from "@/types/projects";
 
-const STATUS_LABELS: Record<IncidentStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   detected: "Detected", investigating: "Investigating", mitigating: "Mitigating",
   resolved: "Resolved", postmortem: "Post-mortem", closed: "Closed",
 };
 
-const STATUS_STYLES: Record<IncidentStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   detected: "text-status-danger-ink border-status-danger-rule",
   investigating: "text-status-warning-ink border-status-warning-rule",
   mitigating: "text-status-warning-ink border-status-warning-rule",
@@ -128,7 +128,7 @@ const TimelineEntry = memo(function TimelineEntry({ update }: { update: Incident
           </Badge>
         )}
         <span className="text-micro text-muted-foreground">
-          {update.createdByName ?? update.createdByEmail?.split("@")[0] ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+          {update.createdBy ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
         </span>
       </div>
       <p className="text-xs text-foreground whitespace-pre-wrap">{update.message}</p>

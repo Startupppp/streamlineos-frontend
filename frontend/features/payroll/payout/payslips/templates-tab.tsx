@@ -12,7 +12,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePayslipTemplates } from "@/hooks/api/payroll";
-import type { PayslipLayout, PayslipTemplate } from "@/types/payroll";
+import type { PayslipLayout } from "@/types/payroll";
+import type { PayslipTemplate } from "@/hooks/api/payroll/payslip-templates-schema";
 import { TemplateEditSheet } from "./template-edit-sheet";
 import { PayslipPreviewSheet } from "./template-preview-sheet";
 import { TemplateDeleteDialog } from "./template-delete-dialog";
@@ -169,7 +170,7 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
         />
       )}
 
-      {!isLoading && !isError && (!templates || templates.length === 0) && (
+      {!isLoading && !isError && (!templates || templates.data.length === 0) && (
         <EmptyState
           illustrationPreset="documents"
           title="No templates found"
@@ -177,9 +178,9 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
         />
       )}
 
-      {!isLoading && !isError && templates && templates.length > 0 && (
+      {!isLoading && !isError && templates && templates.data.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {templates.map((t) => (
+          {templates.data.map((t) => (
             <TemplateCard
               key={t.id}
               template={t}

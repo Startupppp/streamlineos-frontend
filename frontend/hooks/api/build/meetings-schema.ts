@@ -54,6 +54,7 @@ const meetingAttendeeContract = z.object({
   orgId: z.string(),
   meetingId: z.number().int(),
   membershipId: z.number().int(),
+  userId: z.string().optional().default(""),
   attended: z.boolean(),
   createdAt: z.string(),
 });
@@ -80,6 +81,7 @@ export const meetingDetailContract = meetingRowContract.extend({
 export const addAttendeeResultContract = z.object({
   meetingId: z.number().int(),
   userId: z.string(),
+  attended: z.boolean().optional(),
 });
 
 export const convertToTaskResultContract = z.object({

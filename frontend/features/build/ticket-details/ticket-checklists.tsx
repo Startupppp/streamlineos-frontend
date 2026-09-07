@@ -209,8 +209,8 @@ function ChecklistSection({
   const deleteChecklist = useDeleteChecklist(projectId, ticketId);
   const createItem = useCreateChecklistItem(projectId, ticketId);
 
-  const completed = checklist.items.filter((i) => i.isCompleted).length;
-  const total = checklist.items.length;
+  const completed = (checklist.items ?? []).filter((i) => i.isCompleted).length;
+  const total = (checklist.items ?? []).length;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const handleTitleSave = useCallback(() => {
@@ -326,7 +326,7 @@ function ChecklistSection({
 
       <div className="ml-6 space-y-0.5">
         <AnimatePresence initial={false}>
-          {checklist.items.map((item) => (
+          {(checklist.items ?? []).map((item) => (
             <ChecklistItemRow
               key={item.id}
               item={item}

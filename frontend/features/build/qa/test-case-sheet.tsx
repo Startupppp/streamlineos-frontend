@@ -100,10 +100,10 @@ export function TestCaseSheet({
               title: editCase.title,
               suiteId: editCase.suiteId != null ? String(editCase.suiteId) : "none",
               preconditions: editCase.preconditions ?? "",
-              steps: editCase.steps,
+              steps: editCase.steps ?? [],
               expectedResult: editCase.expectedResult ?? "",
-              priority: editCase.priority,
-              automationStatus: editCase.automationStatus,
+              priority: (["low", "medium", "high"] as const).find((v) => v === editCase.priority) ?? "medium",
+              automationStatus: (["manual", "automated", "planned"] as const).find((v) => v === editCase.automationStatus) ?? "manual",
               component: editCase.component ?? "",
               linkedTicketId:
                 editCase.linkedTicketId != null ? String(editCase.linkedTicketId) : "",

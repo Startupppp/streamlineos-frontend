@@ -40,14 +40,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
  * orange before the migration, and with no orange status they collapsed onto
  * the amber below them. Everything else here means its status and keeps it.
  */
-const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
+const SEVERITY_STYLES: Record<string, string> = {
   critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   high: "text-category-orange-ink border-category-orange-rule",
   medium: "text-status-warning-ink border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
 
-const STATUS_STYLES: Record<IncidentStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   detected: "text-status-danger-ink border-status-danger-rule",
   investigating: "text-category-orange-ink border-category-orange-rule",
   mitigating: "text-status-warning-ink border-status-warning-rule",
@@ -56,7 +56,7 @@ const STATUS_STYLES: Record<IncidentStatus, string> = {
   closed: "text-muted-foreground border-border",
 };
 
-const STATUS_LABELS: Record<IncidentStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   detected: "Detected", investigating: "Investigating", mitigating: "Mitigating",
   resolved: "Resolved", postmortem: "Post-mortem", closed: "Closed",
 };

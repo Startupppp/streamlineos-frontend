@@ -61,12 +61,12 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
   const update = useUpdateChangelogEntry();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<ChangelogFormValues>({
+  const form = useForm<ChangelogFormValues, any, ChangelogFormValues>({
     resolver: zodResolver(changelogSchema),
     defaultValues: {
       title: entry?.title ?? "",
       content: entry?.content ?? "",
-      type: entry?.type ?? "feature",
+      type: (["feature", "improvement", "fix"] as const).find((v) => v === entry?.type) ?? "feature",
       version: entry?.version ?? "",
       isPublished: entry?.isPublished ?? false,
     },
