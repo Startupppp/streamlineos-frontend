@@ -49,26 +49,48 @@ in each ticket's `Status:` line.
 
 | | Tickets |
 |---|---|
-| Done | 01–07, 09–19, 21–25 |
-| In progress | 08 (contract) |
-| Blocked on the backend | 20 (tenant layout) — the client is complete and tested; the four `/renderer/layouts/*` routes do not exist yet |
+| Done | 01–06, 12–24 |
+| In progress | 07 (long tail), 08 (contract) |
+| Built but not reachable | 09, 10, 11 — normalisers and services exist and are tested; no controller or queue consumer wires any of the three to a real transport, so no telephony, WhatsApp or web-form message can reach the seam in production |
+| Partially done | 25 — backend convergence landed (`employer_party_id`, the `crm_organizations` → Party backfill, merge-service retirement), but `/crm/companies`, `/crm/clients` and `/parties` are still three independent route trees on the frontend |
 | Deliberately not done | 26 |
 
-**The identity migration went 71 → 36 readers**, and 12 of the 36 are the seam
-itself — `party-legacy-*.ts` and the divergence report, files that legitimately
-read what they write and are deleted along with the tables. So 24 real readers
-remain of an original 71.
+Ticket 20 moved to Done on 2026-09-07: the four routes it waited on are live at
+`backend/src/modules/record-layouts/record-layouts.controller.ts` — `@Controller("renderer/layouts")`
+with `GET/PUT/DELETE :layoutKey` and `GET :layoutKey/usage`.
+
+Tickets 01–06 and 12–24 were deleted on 2026-09-07 after each was verified
+against real code rather than against its own checkbox. The seven that remain
+are the seven that are open.
+
+**The identity migration went 71 → 29 readers.** Re-counted 2026-09-07 from
+`legacy-reader-ratchet.spec.ts`'s `KNOWN_READERS`, which is the executable
+authority rather than this prose: 29 entries — 13 under `party` (the seam
+itself: `party-legacy-*.ts` and the divergence report, files that legitimately
+read what they write and are deleted along with the tables), 12 under
+`finance`, 4 under `accounting`. So **16 real readers remain**, not the 24 this
+paragraph previously claimed.
+
+⚠ **A 30th reader exists and is on no list.**
+`backend/src/modules/calendar/calendar-linked-crm.ts:3` imports `{ deals, leads }`
+from `db/schema`. The ratchet scans all of `src/`, so it sees this file, and
+"calendar" appears nowhere in `KNOWN_READERS` — meaning the guard ticket 08
+built to stop exactly this is currently red. Calendar is outside ticket 07's
+scope, so this reader is owned by no ticket.
 
 ### What is blocking the drop, precisely
 
 Ticket 08 cannot drop `leads`, `clients`, `contacts` and `crm_organizations`
-while anything still reads them, and **13 of the 24 remaining readers are in
-`src/modules/finance/` and `src/modules/accounting/core/`**. Those modules are
-being rewritten onto one `gl_*` kernel by a separate workstream, and this phase
-has no authority to change them. The drop therefore waits on that rewrite
-landing, not on any CRM work. The 11 CRM-owned readers are the part this phase
-can finish, and finishing them is what makes the drop a single migration
-afterwards rather than a project.
+while anything still reads them, and **all 16 of the remaining non-seam readers
+are in `src/modules/finance/` (12) and `src/modules/accounting/` (4)**. Those
+modules are being rewritten onto one `gl_*` kernel by a separate workstream, and
+this phase has no authority to change them. The drop therefore waits on that
+rewrite landing, not on any CRM work.
+
+The earlier "13 of 24, with 11 CRM-owned" split was wrong in both halves: the
+count was 16, and there are now **zero** CRM-owned readers left — this phase
+finished its side. What remains outside the seam is entirely the finance and
+accounting rewrite, plus the one unowned calendar reader noted above.
 
 That is a real dependency, not a scheduling excuse — and it is worth saying that
 the ratchet is what makes it visible. Without a register of readers, "we still

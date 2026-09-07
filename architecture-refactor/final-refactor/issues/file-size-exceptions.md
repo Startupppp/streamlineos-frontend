@@ -143,4 +143,4 @@ the gate has no exemption mechanism to abuse.
 ### Left open
 
 - The **frontend** twin is also red and was not in this pass's scope: `pnpm -C frontend check:over-300` reports **520 against a baseline of 519, rc=1** — one file above. Same ticket-41 blocking shape, different territory.
-- `pnpm check:file-sizes` is red at head on two files neither split nor owned here — `src/modules/support/core/support-tickets.service.ts` (520) and `src/scripts/check-declaration-column-drift.ts` (534). Both measured identically at the commit before this pass, so they are pre-existing: either register them with the nine-column record or bring them under 500.
+- ~~`pnpm check:file-sizes` is red at head on two files neither split nor owned here — `src/modules/support/core/support-tickets.service.ts` (520) and `src/scripts/check-declaration-column-drift.ts` (534).~~ **RESOLVED — re-measured 2026-09-07: 347 and 191 lines.** Both were brought under 500 by a later split; neither needed an exception row. The table above stays empty, which is the intended end state — an exception is a debt record, and none was ever granted.
