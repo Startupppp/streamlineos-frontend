@@ -5,11 +5,8 @@ import { isToday, format } from "date-fns";
 import { CalendarClock } from "lucide-react";
 import { getUserDisplayName } from "@/lib/person-display";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubCardProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubCardProps } from "@/hooks/api/hr/hub-types";
 import { SkeletonRows, ErrorRetry } from "./today-card";
 
 export function InterviewsTodayCard({

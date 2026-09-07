@@ -9,11 +9,8 @@ import {
   ClipboardList as ClipboardListIcon,
 } from "lucide-react";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubViewProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { HrQueueCard, OpsInboxCard, resolveQueueTone } from "./queues/queue-cards";
 
 export function HrHubQueues({

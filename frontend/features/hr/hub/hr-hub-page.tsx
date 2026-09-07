@@ -18,10 +18,8 @@ import {
   HrQuickAction,
 } from "@/features/hr/shared/hr-ui";
 import { cn } from "@/lib/utils";
-import {
-  EMPTY_HR_HUB_ACCESS,
-  useHrHubSnapshot,
-} from "@/hooks/api/hr/hub";
+import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
+import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubRecruitment } from "./hr-hub-recruitment";
