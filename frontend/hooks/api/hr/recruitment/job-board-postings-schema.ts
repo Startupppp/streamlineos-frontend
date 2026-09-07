@@ -6,7 +6,7 @@ const jobBoardPostingRowSchema = z.object({
   jobPostingId: z.number().int(),
   platform: z.string(),
   externalPostUrl: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "POSTED", "EXPIRED", "CLOSED"]),
   postedBy: z.string().nullable(),
   postedAt: z.string().nullable(),
   expiryDate: z.string().nullable(),

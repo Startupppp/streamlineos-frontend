@@ -45,11 +45,10 @@ const compCycleContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
-  type: z.string(),
-  fiscalYear: z.number().int().nullable(),
-  status: z.string(),
-  budgetCents: z.number().int().nullable(),
-  effectiveDate: z.string().nullable(),
+  fiscalYear: z.number().int(),
+  status: z.enum(["draft", "active", "calibrating", "approved", "closed"]),
+  budgetPoolCents: z.number(),
+  meritMatrix: z.record(z.string(), z.unknown()).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -61,35 +60,47 @@ export const createCompCycleContract = compCycleContract;
 
 const recommendationProjectionContract = z.object({
   id: z.number().int(),
-  orgId: z.string(),
   cycleId: z.number().int(),
   userId: z.string(),
-  currentCents: z.number().int(),
-  proposedCents: z.number().int().nullable(),
-  hrCalibratedCents: z.number().int().nullable(),
-  finalCents: z.number().int().nullable(),
-  status: z.string(),
-  reason: z.string().nullable(),
+  currentSalaryCents: z.number(),
+  recommendedIncreaseCents: z.number(),
+  recommendedPct: z.string(),
+  rating: z.string().nullable(),
+  managerNote: z.string().nullable(),
+  hrCalibratedCents: z.number().nullable(),
+  status: z.enum(["draft", "submitted", "calibrated", "approved"]),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const listRecommendationsContract = withCursorPage(recommendationProjectionContract);
-export const calibrateRecommendationContract = recommendationProjectionContract.extend({
-  approvedAt: z.string().nullable(),
+export const calibrateRecommendationContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  cycleId: z.number().int(),
+  userId: z.string(),
+  userMembershipId: z.number().int().nullable(),
+  currentSalaryCents: z.number(),
+  recommendedIncreaseCents: z.number(),
+  recommendedPct: z.string(),
+  rating: z.string().nullable(),
+  managerNote: z.string().nullable(),
+  hrCalibratedCents: z.number().nullable(),
+  status: z.enum(["draft", "submitted", "calibrated", "approved"]),
+  submittedBy: z.string().nullable(),
+  calibratedBy: z.string().nullable(),
   approvedBy: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 const budgetPoolContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   cycleId: z.number().int(),
-  name: z.string(),
-  budgetCents: z.number().int(),
-  allocatedCents: z.number().int(),
   departmentId: z.string().nullable(),
+  allocatedCents: z.number(),
+  usedCents: z.number(),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const listBudgetPoolsContract = z.array(budgetPoolContract);
@@ -100,11 +111,11 @@ const scheduleItemContract = z.object({
   cumulativeVested: z.number().int(),
 });
 
-const equityGrantContract = z.object({
+export const equityGrantContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   userId: z.string(),
-  grantType: z.string(),
+  grantType: z.enum(["ISO", "NSO", "RSU", "other"]),
   units: z.number().int(),
   strikePriceCents: z.number().int().nullable(),
   grantDate: z.string(),
@@ -112,7 +123,7 @@ const equityGrantContract = z.object({
   vestingMonths: z.number().int(),
   documentUrl: z.string().nullable(),
   notes: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["active", "exercised", "cancelled", "expired"]),
   createdBy: z.string().nullable(),
   boardApprovedAt: z.string().nullable(),
   createdAt: z.string(),

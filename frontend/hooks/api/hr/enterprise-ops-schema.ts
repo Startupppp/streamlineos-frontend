@@ -14,15 +14,16 @@ const accommodationRequestContract = z.object({
   orgId: z.string(),
   userId: z.string(),
   userMembershipId: z.number().int().nullable(),
-  type: z.string(),
-  details: z.record(z.string(), z.unknown()).nullable(),
-  status: z.string(),
-  requestedAt: z.string(),
-  resolvedAt: z.string().nullable(),
-  resolvedBy: z.string().nullable(),
-  notes: z.string().nullable(),
+  type: z.enum(["equipment", "schedule", "workspace", "medical_restriction", "other"]),
+  description: z.string(),
+  confidentialMedicalNote: z.string().nullable(),
+  status: z.enum(["requested", "under_review", "approved", "denied", "implemented"]),
+  reviewedBy: z.string().nullable(),
+  reviewDate: z.string().nullable(),
+  note: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
 });
 
 const accommodationTaskContract = z.object({
@@ -30,11 +31,12 @@ const accommodationTaskContract = z.object({
   orgId: z.string(),
   requestId: z.string(),
   title: z.string(),
-  status: z.string(),
-  assignedTo: z.string().nullable(),
-  dueAt: z.string().nullable(),
-  completedAt: z.string().nullable(),
+  assigneeUserId: z.string().nullable(),
+  assigneeMembershipId: z.number().int().nullable(),
+  status: z.enum(["pending", "in_progress", "completed"]),
+  dueDate: z.string().nullable(),
   createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export const listAccommodationsContract = withCursorPage(accommodationRequestContract);
@@ -46,16 +48,15 @@ export const approveAccommodationContract = accommodationRequestContract;
 const emergencyEventContract = z.object({
   id: z.string(),
   orgId: z.string(),
-  type: z.string(),
-  title: z.string(),
-  description: z.string().nullable(),
-  severity: z.string(),
-  status: z.string(),
-  triggeredBy: z.string().nullable(),
-  affectedCount: z.number().int().nullable(),
-  resolvedAt: z.string().nullable(),
+  name: z.string(),
+  type: z.enum(["office_closure", "disaster", "safety_check", "other"]),
+  locationId: z.string().nullable(),
+  status: z.enum(["active", "resolved"]),
+  message: z.string(),
+  createdBy: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  resolvedAt: z.string().nullable(),
 });
 
 const emergencyResponseContract = z.object({
@@ -91,12 +92,12 @@ export const respondToEventContract = emergencyResponseContract;
 const hrEventContract = z.object({
   id: z.string(),
   orgId: z.string(),
-  source: z.string(),
   eventType: z.string(),
+  entityType: z.string(),
+  entityId: z.string(),
   payload: z.record(z.string(), z.unknown()),
+  actorUserId: z.string().nullable(),
   occurredAt: z.string(),
-  correlationId: z.string().nullable(),
-  createdAt: z.string(),
 });
 
 export const listHrEventsContract = withCursorPage(hrEventContract);
@@ -104,10 +105,12 @@ export const listHrEventsContract = withCursorPage(hrEventContract);
 export const getDataDictionaryContract = z.object({
   catalog: z.array(z.object({
     eventType: z.string(),
-    description: z.string().nullable(),
-    fields: z.record(z.string(), z.unknown()).optional(),
+    description: z.string(),
+    entityTypes: z.array(z.string()),
   })),
+  sanitizedFields: z.array(z.string()),
   immutable: z.boolean(),
+  note: z.string(),
 });
 
 const accessProvisioningContract = z.object({

@@ -129,7 +129,7 @@ export function LegalHoldsTable() {
     <div className="flex flex-1 min-h-0 flex-col">
       <div className="flex items-center justify-between mb-4 shrink-0">
         <p className="text-sm text-muted-foreground">
-          {data?.total ?? 0} legal hold{data?.total !== 1 ? "s" : ""}
+          {data?.data?.length ?? 0} legal hold{(data?.data?.length ?? 0) !== 1 ? "s" : ""}
         </p>
         {canManage && (
           <Button onClick={handleOpenCreate} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -156,7 +156,7 @@ export function LegalHoldsTable() {
           mode: "server",
           page,
           pageSize: 20,
-          total: data?.total ?? 0,
+          total: data?.data?.length ?? 0,
           onPageChange: setPage,
         }}
       />

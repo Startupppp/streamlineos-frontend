@@ -70,4 +70,5 @@ export const versionsContract = z.discriminatedUnion("entity", [
 ]);
 
 export type EffectiveRulesResponse = z.infer<typeof effectiveRulesContract>;
+export type EffectiveRuleItem = z.infer<typeof effectiveRulesItemContract>;
 export type VersionsResponse = z.infer<typeof versionsContract>;

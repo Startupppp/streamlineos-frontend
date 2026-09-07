@@ -17,7 +17,7 @@ export interface FeedbackCycle {
   endDate: string;
   isAnonymous: boolean;
   questions: { id: string; text: string; type: "rating" | "text" }[];
-  createdBy?: string;
+  createdBy: string | null;
   createdAt: string;
 }
 

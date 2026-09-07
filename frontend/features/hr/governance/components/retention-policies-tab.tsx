@@ -148,7 +148,7 @@ export function RetentionPoliciesTab() {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">{data?.total ?? 0} policies</p>
+        <p className="text-sm text-muted-foreground">{data?.data?.length ?? 0} policies</p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <PlusIcon size={16} className="mr-1.5" />
@@ -170,7 +170,7 @@ export function RetentionPoliciesTab() {
             action={canManage ? { label: "Add Policy", onClick: handleOpenSheet } : undefined}
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
+        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">

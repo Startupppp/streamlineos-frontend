@@ -32,7 +32,7 @@ export interface ProvisioningTemplate {
   id: string;
   orgId: string;
   name: string;
-  triggeredBy: "joiner" | "mover" | "leaver";
+  triggeredBy: "joiner" | "mover" | "leaver" | "manual";
   systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
   createdAt: string;
   updatedAt: string;
@@ -132,7 +132,7 @@ export function useCreateProvisioningTemplate() {
     mutationKey: ["hr-identity", "template-create"],
     mutationFn: (body: {
       name: string;
-      triggeredBy: "joiner" | "mover" | "leaver";
+      triggeredBy: "joiner" | "mover" | "leaver" | "manual";
       systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
     }) => apiClient.post(`${BASE}/templates`, body, undefined, _createTemplateContract),
     onSuccess: () => {

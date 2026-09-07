@@ -41,7 +41,7 @@ export interface ReportConfig {
 
 export interface GenerateReportResult {
   rows: Record<string, unknown>[];
-  entity: string;
+  entity: ReportEntity;
   fields: string[];
   total: number;
 }

@@ -17,6 +17,7 @@ export interface AccommodationRequest {
   id: string;
   orgId: string;
   userId: string;
+  userMembershipId: number | null;
   type: AccommodationType;
   description: string;
   confidentialMedicalNote: string | null;
@@ -26,6 +27,7 @@ export interface AccommodationRequest {
   note: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface AccommodationTask {
@@ -34,6 +36,7 @@ export interface AccommodationTask {
   requestId: string;
   title: string;
   assigneeUserId: string | null;
+  assigneeMembershipId: number | null;
   status: AccommodationTaskStatus;
   dueDate: string | null;
   createdAt: string;

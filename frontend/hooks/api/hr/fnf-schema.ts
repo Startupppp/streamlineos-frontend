@@ -36,5 +36,6 @@ export const fnfListContract = z.object({
   items: z.array(fnfRowContract),
   total: z.number().int(),
   page: z.number().int(),
+  pageSize: z.number().int(),
   totalPages: z.number().int(),
 });

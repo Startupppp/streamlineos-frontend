@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const generateReportContract = z.object({
   rows: z.array(z.record(z.string(), z.unknown())),
-  entity: z.string(),
+  entity: z.enum(["candidates", "jobs", "interviews", "offers"]),
   fields: z.array(z.string()),
   total: z.number().int(),
 });

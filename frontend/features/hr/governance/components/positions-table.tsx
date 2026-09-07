@@ -162,7 +162,7 @@ export function PositionsTable() {
             <SelectItem value="future">Future</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-sm text-muted-foreground whitespace-nowrap">{data?.total ?? 0} positions</p>
+        <p className="text-sm text-muted-foreground whitespace-nowrap">{data?.data?.length ?? 0} positions</p>
       </div>
       <DataTable
         className="flex-1 min-h-0"
@@ -180,7 +180,7 @@ export function PositionsTable() {
             compact
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
+        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
     </>
   );

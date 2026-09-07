@@ -261,7 +261,7 @@ export function LaborTabs() {
       ) : activeTab === "memberships" ? (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{memberships?.total ?? 0} memberships</p>
+            <p className="text-sm text-muted-foreground">{memberships?.data?.length ?? 0} memberships</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
@@ -274,13 +274,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.total ?? 0, onPageChange: setMembershipPage }}
+            pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.data?.length ?? 0, onPageChange: setMembershipPage }}
           />
         </>
       ) : activeTab === "agreements" ? (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{agreements?.total ?? 0} agreements</p>
+            <p className="text-sm text-muted-foreground">{agreements?.data?.length ?? 0} agreements</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
@@ -293,13 +293,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.total ?? 0, onPageChange: setAgreementPage }}
+            pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.data?.length ?? 0, onPageChange: setAgreementPage }}
           />
         </>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{cases?.total ?? 0} cases</p>
+            <p className="text-sm text-muted-foreground">{cases?.data?.length ?? 0} cases</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
@@ -312,7 +312,7 @@ export function LaborTabs() {
                 action={canManage ? { label: "New Case", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.total ?? 0, onPageChange: setCasePage }}
+            pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.data?.length ?? 0, onPageChange: setCasePage }}
           />
         </>
       )}

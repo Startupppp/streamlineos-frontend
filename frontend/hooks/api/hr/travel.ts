@@ -16,6 +16,7 @@ export interface TravelRequest {
   id: number;
   orgId: string;
   userId: string;
+  userMembershipId: number | null;
   purpose: string;
   destination: string;
   departureDate: string;
@@ -23,12 +24,20 @@ export interface TravelRequest {
   flightRequired: boolean;
   hotelRequired: boolean;
   advanceRequired: boolean;
-  advanceAmount?: string;
-  estimatedCost?: string;
-  perDiem?: string;
+  advanceAmount: string | null;
+  estimatedCost: string | null;
+  perDiem: string | null;
+  itinerary: Array<{ date: string; activity: string; location: string }>;
   status: "DRAFT" | "PENDING" | "MANAGER_APPROVED" | "FINANCE_APPROVED" | "REJECTED" | "COMPLETED";
-  rejectionReason?: string;
+  managerApproverId: string | null;
+  managerApproverMembershipId: number | null;
+  managerApprovedAt: string | null;
+  financeApproverId: string | null;
+  financeApproverMembershipId: number | null;
+  financeApprovedAt: string | null;
+  rejectionReason: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export function useMyTravelRequests() {
@@ -47,11 +56,25 @@ export function usePendingTravelApprovals() {
   });
 }
 
+export interface CreateTravelInput {
+  purpose: string;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  flightRequired: boolean;
+  hotelRequired: boolean;
+  advanceRequired: boolean;
+  advanceAmount?: string;
+  estimatedCost?: string;
+  perDiem?: string;
+  itinerary?: Array<{ date: string; activity: string; location: string }>;
+}
+
 export function useCreateTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:create", {
     mutationKey: ["hr", "travel", "create"],
-    mutationFn: (data: Omit<TravelRequest, "id" | "orgId" | "userId" | "status" | "createdAt">) =>
+    mutationFn: (data: CreateTravelInput) =>
       apiClient.post("/hr/travel", data, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });

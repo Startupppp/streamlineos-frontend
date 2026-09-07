@@ -27,7 +27,7 @@ export interface JobBoardPosting {
   jobPostingId: number;
   platform: string;
   externalPostUrl?: string | null;
-  status: string;
+  status: JobBoardPostingStatus;
   postedBy?: string | null;
   postedAt?: string | null;
   expiryDate?: string | null;

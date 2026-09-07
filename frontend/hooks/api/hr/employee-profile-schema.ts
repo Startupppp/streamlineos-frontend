@@ -9,7 +9,13 @@ export const bulkOnboardResultContract = z.object({
   total: z.number().int(),
   created: z.number().int(),
   failed: z.number().int(),
-  results: z.array(z.record(z.string(), z.unknown())),
+  results: z.array(z.object({
+    row: z.number().int(),
+    email: z.string(),
+    success: z.boolean(),
+    userId: z.string().optional(),
+    error: z.string().optional(),
+  })),
 });
 
 export const employmentByUserIdContract = z.object({
@@ -30,7 +36,14 @@ export const employmentByUserIdContract = z.object({
 });
 
 export const timelinePageContract = z.object({
-  data: z.array(z.record(z.string(), z.unknown())),
+  data: z.array(z.object({
+    id: z.string(),
+    type: z.enum(["status_transition", "effective_change", "audit"]),
+    action: z.string(),
+    entityType: z.string(),
+    createdAt: z.string(),
+    data: z.record(z.string(), z.unknown()),
+  })),
   pageInfo: z.object({
     limit: z.number().int(),
     hasMore: z.boolean(),

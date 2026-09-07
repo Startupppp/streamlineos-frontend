@@ -198,16 +198,17 @@ export function SuccessionTab() {
       ) : (
         <div className="space-y-2">
           {plans.map((plan) => {
-            const cfg = READINESS_CONFIG[plan.readiness];
+            const readiness = plan.readiness && isSuccessionReadiness(plan.readiness) ? plan.readiness : "ready_now";
+            const cfg = READINESS_CONFIG[readiness];
             return (
               <Card key={plan.id}>
                 <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <TruncatedText text={plan.roleName} className="font-medium text-sm" />
+                    <TruncatedText text={plan.positionTitle ?? "—"} className="font-medium text-sm" />
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Successor: {resolveMemberName(plan.successorId) ?? plan.successorId}
-                      {plan.incumbentId && (
-                        <> · Incumbent: {resolveMemberName(plan.incumbentId) ?? plan.incumbentId}</>
+                      Successor: {resolveMemberName(plan.successorUserId) ?? plan.successorUserId ?? "—"}
+                      {plan.incumbentUserId && (
+                        <> · Incumbent: {resolveMemberName(plan.incumbentUserId) ?? plan.incumbentUserId}</>
                       )}
                     </p>
                   </div>

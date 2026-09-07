@@ -1,5 +1,7 @@
 "use client";
 
+import type { z } from "zod";
+import type { equityGrantContract } from "@/hooks/api/hr/enterprise-comp-schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -14,12 +16,13 @@ export interface TimeDevice {
   name: string;
   serialNumber: string;
   type: "biometric" | "rfid" | "mobile" | "other";
-  locationId: number | null;
+  locationId: string | null;
   status: "active" | "inactive" | "faulty";
   lastSyncAt: string | null;
   effectiveFrom: string | null;
   effectiveTo: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface DeviceSyncLog {
@@ -33,12 +36,15 @@ export interface DeviceSyncLog {
 
 export interface CompCycle {
   id: number;
+  orgId: string;
   name: string;
   fiscalYear: number;
   status: "draft" | "active" | "calibrating" | "approved" | "closed";
   budgetPoolCents: number;
-  meritMatrix: Record<string, number> | null;
+  meritMatrix: Record<string, unknown> | null;
+  createdBy: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CompRecommendation {
@@ -55,30 +61,18 @@ export interface CompRecommendation {
   createdAt: string;
 }
 
+
 export interface CompBudgetPool {
   id: number;
+  orgId: string;
   cycleId: number;
-  departmentId: number | null;
+  departmentId: string | null;
   allocatedCents: number;
   usedCents: number;
   createdAt: string;
 }
 
-export interface EquityGrant {
-  id: number;
-  userId: string;
-  grantType: "ISO" | "NSO" | "RSU" | "other";
-  units: number;
-  strikePriceCents: number | null;
-  grantDate: string;
-  cliffMonths: number;
-  vestingMonths: number;
-  status: "active" | "exercised" | "cancelled" | "expired";
-  boardApprovedAt: string | null;
-  documentUrl: string | null;
-  notes: string | null;
-  createdAt: string;
-}
+export type EquityGrant = z.infer<typeof equityGrantContract>;
 
 export interface VestingEvent {
   id: number;

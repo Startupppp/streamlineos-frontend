@@ -11,7 +11,7 @@ const versionsContract = lazyContract(() =>
   import("@/hooks/api/hr/settings-hub-schema").then((m) => m.versionsContract),
 );
 
-export type { EffectiveRulesResponse as EffectiveRuleItem, VersionsResponse } from "@/hooks/api/hr/settings-hub-schema";
+export type { EffectiveRuleItem, VersionsResponse } from "@/hooks/api/hr/settings-hub-schema";
 
 export type VersionEntity = "policy" | "template" | "workflow";
 

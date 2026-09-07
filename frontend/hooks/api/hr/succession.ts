@@ -22,13 +22,15 @@ export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
 export interface SuccessionPlan {
   id: number;
   orgId: string;
-  roleName: string;
-  jobRoleId: number | null;
-  incumbentId: string | null;
-  successorId: string;
-  readiness: SuccessionReadiness;
-  note: string | null;
-  createdBy: string | null;
+  positionId: string | null;
+  positionTitle: string | null;
+  incumbentUserId: string | null;
+  incumbentMembershipId: number | null;
+  successorUserId: string | null;
+  successorMembershipId: number | null;
+  readiness: string | null;
+  notes: string | null;
+  status: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,10 +67,14 @@ export function useCreateSuccessionPlan() {
   return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "create"],
     mutationFn: (
-      body: Omit<
-        SuccessionPlan,
-        "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt"
-      >,
+      body: {
+        roleName: string;
+        successorId: string;
+        incumbentId?: string | null;
+        jobRoleId?: number | null;
+        readiness?: SuccessionReadiness;
+        note?: string | null;
+      },
     ) => apiClient.post("/hr/succession", body, undefined, successionRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });

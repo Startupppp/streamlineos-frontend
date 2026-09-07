@@ -15,16 +15,26 @@ import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 export interface FnfSettlement {
   id: number;
+  orgId: string;
   userId: string;
-  basicDues: string | null;
-  leaveEncashment: string | null;
-  bonusDue: string | null;
-  deductions: string | null;
-  loanRecovery: string | null;
-  netPayable: string | null;
-  status: string | null;
+  resignationId: number | null;
+  basicDues: string;
+  leaveEncashment: string;
+  bonusDue: string;
+  deductions: string;
+  loanRecovery: string;
+  netPayable: string;
+  status: string;
+  userMembershipId: number | null;
+  approvedBy: string | null;
   notes: string | null;
-  createdAt: string | null;
+  reimbursementsDue: string;
+  assetRecovery: string;
+  noticeRecovery: string;
+  otherDeductions: string;
+  statementPublishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
   user?: { name: string | null; email: string } | null;
 }
 

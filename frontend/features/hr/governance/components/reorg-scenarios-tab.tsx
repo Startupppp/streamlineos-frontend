@@ -142,7 +142,7 @@ export function ReorgScenariosTab() {
             compact
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
+        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
     </>
   );

@@ -67,9 +67,9 @@ export function WorkforceCostPage() {
           />
         ) : (
           <StatCardGrid cols={3}>
-            <StatCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />
-            <StatCard label="Monthly Cost" value={formatCents(summary?.total_monthly_cost_cents)} hint="All active employees" icon={DollarSign} tone="emerald" />
-            <StatCard label="Annual CTC" value={formatCents(summary?.total_annual_ctc_cents)} hint="Total compensation" icon={Calendar} tone="blue" />
+            <StatCard label="Total Headcount" value={String(summary?.totalHeadcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />
+            <StatCard label="Monthly Cost" value={formatCents(summary?.totalMonthlyCostCents)} hint="All active employees" icon={DollarSign} tone="emerald" />
+            <StatCard label="Annual CTC" value={formatCents(summary?.totalAnnualCtcCents)} hint="Total compensation" icon={Calendar} tone="blue" />
           </StatCardGrid>
         )}
 
@@ -109,10 +109,10 @@ export function WorkforceCostPage() {
                 {byDept.map((row, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
                     <div>
-                      <p className="text-sm font-medium">{String(row["department_name"] ?? "—")}</p>
-                      <p className="text-xs text-muted-foreground">{String(row["headcount"] ?? 0)} employees</p>
+                      <p className="text-sm font-medium">{String(row.departmentName ?? "—")}</p>
+                      <p className="text-xs text-muted-foreground">{String(row.headcount ?? 0)} employees</p>
                     </div>
-                    <p className="text-sm font-bold text-primary">{formatCents(row["monthly_cost_cents"])}/mo</p>
+                    <p className="text-sm font-bold text-primary">{formatCents(row.monthlyCostCents)}/mo</p>
                   </div>
                 ))}
               </div>
@@ -142,10 +142,10 @@ export function WorkforceCostPage() {
                 {byLoc.map((row, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
                     <div>
-                      <p className="text-sm font-medium">{String(row["location_id"] === "unassigned" ? "Unassigned" : `Location ${row["location_id"]}`)}</p>
-                      <p className="text-xs text-muted-foreground">{String(row["headcount"] ?? 0)} employees</p>
+                      <p className="text-sm font-medium">{String(row.locationId === "unassigned" ? "Unassigned" : `Location ${row.locationId}`)}</p>
+                      <p className="text-xs text-muted-foreground">{String(row.headcount ?? 0)} employees</p>
                     </div>
-                    <p className="text-sm font-bold text-primary">{formatCents(row["monthly_cost_cents"])}/mo</p>
+                    <p className="text-sm font-bold text-primary">{formatCents(row.monthlyCostCents)}/mo</p>
                   </div>
                 ))}
               </div>

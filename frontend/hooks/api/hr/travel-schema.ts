@@ -18,7 +18,7 @@ export const travelRequestContract = z.object({
   itinerary: z.array(
     z.object({ date: z.string(), activity: z.string(), location: z.string() }),
   ),
-  status: z.string(),
+  status: z.enum(["DRAFT", "PENDING", "MANAGER_APPROVED", "FINANCE_APPROVED", "REJECTED", "COMPLETED"]),
   managerApproverId: z.string().nullable(),
   managerApproverMembershipId: z.number().int().nullable(),
   managerApprovedAt: z.string().nullable(),

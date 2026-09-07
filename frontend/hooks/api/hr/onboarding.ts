@@ -190,17 +190,23 @@ export function useCreateHrOnboardingTemplate() {
 
 export interface OnboardingChecklistDoc {
   id: number;
+  orgId: string;
+  userId: string;
   documentTypeId: number;
   documentTypeName: string;
   isMandatory: boolean;
   hasFile: boolean;
   fileName: string;
   fileSize: number | null;
+  mimeType: string | null;
+  version: number;
   status: string;
+  reviewedBy: string | null;
   reviewedAt: string | null;
-  reviewerName: string | null;
   remarks: string | null;
-  version: number | null;
+  createdAt: string;
+  updatedAt: string;
+  reviewerName: string | null;
 }
 
 interface OnboardingChecklistDocsResponse {

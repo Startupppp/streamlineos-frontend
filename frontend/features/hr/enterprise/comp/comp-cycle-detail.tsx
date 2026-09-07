@@ -163,7 +163,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
             {Object.entries(cycle.meritMatrix).map(([rating, pct]) => (
               <div key={rating} className="p-2 rounded-lg bg-primary/5 text-center">
                 <p className="text-xs text-muted-foreground">{rating}</p>
-                <p className="text-sm font-bold text-primary">{pct}%</p>
+                <p className="text-sm font-bold text-primary">{String(pct)}%</p>
               </div>
             ))}
           </div>

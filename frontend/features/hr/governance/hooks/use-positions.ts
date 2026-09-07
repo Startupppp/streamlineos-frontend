@@ -26,14 +26,16 @@ export interface Position {
   id: number;
   orgId: string;
   title: string;
-  departmentId: number | null;
+  departmentId: string | null;
   jobLevelId: number | null;
-  status: "open" | "filled" | "frozen" | "future";
+  status: "open" | "filled" | "frozen" | "future" | string;
   budgetedCostCents: number | null;
   effectiveFrom: string;
   incumbentUserId: string | null;
   futureDated: boolean;
+  deletedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ReorgScenario {

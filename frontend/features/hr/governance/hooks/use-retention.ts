@@ -43,13 +43,16 @@ export interface DataRequest {
   id: number;
   orgId: string;
   subjectUserId: string;
-  type: "export" | "delete" | "anonymize";
-  status: "pending" | "approved" | "processing" | "completed" | "rejected";
+  subjectMembershipId: number | null;
+  type: "export" | "delete" | "anonymize" | "correction";
+  status: "pending" | "approved" | "processing" | "completed" | "rejected" | "partial";
   requestedBy: string | null;
   approvedBy: string | null;
   reason: string | null;
   completedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface RetentionListResponse<T> {

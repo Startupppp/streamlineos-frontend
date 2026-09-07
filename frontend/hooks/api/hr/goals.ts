@@ -16,20 +16,22 @@ const goalLazy = lazyContract(() =>
 
 export interface HrGoal {
   id: number;
+  orgId: string;
+  userId: string;
+  userMembershipId: number | null;
   title: string;
-  description?: string;
+  description: string | null;
   type: string;
-  status: string;
-  progress: number;
+  targetValue: string | null;
+  currentValue: string;
+  unit: string | null;
   startDate: string;
   endDate: string;
-  userId: string;
-  orgId: string;
-  parentGoalId?: number;
-  targetValue?: string;
-  currentValue?: string;
-  unit?: string;
+  status: string;
+  progress: number;
+  parentGoalId: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export function useHrGoals(params?: { userId?: string }) {

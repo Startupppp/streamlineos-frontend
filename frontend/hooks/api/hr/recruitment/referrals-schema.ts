@@ -9,7 +9,7 @@ const candidateReferralRowSchema = z.object({
   jobPostingId: z.number().int().nullable(),
   relationship: z.string().nullable(),
   notes: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["SUBMITTED", "REVIEWING", "HIRED", "REJECTED", "BONUS_PAID"]),
   bonusEligible: z.boolean(),
   bonusAmount: z.string().nullable(),
   bonusPaidAt: z.string().nullable(),

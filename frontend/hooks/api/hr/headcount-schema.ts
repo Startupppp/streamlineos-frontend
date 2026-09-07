@@ -16,7 +16,7 @@ const headcountRowContract = z.object({
   level: z.string().nullable(),
   justification: z.string().nullable(),
   targetDate: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "JOB_CREATED"]),
   approvedBy: z.string().nullable(),
   approvedByMembershipId: z.number().int().nullable(),
   approvedAt: z.string().nullable(),

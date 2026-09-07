@@ -22,21 +22,25 @@ export type HeadcountStatus =
 export interface HeadcountRequest {
   id: number;
   orgId: string;
-  departmentId: number | null;
+  orgDepartmentId: string | null;
   requestedBy: string;
+  requestedByMembershipId: number | null;
   requestedRole: string;
   level: string | null;
   justification: string | null;
   targetDate: string | null;
   status: HeadcountStatus;
   approvedBy: string | null;
+  approvedByMembershipId: number | null;
   approvedAt: string | null;
   rejectedReason: string | null;
   linkedJobPostingId: number | null;
   createdAt: string;
-  departmentName: string | null;
-  requesterName: string | null;
-  requesterEmail: string | null;
+  updatedAt: string;
+  departmentId?: number | null;
+  departmentName?: string | null;
+  requesterName?: string | null;
+  requesterEmail?: string | null;
 }
 
 export interface CreateHeadcountRequestInput {
