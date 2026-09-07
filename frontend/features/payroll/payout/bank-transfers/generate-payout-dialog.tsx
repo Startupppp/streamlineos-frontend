@@ -76,6 +76,11 @@ export function GeneratePayoutDialog({
     if (generatedBatchId !== null) onDownload(generatedBatchId);
   }
 
+  function handleFormatChange(v: string): void {
+    const next = BATCH_FORMATS.find((candidate) => candidate === v);
+    if (next) onFormatChange(next);
+  }
+
   function handleGenerate() {
     createMutation.mutate(
       { runId, format: format === recommendedFormat ? undefined : format, idempotencyKey },
@@ -125,10 +130,7 @@ export function GeneratePayoutDialog({
                 <Label htmlFor="batch-format">Format</Label>
                 <Select
                   value={format}
-                  onValueChange={(v) => {
-                    const next = BATCH_FORMATS.find((candidate) => candidate === v);
-                    if (next) onFormatChange(next);
-                  }}
+                  onValueChange={handleFormatChange}
                 >
                   <SelectTrigger id="batch-format" className="">
                     <SelectValue />

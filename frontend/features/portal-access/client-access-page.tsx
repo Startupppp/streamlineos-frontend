@@ -251,6 +251,11 @@ export function ClientAccessPage() {
     setRevokeTarget(null);
   }
 
+  function handleNextPage(): void {
+    const nextCursor = pagination?.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }
+
   const columns: DataTableColumn<ProjectClientGrant>[] = [
     {
       key: "partyContactId",
@@ -403,10 +408,7 @@ export function ClientAccessPage() {
                   hasNext={pagination.hasMore}
                   disabled={isLoading}
                   onPrevious={handlePreviousPage}
-                  onNext={() => {
-                    const nextCursor = pagination.nextCursor;
-                    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
-                  }}
+                  onNext={handleNextPage}
                   className="mt-2 px-1"
                 />
               ) : null}

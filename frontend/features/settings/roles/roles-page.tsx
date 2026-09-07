@@ -136,6 +136,11 @@ export function RolesPage() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
+  function handleTabChange(v: string): void {
+    const tab = ROLES_PAGE_TABS.find((candidate) => candidate === v);
+    if (tab) setActiveTab(tab);
+  }
+
   const deleteEnabled = deleteConfirmation === (deleteTarget?.name ?? "");
 
   useEffect(() => {
@@ -198,10 +203,7 @@ export function RolesPage() {
     >
       <Tabs
         value={activeTab}
-        onValueChange={(v) => {
-          const tab = ROLES_PAGE_TABS.find((candidate) => candidate === v);
-          if (tab) setActiveTab(tab);
-        }}
+        onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <TabsList className="shrink-0">

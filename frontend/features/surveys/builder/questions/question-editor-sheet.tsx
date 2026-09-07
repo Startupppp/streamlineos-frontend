@@ -76,6 +76,11 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
     }
   }
 
+  function handleTypeChange(v: string): void {
+    const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);
+    if (next) setType(next);
+  }
+
   const meta = QUESTION_TYPE_META[type];
   const isBusy = createQuestion.isPending || patchQuestion.isPending;
 
@@ -127,10 +132,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
             <Label>Type</Label>
             <Select
               value={type}
-              onValueChange={(v) => {
-                const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);
-                if (next) setType(next);
-              }}
+              onValueChange={handleTypeChange}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>

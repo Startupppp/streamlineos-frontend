@@ -66,6 +66,11 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
   const [scoreThreshold, setScoreThreshold] = useState("");
   const [createFollowUpTask, setCreateFollowUpTask] = useState(false);
 
+  function handleEventTypeChange(v: string): void {
+    const next = EVENT_TYPES.find((candidate) => candidate === v);
+    if (next) setEventType(next);
+  }
+
   function handleFollowUpTaskToggle(checked: boolean | "indeterminate"): void {
     setCreateFollowUpTask(Boolean(checked));
   }
@@ -133,10 +138,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
             <Label>When</Label>
             <Select
               value={eventType}
-              onValueChange={(v) => {
-                const next = EVENT_TYPES.find((candidate) => candidate === v);
-                if (next) setEventType(next);
-              }}
+              onValueChange={handleEventTypeChange}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>

@@ -71,6 +71,11 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
     toast.success("Link copied");
   }
 
+  function handleNewTypeChange(v: string): void {
+    const next = COLLECTOR_TYPES.find((candidate) => candidate === v);
+    if (next) setNewType(next);
+  }
+
   async function handleToggleStatus(collectorId: number, status: CollectorStatus) {
     try {
       await patchCollector.mutateAsync({ collectorId, input: { status: status === "active" ? "paused" : "active" } });
@@ -115,10 +120,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
         <div className="flex items-center gap-2">
           <Select
             value={newType}
-            onValueChange={(v) => {
-              const next = COLLECTOR_TYPES.find((candidate) => candidate === v);
-              if (next) setNewType(next);
-            }}
+            onValueChange={handleNewTypeChange}
           >
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[200px]")}><SelectValue /></SelectTrigger>
             <SelectContent>

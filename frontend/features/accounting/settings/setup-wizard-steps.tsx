@@ -78,6 +78,11 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
     );
   }
 
+  function handleAccountingBasisChange(v: string): void {
+    const basis = ACCOUNTING_BASIS_VALUES.find((candidate) => candidate === v);
+    if (basis) form.setValue("accountingBasis", basis, { shouldValidate: true });
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -117,10 +122,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
               <Label>Accounting basis</Label>
               <Select
                 value={form.watch("accountingBasis")}
-                onValueChange={(v) => {
-                  const basis = ACCOUNTING_BASIS_VALUES.find((candidate) => candidate === v);
-                  if (basis) form.setValue("accountingBasis", basis, { shouldValidate: true });
-                }}
+                onValueChange={handleAccountingBasisChange}
               >
                 <SelectTrigger>
                   <SelectValue />
