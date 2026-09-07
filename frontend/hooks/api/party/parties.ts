@@ -11,6 +11,14 @@ import type {
   UpdatePartyInput,
 } from "@/types/party/parties";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const partyDetailContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyDetailContract),
+);
+const partyMutationContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyMutationContract),
+);
 
 export interface UsePartiesParams {
   page?: number;
@@ -51,7 +59,7 @@ export function useParty(partyId: string | null) {
 
   return useQuery({
     queryKey: directoryAndOwnershipQueryKeys.party.party(partyId ?? ""),
-    queryFn: ({ signal }) => apiClient.get<BusinessParty>(`/party/parties/${partyId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<BusinessParty>(`/party/parties/${partyId}`, undefined, signal, partyDetailContract),
     staleTime: 60_000,
     enabled: canView && !!partyId,
   });
@@ -62,7 +70,7 @@ export function useCreateParty() {
   return useAuthorizedMutation("party:parties:create", {
     mutationKey: ["party", "parties", "create"],
     mutationFn: (input: CreatePartyInput) =>
-      apiClient.post<BusinessParty>("/party/parties", input),
+      apiClient.post<BusinessParty>("/party/parties", input, undefined, partyMutationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
     },
@@ -74,7 +82,7 @@ export function useUpdateParty() {
   return useAuthorizedMutation("party:parties:update", {
     mutationKey: ["party", "parties", "update"],
     mutationFn: ({ partyId, ...input }: UpdatePartyInput & { partyId: string }) =>
-      apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input),
+      apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input, undefined, partyMutationContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.party.party(variables.partyId),

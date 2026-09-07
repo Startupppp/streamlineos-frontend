@@ -12,7 +12,7 @@ import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
  * NOT `.strict()`. Timestamps are ISO strings.
  */
 
-const partyRowContract = z.object({
+export const partyRowContract = z.object({
   partyId: z.string(),
   organizationId: z.string(),
   partyType: z.string(),

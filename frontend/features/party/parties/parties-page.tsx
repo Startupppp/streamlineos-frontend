@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { asRecordValues } from "@/components/renderer";
+import { useCallback, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -13,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import type { ReactNode } from "react";
+import type { RecordValue } from "@/components/renderer";
 
 const RecordList = dynamic(
   () =>
@@ -163,7 +163,7 @@ export function PartiesPage() {
   );
 
   const handleRowClick = useCallback(
-    (row: BusinessParty) => setOpenPartyId(row.partyId),
+    (row: RecordValue) => setOpenPartyId(String(row.partyId)),
     [setOpenPartyId],
   );
 
@@ -236,21 +236,27 @@ export function PartiesPage() {
     });
   }
 
+  const rows = data?.data ?? [];
+  const partiesById = useMemo(
+    () => new Map(rows.map((party) => [party.partyId, party])),
+    [rows],
+  );
+
   const renderRowActions = useCallback(
-    (row: BusinessParty): ReactNode =>
-      canManageRow ? (
+    (row: RecordValue): ReactNode => {
+      const party = partiesById.get(String(row.partyId));
+      return canManageRow && party ? (
         <PartyRowActions
-          party={row}
+          party={party}
           canEdit={canUpdate}
           canDelete={canDelete}
           onEdit={handleEditRow}
           onDelete={handleDeleteRow}
         />
-      ) : null,
-    [canManageRow, canUpdate, canDelete, handleEditRow, handleDeleteRow],
+      ) : null;
+    },
+    [partiesById, canManageRow, canUpdate, canDelete, handleEditRow, handleDeleteRow],
   );
-
-  const rows = asRecordValues(data?.data ?? []);
   const [density, setDensity] = useDensity();
   const pagination = data?.pagination;
   const isFiltered =
@@ -351,7 +357,7 @@ export function PartiesPage() {
                 layout={PARTY_LAYOUT}
                 rows={rows}
                 actions={renderRowActions}
-                getRowKey={(row) => row.partyId}
+                getRowKey={(row) => String(row.partyId)}
                 onRowClick={handleRowClick}
                 density={density}
                 minWidth="720px"
