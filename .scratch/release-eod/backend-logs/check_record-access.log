@@ -1,9 +1,0 @@
-findFirst calls        1193
-  record reads         592
-  conflict checks      61
-  other                540
-
-PURGE READS — named, not hidden in an allowlist:
-  SKIP  src/modules/kb/wiki/kb-page-tree.service.ts:232  kbPages  — hardDelete reads the page in order to purge it; excluding deleted rows would make a deleted page unpurgeable
-
-OK — every record read excludes soft-deleted rows.

@@ -1,8 +1,0 @@
-Scanned 3689 TypeScript files under src/
-TIER 1 (banned)    : 0 violation(s) — must be 0
-TIER 2 (ratcheted) : 253 (184 floating promises + 69 swallowed rejections) vs ratchet 279
-INVENTORY          : 57 registerAfterCommit call(s) — a sanctioned mechanism (CLAUDE.md §4), reported, not gated
-
-TIER 2 IMPROVED — 26 fewer than the ratchet. Lower TIER2_RATCHET to 253 in src/scripts/check-fire-and-forget.mjs so the gain is held.
-
-check:fire-and-forget PASSED — tier 1 clean, tier 2 at 253 (ratchet 279)

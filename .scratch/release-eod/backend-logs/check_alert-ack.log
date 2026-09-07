@@ -1,6 +1,0 @@
-PREREQUISITE MISSING: ALERT_WEBHOOK_URL is not set.
-Alert acknowledgement cannot be confirmed without a configured webhook destination.
-1. Set ALERT_WEBHOOK_URL to your Slack/PagerDuty/OpsGenie webhook endpoint.
-2. Run the interactive drill: node src/scripts/drill-alert-system.mjs
-3. Enter the nonce shown in your alert channel to confirm a human received it.
-4. Re-run this check.

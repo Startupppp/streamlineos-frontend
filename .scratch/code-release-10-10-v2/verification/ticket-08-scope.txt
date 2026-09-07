@@ -1,2 +1,0 @@
-TICKET 08
-CODE criteria to verify (3): PRD-C120, PRD-C121, PRD-C122

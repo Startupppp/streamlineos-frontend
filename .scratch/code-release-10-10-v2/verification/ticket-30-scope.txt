@@ -1,2 +1,0 @@
-TICKET 30
-CODE criteria to verify (4): PRD-C011, PRD-C015, PRD-C064, PRD-C104

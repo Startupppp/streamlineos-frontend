@@ -1,8 +1,0 @@
-Error: [region] organisation 06161c5f-ae82-4a6e-b0e0-813bce6ee8d9 has no region. It must be placed before its data can be reached.
-    at RegionRegistry.resolvePlacement (D:\projects\personal\Streamlineos\backend\src\common\region\region-registry.ts:261:13)
-    at processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async RegionRegistry.placementForOrg (D:\projects\personal\Streamlineos\backend\src\common\region\region-registry.ts:131:23)
-    at async RegionRegistry.admittedPlacementForOrg (D:\projects\personal\Streamlineos\backend\src\common\region\region-registry.ts:144:23)
-    at async withTenant (D:\projects\personal\Streamlineos\backend\src\common\tenant\with-tenant.ts:117:21)
-    at async findMultiOrgUser (D:\projects\personal\Streamlineos\backend\src\scripts\verify-multi-org-employment.ts:18:23)
-    at async main (D:\projects\personal\Streamlineos\backend\src\scripts\verify-multi-org-employment.ts:88:21)

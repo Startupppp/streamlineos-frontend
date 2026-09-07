@@ -1,2 +1,0 @@
-TICKET 17
-CODE criteria to verify (5): PRD-C002, PRD-C152, PRD-C153, PRD-C154, PRD-C155

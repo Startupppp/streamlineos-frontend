@@ -1,5 +1,0 @@
-Schema files            347
-Tenant tables           840
-Leading tenant index    840
-
-OK — every tenant table declares an index leading with its tenant column.

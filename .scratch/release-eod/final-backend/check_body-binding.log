@@ -1,6 +1,0 @@
-check-body-binding: 1945 validated body/query slots on controller routes
-  BOUND      1936
-  NO-FIELDS  3  (z.record / empty z.object — no property to bind)
-  no-param   6  (handler declares no @Body()/@Query() parameter)
-  UNBOUND    0
-check-body-binding: every validated slot is typed from its own schema.

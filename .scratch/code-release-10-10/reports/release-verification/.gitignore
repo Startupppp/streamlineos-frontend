@@ -1,4 +1,0 @@
-# Dry-run artifacts are regenerable evidence, not the release record.
-# Only an AUTHORITATIVE run (both trees clean) writes to the parent directory,
-# and that record is committed deliberately as ticket 42 evidence.
-dry-runs/

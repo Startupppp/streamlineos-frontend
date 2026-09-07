@@ -1,5 +1,0 @@
-Schema source: 924 named foreign keys, 771 of them carrying an explicit .onDelete()
-Declared foreign keys 2288
-INCONCLUSIVE — the catalog half did not run. A foreign key's ON DELETE action lives only in pg_constraint.confdeltype; nothing static can see it, so all 2288 declared foreign keys are UNVERIFIED.
-  Set REFERENTIAL_ACTION_GATE_DATABASE_URL to a database bootstrapped to journal head to run it.
-  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run.

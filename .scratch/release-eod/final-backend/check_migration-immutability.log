@@ -1,3 +1,0 @@
-check-migration-immutability: 685 sealed entries against a journal of 685 — 0 newly appended, 0 comment-only edit(s)
-
-OK — every sealed migration still builds the same database.

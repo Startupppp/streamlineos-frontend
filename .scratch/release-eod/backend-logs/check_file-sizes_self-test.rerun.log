@@ -1,3 +1,0 @@
-  FAIL: an unreadable subtree reports reason=scan-error
-  FAIL: an unreadable subtree never reports zero violations as a pass
-check-file-sizes self-tests: 2 failed, 47 passed

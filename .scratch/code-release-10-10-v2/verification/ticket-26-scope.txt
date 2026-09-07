@@ -1,2 +1,0 @@
-TICKET 26
-CODE criteria to verify (4): PRD-C023, PRD-C024, PRD-C026, PRD-C028

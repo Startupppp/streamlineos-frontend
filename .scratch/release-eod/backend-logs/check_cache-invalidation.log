@@ -1,6 +1,0 @@
-
-=== cache-invalidation gate — 1076 service files scanned ===
-Key shapes: 187 write sites / 177 distinct shapes · 475 invalidate sites · 131 CACHE_KEYS factories
-Table map: 10 of 10 entries match at least one file
-
-RESULT: LOW-only — 0 documentation gaps (not blockers)

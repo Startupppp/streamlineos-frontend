@@ -1,3 +1,0 @@
-check-test-typecheck: all test files typecheck clean under the repo's strict settings
-(tsconfig.test.json). This is a HARD GATE at zero, not a baseline — nothing is
-suppressed and nothing is ratcheted.

@@ -1,9 +1,0 @@
-check-route-duplicates: route deduplication report
-  NOTE: static-vs-param pairs are NOT reported — NestJS globally sorts static segments before parameterized ones, so these are safe.
-  operationId duplicates: 0
-  genuinely ambiguous param-vs-param routes: 0
-  VERSION INCONSISTENCIES: 2 path(s) with a versioned sibling alongside an unversioned one:
-    /v2/users — v2 path exists alongside an unversioned sibling — one may be unintentionally versionless
-    /v2/users/{userId} — v2 path exists alongside an unversioned sibling — one may be unintentionally versionless
-
-  Total findings: 2 (reported only — deletion requires caller/dependency proof)

@@ -1,2 +1,0 @@
-check-multipart-contracts: scanned 551 controller file(s)
-  OK — every handler with a file interceptor carries @MultipartAction or @BodylessAction

@@ -1,2 +1,0 @@
-check-compression: HTTP response compression analysis
-  compression: OK — compression middleware detected in main.ts or app.module.ts

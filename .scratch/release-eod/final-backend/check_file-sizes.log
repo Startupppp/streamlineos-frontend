@@ -1,5 +1,0 @@
-check-file-sizes: exception registry is stale — 1 error(s):
-
-  src/modules/organization/core/membership-artifacts.ts: stale line count — registered 3216, actual 3222
-
-Fix: re-measure the affected file(s) and update D:\projects\personal\Streamlineos\architecture-refactor\final-refactor\issues\file-size-exceptions.md. A file at or below 500 lines must lose its row.

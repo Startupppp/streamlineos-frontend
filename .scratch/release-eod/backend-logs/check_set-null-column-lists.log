@@ -1,5 +1,0 @@
-Declared SET NULL foreign keys 564  ·  requiring a column list 276  ·  unreachable 0
-Declaration half OK — every declared SET NULL key has at least one nullable member.
-INCONCLUSIVE — the catalog half did not run. The ON DELETE SET NULL column list lives only in pg_constraint.confdelsetcols; nothing static can see it, so 276 constraint(s) are UNVERIFIED.
-  Set SET_NULL_GATE_DATABASE_URL to a bootstrapped database to run it.
-  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run.

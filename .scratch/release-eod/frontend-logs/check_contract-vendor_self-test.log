@@ -1,8 +1,0 @@
-✔  self-test passed: identical files produce a match
-✔  self-test passed: different files produce a mismatch
-✔  self-test passed: a missing file produces missing, not a pass
-✔  self-test passed: the backend artifact resolves through the first candidate that exists
-✔  self-test passed: a sibling-layout candidate is found when the monorepo path is absent
-✔  self-test passed: no candidate existing returns null, never a path that is not there
-
-✔  All self-test cases passed — check-contract-vendor is live.

@@ -1,2 +1,0 @@
-TICKET 06
-CODE criteria to verify (2): PRD-C115, PRD-C144

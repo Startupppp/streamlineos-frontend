@@ -1,2 +1,0 @@
-TICKET 20
-CODE criteria to verify (3): PRD-C009, PRD-C138, PRD-C150

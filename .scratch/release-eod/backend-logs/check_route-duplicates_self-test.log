@@ -1,8 +1,0 @@
-Running self-test...
-  [pass] no-dupe-clean-doc — clean document has 0 operationId duplicates
-  [pass] dupe-detected — duplicate operationId is detected
-  [pass] static-vs-param-not-flagged — NestJS-safe static-before-param pair is not flagged
-  [pass] param-vs-param-flagged — param-vs-param at same depth is correctly flagged as ambiguous
-  [pass] no-ambiguous-clean — unrelated paths have no ambiguous findings
-
-SELF-TEST PASSED

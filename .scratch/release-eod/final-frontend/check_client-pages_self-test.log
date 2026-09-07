@@ -1,6 +1,0 @@
-Running self-test...
-
-PASS: self-test (2 assertions)
-
-  (a) found 2 page.tsx files in the fixture tree
-  (b) correctly identified 1 with "use client"

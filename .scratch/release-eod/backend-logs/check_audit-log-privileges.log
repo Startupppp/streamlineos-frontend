@@ -1,5 +1,0 @@
-PREREQUISITE UNMET — cannot determine. This gate requires a live database and a
-non-owner connection; the owner role has BYPASSRLS and would report a boundary
-the running service does not have. Nothing about audit-log privileges was measured.
-Required variable: APP_DATABASE_URL
-Example: APP_DATABASE_URL=postgres://streamline_app:<password>@<host>/<database>

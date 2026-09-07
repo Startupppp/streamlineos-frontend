@@ -1,2 +1,0 @@
-TICKET 11
-CODE criteria to verify (1): PRD-C126

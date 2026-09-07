@@ -1,2 +1,0 @@
-TICKET 16
-CODE criteria to verify (3): PRD-C133, PRD-C134, PRD-C135

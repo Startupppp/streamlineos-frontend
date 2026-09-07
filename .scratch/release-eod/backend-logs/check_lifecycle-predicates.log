@@ -1,8 +1,0 @@
-Tables 788  ·  with a lifecycle column 81  ·  read sites 1725 across 3333 files
-  predicate in statement 774  ·  built elsewhere in file 253  ·  dormant column 111  ·  primary-read candidates 74  ·  join candidates 335
-
-NOTE — 111 read(s) omit a predicate on a lifecycle column no code path ever writes. A dormant trap, not a live defect.
-NOTE — 178 read(s) of a global identity or tenant-root table are outside this rule by design: users, organizations, accounts, sessions.
-
-OK — primary-read candidates 74 (baseline 75) · join candidates 335 (baseline 335).
-Both numbers are ratchets recording the measured state when this gate was written, not a clean bill of health. They may only go down; a new occurrence of either shape fails immediately.

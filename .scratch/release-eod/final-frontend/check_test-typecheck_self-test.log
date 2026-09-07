@@ -1,9 +1,0 @@
-check-test-typecheck --self-test PASS. Proved, in a throwaway tree:
-  1. a call to a method that no longer exists is caught:
-       .check-test-typecheck-selftest/planted.test.ts(13,12): error TS2339: Property 'commit' does not exist on type 'Importer'.
-  2. a wrong-arity call is caught:
-       .check-test-typecheck-selftest/planted.test.ts(14,3): error TS2554: Expected 2 arguments, but got 1.
-  3. an error outside the test globs is reported but not owned:
-       .check-test-typecheck-selftest/planted-source.ts(2,3): error TS2322: Type 'string' is not assignable to type 'number'.
-  4. jest-dom matchers typecheck, so the 703-error registration is live.
-  5. a crashed tsc (exit 1, 0 parseable diagnostics) is refused, not reported clean.

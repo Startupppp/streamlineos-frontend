@@ -1,4 +1,0 @@
-SELF-TEST FAIL [D]: a class provided under a re-exported alias is not an orphan
-SELF-TEST FAIL [D]: importing a same-named module from another folder does not register the other one's providers
-
-2 of 54 self-test assertions failed
