@@ -59,7 +59,7 @@ export function useAdminBlogPosts(params: AdminBlogPostsParams) {
   if (status && status !== "all") queryParams.status = status;
   return useQuery({
     queryKey: accessAndCrmQueryKeys.blogAdmin.posts(queryParams),
-    queryFn: ({ signal }) => apiClient.get<AdminBlogPost[]>("/blog/admin/posts", queryParams, signal, blogAdminPostListContract),
+    queryFn: ({ signal }) => apiClient.get("/blog/admin/posts", queryParams, signal, blogAdminPostListContract),
     staleTime: 30_000,
     enabled: canManage,
   });

@@ -54,7 +54,12 @@ export const blogFeedContract = z.object({
   hasMore: z.boolean(),
 });
 
-export const blogAdminPostListContract = z.array(blogPostWithRelationsContract);
+export const blogAdminPostListContract = z.object({
+  items: z.array(blogPostWithRelationsContract),
+  total: z.number().int(),
+  page: z.number().int(),
+  totalPages: z.number().int(),
+});
 
 export const blogAdminPostDetailContract = blogPostWithRelationsContract;
 

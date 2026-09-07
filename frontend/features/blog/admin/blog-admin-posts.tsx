@@ -108,9 +108,9 @@ function EditPostSheet({ postId, initialPost, onClose, onSubmit, isSubmitting }:
       resolver={zodResolver(blogPostSchema)}
       defaultValues={{
         title: post.title,
-        excerpt: post.excerpt,
+        excerpt: post.excerpt ?? undefined,
         content: "",
-        coverImage: post.coverImage,
+        coverImage: post.coverImage ?? undefined,
         status: post.status,
         isFeatured: post.isFeatured,
         categoryId: post.categoryId,
@@ -380,7 +380,7 @@ export function BlogAdminPosts() {
         <DataTableSkeleton rows={8} columns={5} />
       ) : (
         <DataTable
-          data={data?.posts ?? []}
+          data={data?.items ?? []}
           columns={columnsWithActions}
           getRowKey={(row) => row.id}
           isLoading={isLoading}
