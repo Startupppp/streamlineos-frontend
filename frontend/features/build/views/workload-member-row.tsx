@@ -152,12 +152,14 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
           </span>
         </div>
 
-        {ticketsByDay.map(({ count }, i) => (
+        {ticketsByDay.map(({ count }, i) => {
+          const day = days[i];
+          return (
           <div
             key={i}
             className={cn(
               "w-12 shrink-0 px-1 py-3 flex items-center justify-center",
-              isSameDay(days[i]!, new Date()) && "bg-primary/5",
+              day && isSameDay(day, new Date()) && "bg-primary/5",
             )}
           >
             {count > 0 && (
@@ -171,7 +173,8 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
               </span>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {memberTickets.length > 0 && (

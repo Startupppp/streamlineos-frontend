@@ -47,8 +47,8 @@ interface PeriodSelectorProps {
 export function PeriodSelector({ period, onPeriodChange }: PeriodSelectorProps) {
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const p = e.currentTarget.dataset.period as Period | undefined;
-      if (p) onPeriodChange(p);
+      const p = PERIOD_OPTIONS.find((opt) => opt.value === e.currentTarget.dataset.period);
+      if (p) onPeriodChange(p.value);
     },
     [onPeriodChange],
   );

@@ -26,6 +26,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const VERSION_ENTITIES = [
+  "policy",
+  "template",
+  "workflow",
+] as const satisfies readonly VersionEntity[];
+
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
   active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -95,7 +101,15 @@ export function PolicyVersionsPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 sm:px-6 py-4">
         <div className={FILTER_TOOLBAR_ROW}>
-          <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>
+          <Select
+            value={entity}
+            onValueChange={(v) => {
+              const next = VERSION_ENTITIES.find((candidate) => candidate === v);
+              if (!next) return;
+              setEntity(next);
+              setQueriedId(null);
+            }}
+          >
             <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>

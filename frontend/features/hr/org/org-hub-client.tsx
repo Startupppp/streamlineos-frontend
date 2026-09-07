@@ -27,9 +27,7 @@ export function OrgHubClient() {
   const canManage = useCan("hr:employees:manage");
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
-    ? (requestedTab as (typeof VALID_TABS)[number])
-    : "roles";
+  const initialTab = VALID_TABS.find((candidate) => candidate === requestedTab) ?? "roles";
   const [activeTab, setActiveTab] = useState<string>(initialTab);
 
   const roles = useOrgJobRoles({ enabled: activeTab === "roles" });

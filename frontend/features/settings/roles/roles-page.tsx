@@ -60,6 +60,8 @@ import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { useRoleListState } from "./use-role-list-state";
 import { RolesListPanel } from "./roles-list-panel";
 
+const ROLES_PAGE_TABS = ["roles", "groups"] as const;
+
 const EMPTY_ROLE_ROWS: RoleListRow[] = [];
 
 export function RolesPage() {
@@ -196,7 +198,10 @@ export function RolesPage() {
     >
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "roles" | "groups")}
+        onValueChange={(v) => {
+          const tab = ROLES_PAGE_TABS.find((candidate) => candidate === v);
+          if (tab) setActiveTab(tab);
+        }}
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <TabsList className="shrink-0">

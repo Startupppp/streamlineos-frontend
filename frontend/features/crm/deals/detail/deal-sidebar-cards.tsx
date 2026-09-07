@@ -167,17 +167,19 @@ export function DealSidebarCards({
           <CardTitle className="text-base">Key Dates</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {keyDates
-            .filter((d) => d.value)
-            .map((d) => (
+          {keyDates.map((d) => {
+            const value = d.value;
+            if (!value) return null;
+            return (
               <div
                 key={d.label}
                 className="flex items-center justify-between text-sm"
               >
                 <span className="text-muted-foreground">{d.label}</span>
-                <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
+                <span>{new Date(value).toLocaleDateString("en-IN")}</span>
               </div>
-            ))}
+            );
+          })}
         </CardContent>
       </Card>
 

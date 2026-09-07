@@ -39,7 +39,6 @@ import {
   KIND_LABELS,
   LETTER_TYPE_LABELS,
   type HrTemplateListItem,
-  type HrTemplateKind,
 } from "@/types/hr/templates";
 import { ChecklistEditor } from "./checklist-editor";
 import { ReviewEditor } from "./review-editor";
@@ -76,7 +75,7 @@ const schema = z
     contentQuestions: z.unknown().optional(),
   })
   .superRefine((val, ctx) => {
-    const isLetterEmail = (LETTER_EMAIL_KINDS as readonly string[]).includes(val.kind);
+    const isLetterEmail = LETTER_EMAIL_KINDS.some((candidate) => candidate === val.kind);
     if (!isLetterEmail) return;
 
     if (SUBJECT_REQUIRED_KINDS.includes(val.kind)) {
@@ -120,11 +119,11 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
       name: template?.name ?? "",
       description: template?.description ?? "",
       letterType: template?.letterType ?? undefined,
-      contentSubject: (c["subject"] as string | undefined) ?? "",
-      contentBodyHtml: (c["bodyHtml"] as string | undefined) ?? "",
-      contentItems: (c["items"] as unknown) ?? [],
-      contentSections: (c["sections"] as unknown) ?? [],
-      contentQuestions: (c["questions"] as unknown) ?? [],
+      contentSubject: typeof c.subject === "string" ? c.subject : "",
+      contentBodyHtml: typeof c.bodyHtml === "string" ? c.bodyHtml : "",
+      contentItems: c.items ?? [],
+      contentSections: c.sections ?? [],
+      contentQuestions: c.questions ?? [],
     };
   }, [template, templateDetail]);
 
@@ -140,10 +139,10 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
   }, [open, isEdit, templateDetail, form, defaultValues]);
 
   const kind = form.watch("kind");
-  const isChecklist = (CHECKLIST_KINDS as readonly string[]).includes(kind);
-  const isReview = (REVIEW_KINDS as readonly string[]).includes(kind);
+  const isChecklist = CHECKLIST_KINDS.some((candidate) => candidate === kind);
+  const isReview = REVIEW_KINDS.some((candidate) => candidate === kind);
   const isSurvey = kind === "survey";
-  const isLetterEmail = (LETTER_KINDS as readonly string[]).includes(kind);
+  const isLetterEmail = LETTER_KINDS.some((candidate) => candidate === kind);
   const isLetter = kind === "letter";
 
   const handleSubmit = useCallback(
@@ -165,7 +164,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
         content = { subject: values.contentSubject, bodyHtml: values.contentBodyHtml ?? "" };
       }
       const payload = {
-        kind: values.kind as HrTemplateKind,
+        kind: values.kind,
         name: values.name.trim(),
         description: values.description ?? undefined,
         content,

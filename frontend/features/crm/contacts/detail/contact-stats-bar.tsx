@@ -29,7 +29,7 @@ export function ContactStatsBar({ contactId, openDealsCount }: ContactStatsBarPr
       .filter((t) => t.status === "completed" && t.completedAt)
       .sort(
         (a, b) =>
-          new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime(),
+          new Date(b.completedAt ?? 0).getTime() - new Date(a.completedAt ?? 0).getTime(),
       )[0]?.completedAt ?? null;
 
     return { activitiesThisMonth: monthly, lastContacted: lastDone };

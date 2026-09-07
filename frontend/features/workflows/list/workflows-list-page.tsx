@@ -36,7 +36,14 @@ import { DeleteWorkflowDialog } from "@/features/workflows/list/delete-workflow-
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 
-type StatusFilter = WorkflowStatus | "all";
+const STATUS_FILTERS = [
+  "all",
+  "draft",
+  "published",
+  "disabled",
+  "archived",
+] as const satisfies readonly (WorkflowStatus | "all")[];
+type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 const WORKFLOW_PAGE_SIZE = 24;
 
@@ -117,7 +124,8 @@ export function WorkflowsListPage() {
   }
 
   function handleStatusChange(value: string) {
-    setStatusFilter(value as StatusFilter);
+    const next = STATUS_FILTERS.find((candidate) => candidate === value);
+    if (next) setStatusFilter(next);
   }
 
   function handleNextPage() {

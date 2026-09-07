@@ -24,7 +24,7 @@ import { useGenerateEmail } from "@/hooks/api/ai";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFeature } from "@/lib/billing/use-feature";
-import type { EmailTone } from "@/lib/ai/schemas";
+import { EmailToneSchema, type EmailTone } from "@/lib/ai/schemas";
 import { useCan } from "@/hooks/api/access";
 
 interface AIEmailDialogProps {
@@ -124,8 +124,8 @@ export function AIEmailDialog({
   const handleCopyBody = useCallback(() => handleCopy("body"), [handleCopy]);
 
   const handleToneChange = useCallback((v: string) => {
-    const validTones: string[] = ["formal", "friendly", "urgent"];
-    if (validTones.includes(v)) setTone(v as EmailTone);
+    const parsed = EmailToneSchema.safeParse(v);
+    if (parsed.success) setTone(parsed.data);
   }, []);
 
   const handleContextChange = useCallback(

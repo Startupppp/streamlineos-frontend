@@ -25,6 +25,10 @@ interface Props {
   onClose: () => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function AutomationTestDialog({ rule, onClose }: Props) {
   const { data: eventsData } = useHrAutomationEvents();
   const test = useTestHrAutomation();
@@ -43,7 +47,9 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
   function handleRun() {
     let parsed: Record<string, unknown>;
     try {
-      parsed = JSON.parse(payloadText) as Record<string, unknown>;
+      const raw: unknown = JSON.parse(payloadText);
+      if (!isRecord(raw)) throw new Error("not an object");
+      parsed = raw;
     } catch {
       setJsonError("Invalid JSON — please fix before running.");
       return;

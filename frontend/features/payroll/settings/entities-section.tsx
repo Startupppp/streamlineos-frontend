@@ -101,7 +101,7 @@ export function EntitiesSection() {
                 <SelectValue placeholder="Select entity" />
               </SelectTrigger>
               <SelectContent>
-                {entities!.map((e) => (
+                {(entities ?? []).map((e) => (
                   <SelectItem key={e.id} value={String(e.id)}>
                     {e.legalName} ({e.countryCode})
                   </SelectItem>

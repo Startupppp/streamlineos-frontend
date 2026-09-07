@@ -20,6 +20,8 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { SimulationResult } from "./simulation-result";
 import { useSimulatePayrollImpact } from "@/hooks/api/hr/enterprise-ops-simulator";
 
+const COMPONENT_TYPES = ["earning", "deduction"] as const;
+
 const schema = z.object({
   employeeId: z.string().min(1),
   effectiveDate: z.string().min(1),
@@ -34,7 +36,7 @@ export function PayrollSimulator() {
   const [components, setComponents] = useState<Component[]>([]);
   const [newName, setNewName] = useState("");
   const [newAmount, setNewAmount] = useState("");
-  const [newType, setNewType] = useState<"earning" | "deduction">("earning");
+  const [newType, setNewType] = useState<(typeof COMPONENT_TYPES)[number]>("earning");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -97,7 +99,10 @@ export function PayrollSimulator() {
                   aria-label="Component type"
                   className="rounded-md border border-border bg-background px-2 text-sm"
                   value={newType}
-                  onChange={(e) => setNewType(e.target.value as typeof newType)}
+                  onChange={(e) => {
+                    const next = COMPONENT_TYPES.find((candidate) => candidate === e.target.value);
+                    if (next) setNewType(next);
+                  }}
                 >
                   <option value="earning">Earning</option>
                   <option value="deduction">Deduction</option>

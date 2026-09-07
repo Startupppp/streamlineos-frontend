@@ -120,8 +120,11 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     warning: "amber",
     info: "blue",
   };
+  const roiField = fieldByName(CAMPAIGN_LAYOUT, "roi");
   const roiTone: StatTone =
-    roiToneByFieldTone[toneForSignedValue(fieldByName(CAMPAIGN_LAYOUT, "roi")!, roiValue) ?? "neutral"];
+    roiToneByFieldTone[
+      (roiField ? toneForSignedValue(roiField, roiValue) : undefined) ?? "neutral"
+    ];
 
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);
   const attributionLoading = attributionTab === "first-touch" ? firstLoading : lastLoading;

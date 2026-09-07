@@ -15,7 +15,7 @@ import { HR_SCOPE_TYPES, SCOPE_TYPE_LABELS } from "@/types/hr/policies";
 import type { HrPolicyScopeType } from "@/types/hr/policies";
 
 function isScopeType(v: string): v is HrPolicyScopeType {
-  return (HR_SCOPE_TYPES as readonly string[]).includes(v);
+  return HR_SCOPE_TYPES.some((candidate) => candidate === v);
 }
 
 export interface ScopeRow {

@@ -174,7 +174,13 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                       <FormLabel className="text-xs font-medium">
                         Type <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select value={field.value} onValueChange={(v) => field.onChange(v as ComponentType)}>
+                      <Select
+                        value={field.value}
+                        onValueChange={(v) => {
+                          const next = COMPONENT_TYPES.find((t) => t.value === v);
+                          if (next) field.onChange(next.value);
+                        }}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                         </FormControl>
@@ -196,7 +202,13 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                       <FormLabel className="text-xs font-medium">
                         Calc. Method <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select value={field.value} onValueChange={(v) => field.onChange(v as CalcMethod)}>
+                      <Select
+                        value={field.value}
+                        onValueChange={(v) => {
+                          const next = CALC_METHODS.find((m) => m.value === v);
+                          if (next) field.onChange(next.value);
+                        }}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                         </FormControl>

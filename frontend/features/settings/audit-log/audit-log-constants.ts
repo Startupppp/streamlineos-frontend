@@ -63,7 +63,7 @@ export const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
 export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 export function isValidPageSize(n: number): n is PageSize {
-  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n);
+  return PAGE_SIZE_OPTIONS.some((candidate) => candidate === n);
 }
 
 export function formatActionLabel(action: string): string {

@@ -86,15 +86,18 @@ const WEEK_START_DAYS = [
   { value: "saturday", label: "Saturday" },
 ] as const;
 
+const TIME_FORMAT_VALUES = ["12h", "24h"] as const;
+const WEEK_START_DAY_VALUES = ["monday", "sunday", "saturday"] as const;
+
 const localizationSchema = z.object({
   timezone: z.string().min(1),
   currency: z.enum(CURRENCY_VALUES),
   fiscalYearStart: z.number().int().min(1).max(12),
   language: z.string().min(1),
   dateFormat: z.string().min(1),
-  timeFormat: z.enum(["12h", "24h"]),
+  timeFormat: z.enum(TIME_FORMAT_VALUES),
   numberFormat: z.string().min(1),
-  weekStartDay: z.enum(["monday", "sunday", "saturday"]),
+  weekStartDay: z.enum(WEEK_START_DAY_VALUES),
 });
 
 type LocalizationValues = z.infer<typeof localizationSchema>;
@@ -104,12 +107,10 @@ function toCurrencyCode(value: string | null | undefined): typeof CURRENCY_VALUE
 }
 
 function extractSettings(settings: Record<string, unknown> | null | undefined) {
-  const timeFormat = settings?.timeFormat === "12h" || settings?.timeFormat === "24h"
-    ? (settings.timeFormat as "12h" | "24h")
-    : ("12h" as const);
-  const weekStartDay = settings?.weekStartDay === "monday" || settings?.weekStartDay === "sunday" || settings?.weekStartDay === "saturday"
-    ? (settings.weekStartDay as "monday" | "sunday" | "saturday")
-    : ("monday" as const);
+  const timeFormat =
+    TIME_FORMAT_VALUES.find((candidate) => candidate === settings?.timeFormat) ?? "12h";
+  const weekStartDay =
+    WEEK_START_DAY_VALUES.find((candidate) => candidate === settings?.weekStartDay) ?? "monday";
   return {
     language: typeof settings?.language === "string" ? settings.language : "en",
     dateFormat: typeof settings?.dateFormat === "string" ? settings.dateFormat : "DD/MM/YYYY",
@@ -118,6 +119,17 @@ function extractSettings(settings: Record<string, unknown> | null | undefined) {
     weekStartDay,
   };
 }
+
+const FIELD_KEYS = [
+  "timezone",
+  "currency",
+  "fiscalYearStart",
+  "language",
+  "dateFormat",
+  "timeFormat",
+  "numberFormat",
+  "weekStartDay",
+] as const satisfies readonly (keyof LocalizationValues)[];
 
 const FIELD_LABELS: Record<keyof LocalizationValues, string> = {
   timezone: "Timezone",
@@ -183,6 +195,16 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     form.setValue("fiscalYearStart", Number(value));
   }
 
+  const handleTimeFormatChange = useCallback((value: string) => {
+    const next = TIME_FORMAT_VALUES.find((candidate) => candidate === value);
+    if (next) form.setValue("timeFormat", next);
+  }, [form]);
+
+  const handleWeekStartDayChange = useCallback((value: string) => {
+    const next = WEEK_START_DAY_VALUES.find((candidate) => candidate === value);
+    if (next) form.setValue("weekStartDay", next);
+  }, [form]);
+
   const handleSave = useCallback((values: LocalizationValues) => {
     updateOrg(
       {
@@ -225,7 +247,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     >
       {!isEditing ? (
         <SettingsFieldGrid>
-          {(Object.keys(FIELD_LABELS) as (keyof LocalizationValues)[]).map((key) => (
+          {FIELD_KEYS.map((key) => (
             <SettingsField key={key} label={FIELD_LABELS[key]} value={displayValues[key]} />
           ))}
         </SettingsFieldGrid>
@@ -279,7 +301,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label htmlFor="org-localization-time-format" className="text-xs font-medium">Time format</Label>
-              <Select onValueChange={(v) => form.setValue("timeFormat", v as "12h" | "24h")} value={form.watch("timeFormat")}>
+              <Select onValueChange={handleTimeFormatChange} value={form.watch("timeFormat")}>
                 <SelectTrigger id="org-localization-time-format"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -297,7 +319,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label htmlFor="org-localization-week-start-day" className="text-xs font-medium">Week starts on</Label>
-              <Select onValueChange={(v) => form.setValue("weekStartDay", v as "monday" | "sunday" | "saturday")} value={form.watch("weekStartDay")}>
+              <Select onValueChange={handleWeekStartDayChange} value={form.watch("weekStartDay")}>
                 <SelectTrigger id="org-localization-week-start-day"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}

@@ -7,17 +7,17 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 const MODULE_ACCESS_LINKS = [
-  { key: "hr", label: "HR", permission: "hr:access:view" as PermissionKey },
-  { key: "crm", label: "CRM", permission: "crm:access:view" as PermissionKey },
-  { key: "build", label: "Build", permission: "build:access:view" as PermissionKey },
-  { key: "accounting", label: "Accounting", permission: "accounting:access:view" as PermissionKey },
-  { key: "inventory", label: "Inventory", permission: "inventory:access:view" as PermissionKey },
-  { key: "support", label: "Support", permission: "support:access:view" as PermissionKey },
-  { key: "surveys", label: "Surveys", permission: "surveys:access:view" as PermissionKey },
-  { key: "payroll", label: "Payroll", permission: "payroll:access:view" as PermissionKey },
-  { key: "sign", label: "SignOS", permission: "sign:access:view" as PermissionKey },
-  { key: "timesheets", label: "Timesheets", permission: "timesheets:access:view" as PermissionKey },
-] as const;
+  { key: "hr", label: "HR", permission: "hr:access:view" },
+  { key: "crm", label: "CRM", permission: "crm:access:view" },
+  { key: "build", label: "Build", permission: "build:access:view" },
+  { key: "accounting", label: "Accounting", permission: "accounting:access:view" },
+  { key: "inventory", label: "Inventory", permission: "inventory:access:view" },
+  { key: "support", label: "Support", permission: "support:access:view" },
+  { key: "surveys", label: "Surveys", permission: "surveys:access:view" },
+  { key: "payroll", label: "Payroll", permission: "payroll:access:view" },
+  { key: "sign", label: "SignOS", permission: "sign:access:view" },
+  { key: "timesheets", label: "Timesheets", permission: "timesheets:access:view" },
+] as const satisfies readonly { key: string; label: string; permission: PermissionKey }[];
 
 interface ModuleLinkEntry {
   key: string;

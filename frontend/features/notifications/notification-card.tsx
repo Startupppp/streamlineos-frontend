@@ -12,10 +12,17 @@ import { cn } from "@/lib/utils";
 import {
   NOTIFICATION_TYPE_CONFIG,
   NOTIFICATION_CATEGORY_CONFIG,
+  NOTIFICATION_CATEGORIES,
+  NOTIFICATION_PRIORITIES,
   type NotificationType,
-  type NotificationCategory,
-  type NotificationPriority,
 } from "@/lib/notification-types";
+
+const NOTIFICATION_TYPES = [
+  "INFO",
+  "SUCCESS",
+  "WARNING",
+  "ERROR",
+] as const satisfies readonly NotificationType[];
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";
@@ -100,9 +107,9 @@ function NotificationCardInner({
   onApprove,
   onReject,
 }: NotificationCardProps) {
-  const categoryKey = (category ?? "SYSTEM") as NotificationCategory;
-  const typeKey = (type ?? "INFO") as NotificationType;
-  const priorityKey = (priority ?? "NORMAL") as NotificationPriority;
+  const categoryKey = NOTIFICATION_CATEGORIES.find((c) => c === category) ?? "SYSTEM";
+  const typeKey = NOTIFICATION_TYPES.find((t) => t === type) ?? "INFO";
+  const priorityKey = NOTIFICATION_PRIORITIES.find((p) => p === priority) ?? "NORMAL";
 
   const categoryConfig = NOTIFICATION_CATEGORY_CONFIG[categoryKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
   const typeConfig = NOTIFICATION_TYPE_CONFIG[typeKey] ?? NOTIFICATION_TYPE_CONFIG.INFO;

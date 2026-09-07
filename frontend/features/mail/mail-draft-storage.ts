@@ -14,13 +14,17 @@ export function mailDraftKey(mode: MailComposeMode): string {
   return `${DRAFT_PREFIX}:compose`;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function readMailDraft(key: string): MailDraft | null {
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const record = parsed as Record<string, unknown>;
+    if (!isRecord(parsed)) return null;
+    const record = parsed;
     const bodyHtml = record.bodyHtml;
     if (typeof bodyHtml !== "string") return null;
     const subject = record.subject;

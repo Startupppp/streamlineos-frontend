@@ -69,7 +69,7 @@ export function RuntimeFlow({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "Enter" || e.shiftKey || saving) return;
-      const tag = (e.target as HTMLElement)?.tagName;
+      const tag = e.target instanceof HTMLElement ? e.target.tagName : undefined;
       if (tag === "TEXTAREA" || tag === "BUTTON") return;
       e.preventDefault();
       void handleNext();

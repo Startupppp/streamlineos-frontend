@@ -21,6 +21,18 @@ import { USER_INVITE_ROLES, formatRoleLabel } from "@/lib/constants/user-invite-
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
 export type InvitationStatusFilter = "all" | InvitationStatus;
 
+export const INVITATION_STATUS_FILTERS = [
+  "all",
+  "pending",
+  "accepted",
+  "expired",
+  "revoked",
+] as const satisfies readonly InvitationStatusFilter[];
+
+export function resolveInvitationStatusFilter(raw: string | null): InvitationStatusFilter {
+  return INVITATION_STATUS_FILTERS.find((candidate) => candidate === raw) ?? "all";
+}
+
 const STATUS_CLASSES: Record<InvitationStatus, string> = {
   pending:
     "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",

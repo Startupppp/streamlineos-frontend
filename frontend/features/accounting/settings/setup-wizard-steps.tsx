@@ -46,6 +46,8 @@ export interface StepProps {
   onSkip: () => void;
 }
 
+const ACCOUNTING_BASIS_VALUES = ["ACCRUAL", "CASH"] as const;
+
 export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
   const settingsQuery = useAccountingSettings();
   const updateSettings = useUpdateAccountingSettings();
@@ -115,7 +117,10 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
               <Label>Accounting basis</Label>
               <Select
                 value={form.watch("accountingBasis")}
-                onValueChange={(v) => form.setValue("accountingBasis", v as "ACCRUAL" | "CASH", { shouldValidate: true })}
+                onValueChange={(v) => {
+                  const basis = ACCOUNTING_BASIS_VALUES.find((candidate) => candidate === v);
+                  if (basis) form.setValue("accountingBasis", basis, { shouldValidate: true });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />

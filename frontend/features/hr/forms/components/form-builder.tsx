@@ -141,7 +141,11 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
     const next = [...fields];
     const swap = idx + dir;
     if (swap < 0 || swap >= next.length) return;
-    [next[idx], next[swap]] = [next[swap]!, next[idx]!];
+    const current = next[idx];
+    const target = next[swap];
+    if (!current || !target) return;
+    next[idx] = target;
+    next[swap] = current;
     setFields(next);
     setSelectedFieldIdx(swap);
   }

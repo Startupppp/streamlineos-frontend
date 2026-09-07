@@ -47,6 +47,19 @@ import type { BlogPostStatus } from "@/types/blog";
 import { blogPostSchema, type BlogPostFormValues } from "./blog-post-schema";
 import { BlogPostFormFields } from "./blog-post-form-fields";
 
+const STATUS_FILTER_VALUES = [
+  "all",
+  "draft",
+  "published",
+  "archived",
+] as const satisfies readonly (BlogPostStatus | "all")[];
+
+type BlogStatusFilter = (typeof STATUS_FILTER_VALUES)[number];
+
+function resolveStatusFilter(raw: string | null): BlogStatusFilter {
+  return STATUS_FILTER_VALUES.find((candidate) => candidate === raw) ?? "all";
+}
+
 const STATUS_LABELS: Record<BlogPostStatus, string> = {
   draft: "Draft",
   published: "Published",
@@ -183,8 +196,8 @@ export function BlogAdminPosts() {
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [statusFilter, setStatusFilter] = useState<BlogPostStatus | "all">(
-    (searchParams.get("status") as BlogPostStatus | null) ?? "all",
+  const [statusFilter, setStatusFilter] = useState<BlogStatusFilter>(() =>
+    resolveStatusFilter(searchParams.get("status")),
   );
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
@@ -218,7 +231,7 @@ export function BlogAdminPosts() {
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      const s = value as BlogPostStatus | "all";
+      const s = resolveStatusFilter(value);
       setStatusFilter(s);
       setPage(1);
       const p = new URLSearchParams(searchParams.toString());

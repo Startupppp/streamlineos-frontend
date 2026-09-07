@@ -28,6 +28,13 @@ interface VendorSheetProps {
   onClose: () => void;
 }
 
+const VENDOR_STATUSES = ["ACTIVE", "INACTIVE"] as const;
+const VENDOR_CONTRACT_TYPES = [
+  "CONTINGENCY",
+  "CONTRACT_STAFFING",
+  "BOTH",
+] as const satisfies readonly VendorContractType[];
+
 export function VendorSheet({ initial, onClose }: VendorSheetProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [contactName, setContactName] = useState(initial?.contactName ?? "");
@@ -100,8 +107,14 @@ export function VendorSheet({ initial, onClose }: VendorSheetProps) {
   const handleWebsiteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setWebsite(e.target.value), []);
   const handleSlaChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSlaDays(e.target.value), []);
   const handleGuaranteeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setReplacementGuaranteeDays(e.target.value), []);
-  const handleStatusChange = useCallback((v: string) => setStatus(v as "ACTIVE" | "INACTIVE"), []);
-  const handleContractTypeChange = useCallback((v: string) => setContractType(v as VendorContractType), []);
+  const handleStatusChange = useCallback((v: string) => {
+    const next = VENDOR_STATUSES.find((candidate) => candidate === v);
+    if (next) setStatus(next);
+  }, []);
+  const handleContractTypeChange = useCallback((v: string) => {
+    const next = VENDOR_CONTRACT_TYPES.find((candidate) => candidate === v);
+    if (next) setContractType(next);
+  }, []);
   const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
 
   const isPending = create.isPending || update.isPending;

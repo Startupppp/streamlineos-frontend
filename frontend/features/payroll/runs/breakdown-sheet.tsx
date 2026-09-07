@@ -204,8 +204,9 @@ export function BreakdownSheet({
   const linesByCategory = snapshot?.lines.reduce<
     Partial<Record<SalaryComponentType, CalculationSnapshotLine[]>>
   >((acc, line) => {
-    if (!acc[line.category]) acc[line.category] = [];
-    acc[line.category]!.push(line);
+    const bucket = acc[line.category] ?? [];
+    bucket.push(line);
+    acc[line.category] = bucket;
     return acc;
   }, {});
 

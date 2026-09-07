@@ -23,7 +23,8 @@ import { ImportPreviewStep } from "./import-preview-step";
 import { ImportResultStep } from "./import-result-step";
 import { ExportTab } from "./export-tab";
 
-type Step = "type" | "preview" | "running" | "done";
+const STEPS = ["type", "preview", "running", "done"] as const;
+type Step = (typeof STEPS)[number];
 
 const STEP_LABELS: Record<Step, string> = {
   type: "1. Select Type",
@@ -187,7 +188,7 @@ export function ImportClient() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    {(["type", "preview", "running", "done"] as Step[]).map(function renderStep(s) {
+                    {STEPS.map(function renderStep(s) {
                       return (
                         <span
                           key={s}

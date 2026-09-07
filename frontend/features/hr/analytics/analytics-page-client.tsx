@@ -49,11 +49,11 @@ const DATE_RANGE_VALUES: readonly DateRange[] = ["month", "quarter", "year"];
 const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "recruitment", "attendance", "leaves", "attrition"];
 
 function isDateRange(v: string): v is DateRange {
-  return (DATE_RANGE_VALUES as readonly string[]).includes(v);
+  return DATE_RANGE_VALUES.some((candidate) => candidate === v);
 }
 
 function isSectionTab(v: string): v is SectionTab {
-  return (SECTION_TAB_VALUES as readonly string[]).includes(v);
+  return SECTION_TAB_VALUES.some((candidate) => candidate === v);
 }
 
 const SECTION_TABS: Array<{

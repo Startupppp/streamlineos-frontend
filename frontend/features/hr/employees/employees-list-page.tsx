@@ -41,7 +41,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-type ViewMode = "grid" | "list";
+const VIEW_MODES = ["grid", "list"] as const;
+type ViewMode = (typeof VIEW_MODES)[number];
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
@@ -162,7 +163,7 @@ export function EmployeesListPage() {
     [filters.q],
   );
   const [view, setView] = useState<ViewMode>(
-    (searchParams.get("view") as ViewMode) || "grid",
+    () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
   );
 
   const debouncedSearch = useDebouncedValue(search, 300);

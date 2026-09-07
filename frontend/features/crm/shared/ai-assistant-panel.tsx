@@ -18,7 +18,8 @@ import { useOrgFeatureFlags } from "@/hooks/api/ai";
 import { MeetingFollowUpTab, NextActionsTab } from "./ai-panel-extra-tabs";
 
 type AiEntityType = "lead" | "deal" | "contact";
-type EmailTone = "formal" | "friendly" | "urgent";
+const EMAIL_TONES = ["formal", "friendly", "urgent"] as const;
+type EmailTone = (typeof EMAIL_TONES)[number];
 
 interface EmailDraftResult {
   subject: string;
@@ -120,7 +121,8 @@ function EmailDraftTab({
   }, []);
 
   const handleToneChange = useCallback((val: string) => {
-    setTone(val as EmailTone);
+    const next = EMAIL_TONES.find((candidate) => candidate === val);
+    if (next) setTone(next);
   }, []);
 
   const handleOpenCompose = useCallback(() => {

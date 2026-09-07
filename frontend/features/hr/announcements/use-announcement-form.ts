@@ -2,7 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { buildAnnouncementSchema, zodFieldErrors } from "@/features/hr/announcements/announcement-schema";
+import {
+  buildAnnouncementSchema,
+  isAnnouncementStatus,
+  isAnnouncementTargetType,
+  zodFieldErrors,
+} from "@/features/hr/announcements/announcement-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDepartments } from "@/hooks/api/hr/employees";
 import { useBranches } from "@/hooks/api/branches";
@@ -137,9 +142,10 @@ export function useAnnouncementForm({
 
   const handleTargetTypeChange = useCallback(
     (value: string) => {
+      if (!isAnnouncementTargetType(value)) return;
       setFormData((prev) => ({
         ...prev,
-        targetType: value as HrAnnouncement["targetType"],
+        targetType: value,
         targetIds: [],
       }));
       clearFieldError("targetType");
@@ -158,7 +164,8 @@ export function useAnnouncementForm({
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      setFormData((prev) => ({ ...prev, status: value as HrAnnouncement["status"] }));
+      if (!isAnnouncementStatus(value)) return;
+      setFormData((prev) => ({ ...prev, status: value }));
       clearFieldError("status");
       clearFieldError("publishAt");
     },
@@ -234,7 +241,7 @@ export function useAnnouncementForm({
     }
 
     setFieldErrors({});
-    const payload = parsed.data as CreateHrAnnouncementData;
+    const payload: CreateHrAnnouncementData = parsed.data;
 
     if (editTarget) {
       toast.promise(

@@ -25,6 +25,14 @@ import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import type { BatchFormat } from "@/types/payroll";
 
+const BATCH_FORMATS = [
+  "NEFT_CSV",
+  "RTGS_CSV",
+  "GENERIC_CSV",
+  "ACH_CSV",
+  "SEPA_CSV",
+] as const satisfies readonly BatchFormat[];
+
 function getRecommendedFormat(currency: string | undefined): BatchFormat {
   if (currency === "INR") return "NEFT_CSV";
   if (currency === "USD") return "ACH_CSV";
@@ -117,7 +125,10 @@ export function GeneratePayoutDialog({
                 <Label htmlFor="batch-format">Format</Label>
                 <Select
                   value={format}
-                  onValueChange={(v) => onFormatChange(v as BatchFormat)}
+                  onValueChange={(v) => {
+                    const next = BATCH_FORMATS.find((candidate) => candidate === v);
+                    if (next) onFormatChange(next);
+                  }}
                 >
                   <SelectTrigger id="batch-format" className="">
                     <SelectValue />

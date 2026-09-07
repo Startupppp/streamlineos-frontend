@@ -219,7 +219,15 @@ export function TemplatesSettingsPage() {
                 onValueChange={handleSearchChange}
                />
             </div>
-            <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setCursorHistory([undefined]); }}>
+            <Select
+              value={kind}
+              onValueChange={(v) => {
+                const next = v === ALL_SENTINEL ? ALL_SENTINEL : HR_TEMPLATE_KINDS.find((candidate) => candidate === v);
+                if (!next) return;
+                setKind(next);
+                setCursorHistory([undefined]);
+              }}
+            >
               <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Kinds" />
               </SelectTrigger>
@@ -230,7 +238,15 @@ export function TemplatesSettingsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={(v) => { setStatus(v as HrTemplateStatus | "all"); setCursorHistory([undefined]); }}>
+            <Select
+              value={status}
+              onValueChange={(v) => {
+                const next = v === ALL_SENTINEL ? ALL_SENTINEL : HR_TEMPLATE_STATUSES.find((candidate) => candidate === v);
+                if (!next) return;
+                setStatus(next);
+                setCursorHistory([undefined]);
+              }}
+            >
               <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>

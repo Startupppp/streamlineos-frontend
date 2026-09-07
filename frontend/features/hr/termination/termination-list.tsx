@@ -250,8 +250,8 @@ type StatusFilter = "ALL" | TerminationStatus;
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "All" },
-  ...TERMINATION_STATUSES.map((terminationStatus) => ({
-    value: terminationStatus as StatusFilter,
+  ...TERMINATION_STATUSES.map<{ value: StatusFilter; label: string }>((terminationStatus) => ({
+    value: terminationStatus,
     label: TERMINATION_STATUS_LABELS[terminationStatus],
   })),
 ];

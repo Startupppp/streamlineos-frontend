@@ -26,7 +26,7 @@ const CURRENCY_CODES = ["USD", "EUR", "INR", "GBP", "AED"] as const;
 type CurrencyCode = (typeof CURRENCY_CODES)[number];
 
 function isCurrencyCode(value: string): value is CurrencyCode {
-  return (CURRENCY_CODES as readonly string[]).includes(value);
+  return CURRENCY_CODES.some((candidate) => candidate === value);
 }
 
 export function OrganizationSettingsPage() {

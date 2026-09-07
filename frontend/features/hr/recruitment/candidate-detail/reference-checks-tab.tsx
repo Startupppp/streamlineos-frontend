@@ -235,13 +235,15 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
   const updateCheck = useUpdateReferenceCheck(candidateId, check.id);
   const deleteCheck = useDeleteReferenceCheck(candidateId, check.id);
 
-  const status = (check.status as ReferenceStatus) in STATUS_CONFIG ? (check.status as ReferenceStatus) : "PENDING";
+  const status = STATUS_OPTIONS.find((candidate) => candidate === check.status) ?? "PENDING";
   const cfg = STATUS_CONFIG[status];
   const Icon = cfg.icon;
 
   const handleStatusChange = useCallback((newStatus: string) => {
+    const next = STATUS_OPTIONS.find((candidate) => candidate === newStatus);
+    if (!next) return;
     updateCheck.mutate(
-      { status: newStatus as ReferenceStatus },
+      { status: next },
       {
         onSuccess: () => toast.success("Status updated"),
         onError: (e) => toast.error(getErrorMessage(e)),

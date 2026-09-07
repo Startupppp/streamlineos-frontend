@@ -19,6 +19,7 @@ import { CustomerDisplayPrefsPopover } from "./customer-display-prefs-popover";
 import {
   CustomerFilterPopover,
   ActiveCustomerFilterChips,
+  SIZE_OPTIONS,
   type CustomerFilters,
 } from "./customer-filter-popover";
 import { CustomerTable } from "./customer-table";
@@ -38,7 +39,7 @@ export function ProjectCustomersPage() {
 
   const [filters, setFilters] = useState<CustomerFilters>({
     industry: searchParams.get("industry") ?? undefined,
-    size: (searchParams.get("size") as CustomerFilters["size"]) ?? undefined,
+    size: SIZE_OPTIONS.find((candidate) => candidate === searchParams.get("size")),
   });
 
   const debouncedSearch = useDebouncedValue(search, 300);

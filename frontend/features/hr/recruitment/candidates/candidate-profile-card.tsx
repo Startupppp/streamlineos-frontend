@@ -74,7 +74,10 @@ export const CandidateProfileCard = memo(function CandidateProfileCard({
   isUpdating,
 }: CandidateProfileCardProps) {
   const handleValueChange = useCallback(
-    (v: string) => onStatusChange(v as CandidateStatus),
+    (v: string) => {
+      const next = STATUSES.find((candidate) => candidate === v);
+      if (next) onStatusChange(next);
+    },
     [onStatusChange]
   );
 

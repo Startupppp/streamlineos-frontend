@@ -53,6 +53,8 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 
+const TEAM_MEMBER_ROLES = ["member", "lead"] as const;
+
 function TeamActionsButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -325,7 +327,10 @@ export function TeamHomePage({ teamId }: Props) {
                 />
                 <Select
                   value={addMemberRole}
-                  onValueChange={(v) => setAddMemberRole(v as "member" | "lead")}
+                  onValueChange={(v) => {
+                    const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === v);
+                    if (role) setAddMemberRole(role);
+                  }}
                 >
                   <SelectTrigger className="w-24 text-xs border-input bg-card">
                     <SelectValue />

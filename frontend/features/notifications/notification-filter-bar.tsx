@@ -131,17 +131,22 @@ export function NotificationFilterBar({
   }, [activeSectionLabel, activeCategory, activePriority]);
 
   const handleSectionSelect = useCallback(
-    (value: string) => onSectionChange(value as NotificationSection),
+    (value: string) => {
+      const next = SECTION_TABS.find((tab) => tab.value === value);
+      if (next) onSectionChange(next.value);
+    },
     [onSectionChange],
   );
 
   const handleCategorySelect = useCallback(
-    (value: string) => onCategoryChange(value === "ALL" ? undefined : (value as NotificationCategory)),
+    (value: string) =>
+      onCategoryChange(value === "ALL" ? undefined : NOTIFICATION_CATEGORIES.find((c) => c === value)),
     [onCategoryChange],
   );
 
   const handlePrioritySelect = useCallback(
-    (value: string) => onPriorityChange(value === "ALL" ? undefined : (value as NotificationPriority)),
+    (value: string) =>
+      onPriorityChange(value === "ALL" ? undefined : NOTIFICATION_PRIORITIES.find((p) => p === value)),
     [onPriorityChange],
   );
 

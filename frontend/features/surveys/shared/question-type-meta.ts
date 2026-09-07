@@ -20,26 +20,29 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type SurveyQuestionType =
-  | "short_text"
-  | "long_text"
-  | "single_select"
-  | "multi_select"
-  | "dropdown"
-  | "rating"
-  | "star_rating"
-  | "nps"
-  | "number"
-  | "email"
-  | "phone"
-  | "date"
-  | "matrix"
-  | "likert"
-  | "ranking"
-  | "slider"
-  | "yes_no"
-  | "consent"
-  | "content_block";
+export const QUESTION_TYPE_LIST = [
+  "short_text",
+  "long_text",
+  "single_select",
+  "multi_select",
+  "dropdown",
+  "rating",
+  "star_rating",
+  "nps",
+  "number",
+  "email",
+  "phone",
+  "date",
+  "matrix",
+  "likert",
+  "ranking",
+  "slider",
+  "yes_no",
+  "consent",
+  "content_block",
+] as const;
+
+export type SurveyQuestionType = (typeof QUESTION_TYPE_LIST)[number];
 
 interface QuestionTypeMeta {
   label: string;
@@ -70,4 +73,3 @@ export const QUESTION_TYPE_META: Record<SurveyQuestionType, QuestionTypeMeta> = 
   content_block: { label: "Content block", icon: FileText, hasChoices: false, isContentOnly: true },
 };
 
-export const QUESTION_TYPE_LIST = Object.keys(QUESTION_TYPE_META) as SurveyQuestionType[];

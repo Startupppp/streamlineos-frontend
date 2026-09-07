@@ -123,7 +123,7 @@ function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName
 }
 
 export function InterviewList() {
-  const { data: interviews } = useInterviews({ pageSize: 100 });
+  const { data: interviews } = useInterviews({ limit: 100 });
   const bulkReschedule = useBulkRescheduleInterviews();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());

@@ -15,8 +15,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   NOTIFICATION_CATEGORY_CONFIG,
   NOTIFICATION_PRIORITY_CONFIG,
-  type NotificationCategory,
-  type NotificationPriority,
+  NOTIFICATION_CATEGORIES,
+  NOTIFICATION_PRIORITIES,
 } from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { useCreateSuppression } from "@/hooks/api/notifications";
@@ -128,8 +128,8 @@ export function NotificationDetailDrawer({
 
   if (!notification) return null;
 
-  const categoryKey = (notification.category ?? "SYSTEM") as NotificationCategory;
-  const priorityKey = (notification.priority ?? "NORMAL") as NotificationPriority;
+  const categoryKey = NOTIFICATION_CATEGORIES.find((c) => c === notification.category) ?? "SYSTEM";
+  const priorityKey = NOTIFICATION_PRIORITIES.find((p) => p === notification.priority) ?? "NORMAL";
   const categoryConfig = NOTIFICATION_CATEGORY_CONFIG[categoryKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
   const priorityConfig = NOTIFICATION_PRIORITY_CONFIG[priorityKey] ?? NOTIFICATION_PRIORITY_CONFIG.NORMAL;
   const Icon = categoryConfig.icon;

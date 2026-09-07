@@ -158,7 +158,8 @@ export function CandidateCard({
     onDelete(candidate);
   }
   function handleStatusChange(v: string) {
-    onStatusChange(candidate.id, v as CandidateStatus);
+    const next = STAGE_CONFIG.find((stage) => stage.value === v);
+    if (next) onStatusChange(candidate.id, next.value);
   }
 
   return (
@@ -257,7 +258,7 @@ export function CandidateCard({
                   key={i}
                   className={cn(
                     "h-3 w-3",
-                    i < candidate.rating!
+                    i < (candidate.rating ?? 0)
                       ? "text-status-warning-ink fill-amber-500"
                       : "text-border fill-transparent",
                   )}

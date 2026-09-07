@@ -43,9 +43,13 @@ const fxRatesSchema = z.object({
 
 type FxRatesForm = z.infer<typeof fxRatesSchema>;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function serializeRates(raw: unknown): Array<{ currency: string; rate: string }> {
-  if (!raw || typeof raw !== "object") return [];
-  return Object.entries(raw as Record<string, unknown>)
+  if (!isRecord(raw)) return [];
+  return Object.entries(raw)
     .filter(([, v]) => typeof v === "number")
     .map(([currency, rate]) => ({ currency, rate: String(rate) }));
 }

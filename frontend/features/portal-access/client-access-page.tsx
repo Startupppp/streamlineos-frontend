@@ -404,7 +404,8 @@ export function ClientAccessPage() {
                   disabled={isLoading}
                   onPrevious={handlePreviousPage}
                   onNext={() => {
-                    if (pagination.nextCursor) setCursorHistory((history) => [...history, pagination.nextCursor!]);
+                    const nextCursor = pagination.nextCursor;
+                    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
                   }}
                   className="mt-2 px-1"
                 />

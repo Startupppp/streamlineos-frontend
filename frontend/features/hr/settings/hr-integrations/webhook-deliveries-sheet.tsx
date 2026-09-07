@@ -120,7 +120,7 @@ function DeliveryRow({
 }
 
 export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Props) {
-  const { data: deliveries, isLoading } = useHrWebhookDeliveries(subscription.id, 1);
+  const { data: deliveries, isLoading } = useHrWebhookDeliveries(subscription.id);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

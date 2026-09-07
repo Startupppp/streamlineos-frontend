@@ -32,9 +32,11 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 
+const DEPENDENT_RELATIONSHIPS = ["spouse", "child", "parent", "other"] as const;
+
 const depSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  relationship: z.enum(["spouse", "child", "parent", "other"]),
+  relationship: z.enum(DEPENDENT_RELATIONSHIPS),
   dateOfBirth: z.string().optional(),
 });
 
@@ -194,7 +196,10 @@ export function DependentsManager() {
           <Label>Relationship <span className="text-destructive">*</span></Label>
           <Select
             defaultValue="spouse"
-            onValueChange={(v) => form.setValue("relationship", v as DepFormValues["relationship"])}
+            onValueChange={(v) => {
+              const next = DEPENDENT_RELATIONSHIPS.find((candidate) => candidate === v);
+              if (next) form.setValue("relationship", next);
+            }}
           >
             <SelectTrigger className="text-sm">
               <SelectValue />

@@ -41,6 +41,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const HR_WORKFLOW_STATUSES = [
+  "draft",
+  "active",
+  "archived",
+] as const satisfies readonly HrWorkflowStatus[];
+
 const STATUS_BADGE: Record<HrWorkflowStatus, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   active: { label: "Active", className: "bg-status-success-surface text-status-success-ink" },
@@ -125,7 +131,13 @@ export function WorkflowsSettingsPage() {
       }
       filters={
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={filterObjectType} onValueChange={(v) => setFilterObjectType(v as HrWorkflowObjectType | "all")}>
+          <Select
+            value={filterObjectType}
+            onValueChange={(v) => {
+              const next = v === "all" ? "all" : HR_WORKFLOW_OBJECT_TYPES.find((candidate) => candidate === v);
+              if (next) setFilterObjectType(next);
+            }}
+          >
             <SelectTrigger className={cn("w-48", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All types" />
             </SelectTrigger>
@@ -136,7 +148,13 @@ export function WorkflowsSettingsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as HrWorkflowStatus | "all")}>
+          <Select
+            value={filterStatus}
+            onValueChange={(v) => {
+              const next = v === "all" ? "all" : HR_WORKFLOW_STATUSES.find((candidate) => candidate === v);
+              if (next) setFilterStatus(next);
+            }}
+          >
             <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>

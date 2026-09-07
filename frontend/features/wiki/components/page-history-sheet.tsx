@@ -196,9 +196,9 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
             <SheetBody className="px-6 py-4">
               {detailLoading ? (
                 <Skeleton className="h-64 w-full" />
-              ) : hasContent ? (
+              ) : hasContent && versionDetail ? (
                 <PlateDocumentEditor
-                  value={versionDetail!.content}
+                  value={versionDetail.content}
                   contentKey={`${pageId}-v${selectedVersion}`}
                   editable={false}
                 />

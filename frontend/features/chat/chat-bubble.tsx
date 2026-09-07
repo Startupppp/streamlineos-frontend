@@ -163,7 +163,7 @@ export function ChatBubble({
     if (e.key === "Escape") onCancelEdit();
   }, [onSaveEdit, onCancelEdit]);
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(message.content!);
+    navigator.clipboard.writeText(message.content ?? "");
     toast.success("Copied");
   }, [message.content]);
   const handleCopyLink = useCallback(() => {

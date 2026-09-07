@@ -114,7 +114,8 @@ export function HolidaysPage() {
   }
 
   function handleViewChange(v: string) {
-    setViewMode(v as ViewMode);
+    const next = VIEW_OPTIONS.find((option) => option.value === v);
+    if (next) setViewMode(next.value);
   }
 
   function handleYearFilterChange(v: string) {

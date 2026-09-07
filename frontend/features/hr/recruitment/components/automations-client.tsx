@@ -119,6 +119,14 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
   );
 }
 
+const PIPELINE_ACTIONS = [
+  "SEND_EMAIL",
+  "MOVE_TO_STAGE",
+  "CREATE_INTERVIEW",
+  "SEND_NOTIFICATION",
+  "NOTIFY_HIRING_MANAGER",
+] as const satisfies readonly Action[];
+
 export function AutomationsClient() {
   const { data: automations, isLoading, isError, refetch } = useRecruitmentAutomations();
   const create = useCreateRecruitmentAutomation();
@@ -170,7 +178,10 @@ export function AutomationsClient() {
   function handleCancelSheet() { setSheetOpen(false); resetForm(); }
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
   function handleTriggerChange(v: string) { setTrigger(v as Trigger); }
-  function handleActionChange(v: string) { setAction(v as Action); }
+  function handleActionChange(v: string) {
+    const next = PIPELINE_ACTIONS.find((candidate) => candidate === v);
+    if (next) setAction(next);
+  }
   function handleDeleteDialogChange(v: boolean) { if (!v) setDeleteId(null); }
   function handleConfirmDelete() { if (deleteId != null) handleDelete(deleteId); }
 

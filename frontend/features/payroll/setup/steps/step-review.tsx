@@ -45,7 +45,12 @@ function groupComponents(
     const existing = map.get(line.type) ?? [];
     map.set(line.type, [...existing, line]);
   }
-  return TYPE_ORDER.filter((t) => map.has(t)).map((t) => [t, map.get(t)!]);
+  const grouped: [ComponentType, PolicyPreviewComponent[]][] = [];
+  for (const t of TYPE_ORDER) {
+    const items = map.get(t);
+    if (items) grouped.push([t, items]);
+  }
+  return grouped;
 }
 
 type StepReviewProps = {

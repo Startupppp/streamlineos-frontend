@@ -64,7 +64,8 @@ import {
   type LaborCase,
 } from "../hooks/use-labor";
 
-type ActiveTab = "memberships" | "agreements" | "cases";
+const ACTIVE_TABS = ["memberships", "agreements", "cases"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 const membershipSchema = z.object({
   userId: z.string().min(1),
@@ -229,15 +230,22 @@ export function LaborTabs() {
   const activeError = activeTab === "memberships" ? membershipsError : activeTab === "agreements" ? agreementsError : casesError;
   const errorTitle = activeTab === "memberships" ? "Couldn't load union memberships" : activeTab === "agreements" ? "Couldn't load collective agreements" : "Couldn't load labor cases";
 
+  const expiringCount = (expiring?.data ?? []).length;
+
+  function handleTabChange(value: string) {
+    const tab = ACTIVE_TABS.find((candidate) => candidate === value);
+    if (tab) setActiveTab(tab);
+  }
+
   return (
     <div className="flex flex-1 min-h-0 flex-col">
-      {(expiring?.data ?? []).length > 0 && (
+      {expiringCount > 0 && (
         <div className="flex items-start gap-2 p-3 mb-4 shrink-0 border border-status-warning-rule bg-status-warning-surface rounded-lg text-sm text-status-warning-ink">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>{expiring!.data.length} collective agreement{expiring!.data.length !== 1 ? "s" : ""} expiring within 30 days.</span>
+          <span>{expiringCount} collective agreement{expiringCount !== 1 ? "s" : ""} expiring within 30 days.</span>
         </div>
       )}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4 shrink-0">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-4 shrink-0">
         <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.key} value={tab.key}>

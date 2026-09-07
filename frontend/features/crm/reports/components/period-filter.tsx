@@ -12,8 +12,8 @@ interface PeriodFilterProps {
 export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
   const handleButtonClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const p = e.currentTarget.dataset.period as Period | undefined;
-      if (p) onPeriodChange(p);
+      const p = PERIOD_OPTIONS.find((opt) => opt.value === e.currentTarget.dataset.period);
+      if (p) onPeriodChange(p.value);
     },
     [onPeriodChange],
   );

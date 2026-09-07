@@ -125,7 +125,13 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
         <SheetBody className="space-y-4 px-4 py-4">
           <div className="space-y-1.5">
             <Label>Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as SurveyQuestionType)}>
+            <Select
+              value={type}
+              onValueChange={(v) => {
+                const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);
+                if (next) setType(next);
+              }}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {QUESTION_TYPE_LIST.map((t) => (

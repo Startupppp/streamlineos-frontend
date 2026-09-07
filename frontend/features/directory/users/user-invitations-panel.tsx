@@ -42,6 +42,7 @@ import {
 } from "@/lib/list-pagination";
 import {
   getInvitationColumns,
+  resolveInvitationStatusFilter,
   type InvitationStatusFilter,
 } from "./user-invitation-columns";
 
@@ -67,7 +68,7 @@ export function UserInvitationsPanel() {
   const canCancelInvitation = canManageMembership;
 
   const searchQuery = searchParams.get("q") ?? "";
-  const status = (searchParams.get("status") ?? "all") as InvitationStatusFilter;
+  const status: InvitationStatusFilter = resolveInvitationStatusFilter(searchParams.get("status"));
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
 

@@ -15,8 +15,7 @@ type BillingTab = "plan" | "payments" | "profile";
 const VALID_TABS: BillingTab[] = ["plan", "payments", "profile"];
 
 function resolveTab(raw: string | null): BillingTab {
-  if (raw && (VALID_TABS as string[]).includes(raw)) return raw as BillingTab;
-  return "plan";
+  return VALID_TABS.find((candidate) => candidate === raw) ?? "plan";
 }
 
 function BillingPageContent() {

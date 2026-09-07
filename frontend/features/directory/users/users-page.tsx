@@ -45,6 +45,10 @@ import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
+const SORT_FIELDS = ["name", "joinedAt", "status"] as const;
+const SORT_DIRECTIONS = ["asc", "desc"] as const;
+const USER_STATUS_FILTERS = ["active", "suspended", "archived"] as const;
+
 export function UsersPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -56,8 +60,8 @@ export function UsersPage() {
   const role = searchParams.get("role") ?? "all";
   const departmentId = searchParams.get("departmentId") ?? "all";
   const branchId = searchParams.get("branchId") ?? "all";
-  const sortBy = (searchParams.get("sortBy") as "name" | "joinedAt" | "status") ?? "joinedAt";
-  const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") ?? "desc";
+  const sortBy = SORT_FIELDS.find((candidate) => candidate === searchParams.get("sortBy")) ?? "joinedAt";
+  const sortOrder = SORT_DIRECTIONS.find((candidate) => candidate === searchParams.get("sortOrder")) ?? "desc";
   const pageSize = parsePageSize(searchParams.get("size"));
   const cursorResetKey = [
     searchQuery,
@@ -188,10 +192,7 @@ export function UsersPage() {
       cursor,
       limit: pageSize,
       search: searchQuery || undefined,
-      status:
-        status !== "all"
-          ? (status as "active" | "suspended" | "archived")
-          : undefined,
+      status: USER_STATUS_FILTERS.find((candidate) => candidate === status),
       role: role !== "all" ? role : undefined,
       departmentId: departmentId !== "all" ? departmentId : undefined,
       branchId: branchId !== "all" ? branchId : undefined,

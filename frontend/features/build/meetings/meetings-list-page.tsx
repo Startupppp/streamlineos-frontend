@@ -175,11 +175,13 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   }
 
   function handleScheduleStandup() {
-    handleOpenTemplate(MEETING_TEMPLATES[0]!);
+    const template = MEETING_TEMPLATES[0];
+    if (template) handleOpenTemplate(template);
   }
 
   function handleSchedulePlanning() {
-    handleOpenTemplate(MEETING_TEMPLATES[1]!);
+    const template = MEETING_TEMPLATES[1];
+    if (template) handleOpenTemplate(template);
   }
 
   const handleGenerateAgenda = useCallback(

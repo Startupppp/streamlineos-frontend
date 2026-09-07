@@ -31,10 +31,19 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
+const JOB_POSTING_STATUSES = [
+  "DRAFT",
+  "OPEN",
+  "PAUSED",
+  "CLOSED",
+  "FILLED",
+] as const satisfies readonly JobPostingStatus[];
+
 export function JobsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statusFilter = searchParams.get("status") as JobPostingStatus | null;
+  const statusFilter =
+    JOB_POSTING_STATUSES.find((candidate) => candidate === searchParams.get("status")) ?? null;
   const visibilityFilter = searchParams.get("visibility");
   const pageSizeFromUrl = Math.min(
     100,

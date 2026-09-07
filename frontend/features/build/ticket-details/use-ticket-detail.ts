@@ -55,16 +55,20 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   const members = useMemo<ProjectMember[]>(() => {
     if (!projectData?.members) return [];
-    const list = projectData.members
-      .filter((m) => !!m.user)
-      .map((m) => ({
-        id: m.user!.id,
-        name: m.user!.name || `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
-        firstName: m.user!.firstName || undefined,
-        lastName: m.user!.lastName || undefined,
-        image: m.user!.image || null,
-        email: m.user!.email || "",
-      }));
+    const list = projectData.members.flatMap((m) => {
+      const user = m.user;
+      if (!user) return [];
+      return [
+        {
+          id: user.id,
+          name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          image: user.image || null,
+          email: user.email || "",
+        },
+      ];
+    });
     const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
     if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({

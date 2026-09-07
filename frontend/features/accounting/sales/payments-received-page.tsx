@@ -53,7 +53,7 @@ const PAYMENT_METHOD_VALUES: ArPaymentMethod[] = [
 const ALL_METHODS = "all" as const;
 
 function isArPaymentMethod(value: string): value is ArPaymentMethod {
-  return (PAYMENT_METHOD_VALUES as string[]).includes(value);
+  return PAYMENT_METHOD_VALUES.some((candidate) => candidate === value);
 }
 
 interface PaymentDetailSheetProps {

@@ -30,7 +30,7 @@ const LIMIT_OPTIONS = [10, 20, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
 
 function isValidLimit(n: number): n is LimitOption {
-  return (LIMIT_OPTIONS as readonly number[]).includes(n);
+  return LIMIT_OPTIONS.some((candidate) => candidate === n);
 }
 
 export function DocumentTypesPage() {

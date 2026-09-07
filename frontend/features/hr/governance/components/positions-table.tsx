@@ -22,7 +22,14 @@ import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 const SENTINEL = "__ALL__";
-type StatusFilter = Position["status"] | typeof SENTINEL;
+const STATUS_FILTERS = [
+  SENTINEL,
+  "open",
+  "filled",
+  "frozen",
+  "future",
+] as const satisfies readonly (Position["status"] | typeof SENTINEL)[];
+type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 export function PositionsTable() {
   const canManage = useCan("hr:positions:manage");
@@ -150,7 +157,13 @@ export function PositionsTable() {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <Select value={statusFilter} onValueChange={(v) => handleStatusChange(v as StatusFilter)}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            const next = STATUS_FILTERS.find((candidate) => candidate === v);
+            if (next) handleStatusChange(next);
+          }}
+        >
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>

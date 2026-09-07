@@ -396,8 +396,13 @@ export function useMessagePanelData({
     for (const msg of renderedMessages) {
       const d = msg.createdAt ? new Date(msg.createdAt) : new Date();
       const dateStr = getDateLabel(d);
-      if (dateStr !== currentDate) { currentDate = dateStr; groups.push({ date: dateStr, messages: [] }); }
-      groups[groups.length - 1]!.messages.push(msg);
+      let group = groups[groups.length - 1];
+      if (!group || dateStr !== currentDate) {
+        currentDate = dateStr;
+        group = { date: dateStr, messages: [] };
+        groups.push(group);
+      }
+      group.messages.push(msg);
     }
     return groups;
   }, [renderedMessages]);

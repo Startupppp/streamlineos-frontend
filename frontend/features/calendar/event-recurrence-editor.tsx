@@ -19,6 +19,9 @@ import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   BYSETPOS_LABELS,
+  RECURRENCE_FREQ_OPTIONS,
+  MONTHLY_MODES,
+  RRULE_END_TYPES,
   buildRrule,
 } from "./event-recurrence-schema";
 
@@ -54,7 +57,8 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
 
   const handleFreqChange = useCallback(
     (value: string) => {
-      const freq = value as RecurrenceState["freq"];
+      const freq = RECURRENCE_FREQ_OPTIONS.find((candidate) => candidate === value);
+      if (!freq) return;
       const next: RecurrenceState = { ...state, freq };
       if (freq === "WEEKLY" && next.byDay.length === 0) {
         next.byDay = ["MO"];
@@ -96,7 +100,10 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
   );
 
   const handleMonthlyModeChange = useCallback(
-    (v: string) => set("monthlyMode", v as RecurrenceState["monthlyMode"]),
+    (v: string) => {
+      const mode = MONTHLY_MODES.find((candidate) => candidate === v);
+      if (mode) set("monthlyMode", mode);
+    },
     [set],
   );
 
@@ -106,12 +113,18 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
   );
 
   const handleByDayForMonthly = useCallback(
-    (v: string) => set("byDay", [v as WeekDay]),
+    (v: string) => {
+      const day = WEEKDAYS.find((candidate) => candidate === v);
+      if (day) set("byDay", [day]);
+    },
     [set],
   );
 
   const handleEndTypeChange = useCallback(
-    (v: string) => set("endType", v as RecurrenceState["endType"]),
+    (v: string) => {
+      const endType = RRULE_END_TYPES.find((candidate) => candidate === v);
+      if (endType) set("endType", endType);
+    },
     [set],
   );
 

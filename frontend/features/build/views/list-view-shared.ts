@@ -96,7 +96,7 @@ export const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 export type ValidPriority = typeof VALID_PRIORITIES[number];
 
 export function isValidPriority(v: string): v is ValidPriority {
-  return (VALID_PRIORITIES as readonly string[]).includes(v);
+  return VALID_PRIORITIES.some((candidate) => candidate === v);
 }
 
 export const DROPPABLE_MODES = new Set(["status", "priority", "assignee"]);

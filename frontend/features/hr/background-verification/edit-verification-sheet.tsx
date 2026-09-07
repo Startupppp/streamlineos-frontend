@@ -33,7 +33,7 @@ const TERMINAL_STATUSES = ["PASSED", "FAILED"] as const;
 type TerminalStatus = (typeof TERMINAL_STATUSES)[number];
 
 function isTerminal(status: string): status is TerminalStatus {
-  return (TERMINAL_STATUSES as readonly string[]).includes(status);
+  return TERMINAL_STATUSES.some((candidate) => candidate === status);
 }
 
 const schema = z

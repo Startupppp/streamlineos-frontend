@@ -14,6 +14,15 @@ interface SurveyListFiltersProps {
   onModeChange: (value: SurveyMode | "all") => void;
 }
 
+const SURVEY_STATUSES = [
+  "draft",
+  "testing",
+  "published",
+  "paused",
+  "closed",
+  "archived",
+] as const satisfies readonly SurveyStatus[];
+
 export function SurveyListFilters({
   search,
   onSearchChange,
@@ -22,7 +31,10 @@ export function SurveyListFilters({
   mode,
   onModeChange,
 }: SurveyListFiltersProps) {
-  const handleStatusSelect = useCallback((v: string) => onStatusChange(v as SurveyStatus | "all"), [onStatusChange]);
+  const handleStatusSelect = useCallback((v: string) => {
+    const next = v === "all" ? "all" : SURVEY_STATUSES.find((candidate) => candidate === v);
+    if (next) onStatusChange(next);
+  }, [onStatusChange]);
   const handleModeSelect = useCallback((v: string) => onModeChange(v as SurveyMode | "all"), [onModeChange]);
 
   return (

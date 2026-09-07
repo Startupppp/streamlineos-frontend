@@ -271,14 +271,13 @@ export function ActivityFeed({
 
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
-    const built = comments
-      .filter((c) => !!c.parentCommentId)
-      .reduce<Record<number, TicketComment[]>>((acc, r) => {
-        const parentId = r.parentCommentId!;
-        if (!acc[parentId]) acc[parentId] = [];
-        acc[parentId].push(r);
-        return acc;
-      }, {});
+    const built = comments.reduce<Record<number, TicketComment[]>>((acc, r) => {
+      const parentId = r.parentCommentId;
+      if (!parentId) return acc;
+      if (!acc[parentId]) acc[parentId] = [];
+      acc[parentId].push(r);
+      return acc;
+    }, {});
     const sortedTopLevel = [...topLevel].sort(
       (a, b) =>
         new Date(b.createdAt || 0).getTime() -

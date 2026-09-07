@@ -30,7 +30,7 @@ import { ErrorState } from "@/components/shared/error-state";
 const INTERVIEW_CALENDAR_HREF = "/calendar?source=hr-interviews";
 
 export function InterviewsPage() {
-  const { isLoading, isError, refetch } = useInterviews({ pageSize: 100 });
+  const { isLoading, isError, refetch } = useInterviews({ limit: 100 });
   const { data: stats } = useInterviewStats();
 
   const [sheetOpen, setSheetOpen] = useState(false);

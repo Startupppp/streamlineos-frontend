@@ -110,14 +110,18 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
 
   const members = useMemo(() => {
     if (!data?.members) return [];
-    return data.members
-      .filter((m) => !!m.user)
-      .map((m) => ({
-        id: m.user!.id,
-        name: m.user!.name ?? null,
-        firstName: m.user!.firstName ?? null,
-        lastName: m.user!.lastName ?? null,
-      }));
+    return data.members.flatMap((m) => {
+      const user = m.user;
+      if (!user) return [];
+      return [
+        {
+          id: user.id,
+          name: user.name ?? null,
+          firstName: user.firstName ?? null,
+          lastName: user.lastName ?? null,
+        },
+      ];
+    });
   }, [data]);
 
   const handleTicketSelect = useCallback(

@@ -1,3 +1,7 @@
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -110,16 +114,12 @@ export async function exportPageToHtml(title: string, content: unknown): Promise
     try {
       if (Array.isArray(content)) {
         bodyHtml = slateToHtml(content as SlateNode[]);
-      } else if (
-        typeof content === "object" &&
-        content !== null &&
-        (content as Record<string, unknown>).type === "doc"
-      ) {
+      } else if (isRecord(content) && content.type === "doc") {
         const [{ generateHTML }, { default: StarterKit }] = await Promise.all([
           import("@tiptap/html"),
           import("@tiptap/starter-kit"),
         ]);
-        bodyHtml = generateHTML(content as Record<string, unknown>, [StarterKit]);
+        bodyHtml = generateHTML(content, [StarterKit]);
       }
     } catch {
       bodyHtml = "";

@@ -47,6 +47,8 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
+const CASE_DETAIL_TABS = ["details", "notes", "documents"] as const;
+
 function AddNoteButton({ isPending, disabled, onClick }: { isPending: boolean; disabled: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -244,7 +246,10 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
         {hrCase && (
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "details" | "notes" | "documents")}
+            onValueChange={(v) => {
+              const tab = CASE_DETAIL_TABS.find((candidate) => candidate === v);
+              if (tab) setActiveTab(tab);
+            }}
             className="flex flex-1 min-h-0 flex-col"
           >
             <TabsList className="mx-5 mt-3">

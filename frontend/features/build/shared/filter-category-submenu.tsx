@@ -227,9 +227,9 @@ export function FilterCategorySubmenu({
   }
 
   if (category === "assignee") {
-    const allMembers = [
-      { id: "@me", displayName: "Me (dynamic)", member: null as Member | null },
-      { id: "__unassigned__", displayName: "Unassigned", member: null as Member | null },
+    const allMembers: { id: string; displayName: string; member: Member | null }[] = [
+      { id: "@me", displayName: "Me (dynamic)", member: null },
+      { id: "__unassigned__", displayName: "Unassigned", member: null },
       ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
     ];
     const filtered = allMembers.filter(

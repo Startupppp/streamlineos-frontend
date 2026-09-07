@@ -80,7 +80,8 @@ function isIncidentSeverity(value: string): value is IncidentSeverity {
   return SEVERITY_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
 }
 
-type ActiveTab = "incidents" | "wellness";
+const ACTIVE_TABS = ["incidents", "wellness"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 function WellnessPulseCard() {
   const { data, isLoading } = useWellnessPulse(true);
@@ -298,7 +299,7 @@ export function SafetyPageContent() {
     >
       <div className="flex min-h-0 flex-1 flex-col pb-6">
         <div className="flex items-center gap-1 border-b mb-4" role="tablist" aria-label="Safety view">
-          {(["incidents", "wellness"] as ActiveTab[]).map((tab) => (
+          {ACTIVE_TABS.map((tab) => (
             <button
               key={tab}
               type="button"

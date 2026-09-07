@@ -297,7 +297,9 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     }
 
     for (let i = 0; i < activeIndexed.length; i++) {
-      const { l: line, meta } = activeIndexed[i]!;
+      const entry = activeIndexed[i];
+      if (!entry) continue;
+      const { l: line, meta } = entry;
       if (meta?.trackingMethod === "SERIAL") {
         const serials = (line.serialNumbers ?? "")
           .split(/[\n,]/)

@@ -17,6 +17,14 @@ export interface RecurrenceState {
 
 export const WEEKDAYS: WeekDay[] = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
+export const RRULE_FREQS: RruleFreq[] = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
+
+export const RECURRENCE_FREQ_OPTIONS: (RruleFreq | "none")[] = ["none", ...RRULE_FREQS];
+
+export const MONTHLY_MODES: MonthlyMode[] = ["bymonthday", "bysetpos"];
+
+export const RRULE_END_TYPES: RruleEndType[] = ["never", "count", "until"];
+
 export const WEEKDAY_LABELS: Record<WeekDay, string> = {
   MO: "Mon",
   TU: "Tue",
@@ -90,17 +98,15 @@ function extractProp(parts: Record<string, string>, key: string): string {
 
 export function parseRrule(rrule: string): RecurrenceState {
   const cleaned = rrule.replace(/^RRULE:/i, "");
-  const entries = cleaned.split(";").map((part) => {
+  const props: Record<string, string> = {};
+  for (const part of cleaned.split(";")) {
     const idx = part.indexOf("=");
-    return [part.slice(0, idx).toUpperCase(), part.slice(idx + 1)] as [string, string];
-  });
-  const props = Object.fromEntries(entries);
+    props[part.slice(0, idx).toUpperCase()] = part.slice(idx + 1);
+  }
 
   const rawFreq = extractProp(props, "FREQ").toUpperCase();
   const freq: RruleFreq | "none" =
-    rawFreq === "DAILY" || rawFreq === "WEEKLY" || rawFreq === "MONTHLY" || rawFreq === "YEARLY"
-      ? (rawFreq as RruleFreq)
-      : "none";
+    RRULE_FREQS.find((candidate) => candidate === rawFreq) ?? "none";
 
   const interval = props["INTERVAL"] ? parseInt(props["INTERVAL"], 10) : 1;
 
@@ -110,7 +116,7 @@ export function parseRrule(rrule: string): RecurrenceState {
         .split(",")
         .map((d) => {
           const stripped = d.replace(/^[+-]?\d+/, "").toUpperCase();
-          return WEEKDAYS.includes(stripped as WeekDay) ? (stripped as WeekDay) : null;
+          return WEEKDAYS.find((candidate) => candidate === stripped) ?? null;
         })
         .filter((d): d is WeekDay => d !== null)
     : [];

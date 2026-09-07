@@ -25,6 +25,10 @@ const TYPE_COLORS: Record<SimulationType, string> = {
   payroll: "bg-muted text-muted-foreground",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function SimulationHistory() {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
@@ -78,7 +82,7 @@ export function SimulationHistory() {
       header: "Label",
       cell: (r) => (
         <span className="text-xs text-status-warning-ink">
-          {String((r.result as Record<string, unknown>)?.simulation ?? "")}
+          {isRecord(r.result) ? String(r.result.simulation ?? "") : ""}
         </span>
       ),
     },

@@ -43,10 +43,16 @@ const PRIORITY_ICONS = {
 
 type PriorityKey = keyof typeof PRIORITY_ICONS;
 
+const PRIORITY_KEYS = [
+  "URGENT",
+  "HIGH",
+  "MEDIUM",
+  "LOW",
+] as const satisfies readonly PriorityKey[];
+
 function resolvePriorityKey(priority: string): PriorityKey {
   const key = priority.toUpperCase();
-  if (key in PRIORITY_ICONS) return key as PriorityKey;
-  return "MEDIUM";
+  return PRIORITY_KEYS.find((candidate) => candidate === key) ?? "MEDIUM";
 }
 
 function getCategoryIcon(

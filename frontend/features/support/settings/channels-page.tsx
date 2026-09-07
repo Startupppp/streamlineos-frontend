@@ -71,6 +71,10 @@ const CHANNEL_TYPES: { value: SupportChannelType; label: string }[] = [
   { value: "sms", label: "SMS" },
 ];
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function channelTypeLabel(type: string) {
   return CHANNEL_TYPES.find((t) => t.value === type)?.label ?? type;
 }
@@ -134,10 +138,10 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
       } else {
         try {
           const parsed: unknown = JSON.parse(data.configJson.trim() || "{}");
-          if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+          if (!isRecord(parsed)) {
             throw new Error("Config must be a JSON object");
           }
-          config = parsed as Record<string, unknown>;
+          config = parsed;
         } catch {
           form.setError("configJson", { message: "Enter valid JSON (e.g. {})" });
           return;

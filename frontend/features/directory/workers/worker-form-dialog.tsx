@@ -74,7 +74,7 @@ export function WorkerFormDialog({
   function handleSubmit(values: WorkerFormValues) {
     const subject = values.organizationPersonId
       ? { organizationPersonId: values.organizationPersonId }
-      : { memberUserId: values.memberUserId! };
+      : { memberUserId: values.memberUserId ?? "" };
     createWorker.mutate(
       {
         ...subject,

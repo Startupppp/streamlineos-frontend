@@ -17,6 +17,12 @@ import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
+const MESSAGE_CHANNELS = [
+  "EMAIL",
+  "WHATSAPP",
+  "IN_APP",
+] as const satisfies readonly MessageChannel[];
+
 function MessageBubble({ msg }: { msg: CandidateMessage }) {
   const isOutbound = msg.direction === "OUTBOUND";
   return (
@@ -92,7 +98,13 @@ export function MessagesTab({
         <div className="flex items-center gap-2">
           <div className="flex-1 space-y-1">
             <Label className="text-xs text-muted-foreground">Channel</Label>
-            <Select value={channel} onValueChange={(v) => setChannel(v as MessageChannel)}>
+            <Select
+              value={channel}
+              onValueChange={(v) => {
+                const next = MESSAGE_CHANNELS.find((candidate) => candidate === v);
+                if (next) setChannel(next);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -67,7 +67,7 @@ function CandidateOptionButton({ candidate: c, isKept, onSelect }: CandidateOpti
 
 export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutionDialogProps) {
   const linkDuplicate = useLinkDuplicateCandidate();
-  const [keptId, setKeptId] = useState<number>(group.candidates[0]!.id);
+  const [keptId, setKeptId] = useState<number>(group.candidates[0]?.id ?? 0);
 
   function handleDialogOpenChange(v: boolean) { if (!v) onClose(); }
 

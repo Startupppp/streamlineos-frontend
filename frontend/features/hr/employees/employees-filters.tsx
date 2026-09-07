@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import type { EmployeeStatusFilter } from "./employee-list-filters";
+import { EMPLOYEE_STATUS_FILTERS, type EmployeeStatusFilter } from "./employee-list-filters";
 
 export interface Department {
   id: string;
@@ -85,7 +85,10 @@ export function EmployeesFilters({
 
         <Select
           value={status}
-          onValueChange={(v) => onStatusChange(v as EmployeeStatusFilter)}
+          onValueChange={(v) => {
+            const next = EMPLOYEE_STATUS_FILTERS.find((candidate) => candidate === v);
+            if (next) onStatusChange(next);
+          }}
         >
           <SelectTrigger
             size="sm"

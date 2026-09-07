@@ -79,6 +79,12 @@ const TicketTagBadge = memo(function TicketTagBadge({
   );
 });
 
+const TICKET_LINK_RELATIONS = [
+  "duplicate",
+  "related",
+  "split",
+] as const satisfies readonly TicketLinkRelation[];
+
 export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) {
   const [open, setOpen] = useState(false);
   const [selectedTagId, setSelectedTagId] = useState("");
@@ -100,7 +106,10 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
   const handleTagSelectChange = useCallback((v: string) => setSelectedTagId(v), []);
   const handleLinkedTicketIdChange = useCallback((v: string) => setLinkedTicketId(v), []);
-  const handleLinkRelationChange = useCallback((v: string) => setLinkRelation(v as TicketLinkRelation), []);
+  const handleLinkRelationChange = useCallback((v: string) => {
+    const next = TICKET_LINK_RELATIONS.find((candidate) => candidate === v);
+    if (next) setLinkRelation(next);
+  }, []);
   const handleMergeTargetChange = useCallback((v: string) => setMergeTargetId(v), []);
   const handleSplitTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setSplitTitle(e.target.value),

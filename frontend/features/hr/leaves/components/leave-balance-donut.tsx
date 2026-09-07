@@ -12,22 +12,23 @@ const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 export function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveBalance[]; allowedNames: Set<string> }) {
   const data = useMemo(
     () =>
-      balances
-        .filter(
-          (b) =>
-            b.typeName &&
-            (allowedNames.size === 0 || allowedNames.has(b.typeName)) &&
-            (b.daysPerYear ?? 0) > 0,
-        )
-        .map((b) => ({
-          name: b.typeName!,
-          remaining: Math.max(0, parseFloat(b.balance || "0")),
-          used: Math.max(
-            0,
-            (b.daysPerYear ?? 0) - parseFloat(b.balance || "0"),
-          ),
-          total: b.daysPerYear ?? 0,
-        })),
+      balances.flatMap((b) => {
+        const name = b.typeName;
+        if (!name) return [];
+        if (allowedNames.size > 0 && !allowedNames.has(name)) return [];
+        if ((b.daysPerYear ?? 0) <= 0) return [];
+        return [
+          {
+            name,
+            remaining: Math.max(0, parseFloat(b.balance || "0")),
+            used: Math.max(
+              0,
+              (b.daysPerYear ?? 0) - parseFloat(b.balance || "0"),
+            ),
+            total: b.daysPerYear ?? 0,
+          },
+        ];
+      }),
     [balances, allowedNames],
   );
 

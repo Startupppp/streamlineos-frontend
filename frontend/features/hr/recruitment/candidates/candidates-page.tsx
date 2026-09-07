@@ -52,7 +52,8 @@ import {
 export function CandidatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statusFilter = searchParams.get("status") as CandidateStatus | null;
+  const statusFilter =
+    STAGE_CONFIG.find((stage) => stage.value === searchParams.get("status"))?.value ?? null;
   const [searchQuery, setSearchQueryLocal] = useState(
     searchParams.get("q") ?? "",
   );

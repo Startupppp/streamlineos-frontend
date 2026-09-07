@@ -84,11 +84,11 @@ const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "H
 const TICKET_PAGE_SIZE = 50;
 
 function isTicketStatus(v: string): v is SupportTicketStatus {
-  return (TICKET_STATUSES as readonly string[]).includes(v);
+  return TICKET_STATUSES.some((candidate) => candidate === v);
 }
 
 function isTicketPriority(v: string): v is SupportTicketPriority {
-  return (TICKET_PRIORITIES as readonly string[]).includes(v);
+  return TICKET_PRIORITIES.some((candidate) => candidate === v);
 }
 
 function InboxContent() {

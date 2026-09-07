@@ -19,6 +19,25 @@ import { STATUS_LABELS, type StatusFilter } from "@/lib/expense-constants";
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/common/use-expense-filters";
 
+const STATUS_FILTERS = [
+  "ALL",
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+] as const satisfies readonly StatusFilter[];
+
+const DATE_PRESETS = [
+  "today",
+  "this_week",
+  "this_month",
+  "last_month",
+  "last_3_months",
+  "last_6_months",
+  "this_year",
+  "custom",
+  "all",
+] as const satisfies readonly DatePreset[];
+
 function MemberStatusTab({
   status,
   index,
@@ -42,10 +61,9 @@ function MemberStatusTab({
       nextIdx = (index - 1 + totalCount) % totalCount;
     else return;
     e.preventDefault();
-    onStatusChange(
-      ["ALL", "PENDING", "APPROVED", "REJECTED"][nextIdx] as StatusFilter,
-    );
-    (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
+    onStatusChange(STATUS_FILTERS[nextIdx]);
+    const sibling = e.currentTarget.parentElement?.children[nextIdx];
+    if (sibling instanceof HTMLElement) sibling.focus();
   }
   return (
     <button
@@ -92,19 +110,17 @@ export function AdminExpenseFilters({
     if (onUserChange) onUserChange(v === "all" ? "" : v);
   }
 
+  const statusPills: { key: StatusFilter; label: string; count: number | null }[] = [
+    { key: "ALL", label: "All Claims", count: null },
+    { key: "PENDING", label: "Pending", count: pendingCount },
+    { key: "APPROVED", label: "Approved", count: null },
+    { key: "REJECTED", label: "Rejected", count: null },
+  ];
+
   return (
     <div className={cn(FILTER_TOOLBAR_ROW, "justify-between")}>
       <FilterPillGroup>
-        {[
-          { key: "ALL" as StatusFilter, label: "All Claims", count: null },
-          {
-            key: "PENDING" as StatusFilter,
-            label: "Pending",
-            count: pendingCount,
-          },
-          { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
-          { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
-        ].map((item) => (
+        {statusPills.map((item) => (
           <FilterPill
             key={item.key}
             active={statusFilter === item.key}
@@ -155,10 +171,9 @@ export function MemberExpenseFilters({
   onStatusChange,
   onDatePresetChange,
 }: MemberExpenseFiltersProps) {
-  const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED"] as const;
-
   function handleDatePresetChange(v: string) {
-    onDatePresetChange(v as DatePreset);
+    const next = DATE_PRESETS.find((candidate) => candidate === v);
+    if (next) onDatePresetChange(next);
   }
 
   return (
@@ -168,7 +183,7 @@ export function MemberExpenseFilters({
         role="tablist"
         aria-label="Filter by status"
       >
-        {statuses.map((s, i, arr) => (
+        {STATUS_FILTERS.map((s, i, arr) => (
           <MemberStatusTab
             key={s}
             status={s}

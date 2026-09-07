@@ -34,6 +34,13 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 
+const CAMPAIGN_STATUSES = [
+  "draft",
+  "active",
+  "completed",
+  "cancelled",
+] as const satisfies readonly HrCampaign["status"][];
+
 const STATUS_COLORS: Record<HrCampaign["status"], string> = {
   draft: "bg-muted text-muted-foreground border-border",
   active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -250,7 +257,13 @@ export function CampaignsTab() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as HrCampaign["status"])}>
+            <Select
+              value={status}
+              onValueChange={(v) => {
+                const next = CAMPAIGN_STATUSES.find((candidate) => candidate === v);
+                if (next) setStatus(next);
+              }}
+            >
               <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>

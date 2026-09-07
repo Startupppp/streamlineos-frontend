@@ -39,6 +39,8 @@ import {
 } from "@/lib/person-display";
 import { format } from "date-fns";
 
+const HOLD_ITEM_TYPES = ["employee_profile", "document", "case_evidence"] as const;
+
 const placeHoldSchema = z.object({
   subjectUserId: z.string().min(1, "Subject user ID is required"),
   reason: z.string().min(5, "Reason must be at least 5 characters").max(2000),
@@ -55,7 +57,7 @@ interface LegalHoldSheetProps {
 
 export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
   const [showAttach, setShowAttach] = useState(false);
-  const [itemType, setItemType] = useState<"employee_profile" | "document" | "case_evidence">("employee_profile");
+  const [itemType, setItemType] = useState<(typeof HOLD_ITEM_TYPES)[number]>("employee_profile");
   const [itemRef, setItemRef] = useState("");
 
   const createHold = useCreateLegalHold();
@@ -147,7 +149,10 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                     <select
                       aria-label="Item type"
                       value={itemType}
-                      onChange={(e) => setItemType(e.target.value as typeof itemType)}
+                      onChange={(e) => {
+                        const next = HOLD_ITEM_TYPES.find((candidate) => candidate === e.target.value);
+                        if (next) setItemType(next);
+                      }}
                       className="text-sm border rounded px-2 py-1 bg-background"
                     >
                       <option value="employee_profile">Employee Profile</option>

@@ -121,7 +121,7 @@ export function requiredFieldOf(entity: BulkEntity): BulkField {
   const required = entity.fields.find((field) => field.required);
   // Every entity below declares one. Typed as non-optional for callers rather
   // than left for each of them to handle a case that cannot happen.
-  return required ?? entity.fields[0]!;
+  return required ?? entity.fields[0];
 }
 
 const LEAD_SOURCES = [

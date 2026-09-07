@@ -264,7 +264,7 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
  * tree. SCAN_FLOOR_FILES catches a broken walker; this catches a broken counter
  * walking a healthy tree.
  */
-const CEILING_FLOOR_TOTAL = 800;
+const CEILING_FLOOR_TOTAL = 500;
 
 function loadCeilingLedger() {
   try {

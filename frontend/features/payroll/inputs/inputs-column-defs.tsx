@@ -11,6 +11,22 @@ import {
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function payloadNumber(payload: unknown, key: string): number {
+  if (!isRecord(payload)) return 0;
+  const value = payload[key];
+  return typeof value === "number" ? value : 0;
+}
+
+function payloadCount(payload: unknown, key: string): number {
+  if (!isRecord(payload)) return 0;
+  const value = payload[key];
+  return Array.isArray(value) ? value.length : 0;
+}
+
 export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustmentListItem): string {
   return getUserDisplayName({
     name: row.userName,
@@ -31,50 +47,35 @@ export const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     header: "Payable",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { payableDays?: number };
-      return p.payableDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "payableDays"),
   },
   {
     key: "presentDays",
     header: "Present",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { presentDays?: number };
-      return p.presentDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "presentDays"),
   },
   {
     key: "absentDays",
     header: "Absent",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { absentDays?: number };
-      return p.absentDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "absentDays"),
   },
   {
     key: "lateCount",
     header: "Late",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { lateCount?: number };
-      return p.lateCount ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "lateCount"),
   },
   {
     key: "overtimeMinutes",
     header: "OT (min)",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { overtimeMinutes?: number };
-      return p.overtimeMinutes ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "overtimeMinutes"),
   },
   {
     key: "refs",
@@ -95,40 +96,28 @@ export const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     header: "Paid Leave",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { paidLeaveDays?: number };
-      return p.paidLeaveDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "paidLeaveDays"),
   },
   {
     key: "unpaidLeaveDays",
     header: "Unpaid",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { unpaidLeaveDays?: number };
-      return p.unpaidLeaveDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "unpaidLeaveDays"),
   },
   {
     key: "halfDayCount",
     header: "Half Days",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { halfDayCount?: number };
-      return p.halfDayCount ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "halfDayCount"),
   },
   {
     key: "encashmentDays",
     header: "Encashment",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { encashmentDays?: number };
-      return p.encashmentDays ?? 0;
-    },
+    cell: (row) => payloadNumber(row.payload, "encashmentDays"),
   },
   {
     key: "refs",
@@ -149,10 +138,7 @@ export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     header: "Approved Requests",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { approvedRequests?: unknown[] };
-      return p.approvedRequests?.length ?? 0;
-    },
+    cell: (row) => payloadCount(row.payload, "approvedRequests"),
   },
   {
     key: "totalHours",
@@ -160,8 +146,7 @@ export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => {
-      const p = row.payload as { totalHours?: number };
-      return `${(p.totalHours ?? 0).toFixed(1)}h`;
+      return `${payloadNumber(row.payload, "totalHours").toFixed(1)}h`;
     },
   },
   {
@@ -183,10 +168,7 @@ export const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     header: "Claims",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => {
-      const p = row.payload as { items?: unknown[] };
-      return p.items?.length ?? 0;
-    },
+    cell: (row) => payloadCount(row.payload, "items"),
   },
   {
     key: "totalAmount",
@@ -194,8 +176,7 @@ export const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => {
-      const p = row.payload as { totalAmount?: number };
-      return formatCurrencyFull(p.totalAmount ?? 0, "INR", "en-IN", 0);
+      return formatCurrencyFull(payloadNumber(row.payload, "totalAmount"), "INR", "en-IN", 0);
     },
   },
   {
