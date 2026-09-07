@@ -6,10 +6,10 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { QuestionRow } from "./question-row";
-import type { SurveyBuilderQuestion, SurveyBuilderSection } from "@/hooks/api/surveys/builder";
+import type { SurveyBuilderViewQuestion, SurveyBuilderViewSection } from "@/hooks/api/surveys/builder";
 
 interface SectionCardProps {
-  section: SurveyBuilderSection;
+  section: SurveyBuilderViewSection;
   isFirst: boolean;
   isLast: boolean;
   onRenameSection: (sectionId: number, title: string) => void;
@@ -17,7 +17,7 @@ interface SectionCardProps {
   onMoveSectionUp: (sectionId: number) => void;
   onMoveSectionDown: (sectionId: number) => void;
   onAddQuestion: (sectionId: number) => void;
-  onEditQuestion: (question: SurveyBuilderQuestion) => void;
+  onEditQuestion: (question: SurveyBuilderViewQuestion) => void;
   onDuplicateQuestion: (questionId: number) => void;
   onDeleteQuestion: (questionId: number) => void;
   onMoveQuestionUp: (sectionId: number, questionId: number) => void;

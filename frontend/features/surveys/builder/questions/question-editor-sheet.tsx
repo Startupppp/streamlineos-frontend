@@ -25,16 +25,16 @@ import {
   useCreateQuestion,
   usePatchQuestion,
   type ChoiceInput,
-  type SurveyBuilderQuestion,
-  type SurveyBuilderSection,
+  type SurveyBuilderViewQuestion,
+  type SurveyBuilderViewSection,
   type SurveyBuilderLogicRule,
 } from "@/hooks/api/surveys/builder";
 
 interface QuestionEditorSheetProps {
   surveyId: number;
   sectionId: number | null;
-  question: SurveyBuilderQuestion | null;
-  sections: SurveyBuilderSection[];
+  question: SurveyBuilderViewQuestion | null;
+  sections: SurveyBuilderViewSection[];
   logicRules: SurveyBuilderLogicRule[];
   open: boolean;
   onOpenChange: (open: boolean) => void;

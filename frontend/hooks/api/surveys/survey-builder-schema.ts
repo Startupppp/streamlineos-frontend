@@ -10,11 +10,11 @@ const builderChoiceContract = z.object({
   isCorrect: z.boolean(),
 });
 
-const builderQuestionContract = z.object({
+export const builderQuestionContract = z.object({
   id: z.number(),
   questionKey: z.string(),
   variableName: z.string().nullable(),
-  type: z.string(),
+  type: z.enum(["short_text", "long_text", "single_select", "multi_select", "dropdown", "rating", "star_rating", "nps", "number", "email", "phone", "date", "matrix", "likert", "ranking", "slider", "yes_no", "consent", "content_block"]),
   title: z.string(),
   description: z.string().nullable(),
   required: z.boolean(),
@@ -25,7 +25,7 @@ const builderQuestionContract = z.object({
   choices: z.array(builderChoiceContract),
 });
 
-const builderSectionContract = z.object({
+export const builderSectionContract = z.object({
   id: z.number(),
   title: z.string(),
   description: z.string().nullable(),
@@ -69,7 +69,7 @@ export const surveyQuestionRowContract = z.object({
   sectionId: z.number(),
   questionKey: z.string(),
   variableName: z.string().nullable(),
-  type: z.string(),
+  type: z.enum(["short_text", "long_text", "single_select", "multi_select", "dropdown", "rating", "star_rating", "nps", "number", "email", "phone", "date", "matrix", "likert", "ranking", "slider", "yes_no", "consent", "content_block"]),
   title: z.string(),
   description: z.string().nullable(),
   required: z.boolean(),

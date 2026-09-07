@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { SurveyBuilderQuestion, SurveyBuilderSection, SurveyBuilderLogicRule } from "@/hooks/api/surveys/builder";
+import type { SurveyBuilderViewQuestion, SurveyBuilderViewSection, SurveyBuilderLogicRule } from "@/hooks/api/surveys/builder";
 import {
   useCreateLogicRule,
   useDeleteLogicRule,
@@ -47,8 +47,8 @@ const QUESTION_TARGET_ACTIONS = new Set<LogicActionType>(["skip_to_question", "s
 
 interface LogicRulesSectionProps {
   surveyId: number;
-  question: SurveyBuilderQuestion;
-  sections: SurveyBuilderSection[];
+  question: SurveyBuilderViewQuestion;
+  sections: SurveyBuilderViewSection[];
   rules: SurveyBuilderLogicRule[];
 }
 

@@ -39,6 +39,10 @@ export type SurveyBuilderQuestion = z.infer<typeof surveyQuestionRowContract>;
 
 export type SurveyBuilderSection = z.infer<typeof surveySectionRowContract>;
 
+export type SurveyBuilderViewSection = z.infer<typeof surveyBuilderSnapshotContract>["sections"][number];
+
+export type SurveyBuilderViewQuestion = SurveyBuilderViewSection["questions"][number];
+
 export interface SurveyBuilderLogicRule {
   id: number;
   sourceQuestionId: number;

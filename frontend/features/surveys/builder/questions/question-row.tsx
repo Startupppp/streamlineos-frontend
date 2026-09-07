@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { QUESTION_TYPE_META } from "@/features/surveys/shared/question-type-meta";
-import type { SurveyBuilderQuestion } from "@/hooks/api/surveys/builder";
+import type { SurveyBuilderViewQuestion } from "@/hooks/api/surveys/builder";
 
 interface QuestionRowProps {
-  question: SurveyBuilderQuestion;
+  question: SurveyBuilderViewQuestion;
   isFirst: boolean;
   isLast: boolean;
-  onEdit: (question: SurveyBuilderQuestion) => void;
+  onEdit: (question: SurveyBuilderViewQuestion) => void;
   onDuplicate: (questionId: number) => void;
   onDelete: (questionId: number) => void;
   onMoveUp: (questionId: number) => void;
