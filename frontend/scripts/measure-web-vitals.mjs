@@ -161,6 +161,9 @@ export function summariseInpPhases(samples) {
   return {
     samples: phases.length,
     targets: [...new Set(phases.map((entry) => entry.target).filter((t) => typeof t === "string"))],
+    // A tap fires pointerdown, pointerup and click; each does different work, so the phase split is
+    // not actionable without knowing which one INP attributed the processing to.
+    events: [...new Set(phases.map((entry) => entry.name).filter((n) => typeof n === "string"))],
     inputDelay_p75_ms: p75("inputDelayMs"),
     processing_p75_ms: p75("processingMs"),
     presentation_p75_ms: p75("presentationMs"),
@@ -1577,14 +1580,15 @@ async function selfTest() {
   check("an all-null metric summarises to null rather than 0", buildProfileSummary([{ lcpMs: null, inpMs: null, cls: null, fcpMs: null, ttfbMs: null, longTaskMs: null }]).lcp.p75_ms, null);
 
   const phaseFixture = [
-    { inpPhases: { target: "button#fab", inputDelayMs: 40, processingMs: 500, presentationMs: 60 } },
-    { inpPhases: { target: "button#fab", inputDelayMs: 60, processingMs: 700, presentationMs: 80 } },
+    { inpPhases: { name: "pointerdown", target: "button#fab", inputDelayMs: 40, processingMs: 500, presentationMs: 60 } },
+    { inpPhases: { name: "pointerup", target: "button#fab", inputDelayMs: 60, processingMs: 700, presentationMs: 80 } },
     { inpPhases: null },
   ];
   const phases = summariseInpPhases(phaseFixture);
-  check("an INP number is split into the three phases the spec defines", Object.keys(phases).sort(), ["inputDelay_p75_ms", "presentation_p75_ms", "processing_p75_ms", "samples", "targets"]);
+  check("an INP number is split into the three phases the spec defines", Object.keys(phases).sort(), ["events", "inputDelay_p75_ms", "presentation_p75_ms", "processing_p75_ms", "samples", "targets"]);
   check("a sample that recorded no interaction is dropped rather than counted as zero", phases.samples, 2);
   check("the phase split names the element that was clicked", phases.targets, ["button#fab"]);
+  check("the phase split names which event carried the cost, not just which element", phases.events, ["pointerdown", "pointerup"]);
   check("the dominant phase is visible in the split", phases.processing_p75_ms, 650);
   check("a route where nothing was ever clicked reports no split at all", summariseInpPhases([{ inpPhases: null }]), null);
 
