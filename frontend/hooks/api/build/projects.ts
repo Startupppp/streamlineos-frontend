@@ -15,22 +15,33 @@ import type {
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  applyProjectDetailPatch,
+  getWorkspaceUsersFromCache,
+  patchProjectListCache,
+} from "@/hooks/api/build/project-cache-patch";
+import type {
+  ProjectListCache,
+  UpdateProjectContext,
+} from "@/hooks/api/build/project-cache-patch";
 import type {
   Project,
-  ProjectListItem,
   ProjectWithDetails,
-  ProjectMember,
-  ProjectMemberRecord,
   TicketLabel,
   ProjectFilters,
   ProjectListResponse,
   CreateProjectInput,
   UpdateProjectInput,
-  AddProjectMemberInput,
 } from "@/types/projects";
-import type { OrgMember } from "@/types/organization";
+
+export {
+  useAddProjectMember,
+  useProjectMembers,
+  useUpdateProjectMemberRole,
+} from "@/hooks/api/build/project-members";
+
 const projectListPageLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectListPageContract),
 );
@@ -43,106 +54,9 @@ const projectDetailLazy = lazyContract(() =>
 const projectDeleteSuccessLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
 );
-const memberListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectMemberListContract),
-);
-const memberRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectMemberRowContract),
-);
-const memberRoleLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.memberRoleContract),
-);
 const labelListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
 );
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-type WorkspaceUser = {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  name?: string | null;
-  image: string | null;
-};
-
-function resolveListManager(
-  managerId: string,
-  project: ProjectListItem,
-  workspaceUsers: WorkspaceUser[],
-): ProjectListItem["manager"] {
-  if (project.manager?.id === managerId) return project.manager;
-  const fromMembers = project.members.find((m) => m.id === managerId);
-  if (fromMembers) {
-    return {
-      id: fromMembers.id,
-      firstName: fromMembers.firstName,
-      lastName: fromMembers.lastName,
-      image: fromMembers.image,
-    };
-  }
-  const fromWorkspace = workspaceUsers.find((u) => u.id === managerId);
-  if (fromWorkspace) {
-    return {
-      id: fromWorkspace.id,
-      firstName: fromWorkspace.firstName ?? fromWorkspace.name ?? null,
-      lastName: fromWorkspace.lastName,
-      image: fromWorkspace.image,
-    };
-  }
-  return null;
-}
-
-function resolveListMembers(
-  memberIds: string[],
-  project: ProjectListItem,
-  workspaceUsers: WorkspaceUser[],
-): ProjectListItem["members"] {
-  return memberIds.map((id) => {
-    const existing = project.members.find((m) => m.id === id);
-    if (existing) return existing;
-    const fromWorkspace = workspaceUsers.find((u) => u.id === id);
-    if (fromWorkspace) {
-      return {
-        id: fromWorkspace.id,
-        firstName: fromWorkspace.firstName ?? fromWorkspace.name ?? null,
-        lastName: fromWorkspace.lastName,
-        image: fromWorkspace.image,
-      };
-    }
-    return { id, firstName: null, lastName: null, image: null };
-  });
-}
-
-function getWorkspaceUsersFromCache(
-  queryClient: ReturnType<typeof useQueryClient>,
-): WorkspaceUser[] {
-  const workspaceEntries = queryClient.getQueriesData<{ data: WorkspaceUser[] }>({
-    queryKey: buildWorkQueryKeys.projects.workspaceMembers.all,
-  });
-  const fromWorkspace = workspaceEntries.flatMap(([, data]) => data?.data ?? []);
-
-  const orgEntries = queryClient.getQueriesData<{ data: OrgMember[] }>({
-    queryKey: platformCoreQueryKeys.organization.members(),
-  });
-  const fromOrg = orgEntries.flatMap(([, data]) =>
-    (data?.data ?? []).map((m) => ({
-      id: m.userId,
-      firstName: m.name,
-      lastName: null,
-      name: m.name,
-      image: m.image,
-    })),
-  );
-
-  const seen = new Set<string>();
-  const merged: WorkspaceUser[] = [];
-  for (const user of [...fromOrg, ...fromWorkspace]) {
-    if (seen.has(user.id)) continue;
-    seen.add(user.id);
-    merged.push(user);
-  }
-  return merged;
-}
 
 export function useProjects(
   filters?: ProjectFilters,
@@ -238,80 +152,6 @@ export function useCreateProject(
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
-}
-
-type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
-
-/**
- * `/build` is keyset, so the list page reads it through `useInfiniteQuery` and
- * its cache is `InfiniteData`, not a single envelope. An optimistic patch that
- * only knows the flat shape leaves that page showing stale rows until a
- * refetch, so both shapes are patched and both are snapshotted.
- */
-type ProjectListCache = ProjectListResponse | InfiniteData<ProjectListResponse>;
-
-interface UpdateProjectContext {
-  listSnapshots: [readonly unknown[], ProjectListCache | undefined][];
-  detailKey: ReturnType<typeof buildWorkQueryKeys.projects.detail>;
-  previousDetail: ProjectWithDetails | null | undefined;
-}
-
-function applyProjectListPatch(
-  project: ProjectListItem,
-  patch: ProjectPatch,
-  workspaceUsers: WorkspaceUser[] = [],
-): ProjectListItem {
-  const next: ProjectListItem = { ...project };
-  if (patch.name !== undefined) next.name = patch.name;
-  if (patch.description !== undefined)
-    next.description = patch.description ?? null;
-  if (patch.status !== undefined) next.status = patch.status;
-  if (patch.priority !== undefined) next.priority = patch.priority ?? null;
-  if (patch.startDate !== undefined) next.startDate = patch.startDate;
-  if (patch.endDate !== undefined) next.endDate = patch.endDate;
-  if (patch.managerId !== undefined) {
-    next.manager = patch.managerId
-      ? resolveListManager(patch.managerId, project, workspaceUsers)
-      : null;
-  }
-  if (patch.memberIds !== undefined) {
-    next.members = resolveListMembers(patch.memberIds, project, workspaceUsers);
-  }
-  return next;
-}
-
-function patchProjectListCache(
-  old: ProjectListCache | undefined,
-  projectId: number,
-  patch: ProjectPatch,
-  workspaceUsers: WorkspaceUser[],
-): ProjectListCache | undefined {
-  if (!old) return old;
-  const mapRows = (rows: ProjectListItem[]): ProjectListItem[] =>
-    rows.map((p) =>
-      p.id === projectId ? applyProjectListPatch(p, patch, workspaceUsers) : p,
-    );
-  if ("pages" in old)
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({ ...page, data: mapRows(page.data) })),
-    };
-  if (!old.data) return old;
-  return { ...old, data: mapRows(old.data) };
-}
-
-function applyProjectDetailPatch(
-  project: ProjectWithDetails,
-  patch: ProjectPatch,
-): ProjectWithDetails {
-  const next: ProjectWithDetails = { ...project };
-  if (patch.name !== undefined) next.name = patch.name;
-  if (patch.description !== undefined)
-    next.description = patch.description ?? null;
-  if (patch.status !== undefined) next.status = patch.status;
-  if (patch.startDate !== undefined) next.startDate = patch.startDate;
-  if (patch.endDate !== undefined) next.endDate = patch.endDate;
-  return next;
 }
 
 export function useUpdateProject(
@@ -424,84 +264,6 @@ export function useArchiveProject(
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
-    },
-  });
-}
-
-export function useProjectMembers(
-  projectId: number,
-  options?: Omit<
-    UseQueryOptions<ProjectMemberRecord[]>,
-    "queryKey" | "queryFn" | "enabled"
-  >,
-) {
-  const canView = useCan("build:view");
-  return useQuery<ProjectMemberRecord[]>({
-    queryKey: buildWorkQueryKeys.projects.members(projectId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectMemberRecord[]>(`/build/${projectId}/members`, undefined, signal, memberListLazy),
-    enabled: canView && !!projectId,
-    staleTime: 30_000,
-    ...options,
-  });
-}
-
-export function useAddProjectMember(
-  options?: Omit<
-    UseMutationOptions<ProjectMember, Error, AddProjectMemberInput>,
-    "mutationFn"
-  >,
-) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<ProjectMember, Error, AddProjectMemberInput>("build:manage", {
-    ...options,
-    mutationKey: ["projects", "members", "add"],
-    mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
-      apiClient.post<ProjectMember>(`/build/${projectId}/members`, data, undefined, memberRowLazy),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
-      });
-    },
-  });
-}
-
-
-type UpdateMemberRoleInput = {
-  projectId: number;
-  memberUserId: string;
-  role: "ADMIN" | "MEMBER" | "VIEWER";
-};
-
-export function useUpdateProjectMemberRole(
-  options?: Omit<
-    UseMutationOptions<
-      { userId: string; role: string | null },
-      Error,
-      UpdateMemberRoleInput
-    >,
-    "mutationFn"
-  >,
-) {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { userId: string; role: string | null },
-    Error,
-    UpdateMemberRoleInput
-  >({
-    ...options,
-    mutationKey: ["projects", "members", "update-role"],
-    mutationFn: ({ projectId, memberUserId, role }) =>
-      apiClient.patch<{ userId: string; role: string | null }>(
-        `/build/${projectId}/members/${memberUserId}`,
-        { role },
-        undefined,
-        memberRoleLazy,
-      ),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
-      });
     },
   });
 }
