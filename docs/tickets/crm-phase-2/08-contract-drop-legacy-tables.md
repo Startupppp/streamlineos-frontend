@@ -1,6 +1,6 @@
 # 08 — Contract: drop the legacy tables, and make regression impossible
 
-**Status:** done, as far as this phase can take it — every CRM-owned reader is off the legacy tables. 26 remain: 13 are the seam itself, deleted with the tables, and 13 are in `finance`/`accounting`, which another workstream is rewriting and this phase may not touch. The `DROP` is one migration behind that landing.
+**Status:** in progress — retracting the earlier "26 remain" count and the guard's clean bill. The regression guard this ticket built is currently red: `backend/src/modules/calendar/calendar-linked-crm.ts:3` does `import { deals, leads } from "../../db/schema";`, a live read of two legacy identity tables. `legacy-reader-ratchet.spec.ts` scans all of `src/` (only `db/schema/` is excluded) and its regex matches this import, but "calendar" appears nowhere in `KNOWN_READERS`, so `expect(added).toEqual([])` fails. Calendar also sits outside ticket 07's scope, so this reader is owned by no ticket. Separately, the register itself was undercounted: `KNOWN_READERS` holds **29** entries, not 26 — 13 under `party` (the seam itself, deleted with the tables) and **16** under `finance`/`accounting` (12 + 4), not 13. The `DROP` is one migration behind the finance/accounting rewrite landing, and now also blocked on the unowned calendar reader.
 **Track:** A — identity convergence
 **Blocked by:** 03, 04, 05, 06, 07
 
@@ -50,3 +50,18 @@ enumerates foreign keys from `pg_constraint` at runtime rather than naming
 tables, so removing `leads`, `clients`, `contacts` and `crm_organizations` does
 not strand it. That is one fewer reason to hesitate when the finance half is
 ready; it is not permission to drop them now.
+
+## Retraction (2026-09-07)
+
+Both claims above are wrong, checked directly against current source rather
+than re-trusted. "It passes" is false: `backend/src/modules/calendar/calendar-linked-crm.ts:3`
+imports `{ deals, leads }` from `db/schema`, the ratchet's file walk covers it
+(only `db/schema/` is excluded), and "calendar" is not in `KNOWN_READERS` — the
+`has no reader that is not already known` assertion fails. This reader is
+outside ticket 07's stated scope, so it is owned by no ticket.
+
+The count of 26 was also wrong on its own terms: `KNOWN_READERS` has **13**
+`party` entries (matches), but **12** `finance` entries and **4** `accounting`
+entries, not 11 and 2 — 16 finance/accounting readers, not 13, and **29** total,
+not 26. Neither error was a regression; both were miscounts of a list that was
+sitting in front of the earlier count.

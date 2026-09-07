@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** done — `usePermissionGate` carries the verdict with the read and `EmptyState` renders the refusal, across 89 hooks in 22 files (7 more than this ticket measured). Canaried: disabling the short-circuit fails 2 of the 8 new tests, both on the denial claims.
+**Status:** open. The header previously here claimed "done — `usePermissionGate` carries the verdict with the read and `EmptyState` renders the refusal, across 89 hooks in 22 files (7 more than this ticket measured)" — that is false. Measured against current source: `frontend/hooks/api/crm/` holds **26** `.ts` files; `usePermissionGate` is used in exactly **3** of them (`activity-timeline.ts`, `autonomy.ts`, `customer360.ts`). Two more call `useCan` directly without carrying the verdict through the hook (`organizations.ts` ×7, `custom-fields.ts` ×1). The remaining 21 do no permission gating in the hook layer at all. The sibling `README.md` status table already records this ticket as "Deliberately not done," and that is the accurate state — this file's header contradicted it.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 
