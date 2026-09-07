@@ -12,16 +12,24 @@ import { downloadBlob } from "@/lib/download-blob";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const payrollFilingListC = lazyContract(() =>
-  import("@/hooks/api/payroll/filings-schema").then((m) => m.payrollFilingListContract),
+  import("@/hooks/api/payroll/filings-schema").then(
+    (m) => m.payrollFilingListContract,
+  ),
 );
 const filingCapabilitiesC = lazyContract(() =>
-  import("@/hooks/api/payroll/filings-schema").then((m) => m.filingCapabilitiesResponseContract),
+  import("@/hooks/api/payroll/filings-schema").then(
+    (m) => m.filingCapabilitiesResponseContract,
+  ),
 );
 const filingExportJobC = lazyContract(() =>
-  import("@/hooks/api/payroll/filings-schema").then((m) => m.filingExportJobContract),
+  import("@/hooks/api/payroll/filings-schema").then(
+    (m) => m.filingExportJobContract,
+  ),
 );
 const payrollFilingC = lazyContract(() =>
-  import("@/hooks/api/payroll/filings-schema").then((m) => m.payrollFilingContract),
+  import("@/hooks/api/payroll/filings-schema").then(
+    (m) => m.payrollFilingContract,
+  ),
 );
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
@@ -78,13 +86,16 @@ export const FILING_EXPORT_TERMINAL: FilingExportJobStatus[] = [
 export type FilingExportJob = z.infer<typeof filingExportJobContract>;
 
 /** Backend honesty contract — filings are export-only until a provider is connected. */
-export type FilingCapability = z.infer<typeof filingCapabilitiesResponseContract>;
+export type FilingCapability = z.infer<
+  typeof filingCapabilitiesResponseContract
+>;
 
 export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.filingsAll,
-    queryFn: ({ signal }) => apiClient.get<PayrollFiling[]>("/payroll/filings", undefined, signal, payrollFilingListC),
+    queryFn: ({ signal }) =>
+      apiClient.get("/payroll/filings", undefined, signal, payrollFilingListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -94,7 +105,13 @@ export function useFilingCapabilities() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.filingCapabilities(),
-    queryFn: ({ signal }) => apiClient.get<FilingCapability>("/payroll/filings/capabilities", undefined, signal, filingCapabilitiesC),
+    queryFn: ({ signal }) =>
+      apiClient.get<FilingCapability>(
+        "/payroll/filings/capabilities",
+        undefined,
+        signal,
+        filingCapabilitiesC,
+      ),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -113,7 +130,13 @@ export function usePrepareFilingExport() {
       month?: string;
       runId?: number;
       entityId?: number;
-    }) => apiClient.post<FilingExportJob>("/payroll/filings/export", body, undefined, filingExportJobC),
+    }) =>
+      apiClient.post<FilingExportJob>(
+        "/payroll/filings/export",
+        body,
+        undefined,
+        filingExportJobC,
+      ),
   });
 }
 
@@ -130,7 +153,8 @@ export function useFilingExportJob(jobId: number | null) {
       ),
     enabled: canView && jobId != null,
     refetchInterval: (query) =>
-      query.state.data && FILING_EXPORT_TERMINAL.includes(query.state.data.status)
+      query.state.data &&
+      FILING_EXPORT_TERMINAL.includes(query.state.data.status)
         ? false
         : 2_000,
   });
@@ -149,12 +173,16 @@ export function useAttachAcknowledgement() {
       challanRef?: string;
       acknowledgementRef?: string;
     }) =>
-      apiClient.patch<PayrollFiling>(
+      apiClient.patch(
         `/payroll/filings/${filingId}/acknowledgement`,
-        { challanRef, acknowledgementRef }, undefined, payrollFilingC,
+        { challanRef, acknowledgementRef },
+        undefined,
+        payrollFilingC,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.filingsAll });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.payroll.filingsAll,
+      });
     },
   });
 }

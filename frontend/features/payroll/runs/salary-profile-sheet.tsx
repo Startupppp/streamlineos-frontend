@@ -39,7 +39,7 @@ import { useModuleEnabled, useCan } from "@/hooks/api/access";
 import { useCreateProfile, useCreateWorkerProfile, usePatchProfile, usePatchWorkerProfile } from "@/hooks/api/payroll/employees";
 import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import type { EmployeeSalaryProfile } from "@/types/payroll/runs";
+import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
 
 const profileSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Required: YYYY-MM-DD"),
@@ -78,7 +78,7 @@ interface SalaryProfileSheetProps {
   workerId?: string;
   open: boolean;
   onClose: () => void;
-  existingProfile?: EmployeeSalaryProfile | null;
+  existingProfile?: ProfileDetail | null;
 }
 
 export function SalaryProfileSheet({

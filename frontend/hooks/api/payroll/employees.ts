@@ -6,8 +6,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { EmployeeSalaryProfile, EmployeeProfileDetail } from "@/types/payroll/runs";
-
 const profileListC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.profileListResponseContract),
 );
@@ -26,13 +24,6 @@ const idResponseC = lazyContract(() =>
 const okResponseC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.okResponseContract),
 );
-
-interface PaginatedProfiles {
-  data: EmployeeSalaryProfile[];
-  total: number;
-  page: number;
-  limit: number;
-}
 
 interface CreateProfileBody {
   effectiveFrom: string;
@@ -60,7 +51,7 @@ export function useEmployeeProfiles(params?: {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.employees(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedProfiles>(
+      apiClient.get(
         "/payroll/employees",
         params as Record<string, string | number> | undefined, signal, profileListC,
       ),
@@ -74,7 +65,7 @@ export function useEmployeeProfile(employeeUserId: string) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.employee(employeeUserId),
     queryFn: ({ signal }) =>
-      apiClient.get<EmployeeProfileDetail>(`/payroll/employees/${employeeUserId}`, undefined, signal, profileDetailC),
+      apiClient.get(`/payroll/employees/${employeeUserId}`, undefined, signal, profileDetailC),
     staleTime: 60_000,
     enabled: canView && !!employeeUserId,
   });
@@ -85,7 +76,7 @@ export function useEmployeeProfileHistory(employeeUserId: string) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId),
     queryFn: ({ signal }) =>
-      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/employees/${employeeUserId}/history`, undefined, signal, profileHistoryC),
+      apiClient.get(`/payroll/employees/${employeeUserId}/history`, undefined, signal, profileHistoryC),
     staleTime: 60_000,
     enabled: canView && !!employeeUserId,
   });
@@ -125,7 +116,7 @@ export function useWorkerProfile(workerId: string) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.worker(workerId),
     queryFn: ({ signal }) =>
-      apiClient.get<EmployeeProfileDetail>(`/payroll/workers/${workerId}`, undefined, signal, profileDetailC),
+      apiClient.get(`/payroll/workers/${workerId}`, undefined, signal, profileDetailC),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });
@@ -136,7 +127,7 @@ export function useWorkerProfileHistory(workerId: string) {
   return useQuery({
     queryKey: [...payrollQueryKeys.payroll.worker(workerId), "history"],
     queryFn: ({ signal }) =>
-      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/workers/${workerId}/history`, undefined, signal, profileHistoryC),
+      apiClient.get(`/payroll/workers/${workerId}/history`, undefined, signal, profileHistoryC),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });

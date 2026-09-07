@@ -5,7 +5,7 @@ const nullableWireDate = () => z.string().nullable();
 
 const leadScoreSchema = z.object({
   score: z.number(),
-  confidence: z.number(),
+  confidence: z.enum(["low", "medium", "high"]).optional(),
   reasoning: z.string(),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
@@ -27,7 +27,7 @@ export const generateEmailContract = z.object({
 export const predictDealContract = z.object({
   winProbability: z.number(),
   estimateDisclaimer: z.string(),
-  confidence: z.number(),
+  confidence: z.enum(["low", "medium", "high"]),
   reasoning: z.string(),
   riskFactors: z.array(z.string()),
   positiveSignals: z.array(z.string()),
@@ -36,9 +36,9 @@ export const predictDealContract = z.object({
 
 export const nextActionContract = z.object({
   action: z.string(),
-  urgency: z.string(),
+  urgency: z.enum(["low", "medium", "high", "critical"]),
   reasoning: z.string(),
-  template: z.string().optional(),
+  template: z.string(),
 }).nullable();
 
 export const enrichLeadContract = z.object({
@@ -52,7 +52,7 @@ export const enrichLeadContract = z.object({
 
 const candidateScoreBaseSchema = z.object({
   score: z.number(),
-  fitLevel: z.string(),
+  fitLevel: z.enum(["excellent", "good", "average", "poor"]),
   reasoning: z.string(),
   strengths: z.array(z.string()),
   concerns: z.array(z.string()),
@@ -66,10 +66,10 @@ export const scoreCandidateContract = candidateScoreBaseSchema.extend({
 
 const reviewDraftBaseSchema = z.object({
   overallRating: z.number(),
-  strengths: z.array(z.string()),
-  improvements: z.array(z.string()),
+  strengths: z.string(),
+  improvements: z.string(),
   comments: z.string(),
-  ratings: z.record(z.string(), z.unknown()),
+  ratings: z.array(z.object({ category: z.string(), score: z.number(), comment: z.string() })),
 });
 
 export const generateReviewContract = reviewDraftBaseSchema.extend({
@@ -79,7 +79,7 @@ export const generateReviewContract = reviewDraftBaseSchema.extend({
 
 const attritionRiskBaseSchema = z.object({
   attritionRiskScore: z.number(),
-  riskLevel: z.string(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]),
   reasoning: z.string(),
   riskFactors: z.array(z.string()),
   retentionActions: z.array(z.string()),
@@ -176,55 +176,86 @@ export const aiUsageContract = z.object({
 });
 
 const interviewKitRoundSchema = z.object({
-  roundName: z.string(),
+  round: z.string(),
   questions: z.array(z.object({
     question: z.string(),
-    rationale: z.string().optional(),
-    followUps: z.array(z.string()).optional(),
+    category: z.string(),
+    expectedAnswer: z.string(),
+    redFlags: z.array(z.string()),
+  })),
+  rubric: z.array(z.object({
+    criterion: z.string(),
+    weight: z.number(),
+    description: z.string(),
   })),
 });
 
 export const interviewKitContract = z.object({
   roundKits: z.array(interviewKitRoundSchema),
-  advisory: z.literal(true),
-  disclaimer: z.string(),
+  advisory: z.boolean().optional(),
+  disclaimer: z.string().optional(),
 });
 
 export const interviewNotesSummaryContract = z.object({
   overallRecommendation: z.string(),
-  confidence: z.string(),
+  confidence: z.enum(["low", "medium", "high"]),
   strengthsSummary: z.string(),
   concernsSummary: z.string(),
   roundSummaries: z.array(z.object({
-    roundName: z.string(),
-    summary: z.string(),
+    round: z.string(),
+    verdict: z.string(),
+    keyPoints: z.array(z.string()),
   })),
   suggestedNextStep: z.string(),
-  advisory: z.literal(true),
-  disclaimer: z.string(),
+  advisory: z.boolean().optional(),
+  disclaimer: z.string().optional(),
 });
 
 export const acceptCandidateScoreContract = z.object({
   accepted: z.literal(true),
 });
 
+const fieldDiffSchema = z.object({
+  added: z.array(z.string()),
+  removed: z.array(z.string()),
+  changed: z.array(z.string()),
+});
+
+const citationSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  title: z.string(),
+  href: z.string().optional(),
+  snippet: z.string().optional(),
+  freshness: z.string().optional(),
+});
+
 const aiSummarySnapshotSchema = z.object({
-  id: z.string(),
+  id: z.number().int(),
   orgId: z.string(),
   entityType: z.string(),
   entityId: z.string(),
   summary: z.string(),
-  structured: z.record(z.string(), z.unknown()).nullable(),
-  citations: z.array(z.unknown()),
+  structured: z.object({
+    highlights: z.array(z.string()),
+    blockers: z.array(z.string()),
+    nextActions: z.array(z.string()),
+  }),
+  citations: z.array(citationSchema).nullable(),
+  correlationId: z.string().nullable(),
+  generatedBy: z.string().nullable(),
   createdAt: wireDate(),
-  updatedAt: wireDate(),
 });
 
 export const aiSummarySnapshotContract = aiSummarySnapshotSchema;
 
 export const snapshotWithDiffNullableContract = z.object({
   snapshot: aiSummarySnapshotSchema,
-  diff: z.record(z.string(), z.unknown()).nullable(),
+  diff: z.object({
+    highlights: fieldDiffSchema,
+    blockers: fieldDiffSchema,
+    nextActions: fieldDiffSchema,
+    isSameSnapshot: z.boolean(),
+  }).nullable(),
 }).nullable();
 
 export const confirmActionContract = z.object({

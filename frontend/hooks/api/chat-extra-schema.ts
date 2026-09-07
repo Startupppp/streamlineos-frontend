@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chatChannelMemberContract } from "@/hooks/api/chat-schema";
 
 /**
  * Supplementary chat contracts that reference shape from modules outside chat
@@ -13,25 +14,21 @@ export const chatChannelDetailContract = z.object({
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  type: z.enum(["PUBLIC", "PRIVATE", "DM", "GROUP"]),
+  type: z.enum(["PUBLIC", "PRIVATE", "DIRECT", "GROUP"]),
   avatarUrl: z.string().nullable(),
+  isArchived: z.boolean(),
+  entityType: z.string().nullable(),
+  entityId: z.string().nullable(),
+  unreadCount: z.number().int(),
+  lastMessage: z.object({
+    content: z.string().nullable(),
+    senderName: z.string().nullable(),
+    createdAt: z.string().nullable(),
+  }).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   memberCount: z.number().int().optional(),
-  members: z
-    .array(
-      z.object({
-        id: z.number().int(),
-        role: z.string(),
-        user: z.object({
-          id: z.string(),
-          name: z.string().nullable(),
-          image: z.string().nullable(),
-          email: z.string(),
-        }),
-      }),
-    )
-    .optional(),
+  members: z.array(chatChannelMemberContract),
 });
 
 /** `storageUploadResponseSchema` — quarantine record from the upload handler. */
@@ -57,9 +54,7 @@ export const iceServersContract = z.object({
 
 /** `aiConversationSchema` */
 export const aiConversationContract = z.object({
-  id: z.string(),
-  orgId: z.string(),
-  userId: z.string(),
+  id: z.number().int(),
   title: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -67,17 +62,16 @@ export const aiConversationContract = z.object({
 
 /** `listConversationsResponseSchema` */
 export const aiConversationListContract = z.object({
-  data: z.array(aiConversationContract),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
+  conversations: z.array(aiConversationContract),
+  nextCursor: z.number().int().nullable(),
 });
 
 /** `chatHistoryResponseSchema` — conversation message history page. */
 export const aiConversationMessagesContract = z.object({
   messages: z.array(
     z.object({
-      id: z.string(),
-      conversationId: z.string(),
+      id: z.number().int(),
+      conversationId: z.number().int(),
       role: z.enum(["user", "assistant"]),
       content: z.string(),
       createdAt: z.string(),
@@ -86,8 +80,7 @@ export const aiConversationMessagesContract = z.object({
         .optional(),
     }),
   ),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
+  nextCursor: z.number().int().nullable(),
 });
 
 /** `deleteConversationResponseSchema` */

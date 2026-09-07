@@ -45,7 +45,7 @@ export function useAdminLoans() {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.loansAdmin(),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<LoanAdminItem>>("/hr/loans", undefined, signal, loanListC)).items,
+      (await apiClient.get("/hr/loans", undefined, signal, loanListC)).items,
     staleTime: 30_000,
     enabled: canView,
   });

@@ -33,7 +33,7 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
   return useQuery({
     queryKey: payrollQueryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedJournalBatches>(
+      apiClient.get(
         "/payroll/accounting/journal-batches",
         params as Record<string, string | number> | undefined, signal, journalBatchListC,
       ),
@@ -47,7 +47,7 @@ export function usePeriodReconciliation(periodKey: string, enabled = true) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.periodReconciliation(periodKey),
     queryFn: ({ signal }) =>
-      apiClient.get<PeriodReconciliationReport>(
+      apiClient.get(
         "/payroll/accounting/journal-batches/period-reconciliation",
         { periodKey }, signal, periodReconciliationC,
       ),

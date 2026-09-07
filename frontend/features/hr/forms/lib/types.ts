@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { hrFormRowContract, hrFormSubmissionRowContract } from "@/features/hr/forms/hooks/hr-forms-schema";
+
 export type HrFormFieldType =
   | "text"
   | "long_text"
@@ -38,35 +41,9 @@ export interface HrFormField {
   validation?: HrFormFieldValidation | null;
 }
 
-export interface HrForm {
-  id: number;
-  orgId: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  status: HrFormStatus;
-  audience: HrFormAudience;
-  workflowObjectType: string | null;
-  schema: HrFormField[];
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-}
+export type HrForm = z.infer<typeof hrFormRowContract>;
 
-export interface HrFormSubmission {
-  id: number;
-  orgId: string;
-  formId: number;
-  formSchemaSnapshot: HrFormField[];
-  submittedBy: string | null;
-  submittedByName: string | null;
-  subjectEmployeeId: number | null;
-  data: Record<string, unknown>;
-  status: HrFormSubmissionStatus;
-  workflowInstanceId: number | null;
-  createdAt: string;
-}
+export type HrFormSubmission = z.infer<typeof hrFormSubmissionRowContract>;
 
 export interface CreateHrFormPayload {
   name: string;

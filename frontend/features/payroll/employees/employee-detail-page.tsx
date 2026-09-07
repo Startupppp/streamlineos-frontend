@@ -19,11 +19,11 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type {
-  EmployeeSalaryProfile,
+  ProfileDetail,
   SalaryProfileStatus,
   ProfileComponent,
   SalaryComponentType,
-} from "@/types/payroll/runs";
+} from "@/hooks/api/payroll/employees-schema";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
@@ -137,7 +137,7 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
   );
 }
 
-function ProfileHistoryRow({ profile }: { profile: EmployeeSalaryProfile }) {
+function ProfileHistoryRow({ profile }: { profile: ProfileDetail }) {
   const cfg = STATUS_CONFIG[profile.status];
   return (
     <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-dense">
@@ -230,7 +230,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
     );
   }
 
-  const userName = activeProfile?.userName ?? employeeUserId;
+  const userName = activeProfile?.userId ?? employeeUserId;
 
   return (
     <PageWrapper

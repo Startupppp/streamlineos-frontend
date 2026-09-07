@@ -70,6 +70,17 @@ export const profileCreateResponseContract = z.object({
 export const okResponseContract = z.object({ ok: z.boolean() });
 export const idResponseContract = z.object({ id: z.number() });
 
+export type SalaryComponentType =
+  | "EARNING"
+  | "DEDUCTION"
+  | "EMPLOYER_CONTRIBUTION"
+  | "REIMBURSEMENT"
+  | "TAX"
+  | "ADJUSTMENT";
+
+export type SalaryProfileStatus = "ACTIVE" | "UPCOMING" | "SUPERSEDED";
+
+export type ProfileComponent = z.infer<typeof profileComponentContract>;
 export type ProfileDetail = z.infer<typeof profileDetailContract>;
 export type ProfileDetailResponse = z.infer<typeof profileDetailResponseContract>;
 export type ProfileListResponse = z.infer<typeof profileListResponseContract>;

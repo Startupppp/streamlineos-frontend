@@ -121,7 +121,7 @@ export function useManagerApproveReimbursement() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-approve"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/approve`, undefined, undefined, updateReimbursementResultC),
+      apiClient.post(`/payroll/manager/reimbursements/${id}/approve`, undefined, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -131,7 +131,7 @@ export function useManagerRejectReimbursement() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/reject`, { reason }, undefined, updateReimbursementResultC),
+      apiClient.post(`/payroll/manager/reimbursements/${id}/reject`, { reason }, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -141,7 +141,7 @@ export function useManagerApproveLoan() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-approve"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/approve`, undefined, undefined, updateLoanResultC),
+      apiClient.post(`/payroll/manager/loans/${id}/approve`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -151,7 +151,7 @@ export function useManagerRejectLoan() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-reject"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/reject`, undefined, undefined, updateLoanResultC),
+      apiClient.post(`/payroll/manager/loans/${id}/reject`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -317,7 +317,7 @@ export function useUpdateBank() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "bank", "update"],
     mutationFn: (body: UpdateBankBody) =>
-      apiClient.patch<EssBankDetails>("/payroll/me/bank", body, undefined, updateBankResultC),
+      apiClient.patch("/payroll/me/bank", body, undefined, updateBankResultC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essBank() });
     },

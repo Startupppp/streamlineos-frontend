@@ -28,7 +28,7 @@ export function useFnfSettlements() {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.fnfList(),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<FnfSettlement>>("/payroll/fnf", undefined, signal, fnfInsightsListC)).items,
+      (await apiClient.get("/payroll/fnf", undefined, signal, fnfInsightsListC)).items,
     staleTime: 60_000,
     enabled: canView,
   });
@@ -38,7 +38,7 @@ export function useFnfSettlement(settlementId: number) {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.fnfSettlement(settlementId),
-    queryFn: ({ signal }) => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`, undefined, signal, fnfGetOneC),
+    queryFn: ({ signal }) => apiClient.get(`/payroll/fnf/${settlementId}`, undefined, signal, fnfGetOneC),
     staleTime: 60_000,
     enabled: canView && settlementId > 0,
   });
@@ -75,7 +75,7 @@ export function useApproveFnf() {
       settlementId: number;
       notes?: string;
     }) =>
-      apiClient.post<FnfSettlement>(`/payroll/fnf/${settlementId}/approve`, { status: "APPROVED", notes }, undefined, updateFnfResultC),
+      apiClient.post(`/payroll/fnf/${settlementId}/approve`, { status: "APPROVED", notes }, undefined, updateFnfResultC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.fnfAll });
     },

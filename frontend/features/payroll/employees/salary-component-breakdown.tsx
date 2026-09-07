@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
-import type { ProfileComponent, SalaryComponentType } from "@/types/payroll/runs";
+import type { ProfileComponent, SalaryComponentType } from "@/hooks/api/payroll/employees-schema";
 
 const COMPONENT_TYPE_LABELS: Record<SalaryComponentType, string> = {
   EARNING: "Earnings",
@@ -31,7 +31,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
       <div>
         <div className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{comp.name}</span>
-          {comp.isOverride && (
+          {(comp.calcMethodOverride !== null || comp.formulaOverride !== null) && (
             <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
               override
             </span>

@@ -16,12 +16,12 @@ import {
   useWorkerProfileHistory,
 } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
-import type { EmployeeSalaryProfile } from "@/types/payroll/runs";
+import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
 import { ComponentsBreakdown } from "./salary-component-breakdown";
 import { SalaryProfileStatusBadge } from "./salary-profile-status-badge";
 import { EmployeeDetailPage } from "./employee-detail-page";
 
-function ProfileHistoryRow({ profile }: { profile: EmployeeSalaryProfile }) {
+function ProfileHistoryRow({ profile }: { profile: ProfileDetail }) {
   return (
     <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-dense">
       <span className="font-mono tabular-nums text-muted-foreground shrink-0">
@@ -110,7 +110,7 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
     );
   }
 
-  const payeeName = activeProfile?.userName ?? "Worker payee";
+  const payeeName = "Worker payee";
 
   return (
     <PageWrapper
