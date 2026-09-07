@@ -10,51 +10,53 @@ This document is an executable checklist, not a narrative. Every command named b
 
 ## 1. Pre-release gates (CI-enforced, must pass on main)
 
-These run automatically on every push to `main` via `.github/workflows/backend.yml` and `.github/workflows/backend/ci.yml`. A failing gate blocks merge.
+⚠ **CORRECTED — these two paths do not exist.** The real workflow files are `backend/.github/workflows/ci.yml` (typecheck, lint, build, unit tests, and the static `gates` job) and `backend/.github/workflows/db-gates.yml` (the gates that need a live database). Every table below is updated to cite the real file. A failing gate blocks merge.
 
 ### 1.1 Code and type correctness
 
 | Gate | Command | CI file |
 |---|---|---|
-| TypeScript strict typecheck | `pnpm typecheck` | `backend.yml` |
-| Unit test suite | `pnpm test -- --runInBand` | `backend.yml` |
-| Controller e2e suite | `pnpm test:e2e:ci` | `backend.yml` |
-| NestJS build | `pnpm build` | `backend.yml` |
-| Docker image build | `docker build -f backend/Dockerfile backend` | `backend.yml` |
+| TypeScript strict typecheck | `pnpm typecheck` | `ci.yml` (`verify` job, ci.yml:50) |
+| Unit test suite | `pnpm test -- --runInBand` | `ci.yml` (`tests` job, ci.yml:101 — runs as plain `pnpm test`, not with `--runInBand`) |
+| Controller e2e suite | `pnpm test:e2e:ci` | `db-gates.yml` (`bootstrapped` job, db-gates.yml:178 — gated `if: schedule \|\| workflow_dispatch`, not on every push; UNPROVEN per that job's own comment) |
+| NestJS build | `pnpm build` | `ci.yml` (`verify` job, ci.yml:56) |
+| Docker image build | `docker build -f backend/Dockerfile backend` | ⚠ not found in any workflow under `backend/.github/workflows/` — leaving as-is, not verified as wired; needs its own audit |
 
 ### 1.2 API contract and route safety
 
 | Gate | Command | CI file |
 |---|---|---|
-| OpenAPI freshness | `pnpm openapi:check` | `backend/ci.yml` |
-| Request-schema coverage | `pnpm check:openapi-coverage` | `backend.yml` |
-| Bodyless conflicts | `pnpm check:bodyless-conflicts` | `backend.yml` |
-| Unique operation IDs | `pnpm check:operation-ids` | `backend.yml` |
-| Route classification (zero undeclared) | `pnpm check:route-classification` | `backend/ci.yml` |
-| Navigation permission keys | `pnpm check:navigation-permissions` | `backend/ci.yml` |
+| OpenAPI freshness | `pnpm openapi:check` | `ci.yml` (`gates` job, ci.yml:338) |
+| Request-schema coverage | `pnpm check:openapi-coverage` | `ci.yml` (`gates` job, ci.yml:351) |
+| Bodyless conflicts | `pnpm check:bodyless-conflicts` | `ci.yml` (`gates` job, ci.yml:363) |
+| Unique operation IDs | `pnpm check:operation-ids` | `ci.yml` (`gates` job, ci.yml:359) |
+| Route classification (zero undeclared) | `pnpm check:route-classification` | `ci.yml` (`gates` job, ci.yml:322) |
+| Navigation permission keys | `pnpm check:navigation-permissions` | `ci.yml` (`gates` job, ci.yml:330-334 — blocking; a divergence fails the job, an absent frontend checkout reports as a tolerated warning via `run-gate.mjs`) |
 
 ### 1.3 Migration and schema discipline
 
 | Gate | Command | CI file |
 |---|---|---|
-| Migration authoring discipline | `pnpm check:migration-discipline` | `backend.yml` |
-| Migration ledger vs journal | `pnpm check:migration-ledger` | `backend.yml` |
-| Migration chain integrity | `pnpm check:migration-chain` | `backend/ci.yml` |
-| Cold bootstrap and catalog parity | `pnpm migration:proof` | `.github/workflows/backend.yml` (`migration-proof`) |
+| Migration authoring discipline | `pnpm check:migration-discipline` | `ci.yml` (`gates` job, ci.yml:502) |
+| Migration ledger vs journal | `pnpm check:migration-ledger` | `db-gates.yml` (`bootstrapped` job, db-gates.yml:120 — the live check needs a bootstrapped database; `ci.yml:822` runs only its self-test) |
+| Migration chain integrity | `pnpm check:migration-chain` | `ci.yml` (`gates` job, ci.yml:498) |
+| Cold bootstrap and catalog parity | `pnpm migration:proof` | `db-gates.yml` (`migration-proof` job, db-gates.yml:287) |
 
 ### 1.4 Security and access
 
 | Gate | Command | CI file |
 |---|---|---|
-| Permission key catalog | `pnpm check:permission-keys` | `backend/ci.yml` |
-| Tenant index coverage | `pnpm check:tenant-indexes` | `backend/ci.yml` |
-| Record-access soft-delete | `pnpm check:record-access` | `backend/ci.yml` |
-| DataScope application | `pnpm check:scope-application` | `backend/ci.yml` |
-| Log secret / rate-limit tier | `pnpm check:log-secrets` | `backend/ci.yml` |
-| Placement bypass guard | `pnpm check:placement-bypass` | `backend.yml` |
-| Owner authority guard | `pnpm check:owner-authority` | `backend.yml` |
+| Permission key catalog | `pnpm check:permission-keys` | `ci.yml` (`gates` job, ci.yml:311-315 — blocking, needs a frontend checkout; see the step's own comment) |
+| Tenant index coverage | `pnpm check:tenant-indexes` | `ci.yml` (`gates` job, ci.yml:460) |
+| Record-access soft-delete | `pnpm check:record-access` | `ci.yml` (`gates` job, ci.yml:439) |
+| DataScope application | `pnpm check:scope-application` | `ci.yml` (`gates` job, ci.yml:435) |
+| Log secret / rate-limit tier | `pnpm check:log-secrets` | `ci.yml` (`gates` job, ci.yml:570) |
+| Placement bypass guard | `pnpm check:placement-bypass` | `ci.yml` (`gates` job, ci.yml:443) |
+| Owner authority guard | `pnpm check:owner-authority` | `ci.yml` (`gates` job, ci.yml:447) |
 
-### 1.5 Dependency supply chain (CI HANDOFF — not yet wired, see §7)
+### 1.5 Dependency supply chain
+
+⚠ **CORRECTED — this section used to say "CI HANDOFF — not yet wired, see §7." That was false.** All three gates below are wired and blocking in `backend/.github/workflows/ci.yml`'s `gates` job — self-test then live check, guarded by `if: ${{ !cancelled() }}`, no `continue-on-error`: `check:vulnerabilities` at ci.yml:714-716, `check:licenses` at ci.yml:718-720, `check:feature-flag-governance` at ci.yml:722-724. §7.1's paste-this-YAML instructions are retired — see the note there.
 
 | Gate | Command | Self-test |
 |---|---|---|
@@ -62,7 +64,9 @@ These run automatically on every push to `main` via `.github/workflows/backend.y
 | Disallowed licenses | `pnpm check:licenses` | `pnpm check:licenses:self-test` |
 | Feature-flag governance | `pnpm check:feature-flag-governance` | `pnpm check:feature-flag-governance:self-test` |
 
-### 1.6 Event and async consistency (CI HANDOFF — not yet wired, see §7)
+### 1.6 Event and async consistency
+
+⚠ **CORRECTED — this section used to say "CI HANDOFF — not yet wired, see §7." That was false.** `check:outbox-consumers` self-test and live check both run, blocking, in `backend/.github/workflows/ci.yml`'s `gates` job at ci.yml:686-688. `verify:rbac-integrity`'s self-test runs in the same job at ci.yml:690-692; its live probes — which need a real database — run, blocking, in `backend/.github/workflows/db-gates.yml`'s `bootstrapped` job at db-gates.yml:128-129 ("RBAC referential integrity (live probes)"). §7.2's paste-this-YAML instructions are retired — see the note there.
 
 | Gate | Command | Self-test |
 |---|---|---|
@@ -223,48 +227,15 @@ Template:
 
 ## 7. CI wiring handoffs (orchestrator action required)
 
-The following gates are implemented as scripts but are NOT yet wired into CI. Paste the YAML blocks below into the indicated files and jobs.
+⚠ **CORRECTED — §7.1 and §7.2 below used to instruct pasting YAML into two files, `.github/workflows/backend.yml` and `.github/workflows/backend/ci.yml`, that do not exist in this repository.** Both sets of gates are already wired into the real workflow files — see the retraction notes in §1.5 and §1.6. There is nothing left to paste for either. §7.3 (SBOM generation and artifact-hash upload) is the one genuine handoff remaining in this section.
 
-### 7.1 Paste into `.github/workflows/backend.yml` — `backend` job, after "Build Container"
+### 7.1 Vulnerability, license and feature-flag-governance gates — WIRED, see §1.5
 
-```yaml
-      - name: Vulnerability Gate Self-Test
-        run: pnpm check:vulnerabilities:self-test
+These three gates run, blocking, in `backend/.github/workflows/ci.yml`'s `gates` job: `check:vulnerabilities` (ci.yml:714-716), `check:licenses` (ci.yml:718-720), `check:feature-flag-governance` (ci.yml:722-724, no `continue-on-error`). Nothing to paste.
 
-      - name: Dependency Vulnerability Gate
-        run: pnpm check:vulnerabilities
+### 7.2 Outbox consumer registry and RBAC referential integrity gates — WIRED, see §1.6
 
-      - name: License Gate Self-Test
-        run: pnpm check:licenses:self-test
-
-      - name: Dependency License Gate
-        run: pnpm check:licenses
-
-      - name: Feature Flag Governance Gate Self-Test
-        run: pnpm check:feature-flag-governance:self-test
-
-      - name: Feature Flag Governance Gate
-        run: pnpm check:feature-flag-governance
-        continue-on-error: true
-```
-
-Note: `check:feature-flag-governance` fails until `owner` and `removal_date` columns are added to `feature_flags` (migration required). Use `continue-on-error: true` until that migration is shipped, then remove it.
-
-### 7.2 Paste into `.github/workflows/backend/ci.yml` — `verify` job, after "Migration chain verification"
-
-```yaml
-      - name: Outbox consumer registry Self-Test
-        run: pnpm check:outbox-consumers:self-test
-
-      - name: Outbox consumer registry
-        run: pnpm check:outbox-consumers
-
-      - name: RBAC referential integrity Self-Test
-        run: pnpm verify:rbac-integrity:self-test
-
-      - name: RBAC referential integrity
-        run: pnpm verify:rbac-integrity
-```
+`check:outbox-consumers` (self-test and live check) runs, blocking, in `backend/.github/workflows/ci.yml`'s `gates` job at ci.yml:686-688. `verify:rbac-integrity`'s self-test runs in the same job at ci.yml:690-692; its live probes run, blocking, in `backend/.github/workflows/db-gates.yml`'s `bootstrapped` job at db-gates.yml:128-129. Nothing to paste.
 
 ### 7.3 SBOM and artifact hashes (post-build, paste into `backend` job after "Build")
 
