@@ -7,7 +7,7 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   PmPageShell,
   PmSection,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { TestCasesTab } from "./test-cases-tab";
 import { TestRunsTab } from "./test-runs-tab";
 

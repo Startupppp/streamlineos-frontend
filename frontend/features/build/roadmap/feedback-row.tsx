@@ -18,7 +18,7 @@ import { useUpdateFeedbackPost } from "@/hooks/api/build/roadmap";
 import type { FeedbackPost, RoadmapItem } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";

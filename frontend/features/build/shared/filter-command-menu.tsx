@@ -31,8 +31,8 @@ import { useHorizontalSwipe } from "@/hooks/common/use-horizontal-swipe";
 import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
-import { FilterTriggerButton, MobileFilterSearch } from "@/features/shared/list-view";
-import { FilterCategoryList } from "@/features/shared/list-view";
+import { FilterTriggerButton, MobileFilterSearch } from "@/components/list-view";
+import { FilterCategoryList } from "@/components/list-view";
 import {
   categoryTitle,
   type FilterCategory,
@@ -44,7 +44,7 @@ import {
   type ProjectOption,
   type FilterState,
   type CategoryDefinition,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 import type { StatusConfigEntry } from "@/lib/status-config";
 import {
   pmSnappy,
@@ -52,7 +52,7 @@ import {
   stepSlideReduced,
 } from "@/lib/motion-presets";
 
-export type { FilterState } from "@/features/shared/list-view";
+export type { FilterState } from "@/components/list-view";
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;

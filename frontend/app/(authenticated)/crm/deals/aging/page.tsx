@@ -13,9 +13,9 @@ import {
   CONTENT_FILL_PANEL,
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   DEAL_AGING_LAYOUT,
   dealAgingRecordFields,

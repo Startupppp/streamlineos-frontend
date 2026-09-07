@@ -22,7 +22,7 @@ import {
   PmSection,
   PM_PANEL,
   PM_ROW,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

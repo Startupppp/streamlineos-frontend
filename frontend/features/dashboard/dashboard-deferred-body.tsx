@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -47,13 +47,6 @@ const RecentActivityCard = dynamic(
     })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
-const PublicDocumentsCard = dynamic(
-  () =>
-    import("@/features/dashboard/public-documents-card").then((m) => ({
-      default: m.PublicDocumentsCard,
-    })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
-);
 
 const LeavesTodayWidget = dynamic(
   () =>
@@ -93,9 +86,11 @@ const UpcomingHolidaysWidget = dynamic(
 
 interface DashboardDeferredBodyProps {
   access: DashboardAccess;
+  expensesSlot?: ReactNode;
+  publicDocumentsSlot?: ReactNode;
 }
 
-export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
+export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlot }: DashboardDeferredBodyProps) {
   const { fadeUp } = useMotionVariants();
   const router = useRouter();
   const {
@@ -275,6 +270,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           hrEnabled={hrEnabled}
           canViewExecutive={canViewExecutive}
           canSelfAttendance={canSelfAttendance}
+          expensesSlot={expensesSlot}
         />
 
         {showHrTeamRow && (
@@ -323,17 +319,17 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {batch2Ready && showDocumentsCard && (
+        {batch2Ready && showDocumentsCard && publicDocumentsSlot ? (
           <motion.div
             variants={fadeUp}
             initial="hidden"
             animate="visible"
           >
             <HomeSectionBoundary sectionLabel="Company documents">
-              <PublicDocumentsCard />
+              {publicDocumentsSlot}
             </HomeSectionBoundary>
           </motion.div>
-        )}
+        ) : null}
 
         {batch2Ready && projectsEnabled && (
           <motion.div

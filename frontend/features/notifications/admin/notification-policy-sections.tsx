@@ -13,7 +13,7 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
-} from "@/features/notifications/notification-types";
+} from "@/lib/notification-types";
 import type {
   NotificationCategory,
   NotificationChannel,

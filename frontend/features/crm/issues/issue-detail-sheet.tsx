@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { RecordDetail } from "@/features/renderer";
+import { RecordDetail } from "@/components/renderer";
 import { useIssue } from "@/hooks/api/crm/issues";
 import { formatRelativeTime, formatShortDate } from "@/lib/date-utils";
 import {

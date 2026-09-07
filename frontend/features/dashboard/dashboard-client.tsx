@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import {
@@ -68,7 +68,12 @@ const ExecutiveKpiWidget = dynamic(
   { loading: () => <StatCardGridSkeleton cols={4} /> },
 );
 
-export function DashboardClient() {
+interface DashboardClientProps {
+  expensesSlot?: ReactNode;
+  publicDocumentsSlot?: ReactNode;
+}
+
+export function DashboardClient({ expensesSlot, publicDocumentsSlot }: DashboardClientProps = {}) {
   const { fadeUp } = useMotionVariants();
   const { data: session } = useSession();
   const firstName = getFirstName(session);
@@ -270,7 +275,7 @@ export function DashboardClient() {
             </motion.div>
           )}
 
-          <DashboardDeferredBody access={access} />
+          <DashboardDeferredBody access={access} expensesSlot={expensesSlot} publicDocumentsSlot={publicDocumentsSlot} />
         </div>
       </PageWrapper>
       <GuidedTourOverlay />

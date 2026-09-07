@@ -19,7 +19,7 @@ import {
   useUnarchiveNotification,
 } from "@/hooks/api/notifications";
 import { useRunWhenOnline } from "@/hooks/common/use-run-when-online";
-import type { NotificationSection } from "./notification-types";
+import type { NotificationSection } from "@/lib/notification-types";
 
 interface Params {
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<number>>>;

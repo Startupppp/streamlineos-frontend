@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import { toKanbanTicket, type ProjectGroup } from "./all-work-ticket-utils";

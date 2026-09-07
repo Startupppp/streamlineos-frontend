@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalShell, LegalSection, PlainEnglish } from "@/features/legal/legal-shell";
+import { LegalShell, LegalSection, PlainEnglish } from "@/features/landing/legal-shell";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {

@@ -18,7 +18,7 @@ import { useCan } from "@/hooks/api/access";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { useImportKbPages, useKbImportJobs } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import {
   KbUploadIcon,
   KbFileTextIcon,

@@ -14,9 +14,9 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { RecordList } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
 import { useCan } from "@/hooks/api/access";
 import {

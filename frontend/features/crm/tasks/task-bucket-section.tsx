@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RecordList, type RecordValue } from "@/features/renderer";
+import { RecordList, type RecordValue } from "@/components/renderer";
 import type { RecordLayout } from "@/lib/renderer/layout";
 import type { DensityMode } from "@/lib/design-tokens";
 import { type TaskBucket } from "@/hooks/api/tasks";

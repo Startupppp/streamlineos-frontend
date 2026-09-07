@@ -1,6 +1,6 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmPanel, PmSection } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome/pm-chrome";
 
 export default function TeamDetailLoading() {
   return (

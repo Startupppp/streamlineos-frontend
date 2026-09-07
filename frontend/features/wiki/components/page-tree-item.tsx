@@ -35,7 +35,7 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
-import { KNOWLEDGE_BASE, pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import {
   KbChevronRightIcon,
   KbChevronDownIcon,

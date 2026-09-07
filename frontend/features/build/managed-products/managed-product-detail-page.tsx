@@ -15,7 +15,7 @@ import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 import type { ManagedProduct, UpdateManagedProductInput } from "@/types/projects";
 import { getUserDisplayName } from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { cn } from "@/lib/utils";
 
 interface Props {

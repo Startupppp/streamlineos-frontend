@@ -7,7 +7,7 @@ import {
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import { KNOWLEDGE_BASE, pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import {
   KB_STATUS_LABELS,

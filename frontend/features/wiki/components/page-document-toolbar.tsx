@@ -50,7 +50,7 @@ import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
 import { exportPageToHtml } from "@/features/wiki/lib/export-page";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 
 interface PageDocumentToolbarProps {
   page: KbPageDetail;

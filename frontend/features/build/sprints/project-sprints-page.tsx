@@ -22,7 +22,7 @@ import { SprintsPageSkeleton } from "@/features/build/sprints/sprints-page-skele
 import { SprintPlanningPanel, type PlanningTicket } from "@/features/build/sprints/sprint-planning-panel";
 import { useSprintTicketMover } from "@/features/build/sprints/use-sprint-ticket-mover";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
-import { PmPageShell, PM_FILL_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PM_FILL_PANEL } from "@/components/pm-chrome/pm-chrome";
 
 interface ProjectSprintsPageProps {
   projectId: string;

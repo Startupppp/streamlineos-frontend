@@ -19,7 +19,7 @@ import { LeadRowControls } from "./lead-row-controls";
 import { useLeadMutations, type ConversionDetails } from "./use-lead-mutations";
 
 const RecordList = dynamic(
-  () => import("@/features/renderer/record-list").then((m) => ({ default: m.RecordList })),
+  () => import("@/components/renderer/record-list").then((m) => ({ default: m.RecordList })),
   { ssr: false, loading: () => <DataTableSkeleton rows={12} columns={8} className="flex-1" /> },
 );
 

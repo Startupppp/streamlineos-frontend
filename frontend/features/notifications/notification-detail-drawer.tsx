@@ -17,7 +17,7 @@ import {
   NOTIFICATION_PRIORITY_CONFIG,
   type NotificationCategory,
   type NotificationPriority,
-} from "./notification-types";
+} from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { useCreateSuppression } from "@/hooks/api/notifications";
 import type { Notification } from "@/types/notifications";

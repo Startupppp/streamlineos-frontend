@@ -31,7 +31,7 @@ import {
   PmSection,
   PM_FILL_PANEL,
   PM_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";

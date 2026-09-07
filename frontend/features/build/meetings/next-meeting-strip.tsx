@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CalendarClock, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getUserDisplayName } from "@/lib/person-display";
 import { MeetingTypeBadge } from "./meeting-badges";

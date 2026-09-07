@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
-import { pageHistoryHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHistoryHref } from "@/lib/knowledge-routes";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const PlateDocumentEditor = dynamic(

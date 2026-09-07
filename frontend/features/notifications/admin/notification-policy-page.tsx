@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { useNotificationPolicies, useUpsertNotificationPolicy } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
-import { NOTIFICATION_CATEGORIES } from "@/features/notifications/notification-types";
+import { NOTIFICATION_CATEGORIES } from "@/lib/notification-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { NotificationChannel, NotificationCategory, PolicyOverride } from "@/types/notifications";
 import {

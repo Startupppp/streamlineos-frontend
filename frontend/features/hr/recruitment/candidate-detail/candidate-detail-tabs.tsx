@@ -14,9 +14,9 @@ import { CalibrationTab } from "@/features/hr/recruitment/candidate-detail/calib
 import { ResumeTab } from "@/features/hr/recruitment/candidate-detail/resume-tab";
 import { ReferralsTab } from "@/features/hr/recruitment/candidate-detail/referrals-tab";
 import { ActivityTab } from "@/features/hr/recruitment/candidate-detail/activity-tab";
-import { ApplicationsTab } from "@/features/candidates/applications-tab";
-import { InterviewsTab } from "@/features/candidates/interviews-tab";
-import { MessagesTab } from "@/features/candidates/messages-tab";
+import { ApplicationsTab } from "@/features/hr/recruitment/candidates/applications-tab";
+import { InterviewsTab } from "@/features/hr/recruitment/candidates/interviews-tab";
+import { MessagesTab } from "@/features/hr/recruitment/candidates/messages-tab";
 import type { CandidateStatus, BgvStatus, CandidateApplication, Interview } from "@/types/hr";
 import type { InterviewScorecard } from "@/hooks/api/hr/recruitment";
 import type { ScorecardTemplate } from "@/hooks/api/hr/recruitment";

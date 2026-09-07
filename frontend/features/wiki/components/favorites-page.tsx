@@ -11,7 +11,7 @@ import { useKbPagesFavorites, useToggleFavoriteKbPage } from "@/hooks/api/kb";
 import {
   pageHref,
   KNOWLEDGE_BASE,
-} from "@/features/wiki/lib/knowledge-routes";
+} from "@/lib/knowledge-routes";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import {
   KbFileTextIcon,

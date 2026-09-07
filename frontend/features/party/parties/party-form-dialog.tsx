@@ -2,9 +2,9 @@
 
 import { toast } from "sonner";
 import { AppDialog } from "@/components/shared/app-dialog";
-import { RecordForm } from "@/features/renderer/record-form";
+import { RecordForm } from "@/components/renderer/record-form";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
-import type { RecordFormValues } from "@/features/renderer/record-form";
+import type { RecordFormValues } from "@/components/renderer/record-form";
 import { useCreateParty, useUpdateParty } from "@/hooks/api/party/parties";
 import type { BusinessParty, CreatePartyInput, UpdatePartyInput } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";

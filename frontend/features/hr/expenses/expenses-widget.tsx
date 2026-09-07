@@ -12,14 +12,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatAmountInCurrency, formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useExpensePageData } from "@/hooks/api/hr";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
   STATUS_LABELS,
   STATUS_STYLES,
-} from "@/features/hr/expenses/expense-constants";
-import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
+} from "@/lib/expense-constants";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 
 const CreateExpenseDialog = dynamic(
@@ -90,12 +90,10 @@ function ExpenseRow({
 }
 
 export function ExpensesWidget() {
-  const {
-    accountingEnabled,
-    canViewExpenses,
-    canCreateExpenses,
-    canApproveExpenses,
-  } = useDashboardAccess();
+  const accountingEnabled = useModuleEnabled("accounting");
+  const canViewExpenses = useCan("hr:expenses:view");
+  const canCreateExpenses = useCan("hr:expenses:create");
+  const canApproveExpenses = useCan("hr:expenses:approve");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const enabled = accountingEnabled && canViewExpenses;

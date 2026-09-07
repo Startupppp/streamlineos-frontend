@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { useOrgDisplay } from "@/hooks/api/org-display";

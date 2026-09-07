@@ -8,7 +8,7 @@ import { requireSession } from "../../lib/rbac/require-permission";
 import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";
-import { DashboardShell } from "../../components/layout/dashboard-shell";
+import { LayoutClient } from "./layout-client";
 import { GlobalCreateTicketDialog } from "../../features/build/tickets/global-create-ticket-dialog";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
@@ -52,14 +52,14 @@ export default async function DashboardLayout({
     <AppThemeProvider>
       <AppThemeScript nonce={nonce} />
       <HydrationBoundary state={state}>
-        <DashboardShell
+        <LayoutClient
           userId={session.user.id}
           defaultCollapsed={defaultCollapsed}
           shellVariant={shellVariant}
           createTicketDialog={<GlobalCreateTicketDialog />}
         >
           {children}
-        </DashboardShell>
+        </LayoutClient>
       </HydrationBoundary>
       <FeedbucketEmbed />
     </AppThemeProvider>

@@ -12,7 +12,7 @@ import {
   useDeleteDocument,
 } from "@/hooks/api/hr";
 import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
-import { CreateEnvelopeDialog } from "@/features/sign";
+import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
 import { useSession } from "next-auth/react";

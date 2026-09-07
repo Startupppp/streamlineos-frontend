@@ -17,7 +17,7 @@ const TiptapEditor = dynamic(
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import type { MeetingDetail } from "@/types/projects";
 
 interface MeetingNotesSectionProps {

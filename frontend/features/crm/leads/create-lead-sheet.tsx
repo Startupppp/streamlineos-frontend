@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
 import { useLeadLayout } from "./use-lead-layout";
 import { useCreateLead } from "@/hooks/api/leads";
 import { getErrorMessage } from "@/lib/get-error-message";

@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
-import { PmSection, PmPanel, PmStaggerList } from "@/features/build/shared/pm-chrome";
+import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome/pm-chrome";
 import { MyWorkRow } from "./command-center-rows";
 import { CreateIssueButton } from "./command-center-actions";
 import { PanelHeader } from "./panel-header";

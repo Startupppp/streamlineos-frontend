@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { projectPageHref } from "@/features/wiki/lib/knowledge-routes";
+import { projectPageHref } from "@/lib/knowledge-routes";
 import PageDocument from "./page-document";
 
 interface ProjectWikiPageDocumentProps {

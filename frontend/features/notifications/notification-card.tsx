@@ -15,7 +15,7 @@ import {
   type NotificationType,
   type NotificationCategory,
   type NotificationPriority,
-} from "./notification-types";
+} from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";

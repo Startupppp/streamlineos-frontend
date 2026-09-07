@@ -12,7 +12,7 @@ import { Bug as BugIcon } from "lucide-react";
 import { useUpdateTestResult } from "@/hooks/api/build/qa";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [

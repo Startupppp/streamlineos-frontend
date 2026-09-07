@@ -19,8 +19,8 @@ import {
   RecordList,
   type RecordFieldControl,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useProducts } from "@/hooks/api/crm/products";
 import {

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealList } from "@/features/crm/deals/deal-list";
 import { DealsFilterBar } from "@/features/crm/deals/deals-filter-bar";
-import { useDensity } from "@/features/renderer/density-toggle";
+import { useDensity } from "@/components/renderer/density-toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";

@@ -25,7 +25,7 @@ import {
   pmSnappy,
   pmSpring,
 } from "@/lib/motion-presets";
-import { PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome/pm-chrome";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";

@@ -1,6 +1,6 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PmPageShell, PmSection } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome/pm-chrome";
 
 export default function AutomationsLoading() {
   return (

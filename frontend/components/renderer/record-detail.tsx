@@ -5,9 +5,9 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { renderFieldValue, resolveField, type RecordValue } from "./format-value";
 
-export interface RecordDetailProps {
+export interface RecordDetailProps<T extends RecordValue = RecordValue> {
   layout: RecordLayout;
-  record: RecordValue;
+  record: T;
   className?: string;
   /** The tenant's currency, for `money` fields. See `RecordListProps.money`. */
   money?: MoneyDisplay;
@@ -29,13 +29,13 @@ export interface RecordDetailProps {
  * cares about different things sees a different arrangement without a screen
  * being written for them.
  */
-export function RecordDetail({
+export function RecordDetail<T extends RecordValue = RecordValue>({
   layout,
   record,
   className,
   money = DEFAULT_MONEY_DISPLAY,
   showTitle = true,
-}: RecordDetailProps) {
+}: RecordDetailProps<T>) {
   const titleField = resolveField(layout, layout.titleField);
   const title = renderFieldValue(
     titleField,

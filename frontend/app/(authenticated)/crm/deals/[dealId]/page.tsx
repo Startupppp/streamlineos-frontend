@@ -31,7 +31,7 @@ import {
 } from "@/hooks/api/crm";
 import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { RecordDetail, asRecordValue } from "@/features/renderer";
+import { RecordDetail, asRecordValue } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";

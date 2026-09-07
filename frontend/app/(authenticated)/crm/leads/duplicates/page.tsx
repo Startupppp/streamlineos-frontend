@@ -13,7 +13,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/hooks/api/crm/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { statusToneClasses } from "@/lib/design-tokens";

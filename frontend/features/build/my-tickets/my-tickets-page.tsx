@@ -17,7 +17,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { cn } from "@/lib/utils";
 import { mapBoardTicketToKanban } from "./map-board-ticket";
 import { MY_TICKETS_VIEWS, parseMyTicketsView } from "./my-tickets-view";

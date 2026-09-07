@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useCreateKbPage } from "@/hooks/api/kb";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";

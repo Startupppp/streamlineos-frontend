@@ -25,7 +25,7 @@ import {
   getMobileModuleContentPaddingClassName,
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
-import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
+import { isPortalChromelessPath, type ModuleAccent } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { ShellVariantProvider } from "./shell-variant-context";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
@@ -49,15 +49,6 @@ const WelcomeToast = dynamic(
   { ssr: false },
 );
 
-import { ChatMobileBottomNav as ChatMobileBottomNavSync } from "@/features/chat/chat-mobile-bottom-nav";
-
-const ChatMobileBottomNavLazy = dynamic(
-  () =>
-    import("@/features/chat/chat-mobile-bottom-nav").then(
-      (m) => m.ChatMobileBottomNav,
-    ),
-  { ssr: false },
-);
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
 const SIDEBAR_COLLAPSED_W = "3.5rem";
@@ -67,18 +58,22 @@ function setSidebarCookie(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
+interface ProjectNavTreeSlotProps {
+  projectId: string;
+  collapsed: boolean;
+  accent: ModuleAccent;
+  onNavigate: () => void;
+}
+
 interface DashboardShellProps {
   userId: string;
   defaultCollapsed: boolean;
-  /**
-   * Determined server-side from `Sec-CH-UA-Mobile` / User-Agent.
-   * Defaults to "desktop" so the shell remains unchanged when not provided.
-   * A desktop browser resized narrow still gets "desktop" (CSS breakpoints
-   * handle the visual layout for that case).
-   */
   shellVariant?: ShellVariant;
   children: React.ReactNode;
   createTicketDialog?: React.ReactNode;
+  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
+  notificationBellSlot?: React.ReactNode;
+  chatMobileNavSlot?: (onOpenMobileMenu: () => void) => React.ReactNode;
 }
 
 export function DashboardShell({
@@ -87,6 +82,9 @@ export function DashboardShell({
   shellVariant = "desktop",
   children,
   createTicketDialog,
+  projectNavTreeSlot,
+  notificationBellSlot,
+  chatMobileNavSlot,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const route = pathname ?? "";
@@ -251,6 +249,7 @@ export function DashboardShell({
               mobileNavOpen={mobileMenuOpen}
               hideAdminChrome={isPortalRoute}
               shellVariant={shellVariant}
+              notificationBellSlot={notificationBellSlot}
             />
 
             <ShellOfflineBanner />
@@ -262,7 +261,7 @@ export function DashboardShell({
                   style={{ width: sidebarW }}
                   className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
                 >
-                  <AppSidebar isCollapsed={isSidebarCollapsed} />
+                  <AppSidebar isCollapsed={isSidebarCollapsed} projectNavTreeSlot={projectNavTreeSlot} />
                 </aside>
               )}
 
@@ -306,6 +305,7 @@ export function DashboardShell({
                   isMobile
                   onNavigate={handleCloseMobileMenu}
                   onRequestProductSwitcher={handleRequestProductSwitcher}
+                  projectNavTreeSlot={projectNavTreeSlot}
                 />
               </DrawerContent>
             </Drawer>
@@ -320,12 +320,7 @@ export function DashboardShell({
           )}
 
           <MobileModuleBottomNav />
-          {isChatRoute && shellVariant === "mobile" && (
-            <ChatMobileBottomNavSync onOpenMobileMenu={handleOpenMobileMenu} />
-          )}
-          {isChatRoute && shellVariant !== "mobile" && (
-            <ChatMobileBottomNavLazy onOpenMobileMenu={handleOpenMobileMenu} />
-          )}
+          {isChatRoute && chatMobileNavSlot?.(handleOpenMobileMenu)}
           {!(isChatRoute && isChatConversationOpen) && (
             <MobileShellFab
               onOpenMobileMenu={handleOpenMobileMenu}

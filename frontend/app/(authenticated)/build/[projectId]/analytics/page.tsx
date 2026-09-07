@@ -25,7 +25,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 export default function AnalyticsPage({

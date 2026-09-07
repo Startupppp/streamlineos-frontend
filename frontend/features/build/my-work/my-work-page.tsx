@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmSection } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome/pm-chrome";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ViewSwitcher } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";

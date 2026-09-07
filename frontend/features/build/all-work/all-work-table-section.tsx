@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL_SOLID } from "@/components/pm-chrome/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";

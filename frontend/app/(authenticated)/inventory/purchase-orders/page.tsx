@@ -47,7 +47,7 @@ import {
 import {
   useListFilterParams,
   type ListFilterSpec,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 
 const STATUS_OPTIONS = [

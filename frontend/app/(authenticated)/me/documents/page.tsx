@@ -1,4 +1,4 @@
-import { MyDocumentsPage } from "@/features/employee-self-service";
+import { MyDocumentsPage } from "@/features/hr/document-review/my-documents-page";
 import { requireSession } from "@/lib/rbac/require-permission";
 
 export default async function EmployeeDocumentsPage() {

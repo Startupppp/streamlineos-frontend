@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell } from "@/features/build/shared/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome/pm-chrome";
 
 export function SprintsPageSkeleton() {
   return (

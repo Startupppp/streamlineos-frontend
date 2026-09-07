@@ -10,7 +10,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
 import { useSaveSnapshot } from "@/hooks/api/ai-summaries";
-import { StandardSummaryCard } from "@/features/ai-summaries";
+import { StandardSummaryCard } from "@/features/build/ai-summaries";
 import { EvidenceStrip } from "./evidence-strip";
 
 interface SummaryCardProps {

@@ -30,7 +30,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import {
   TEXT_ONE_LINE,
   TEXT_BODY,

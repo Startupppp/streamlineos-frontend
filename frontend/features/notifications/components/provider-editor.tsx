@@ -66,7 +66,7 @@ import {
   useTestNotificationProvider,
 } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
-import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,

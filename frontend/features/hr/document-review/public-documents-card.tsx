@@ -27,8 +27,7 @@ import {
   viewProtectedFile,
 } from "@/hooks/common/use-file-url";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useCan } from "@/hooks/api/access";
-import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   useHrDocumentStats,
   useMissingOnboardingDocsCount,
@@ -44,7 +43,7 @@ const UploadDocSheet = dynamic(
 import {
   useMyPendingDocuments,
   type PendingDocumentReason,
-} from "@/features/dashboard/use-my-pending-documents";
+} from "./use-my-pending-documents";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";
@@ -246,7 +245,8 @@ function MyPendingUploadsSection() {
 export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const canViewDocStats = useCan("hr:documents:view");
   const canViewSignEnvelopes = useCan("sign:envelope:view");
-  const { signEnabled, canViewOnboardingDocsSummary } = useDashboardAccess();
+  const signEnabled = useModuleEnabled("SIGN");
+  const canViewOnboardingDocsSummary = useCan("hr:onboarding:manage");
   const { data: documents, isLoading, error: documentsError, refetch: refetchDocuments } = usePublicDocuments(6, canViewDocStats);
 
   const { data: docStats } = useHrDocumentStats({ enabled: canViewDocStats });

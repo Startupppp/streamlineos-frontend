@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { RecordList } from "@/features/renderer";
+import { RecordList } from "@/components/renderer";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";

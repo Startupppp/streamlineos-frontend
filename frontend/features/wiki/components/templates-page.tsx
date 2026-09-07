@@ -25,7 +25,7 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import {
   STARTER_TEMPLATES,
   deriveContentText,

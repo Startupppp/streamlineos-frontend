@@ -10,7 +10,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import {

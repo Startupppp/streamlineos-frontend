@@ -18,7 +18,7 @@ import {
 import {
   NOTIFICATION_CATEGORY_CONFIG,
   type NotificationCategory,
-} from "./notification-types";
+} from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Notification } from "@/types/notifications";

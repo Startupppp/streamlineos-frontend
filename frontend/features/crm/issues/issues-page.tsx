@@ -21,8 +21,8 @@ import {
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { RecordList } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { RecordList } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useCan } from "@/hooks/api/access";
 import { useIssueRecordTypes, useIssues } from "@/hooks/api/crm/issues";
 import { cn } from "@/lib/utils";

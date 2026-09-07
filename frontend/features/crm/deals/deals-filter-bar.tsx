@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { DensityToggle } from "@/features/renderer/density-toggle";
+import { DensityToggle } from "@/components/renderer/density-toggle";
 import type { DensityMode } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 

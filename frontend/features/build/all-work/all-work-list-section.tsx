@@ -4,7 +4,7 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ListView } from "@/features/build/views/list-view";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";

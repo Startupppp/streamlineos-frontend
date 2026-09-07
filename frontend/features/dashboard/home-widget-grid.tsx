@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -24,13 +24,6 @@ const PayrollWidget = dynamic(
   () =>
     import("@/features/dashboard/payroll-widget").then((m) => ({
       default: m.PayrollWidget,
-    })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
-);
-const ExpensesWidget = dynamic(
-  () =>
-    import("@/features/dashboard/expenses-widget").then((m) => ({
-      default: m.ExpensesWidget,
     })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
@@ -82,6 +75,7 @@ export interface HomeWidgetGridProps {
   hrEnabled: boolean;
   canViewExecutive: boolean;
   canSelfAttendance: boolean;
+  expensesSlot?: ReactNode;
 }
 
 export function HomeWidgetGrid({
@@ -89,6 +83,7 @@ export function HomeWidgetGrid({
   hrEnabled,
   canViewExecutive,
   canSelfAttendance,
+  expensesSlot,
 }: HomeWidgetGridProps) {
   const { fadeUp } = useMotionVariants();
 
@@ -144,9 +139,9 @@ export function HomeWidgetGrid({
           <PayrollWidget />
         </HomeSectionBoundary>
       ) : null}
-      {batch2Ready ? (
+      {batch2Ready && expensesSlot ? (
         <HomeSectionBoundary sectionLabel="Expenses">
-          <ExpensesWidget />
+          {expensesSlot}
         </HomeSectionBoundary>
       ) : null}
     </motion.div>

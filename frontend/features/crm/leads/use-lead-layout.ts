@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import { LEAD_LAYOUT, withLeadOptions } from "@/lib/renderer/crm/lead-layout";
 import type { RecordLayout } from "@/lib/renderer/layout";

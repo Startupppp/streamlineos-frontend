@@ -36,8 +36,8 @@ import { AccountTimeline } from "@/features/crm/companies/detail/account-timelin
 import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
 import { CompanySheet } from "@/features/crm/companies/company-sheet";
-import { RecordDetail, RecordList, asRecordValue, asRecordValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordDetail, RecordList, asRecordValue, asRecordValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";

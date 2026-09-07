@@ -18,7 +18,7 @@ import {
   useRecordKbPageVisit,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import PageCover from "./page-cover";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";

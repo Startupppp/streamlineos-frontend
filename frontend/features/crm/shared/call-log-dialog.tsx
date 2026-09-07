@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/shared/app-dialog";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   CALL_DIRECTION_LABELS,
   CALL_LOG_LAYOUT,

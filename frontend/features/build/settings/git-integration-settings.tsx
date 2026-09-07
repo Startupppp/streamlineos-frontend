@@ -59,7 +59,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
 import { SetupInstructions } from "./git-setup-instructions";

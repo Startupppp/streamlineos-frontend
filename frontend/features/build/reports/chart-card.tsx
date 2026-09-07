@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Gauge } from "lucide-react";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome/pm-chrome";
 import { formatNumber } from "@/lib/format-utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";

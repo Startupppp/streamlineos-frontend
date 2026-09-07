@@ -16,8 +16,8 @@ import {
   renderFieldValue,
   resolveField,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   CONTACT_ROLE_LAYOUT,
   packEntityRef,

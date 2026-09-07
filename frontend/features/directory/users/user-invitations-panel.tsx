@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { UserInviteDialog } from "@/features/users/user-invite-dialog";
+import { UserInviteDialog } from "@/features/directory/users/user-invite-dialog";
 import {
   useInvitations,
   useResendInvite,

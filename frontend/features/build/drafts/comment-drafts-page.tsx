@@ -28,7 +28,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { CommentDraftRow } from "./comment-draft-row";
 
 function DraftsLoadingSkeleton() {

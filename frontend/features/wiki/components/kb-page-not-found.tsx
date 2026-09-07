@@ -10,7 +10,7 @@ import {
   KB_SPACES,
   KB_TRASH,
   KNOWLEDGE_BASE,
-} from "@/features/wiki/lib/knowledge-routes";
+} from "@/lib/knowledge-routes";
 
 interface KbPageNotFoundProps {
   error: unknown;

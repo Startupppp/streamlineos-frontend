@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type { RecordLayout } from "@/lib/renderer/layout";
 import { DEAL_LAYOUT, withDealStages } from "@/lib/renderer/crm/deal-layout";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 
 /**

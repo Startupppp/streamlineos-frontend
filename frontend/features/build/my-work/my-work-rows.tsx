@@ -17,7 +17,7 @@ import type { MyWorkItem } from "@/types/projects/my-work";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
-import { PmPanel, PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PmPanel, PM_ROW } from "@/components/pm-chrome/pm-chrome";
 import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,

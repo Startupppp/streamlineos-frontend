@@ -1,4 +1,4 @@
-import { ProjectChatPage } from "@/features/build/project-detail/project-chat-page";
+import { BuildProjectChatPage } from "@/features/chat/build-project-chat-page";
 
 export default async function Page({
   params,
@@ -6,5 +6,5 @@ export default async function Page({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  return <ProjectChatPage projectId={projectId} />;
+  return <BuildProjectChatPage projectId={projectId} />;
 }

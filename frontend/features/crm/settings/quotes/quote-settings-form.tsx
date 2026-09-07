@@ -1,8 +1,8 @@
 "use client";
 
 import { toast } from "sonner";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useUpdateQuoteSettings } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QUOTE_SETTINGS_LAYOUT } from "@/lib/renderer/crm/settings/quote-template-layout";

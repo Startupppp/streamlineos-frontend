@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome/pm-chrome";
 import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import type { CrmOrganization } from "@/types/crm";
 import type { CustomerDisplayPrefs } from "./use-customer-display-prefs";

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NOTIFICATION_CATEGORY_VALUES } from "./notification-types";
+import { NOTIFICATION_CATEGORY_VALUES } from "@/lib/notification-types";
 
 export const broadcastSchema = z.object({
   title: z.string().min(1, "Title is required"),

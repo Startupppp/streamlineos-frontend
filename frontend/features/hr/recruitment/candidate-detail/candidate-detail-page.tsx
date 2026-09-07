@@ -30,7 +30,7 @@ import { useCandidateAiActions } from "@/features/hr/recruitment/candidate-detai
 import {
   ScheduleInterviewSheet,
   ApplyToJobSheet,
-} from "@/features/candidates/candidate-sheets";
+} from "@/features/hr/recruitment/candidates/candidate-sheets";
 import { useCan } from "@/hooks/api/access";
 import { AiActionsMenu } from "@/components/ai";
 

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
 import { subjectLayout, subjectRecord, type RenderableSubject } from "@/lib/renderer/subject-layout";
 import { useCreateSubject, useUpdateSubject } from "@/hooks/api/party/subjects";
 import { getErrorMessage } from "@/lib/get-error-message";

@@ -27,7 +27,7 @@ import {
   useUploadKbSource,
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";

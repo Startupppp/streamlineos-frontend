@@ -3,18 +3,19 @@
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { useEntityChannel } from "@/hooks/api/chat";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { PmPageShell, PmPanel } from "@/features/build/shared/pm-chrome";
-import { ChatAblyProvider } from "@/features/chat/ably-provider";
-import { MessagePanel } from "@/features/chat/message-panel";
-import { ChannelInfoPanel } from "@/features/chat/channel-info-panel";
-import { useIsChatMobile } from "@/features/chat/use-chat-mobile";
+import { ChatAblyProvider } from "./ably-provider";
+import { MessagePanel } from "./message-panel";
+import { ChannelInfoPanel } from "./channel-info-panel";
+import { useIsChatMobile } from "./use-chat-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome/pm-chrome";
 
 interface ProjectChatPageProps {
   projectId: string;
@@ -22,7 +23,7 @@ interface ProjectChatPageProps {
 
 const noop = () => {};
 
-export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
+export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
   const { data: channel, error, isLoading, refetch } = useEntityChannel(
@@ -87,7 +88,7 @@ export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
   return (
     <PageWrapper noInternalScroll>
       <PmPageShell withGlow={false}>
-        <PmPanel className="flex flex-1 min-h-0 overflow-hidden p-0" solid>
+        <div className={cn(PM_PANEL_SOLID, "overflow-hidden flex flex-1 min-h-0 overflow-hidden p-0")}>
           <ChatAblyProvider>
             <div className="flex min-h-0 min-w-0 flex-1">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -133,7 +134,7 @@ export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
               )}
             </div>
           </ChatAblyProvider>
-        </PmPanel>
+        </div>
       </PmPageShell>
     </PageWrapper>
   );

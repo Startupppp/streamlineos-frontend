@@ -23,27 +23,30 @@ import {
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 
-const ProjectNavTree = dynamic(
-  () =>
-    import("@/features/build/sidebar/project-nav-tree").then(
-      (m) => m.ProjectNavTree,
-    ),
-  { ssr: false },
-);
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+
+interface ProjectNavTreeSlotProps {
+  projectId: string;
+  collapsed: boolean;
+  accent: ModuleAccent;
+  onNavigate: () => void;
+}
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
   isMobile?: boolean;
+  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
 }
 
 interface SidebarSkeletonProps {
   isCollapsed: boolean;
   isMobile: boolean;
 }
+
+const noop = () => {};
 
 function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
   const effectiveCollapsed = isMobile ? false : isCollapsed;
@@ -84,6 +87,7 @@ export function AppSidebar({
   onNavigate,
   onRequestProductSwitcher,
   isMobile = false,
+  projectNavTreeSlot,
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess({
@@ -250,14 +254,15 @@ export function AppSidebar({
                   />
                   {activeProduct === "build" &&
                   activeProjectId &&
-                  group.label === "Build" ? (
-                    <ProjectNavTree
-                      projectId={activeProjectId}
-                      collapsed={effectiveCollapsed}
-                      accent={accent}
-                      onNavigate={onNavigate}
-                    />
-                  ) : null}
+                  group.label === "Build" &&
+                  projectNavTreeSlot
+                    ? projectNavTreeSlot({
+                        projectId: activeProjectId,
+                        collapsed: effectiveCollapsed,
+                        accent,
+                        onNavigate: onNavigate ?? noop,
+                      })
+                    : null}
                 </Fragment>
               );
             })}

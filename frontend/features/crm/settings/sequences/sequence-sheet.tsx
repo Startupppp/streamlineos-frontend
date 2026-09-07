@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
-import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   useCreateCrmSequence,
   useCreateCrmSequenceStep,

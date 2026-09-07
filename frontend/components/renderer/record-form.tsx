@@ -47,9 +47,9 @@ export interface RecordFieldControl {
   disabled?: boolean;
 }
 
-export interface RecordFormProps {
+export interface RecordFormProps<T extends Record<string, unknown> = Record<string, unknown>> {
   layout: RecordLayout;
-  initial?: Record<string, unknown>;
+  initial?: T;
   /**
    * The submit event is forwarded as it always was, so a caller that needs to
    * stop propagation still can. The values it receives are the ones the record
@@ -109,7 +109,7 @@ function controlType(kind: FieldSpec["kind"]): string {
  * than bespoke inputs — there is one Input, one Select, one FormMessage, and a
  * generated form has no more licence to fork them than a hand-written one.
  */
-export function RecordForm({
+export function RecordForm<T extends Record<string, unknown> = Record<string, unknown>>({
   layout,
   initial,
   onSubmit,
@@ -119,7 +119,7 @@ export function RecordForm({
   className,
   mode = "edit",
   controls,
-}: RecordFormProps) {
+}: RecordFormProps<T>) {
   const schema = useMemo(() => schemaForLayout(layout, mode, initial), [layout, mode, initial]);
   const fields = useMemo(() => formFields(layout, mode), [layout, mode]);
 

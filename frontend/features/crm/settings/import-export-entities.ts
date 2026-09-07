@@ -1,5 +1,5 @@
 import { Users, Handshake, Contact2, Building2 } from "lucide-react";
-import type { ImportEntity } from "@/features/shared/import-export/entity-card";
+import type { ImportEntity } from "@/components/import-export/entity-card";
 
 /**
  * Settings-page export cards. Importing lives at `/crm/import`, which speaks the

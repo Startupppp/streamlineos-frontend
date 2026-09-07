@@ -1,7 +1,7 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { PmPageShell, PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 
 export default function IntegrationsLoading() {
   return (

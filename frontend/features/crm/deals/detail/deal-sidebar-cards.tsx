@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
+import { ActivityTimeline } from "@/components/timeline/activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import { DealAiInsightsCard } from "./deal-ai-insights-card";
 import { DealHealthChip } from "./deal-health-chip";

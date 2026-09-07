@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

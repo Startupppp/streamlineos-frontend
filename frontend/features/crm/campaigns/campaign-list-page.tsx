@@ -22,9 +22,9 @@ import {
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
-import { RecordList, asRecordValues } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
 import { useCan } from "@/hooks/api/access";

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { spaceHref } from "@/features/wiki/lib/knowledge-routes";
+import { spaceHref } from "@/lib/knowledge-routes";
 import {
   KbPencilIcon,
   KbTrash2Icon,

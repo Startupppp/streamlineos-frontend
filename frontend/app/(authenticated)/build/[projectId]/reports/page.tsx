@@ -8,7 +8,7 @@ import { CfdSection } from "@/features/build/reports/cfd-section";
 import { CriticalPathSection } from "@/features/build/reports/critical-path-section";
 import { CycleTimeSection } from "@/features/build/reports/cycle-time-section";
 import { LeadTimeSection } from "@/features/build/reports/lead-time-section";
-import { PmPageShell, PmSection } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome/pm-chrome";
 
 export default function ProjectReportsPage({
   params,

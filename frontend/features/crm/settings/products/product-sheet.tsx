@@ -9,8 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { RecordForm, asRecordValue, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, asRecordValue, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/crm/products";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PRODUCT_LAYOUT } from "@/lib/renderer/crm/settings/product-layout";

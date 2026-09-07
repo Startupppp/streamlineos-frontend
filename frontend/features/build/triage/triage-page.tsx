@@ -13,7 +13,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
 

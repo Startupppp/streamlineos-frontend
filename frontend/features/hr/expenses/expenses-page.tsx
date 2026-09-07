@@ -27,7 +27,7 @@ import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
   type StatusFilter,
-} from "@/features/hr/expenses/expense-constants";
+} from "@/lib/expense-constants";
 import { AdminExpenseStats } from "@/features/hr/expenses/expense-stats";
 import {
   AdminExpenseFilters,

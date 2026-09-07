@@ -31,7 +31,7 @@ import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import PublicPageContent from "./public-page-content";
 import { computeVersionDiff } from "@/features/wiki/lib/version-diff";
-import { pageHref, KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
 interface DiffSummaryProps {

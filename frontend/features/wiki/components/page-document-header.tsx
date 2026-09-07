@@ -31,7 +31,7 @@ import MovePageDialog from "./move-page-dialog";
 import PageMetadataSheet from "./page-metadata-sheet";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
-import { KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 
 interface PageDocumentHeaderProps {
   page: KbPageDetail;

@@ -33,33 +33,20 @@ import { fileURLToPath } from "node:url";
 
 const REAL_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-// 19 -> 3 on 2026-09-03. These 16 were FIXED, not re-counted: nine modules moved
-// to the tree that actually owns them, and the command palette's Build create-ticket
-// dialog became a slot the app layout fills. The three that remain are lazy feature
-// widgets the shell composes -- the notification bell, the chat mobile bottom nav and
-// the Build project nav tree -- each of which needs runtime values the shell owns, so
-// a ReactNode slot alone does not invert them. See reports/35c-import-direction.md.
-const BASELINE_SHARED_IMPORTS_FEATURE = 3;
-// 194, re-measured 2026-09-02 immediately after test files left the corpus
-// (222 with them, 194 without). NOT 210 — see the header.
-// Tightened 194 -> 182 on 2026-09-03. These 12 were NOT fixed: deduplicating
-// violation edges (see dedupeEdges) stopped counting repeated references to the
-// same module as separate violations. The baseline is lowered to the measured
-// value anyway, because leaving it at 194 would leave 12 slots of slack for a
-// real future regression to hide in -- which is the one thing a ratchet exists
-// to prevent.
-// Tightened 182 -> 177 on 2026-09-03. Five of these were fixed by the same moves:
-// user-invite-roles left features/users for lib/constants (3 edges), the command
-// palette left features/ for components/ (1), and the chat mobile chrome geometry
-// left features/chat for components/layout/mobile (1).
-// Tightened 177 -> 169 on 2026-09-04. All eight were real edges removed, not a
-// corpus change: the two FEATURE-level dependency cycles PRD-C024 names were cut
-// by promoting the leaf each pair shared to components/shared —
-// features/build/shared/{status-badge,format-ticket-key} (7 edges out of
-// features/chat) and features/hr/hr-sheet (1 edge out of features/candidates).
-// `check:feature-cycles`, added in the same change, is what keeps them cut;
-// `check:cycles` cannot see a feature-level loop because madge measures files.
-const BASELINE_CROSS_FEATURE = 169;
+// 19 -> 3 -> 0 on 2026-09-07. The final 3 (notification bell, chat mobile bottom nav,
+// Build project nav tree) were fixed using render-prop slots threaded through
+// layout-client.tsx (app layer) so the shell never imports features directly.
+const BASELINE_SHARED_IMPORTS_FEATURE = 0;
+// 169 -> 0 on 2026-09-07. All remaining violations fixed by:
+// renderer/list-view/import-export/timeline/approval-actions -> components/;
+// notification-types/expense-constants/knowledge-routes/format-relative-time -> lib/;
+// candidates -> hr/recruitment/candidates; users -> directory/users;
+// ai-summaries -> build/ai-summaries; ai-drafts -> crm/ai-drafts;
+// inbox -> notifications/unified-inbox; legal-shell -> landing;
+// payment-providers-page -> payments; ESS pages -> owning HR features;
+// dashboard widgets threaded as ReactNode slots; project-chat-page -> chat;
+// useDashboardAccess cross-feature calls replaced with useCan+useModuleEnabled.
+const BASELINE_CROSS_FEATURE = 0;
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
@@ -244,6 +231,9 @@ if (args.includes("--self-test")) {
   // modules is still two violations; only repeated references to the SAME module
   // collapse, which is exactly the granularity the rule is about.
   const violations = dedupeEdges(scanViolations(REAL_ROOT));
+  if (args.includes("--list")) {
+    for (const v of violations) console.log(`${v.rule}	${v.file}	${v.specifier}`);
+  }
   const sharedCount = violations.filter((v) => v.rule === "shared-imports-feature").length;
   const crossCount = violations.filter((v) => v.rule === "cross-feature-import").length;
 

@@ -12,11 +12,10 @@ import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import type { ReactNode } from "react";
-import type { RecordValue } from "@/features/renderer/format-value";
 
 const RecordList = dynamic(
   () =>
-    import("@/features/renderer/record-list").then((m) => ({
+    import("@/components/renderer/record-list").then((m) => ({
       default: m.RecordList,
     })),
   {
@@ -26,7 +25,7 @@ const RecordList = dynamic(
     ),
   },
 );
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -163,7 +162,7 @@ export function PartiesPage() {
   );
 
   const handleRowClick = useCallback(
-    (row: RecordValue) => setOpenPartyId(String(row.partyId)),
+    (row: BusinessParty) => setOpenPartyId(row.partyId),
     [setOpenPartyId],
   );
 
@@ -237,10 +236,10 @@ export function PartiesPage() {
   }
 
   const renderRowActions = useCallback(
-    (row: RecordValue): ReactNode =>
+    (row: BusinessParty): ReactNode =>
       canManageRow ? (
         <PartyRowActions
-          party={row as unknown as BusinessParty}
+          party={row}
           canEdit={canUpdate}
           canDelete={canDelete}
           onEdit={handleEditRow}
@@ -349,9 +348,9 @@ export function PartiesPage() {
             <>
               <RecordList
                 layout={PARTY_LAYOUT}
-                rows={rows as unknown as RecordValue[]}
+                rows={rows}
                 actions={renderRowActions}
-                getRowKey={(row) => String(row.partyId)}
+                getRowKey={(row) => row.partyId}
                 onRowClick={handleRowClick}
                 density={density}
                 minWidth="720px"

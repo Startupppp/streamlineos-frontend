@@ -21,9 +21,9 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { type RecordValue } from "@/features/renderer";
-import { useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { type RecordValue } from "@/components/renderer";
+import { useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { TASK_LAYOUT, taskRecordFields } from "@/lib/renderer/crm/task-layout";
 import {
   useTasks,
@@ -37,7 +37,7 @@ import {
   type TasksFilters,
 } from "@/hooks/api/tasks";
 import { useCalendarMemberLookup } from "@/hooks/api/calendar";
-import { MyTasksPanel } from "@/features/crm/timeline/my-tasks-panel";
+import { MyTasksPanel } from "@/components/timeline/my-tasks-panel";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { TasksToolbar } from "@/features/crm/tasks/tasks-toolbar";

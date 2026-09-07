@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
-import { PM_PANEL, PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL, PM_PANEL_SOLID } from "@/components/pm-chrome/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 

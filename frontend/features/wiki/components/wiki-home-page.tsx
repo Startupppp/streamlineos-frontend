@@ -23,7 +23,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMotionVariants } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
-import { pageHref, projectPageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import {
   KbClockIcon,
   KbFileTextIcon,

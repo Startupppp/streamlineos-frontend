@@ -1,7 +1,7 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { PmPageShell, PmSection, PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 

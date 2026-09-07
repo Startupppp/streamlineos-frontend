@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { NotificationCard } from "@/features/notifications/notification-card";
-import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import type {
   UnifiedInboxItem,
   MailInboxItem,

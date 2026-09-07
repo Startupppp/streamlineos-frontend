@@ -26,9 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useCan } from "@/hooks/api/access";

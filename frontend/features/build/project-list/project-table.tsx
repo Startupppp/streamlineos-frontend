@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome/pm-chrome";
 import { useCan } from "@/hooks/api/access";
 import type { ProjectListItem } from "@/types/projects/projects";
 import type { DisplayPrefs } from "./use-display-prefs";

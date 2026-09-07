@@ -1,6 +1,6 @@
 "use client";
 
-import { PmSection, PmStaggerList } from "@/features/build/shared/pm-chrome";
+import { PmSection, PmStaggerList } from "@/components/pm-chrome/pm-chrome";
 import { SprintCard } from "@/features/build/sprints/sprint-card";
 import { VelocityChart } from "@/features/build/sprints/velocity-chart";
 import type { Sprint } from "@/types/projects";

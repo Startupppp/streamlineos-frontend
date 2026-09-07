@@ -12,7 +12,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
-import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
+import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 
 function formatEventType(eventType: string): string {
   return eventType.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ProjectListItem } from "@/types/projects";
-import { PmSection, PmPanel, PmStaggerList } from "@/features/build/shared/pm-chrome";
+import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome/pm-chrome";
 import { ProjectCard } from "./command-center-rows";
 import { PanelHeader } from "./panel-header";
 import {

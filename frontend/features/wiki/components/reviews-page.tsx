@@ -38,7 +38,7 @@ import type {
   KbReviewStatus,
   KbReviewType,
 } from "@/hooks/api/kb/page-reviews";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
 import {
   KbClipboardCheckIcon,

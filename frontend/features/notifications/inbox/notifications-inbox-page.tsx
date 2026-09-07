@@ -26,7 +26,7 @@ import type {
   NotificationSection,
   NotificationCategory,
   NotificationPriority,
-} from "@/features/notifications/notification-types";
+} from "@/lib/notification-types";
 
 export function NotificationsInboxPage() {
   const [activeSection, setActiveSection] = useState<NotificationSection>("ALL");

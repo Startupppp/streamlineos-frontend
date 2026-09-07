@@ -10,7 +10,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useLeadBoard, useLeadStats, useUpdateLeadStatus, useLeads } from "@/hooks/api/leads";
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";

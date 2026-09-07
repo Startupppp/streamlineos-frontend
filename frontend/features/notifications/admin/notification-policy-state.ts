@@ -1,4 +1,4 @@
-import { NOTIFICATION_CATEGORIES } from "@/features/notifications/notification-types";
+import { NOTIFICATION_CATEGORIES } from "@/lib/notification-types";
 import type {
   NotificationCategory,
   NotificationChannel,

@@ -6,7 +6,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { GoalDetail } from "@/hooks/api/goals";
-import { PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 

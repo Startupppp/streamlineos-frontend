@@ -28,7 +28,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { getUserDisplayName } from "@/lib/person-display";
 

@@ -29,7 +29,7 @@ import {
   type NotificationSection,
   type NotificationCategory,
   type NotificationPriority,
-} from "@/features/notifications/notification-types";
+} from "@/lib/notification-types";
 import { cn } from "@/lib/utils";
 
 interface NotificationFilterBarProps {

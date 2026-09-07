@@ -1,6 +1,6 @@
 ﻿import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 
 type SetupStep = {
   title: string;

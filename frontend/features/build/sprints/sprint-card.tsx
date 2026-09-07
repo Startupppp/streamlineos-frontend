@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { EditSprintDialog } from "@/features/build/sprints/edit-sprint-dialog";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface SprintData {

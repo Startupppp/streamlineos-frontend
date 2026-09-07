@@ -1,4 +1,4 @@
-import type { RecordFormValues } from "@/features/renderer";
+import type { RecordFormValues } from "@/components/renderer";
 
 /**
  * Reading a generated form's values back out as an API payload.

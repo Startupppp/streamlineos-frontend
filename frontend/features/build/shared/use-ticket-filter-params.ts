@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useListFilterParams, type ListFilterSpec } from "@/features/shared/list-view";
+import { useListFilterParams, type ListFilterSpec } from "@/components/list-view";
 
 /**
  * Build's declaration, and the first caller of the shared list-filter hook. The

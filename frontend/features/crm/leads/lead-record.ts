@@ -1,4 +1,4 @@
-import { asRecordValue, asRecordValues, type RecordValue } from "@/features/renderer/format-value";
+import { asRecordValue, asRecordValues, type RecordValue } from "@/components/renderer/format-value";
 import type { Lead } from "@/types/leads";
 
 /**

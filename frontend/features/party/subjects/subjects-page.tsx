@@ -6,7 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { useSubjectTypes, useSubjects } from "@/hooks/api/party/subjects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { RecordList, type RecordValue } from "@/features/renderer";
+import { RecordList, type RecordValue } from "@/components/renderer";
 import { subjectLayout, subjectRecord } from "@/lib/renderer/subject-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";

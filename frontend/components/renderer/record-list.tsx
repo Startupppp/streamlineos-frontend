@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import {
   DataTable,
   type DataTableColumn,
@@ -24,8 +24,8 @@ import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 const MOBILE_SYNC_LIMIT = 20;
 
-type BorrowedProps = Pick<
-  DataTableProps<RecordValue>,
+type BorrowedProps<T extends RecordValue = RecordValue> = Pick<
+  DataTableProps<T>,
   | "isLoading"
   | "emptyState"
   | "pagination"
@@ -42,16 +42,16 @@ type BorrowedProps = Pick<
   | "selection"
 >;
 
-export interface RecordListProps extends BorrowedProps {
+export interface RecordListProps<T extends RecordValue = RecordValue> extends BorrowedProps<T> {
   layout: RecordLayout;
-  rows: RecordValue[];
-  getRowKey: (row: RecordValue, index: number) => string;
+  rows: T[];
+  getRowKey: (row: T, index: number) => string;
   /**
    * A trailing column for per-row controls. Not part of the description because
    * what a row can do depends on the caller's permissions, which is a screen
    * concern rather than a shape one.
    */
-  actions?: (row: RecordValue) => ReactNode;
+  actions?: (row: T) => ReactNode;
   /**
    * A leading column for the one control a row is *about*.
    *
@@ -64,7 +64,7 @@ export interface RecordListProps extends BorrowedProps {
    * Not part of the description, for the same reason `actions` is not: what a
    * row can do depends on the caller's permissions.
    */
-  leading?: (row: RecordValue) => ReactNode;
+  leading?: (row: T) => ReactNode;
   /**
    * Set by the surface so the toggle can live in its toolbar. Omitted, the list
    * renders comfortable and shows no control — a screen with no room for one
@@ -83,23 +83,23 @@ export interface RecordListProps extends BorrowedProps {
   money?: MoneyDisplay;
 }
 
-interface MobileRecordCardProps {
-  row: RecordValue;
+interface MobileRecordCardProps<T extends RecordValue> {
+  row: T;
   layout: RecordLayout;
   money: MoneyDisplay;
-  leading: ((row: RecordValue) => ReactNode) | undefined;
-  actions: ((row: RecordValue) => ReactNode) | undefined;
-  onRowClick: ((row: RecordValue) => void) | undefined;
+  leading: ((row: T) => ReactNode) | undefined;
+  actions: ((row: T) => ReactNode) | undefined;
+  onRowClick: ((row: T) => void) | undefined;
 }
 
-const MobileRecordCard = memo(function MobileRecordCard({
+function MobileRecordCard<T extends RecordValue>({
   row,
   layout,
   money,
   leading,
   actions,
   onRowClick,
-}: MobileRecordCardProps) {
+}: MobileRecordCardProps<T>) {
   const primary =
     layout.list.columns.find((c) => c.primary) ?? layout.list.columns[0];
   const primaryField = resolveField(
@@ -166,9 +166,9 @@ const MobileRecordCard = memo(function MobileRecordCard({
       </div>
     </div>
   );
-});
+}
 
-export function RecordList({
+export function RecordList<T extends RecordValue = RecordValue>({
   layout,
   rows,
   getRowKey,
@@ -183,9 +183,9 @@ export function RecordList({
   className,
   density = "comfortable",
   money = DEFAULT_MONEY_DISPLAY,
-}: RecordListProps) {
+}: RecordListProps<T>) {
   const shellVariant = useShellVariant();
-  const columns = useMemo<DataTableColumn<RecordValue>[]>(
+  const columns = useMemo<DataTableColumn<T>[]>(
     () =>
       layout.list.columns.map((column) => {
         const field = resolveField(layout, column.field);
@@ -195,8 +195,6 @@ export function RecordList({
           key: column.field,
           header: field.label,
           sortable: column.sortable,
-          // Sorting compares the underlying value, never the formatted string:
-          // a localised date sorts alphabetically and lands in the wrong order.
           sortValue: column.sortable
             ? (row) => {
                 const value = row[column.field];
@@ -246,7 +244,7 @@ export function RecordList({
     [layout, money],
   );
 
-  const allColumns = useMemo<DataTableColumn<RecordValue>[]>(() => {
+  const allColumns = useMemo<DataTableColumn<T>[]>(() => {
     const withLeading = leading
       ? [
           { key: "leading", header: "", className: "w-10", cell: leading },
@@ -266,7 +264,7 @@ export function RecordList({
     layout.list.columns.find((column) => column.primary) ??
     layout.list.columns[0];
 
-  const mobileCard = (row: RecordValue): ReactNode => {
+  const mobileCard = (row: T): ReactNode => {
     const primaryField = resolveField(
       layout,
       primary?.field ?? layout.titleField,
@@ -320,7 +318,7 @@ export function RecordList({
         className={cn("flex min-w-0 flex-col gap-2 p-2", className)}
       >
         {visible.map((row, index) => (
-          <MobileRecordCard
+          <MobileRecordCard<T>
             key={getRowKey(row, index)}
             row={row}
             layout={layout}
@@ -348,11 +346,6 @@ export function RecordList({
         minWidth={minWidth}
         mobileCard={mobileCard}
         className={className}
-        /*
-          The row height comes from the density token rather than from the
-          table's own padding, which is what makes the toggle do anything at
-          all. `h-row-h` resolves to 3rem comfortable and 2.5rem compact.
-        */
         rowClassName={() => "h-row-h"}
       />
     </div>

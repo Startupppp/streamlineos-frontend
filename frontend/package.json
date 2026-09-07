@@ -57,6 +57,7 @@
     "check:route-bundle-budget:self-test": "node scripts/check-route-bundle-budget.mjs --self-test",
     "measure:web-vitals": "node scripts/measure-web-vitals.mjs",
     "measure:web-vitals:self-test": "node scripts/measure-web-vitals.mjs --self-test",
+    "profile:interaction": "node scripts/profile-interaction.mjs",
     "measure:route-bundles": "node scripts/measure-route-bundles.mjs",
     "measure:route-bundles:self-test": "node scripts/measure-route-bundles.mjs --self-test",
     "check:route-access-contract": "node scripts/check-route-access-contract.mjs",

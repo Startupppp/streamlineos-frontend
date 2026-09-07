@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   TurnstileWidget,
   isTurnstileEnabled,
-} from "@/features/security/turnstile-widget";
+} from "@/components/security/turnstile-widget";
 import { PublicFormField } from "./components/public-form-field";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 

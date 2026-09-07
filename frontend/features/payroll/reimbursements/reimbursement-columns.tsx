@@ -5,7 +5,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { formatShortDate } from "@/lib/date-utils";
-import { ApprovalActions } from "@/features/hr/shared/approval-actions";
+import { ApprovalActions } from "@/components/approval-actions/approval-actions";
 import type { Reimbursement } from "@/hooks/api/hr/reimbursements";
 import { ReimbursementStatusBadge } from "./reimbursement-status-badge";
 

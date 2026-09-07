@@ -1,11 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSession } from "next-auth/react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useMyOnboardingDocs, type MyOnboardingDoc } from "@/hooks/api/hr/documents";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
-import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 
 export type PendingDocumentReason = "NOT_SUBMITTED" | "RE_UPLOAD";
 
@@ -21,9 +19,8 @@ const NEEDS_REUPLOAD: ReadonlySet<MyOnboardingDoc["status"]> = new Set([
   "RE_UPLOAD_REQUESTED",
 ]);
 
-
 export function useMyPendingDocuments() {
-  const { hrEnabled } = useDashboardAccess();
+  const hrEnabled = useModuleEnabled("HR");
   const canUploadOwnDocs = useCan("self:onboarding-docs");
   const enabled = hrEnabled && canUploadOwnDocs;
 

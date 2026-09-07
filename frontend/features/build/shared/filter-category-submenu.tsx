@@ -22,7 +22,7 @@ import {
   PanelShell,
   EmptyHint,
   FilterDatesPanel,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 import {
   PRIORITIES,
   TYPES,
@@ -33,10 +33,10 @@ import {
   type Cycle,
   type Sprint,
   type ProjectOption,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 
-export type { StatusFilterOption } from "@/features/shared/list-view";
-export { StatusFilterDot } from "@/features/shared/list-view";
+export type { StatusFilterOption } from "@/components/list-view";
+export { StatusFilterDot } from "@/components/list-view";
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;

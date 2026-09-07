@@ -42,7 +42,7 @@ import {
 import { ProgramFormSheet } from "./program-form-sheet";
 import type { Program, CreateProgramInput, UpdateProgramInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";

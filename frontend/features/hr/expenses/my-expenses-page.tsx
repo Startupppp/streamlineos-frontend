@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/features/hr/expenses/expense-constants";
-import type { StatusFilter } from "@/features/hr/expenses/expense-constants";
+import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/lib/expense-constants";
+import type { StatusFilter } from "@/lib/expense-constants";
 import { MemberExpenseList } from "@/features/hr/expenses/expense-list";
 import { useExpensePageData } from "@/hooks/api/hr/expenses";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
