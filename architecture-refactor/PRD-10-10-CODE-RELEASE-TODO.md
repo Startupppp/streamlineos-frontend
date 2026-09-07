@@ -913,6 +913,20 @@ These decisions are final for this release and remove implementation alternative
       that reports zero from a regex matching nothing reads exactly like a clean repository. It covers
       **143** literal call sites and explicitly reports the **353** that forward a variable or spread as
       NOT covered.
+      **A companion enum-drift gate was attempted and ABANDONED, deliberately and without shipping it.**
+      The defect class is real and was found by hand this session: three surveys response schemas declared
+      `abandoned`/`expired`/`pending`, values the `pgEnum` does not contain, while omitting `invalid`,
+      `excluded`, `not_started`, `submitted`, `delivered`, `partial` and `disqualified`, which it does.
+      A static gate cannot see it soundly. The generated document inlines every response schema per
+      operation and names only 6 shared components, so there is no name to match a frontend contract to;
+      and matching a `z.enum` to a `pgEnum` by shared values is a heuristic, not a join - the loose version
+      written here reported **470 candidates**, mostly unrelated enums that coincide (an e-signature status
+      beside a survey participant status). **470 is a candidate count from a broken heuristic and is not
+      reported as a defect count.**
+      The class is not uncovered, though: `ResponseContractInterceptor` validates the real handler return
+      against its `@ResponseSchema` and THROWS under `NODE_ENV=test`, so a wrong enum value fails the
+      moment a route is exercised. The gap is therefore **e2e route coverage**, not a missing static gate,
+      and adding a noisy static scan would have reported a number over a set it cannot see.
       Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
       Owner: the repository owner.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-06.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-06.md).
