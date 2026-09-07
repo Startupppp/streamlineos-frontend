@@ -46,14 +46,26 @@ interface SummaryParams {
   includeExported?: boolean;
 }
 
+interface ExportHistoryQueryParams {
+  limit: number;
+  cursor?: string;
+}
+
+type SummaryQueryParams = {
+  start: string;
+  end: string;
+  userId?: string;
+  includeExported?: "true";
+};
+
 export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boolean) {
   const canView = useCan("timesheets:payroll:view");
-  const queryParams: Record<string, unknown> = {
+  const queryParams: SummaryQueryParams = {
     start: params.start,
     end: params.end,
+    userId: params.userId ? params.userId : undefined,
+    includeExported: params.includeExported ? "true" : undefined,
   };
-  if (params.userId) queryParams.userId = params.userId;
-  if (params.includeExported) queryParams.includeExported = "true";
 
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.payroll.summary(queryParams),
@@ -107,7 +119,7 @@ export function useTimesheetPayrollExports(limit = 20) {
   return useInfiniteQuery<ExportHistoryResponse>({
     queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exports(limit),
     queryFn: ({ pageParam , signal }) => {
-      const params: Record<string, unknown> = { limit };
+      const params: ExportHistoryQueryParams = { limit };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params, signal, exportListC);
     },

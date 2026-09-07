@@ -1,7 +1,7 @@
-export interface ReportRangeParams {
+export type ReportRangeParams = {
   startDate?: string;
   endDate?: string;
-}
+};
 
 export interface ReportCurrencyAmount {
   currency: string;

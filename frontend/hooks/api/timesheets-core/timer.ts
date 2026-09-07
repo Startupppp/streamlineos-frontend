@@ -50,12 +50,16 @@ export function useStartTimer() {
   });
 }
 
-function useTimerAction(action: "pause" | "resume" | "stop") {
+/**
+ * Each action passes its own literal path rather than interpolating the action
+ * name: a path segment built from a variable is a path the contract scan cannot
+ * read, so drift on it would never be reported.
+ */
+function useTimerAction(action: "pause" | "resume", request: (timerId: number) => Promise<TimerSession>) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["timesheets", "timer", action],
-    mutationFn: (timerId: number) =>
-      apiClient.post<TimerSession>(`/timesheets/timer/${timerId}/${action}`, undefined, undefined, timerC),
+    mutationFn: request,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
     },
@@ -64,11 +68,15 @@ function useTimerAction(action: "pause" | "resume" | "stop") {
 }
 
 export function usePauseTimer() {
-  return useTimerAction("pause");
+  return useTimerAction("pause", (timerId) =>
+    apiClient.post<TimerSession>(`/timesheets/timer/${timerId}/pause`, undefined, undefined, timerC),
+  );
 }
 
 export function useResumeTimer() {
-  return useTimerAction("resume");
+  return useTimerAction("resume", (timerId) =>
+    apiClient.post<TimerSession>(`/timesheets/timer/${timerId}/resume`, undefined, undefined, timerC),
+  );
 }
 
 export function useDiscardTimer() {

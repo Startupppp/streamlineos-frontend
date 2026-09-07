@@ -2,6 +2,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
 
 const CALL_HEAD_RE = /\bapiClient\.(get|post|put|patch|delete)\s*[<(]/gu;
+const STREAM_HEAD_RE = /\bstreamAiResult\s*(?:<[^>]*>)?\s*\(/gu;
 const IDENT_RE = /^[A-Za-z_$][\w$]*$/u;
 const BODY_CONTEXT_CHARS = 1200;
 
@@ -28,11 +29,12 @@ export function* walkTs(dir) {
 
 export function buildTypeAliasEnumMap(content) {
   const map = new Map();
-  const typeRe = /export\s+type\s+(\w+)\s*=([^;]+);/gu;
+  const typeRe = /(?:export\s+)?type\s+(\w+)\s*=([^;]+);/gu;
   let m;
   while ((m = typeRe.exec(content)) !== null) {
     const name = m[1];
     const body = m[2];
+    if (body.trimStart().startsWith("{")) continue;
     const literals = [];
     const litRe = /"([^"]+)"/gu;
     let lit;
@@ -58,20 +60,33 @@ function bodyOfBlock(content, headerMatch) {
   return null;
 }
 
-export function buildInterfaceFieldTypeMap(content) {
-  const map = new Map();
-  const headerRe = /(?:export\s+)?interface\s+(\w+)\s*(?:\{|extends)/gu;
+/**
+ * Both declaration forms describe a request shape equally statically, and the
+ * choice between them is forced elsewhere: an `interface` has no implicit index
+ * signature, so a params object typed as one cannot be handed to a query-key
+ * factory taking `Record<string, unknown>`. Reading only `interface` would make
+ * that unavoidable `type` read as an unresolvable payload.
+ */
+function* objectTypeBodies(content) {
+  const headerRe = /(?:export\s+)?(?:interface\s+(\w+)\s*(?:\{|extends)|type\s+(\w+)\s*=\s*\{)/gu;
   let m;
   while ((m = headerRe.exec(content)) !== null) {
     const body = bodyOfBlock(content, m);
     if (body === null) continue;
+    yield [m[1] ?? m[2], body];
+  }
+}
+
+export function buildInterfaceFieldTypeMap(content) {
+  const map = new Map();
+  for (const [name, body] of objectTypeBodies(content)) {
     const fieldTypeMap = new Map();
     const fieldRe = /^\s{2,6}(\w+)\??:\s*(?:Partial<)?([A-Z]\w*)(?:<[^>]*>)?(?:\[\])?/gmu;
     let fm;
     while ((fm = fieldRe.exec(body)) !== null) {
       fieldTypeMap.set(fm[1], fm[2]);
     }
-    if (fieldTypeMap.size > 0) map.set(m[1], fieldTypeMap);
+    if (fieldTypeMap.size > 0) map.set(name, fieldTypeMap);
   }
   return map;
 }
@@ -104,18 +119,14 @@ function buildZodObjectFieldMap(content) {
 
 export function buildInterfaceMap(content) {
   const map = new Map();
-  const headerRe = /(?:export\s+)?interface\s+(\w+)\s*(?:\{|extends)/gu;
-  let m;
-  while ((m = headerRe.exec(content)) !== null) {
-    const body = bodyOfBlock(content, m);
-    if (body === null) continue;
+  for (const [name, body] of objectTypeBodies(content)) {
     const fields = new Set();
     const fieldRe = /^\s{2,6}(\w+)\??:/gmu;
     let fm;
     while ((fm = fieldRe.exec(body)) !== null) {
       fields.add(fm[1]);
     }
-    if (fields.size > 0) map.set(m[1], fields);
+    if (fields.size > 0) map.set(name, fields);
   }
 
   const zodObjMap = buildZodObjectFieldMap(content);
@@ -296,32 +307,52 @@ function resolveIdentifierType(identifier, contextBefore) {
 }
 
 /**
- * The body sits at argument index 1 and is NOT the last argument: `apiClient`
- * takes a config/signal and a response contract after it. Anchoring on the
- * closing paren is what silently unresolved every inline-object body when the
- * contract argument was introduced.
+ * The request payload sits at argument index 1 and is NOT the last argument:
+ * `apiClient` takes a config/signal and a response contract after it. Anchoring
+ * on the closing paren is what silently unresolved every inline-object body when
+ * the contract argument was introduced.
+ *
+ * A GET's payload slot is its query string, which is as much of the request
+ * contract as a POST body — the contract declares it under `parameters`. Both
+ * resolve here; `requestKind` says which half of the contract to check against.
+ *
+ * An omitted or explicitly `undefined` payload is RESOLVED, not unknown: the
+ * call provably sends nothing, so "the contract requires a field this call never
+ * sends" is a check that can run. Only a payload the scan cannot read — a spread,
+ * a `Record<string, unknown>`, an unannotated identifier — is unresolved.
  */
-function resolveBody(method, args, contextBefore, interfaceMap) {
-  const empty = { bodyFields: null, bodyTypeName: null, isPartial: false };
-  if (method === "GET") return empty;
-  const expr = args[1];
-  if (expr === undefined || expr === "undefined" || expr === "null") return empty;
+function resolveRequest(method, expr, contextBefore, interfaceMap) {
+  const requestKind = method === "GET" ? "query" : "body";
+  const emptyShape = { requestFields: new Set(), requestTypeName: null, isPartial: false, requestKind };
+  const unresolved = { requestFields: null, requestTypeName: null, isPartial: false, requestKind };
+  if (expr === undefined || expr === "undefined" || expr === "null") return emptyShape;
 
   const literalFields = objectLiteralFields(expr);
-  if (literalFields) return { bodyFields: literalFields, bodyTypeName: null, isPartial: false };
+  if (literalFields) return { requestFields: literalFields, requestTypeName: null, isPartial: false, requestKind };
 
-  if (!IDENT_RE.test(expr)) return empty;
+  if (!IDENT_RE.test(expr)) return unresolved;
   const resolved = resolveIdentifierType(expr, contextBefore);
-  if (!resolved) return empty;
+  if (!resolved) return unresolved;
   const fields = interfaceMap.get(resolved.typeName);
   return {
-    bodyFields: fields ? new Set(fields) : null,
-    bodyTypeName: resolved.typeName,
+    requestFields: fields ? new Set(fields) : null,
+    requestTypeName: resolved.typeName,
     isPartial: resolved.isPartial,
+    requestKind,
   };
 }
 
-export function extractCallsFromSource(content, interfaceMap, file) {
+function objectLiteralEntry(expr, key) {
+  if (!expr.startsWith("{") || !expr.endsWith("}")) return undefined;
+  for (const seg of splitTopLevel(expr.slice(1, -1))) {
+    const m = new RegExp(`^${key}\\s*:`, "u").exec(seg);
+    if (m) return seg.slice(m[0].length).trim();
+    if (seg === key) return key;
+  }
+  return undefined;
+}
+
+function extractApiClientCalls(content, interfaceMap, file) {
   const calls = [];
   let skipped = 0;
 
@@ -351,12 +382,54 @@ export function extractCallsFromSource(content, interfaceMap, file) {
     }
 
     const contextBefore = content.slice(Math.max(0, m.index - BODY_CONTEXT_CHARS), m.index);
-    const { bodyFields, bodyTypeName, isPartial } = resolveBody(method, args, contextBefore, interfaceMap);
+    const shape = resolveRequest(method, args[1], contextBefore, interfaceMap);
 
-    calls.push({ method, path, bodyFields, bodyTypeName, isPartial, file });
+    calls.push({ method, path, ...shape, file });
   }
 
   return { calls, skipped };
+}
+
+/**
+ * The AI surfaces post through `streamAiResult`, not `apiClient`, so scanning
+ * only `apiClient` left five in-scope timesheets request bodies invisible — an
+ * endpoint the scan never sees cannot drift in its report either.
+ */
+function extractStreamAiCalls(content, interfaceMap, file) {
+  const calls = [];
+  let skipped = 0;
+
+  STREAM_HEAD_RE.lastIndex = 0;
+  let m;
+  while ((m = STREAM_HEAD_RE.exec(content)) !== null) {
+    const braceIdx = content.indexOf("{", m.index + m[0].length - 1);
+    if (braceIdx < 0) continue;
+    const closeIdx = findMatchingParen(content, braceIdx);
+    if (closeIdx < 0) continue;
+    const objectExpr = content.slice(braceIdx, closeIdx + 1);
+
+    const pathExpr = objectLiteralEntry(objectExpr, "path");
+    if (pathExpr === undefined || !/^[`'"]/u.test(pathExpr)) continue;
+
+    const path = normalizePath(pathExpr);
+    if (path.split("/").filter(Boolean).some(isComputedSegment)) {
+      skipped++;
+      continue;
+    }
+
+    const contextBefore = content.slice(Math.max(0, m.index - BODY_CONTEXT_CHARS), m.index);
+    const shape = resolveRequest("POST", objectLiteralEntry(objectExpr, "body"), contextBefore, interfaceMap);
+
+    calls.push({ method: "POST", path, ...shape, file });
+  }
+
+  return { calls, skipped };
+}
+
+export function extractCallsFromSource(content, interfaceMap, file) {
+  const api = extractApiClientCalls(content, interfaceMap, file);
+  const stream = extractStreamAiCalls(content, interfaceMap, file);
+  return { calls: [...api.calls, ...stream.calls], skipped: api.skipped + stream.skipped };
 }
 
 export function extractFrontendCalls(hookDirs, interfaceMap) {

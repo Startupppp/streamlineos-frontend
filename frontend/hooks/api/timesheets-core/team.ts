@@ -22,6 +22,12 @@ interface TeamWeekSummaryResponse {
   summaries: TeamMemberWeekSummary[];
 }
 
+type TeamWeekSummaryParams = {
+  userIds: string;
+  startDate: string;
+  endDate: string;
+};
+
 export function useTeamWeekSummary(
   userIds: string[],
   startDate: string,
@@ -29,7 +35,7 @@ export function useTeamWeekSummary(
   enabled = true,
 ) {
   const canView = useCan("timesheets:team:view");
-  const params = { userIds: userIds.join(","), startDate, endDate };
+  const params: TeamWeekSummaryParams = { userIds: userIds.join(","), startDate, endDate };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.teamWeekSummary(params),
     queryFn: ({ signal }) =>

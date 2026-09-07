@@ -36,15 +36,15 @@ const billingLeakageC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.billingLeakageResponseContract),
 );
 
-interface OverviewQuery {
+type OverviewQuery = {
   startDate?: string;
   endDate?: string;
   userId?: string;
-}
+};
 
 export function useReportsOverview(query: OverviewQuery = {}, enabled = true) {
   const canView = useCan("timesheets:reports:view");
-  const params = { startDate: query.startDate, endDate: query.endDate, userId: query.userId };
+  const params: OverviewQuery = { startDate: query.startDate, endDate: query.endDate, userId: query.userId };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.reportsOverview(params),
     queryFn: ({ signal }) => apiClient.get<ReportOverview>("/timesheets/reports/overview", params, signal, reportsOverviewC),
@@ -55,7 +55,7 @@ export function useReportsOverview(query: OverviewQuery = {}, enabled = true) {
 }
 
 export function useUtilizationReport(query: ReportRangeParams = {}, enabled = true) {
-  const params = { startDate: query.startDate, endDate: query.endDate };
+  const params: ReportRangeParams = { startDate: query.startDate, endDate: query.endDate };
   return useGatedQuery("timesheets:reports:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.report("utilization", params),
     queryFn: ({ signal }) => apiClient.get<UtilizationReport>("/timesheets/reports/utilization", params, signal, reportsUtilizationC),
@@ -66,7 +66,7 @@ export function useUtilizationReport(query: ReportRangeParams = {}, enabled = tr
 }
 
 export function useClientProfitabilityReport(query: ReportRangeParams = {}, enabled = true) {
-  const params = { startDate: query.startDate, endDate: query.endDate };
+  const params: ReportRangeParams = { startDate: query.startDate, endDate: query.endDate };
   return useGatedQuery("timesheets:reports:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.report("client-profitability", params),
     queryFn: ({ signal }) =>
@@ -78,7 +78,7 @@ export function useClientProfitabilityReport(query: ReportRangeParams = {}, enab
 }
 
 export function useComplianceReport(query: ReportRangeParams = {}, enabled = true) {
-  const params = { startDate: query.startDate, endDate: query.endDate };
+  const params: ReportRangeParams = { startDate: query.startDate, endDate: query.endDate };
   return useGatedQuery("timesheets:reports:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.report("compliance", params),
     queryFn: ({ signal }) => apiClient.get<ComplianceReport>("/timesheets/reports/compliance", params, signal, complianceC),
@@ -89,7 +89,7 @@ export function useComplianceReport(query: ReportRangeParams = {}, enabled = tru
 }
 
 export function useApprovalSlaReport(query: ReportRangeParams = {}, enabled = true) {
-  const params = { startDate: query.startDate, endDate: query.endDate };
+  const params: ReportRangeParams = { startDate: query.startDate, endDate: query.endDate };
   return useGatedQuery("timesheets:reports:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.report("approval-sla", params),
     queryFn: ({ signal }) => apiClient.get<ApprovalSlaReport>("/timesheets/reports/approval-sla", params, signal, approvalSlaC),
@@ -100,7 +100,7 @@ export function useApprovalSlaReport(query: ReportRangeParams = {}, enabled = tr
 }
 
 export function useBillingLeakageReport(query: ReportRangeParams = {}, enabled = true) {
-  const params = { startDate: query.startDate, endDate: query.endDate };
+  const params: ReportRangeParams = { startDate: query.startDate, endDate: query.endDate };
   return useGatedQuery("timesheets:reports:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.report("billing-leakage", params),
     queryFn: ({ signal }) => apiClient.get<BillingLeakageReport>("/timesheets/reports/billing-leakage", params, signal, billingLeakageC),

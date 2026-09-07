@@ -15,7 +15,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { PayPeriod, PayrollSummaryRow } from "./types";
-import type { PeriodPreset } from "./lib/period-presets";
+import { resolvePeriodPreset } from "./lib/period-presets";
 import { getPresetRange } from "./lib/period-presets";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
@@ -30,7 +30,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const preset = (searchParams.get("preset") ?? "this-period") as PeriodPreset;
+  const preset = resolvePeriodPreset(searchParams.get("preset"));
   const start = searchParams.get("start") ?? "";
   const end = searchParams.get("end") ?? "";
   const userId = searchParams.get("userId") ?? "all";
@@ -50,7 +50,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
 
   const handlePresetChange = useCallback(
     (value: string) => {
-      const p = value as PeriodPreset;
+      const p = resolvePeriodPreset(value);
       if (p === "custom") {
         updateParams({ preset: "custom" });
         return;

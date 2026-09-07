@@ -24,15 +24,15 @@ const billingInvoiceDraftC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingInvoiceDraftResponseContract),
 );
 
-interface UninvoicedQuery {
+type UninvoicedQuery = {
   startDate?: string;
   endDate?: string;
   projectId?: number;
-}
+};
 
 export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true) {
   const canView = useCan("timesheets:billing:view");
-  const params = { startDate: query.startDate, endDate: query.endDate, projectId: query.projectId };
+  const params: UninvoicedQuery = { startDate: query.startDate, endDate: query.endDate, projectId: query.projectId };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced(params),
     queryFn: ({ signal }) => apiClient.get<BillingUninvoiced>("/timesheets/billing/uninvoiced", params, signal, billingUninvoicedC),

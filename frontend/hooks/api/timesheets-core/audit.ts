@@ -19,6 +19,14 @@ interface AuditQuery {
   limit?: number;
 }
 
+interface AuditQueryParams {
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  limit: number;
+  cursor?: string;
+}
+
 export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
   const canView = useCan("timesheets:audit:view");
   const filters = {
@@ -30,7 +38,12 @@ export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
   return useInfiniteQuery<CursorPage<AuditEvent>>({
     queryKey: usersAndCommerceQueryKeys.timesheets.audit(filters),
     queryFn: ({ pageParam , signal }) => {
-      const params: Record<string, unknown> = { ...filters };
+      const params: AuditQueryParams = {
+        entityType: filters.entityType,
+        entityId: filters.entityId,
+        action: filters.action,
+        limit: filters.limit,
+      };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params, signal, auditListC);
     },

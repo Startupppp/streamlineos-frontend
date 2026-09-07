@@ -28,12 +28,27 @@ const bulkRejectC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.bulkRejectResponseContract),
 );
 
+/**
+ * The approvals list accepts three of the seven period statuses; typing the
+ * filter as the full `PeriodStatus` let a caller ask for `OPEN` and get a 400.
+ */
+type ApprovalStatusFilter = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJECTED">;
+
 interface ApprovalsQuery {
-  status?: PeriodStatus;
+  status?: ApprovalStatusFilter;
   userId?: string;
   startDate?: string;
   endDate?: string;
   limit?: number;
+}
+
+interface ApprovalsQueryParams {
+  status?: ApprovalStatusFilter;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  limit: number;
+  cursor?: string;
 }
 
 export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
@@ -48,7 +63,13 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
   return useInfiniteQuery<CursorPage<TimesheetPeriod>>({
     queryKey: usersAndCommerceQueryKeys.timesheets.approvals(filters),
     queryFn: ({ pageParam , signal }) => {
-      const params: Record<string, unknown> = { ...filters };
+      const params: ApprovalsQueryParams = {
+        status: filters.status,
+        userId: filters.userId,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        limit: filters.limit,
+      };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params, signal, approvalsListC);
     },

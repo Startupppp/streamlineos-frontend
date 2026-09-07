@@ -29,7 +29,7 @@ export function SettingsView() {
 
   const tabParam = searchParams.get("tab");
   const activeTab =
-    tabParam && (VALID_TABS as readonly string[]).includes(tabParam) && (tabParam !== "rates" || canViewRates)
+    tabParam && VALID_TABS.some((candidate) => candidate === tabParam) && (tabParam !== "rates" || canViewRates)
       ? tabParam
       : "general";
 

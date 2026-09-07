@@ -11,6 +11,7 @@ import type {
   CreateEntryInput,
   CursorPage,
   EntriesQuery,
+  EntryStatus,
   TimesheetEntry,
   UpdateEntryInput,
 } from "@/features/timesheets/types";
@@ -23,7 +24,19 @@ const entryC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryContract),
 );
 
-function toParams(query: EntriesQuery): Record<string, unknown> {
+type EntriesQueryParams = {
+  userId?: string;
+  projectId?: number;
+  ticketId?: number;
+  status?: EntryStatus;
+  startDate?: string;
+  endDate?: string;
+  billable?: "true" | "false";
+  cursor?: string;
+  limit?: number;
+};
+
+function toParams(query: EntriesQuery): EntriesQueryParams {
   return {
     userId: query.userId,
     projectId: query.projectId,
@@ -31,7 +44,7 @@ function toParams(query: EntriesQuery): Record<string, unknown> {
     status: query.status,
     startDate: query.startDate,
     endDate: query.endDate,
-    billable: query.billable === undefined ? undefined : String(query.billable),
+    billable: query.billable === undefined ? undefined : query.billable ? "true" : "false",
     cursor: query.cursor,
     limit: query.limit,
   };
@@ -39,7 +52,7 @@ function toParams(query: EntriesQuery): Record<string, unknown> {
 
 export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const canView = useCan("timesheets:entries:view");
-  const params = toParams(query);
+  const params: EntriesQueryParams = toParams(query);
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.entries(params),
     queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal, entriesListC),

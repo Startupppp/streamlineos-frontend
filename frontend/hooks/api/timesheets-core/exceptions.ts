@@ -57,7 +57,13 @@ export function useTimesheetExceptions(
   return useInfiniteQuery<CursorPage<TimesheetException>>({
     queryKey: usersAndCommerceQueryKeys.timesheets.exceptions(filters),
     queryFn: ({ pageParam , signal }) => {
-      const params: Record<string, unknown> = { ...filters };
+      const params: ExceptionsQueryInput = {
+        status: filters.status,
+        severity: filters.severity,
+        rule: filters.rule,
+        userId: filters.userId,
+        limit: filters.limit,
+      };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetException>>(
         "/timesheets/exceptions",

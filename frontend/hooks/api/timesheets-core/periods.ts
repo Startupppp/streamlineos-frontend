@@ -36,12 +36,20 @@ export function usePeriod(periodId: number | null) {
   });
 }
 
-function usePeriodAction(action: "submit" | "recall" | "reopen" | "lock" | "unlock", message: string) {
+/**
+ * Each action passes its own literal path rather than interpolating the action
+ * name: a path segment built from a variable is a path the contract scan cannot
+ * read, so drift on it would never be reported.
+ */
+function usePeriodAction(
+  action: "submit" | "recall",
+  message: string,
+  request: (periodId: number) => Promise<TimesheetPeriod>,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["timesheets", "periods", action],
-    mutationFn: (periodId: number) =>
-      apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/${action}`, undefined, undefined, timesheetPeriodC),
+    mutationFn: request,
     onSuccess: (_, periodId) => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
@@ -53,10 +61,14 @@ function usePeriodAction(action: "submit" | "recall" | "reopen" | "lock" | "unlo
 }
 
 export function useSubmitPeriod() {
-  return usePeriodAction("submit", "Timesheet submitted for approval");
+  return usePeriodAction("submit", "Timesheet submitted for approval", (periodId) =>
+    apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/submit`, undefined, undefined, timesheetPeriodC),
+  );
 }
 
 export function useRecallPeriod() {
-  return usePeriodAction("recall", "Timesheet recalled");
+  return usePeriodAction("recall", "Timesheet recalled", (periodId) =>
+    apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/recall`, undefined, undefined, timesheetPeriodC),
+  );
 }
 
