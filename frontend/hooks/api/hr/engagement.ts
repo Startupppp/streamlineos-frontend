@@ -1,6 +1,6 @@
 "use client";
 import type { z } from "zod";
-import type { communityBaseContract } from "@/hooks/api/hr/engagement-schema";
+import type { communityBaseContract, listCommunitiesContract, campaignContract } from "@/hooks/api/hr/engagement-schema";
 import type { pollContract } from "@/hooks/api/hr/engagement-schema";
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,19 +59,9 @@ export interface PollResults {
   counts: { option: string; optionIndex: number; count: number }[];
 }
 
-export type HrCommunity = z.infer<typeof communityBaseContract>;
+export type HrCommunity = z.infer<typeof listCommunitiesContract>["items"][number];
 
-export interface HrCampaign {
-  id: number;
-  orgId: string;
-  name: string;
-  description?: string;
-  startsAt?: string;
-  endsAt?: string;
-  status: "draft" | "active" | "completed" | "cancelled";
-  audience?: { type: string; ids?: string[] };
-  createdAt: string;
-}
+export type HrCampaign = z.infer<typeof campaignContract>;
 
 export interface EmployeeOfMonth {
   period: string;

@@ -134,14 +134,14 @@ export const listCommunitiesContract = z.object({
 
 export const createCommunityContract = communityBaseContract;
 
-const campaignContract = z.object({
+export const campaignContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   startsAt: z.string().nullable(),
   endsAt: z.string().nullable(),
-  status: z.enum(["draft", "active", "completed"]),
+  status: z.enum(["draft", "active", "completed", "cancelled"]),
   audience: z.object({ type: z.string(), ids: z.array(z.string()).optional() }).nullable(),
   createdBy: z.string().nullable(),
   createdByMembershipId: z.number().int().nullable(),

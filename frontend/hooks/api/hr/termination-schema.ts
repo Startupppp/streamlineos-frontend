@@ -14,7 +14,7 @@ export const terminationItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   userId: z.string(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "PENDING_FINAL", "APPROVED", "REJECTED", "SENT", "COMPLETED"]),
   reasons: z.array(z.string()),
   detailedExplanation: z.string(),
   effectiveDate: z.string(),
