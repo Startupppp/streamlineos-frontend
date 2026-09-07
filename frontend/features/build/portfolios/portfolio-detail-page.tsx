@@ -47,7 +47,7 @@ import {
   PmSection,
   PM_PANEL,
   PM_ROW,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 

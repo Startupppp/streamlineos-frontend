@@ -40,7 +40,12 @@ import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
 import type { Employee } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const emailReportContract = lazyContract(() =>
+  import("@/features/hr/attendance/attendance-email-schema").then((m) => m.attendanceEmailReportContract),
+);
 
 const MAX_REPORT_RECIPIENTS = 10;
 const MAX_REPORT_DAYS = 31;
@@ -305,7 +310,7 @@ function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }
         to: recipientEmails,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-      });
+      }, undefined, emailReportContract);
       toast.success("Attendance report queued for delivery");
       handleClose();
     } catch (err) {

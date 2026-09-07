@@ -20,10 +20,10 @@ import {
   STATUS_STYLES,
   STATUS_LABELS,
   parseExpenseReceipts,
-} from "./expense-constants";
+} from "@/lib/expense-constants";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
-import type { StatusFilter } from "./expense-constants";
+import type { StatusFilter } from "@/lib/expense-constants";
 
 interface AdminExpenseListProps {
   expenses: ExpenseWithRelations[];

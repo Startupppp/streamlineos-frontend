@@ -390,3 +390,189 @@ export const chatPollPageContract = z.object({
   nextCursor: z.number().nullable(),
   hasMore: z.boolean(),
 });
+
+/** Simple success responses — backend `channelOkSchema` / `chatMessageOkSchema`. */
+export const chatOkContract = z.object({ ok: z.literal(true) });
+
+/** `chatReactionsResponseSchema` — reactions map keyed by emoji, values are user id arrays. */
+export const chatReactionsContract = z.object({
+  reactions: z.record(z.string(), z.array(z.string())),
+});
+
+/** `chatSummarizeResponseSchema` */
+export const chatSummarizeContract = z.object({ summary: z.string() });
+
+/** `chatCreateTaskSchema` */
+export const chatCreateTaskContract = z.object({
+  ticketId: z.number().int(),
+  ticketNumber: z.number().int(),
+});
+
+/**
+ * `chatAvailableActionsSchema` — backend `actions` is `z.array(z.string())`, NOT
+ * `EntityAction[]`. The client must map after fetch.
+ */
+export const chatEntityActionsContract = z.object({
+  references: z.array(
+    z.object({
+      reference: z.object({ type: z.string(), id: z.string() }),
+      actions: z.array(z.string()),
+    }),
+  ),
+});
+
+/** `chatActionOptionsSchema` — free-form option objects from a provider. */
+export const chatEntityActionOptionsContract = z.object({
+  options: z.array(z.record(z.string(), z.unknown())),
+});
+
+/** `chatSubmitActionSchema` */
+export const chatSubmitActionContract = z.object({ success: z.literal(true) });
+
+/** `chatUnreadResponseSchema` */
+export const chatUnreadContract = z
+  .object({ total: z.number().int().min(0).max(100) })
+  .strict();
+
+/** `chatOnlineResponseSchema` */
+export const chatOnlineUsersContract = z.array(
+  z.object({
+    userId: z.string(),
+    status: z.string(),
+    lastSeenAt: z.string(),
+    userName: z.string().nullable(),
+    userImage: z.string().nullable(),
+  }),
+);
+
+/** `chatUsersResponseSchema` */
+export const chatOrgUsersContract = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+    role: z.string().optional(),
+  }),
+);
+
+/** `chatLinkPreviewSchema` */
+export const chatLinkPreviewContract = z.object({
+  url: z.string(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  image: z.string().nullable(),
+  siteName: z.string().nullable(),
+});
+
+/** `chatSignedUrlSchema` — attachment pre-signed URL. */
+export const chatAttachmentUrlContract = z.object({ url: z.string() });
+
+/** `chatInviteLinkTokenSchema` */
+export const chatInviteLinkContract = z.object({ token: z.string() });
+
+/** `chatInviteLinkJoinSchema` */
+export const chatJoinViaInviteContract = z.object({
+  ok: z.literal(true),
+  channelId: z.number().int(),
+});
+
+/** `channelMuteResponseSchema` */
+export const chatMuteResponseContract = z.object({
+  ok: z.literal(true),
+  mutedUntil: z.string(),
+});
+
+/** `channelNotifPrefResponseSchema` */
+export const chatNotifPrefResponseContract = z.object({
+  ok: z.literal(true),
+  notificationPreference: z.string(),
+});
+
+/** `channelFilesResponseSchema` */
+export const chatChannelFilesContract = z.object({
+  files: z.array(
+    z.object({
+      id: z.number().int(),
+      fileName: z.string(),
+      fileUrl: z.string(),
+      fileKey: z.string(),
+      fileSize: z.number().int(),
+      mimeType: z.string(),
+      uploadedAt: z.string(),
+      uploadedBy: z.object({ id: z.string(), name: z.string().nullable() }),
+    }),
+  ),
+  nextCursor: z.number().int().optional(),
+});
+
+/** `chatThreadPageSchema` — parent message + replies keyset page. */
+export const chatThreadPageContract = z.object({
+  parentMessage: chatMessageContract,
+  replies: z.array(chatMessageContract),
+  nextCursor: z.number().nullable(),
+});
+
+/** `chatPinsListResponseSchema` — array of pinned message items. */
+export const chatPinItemContract = z.object({
+  id: z.number().int(),
+  channelId: z.number().int(),
+  pinnedAt: z.string(),
+  pinnedBy: z.object({ id: z.string(), name: z.string().nullable() }),
+  message: chatMessageContract,
+});
+
+export const chatPinsContract = z.array(chatPinItemContract);
+
+/**
+ * `chatSavedListResponseSchema` — backend uses `membershipId`, not `userId`.
+ * The client maps this after fetch.
+ */
+export const chatSavedMessagesContract = z.object({
+  items: z.array(
+    z.object({
+      id: z.number().int(),
+      membershipId: z.number().int(),
+      savedAt: z.string(),
+      message: chatMessageContract,
+    }),
+  ),
+  nextCursor: z.number().optional(),
+});
+
+/** `chatSearchMessagesResponseSchema` */
+export const chatSearchMessagesContract = z.object({
+  results: z.array(
+    z.object({
+      id: z.number().int(),
+      channelId: z.number().int(),
+      content: z.string().nullable(),
+      createdAt: z.string(),
+      sender: z.object({ id: z.string().nullable(), name: z.string().nullable() }),
+      highlight: z.string().optional(),
+    }),
+  ),
+  nextCursor: z.number().optional(),
+});
+
+/** `chatSearchChannelsResponseSchema` */
+export const chatSearchChannelsContract = z.array(
+  z.object({
+    id: z.number().int(),
+    name: z.string(),
+    type: z.string(),
+    description: z.string().nullable(),
+    avatarUrl: z.string().nullable(),
+    isMember: z.boolean(),
+  }),
+);
+
+/** `chatSearchUsersResponseSchema` */
+export const chatSearchUsersContract = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+  }),
+);

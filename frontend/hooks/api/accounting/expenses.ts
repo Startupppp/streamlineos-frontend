@@ -22,6 +22,22 @@ import type {
 } from "@/types/accounting/expenses";
 import type { ExpenseWithRelations, ExpenseStats, ExpenseCategoryRecord } from "@/types/hr/expenses";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  expensePolicyListContract,
+  expensePolicyCreatedContract,
+  expensePolicyUpdatedContract,
+  expensePolicyDeleteContract,
+  receiptInboxListContract,
+  expenseReceiptUpdateContract,
+  reimbursementBatchListContract,
+  reimbursementBatchDetailContract,
+  reimbursementBatchCreatedContract,
+  reimbursementApproveContract,
+  reimbursementPayContract,
+  hrExpensePageDataResponseContract,
+  expenseApproveContract,
+  expenseRejectContract,
+} from "@/hooks/api/accounting/expenses-schema";
 
 const expenseKeys = {
   all: [...accountingAndSupportQueryKeys.accounting.all, "expenses"] as const,
@@ -65,7 +81,7 @@ export function useTeamExpenses(params: TeamExpensesParams = {}) {
   return useQuery<TeamExpensesResponse, Error>({
     queryKey: expenseKeys.team(params),
     queryFn: ({ signal }) =>
-      apiClient.get<TeamExpensesResponse>("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true }), signal),
+      apiClient.get("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true }), signal, hrExpensePageDataResponseContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: can,
@@ -82,7 +98,7 @@ export function useReceiptInbox(params: ReceiptInboxParams = {}) {
   return useQuery<ListResponse<FinReceiptInboxItem>, Error>({
     queryKey: expenseKeys.receipts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<FinReceiptInboxItem>>("/accounting/expenses/receipts", toQuery(params), signal),
+      apiClient.get("/accounting/expenses/receipts", toQuery(params), signal, receiptInboxListContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -93,7 +109,7 @@ export function usePatchReceiptMetadata(expenseId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, PatchReceiptInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "receipts", "patch", expenseId],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>(`/accounting/expenses/receipts/${expenseId}`, data),
+      apiClient.patch(`/accounting/expenses/receipts/${expenseId}`, data, undefined, expenseReceiptUpdateContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "receipts"] });
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
@@ -112,7 +128,7 @@ export function useReimbursementBatches(params: BatchListParams = {}) {
   return useQuery<ListResponse<FinReimbursementBatch>, Error>({
     queryKey: expenseKeys.batches(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<FinReimbursementBatch>>("/accounting/reimbursements", toQuery(params), signal),
+      apiClient.get("/accounting/reimbursements", toQuery(params), signal, reimbursementBatchListContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -123,7 +139,7 @@ export function useReimbursementBatch(batchId: number) {
   return useQuery<FinReimbursementBatchDetail, Error>({
     queryKey: expenseKeys.batch(batchId),
     queryFn: ({ signal }) =>
-      apiClient.get<FinReimbursementBatchDetail>(`/accounting/reimbursements/${batchId}`, undefined, signal),
+      apiClient.get(`/accounting/reimbursements/${batchId}`, undefined, signal, reimbursementBatchDetailContract),
     staleTime: 30_000,
     enabled: can && Number.isInteger(batchId) && batchId > 0,
   });
@@ -134,7 +150,7 @@ export function useCreateReimbursementBatch() {
   return useAuthorizedMutation<FinReimbursementBatch, Error, CreateBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "create"],
     mutationFn: (data) =>
-      apiClient.post<FinReimbursementBatch>("/accounting/reimbursements", data),
+      apiClient.post("/accounting/reimbursements", data, undefined, reimbursementBatchCreatedContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "pendingForBatch"] });
@@ -148,7 +164,7 @@ export function useApproveBatch(batchId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, void>("accounting:reimbursements:approve", {
     mutationKey: ["accounting", "expenses", "batches", "approve", batchId],
     mutationFn: () =>
-      apiClient.post<{ success: boolean }>(`/accounting/reimbursements/${batchId}/approve`),
+      apiClient.post(`/accounting/reimbursements/${batchId}/approve`, undefined, undefined, reimbursementApproveContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.batch(batchId) });
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
@@ -161,7 +177,7 @@ export function usePayBatch(batchId: number) {
   return useAuthorizedMutation<{ success: boolean; entryId?: number }, Error, PayBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "pay", batchId],
     mutationFn: (data) =>
-      apiClient.post<{ success: boolean; entryId?: number }>(`/accounting/reimbursements/${batchId}/pay`, data),
+      apiClient.post(`/accounting/reimbursements/${batchId}/pay`, data, undefined, reimbursementPayContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.batch(batchId) });
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
@@ -175,13 +191,13 @@ export function usePendingForBatch() {
   return useQuery<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }, Error>({
     queryKey: expenseKeys.pendingForBatch(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }>("/hr/expenses/page-data", {
+      apiClient.get("/hr/expenses/page-data", {
         status: "REIMBURSEMENT_PENDING",
         pageSize: "200",
         includeStats: "false",
         includePending: "false",
         includeCategories: "false",
-      }, signal),
+      }, signal, hrExpensePageDataResponseContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -191,7 +207,7 @@ export function useExpensePolicies() {
   const can = useCan("accounting:reimbursements:read");
   return useQuery<FinExpensePolicy[], Error>({
     queryKey: expenseKeys.policies(),
-    queryFn: ({ signal }) => apiClient.get<FinExpensePolicy[]>("/accounting/expenses/policies", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/expenses/policies", undefined, signal, expensePolicyListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -201,7 +217,7 @@ export function useCreateExpensePolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation<FinExpensePolicy, Error, CreatePolicyInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "create"],
-    mutationFn: (data) => apiClient.post<FinExpensePolicy>("/accounting/expenses/policies", data),
+    mutationFn: (data) => apiClient.post("/accounting/expenses/policies", data, undefined, expensePolicyCreatedContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.policies() });
     },
@@ -213,7 +229,7 @@ export function useUpdateExpensePolicy(policyId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, UpdatePolicyInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "update", policyId],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>(`/accounting/expenses/policies/${policyId}`, data),
+      apiClient.patch(`/accounting/expenses/policies/${policyId}`, data, undefined, expensePolicyUpdatedContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.policies() });
     },
@@ -225,7 +241,7 @@ export function useDeleteExpensePolicy(policyId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, void>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "delete", policyId],
     mutationFn: () =>
-      apiClient.delete<{ success: boolean }>(`/accounting/expenses/policies/${policyId}`),
+      apiClient.delete(`/accounting/expenses/policies/${policyId}`, undefined, undefined, expensePolicyDeleteContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.policies() });
     },
@@ -263,7 +279,7 @@ export function useApproveExpense(expenseId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, void>("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "approve", expenseId],
     mutationFn: () =>
-      apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/approve`),
+      apiClient.post(`/hr/expenses/${expenseId}/approve`, undefined, undefined, expenseApproveContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
@@ -275,7 +291,7 @@ export function useRejectExpense(expenseId: number) {
   return useAuthorizedMutation<{ success: boolean }, Error, { rejectionReason: string }>("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "reject", expenseId],
     mutationFn: (data) =>
-      apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/reject`, data),
+      apiClient.post(`/hr/expenses/${expenseId}/reject`, data, undefined, expenseRejectContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },

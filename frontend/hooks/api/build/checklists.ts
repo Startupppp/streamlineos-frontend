@@ -1,10 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type { Checklist, ChecklistItem } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
 
 function checklistKeys(projectId: number, ticketId: number) {
   return ["projects", projectId, "tickets", ticketId, "checklists"] as const;
@@ -85,6 +91,9 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
     mutationFn: (checklistId: number) =>
       apiClient.delete(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}`,
+        undefined,
+        undefined,
+        successLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -171,6 +180,9 @@ export function useDeleteChecklistItem(projectId: number, ticketId: number) {
     }) =>
       apiClient.delete(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items/${itemId}`,
+        undefined,
+        undefined,
+        successLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),

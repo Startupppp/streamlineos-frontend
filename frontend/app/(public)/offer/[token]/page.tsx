@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicOffer } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
+import { publicOfferDetailContract } from "@/lib/public-schema";
 import { OfferActionIsland } from "@/features/careers/components/offer-action-island";
 
 type Props = { params: Promise<{ token: string }> };
@@ -67,7 +68,7 @@ export default async function OfferAcceptancePage({ params }: Props) {
 
   let offer: PublicOffer | null;
   try {
-    offer = await publicGetNoStore<PublicOffer>(`/public/offer/${token}`);
+    offer = await publicGetNoStore<PublicOffer>(`/public/offer/${token}`, undefined, publicOfferDetailContract);
   } catch (e) {
     if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
     throw e;

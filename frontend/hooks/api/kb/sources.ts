@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -58,6 +59,18 @@ export interface KbSourcePage {
 
 const SOURCES_PAGE_SIZE = 50;
 
+const kbSourcePageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourcePageContract),
+);
+
+const kbSourceContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourceContract),
+);
+
+const kbSourceSuccessContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourceSuccessContract),
+);
+
 /**
  * `GET /kb/sources` was a hard cap of 100 with no cursor: a tenant past 100 sources could
  * never reach the rest, and the response was shaped exactly like a complete list, so
@@ -75,7 +88,7 @@ export function useKbSources() {
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
-      return apiClient.get<KbSourcePage>("/kb/sources", params, signal);
+      return apiClient.get<KbSourcePage>("/kb/sources", params, signal, kbSourcePageContract);
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -105,7 +118,7 @@ export function useUploadKbSource() {
         size: file.size,
         lastModified: file.lastModified,
       });
-      return apiClient.upload<KbSource>("/kb/sources", fd, undefined, config);
+      return apiClient.upload<KbSource>("/kb/sources", fd, kbSourceContract, config);
     },
     onSuccess: () => {
       operation.settle();
@@ -120,7 +133,7 @@ export function useCreateKbSourceNote() {
   return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["create", "kb", "source", "note"],
     mutationFn: (input: { title: string; text: string }) =>
-      apiClient.post<KbSource>("/kb/sources/note", input, operation.configFor(input)),
+      apiClient.post<KbSource>("/kb/sources/note", input, operation.configFor(input), kbSourceContract),
     onSuccess: () => {
       operation.settle();
       return qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() });
@@ -133,7 +146,7 @@ export function useDeleteKbSource() {
   return useAuthorizedMutation("kb:pages:delete", {
     mutationKey: ["delete", "kb", "source"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`),
+      apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`, undefined, undefined, kbSourceSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() }),
   });
 }

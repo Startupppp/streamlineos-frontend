@@ -1,9 +1,23 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
+
+const journalBatchListC = lazyContract(() =>
+  import("@/hooks/api/payroll/journal-batches-schema").then((m) => m.journalBatchListContract),
+);
+const periodReconciliationC = lazyContract(() =>
+  import("@/hooks/api/payroll/journal-batches-schema").then((m) => m.periodReconciliationReportContract),
+);
+const journalBatchDetailC = lazyContract(() =>
+  import("@/hooks/api/payroll/journal-batches-schema").then((m) => m.journalBatchDetailContract),
+);
+const journalBatchSummaryC = lazyContract(() =>
+  import("@/hooks/api/payroll/journal-batches-schema").then((m) => m.journalBatchSummaryContract),
+);
 import type {
   JournalBatch,
   JournalBatchDetail,
@@ -21,7 +35,7 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedJournalBatches>(
         "/payroll/accounting/journal-batches",
-        params as Record<string, string | number> | undefined, signal,
+        params as Record<string, string | number> | undefined, signal, journalBatchListC,
       ),
     staleTime: 60_000,
     enabled: canView,
@@ -35,7 +49,7 @@ export function usePeriodReconciliation(periodKey: string, enabled = true) {
     queryFn: ({ signal }) =>
       apiClient.get<PeriodReconciliationReport>(
         "/payroll/accounting/journal-batches/period-reconciliation",
-        { periodKey }, signal,
+        { periodKey }, signal, periodReconciliationC,
       ),
     enabled: enabled && canView && /^\d{4}-\d{2}$/.test(periodKey),
     staleTime: 30_000,
@@ -60,7 +74,7 @@ export function useCreateJournalBatch() {
   return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "create"],
     mutationFn: (input: CreateJournalBatchInput) =>
-      apiClient.post<JournalBatchDetail>("/payroll/accounting/journal-batches", input),
+      apiClient.post<JournalBatchDetail>("/payroll/accounting/journal-batches", input, undefined, journalBatchDetailC),
     onSuccess: () => invalidate(),
   });
 }
@@ -70,7 +84,7 @@ export function usePostJournalBatch() {
   return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "post"],
     mutationFn: (batchId: number) =>
-      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/post`),
+      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/post`, undefined, undefined, journalBatchSummaryC),
     onSuccess: (_, batchId) => invalidate(batchId),
   });
 }
@@ -80,9 +94,7 @@ export function useReverseJournalBatch() {
   return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "reverse"],
     mutationFn: ({ batchId, reason }: { batchId: number; reason: string }) =>
-      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reverse`, {
-        reason,
-      }),
+      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reverse`, { reason }, undefined, journalBatchSummaryC),
     onSuccess: (_, { batchId }) => invalidate(batchId),
   });
 }
@@ -100,10 +112,7 @@ export function useReconcileJournalBatch() {
       status: JournalReconStatus;
       note?: string;
     }) =>
-      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reconcile`, {
-        status,
-        note,
-      }),
+      apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reconcile`, { status, note }, undefined, journalBatchSummaryC),
     onSuccess: (_, { batchId }) => invalidate(batchId),
   });
 }

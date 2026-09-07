@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -26,7 +27,7 @@ export function useCreateAsset() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
-      apiClient.post<Asset>("/hr/assets", data),
+      apiClient.post<Asset>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.assetRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
@@ -56,7 +57,7 @@ export function useCreateDocument() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "create"],
     mutationFn: (data: CreateDocumentInput) =>
-      apiClient.post<Document>("/hr/documents", data),
+      apiClient.post<Document>("/hr/documents", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.documentRowContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
@@ -70,7 +71,7 @@ export function useUpdateDocument() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
-      apiClient.patch<Document>(`/hr/documents/${id}`, data),
+      apiClient.patch<Document>(`/hr/documents/${id}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.documentRowContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
@@ -114,7 +115,7 @@ export function useHrPerformanceReviews(params?: HrPerformanceReviewParams) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.performanceReviews(queryParams),
     queryFn: ({ signal }) =>
-      apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams, signal),
+      apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.performanceReviewPageContract))),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
@@ -126,7 +127,7 @@ export function useCreateGoal() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: CreateGoalInput) =>
-      apiClient.post<Goal>("/hr/performance/goals", data),
+      apiClient.post<Goal>("/hr/performance/goals", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.goalContract))),
     onSuccess: () =>
       qc.invalidateQueries({
         queryKey: [...humanResourcesQueryKeys.hr.all, "goals"],
@@ -139,7 +140,7 @@ export function useHrWfhRequests() {
   const canSelf = useCan("self:attendance");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.wfhRequests(),
-    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
     enabled: canSelf,
   });
@@ -150,7 +151,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests(),
-    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
   });

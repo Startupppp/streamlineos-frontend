@@ -230,9 +230,9 @@ jest.mock("@/features/hr/leaves/wfh-request-sheet", () => ({
   WfhRequestSheet: () => null,
 }));
 
-import { MyAttendancePage } from "./components/my-attendance-page";
-import { MyExpensesPage } from "./components/my-expenses-page";
-import { MyDocumentsPage } from "./components/my-documents-page";
+import { MyAttendancePage } from "@/features/hr/attendance/my-attendance-page";
+import { MyExpensesPage } from "@/features/hr/expenses/my-expenses-page";
+import { MyDocumentsPage } from "@/features/hr/document-review/my-documents-page";
 import { LeavesWfhContent } from "@/features/hr/leaves/components/leaves-wfh-content";
 
 interface SelfServiceRoute {

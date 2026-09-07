@@ -21,7 +21,12 @@ import { toast } from "sonner";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const bulkImportContract = lazyContract(() =>
+  import("@/features/hr/recruitment/candidates/bulk-import-schema").then((m) => m.bulkImportResultContract),
+);
 import { activationProps } from "@/lib/keyboard-activation";
 
 const MAX_IMPORT_ROWS = 500;
@@ -222,9 +227,11 @@ export function BulkImportPage() {
 
     setImporting(true);
     try {
-      const data = await apiClient.post<{ created: number; skipped: number; errors: string[] }>(
+      const data = await apiClient.post(
         "/hr/recruitment/candidates/bulk-import",
         { rows: mappedRows },
+        undefined,
+        bulkImportContract,
       );
       setImportResult(data);
       setStep("done");

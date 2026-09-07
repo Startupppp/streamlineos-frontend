@@ -3,9 +3,32 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const workforcePlansContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.workforcePlansContract),
+);
+const budgetVsActualContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.budgetVsActualContract),
+);
+const skillsGapContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.skillsGapContract),
+);
+const successionRiskContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.successionRiskContract),
+);
+const attritionForecastContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.attritionForecastContract),
+);
+const createHeadcountPlanContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.createHeadcountPlanContract),
+);
+const updateHeadcountPlanContract = lazyContract(() =>
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.updateHeadcountPlanContract),
+);
 
 export interface HeadcountPlan {
   id: number;
@@ -62,7 +85,7 @@ export function useHrWorkforcePlans() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.plans(),
-    queryFn: ({ signal }) => apiClient.get<HeadcountPlan[]>("/hr/analytics-plus/workforce/plans", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/analytics-plus/workforce/plans", undefined, signal, workforcePlansContract),
     staleTime: 5 * 60_000,
     enabled: canHeadcount,
   });
@@ -72,7 +95,7 @@ export function useHrBudgetVsActual() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.budgetVsActual(),
-    queryFn: ({ signal }) => apiClient.get<BudgetVsActual[]>("/hr/analytics-plus/workforce/budget-vs-actual", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/analytics-plus/workforce/budget-vs-actual", undefined, signal, budgetVsActualContract),
     staleTime: 5 * 60_000,
     enabled: canHeadcount,
   });
@@ -82,7 +105,7 @@ export function useHrSkillsGap() {
   return useGatedQuery("hr:analytics:read", {
     queryKey: workforceKeys.skillsGap(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ gaps: SkillsGap[] }>("/hr/analytics-plus/workforce/skills-gap", undefined, signal),
+      apiClient.get("/hr/analytics-plus/workforce/skills-gap", undefined, signal, skillsGapContract),
     staleTime: 10 * 60_000,
   });
 }
@@ -92,8 +115,8 @@ export function useHrSuccessionRisk() {
   return useQuery({
     queryKey: workforceKeys.successionRisk(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ riskyRoles: SuccessionRisk[] }>(
-        "/hr/analytics-plus/workforce/succession-risk", undefined, signal,
+      apiClient.get(
+        "/hr/analytics-plus/workforce/succession-risk", undefined, signal, successionRiskContract,
       ),
     staleTime: 10 * 60_000,
     enabled: canSuccession,
@@ -104,7 +127,7 @@ export function useHrAttritionForecast() {
   return useGatedQuery("hr:analytics:read", {
     queryKey: workforceKeys.attritionForecast(),
     queryFn: ({ signal }) =>
-      apiClient.get<AttritionForecast>("/hr/analytics-plus/workforce/attrition-forecast", undefined, signal),
+      apiClient.get("/hr/analytics-plus/workforce/attrition-forecast", undefined, signal, attritionForecastContract),
     staleTime: 30 * 60_000,
   });
 }
@@ -122,7 +145,7 @@ export function useCreateHeadcountPlan() {
   return useAuthorizedMutation("hr:workforce:manage", {
     mutationKey: ["hr", "workforce", "createPlan"],
     mutationFn: (data: CreatePlanInput) =>
-      apiClient.post<HeadcountPlan>("/hr/analytics-plus/workforce/plans", data),
+      apiClient.post("/hr/analytics-plus/workforce/plans", data, undefined, createHeadcountPlanContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: workforceKeys.plans() });
       void qc.invalidateQueries({ queryKey: workforceKeys.budgetVsActual() });
@@ -142,7 +165,7 @@ export function useUpdateHeadcountPlan() {
   return useAuthorizedMutation("hr:workforce:manage", {
     mutationKey: ["hr", "workforce", "updatePlan"],
     mutationFn: ({ id, ...data }: UpdatePlanInput) =>
-      apiClient.patch<HeadcountPlan>(`/hr/analytics-plus/workforce/plans/${id}`, data),
+      apiClient.patch(`/hr/analytics-plus/workforce/plans/${id}`, data, undefined, updateHeadcountPlanContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: workforceKeys.plans() });
       void qc.invalidateQueries({ queryKey: workforceKeys.budgetVsActual() });

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -13,6 +14,20 @@ import type {
   AddIncidentUpdateInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const incidentListContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentListContract),
+);
+const incidentRowContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentRowContract),
+);
+const incidentDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentDetailContract),
+);
+const incidentUpdateRowContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentUpdateRowContract),
+);
 
 type IncidentFilters = {
   status?: string;
@@ -27,7 +42,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
 
   return useQuery<Incident[]>({
     queryKey: buildWorkQueryKeys.projects.incidents.list(projectId ?? 0, filters),
-    queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal),
+    queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal, incidentListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -38,7 +53,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
   return useQuery<IncidentDetail>({
     queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId ?? 0, incidentId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`, undefined, signal),
+      apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`, undefined, signal, incidentDetailContract),
     enabled: canView && !!projectId && !!incidentId,
     staleTime: 60_000,
   });
@@ -49,7 +64,7 @@ export function useCreateIncident() {
   return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "create"],
     mutationFn: ({ projectId, ...data }: CreateIncidentInput & { projectId: number }) =>
-      apiClient.post<Incident>(`/build/${projectId}/incidents`, data),
+      apiClient.post<Incident>(`/build/${projectId}/incidents`, data, undefined, incidentRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },
@@ -65,7 +80,7 @@ export function useUpdateIncident() {
       id,
       ...data
     }: UpdateIncidentInput & { projectId: number; id: number }) =>
-      apiClient.patch<Incident>(`/build/${projectId}/incidents/${id}`, data),
+      apiClient.patch<Incident>(`/build/${projectId}/incidents/${id}`, data, undefined, incidentRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
       qc.invalidateQueries({
@@ -99,6 +114,8 @@ export function useAddIncidentUpdate() {
       apiClient.post<IncidentUpdate>(
         `/build/${projectId}/incidents/${incidentId}/updates`,
         data,
+        undefined,
+        incidentUpdateRowContract,
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({

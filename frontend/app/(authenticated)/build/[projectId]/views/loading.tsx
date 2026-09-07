@@ -1,6 +1,6 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PmPageShell } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome";
 
 export default function ViewsLoading() {
   return (

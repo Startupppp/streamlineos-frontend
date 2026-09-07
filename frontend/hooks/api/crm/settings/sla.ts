@@ -5,6 +5,17 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const slaPoliciesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaPoliciesListContract),
+);
+const slaReportLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaReportContract),
+);
+const slaBreachedLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaBreachedListContract),
+);
 
 export interface SlaPolicy {
   id: number;
@@ -52,7 +63,7 @@ export interface UpdateSlaPolicyInput {
 export function useSlaPolicies() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaPolicies(),
-    queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/crm/sla/policies", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/crm/sla/policies", undefined, signal, slaPoliciesLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -60,7 +71,7 @@ export function useSlaPolicies() {
 export function useSlaReport() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaReport(),
-    queryFn: ({ signal }) => apiClient.get<SlaReport>("/crm/sla/report", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SlaReport>("/crm/sla/report", undefined, signal, slaReportLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -69,7 +80,7 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>, signal),
+      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>, signal, slaBreachedLazy),
     staleTime: 2 * 60_000,
   });
 }

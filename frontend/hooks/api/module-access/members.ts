@@ -22,6 +22,12 @@ const memberCandidatePageContract = lazyContract(() =>
 const memberGrantsContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleMemberGrantsContract),
 );
+const moduleSuccessContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleSuccessContract),
+);
+const moduleMemberGrantsSetContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberGrantsSetContract),
+);
 
 export function useModuleMembersInfinite(
   moduleKey: string,
@@ -56,7 +62,7 @@ export function useAddModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
     mutationFn: (body) =>
-      apiClient.post<{ success: true }>(`/module-access/${moduleKey}/members`, body),
+      apiClient.post(`/module-access/${moduleKey}/members`, body, moduleSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
@@ -84,9 +90,10 @@ export function useUpdateModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "update-module-member"],
     mutationFn: ({ userId, groupIds }) =>
-      apiClient.patch<{ success: true }>(
+      apiClient.patch(
         `/module-access/${moduleKey}/members/${userId}`,
         { groupIds },
+        moduleSuccessContract,
       ),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
@@ -115,7 +122,7 @@ export function useRemoveModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "remove-module-member"],
     mutationFn: ({ userId }) =>
-      apiClient.delete<{ success: true }>(`/module-access/${moduleKey}/members/${userId}`),
+      apiClient.delete(`/module-access/${moduleKey}/members/${userId}`, undefined, undefined, moduleSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
@@ -207,6 +214,7 @@ export function useSetModuleMemberGrants(moduleKey: string) {
       apiClient.put<{ success: true; granted: number }>(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
         { items, reason },
+        moduleMemberGrantsSetContract,
       ),
     onSuccess: (_, { membershipId }) => {
       void queryClient.invalidateQueries({

@@ -7,6 +7,17 @@ import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import {
+  vendorCreditListContract,
+  vendorCreditDetailContract,
+  vendorCreditCreatedContract,
+  vendorCreditPostContract,
+  vendorCreditApplyContract,
+  recurringBillListContract,
+  recurringBillTemplateContract,
+  recurringBillDeleteContract,
+  recurringBillRunNowContract,
+} from "@/hooks/api/accounting/ap-vendors-schema";
 
 const apVendorKeys = {
   vendorCredits: (params?: object) =>
@@ -156,9 +167,9 @@ export function useVendorCredits(params: ListVendorCreditsParams = {}) {
   return useQuery<CursorPage<VendorCreditSummary>, Error>({
     queryKey: apVendorKeys.vendorCredits(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<VendorCreditSummary>>(
+      apiClient.get(
         "/accounting/vendor-credits",
-        toQuery(params), signal,
+        toQuery(params), signal, vendorCreditListContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -170,7 +181,7 @@ export function useVendorCredit(creditId: number) {
   return useQuery<VendorCreditDetail, Error>({
     queryKey: apVendorKeys.vendorCredit(creditId),
     queryFn: ({ signal }) =>
-      apiClient.get<VendorCreditDetail>(`/accounting/vendor-credits/${creditId}`, undefined, signal),
+      apiClient.get(`/accounting/vendor-credits/${creditId}`, undefined, signal, vendorCreditDetailContract),
     staleTime: 60_000,
     enabled: can && Number.isInteger(creditId) && creditId > 0,
   });
@@ -181,7 +192,7 @@ export function useCreateVendorCredit() {
   return useAuthorizedMutation<VendorCreditSummary, Error, CreateVendorCreditInput>("accounting:vendor-credits:create", {
     mutationKey: ["create-vendor-credit"],
     mutationFn: (body) =>
-      apiClient.post<VendorCreditSummary>("/accounting/vendor-credits", body),
+      apiClient.post("/accounting/vendor-credits", body, undefined, vendorCreditCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.vendorCredits(), exact: false });
     },
@@ -193,8 +204,9 @@ export function usePostVendorCredit(creditId: number) {
   return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:vendor-credits:manage", {
     mutationKey: ["post-vendor-credit", creditId],
     mutationFn: () =>
-      apiClient.post<{ id: number; status: string }>(
+      apiClient.post(
         `/accounting/vendor-credits/${creditId}/post`,
+        undefined, undefined, vendorCreditPostContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.vendorCredit(creditId) });
@@ -212,9 +224,9 @@ export function useApplyVendorCredit(creditId: number) {
   >("accounting:vendor-credits:manage", {
     mutationKey: ["apply-vendor-credit", creditId],
     mutationFn: (body) =>
-      apiClient.post<{ id: number; billId: number; appliedAmount: number }>(
+      apiClient.post(
         `/accounting/vendor-credits/${creditId}/apply`,
-        body,
+        body, undefined, vendorCreditApplyContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.apAll });
@@ -228,9 +240,9 @@ export function useRecurringBills(params: ListRecurringBillsParams = {}) {
   return useQuery<CursorPage<RecurringBillTemplate>, Error>({
     queryKey: apVendorKeys.recurringBills(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<RecurringBillTemplate>>(
+      apiClient.get(
         "/accounting/recurring-bills",
-        toQuery(params), signal,
+        toQuery(params), signal, recurringBillListContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -242,7 +254,7 @@ export function useCreateRecurringBill() {
   return useAuthorizedMutation<RecurringBillTemplate, Error, CreateRecurringBillInput>("accounting:recurring:manage", {
     mutationKey: ["create-recurring-bill"],
     mutationFn: (body) =>
-      apiClient.post<RecurringBillTemplate>("/accounting/recurring-bills", body),
+      apiClient.post("/accounting/recurring-bills", body, undefined, recurringBillTemplateContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBills(), exact: false });
     },
@@ -254,9 +266,9 @@ export function useUpdateRecurringBill(templateId: number) {
   return useAuthorizedMutation<RecurringBillTemplate, Error, UpdateRecurringBillInput>("accounting:recurring:manage", {
     mutationKey: ["update-recurring-bill", templateId],
     mutationFn: (body) =>
-      apiClient.patch<RecurringBillTemplate>(
+      apiClient.patch(
         `/accounting/recurring-bills/${templateId}`,
-        body,
+        body, undefined, recurringBillTemplateContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBills(), exact: false });
@@ -270,8 +282,9 @@ export function useDeleteRecurringBill(templateId: number) {
   return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, void>("accounting:recurring:manage", {
     mutationKey: ["delete-recurring-bill", templateId],
     mutationFn: () =>
-      apiClient.delete<{ id: number; deleted: boolean }>(
+      apiClient.delete(
         `/accounting/recurring-bills/${templateId}`,
+        undefined, undefined, recurringBillDeleteContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBills(), exact: false });
@@ -285,8 +298,9 @@ export function useRunRecurringBillNow(templateId: number) {
   return useAuthorizedMutation<{ billId: number }, Error, void>("accounting:recurring:manage", {
     mutationKey: ["run-recurring-bill-now", templateId],
     mutationFn: () =>
-      apiClient.post<{ billId: number }>(
+      apiClient.post(
         `/accounting/recurring-bills/${templateId}/run-now`,
+        undefined, undefined, recurringBillRunNowContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBills(), exact: false });

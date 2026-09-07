@@ -1,4 +1,4 @@
-export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+export type AttendanceStatus = string;
 export type WfhRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface BreakEntry {
@@ -133,7 +133,7 @@ export interface TeamAttendanceEntry {
   email: string;
   image: string | null;
   department: string | null;
-  status: "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+  status: string;
   checkIn: string | null;
   checkOut: string | null;
   workHours: string | null;

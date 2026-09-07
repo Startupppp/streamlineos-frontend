@@ -5,6 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import {
+  anomaliesContract,
+  digestContract,
+  categorizeSuggestContract,
+} from "@/hooks/api/accounting/insights-schema";
 
 export type AnomalySeverity = "info" | "warning" | "critical";
 
@@ -59,7 +64,7 @@ export function useAnomalies(params: { from?: string; to?: string } = {}) {
   const query = toQuery(params);
   return useQuery<Anomaly[], Error>({
     queryKey: insightKeys.anomalies(query),
-    queryFn: ({ signal }) => apiClient.get<Anomaly[]>("/accounting/insights/anomalies", query, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/insights/anomalies", query, signal, anomaliesContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -69,7 +74,7 @@ export function useInsightsDigest() {
   const can = useCan("accounting:reports:read");
   return useQuery<InsightsDigest, Error>({
     queryKey: insightKeys.digest(),
-    queryFn: ({ signal }) => apiClient.get<InsightsDigest>("/accounting/insights/digest", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/insights/digest", undefined, signal, digestContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -79,6 +84,6 @@ export function useCategorizeSuggest() {
   return useAuthorizedMutation<CategorizeSuggestResult, Error, CategorizeSuggestInput>("accounting:reimbursements:read", {
     mutationKey: ["categorize", "suggest"],
     mutationFn: (input) =>
-      apiClient.post<CategorizeSuggestResult>("/accounting/expenses/categorize-suggest", input),
+      apiClient.post("/accounting/expenses/categorize-suggest", input, undefined, categorizeSuggestContract),
   });
 }

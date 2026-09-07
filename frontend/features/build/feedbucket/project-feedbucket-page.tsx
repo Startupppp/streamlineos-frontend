@@ -10,7 +10,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";

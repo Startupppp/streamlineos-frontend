@@ -4,6 +4,17 @@ import { useMemo } from "react";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const listInsightsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.listInsightsContract),
+);
+const explainInsightContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.explainInsightContract),
+);
+const reorderProposalContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.reorderProposalContract),
+);
 import type { InsightNarration } from "@/hooks/api/inv-ai-explain";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 import type { InventoryProduct } from "@/types/inventory";
@@ -60,7 +71,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         run: async (signal?: AbortSignal) => {
           const insights = await apiClient.get<{
             items: AiInsight[];
-          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" }, signal);
+          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" }, signal, listInsightsContract);
 
           const variantSku = firstVariant.sku;
           const matching = insights.items.find(
@@ -81,6 +92,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
             `/inventory/ai/insights/${matching.id}/explain`,
             undefined,
             { signal },
+            explainInsightContract,
           );
 
           return { text: narrationToText(narration) };
@@ -108,6 +120,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
             "/inventory/ai/reorder-proposal",
             { variantId: String(firstVariant.id) },
             { signal },
+            reorderProposalContract,
           );
 
           const ev = response.evidence;

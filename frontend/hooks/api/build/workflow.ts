@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   WorkflowTransition,
@@ -11,6 +12,14 @@ import type {
   UpdateWipInput,
 } from "@/types/projects/workflow";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const workflowTransitionListContract = lazyContract(() =>
+  import("@/hooks/api/build/workflow-schema").then((m) => m.workflowTransitionListContract),
+);
+const workflowTransitionContract = lazyContract(() =>
+  import("@/hooks/api/build/workflow-schema").then((m) => m.workflowTransitionContract),
+);
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage project workflows.");
@@ -25,7 +34,7 @@ export function useWorkflowTransitions(projectId: number) {
   return useQuery<WorkflowTransition[]>({
     queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`, undefined, signal),
+      apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`, undefined, signal, workflowTransitionListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -38,7 +47,7 @@ export function useCreateTransition(projectId: number) {
     mutationKey: ["projects", projectId, "workflow", "transitions", "create"],
     mutationFn: (data: CreateTransitionInput) => {
       assertPermission(canManage);
-      return apiClient.post<WorkflowTransition>(`/build/${projectId}/workflow/transitions`, data);
+      return apiClient.post<WorkflowTransition>(`/build/${projectId}/workflow/transitions`, data, undefined, workflowTransitionContract);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId) });
@@ -56,6 +65,8 @@ export function useUpdateTransition(projectId: number) {
       return apiClient.patch<WorkflowTransition>(
         `/build/${projectId}/workflow/transitions/${id}`,
         data,
+        undefined,
+        workflowTransitionContract,
       );
     },
     onSuccess: () => {

@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -11,6 +12,23 @@ import type {
   WorkflowListParams,
 } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const workflowListContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowListContract),
+);
+const workflowDetailContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowDetailContract),
+);
+const workflowCreateContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowCreateContract),
+);
+const workflowUpdateContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowUpdateContract),
+);
+const workflowPublishContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowPublishContract),
+);
+
 
 interface CreateWorkflowInput {
   name: string;
@@ -37,7 +55,7 @@ export function useWorkflows(params?: WorkflowListParams) {
   return useQuery({
     queryKey: supportAndWorkflowsQueryKeys.workflows.list(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>, signal),
+      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>, signal, workflowListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -48,7 +66,7 @@ export function useWorkflow(workflowId: string) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
     queryKey: supportAndWorkflowsQueryKeys.workflows.detail(workflowId),
-    queryFn: ({ signal }) => apiClient.get<Workflow>(`/workflows/${workflowId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Workflow>(`/workflows/${workflowId}`, undefined, signal, workflowDetailContract),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
   });

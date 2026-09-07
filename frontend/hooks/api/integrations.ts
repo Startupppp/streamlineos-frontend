@@ -3,9 +3,26 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const integrationsListContract = lazyContract(() =>
+  import("@/hooks/api/integrations-schema").then((m) => m.integrationsListContract),
+);
+const integrationsInitiateContract = lazyContract(() =>
+  import("@/hooks/api/integrations-schema").then((m) => m.integrationsInitiateContract),
+);
+const integrationsFinalizeContract = lazyContract(() =>
+  import("@/hooks/api/integrations-schema").then((m) => m.integrationsFinalizeContract),
+);
+const integrationsDisconnectContract = lazyContract(() =>
+  import("@/hooks/api/integrations-schema").then((m) => m.integrationsDisconnectContract),
+);
+const integrationsSetPrimaryContract = lazyContract(() =>
+  import("@/hooks/api/integrations-schema").then((m) => m.integrationsSetPrimaryContract),
+);
 
 export type IntegrationToolkit = "googlecalendar" | "outlook" | "gmail";
 export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled";
@@ -23,7 +40,7 @@ export interface IntegrationConnection {
 export function useIntegrationConnections(options?: { enabled?: boolean }) {
   return useGatedQuery("integrations:connections:view", {
     queryKey: platformHierarchyQueryKeys.integrations.connections(),
-    queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal, integrationsListContract),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });
@@ -36,7 +53,7 @@ export function useInitiateIntegrationConnection() {
       apiClient.post<{ redirectUrl: string }>("/integrations/connections/initiate", {
         toolkit,
         ...(returnPath !== undefined && { returnPath }),
-      }),
+      }, undefined, integrationsInitiateContract),
   });
 }
 
@@ -45,7 +62,7 @@ export function useFinalizeIntegrationConnection() {
   return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "finalize"],
     mutationFn: (connectedAccountId: string) =>
-      apiClient.post<IntegrationConnection>("/integrations/connections/finalize", { connectedAccountId }),
+      apiClient.post<IntegrationConnection>("/integrations/connections/finalize", { connectedAccountId }, undefined, integrationsFinalizeContract),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: platformHierarchyQueryKeys.integrations.connections(),
@@ -62,7 +79,7 @@ export function useDisconnectIntegration() {
   return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "disconnect"],
     mutationFn: (connectionId: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/integrations/connections/${connectionId}`),
+      apiClient.delete<{ deleted: boolean }>(`/integrations/connections/${connectionId}`, undefined, undefined, integrationsDisconnectContract),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: platformHierarchyQueryKeys.integrations.connections(),
@@ -79,7 +96,7 @@ export function useSetPrimaryIntegration() {
   return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "set-primary"],
     mutationFn: (connectionId: number) =>
-      apiClient.patch<IntegrationConnection>(`/integrations/connections/${connectionId}/primary`, {}),
+      apiClient.patch<IntegrationConnection>(`/integrations/connections/${connectionId}/primary`, {}, undefined, integrationsSetPrimaryContract),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: platformHierarchyQueryKeys.integrations.connections(),

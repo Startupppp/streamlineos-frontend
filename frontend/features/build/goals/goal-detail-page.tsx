@@ -53,7 +53,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";

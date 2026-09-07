@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -17,6 +18,43 @@ import {
   type EssReimbursement,
   type EssSalaryStructure,
 } from "@/hooks/api/payroll/ess-money-schema";
+
+const essOverviewC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-overview-schema").then((m) => m.essOverviewContract),
+);
+const taxDeclarationResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-overview-schema").then((m) => m.taxDeclarationResponseContract),
+);
+const updateBankResultC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-overview-schema").then((m) => m.updateBankResultContract),
+);
+const ownFnfC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-overview-schema").then((m) => m.ownFnfContract),
+);
+const totalRewardsC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-overview-schema").then((m) => m.totalRewardsStatementContract),
+);
+const teamRewardsC = lazyContract(() =>
+  import("@/hooks/api/payroll/manager-team-schema").then((m) => m.teamRewardsResultContract),
+);
+const orgPayCompressionC = lazyContract(() =>
+  import("@/hooks/api/payroll/manager-team-schema").then((m) => m.orgPayCompressionContract),
+);
+const managerInboxC = lazyContract(() =>
+  import("@/hooks/api/payroll/manager-team-schema").then((m) => m.managerInboxResultContract),
+);
+const updateReimbursementResultC = lazyContract(() =>
+  import("@/hooks/api/payroll/manager-team-schema").then((m) => m.updateReimbursementResultContract),
+);
+const updateLoanResultC = lazyContract(() =>
+  import("@/hooks/api/payroll/manager-team-schema").then((m) => m.updateLoanResultContract),
+);
+const essReimbursementC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-money-schema").then((m) => m.essReimbursementContract),
+);
+const essLoanC = lazyContract(() =>
+  import("@/hooks/api/payroll/ess-money-schema").then((m) => m.essLoanContract),
+);
 import type {
   EssOverview,
   EssTaxDeclarationResponse,
@@ -32,7 +70,7 @@ export function useEssTotalRewards() {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.essTotalRewards(),
-    queryFn: ({ signal }) => apiClient.get<TotalRewardsStatement>("/payroll/me/total-rewards", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TotalRewardsStatement>("/payroll/me/total-rewards", undefined, signal, totalRewardsC),
     staleTime: 60_000,
     enabled: canSelf,
   });
@@ -42,7 +80,7 @@ export function useManagerTeamRewards(enabled = true) {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.teamRewards(),
-    queryFn: ({ signal }) => apiClient.get<TeamRewardsResult>("/payroll/manager/team-rewards", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TeamRewardsResult>("/payroll/manager/team-rewards", undefined, signal, teamRewardsC),
     staleTime: 60_000,
     enabled: enabled && canSelf,
   });
@@ -54,7 +92,7 @@ export function useOrgPayCompression(enabled = true) {
     queryKey: payrollQueryKeys.payroll.orgPayCompression(),
     queryFn: ({ signal }) =>
       apiClient.get<PayCompressionStats & { scope: "organization" }>(
-        "/payroll/analytics/pay-compression", undefined, signal,
+        "/payroll/analytics/pay-compression", undefined, signal, orgPayCompressionC,
       ),
     staleTime: 60_000,
     enabled: enabled && canView,
@@ -65,7 +103,7 @@ export function useManagerInbox(enabled = true) {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.managerInbox(),
-    queryFn: ({ signal }) => apiClient.get<ManagerInbox>("/payroll/manager/inbox", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ManagerInbox>("/payroll/manager/inbox", undefined, signal, managerInboxC),
     staleTime: 30_000,
     enabled: enabled && canSelf,
   });
@@ -83,7 +121,7 @@ export function useManagerApproveReimbursement() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-approve"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/approve`),
+      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/approve`, undefined, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -93,9 +131,7 @@ export function useManagerRejectReimbursement() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/reject`, {
-        reason,
-      }),
+      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/reject`, { reason }, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -105,7 +141,7 @@ export function useManagerApproveLoan() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-approve"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/approve`),
+      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/approve`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -115,7 +151,7 @@ export function useManagerRejectLoan() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-reject"],
     mutationFn: (id: number) =>
-      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/reject`),
+      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/reject`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -124,7 +160,7 @@ export function useEssOverview() {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.essOverview(),
-    queryFn: ({ signal }) => apiClient.get<EssOverview>("/payroll/me/overview", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<EssOverview>("/payroll/me/overview", undefined, signal, essOverviewC),
     staleTime: 30_000,
     enabled: canSelf,
   });
@@ -175,7 +211,7 @@ export function useEssTaxDeclaration(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.essTaxDeclaration(),
-    queryFn: ({ signal }) => apiClient.get<EssTaxDeclarationResponse>("/payroll/me/tax-declaration", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<EssTaxDeclarationResponse>("/payroll/me/tax-declaration", undefined, signal, taxDeclarationResponseC),
     staleTime: 60_000,
     enabled: canSelf && (options?.enabled ?? true),
   });
@@ -196,7 +232,7 @@ export function useEssFnf() {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.essFnf(),
-    queryFn: ({ signal }) => apiClient.get<EssFnfSettlement | null>("/payroll/me/fnf", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<EssFnfSettlement | null>("/payroll/me/fnf", undefined, signal, ownFnfC),
     staleTime: 120_000,
     enabled: canSelf,
   });
@@ -215,7 +251,7 @@ export function useSubmitReimbursement() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "reimbursements", "submit"],
     mutationFn: (body: SubmitReimbursementBody) =>
-      apiClient.post<EssReimbursement>("/payroll/me/reimbursements", body),
+      apiClient.post<EssReimbursement>("/payroll/me/reimbursements", body, undefined, essReimbursementC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essReimbursements() });
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essOverview() });
@@ -234,7 +270,7 @@ export function useCreateLoan() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "loans", "create"],
     mutationFn: (body: CreateLoanBody) =>
-      apiClient.post<EssLoan>("/payroll/me/loans", body),
+      apiClient.post<EssLoan>("/payroll/me/loans", body, undefined, essLoanC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essLoans() });
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essOverview() });
@@ -258,7 +294,7 @@ export function useSubmitTaxDeclaration() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "tax-declaration", "submit"],
     mutationFn: (body: SubmitTaxDeclarationBody) =>
-      apiClient.post<EssTaxDeclarationResponse>("/payroll/me/tax-declaration", body),
+      apiClient.post<EssTaxDeclarationResponse>("/payroll/me/tax-declaration", body, undefined, taxDeclarationResponseC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essTaxDeclaration() });
     },
@@ -281,7 +317,7 @@ export function useUpdateBank() {
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "bank", "update"],
     mutationFn: (body: UpdateBankBody) =>
-      apiClient.patch<EssBankDetails>("/payroll/me/bank", body),
+      apiClient.patch<EssBankDetails>("/payroll/me/bank", body, undefined, updateBankResultC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essBank() });
     },

@@ -12,6 +12,7 @@ import type {
   CreateHrWebhookInput,
   UpdateHrWebhookInput,
 } from "@/types/hr/webhooks";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
@@ -29,7 +30,7 @@ export function useHrWebhooks(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: hrWebhookKeys.list(params),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params as Record<string, unknown>, signal)).items,
+      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params as Record<string, unknown>, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)))).items,
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -39,7 +40,7 @@ export function useHrWebhookEvents() {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.events(),
-    queryFn: ({ signal }) => apiClient.get<HrWebhookEventsResponse>("/hr/webhooks/events", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrWebhookEventsResponse>("/hr/webhooks/events", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookEventsResponseContract))),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });
@@ -53,7 +54,7 @@ export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit =
       (await apiClient.get<OffsetPage<HrWebhookDelivery>>(`/hr/webhooks/${subscriptionId}/deliveries`, {
         page: String(page),
         limit: String(limit),
-      }, signal)).items,
+      }, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookDeliveryListContract)))).items,
     enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
   });
@@ -64,7 +65,7 @@ export function useCreateHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "create"],
     mutationFn: (input: CreateHrWebhookInput) =>
-      apiClient.post<HrWebhookSubscription & { secret: string }>("/hr/webhooks", input),
+      apiClient.post<HrWebhookSubscription & { secret: string }>("/hr/webhooks", input, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionWithSecretContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrWebhookKeys.all }),
   });
 }
@@ -74,7 +75,7 @@ export function useUpdateHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrWebhookInput & { id: number }) =>
-      apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, input),
+      apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, input, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionContract))),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.all });
       qc.invalidateQueries({ queryKey: hrWebhookKeys.detail(vars.id) });
@@ -87,7 +88,7 @@ export function useToggleHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "toggle"],
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-      apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, { isActive }),
+      apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, { isActive }, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionContract))),
     onMutate: async ({ id, isActive }) => {
       await qc.cancelQueries({ queryKey: hrWebhookKeys.list() });
       const previous = qc.getQueryData<HrWebhookSubscription[]>(hrWebhookKeys.list());
@@ -120,7 +121,7 @@ export function useTestHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "test"],
     mutationFn: (id: number) =>
-      apiClient.post<{ deliveryId: number; event: string }>(`/hr/webhooks/${id}/test`, {}),
+      apiClient.post<{ deliveryId: number; event: string }>(`/hr/webhooks/${id}/test`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookTestResponseContract))),
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.deliveries(id) });
     },

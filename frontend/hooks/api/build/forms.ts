@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -15,6 +16,26 @@ import type {
   FormType,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const formListContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.formListContract),
+);
+const formRowContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.formRowContract),
+);
+const submissionListContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.submissionListContract),
+);
+const submissionCreateResultContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.submissionCreateResultContract),
+);
+const submissionRowContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.submissionRowContract),
+);
+const formSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/forms-schema").then((m) => m.formSuccessContract),
+);
 
 interface FormFilters {
   type?: FormType;
@@ -32,7 +53,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params, signal, formListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -42,7 +63,7 @@ export function useForm(projectId: number, formId: number) {
   const canView = useCan("build:forms:view");
   return useQuery<ProjectForm>({
     queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, formId),
-    queryFn: ({ signal }) => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`, undefined, signal, formRowContract),
     enabled: canView && !!projectId && !!formId,
     staleTime: 60_000,
   });
@@ -53,7 +74,7 @@ export function useCreateForm(projectId: number) {
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "create"],
     mutationFn: (data: CreateFormInput) =>
-      apiClient.post<ProjectForm>(`/build/${projectId}/forms`, data),
+      apiClient.post<ProjectForm>(`/build/${projectId}/forms`, data, undefined, formRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },
@@ -65,7 +86,7 @@ export function useUpdateForm(projectId: number) {
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "update"],
     mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
-      apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data),
+      apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data, undefined, formRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, vars.id) });
@@ -78,7 +99,7 @@ export function useDeleteForm(projectId: number) {
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/forms/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/forms/${id}`, formSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },
@@ -90,7 +111,7 @@ export function useFormSubmissions(projectId: number, formId: number) {
   return useQuery<FormSubmission[]>({
     queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
     queryFn: ({ signal }) =>
-      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal),
+      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal, submissionListContract),
     enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });
@@ -104,6 +125,8 @@ export function useSubmitForm(projectId: number, formId: number) {
       apiClient.post<SubmitFormResponse>(
         `/build/${projectId}/forms/${formId}/submissions`,
         data,
+        undefined,
+        submissionCreateResultContract,
       ),
     onSuccess: () => {
       qc.invalidateQueries({
@@ -121,6 +144,8 @@ export function useUpdateSubmission(projectId: number, formId: number) {
       apiClient.patch<FormSubmission>(
         `/build/${projectId}/forms/${formId}/submissions/${submissionId}`,
         data,
+        undefined,
+        submissionRowContract,
       ),
     onSuccess: () => {
       qc.invalidateQueries({

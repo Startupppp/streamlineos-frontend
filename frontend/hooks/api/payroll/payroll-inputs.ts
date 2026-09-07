@@ -3,10 +3,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const payrollPeriodListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then((m) => m.payrollPeriodListContract),
+);
+const payrollPeriodC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then((m) => m.payrollPeriodContract),
+);
+const payrollSnapshotListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then((m) => m.payrollSnapshotListContract),
+);
+const payrollAdjustmentListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then((m) => m.payrollAdjustmentListContract),
+);
+const payrollAdjustmentC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then((m) => m.payrollAdjustmentContract),
+);
 
 export type HrPayrollInputStatus = "open" | "building" | "built" | "locked";
 
@@ -97,7 +114,7 @@ export function usePayrollInputPeriods(params?: { cursor?: string; limit?: numbe
   return useQuery({
     queryKey: payrollQueryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedPeriods>("/hr/payroll-inputs/periods", params as Record<string, string | number> | undefined, signal),
+      apiClient.get<PaginatedPeriods>("/hr/payroll-inputs/periods", params as Record<string, string | number> | undefined, signal, payrollPeriodListC),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -108,7 +125,7 @@ export function useCreatePayrollInputPeriod() {
   return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "create"],
     mutationFn: (data: { periodKey: string; cutoffDate?: string }) =>
-      apiClient.post<PayrollInputPeriod>("/hr/payroll-inputs/periods", data),
+      apiClient.post<PayrollInputPeriod>("/hr/payroll-inputs/periods", data, undefined, payrollPeriodC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.periods() });
       toast.success("Period created");

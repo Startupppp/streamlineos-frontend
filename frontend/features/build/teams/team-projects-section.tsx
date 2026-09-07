@@ -35,7 +35,7 @@ import {
   PmPanel,
   PmSection,
   PM_ROW,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import type { TeamProject } from "@/hooks/api/build/teams";
 

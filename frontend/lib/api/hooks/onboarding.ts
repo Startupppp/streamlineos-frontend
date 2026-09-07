@@ -1,8 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+
+const personalDetailsContract = lazyContract(() =>
+  import("@/lib/api/hooks/onboarding-schema").then((m) => m.personalDetailsContract),
+);
+const bankDetailsContract = lazyContract(() =>
+  import("@/lib/api/hooks/onboarding-schema").then((m) => m.bankDetailsContract),
+);
 
 export interface PersonalDetailsPayload {
   phone: string;
@@ -36,7 +44,7 @@ export function usePersonalDetailsQuery() {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
     queryFn: ({ signal }) =>
-      apiClient.get<PersonalDetails>("/onboarding/personal-details", undefined, signal),
+      apiClient.get<PersonalDetails>("/onboarding/personal-details", undefined, signal, personalDetailsContract),
     staleTime: 30_000,
   });
 }
@@ -72,7 +80,7 @@ export type BankDetails = BankDetailsPayload;
 export function useBankDetailsQuery() {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
-    queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal, bankDetailsContract),
     staleTime: 30_000,
   });
 }

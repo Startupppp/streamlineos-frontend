@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -137,6 +138,22 @@ interface ForecastParams {
   page?: number;
 }
 
+const listRulesContract = lazyContract(() =>
+  import("@/hooks/api/inventory/planning-schema").then((m) => m.listRulesContract),
+);
+const ruleDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/planning-schema").then((m) => m.ruleDetailContract),
+);
+const listSuggestionsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/planning-schema").then((m) => m.listSuggestionsContract),
+);
+const listForecastingContract = lazyContract(() =>
+  import("@/hooks/api/inventory/planning-schema").then((m) => m.listForecastingContract),
+);
+const getPoContract = lazyContract(() =>
+  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getPoContract),
+);
+
 export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
   const canView = useCan("inventory:replenishment:manage");
   return useQuery<ReplenishmentRuleListResponse, Error>({
@@ -146,7 +163,7 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
         ...(params?.isActive !== undefined ? { isActive: String(params.isActive) } : {}),
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal),
+      }, signal, listRulesContract),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -157,7 +174,7 @@ export function useCreateReplenishmentRule() {
   return useAuthorizedMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "create"],
     mutationFn: (data) =>
-      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data),
+      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data, undefined, ruleDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -173,7 +190,7 @@ export function useUpdateReplenishmentRule() {
   >("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "update"],
     mutationFn: ({ ruleId, data }) =>
-      apiClient.patch<ReplenishmentRule>(`/inventory/replenishment/rules/${ruleId}`, data),
+      apiClient.patch<ReplenishmentRule>(`/inventory/replenishment/rules/${ruleId}`, data, undefined, ruleDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -219,7 +236,7 @@ export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsPar
       const raw = await apiClient.get<RawReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, listSuggestionsContract);
       return { items: raw.items.map(mapSuggestion), total: raw.total, page: raw.page, totalPages: raw.totalPages };
     },
     staleTime: 5 * 60_000,
@@ -232,7 +249,7 @@ export function useGeneratePO() {
   return useAuthorizedMutation<GeneratePOResult, Error, GeneratePOInput>("inventory:purchase-orders:create", {
     mutationKey: ["inventory", "replenishment", "generate-po"],
     mutationFn: (input) =>
-      apiClient.post<GeneratePOResult>("/inventory/replenishment/suggestions/generate-po", input),
+      apiClient.post<GeneratePOResult>("/inventory/replenishment/suggestions/generate-po", input, undefined, getPoContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
     },
@@ -247,7 +264,7 @@ export function useForecasting(params?: ForecastParams) {
       apiClient.get<ForecastListResponse>("/inventory/forecasting", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal),
+      }, signal, listForecastingContract),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

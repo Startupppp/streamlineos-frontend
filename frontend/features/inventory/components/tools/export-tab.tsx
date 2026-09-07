@@ -8,6 +8,11 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const exportJobsListContract = lazyContract(() =>
+  import("@/hooks/api/inventory/settings-schema").then((m) => m.exportJobsListContract),
+);
 import { queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +39,7 @@ interface ExportJobListResponse {
 function useExportJobsWithPolling() {
   return useQuery<ExportJobListResponse, Error>({
     queryKey: queryKeys.inventory.exportJobs(),
-    queryFn: ({ signal }) => apiClient.get<ExportJobListResponse>("/inventory/export/jobs", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ExportJobListResponse>("/inventory/export/jobs", undefined, signal, exportJobsListContract),
     staleTime: 10_000,
     refetchInterval: (query) => {
       const items = query.state.data?.items ?? [];

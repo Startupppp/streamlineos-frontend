@@ -2,11 +2,28 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportAiSuggestionListC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiSuggestionListContract),
+);
+const supportAiSuggestionNullableC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiSuggestionNullableContract),
+);
+const supportAiTranslationC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiTranslationContract),
+);
+const supportAiImproveReplyC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiImproveReplyContract),
+);
+const supportAiReportC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiReportContract),
+);
 
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
@@ -170,7 +187,7 @@ function invalidateSuggestions(qc: ReturnType<typeof useQueryClient>, ticketId: 
 export function useTicketAiSuggestions(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
     queryKey: supportAndWorkflowsQueryKeys.supportAiSuggestions.list(ticketId),
-    queryFn: ({ signal }) => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`, undefined, signal, supportAiSuggestionListC),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });
@@ -181,7 +198,7 @@ export function useAnalyzeTicket(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion[], Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "analyze", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`, undefined, { signal: input?.signal }, supportAiSuggestionListC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -191,7 +208,7 @@ export function useFindDuplicates(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "find-duplicates", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/find-duplicates`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/find-duplicates`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -201,7 +218,7 @@ export function useSuggestKbArticles(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "suggest-kb-articles", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-kb-articles`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-kb-articles`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -211,7 +228,7 @@ export function useSuggestReply(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-reply", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-reply`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-reply`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -221,7 +238,7 @@ export function useSuggestMacro(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-macro", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -231,7 +248,7 @@ export function useGenerateHandoffSummary(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "handoff-summary", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -241,7 +258,7 @@ export function useFindRootCauseCluster(ticketId: number) {
   return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "root-cause-cluster", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`, undefined, { signal: input?.signal }),
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`, undefined, { signal: input?.signal }, supportAiSuggestionNullableC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -254,6 +271,7 @@ export function useTranslateMessage(ticketId: number) {
         `/support/${ticketId}/ai/translate`,
         body,
         { signal },
+        supportAiTranslationC,
       ),
   });
 }
@@ -263,7 +281,7 @@ export function useResolveAiSuggestion(ticketId: number) {
   return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "resolve", ticketId],
     mutationFn: ({ suggestionId, status, feedback }: ResolveAiSuggestionInput) =>
-      apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }),
+      apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }, undefined, supportAiSuggestionNullableC),
     onSuccess: () => {
       invalidateSuggestions(qc, ticketId);
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(ticketId) });
@@ -312,7 +330,7 @@ export function useImproveReply(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "improve-reply", ticketId],
     mutationFn: ({ signal, ...input }: ImproveReplyInput & AiAbortInput) =>
-      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }, { signal }),
+      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }, { signal }, supportAiImproveReplyC),
   });
 }
 
@@ -320,7 +338,7 @@ export function useTranslateDraft(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "translate-draft", ticketId],
     mutationFn: ({ signal, ...input }: TranslateDraftInput & AiAbortInput) =>
-      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }, { signal }),
+      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }, { signal }, supportAiTranslationC),
   });
 }
 
@@ -338,7 +356,7 @@ export function useSupportAiReport(params?: SupportAiReportParams) {
   const record = reportParamsToRecord(params);
   return useGatedQuery("support:ai:view", {
     queryKey: supportAndWorkflowsQueryKeys.supportAiReport.get(record),
-    queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal),
+    queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal, supportAiReportC),
     staleTime: 2 * 60_000,
   });
 }

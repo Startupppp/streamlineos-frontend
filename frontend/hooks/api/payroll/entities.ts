@@ -2,8 +2,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
+
+const entityListC = lazyContract(() =>
+  import("@/hooks/api/payroll/entities-schema").then((m) => m.payrollEntityListContract),
+);
+const countryPacksC = lazyContract(() =>
+  import("@/hooks/api/payroll/entities-schema").then((m) => m.countryPacksResponseContract),
+);
+const entityContextC = lazyContract(() =>
+  import("@/hooks/api/payroll/entities-schema").then((m) => m.entityContextResponseContract),
+);
 
 export interface CountryPackDescriptor {
   countryCode: string;
@@ -51,7 +62,7 @@ export function usePayrollEntities() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.entitiesAll,
-    queryFn: ({ signal }) => apiClient.get<PayrollEntity[]>("/payroll/entities", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PayrollEntity[]>("/payroll/entities", undefined, signal, entityListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -66,7 +77,7 @@ export function useCountryPacks() {
         mode: string;
         honestyNote: string;
         packs: CountryPackDescriptor[];
-      }>("/payroll/entities/country-packs", undefined, signal),
+      }>("/payroll/entities/country-packs", undefined, signal, countryPacksC),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -77,7 +88,7 @@ export function useEntityContext(entityId: number | null) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.entityContext(entityId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`, undefined, signal),
+      apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`, undefined, signal, entityContextC),
     enabled: canView && entityId != null && entityId > 0,
     staleTime: 60_000,
   });

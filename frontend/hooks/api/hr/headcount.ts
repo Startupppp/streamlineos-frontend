@@ -8,6 +8,7 @@ import {
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
@@ -63,7 +64,7 @@ export function useHeadcountRequests(
   return useQuery<HeadcountRequest[], Error>({
     queryKey: humanResourcesQueryKeys.hr.headcountRequests(),
     queryFn: ({ signal }) =>
-      apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
+      apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountListPageContract))),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -141,7 +142,7 @@ export function useCreateHeadcountJob(
   return useMutation({
     mutationKey: ["hr", "headcount", "create-job"],
     mutationFn: (id: number) =>
-      apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}),
+      apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.createJobFromHeadcountContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });

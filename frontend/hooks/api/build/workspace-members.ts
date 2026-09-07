@@ -3,10 +3,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const workspaceMemberPageContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.workspaceMemberPageContract),
+);
+
+const workspaceMemberRowContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.workspaceMemberRowContract),
+);
+const workspaceMemberSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+);
 export interface ProjectWorkspaceMember {
   id: string;
   role: "member" | "admin";
@@ -47,7 +58,7 @@ export function useProjectWorkspaceMembers(
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),
-      }, signal),
+      }, signal, workspaceMemberPageContract),
     staleTime: 30_000,
     enabled,
     ...restOptions,
@@ -59,7 +70,7 @@ export function useAddProjectWorkspaceMember() {
   return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.workspaceMembers.all, "add"],
     mutationFn: (body: { userId: string; role?: "member" | "admin" }) =>
-      apiClient.post<unknown>("/build/members", body),
+      apiClient.post<unknown>("/build/members", body, undefined, workspaceMemberRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workspaceMembers.all });
     },
@@ -71,7 +82,7 @@ export function useRemoveProjectWorkspaceMember() {
   return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<unknown>(`/build/members/${userId}`),
+      apiClient.delete<unknown>(`/build/members/${userId}`, undefined, undefined, workspaceMemberSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workspaceMembers.all });
     },

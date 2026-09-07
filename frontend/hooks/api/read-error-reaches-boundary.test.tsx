@@ -8,7 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { authenticatedScope } from "@/lib/query-scope";
 import type { AccessResponse } from "@/types/access";
 import { CompOffPageClient } from "@/features/hr/overtime/comp-off-page-client";
-import { UserStatsCards } from "@/features/users/user-stats-cards";
+import { UserStatsCards } from "@/features/directory/users/user-stats-cards";
 
 /**
  * The shape this pins: a read that fails reaches a surface as `data === undefined`,

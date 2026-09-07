@@ -12,6 +12,9 @@ import { lazyContract } from "@/lib/api-envelope";
 const ownershipContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleOwnershipContract),
 );
+const moduleSuccessContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleSuccessContract),
+);
 
 export function useModuleOwnership(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
@@ -34,10 +37,11 @@ export function useTransferModuleOwnership(moduleKey: string) {
   return useMutation<{ success: true }, Error, { toUserId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "transfer-ownership"],
     mutationFn: (body) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/module-access/${moduleKey}/ownership/transfer`,
         body,
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        moduleSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -52,10 +56,11 @@ export function useCancelModuleOwnershipTransfer(moduleKey: string) {
   return useMutation<{ success: true }, Error, void>({
     mutationKey: ["moduleAccess", moduleKey, "cancel-transfer"],
     mutationFn: () =>
-      apiClient.delete<{ success: true }>(
+      apiClient.delete(
         `/module-access/${moduleKey}/ownership/transfer`,
         undefined,
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        moduleSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({

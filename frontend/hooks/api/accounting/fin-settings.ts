@@ -16,6 +16,14 @@ import type {
   UpdateSettingsInput,
 } from "@/types/accounting/fin-settings";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  accountingSettingsContract,
+  sequenceListContract,
+  sequenceContract,
+  systemAccountListContract,
+  upsertSystemAccountContract,
+  updatePaymentTermsContract,
+} from "@/hooks/api/accounting/fin-settings-schema";
 
 const finSettingsKeys = {
   all: [...accountingAndSupportQueryKeys.accounting.all, "fin-settings"] as const,
@@ -30,7 +38,7 @@ export function useAccountingSettings() {
   const can = useCan("accounting:settings:read");
   return useQuery<AccountingSettings, Error>({
     queryKey: finSettingsKeys.settings(),
-    queryFn: ({ signal }) => apiClient.get<AccountingSettings>("/accounting/settings", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/settings", undefined, signal, accountingSettingsContract),
     staleTime: 120_000,
     enabled: can,
   });
@@ -41,7 +49,7 @@ export function useUpdateAccountingSettings() {
   return useAuthorizedMutation<AccountingSettings, Error, UpdateSettingsInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "update"],
     mutationFn: (data) =>
-      apiClient.patch<AccountingSettings>("/accounting/settings", data),
+      apiClient.patch("/accounting/settings", data, undefined, accountingSettingsContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
     },
@@ -62,7 +70,7 @@ export function useNumberSequences() {
   const can = useCan("accounting:settings:read");
   return useQuery<{ items: NumberSequence[] }, Error>({
     queryKey: finSettingsKeys.sequences(),
-    queryFn: ({ signal }) => apiClient.get<{ items: NumberSequence[] }>("/accounting/settings/sequences", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/settings/sequences", undefined, signal, sequenceListContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -73,9 +81,9 @@ export function useUpdateNumberSequence(entityType: string) {
   return useAuthorizedMutation<NumberSequence, Error, UpdateSequenceInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "sequences", entityType, "update"],
     mutationFn: (data) =>
-      apiClient.patch<NumberSequence>(
+      apiClient.patch(
         `/accounting/settings/sequences/${entityType}`,
-        data,
+        data, undefined, sequenceContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
@@ -88,7 +96,7 @@ export function useSystemAccounts() {
   return useQuery<{ items: SystemAccountMapping[] }, Error>({
     queryKey: finSettingsKeys.systemAccounts(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ items: SystemAccountMapping[] }>("/accounting/settings/system-accounts", undefined, signal),
+      apiClient.get("/accounting/settings/system-accounts", undefined, signal, systemAccountListContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -99,9 +107,9 @@ export function useUpsertSystemAccount(purpose: string) {
   return useAuthorizedMutation<SystemAccountMapping, Error, { accountId: number }>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "system-accounts", purpose, "upsert"],
     mutationFn: (data) =>
-      apiClient.put<SystemAccountMapping>(
+      apiClient.put(
         `/accounting/settings/system-accounts/${purpose}`,
-        data,
+        data, undefined, upsertSystemAccountContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
@@ -114,7 +122,7 @@ export function useUpdatePaymentTerms() {
   return useAuthorizedMutation<{ terms: PaymentTerm[] }, Error, UpdatePaymentTermsInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "payment-terms", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ terms: PaymentTerm[] }>("/accounting/settings/payment-terms", data),
+      apiClient.patch("/accounting/settings/payment-terms", data, undefined, updatePaymentTermsContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
     },

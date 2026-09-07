@@ -1,6 +1,5 @@
 export { SignDashboard } from "./dashboard/sign-dashboard";
 export { EnvelopeList } from "./envelopes/envelope-list";
-export { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 export { EnvelopeBuilder } from "./builder/envelope-builder";
 export { PublicSessionView } from "./public/public-session-view";
 export { TemplateList } from "./templates/template-list";

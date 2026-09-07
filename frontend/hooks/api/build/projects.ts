@@ -12,6 +12,7 @@ import type {
   UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
+import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -30,6 +31,30 @@ import type {
   AddProjectMemberInput,
 } from "@/types/projects";
 import type { OrgMember } from "@/types/organization";
+const projectListPageLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectListPageContract),
+);
+const projectRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectRowContract),
+);
+const projectDetailLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectDetailContract),
+);
+const projectDeleteSuccessLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+);
+const memberListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectMemberListContract),
+);
+const memberRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectMemberRowContract),
+);
+const memberRoleLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.memberRoleContract),
+);
+const labelListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
+);
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type WorkspaceUser = {

@@ -14,7 +14,7 @@ import {
   parseExpenseReceipts,
   serializeExpenseReceipts,
   type ExpenseReceipt,
-} from "../expense-constants";
+} from "@/lib/expense-constants";
 import { expenseFormSchema, type ExpenseFormData } from "./expense-form-schema";
 import { ExpenseFormFields } from "./expense-form-fields";
 import { type PendingReceipt } from "./receipt-manager";

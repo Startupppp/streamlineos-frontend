@@ -12,6 +12,21 @@ import type {
 } from "@/types/crm";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+
+import { lazyContract } from "@/lib/api-envelope";
+
+const automationEventsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.automationEventsListContract),
+);
+const automationActionsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.automationActionsListContract),
+);
+const automationRulesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.automationRulesListContract),
+);
+const automationRunsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.automationRunsPageContract),
+);
 interface AutomationRunsResponse {
   runs: AutomationRun[];
   total: number;
@@ -49,7 +64,7 @@ export function useAutomationEvents() {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.events(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ events: CrmAutomationEvent[] }>("/crm/automation/events", undefined, signal),
+      apiClient.get<{ events: CrmAutomationEvent[] }>("/crm/automation/events", undefined, signal, automationEventsLazy),
     staleTime: 5 * 60_000,
   });
 }
@@ -69,7 +84,7 @@ export function useCrmAutomationRules() {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.list(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ rules: CrmAutomationRule[] }>("/crm/automations", undefined, signal),
+      apiClient.get<{ rules: CrmAutomationRule[] }>("/crm/automations", undefined, signal, automationRulesLazy),
     staleTime: 30_000,
   });
 }

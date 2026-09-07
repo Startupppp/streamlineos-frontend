@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { GitConnection, GitProvider } from "@/hooks/api/git-integration";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { SetupInstructions } from "./git-setup-instructions";

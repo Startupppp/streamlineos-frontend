@@ -74,3 +74,52 @@ export type SimulationCandidatesPage = z.infer<
   typeof simulationCandidatesPageContract
 >;
 export type SimulatedAccess = z.infer<typeof simulatedAccessContract>;
+
+export const roleSuccessContract = z.object({ success: z.literal(true) });
+
+export const setRolePermissionsContract = z.object({
+  success: z.literal(true),
+  version: z.number(),
+});
+
+export const seedDefaultRolesContract = z.object({
+  created: z.array(z.string()),
+  skipped: z.array(z.string()),
+});
+
+export const rolePermissionGrantsContract = z.array(
+  z.object({
+    permissionKey: z.string(),
+    scope: z.enum(["all", "team", "own", "none"]),
+  }),
+);
+
+export const roleMembersContract = z.array(
+  z.object({
+    id: z.string(),
+    principalType: z.enum(["user", "department"]),
+    principalId: z.string(),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+    image: z.string().nullable(),
+    via: z.enum(["direct", "department"]),
+    departmentId: z.number().nullable(),
+    departmentName: z.string().nullable(),
+  }),
+);
+
+export const rolesAnalyticsContract = z.object({
+  totalRoles: z.number(),
+  customRoles: z.number(),
+  systemRoles: z.number(),
+  totalPermissions: z.number(),
+  usersAssigned: z.number(),
+  recentChanges: z.number(),
+});
+
+export const assignableDepartmentsContract = z.array(
+  z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+);

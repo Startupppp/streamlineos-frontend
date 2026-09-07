@@ -13,6 +13,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const importUsersContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.importUsersContract),
+);
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -97,7 +102,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
 
   const { mutate: doImport, isPending } = useMutation<ImportResult, Error, ImportRow[]>({
     mutationKey: ["users", "import"],
-    mutationFn: (rows) => apiClient.post<ImportResult>("/users/import", { rows }),
+    mutationFn: (rows) => apiClient.post<ImportResult>("/users/import", { rows }, importUsersContract),
     onSuccess: (result) => {
       setImportResult(result);
       if (result.succeeded > 0) {

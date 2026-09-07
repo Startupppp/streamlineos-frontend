@@ -12,6 +12,9 @@ import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
 import { apiClient } from "@/lib/api-client";
+import { z } from "zod";
+
+const uploadKeyContract = z.object({ key: z.string() });
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -83,6 +86,7 @@ export function SettingsProfile() {
       const { key } = await apiClient.upload<{ key: string }>(
         "/storage/upload",
         formData,
+        uploadKeyContract,
       );
 
       await new Promise<void>((resolve, reject) => {

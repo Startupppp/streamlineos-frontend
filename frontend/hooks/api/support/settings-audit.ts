@@ -1,8 +1,13 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportSettingsAuditLogListC = lazyContract(() =>
+  import("./support-settings-schema").then((m) => m.supportSettingsAuditLogListContract),
+);
 
 export type SettingsAuditEntityType =
   | "sla_policy"
@@ -33,7 +38,7 @@ export function useSettingsAuditLog(entityType?: SettingsAuditEntityType) {
     queryFn: ({ signal }) =>
       apiClient.get<SettingsAuditLogEntry[]>(
         "/support/settings/audit-log",
-        entityType ? { entityType } : undefined, signal,
+        entityType ? { entityType } : undefined, signal, supportSettingsAuditLogListC,
       ),
     staleTime: 30_000,
   });

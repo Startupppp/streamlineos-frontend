@@ -13,7 +13,7 @@ import {
   PmPageShell,
   PmPanel,
   PM_TOOLBAR,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 interface PageProps {

@@ -1,7 +1,7 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PmPageShell, PmSection } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
 export default function MilestonesLoading() {
   return (

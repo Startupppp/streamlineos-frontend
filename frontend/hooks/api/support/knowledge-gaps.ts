@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type {
   KnowledgeGap,
   ListKnowledgeGapsResponse,
@@ -11,6 +12,19 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const gapListResponseC = lazyContract(() =>
+  import("./knowledge-gap-schema").then((m) => m.gapListResponseContract),
+);
+const detectGapsJobC = lazyContract(() =>
+  import("./knowledge-gap-schema").then((m) => m.detectGapsJobContract),
+);
+const proposeDraftResponseC = lazyContract(() =>
+  import("./knowledge-gap-schema").then((m) => m.proposeDraftResponseContract),
+);
+const dismissGapResponseC = lazyContract(() =>
+  import("./knowledge-gap-schema").then((m) => m.dismissGapResponseContract),
+);
 
 export const knowledgeGapsKeys = {
   all: [...queryKeyBase, "support", "knowledge-gaps"] as const,
@@ -24,7 +38,7 @@ export function useKnowledgeGaps(cursor?: number) {
     queryFn: ({ signal }) =>
       apiClient.get<ListKnowledgeGapsResponse>("/support/knowledge-gaps", {
         ...(cursor !== undefined ? { cursor: String(cursor) } : {}),
-      }, signal),
+      }, signal, gapListResponseC),
     staleTime: 30_000,
   });
 }
@@ -34,7 +48,7 @@ export function useDetectGaps() {
   return useAuthorizedMutation<DetectGapsResponse, Error>("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "detect"],
     mutationFn: () =>
-      apiClient.post<DetectGapsResponse>("/support/knowledge-gaps/detect"),
+      apiClient.post<DetectGapsResponse>("/support/knowledge-gaps/detect", undefined, undefined, detectGapsJobC),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: knowledgeGapsKeys.all });
     },
@@ -48,6 +62,7 @@ export function useDraftGap() {
     mutationFn: ({ gapId }) =>
       apiClient.post<DraftGapResponse>(
         `/support/knowledge-gaps/${gapId}/draft`,
+        undefined, undefined, proposeDraftResponseC,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: knowledgeGapsKeys.all });
@@ -62,7 +77,7 @@ export function useDismissGap() {
     mutationFn: ({ gapId }) =>
       apiClient.patch<KnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
         action: "dismiss",
-      }),
+      }, undefined, dismissGapResponseC),
     onMutate: async ({ gapId }) => {
       await queryClient.cancelQueries({ queryKey: knowledgeGapsKeys.all });
       const snapshots = new Map<string, ListKnowledgeGapsResponse>();

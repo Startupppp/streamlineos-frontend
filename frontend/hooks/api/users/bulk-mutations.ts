@@ -7,12 +7,26 @@ import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { invalidatePersonAccountAccess } from "./cache";
 import type { BulkActionResult, BulkUpdatePayload } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const bulkActionResultContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.bulkActionResultContract),
+);
+const bulkUpdateContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.bulkUpdateContract),
+);
+const sendSigninLinkContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.sendSigninLinkContract),
+);
+const updateUserRoleContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.updateUserRoleContract),
+);
 
 function useBulkLifecycleMutation(endpoint: string, mutationKey: string) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
     mutationKey: ["bulk", mutationKey],
-    mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload),
+    mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload, bulkActionResultContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
@@ -35,7 +49,7 @@ export const useBulkUpdateUsers = () => {
   return useAuthorizedMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>("settings:organization:manage", {
     mutationKey: ["bulk", "update", "users"],
     mutationFn: (payload) =>
-      apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", payload),
+      apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", payload, bulkUpdateContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
     },
@@ -49,6 +63,7 @@ export const useSendSigninLink = () => {
       apiClient.post<{ success: boolean; email: string }>(
         `/users/${userId}/send-signin-link`,
         {},
+        sendSigninLinkContract,
       ),
   });
 };
@@ -65,6 +80,7 @@ export const useUpdateUserRole = () => {
       apiClient.post<{ success: boolean; userId: string; role: string }>(
         `/settings/users/${userId}/role`,
         { role },
+        updateUserRoleContract,
       ),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });

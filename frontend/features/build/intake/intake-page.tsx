@@ -33,7 +33,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   createIntakeSchema,

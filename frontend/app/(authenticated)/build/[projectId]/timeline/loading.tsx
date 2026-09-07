@@ -1,7 +1,7 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmPanel } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PmPanel } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function TimelineLoading() {

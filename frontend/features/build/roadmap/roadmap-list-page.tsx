@@ -19,7 +19,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_SECTION,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 

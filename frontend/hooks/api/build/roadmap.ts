@@ -15,7 +15,31 @@ import type {
   PublicFeedbackPost,
   PublicChangelogEntry,
 } from "@/types/projects";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const roadmapPageContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPageContract),
+);
+const roadmapItemContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapItemContract),
+);
+const feedbackPageContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPageContract),
+);
+const feedbackPostContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPostContract),
+);
+const changelogPageContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogPageContract),
+);
+const changelogEntryContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogEntryContract),
+);
+const roadmapSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
+);
+
 export type {
   ChangelogType,
   RoadmapItem,
@@ -142,7 +166,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params, signal, roadmapPageContract),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -154,7 +178,7 @@ export function useCreateRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
-      apiClient.post<RoadmapItem>("/build/roadmap", input),
+      apiClient.post<RoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -164,7 +188,7 @@ export function useUpdateRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ id, ...input }: UpdateRoadmapItemInput & { id: number }) =>
-      apiClient.patch<RoadmapItem>(`/build/roadmap/${id}`, input),
+      apiClient.patch<RoadmapItem>(`/build/roadmap/${id}`, input, undefined, roadmapItemContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -174,7 +198,7 @@ export function useDeleteRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -184,7 +208,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal, feedbackPageContract),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -196,7 +220,7 @@ export function useUpdateFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "update"],
     mutationFn: ({ id, ...input }: UpdateFeedbackPostInput & { id: number }) =>
-      apiClient.patch<FeedbackPost>(`/build/feedback/${id}`, input),
+      apiClient.patch<FeedbackPost>(`/build/feedback/${id}`, input, undefined, feedbackPostContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -206,7 +230,7 @@ export function useMergeFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "merge"],
     mutationFn: ({ id, targetPostId }: { id: number; targetPostId: number }) =>
-      apiClient.post<FeedbackPost>(`/build/feedback/${id}/merge`, { targetPostId }),
+      apiClient.post<FeedbackPost>(`/build/feedback/${id}/merge`, { targetPostId }, undefined, feedbackPostContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -216,7 +240,7 @@ export function useDeleteFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -226,7 +250,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal, changelogPageContract),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -238,7 +262,7 @@ export function useCreateChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
-      apiClient.post<ChangelogEntry>("/build/changelog", input),
+      apiClient.post<ChangelogEntry>("/build/changelog", input, undefined, changelogEntryContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -248,7 +272,7 @@ export function useUpdateChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "update"],
     mutationFn: ({ id, ...input }: UpdateChangelogEntryInput & { id: number }) =>
-      apiClient.patch<ChangelogEntry>(`/build/changelog/${id}`, input),
+      apiClient.patch<ChangelogEntry>(`/build/changelog/${id}`, input, undefined, changelogEntryContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -258,7 +282,7 @@ export function useDeleteChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }

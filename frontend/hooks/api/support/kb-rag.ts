@@ -5,9 +5,20 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
 import { streamAiText } from "@/hooks/api/ai-text-stream";
 import type { AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
 import { publicKbSourcesSchema } from "./kb-rag-schema";
+
+const kbIndexStatusC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbIndexStatusContract),
+);
+const kbReindexArticleC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbReindexArticleContract),
+);
+const kbReindexAllC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbReindexAllContract),
+);
 
 export interface KbAnswerSource {
   articleId: number;
@@ -68,7 +79,7 @@ export function useSupportKbIndexStatus(id: number) {
   return useGatedQuery("support:kb:view", {
     queryKey: [...accountingAndSupportQueryKeys.supportKb.article(id), "index-status"] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`, undefined, signal),
+      apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`, undefined, signal, kbIndexStatusC),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
   });
@@ -79,7 +90,7 @@ export function useReindexSupportKbArticle() {
   return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "rag", "reindex"],
     mutationFn: (id: number) =>
-      apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}),
+      apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}, undefined, kbReindexArticleC),
     onSuccess: (_, id) => {
       qc.invalidateQueries({
         queryKey: [...accountingAndSupportQueryKeys.supportKb.article(id), "index-status"],
@@ -92,7 +103,7 @@ export function useReindexAllSupportKb() {
   const qc = useQueryClient();
   return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "rag", "reindex-all"],
-    mutationFn: () => apiClient.post<IndexAllResult>("/support/kb/reindex-all", {}),
+    mutationFn: () => apiClient.post<IndexAllResult>("/support/kb/reindex-all", {}, undefined, kbReindexAllC),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.all }),
   });
 }

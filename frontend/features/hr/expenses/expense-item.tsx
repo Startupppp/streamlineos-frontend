@@ -22,7 +22,7 @@ import {
   getReceiptFileKind,
   receiptKindEmoji,
   receiptKindLabel,
-} from "./expense-constants";
+} from "@/lib/expense-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { activationProps } from "@/lib/keyboard-activation";
 

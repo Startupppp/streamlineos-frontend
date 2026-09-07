@@ -3,8 +3,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const kbCommentListC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbCommentListContract),
+);
+const kbCommentRowC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbCommentRowContract),
+);
+const kbSuccessC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbSuccessContract),
+);
 
 interface KbArticleComment {
   id: number;
@@ -22,8 +33,11 @@ export function useSupportKbComments(articleId: number) {
     queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbArticleComment[]>(
-        `/support/kb/articles/${articleId}/comments`
-      , undefined, signal),
+        `/support/kb/articles/${articleId}/comments`,
+        undefined,
+        signal,
+        kbCommentListC,
+      ),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
   });
@@ -36,7 +50,9 @@ export function useAddSupportKbComment(articleId: number) {
     mutationFn: (body: string) =>
       apiClient.post<KbArticleComment>(
         `/support/kb/articles/${articleId}/comments`,
-        { body }
+        { body },
+        undefined,
+        kbCommentRowC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),
@@ -49,7 +65,10 @@ export function useDeleteSupportKbComment(articleId: number) {
     mutationKey: ["supportKbComments", "delete"],
     mutationFn: (commentId: number) =>
       apiClient.delete<{ success: boolean }>(
-        `/support/kb/articles/${articleId}/comments/${commentId}`
+        `/support/kb/articles/${articleId}/comments/${commentId}`,
+        undefined,
+        undefined,
+        kbSuccessC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),

@@ -25,8 +25,16 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/features/hr/onboarding/onboarding-schema").then((m) => m.storageUploadContract),
+);
+const onboardingDocRowContract = lazyContract(() =>
+  import("@/features/hr/onboarding/onboarding-schema").then((m) => m.onboardingDocumentRowContract),
+);
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocList, useSubmitOnboardingDoc } from "@/hooks/api/hr/onboarding";
 
@@ -173,12 +181,12 @@ export const EmployeeDocumentsTab = forwardRef<
       const fd = new FormData();
       fd.append("file", file);
       fd.append("folder", "onboarding-docs");
-      const uploadResult = await apiClient.upload<{ key: string }>("/storage/upload", fd);
+      const uploadResult = await apiClient.upload("/storage/upload", fd, storageUploadContract);
       await apiClient.post("/hr/onboarding-docs/me", {
         documentTypeId,
         fileUrl: uploadResult.key,
         fileName: file.name,
-      });
+      }, undefined, onboardingDocRowContract);
     }
 
     await qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });

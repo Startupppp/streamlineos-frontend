@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -36,11 +37,22 @@ export interface CommentDraft {
   ticket: CommentDraftTicket;
 }
 
+
+const commentDraftListContract = lazyContract(() =>
+  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftListContract),
+);
+const commentDraftContract = lazyContract(() =>
+  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftContract),
+);
+const commentDraftDeletedContract = lazyContract(() =>
+  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftDeletedContract),
+);
+
 export function useMyCommentDrafts() {
   const canView = useCan("build:tickets:view");
   return useQuery<CommentDraft[]>({
     queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(),
-    queryFn: ({ signal }) => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine", undefined, signal, commentDraftListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -51,7 +63,7 @@ export function useUpsertCommentDraft() {
   return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "upsert"],
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
-      apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }),
+      apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }, undefined, commentDraftContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
@@ -63,7 +75,7 @@ export function useDeleteCommentDraft() {
   return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`),
+      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`, commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
@@ -75,7 +87,7 @@ export function useDeleteCommentDraftByTicket() {
   return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
     mutationFn: (ticketId: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`),
+      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`, commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
@@ -87,7 +99,7 @@ export function useDeleteAllCommentDrafts() {
   return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete-all"],
     mutationFn: () =>
-      apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine"),
+      apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },

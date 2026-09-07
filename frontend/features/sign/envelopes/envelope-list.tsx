@@ -21,7 +21,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
-import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
+import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
 import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";

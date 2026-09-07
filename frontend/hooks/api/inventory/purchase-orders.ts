@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -50,6 +51,16 @@ interface SendPurchaseOrderInput {
   poId?: number;
 }
 
+const listPosContract = lazyContract(() =>
+  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.listPosContract),
+);
+const getPoContract = lazyContract(() =>
+  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getPoContract),
+);
+const getGrnContract = lazyContract(() =>
+  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getGrnContract),
+);
+
 export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
@@ -60,7 +71,7 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
-      }, signal),
+      }, signal, listPosContract),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -73,7 +84,7 @@ export function useVendorPurchaseOrders(vendorId: number) {
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         vendorId: String(vendorId),
-      }, signal),
+      }, signal, listPosContract),
     staleTime: 2 * 60_000,
     enabled: canView && vendorId > 0,
   });
@@ -83,7 +94,7 @@ export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PurchaseOrder, Error>({
     queryKey: queryKeys.inventory.purchaseOrder(poId),
-    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal, getPoContract),
     staleTime: 2 * 60_000,
     enabled: canView && poId > 0,
   });
@@ -109,7 +120,7 @@ export function useCreatePurchaseOrder() {
           lineOrder: line.lineOrder ?? 0,
         })),
       };
-      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body);
+      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body, undefined, getPoContract);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -124,7 +135,7 @@ export function useSendPurchaseOrder(poId?: number) {
     mutationFn: (vars) => {
       const id = poId ?? vars?.poId;
       if (!id) throw new Error("Purchase order id is required");
-      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {});
+      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {}, undefined, getPoContract);
     },
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -138,7 +149,7 @@ export function useReceiveGoods(poId: number) {
   return useAuthorizedMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
-      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, undefined, getGrnContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
@@ -160,6 +171,7 @@ export function useApprovePurchaseOrder(poId: number) {
         `/inventory/purchase-orders/${poId}/approve`,
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        getPoContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -239,7 +251,7 @@ export function useUpdatePurchaseOrder(poId: number) {
               })),
             }
           : {}),
-      }),
+      }, undefined, getPoContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });

@@ -3,8 +3,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+
+const documentTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-templates-schema").then((m) => m.documentTemplateContract),
+);
+const documentTemplateListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-templates-schema").then((m) => m.documentTemplateListContract),
+);
+const successBoolLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-templates-schema").then((m) => m.successBoolContract),
+);
 
 
 export interface DocumentTemplate {
@@ -46,8 +57,10 @@ export function useDocumentTemplates(type?: string) {
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
-        params as Record<string, unknown> | undefined
-      , signal),
+        params as Record<string, unknown> | undefined,
+        signal,
+        documentTemplateListLazy,
+      ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -59,7 +72,7 @@ export function useDocumentTemplate(templateId: number) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documentTemplate(templateId),
     queryFn: ({ signal }) =>
-      apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`, undefined, signal),
+      apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`, undefined, signal, documentTemplateLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && templateId > 0 && canView,
   });
@@ -70,7 +83,7 @@ export function useCreateDocumentTemplate() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "create"],
     mutationFn: (data: CreateDocumentTemplateInput) =>
-      apiClient.post<DocumentTemplate>("/hr/documents/templates", data),
+      apiClient.post<DocumentTemplate>("/hr/documents/templates", data, undefined, documentTemplateLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }
@@ -80,7 +93,7 @@ export function useUpdateDocumentTemplate() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "update"],
     mutationFn: ({ templateId, ...data }: UpdateDocumentTemplateInput & { templateId: number }) =>
-      apiClient.put<DocumentTemplate>(`/hr/documents/templates/${templateId}`, data),
+      apiClient.put<DocumentTemplate>(`/hr/documents/templates/${templateId}`, data, undefined, documentTemplateLazy),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplate(variables.templateId) });
@@ -93,7 +106,7 @@ export function useDeleteDocumentTemplate() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`, undefined, undefined, successBoolLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }
@@ -103,22 +116,9 @@ export function useSetDocumentTemplateDefault() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "set-default"],
     mutationFn: ({ templateId, isDefault }: { templateId: number; isDefault: boolean }) =>
-      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${templateId}`, { isDefault }),
+      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${templateId}`, { isDefault }, undefined, documentTemplateLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
-}
-
-export interface DocumentTemplateVersion {
-  id: number;
-  templateId: number;
-  orgId: string;
-  version: number;
-  title: string;
-  type: string;
-  htmlContent: string;
-  variables: string[];
-  archivedAt: string | null;
-  archivedBy: string;
 }
 
 export function useDocumentTemplateVersions(templateId: number) {
@@ -127,9 +127,12 @@ export function useDocumentTemplateVersions(templateId: number) {
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.documentTemplate(templateId), "versions"],
     queryFn: ({ signal }) =>
-      apiClient.get<DocumentTemplateVersion[]>(
-        `/hr/documents/templates/${templateId}/versions`
-      , undefined, signal),
+      apiClient.get<DocumentTemplate[]>(
+        `/hr/documents/templates/${templateId}/versions`,
+        undefined,
+        signal,
+        documentTemplateListLazy,
+      ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!templateId && canView,
   });

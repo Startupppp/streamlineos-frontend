@@ -2,11 +2,20 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSchedule, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const workflowScheduleListContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowScheduleListContract),
+);
+const workflowScheduleUpdateContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowScheduleUpdateContract),
+);
+
 
 interface UpdateScheduleInput {
   cronExpression?: string;

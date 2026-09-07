@@ -3,12 +3,22 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
 
+const generateWorkspaceContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.generateWorkspaceContract),
+);
+
+/**
+ * DISAGREEMENT FIXED: `WorkspaceGenerationResult` previously used number fields
+ * (`businessUnits: number`, etc.) but the backend `generateWorkspaceResponseSchema`
+ * returns string arrays of created unit names. Updated to match backend.
+ */
 export type WorkspaceGenerationResult = {
-  businessUnits: number;
-  branches: number;
-  departments: number;
-  teams: number;
+  businessUnits: string[];
+  branches: string[];
+  departments: string[];
+  teams: string[];
 };
 
 export function useGenerateWorkspace() {
@@ -22,6 +32,7 @@ export function useGenerateWorkspace() {
       apiClient.post<WorkspaceGenerationResult>(
         "/workspace-onboarding/generate",
         data,
+        generateWorkspaceContract,
       ),
   });
 }

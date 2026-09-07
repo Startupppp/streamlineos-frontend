@@ -5,6 +5,7 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { RecordForm } from "@/components/renderer/record-form";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import type { RecordFormValues } from "@/components/renderer/record-form";
+import { asRecordValue } from "@/components/renderer/format-value";
 import { useCreateParty, useUpdateParty } from "@/hooks/api/party/parties";
 import type { BusinessParty, CreatePartyInput, UpdatePartyInput } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -113,7 +114,7 @@ export function PartyFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
         key={`${mode}:${defaultValues?.partyId ?? "new"}:${String(open)}`}
         layout={PARTY_LAYOUT}
         mode={mode}
-        initial={defaultValues as unknown as Record<string, unknown> | undefined}
+        initial={defaultValues !== undefined ? asRecordValue(defaultValues) : undefined}
         onSubmit={handleSubmit}
         onCancel={() => onOpenChange(false)}
         isSubmitting={isPending}

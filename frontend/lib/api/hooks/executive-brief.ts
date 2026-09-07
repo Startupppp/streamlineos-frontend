@@ -1,6 +1,7 @@
 "use client";
 
 import { queryOptions, useQueryClient } from "@tanstack/react-query";
+import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
@@ -25,9 +26,13 @@ export interface LatestBriefResponse {
   staleSinceMinutes?: number;
 }
 
+const executiveBriefContract = lazyContract(() =>
+  import("@/lib/api/hooks/executive-brief-schema").then((m) => m.executiveBriefGetLatestContract),
+);
+
 const briefQueryOptions = queryOptions({
   queryKey: platformCoreQueryKeys.executiveBrief,
-  queryFn: ({ signal }) => apiClient.get<LatestBriefResponse>("/ai/executive-brief", undefined, signal),
+  queryFn: ({ signal }) => apiClient.get<LatestBriefResponse>("/ai/executive-brief", undefined, signal, executiveBriefContract),
   staleTime: 5 * 60 * 1000,
 });
 

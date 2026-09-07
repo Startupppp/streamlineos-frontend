@@ -2,6 +2,14 @@
 
 import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+const chatSavedMessagesContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSavedMessagesContract),
+);
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -28,7 +36,7 @@ export function useSaveMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "save"],
     mutationFn: (messageId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
+      apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.savedMessages(),
@@ -42,7 +50,7 @@ export function useUnsaveMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "unsave"],
     mutationFn: (messageId: number) =>
-      apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
+      apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.savedMessages(),

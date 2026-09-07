@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -13,11 +14,31 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+
+const portalProjectListContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.portalProjectListContract),
+);
+const portalProjectOverviewContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.portalProjectOverviewContract),
+);
+const portalChangeRequestListContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.portalChangeRequestListContract),
+);
+const changeRequestRowContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.changeRequestRowContract),
+);
+const visibilitySummaryContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.visibilitySummaryContract),
+);
+const toggleVisibilityContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.toggleVisibilityContract),
+);
+
 export function usePortalProjects() {
   const canView = useCan("build:portal:view");
   return useQuery<ClientPortalProject[]>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.projects(),
-    queryFn: ({ signal }) => apiClient.get<ClientPortalProject[]>("/build/portal/projects", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ClientPortalProject[]>("/build/portal/projects", undefined, signal, portalProjectListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -28,7 +49,7 @@ export function usePortalProjectOverview(projectId: number) {
   return useQuery<ClientPortalOverview>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.overview(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<ClientPortalOverview>(`/build/portal/projects/${projectId}/overview`, undefined, signal),
+      apiClient.get<ClientPortalOverview>(`/build/portal/projects/${projectId}/overview`, undefined, signal, portalProjectOverviewContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -39,7 +60,7 @@ export function usePortalChangeRequests(projectId: number) {
   return useQuery<ChangeRequest[]>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.changeRequests(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<ChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal),
+      apiClient.get<ChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal, portalChangeRequestListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -53,6 +74,8 @@ export function useSubmitPortalChangeRequest(projectId: number) {
       apiClient.post<ChangeRequest>(
         `/build/portal/projects/${projectId}/change-requests`,
         data,
+        undefined,
+        changeRequestRowContract,
       ),
     onSuccess: () => {
       qc.invalidateQueries({
@@ -67,7 +90,7 @@ export function useClientVisibility(projectId: number) {
   return useQuery<ClientVisibilitySummary>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<ClientVisibilitySummary>(`/build/${projectId}/client-visibility`, undefined, signal),
+      apiClient.get<ClientVisibilitySummary>(`/build/${projectId}/client-visibility`, undefined, signal, visibilitySummaryContract),
     enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
@@ -81,6 +104,8 @@ export function useUpdateTicketVisibility(projectId: number) {
       apiClient.patch<{ success: boolean }>(
         `/build/${projectId}/client-visibility/tickets/${id}`,
         { clientVisible },
+        undefined,
+        toggleVisibilityContract,
       ),
     onMutate: async ({ id, clientVisible }) => {
       const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
@@ -113,6 +138,8 @@ export function useUpdateMilestoneVisibility(projectId: number) {
       apiClient.patch<{ success: boolean }>(
         `/build/${projectId}/client-visibility/milestones/${id}`,
         { clientVisible },
+        undefined,
+        toggleVisibilityContract,
       ),
     onMutate: async ({ id, clientVisible }) => {
       const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);

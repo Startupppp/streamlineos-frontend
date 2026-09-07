@@ -2,6 +2,7 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -72,6 +73,16 @@ interface CostingParams {
   page?: number;
 }
 
+const valuationSummaryContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationSummaryContract),
+);
+const valuationLayersContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationLayersContract),
+);
+const listVariantsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.listVariantsContract),
+);
+
 export function useValuationReport(params?: ValuationReportParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationSummary, Error>({
@@ -80,7 +91,7 @@ export function useValuationReport(params?: ValuationReportParams) {
       apiClient.get<ValuationSummary>("/inventory/reports/valuation", {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
-      }, signal),
+      }, signal, valuationSummaryContract),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -94,7 +105,7 @@ export function useValuationLayers(variantId: number, page?: number) {
       apiClient.get<ValuationLayersResponse>("/inventory/valuation/layers", {
         variantId: String(variantId),
         ...(page ? { page: String(page) } : {}),
-      }, signal),
+      }, signal, valuationLayersContract),
     enabled: canView && variantId > 0,
     staleTime: 2 * 60_000,
   });
@@ -108,7 +119,7 @@ export function useCostingProducts(params?: CostingParams) {
       apiClient.get<CostingListResponse>("/inventory/products/variants", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal),
+      }, signal, listVariantsContract),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

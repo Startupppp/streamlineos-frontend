@@ -23,6 +23,9 @@ const activeHuddleContract = lazyContract(() =>
 const huddleContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatHuddleContract),
 );
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
 
 export function useActiveHuddle(channelId: number) {
   const canRead = useCan("chat:channels:read");
@@ -66,7 +69,7 @@ export function useJoinHuddle() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "join"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`),
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`, undefined, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -81,7 +84,7 @@ export function useLeaveHuddle() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "leave"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`, undefined, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
       queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
@@ -93,7 +96,7 @@ export function useHuddleHeartbeat() {
   return useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],
     mutationFn: ({ huddleId }: { huddleId: number }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/heartbeat`),
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/heartbeat`, undefined, undefined, chatOkContract),
   });
 }
 
@@ -102,7 +105,7 @@ export function useSetHuddleMute() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "mute"],
     mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }),
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -114,7 +117,7 @@ export function useRaiseHand() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "hand"],
     mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }),
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -125,7 +128,7 @@ export function useSendHuddleSignal() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "signal"],
     mutationFn: ({ huddleId, ...signal }: { huddleId: number } & HuddleSignalInput) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/signal`, signal),
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/signal`, signal, undefined, chatOkContract),
   });
 }
 
@@ -134,7 +137,7 @@ export function useSetHuddleScreenShare() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "screenshare"],
     mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }),
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -146,7 +149,7 @@ export function useKickParticipant() {
   return useAuthorizedMutation("chat:huddles:moderate", {
     mutationKey: ["chat", "huddle", "kick"],
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
+      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -158,7 +161,7 @@ export function useSetHuddleDeafen() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "deafen"],
     mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }),
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
@@ -179,6 +182,7 @@ export function useInviteToHuddle() {
         `/chat/huddles/${huddleId}/invite`,
         { userIds },
         operation.configFor({ huddleId, userIds }),
+        chatOkContract,
       ),
     onSuccess: () => {
       operation.settle();

@@ -1,9 +1,20 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { streamAiText, type AiTextStreamResult } from "@/hooks/api/ai-text-stream";
+
+const meetingFollowUpContract = lazyContract(() =>
+  import("@/hooks/api/meetings-ai-schema").then((m) => m.meetingFollowUpContract),
+);
+const proposeSendFollowUpContract = lazyContract(() =>
+  import("@/hooks/api/meetings-ai-schema").then((m) => m.proposeSendFollowUpContract),
+);
+const confirmSendFollowUpContract = lazyContract(() =>
+  import("@/hooks/api/meetings-ai-schema").then((m) => m.confirmSendFollowUpContract),
+);
 
 export interface MeetingPrepInput {
   eventId: string;
@@ -54,7 +65,7 @@ export interface ProposeSendInput {
 }
 
 export interface ProposeSendResult {
-  proposalId: string;
+  proposalId: number;
   token: string;
   expiresAt: string;
 }
@@ -162,7 +173,7 @@ export function useMeetingFollowUp() {
   return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up"],
     mutationFn: ({ signal, ...input }: MeetingFollowUpInput & AiAbortInput) =>
-      apiClient.post<MeetingFollowUpResult>("/ai/meetings/follow-up", input, { signal }),
+      apiClient.post<MeetingFollowUpResult>("/ai/meetings/follow-up", input, { signal }, meetingFollowUpContract),
   });
 }
 
@@ -170,7 +181,7 @@ export function useProposeMeetingSend() {
   return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up", "propose-send"],
     mutationFn: ({ signal, ...input }: ProposeSendInput & AiAbortInput) =>
-      apiClient.post<ProposeSendResult>("/ai/meetings/follow-up/propose-send", input, { signal }),
+      apiClient.post<ProposeSendResult>("/ai/meetings/follow-up/propose-send", input, { signal }, proposeSendFollowUpContract),
   });
 }
 
@@ -178,6 +189,6 @@ export function useConfirmMeetingSend() {
   return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up", "confirm-send"],
     mutationFn: ({ signal, ...input }: ConfirmSendInput & AiAbortInput) =>
-      apiClient.post<ConfirmSendResult>("/ai/meetings/follow-up/confirm-send", input, { signal }),
+      apiClient.post<ConfirmSendResult>("/ai/meetings/follow-up/confirm-send", input, { signal }, confirmSendFollowUpContract),
   });
 }

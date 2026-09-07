@@ -36,7 +36,91 @@ export const bankAccountContract = z.object({
 
 export const bankAccountsPageContract = cursorPageContract(bankAccountContract);
 
+export const bankTransactionContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  bankAccountId: z.number(),
+  importId: z.number().nullable(),
+  txnDate: z.string(),
+  description: z.string().nullable(),
+  reference: z.string().nullable(),
+  amount: z.string(),
+  balanceAfter: z.string().nullable(),
+  counterparty: z.string().nullable(),
+  fingerprint: z.string(),
+  status: z.enum(["UNMATCHED", "SUGGESTED", "MATCHED", "RECONCILED", "IGNORED"]),
+  matchedJournalEntryId: z.number().nullable(),
+  createdAt: z.string(),
+});
+
+export const bankTransactionListContract = cursorPageContract(bankTransactionContract);
+
+export const bankImportCreateContract = z.object({
+  id: z.number(),
+  importedCount: z.number(),
+  duplicateCount: z.number(),
+  totalRows: z.number(),
+});
+
+const reconMatchContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  bankTransactionId: z.number(),
+  journalEntryId: z.number().nullable(),
+  matchedType: z.string(),
+  matchedRecordId: z.number().nullable(),
+  amount: z.string(),
+  confidence: z.string().nullable(),
+  isConfirmed: z.boolean(),
+  confirmedByMembershipId: z.number().nullable(),
+  confirmedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+const bankTxnWithMatchesContract = bankTransactionContract.extend({
+  suggestedMatches: z.array(reconMatchContract),
+});
+
+export const reconWorkspaceContract = z.object({
+  unmatched: z.array(bankTransactionContract),
+  suggested: z.array(bankTxnWithMatchesContract),
+  reconciledCount: z.number(),
+  ledgerBalance: z.string().nullable(),
+  bankBalance: z.string(),
+});
+
+export const reconRuleContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  name: z.string(),
+  priority: z.number(),
+  conditions: z.unknown(),
+  action: z.unknown(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const reconRuleListContract = cursorPageContract(reconRuleContract);
+
+export const bankTransferContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  fromBankAccountId: z.number(),
+  toBankAccountId: z.number(),
+  amount: z.string(),
+  transferDate: z.string(),
+  reference: z.string().nullable(),
+  journalEntryId: z.number().nullable(),
+  createdByMembershipId: z.number().nullable(),
+  createdAt: z.string(),
+});
+
+export const bankTransferListContract = cursorPageContract(bankTransferContract);
+
 export type BankAccountType = z.infer<typeof bankAccountTypeContract>;
 
 export type BankAccountsPage = z.infer<typeof bankAccountsPageContract>;
 export type BankAccountRecord = z.infer<typeof bankAccountContract>;
+export type BankTransactionList = z.infer<typeof bankTransactionListContract>;
+export type ReconWorkspace = z.infer<typeof reconWorkspaceContract>;

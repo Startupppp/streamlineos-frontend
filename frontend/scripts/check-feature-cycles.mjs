@@ -44,7 +44,27 @@ const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
  * clean — the exact failure this release keeps finding in other gates.
  */
 const SCAN_FLOOR_FEATURES = 10;
-const SCAN_FLOOR_EDGES = 20;
+
+/**
+ * Liveness is proven by imports this scanner RESOLVED inside `features/`, not by
+ * cross-feature edges.
+ *
+ * Until 2026-09-07 the floor was 20 CROSS-feature edges, which made this gate
+ * contradict `check:import-direction`: that gate drives cross-feature imports to
+ * zero by design, and on the day its baseline reached 0/0 this one failed with
+ * "found 43 feature(s) and 17 cross-feature edge(s) (floor 10/20)" — a red gate
+ * caused by the debt being RETIRED, not by the scanner breaking. Repricing 20
+ * down to 15 would have bought one refactor of headroom and left the same trap.
+ *
+ * `resolvedImports` counts every import inside `features/` whose specifier this
+ * scanner resolved to a file it can attribute to a feature, INCLUDING the
+ * feature-internal ones a healthy tree is almost entirely made of. It measured
+ * 3,743 at this commit against 17 cross-feature edges, and it cannot legitimately
+ * approach zero while `features/` has files — but it goes straight to zero if
+ * `IMPORT_PATTERN` or `resolveSpecifier` breaks, which is the failure this floor
+ * exists to catch. The floor is set an order of magnitude below the measurement.
+ */
+const SCAN_FLOOR_RESOLVED_IMPORTS = 200;
 
 const IMPORT_PATTERN =
   /(?:import|export)\s[^;]*?from\s*["']([^"']+)["']|import\s*\(\s*["']([^"']+)["']\s*\)|require\(\s*["']([^"']+)["']\s*\)|jest\.mock\(\s*["']([^"']+)["']/g;
@@ -91,6 +111,7 @@ function resolveSpecifier(fromFile, specifier) {
 export function buildFeatureGraph(files, readFile) {
   /** @type {Map<string, Map<string, string[]>>} */
   const edges = new Map();
+  let resolvedImports = 0;
 
   for (const file of files) {
     const owner = featureOf(relative(ROOT, file));
@@ -103,7 +124,9 @@ export function buildFeatureGraph(files, readFile) {
       const target = resolveSpecifier(file, specifier);
       if (target === null) continue;
       const targetFeature = featureOf(target);
-      if (targetFeature === null || targetFeature === owner) continue;
+      if (targetFeature === null) continue;
+      resolvedImports += 1;
+      if (targetFeature === owner) continue;
 
       if (!edges.has(owner)) edges.set(owner, new Map());
       const perTarget = edges.get(owner);
@@ -112,6 +135,7 @@ export function buildFeatureGraph(files, readFile) {
     }
   }
 
+  edges.resolvedImports = resolvedImports;
   return edges;
 }
 
@@ -214,6 +238,7 @@ function main() {
   );
 
   const edgeCount = [...edges.values()].reduce((total, m) => total + m.size, 0);
+  const resolvedImports = edges.resolvedImports ?? 0;
 
   if (args.includes("--list")) {
     for (const [from, targets] of [...edges.entries()].sort()) {
@@ -227,10 +252,10 @@ function main() {
     process.exit(0);
   }
 
-  if (features.size < SCAN_FLOOR_FEATURES || edgeCount < SCAN_FLOOR_EDGES) {
+  if (features.size < SCAN_FLOOR_FEATURES || resolvedImports < SCAN_FLOOR_RESOLVED_IMPORTS) {
     console.error(
-      `FAIL: scan floor — found ${features.size} feature(s) and ${edgeCount} cross-feature edge(s) ` +
-        `(floor ${SCAN_FLOOR_FEATURES}/${SCAN_FLOOR_EDGES}). A gate that suddenly sees nothing is broken, not green.`,
+      `FAIL: scan floor — found ${features.size} feature(s) and resolved ${resolvedImports} import(s) inside features/ ` +
+        `(floor ${SCAN_FLOOR_FEATURES}/${SCAN_FLOOR_RESOLVED_IMPORTS}). A gate that suddenly sees nothing is broken, not green.`,
     );
     process.exit(1);
   }
@@ -259,7 +284,7 @@ function main() {
   }
 
   console.log(
-    `PASS: features/ is acyclic — ${features.size} feature(s), ${edgeCount} cross-feature edge(s), ${files.length} file(s) scanned.`,
+    `PASS: features/ is acyclic — ${features.size} feature(s), ${edgeCount} cross-feature edge(s), ${resolvedImports} resolved import(s), ${files.length} file(s) scanned.`,
   );
 }
 

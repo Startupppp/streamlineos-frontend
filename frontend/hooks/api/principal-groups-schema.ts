@@ -73,3 +73,7 @@ export const principalGroupRoleContract = z.object({
 export type GroupRole = z.infer<typeof principalGroupRoleContract>;
 
 export const principalGroupRolesContract = z.array(principalGroupRoleContract);
+
+export const principalGroupSuccessContract = z.object({
+  success: z.literal(true),
+});

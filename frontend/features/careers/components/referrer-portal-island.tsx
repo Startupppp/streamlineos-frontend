@@ -17,10 +17,15 @@ import {
 import { format } from "date-fns";
 import { Share2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import { referrerPortalSchema, type ReferrerPortalFormValues } from "./referrer-portal-schema";
 import type { PublicReferrerPortal } from "@/lib/public-fetch";
+
+const publicReferralSubmitContract = lazyContract(() =>
+  import("@/lib/public-schema").then((m) => m.publicReferralSubmitContract),
+);
 
 const STATUS_LABEL: Record<string, string> = {
   SUBMITTED: "Submitted",
@@ -68,6 +73,8 @@ export function ReferrerPortalIsland({ data, token }: Props) {
           phone: values.phone?.trim() || undefined,
           jobPostingId: values.jobPostingId ? Number(values.jobPostingId) : undefined,
         },
+        undefined,
+        publicReferralSubmitContract,
       );
       setSubmitSuccess(
         result.alreadyReferred

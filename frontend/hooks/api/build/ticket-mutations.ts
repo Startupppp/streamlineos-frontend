@@ -16,6 +16,24 @@ import type {
   ProjectMember,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const ticketUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
+);
+
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+
+const rankTicketResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.rankTicketResultContract),
+);
+
+const bulkUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+);
 
 export interface UpdateTicketResponse {
   updated: boolean;
@@ -120,7 +138,9 @@ export function useUpdateTicket(
     mutationFn: ({ ticketId, ...data }) =>
       apiClient.patch<UpdateTicketResponse>(
         `/build/${projectId}/tickets/${ticketId}`,
-        data
+        data,
+        undefined,
+        ticketUpdateResultLazy,
       ),
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
@@ -237,7 +257,10 @@ export function useDeleteTicket(
     mutationKey: ["projects", "tickets", "delete"],
     mutationFn: ({ ticketId }) =>
       apiClient.delete<{ success: boolean }>(
-        `/build/${projectId}/tickets/${ticketId}`
+        `/build/${projectId}/tickets/${ticketId}`,
+        undefined,
+        undefined,
+        successLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
@@ -278,6 +301,8 @@ export function useRankTicket<TContext = unknown>(
       apiClient.patch<RankTicketResponse>(
         `/build/${projectId}/tickets/${ticketId}/rank`,
         data,
+        undefined,
+        rankTicketResultLazy,
       ),
   });
 }
@@ -298,7 +323,9 @@ export function useBulkUpdateTickets(projectId: number) {
     mutationFn: (data: BulkUpdateTicketsInput) =>
       apiClient.post<{ updated: number; ticketIds: number[] }>(
         `/build/${projectId}/tickets/bulk`,
-        data
+        data,
+        undefined,
+        bulkUpdateResultLazy,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });

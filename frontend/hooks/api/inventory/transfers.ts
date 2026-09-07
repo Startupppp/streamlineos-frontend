@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { TransferStatus } from "@/features/inventory/lib";
@@ -192,6 +193,13 @@ export interface TransferFilters {
   limit?: number;
 }
 
+const listTransfersContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.listTransfersContract),
+);
+const transferItemContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.transferItemContract),
+);
+
 export function useTransfers(filters?: TransferFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<{ items: TransferListItem[]; total: number; page: number; totalPages: number }, Error>({
@@ -209,6 +217,8 @@ export function useTransfers(filters?: TransferFilters) {
       const res = await apiClient.get<{ items: RawTransferListItem[]; total: number; page: number; totalPages: number }>(
         "/inventory/stock/transfers",
         params,
+        undefined,
+        listTransfersContract,
       );
       return {
         items: res.items.map(toTransferListItem),
@@ -228,7 +238,7 @@ export function useTransfer(transferId: number) {
     queryKey: queryKeys.inventory.transfer(transferId),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawTransferDetail | null>(
-        `/inventory/stock/transfers/${transferId}`, undefined, signal,
+        `/inventory/stock/transfers/${transferId}`, undefined, signal, transferItemContract,
       );
       return res ? toTransferDetail(res) : null;
     },
@@ -252,7 +262,7 @@ export function useCreateTransfer() {
           lotId: l.lotId,
           serialId: l.serialId,
         })),
-      }),
+      }, undefined, transferItemContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });

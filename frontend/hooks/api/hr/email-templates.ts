@@ -9,8 +9,19 @@ import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query"
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const emailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/hr/email-templates-schema").then((m) => m.emailTemplateContract),
+);
+const emailTemplateListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/email-templates-schema").then((m) => m.emailTemplateListContract),
+);
+const emailTemplateAiLazy = lazyContract(() =>
+  import("@/hooks/api/hr/email-templates-schema").then((m) => m.emailTemplateAiContract),
+);
 
 export interface EmailTemplate {
   id: number;
@@ -57,7 +68,7 @@ export function useEmailTemplates(
   return useQuery<EmailTemplate[], Error>({
     queryKey: humanResourcesQueryKeys.hr.emailTemplatesList(),
     queryFn: ({ signal }) =>
-      apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal),
+      apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal, emailTemplateListLazy),
     staleTime: 60_000,
     ...options,
     enabled: canManage && !!orgId && (options?.enabled ?? true),
@@ -71,7 +82,7 @@ export function useCreateEmailTemplate(
   return useAuthorizedMutation<EmailTemplate, Error, CreateEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "create"],
     mutationFn: (data: CreateEmailTemplateInput) =>
-      apiClient.post<EmailTemplate>("/hr/email-templates", data),
+      apiClient.post<EmailTemplate>("/hr/email-templates", data, undefined, emailTemplateLazy),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
@@ -87,7 +98,7 @@ export function useUpdateEmailTemplate(
   return useAuthorizedMutation<EmailTemplate, Error, UpdateEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
-      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
+      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data, undefined, emailTemplateLazy),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
@@ -118,7 +129,7 @@ export function useGenerateAiEmailTemplate(
   return useAuthorizedMutation<AiGenerateResult, Error, GenerateAiEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "generate-ai"],
     mutationFn: (data: GenerateAiEmailTemplateInput) =>
-      apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data),
+      apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data, undefined, emailTemplateAiLazy),
     ...options,
   });
 }

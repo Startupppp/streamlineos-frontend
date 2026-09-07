@@ -8,6 +8,11 @@ import { coreKeys } from "./core-keys";
 import {
   coaTreeContract,
   setupStatusContract,
+  coaTemplateListContract,
+  coaAccountStatusContract,
+  coaApplyTemplateContract,
+  journalApprovalSubmitContract,
+  journalApprovalDecisionContract,
   type AccountTreeNode,
   type SetupStep,
 } from "@/hooks/api/accounting/core-coa-schema";
@@ -35,7 +40,7 @@ export function useCoaTemplates() {
   const can = useCan("accounting:accounts:read");
   return useQuery<{ items: CoaTemplate[] }, Error>({
     queryKey: coreKeys.coaTemplates(),
-    queryFn: ({ signal }) => apiClient.get<{ items: CoaTemplate[] }>("/accounting/coa/templates", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/coa/templates", undefined, signal, coaTemplateListContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -56,7 +61,7 @@ export function useDeactivateAccount(accountId: number) {
   return useAuthorizedMutation<{ id: number; isActive: false }, Error, void>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "deactivate-account", accountId],
     mutationFn: () =>
-      apiClient.post<{ id: number; isActive: false }>(`/accounting/coa/${accountId}/deactivate`),
+      apiClient.post(`/accounting/coa/${accountId}/deactivate`, undefined, undefined, coaAccountStatusContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -69,7 +74,7 @@ export function useActivateAccount(accountId: number) {
   return useAuthorizedMutation<{ id: number; isActive: true }, Error, void>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "activate-account", accountId],
     mutationFn: () =>
-      apiClient.post<{ id: number; isActive: true }>(`/accounting/coa/${accountId}/activate`),
+      apiClient.post(`/accounting/coa/${accountId}/activate`, undefined, undefined, coaAccountStatusContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -82,7 +87,7 @@ export function useDeleteAccount(accountId: number) {
   return useAuthorizedMutation<{ id: number; isActive: boolean }, Error, void>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "delete-account", accountId],
     mutationFn: () =>
-      apiClient.delete<{ id: number; isActive: boolean }>(`/accounting/coa/${accountId}`),
+      apiClient.delete(`/accounting/coa/${accountId}`, undefined, undefined, coaAccountStatusContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -95,9 +100,9 @@ export function useApplyTemplate() {
   return useAuthorizedMutation<{ templateKey: string; inserted: number; skipped: number }, Error, { templateKey: string }>("accounting:accounts:manage", {
     mutationKey: [...coreKeys.all, "apply-template"],
     mutationFn: (body) =>
-      apiClient.post<{ templateKey: string; inserted: number; skipped: number }>(
+      apiClient.post(
         "/accounting/coa/templates/apply",
-        body,
+        body, undefined, coaApplyTemplateContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
@@ -111,7 +116,7 @@ export function useSubmitJournalApproval(entryId: number) {
   return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:journal:create", {
     mutationKey: [...coreKeys.all, "submit-approval", entryId],
     mutationFn: () =>
-      apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/submit-approval`),
+      apiClient.post(`/accounting/journal/${entryId}/submit-approval`, undefined, undefined, journalApprovalSubmitContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -124,7 +129,7 @@ export function useApproveJournal(entryId: number) {
   return useAuthorizedMutation<{ id: number; status: string }, Error, { note?: string }>("accounting:journal:approve", {
     mutationKey: [...coreKeys.all, "approve-journal", entryId],
     mutationFn: (body) =>
-      apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/approve`, body),
+      apiClient.post(`/accounting/journal/${entryId}/approve`, body, undefined, journalApprovalDecisionContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -137,7 +142,7 @@ export function useRejectJournal(entryId: number) {
   return useAuthorizedMutation<{ id: number; status: string }, Error, { note?: string }>("accounting:journal:approve", {
     mutationKey: [...coreKeys.all, "reject-journal", entryId],
     mutationFn: (body) =>
-      apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/reject`, body),
+      apiClient.post(`/accounting/journal/${entryId}/reject`, body, undefined, journalApprovalDecisionContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });

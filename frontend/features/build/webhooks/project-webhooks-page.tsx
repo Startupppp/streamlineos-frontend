@@ -42,7 +42,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
 import {

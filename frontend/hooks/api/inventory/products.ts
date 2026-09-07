@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -71,6 +72,31 @@ function serializeVariantWrite(data: CreateProductVariantInput) {
   };
 }
 
+const listProductsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.listProductsContract),
+);
+const getProductContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.getProductContract),
+);
+const listCategoriesContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.listCategoriesContract),
+);
+const listUomContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.listUomContract),
+);
+const listVariantsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.listVariantsContract),
+);
+const invProductVariantContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.invProductVariantContract),
+);
+const invCategoryContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.invCategoryContract),
+);
+const invUomContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.invUomContract),
+);
+
 export function useProducts(filters?: ProductFilters) {
   const canView = useCan("inventory:products:read");
   return useQuery<ProductListResponse, Error>({
@@ -83,7 +109,7 @@ export function useProducts(filters?: ProductFilters) {
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.productType ? { productType: filters.productType } : {}),
-      }, signal),
+      }, signal, listProductsContract),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -94,7 +120,7 @@ export function useProduct(productId: number) {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryProduct, Error>({
     queryKey: queryKeys.inventory.product(productId),
-    queryFn: ({ signal }) => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`, undefined, signal, getProductContract),
     enabled: canView && productId > 0,
     staleTime: 2 * 60_000,
   });
@@ -104,7 +130,7 @@ export function useCategories() {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryCategory[], Error>({
     queryKey: queryKeys.inventory.categories(),
-    queryFn: ({ signal }) => apiClient.get<InventoryCategory[]>("/inventory/products/categories", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<InventoryCategory[]>("/inventory/products/categories", undefined, signal, listCategoriesContract),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -114,7 +140,7 @@ export function useUom() {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryUom[], Error>({
     queryKey: queryKeys.inventory.uom(),
-    queryFn: ({ signal }) => apiClient.get<InventoryUom[]>("/inventory/products/uom", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<InventoryUom[]>("/inventory/products/uom", undefined, signal, listUomContract),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -125,7 +151,7 @@ export function useCreateProduct() {
   return useAuthorizedMutation<InventoryProduct, Error, CreateProductInput>("inventory:products:create", {
     mutationKey: ["inventory", "product", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data)),
+      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data), undefined, getProductContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
@@ -142,6 +168,8 @@ export function useUpdateProduct(id?: number) {
       return apiClient.patch<InventoryProduct>(
         `/inventory/products/${resolvedId}`,
         serializeProductWrite(data),
+        undefined,
+        getProductContract,
       );
     },
     onSuccess: (_, vars) => {
@@ -171,7 +199,7 @@ export function useArchiveProduct() {
   return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
-      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}, undefined, getProductContract),
     onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -184,7 +212,7 @@ export function useRestoreProduct() {
   return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
-      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}, undefined, getProductContract),
     onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -199,7 +227,7 @@ export function useProductVariants(filters?: ProductVariantFilters) {
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<ProductVariantFlat>>("/inventory/products/variants", {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
-      }, signal)).items,
+      }, signal, listVariantsContract)).items,
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -213,6 +241,8 @@ export function useCreateProductVariant(productId: number) {
       apiClient.post<InventoryProductVariant>(
         `/inventory/products/${productId}/variants`,
         serializeVariantWrite(data),
+        undefined,
+        invProductVariantContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -226,7 +256,7 @@ export function useCreateCategory() {
   return useAuthorizedMutation<InventoryCategory, Error, CreateCategoryInput>("inventory:products:create", {
     mutationKey: ["inventory", "category", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryCategory>("/inventory/products/categories", data),
+      apiClient.post<InventoryCategory>("/inventory/products/categories", data, undefined, invCategoryContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -238,7 +268,7 @@ export function useCreateUom() {
   return useAuthorizedMutation<InventoryUom, Error, CreateUomInput>("inventory:products:create", {
     mutationKey: ["inventory", "uom", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryUom>("/inventory/products/uom", data),
+      apiClient.post<InventoryUom>("/inventory/products/uom", data, undefined, invUomContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
     },
@@ -254,7 +284,7 @@ export function useUpdateCategory() {
   >("inventory:products:update", {
     mutationKey: ["inventory", "category", "update"],
     mutationFn: ({ categoryId, data }) =>
-      apiClient.patch(`/inventory/products/categories/${categoryId}`, data),
+      apiClient.patch(`/inventory/products/categories/${categoryId}`, data, undefined, invCategoryContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -270,7 +300,7 @@ export function useUpdateProductVariant(productId: number) {
   >("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "update"],
     mutationFn: ({ variantId, data }) =>
-      apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data),
+      apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data, undefined, invProductVariantContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },

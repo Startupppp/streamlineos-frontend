@@ -5,7 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const salesOrderMutationContract = lazyContract(() =>
+  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.salesOrderMutationContract),
+);
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
@@ -117,7 +122,7 @@ export function useCreateSalesOrder() {
           taxRate: (line.taxRate ?? 0).toFixed(2),
           lineOrder: index,
         })),
-      }),
+      }, undefined, salesOrderMutationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
@@ -165,7 +170,7 @@ export function useInvoiceSalesOrder() {
   return useAuthorizedMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>("inventory:sales-orders:invoice", {
     mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }) =>
-      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
+      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}, undefined, salesOrderMutationContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -185,6 +190,7 @@ export function useReserveSalesOrder() {
           ...(allocations !== undefined ? { allocations } : {}),
         },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        salesOrderMutationContract,
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });

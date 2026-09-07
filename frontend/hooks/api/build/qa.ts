@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   TestSuite,
@@ -17,6 +18,32 @@ import type {
   UpdateTestResultInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const testSuiteListContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testSuiteListContract),
+);
+const testCaseListContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testCaseListContract),
+);
+const testCaseRowContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testCaseRowContract),
+);
+const testRunListContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testRunListContract),
+);
+const testRunRowContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testRunRowContract),
+);
+const testRunDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testRunDetailContract),
+);
+const testRunResultRowContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testRunResultRowContract),
+);
+const bugRowContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.bugRowContract),
+);
 
 type TestCaseFilters = {
   q?: string;
@@ -33,7 +60,7 @@ export function useTestSuites(projectId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
     queryKey: buildWorkQueryKeys.projects.qa.suites(projectId ?? 0),
-    queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal, testSuiteListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -49,7 +76,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
 
   return useQuery<TestCase[]>({
     queryKey: buildWorkQueryKeys.projects.qa.cases(projectId ?? 0, filters),
-    queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal),
+    queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal, testCaseListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -61,7 +88,7 @@ export function useCreateTestCase() {
   return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "cases", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
-      apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data),
+      apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data, undefined, testCaseRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
@@ -77,7 +104,7 @@ export function useUpdateTestCase() {
       id,
       ...data
     }: UpdateTestCaseInput & { projectId: number; id: number }) =>
-      apiClient.patch<TestCase>(`/build/${projectId}/test-cases/${id}`, data),
+      apiClient.patch<TestCase>(`/build/${projectId}/test-cases/${id}`, data, undefined, testCaseRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
@@ -103,7 +130,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 
   return useQuery<TestRun[]>({
     queryKey: buildWorkQueryKeys.projects.qa.runs(projectId ?? 0, filters?.status),
-    queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal),
+    queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal, testRunListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -113,7 +140,7 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail>({
     queryKey: buildWorkQueryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
-    queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal, testRunDetailContract),
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
   });
@@ -124,7 +151,7 @@ export function useCreateTestRun() {
   return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "runs", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestRunInput & { projectId: number }) =>
-      apiClient.post<TestRun>(`/build/${projectId}/test-runs`, data),
+      apiClient.post<TestRun>(`/build/${projectId}/test-runs`, data, undefined, testRunRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },
@@ -140,7 +167,7 @@ export function useUpdateTestRun() {
       id,
       ...data
     }: UpdateTestRunInput & { projectId: number; id: number }) =>
-      apiClient.patch<TestRun>(`/build/${projectId}/test-runs/${id}`, data),
+      apiClient.patch<TestRun>(`/build/${projectId}/test-runs/${id}`, data, undefined, testRunRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.id) });
@@ -173,6 +200,8 @@ export function useUpdateTestResult() {
       apiClient.patch<unknown>(
         `/build/${projectId}/test-runs/${runId}/results/${resultId}`,
         data,
+        undefined,
+        testRunResultRowContract,
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });
@@ -199,6 +228,8 @@ export function useCreateBugFromResult() {
       apiClient.post<Bug>(
         `/build/${projectId}/test-runs/${runId}/results/${resultId}/bug`,
         data,
+        undefined,
+        bugRowContract,
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });

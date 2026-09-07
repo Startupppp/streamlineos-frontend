@@ -2,16 +2,24 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
-import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/ai-summaries/types";
+import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/build/ai-summaries/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const snapshotWithDiffNullableContract = lazyContract(() =>
+  import("@/hooks/api/ai-schema").then((m) => m.snapshotWithDiffNullableContract),
+);
+const aiSummarySnapshotContract = lazyContract(() =>
+  import("@/hooks/api/ai-schema").then((m) => m.aiSummarySnapshotContract),
+);
 
 export function useLatestSnapshot(entityType: string, entityId: string) {
   return useGatedQuery("ai:summaries:view", {
     queryKey: growthAndSignQueryKeys.aiSummaries.latest(entityType, entityId),
     queryFn: ({ signal }) =>
-      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`, undefined, signal),
+      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`, undefined, signal, snapshotWithDiffNullableContract),
     staleTime: 2 * 60_000,
   });
 }
@@ -23,6 +31,8 @@ export function useSaveSnapshot(entityType: string, entityId: string) {
       apiClient.post<AiSummarySnapshot>(
         `/ai/summaries/${entityType}/${entityId}/snapshot`,
         payload,
+        undefined,
+        aiSummarySnapshotContract,
       ),
   });
 }

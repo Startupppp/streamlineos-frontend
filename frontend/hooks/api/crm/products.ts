@@ -6,11 +6,16 @@ import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { Product, CreateProductInput, UpdateProductInput, ProductsResponse } from "@/types/crm/products";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const crmProductsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/products-schema").then((m) => m.crmProductsListContract),
+);
 
 export function useProducts(search?: string) {
   return useGatedQuery("crm:products:manage", {
     queryKey: queryKeys.crmProducts.list(search ? { search } : undefined),
-    queryFn: ({ signal }) => apiClient.get<ProductsResponse>("/crm/products", search ? { search } : undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProductsResponse>("/crm/products", search ? { search } : undefined, signal, crmProductsLazy),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
   });

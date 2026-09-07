@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { lazyContract } from "@/lib/api-envelope";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
@@ -9,6 +10,22 @@ import type {
   CustomFieldType,
 } from "@/types/projects/tasks";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const cfListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.buildCustomFieldListContract),
+);
+const cfLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.buildCustomFieldContract),
+);
+const cfDeleteLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+);
+const tfvListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketFieldValueListContract),
+);
+const tfvCreateLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketFieldValueCreateContract),
+);
 
 function customFieldKeys(projectId: number) {
   return ["projects", projectId, "custom-fields"] as const;
@@ -23,7 +40,7 @@ export function useProjectCustomFields(projectId: number) {
   return useQuery<ProjectCustomField[]>({
     queryKey: customFieldKeys(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`, undefined, signal),
+      apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`, undefined, signal, cfListLazy),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -53,7 +70,7 @@ export function useDeleteProjectCustomField(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-fields", "delete"],
     mutationFn: (fieldId: number) =>
-      apiClient.delete(`/build/${projectId}/custom-fields/${fieldId}`),
+      apiClient.delete<{success:true}>(`/build/${projectId}/custom-fields/${fieldId}`, undefined, undefined, cfDeleteLazy),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
   });
@@ -65,7 +82,7 @@ export function useTicketCustomFieldValues(projectId: number, ticketId: number) 
     queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketCustomFieldValue[]>(
-        `/build/${projectId}/tickets/${ticketId}/custom-field-values`, undefined, signal,
+        `/build/${projectId}/tickets/${ticketId}/custom-field-values`, undefined, signal, tfvListLazy,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,

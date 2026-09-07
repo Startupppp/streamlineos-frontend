@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -11,6 +12,17 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const managedProductPageContract = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductPageContract),
+);
+const managedProductRowContract = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
+);
+const managedProductSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductSuccessContract),
+);
 
 interface ListManagedProductsParams {
   cursor?: string;
@@ -30,7 +42,7 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams, signal),
+      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams, signal, managedProductPageContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -41,7 +53,7 @@ export function useManagedProduct(managedProductId: number) {
   return useQuery<ManagedProduct>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
     queryFn: ({ signal }) =>
-      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal),
+      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
   });
@@ -52,7 +64,7 @@ export function useCreateManagedProduct() {
   return useAuthorizedMutation("build:managed-products:create", {
     mutationKey: ["projects", "managed-products", "create"],
     mutationFn: (data: CreateManagedProductInput) =>
-      apiClient.post<ManagedProduct>("/build/managed-products", data),
+      apiClient.post<ManagedProduct>("/build/managed-products", data, undefined, managedProductRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
     },

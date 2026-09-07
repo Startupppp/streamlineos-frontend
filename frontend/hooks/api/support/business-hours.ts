@@ -2,9 +2,20 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportBusinessHoursListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.supportBusinessHoursListContract),
+);
+const supportBusinessHoursContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.supportBusinessHoursContract),
+);
+const channelSuccessContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.channelSuccessContract),
+);
 
 export type BusinessHoursDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -49,7 +60,7 @@ export interface UpdateBusinessHoursInput {
 export function useBusinessHoursList() {
   return useGatedQuery("support:settings:manage", {
     queryKey: supportAndWorkflowsQueryKeys.supportBusinessHours.list(),
-    queryFn: ({ signal }) => apiClient.get<BusinessHours[]>("/support/business-hours", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<BusinessHours[]>("/support/business-hours", undefined, signal, supportBusinessHoursListContract),
     staleTime: 60_000,
   });
 }
@@ -59,7 +70,7 @@ export function useCreateBusinessHours() {
   return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "create"],
     mutationFn: (input: CreateBusinessHoursInput) =>
-      apiClient.post<BusinessHours>("/support/business-hours", input),
+      apiClient.post<BusinessHours>("/support/business-hours", input, undefined, supportBusinessHoursContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportBusinessHours.all }),
   });
 }
@@ -69,7 +80,7 @@ export function useUpdateBusinessHours() {
   return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "update"],
     mutationFn: ({ id, ...input }: UpdateBusinessHoursInput & { id: number }) =>
-      apiClient.patch<BusinessHours>(`/support/business-hours/${id}`, input),
+      apiClient.patch<BusinessHours>(`/support/business-hours/${id}`, input, undefined, supportBusinessHoursContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportBusinessHours.all }),
   });
 }
@@ -78,7 +89,7 @@ export function useDeleteBusinessHours() {
   const qc = useQueryClient();
   return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/business-hours/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/business-hours/${id}`, undefined, undefined, channelSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportBusinessHours.all }),
   });
 }

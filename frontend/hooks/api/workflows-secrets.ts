@@ -2,11 +2,20 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSecret, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const workflowSecretListContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowSecretListContract),
+);
+const workflowSecretCreateContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowSecretCreateContract),
+);
+
 
 interface CreateSecretInput {
   name: string;
@@ -48,7 +57,7 @@ export function useCreateGlobalSecret() {
     mutationKey: ["create", "global", "secret"],
     mutationFn: (input: CreateSecretInput) => {
       assertPermission(canManage);
-      return apiClient.post<WorkflowSecret>("/workflows/secrets", input);
+      return apiClient.post<WorkflowSecret>("/workflows/secrets", input, undefined, workflowSecretCreateContract);
     },
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-secrets"] }),

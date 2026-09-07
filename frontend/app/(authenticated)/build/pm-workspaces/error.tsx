@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
-import { PmPageShell } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome";
 import { isChunkLoadError, reportError } from "@/lib/observability";
 
 export default function PmWorkspacesError({

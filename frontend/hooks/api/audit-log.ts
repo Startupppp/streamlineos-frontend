@@ -5,6 +5,17 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useCan } from "@/hooks/api/access";
+import { lazyContract } from "@/lib/api-envelope";
+
+const auditLogListContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogListContract),
+);
+const auditLogActionsContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogActionsContract),
+);
+const auditLogTargetTypesContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogTargetTypesContract),
+);
 
 export interface AuditLogRow {
   id: number;
@@ -64,7 +75,7 @@ export const useAuditLogs = (
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.userSearch ? { userSearch: filters.userSearch } : {}),
-      }, signal),
+      }, signal, auditLogListContract),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -77,7 +88,7 @@ export const useAuditLogActions = (
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: accessAndCrmQueryKeys.auditLog.actions(),
-    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/actions", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/actions", undefined, signal, auditLogActionsContract),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -90,7 +101,7 @@ export const useAuditLogTargetTypes = (
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: accessAndCrmQueryKeys.auditLog.targetTypes(),
-    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/target-types", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/target-types", undefined, signal, auditLogTargetTypesContract),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

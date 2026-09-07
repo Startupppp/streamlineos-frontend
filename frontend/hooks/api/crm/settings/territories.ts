@@ -5,6 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const territoriesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/territories-schema").then((m) => m.territoriesListContract),
+);
 
 export interface TerritoryCriteria {
   countries?: string[];
@@ -61,7 +66,7 @@ export interface TerritoryPreviewResult {
 export function useTerritories() {
   return useGatedQuery("crm:territories:manage", {
     queryKey: queryKeys.crmSettings.territories(),
-    queryFn: ({ signal }) => apiClient.get<Territory[]>("/crm/territories", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Territory[]>("/crm/territories", undefined, signal, territoriesLazy),
     staleTime: 2 * 60_000,
   });
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import { publicGet } from "@/lib/public-fetch";
+import { publicJobListContract } from "@/lib/public-schema";
 
 type Props = { params: Promise<{ orgSlug: string }> };
 
@@ -43,7 +44,7 @@ const typeLabels: Record<string, string> = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orgSlug } = await params;
   try {
-    const data = await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+    const data = await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`, undefined, publicJobListContract);
     if (!data) return { title: "Careers" };
     return { title: `${data.org.name} — Open Positions` };
   } catch {

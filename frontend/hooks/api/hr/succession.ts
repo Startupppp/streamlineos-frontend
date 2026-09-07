@@ -5,6 +5,17 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const successionListContract = lazyContract(() =>
+  import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanListContract),
+);
+const successionRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanContract),
+);
+const successionDeleteContract = lazyContract(() =>
+  import("@/hooks/api/hr/succession-schema").then((m) => m.successionDeleteContract),
+);
 
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
 
@@ -36,10 +47,11 @@ export function useSuccessionPlans() {
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
       if (pageParam !== null) params.set("cursor", pageParam);
-      return apiClient.get<SuccessionPage>(
+      return apiClient.get(
         `/hr/succession?${params}`,
         undefined,
         signal,
+        successionListContract,
       );
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -57,7 +69,7 @@ export function useCreateSuccessionPlan() {
         SuccessionPlan,
         "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt"
       >,
-    ) => apiClient.post<SuccessionPlan>("/hr/succession", body),
+    ) => apiClient.post("/hr/succession", body, undefined, successionRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }
@@ -67,7 +79,7 @@ export function useDeleteSuccessionPlan() {
   return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/succession/${id}`),
+      apiClient.delete(`/hr/succession/${id}`, undefined, undefined, successionDeleteContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }

@@ -36,7 +36,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 function NewTemplateButton({ onClick }: { onClick: () => void }) {

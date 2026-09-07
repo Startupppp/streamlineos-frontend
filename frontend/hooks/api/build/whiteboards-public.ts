@@ -2,8 +2,16 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import type { ExcalidrawSceneData } from "./whiteboards";
+
+const publicWhiteboardContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.publicWhiteboardContract),
+);
+const publicWhiteboardUpdateContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.publicWhiteboardUpdateContract),
+);
 
 export interface PublicWhiteboard {
   name: string;
@@ -16,7 +24,7 @@ export interface PublicWhiteboard {
 export function usePublicWhiteboard(token: string) {
   return useQuery({
     queryKey: accountingAndSupportQueryKeys.whiteboards.publicLink(token),
-    queryFn: ({ signal }) => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`, undefined, signal, publicWhiteboardContract),
     enabled: !!token,
     staleTime: 30_000,
     retry: false,
@@ -39,6 +47,8 @@ export function useUpdatePublicWhiteboard(token: string) {
       apiClient.patch<{ success: boolean; updatedAt: string | null }>(
         `/public/whiteboard-links/${token}`,
         { data },
+        undefined,
+        publicWhiteboardUpdateContract,
       ),
     onSuccess: (result, data) => {
       queryClient.setQueryData<PublicWhiteboard>(

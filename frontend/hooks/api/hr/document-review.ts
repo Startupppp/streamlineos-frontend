@@ -2,9 +2,17 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const onboardingDocListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-review-schema").then((m) => m.onboardingDocListContract),
+);
+const onboardingDocRowLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-review-schema").then((m) => m.onboardingDocRowContract),
+);
 
 const REVIEW_DOCS_PAGE_SIZE = 20;
 
@@ -46,6 +54,7 @@ export function useEmployeeOnboardingDocs(
         "/hr/onboarding-docs",
         { userId, cursor, limit: REVIEW_DOCS_PAGE_SIZE },
         signal,
+        onboardingDocListLazy,
       ),
     enabled: canReviewDocs && !!userId,
     staleTime: 30_000,
@@ -54,13 +63,13 @@ export function useEmployeeOnboardingDocs(
 
 export function useReviewDocument() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, { docId: number; status: "APPROVED" | "RE_UPLOAD_REQUESTED"; remarks?: string }>("hr:onboarding:manage", {
+  return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "onboarding-docs", "review"],
-    mutationFn: ({ docId, status, remarks }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, {
+    mutationFn: ({ docId, status, remarks }: { docId: number; status: "APPROVED" | "RE_UPLOAD_REQUESTED"; remarks?: string }) =>
+      apiClient.patch(`/hr/onboarding-docs/${docId}`, {
         status,
         remarks,
-      }),
+      }, undefined, onboardingDocRowLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
     },
@@ -78,8 +87,8 @@ interface UploadOnboardingDocData {
 
 function uploadOnboardingDocRequest(selfUpload: boolean, data: UploadOnboardingDocData) {
   if (selfUpload)
-    return apiClient.post("/hr/onboarding-docs/me", data);
-  return apiClient.post("/hr/onboarding-docs", data);
+    return apiClient.post("/hr/onboarding-docs/me", data, undefined, onboardingDocRowLazy);
+  return apiClient.post("/hr/onboarding-docs", data, undefined, onboardingDocRowLazy);
 }
 
 export function useUploadOnboardingDoc(selfUpload: boolean) {

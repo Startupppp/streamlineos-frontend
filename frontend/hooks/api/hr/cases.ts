@@ -3,11 +3,40 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const hrCaseListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrCaseListContract),
+);
+const hrCaseLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrCaseContract),
+);
+const anonymousCaseLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.anonymousCaseContract),
+);
+const hrCaseNotesLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrCaseNotesContract),
+);
+const hrCaseNoteLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrCaseNoteContract),
+);
+const hrCaseDocumentsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrCaseDocumentsContract),
+);
+const hrDisciplinaryListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrDisciplinaryListContract),
+);
+const hrDisciplinaryCreateLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrDisciplinaryCreateContract),
+);
+const hrDisciplinaryActionLazy = lazyContract(() =>
+  import("@/hooks/api/hr/cases-schema").then((m) => m.hrDisciplinaryActionContract),
+);
 
 export type CaseCategory =
   | "grievance" | "disciplinary" | "harassment" | "ethics"
@@ -100,7 +129,7 @@ export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>, signal, hrCaseListLazy),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
@@ -110,7 +139,7 @@ export function useHrCases(params: ListCasesParams = {}) {
 export function useHrCase(id: number) {
   return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.detail(id),
-    queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${id}`, undefined, signal, hrCaseLazy),
     enabled: id > 0,
     staleTime: 30_000,
   });
@@ -128,7 +157,7 @@ export function useCreateCase() {
       details: string;
       assignedTo?: string;
       confidential?: boolean;
-    }) => apiClient.post<HrCase>("/hr/cases", body),
+    }) => apiClient.post<HrCase>("/hr/cases", body, undefined, hrCaseLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.all });
       toast.success("Case created");
@@ -145,7 +174,7 @@ export function useAnonymousReport() {
       severity: CaseSeverity;
       summary: string;
       details: string;
-    }) => apiClient.post<{ caseNumber: string }>("/hr/cases/anonymous", body),
+    }) => apiClient.post<{ caseNumber: string }>("/hr/cases/anonymous", body, undefined, anonymousCaseLazy),
     onSuccess: () => toast.success("Anonymous report submitted"),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
@@ -163,7 +192,7 @@ export function useUpdateCase(id: number) {
       summary: string;
       details: string;
       confidential: boolean;
-    }>) => apiClient.patch<HrCase>(`/hr/cases/${id}`, body),
+    }>) => apiClient.patch<HrCase>(`/hr/cases/${id}`, body, undefined, hrCaseLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
       void qc.invalidateQueries({ queryKey: caseKeys.all });
@@ -177,7 +206,7 @@ export function useStartInvestigation(id: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "investigate", id],
-    mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${id}/investigate`, {}),
+    mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${id}/investigate`, {}, undefined, hrCaseLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
       void qc.invalidateQueries({ queryKey: caseKeys.all });
@@ -190,7 +219,7 @@ export function useStartInvestigation(id: number) {
 export function useCaseNotes(caseId: number) {
   return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.notes(caseId),
-    queryFn: ({ signal }) => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`, undefined, signal, hrCaseNotesLazy),
     enabled: caseId > 0,
     staleTime: 20_000,
   });
@@ -201,7 +230,7 @@ export function useAddCaseNote(caseId: number) {
   return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "notes", "add", caseId],
     mutationFn: (body: { note: string; isConfidential?: boolean }) =>
-      apiClient.post<CaseNote>(`/hr/cases/${caseId}/notes`, body),
+      apiClient.post<CaseNote>(`/hr/cases/${caseId}/notes`, body, undefined, hrCaseNoteLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.notes(caseId) });
       toast.success("Note added");
@@ -213,7 +242,7 @@ export function useAddCaseNote(caseId: number) {
 export function useCaseDocuments(caseId: number) {
   return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.documents(caseId),
-    queryFn: ({ signal }) => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`, undefined, signal, hrCaseDocumentsLazy),
     enabled: caseId > 0,
     staleTime: 30_000,
   });
@@ -222,7 +251,7 @@ export function useCaseDocuments(caseId: number) {
 export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
   return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.disciplinaryList(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>, signal, hrDisciplinaryListLazy),
     staleTime: 30_000,
   });
 }
@@ -241,7 +270,7 @@ export function useCreateDisciplinaryAction() {
       letterTemplateId?: number;
       letterContext?: Record<string, string>;
       forceEscalate?: boolean;
-    }) => apiClient.post<DisciplinaryAction>("/hr/cases/disciplinary", body),
+    }) => apiClient.post<DisciplinaryAction>("/hr/cases/disciplinary", body, undefined, hrDisciplinaryCreateLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
       toast.success("Disciplinary action issued");
@@ -254,17 +283,12 @@ export function useMyDisciplinaryActions() {
   return useGatedQuery("self:cases", {
     queryKey: caseKeys.disciplinaryMine,
     queryFn: ({ signal }) =>
-      apiClient.get<
-        Array<{
-          id: number;
-          actionType: DisciplinaryActionType;
-          effectiveDate: string;
-          note: string | null;
-          caseId: number | null;
-          acknowledgedAt: string | null;
-          createdAt: string;
-        }>
-      >("/hr/cases/disciplinary/mine"),
+      apiClient.get<CursorResult<DisciplinaryAction>>(
+        "/hr/cases/disciplinary/mine",
+        undefined,
+        signal,
+        hrDisciplinaryListLazy,
+      ),
     staleTime: 60_000,
   });
 }
@@ -274,7 +298,7 @@ export function useAcknowledgeDisciplinaryAction() {
   return useAuthorizedMutation("self:cases", {
     mutationKey: ["hr-disciplinary", "acknowledge"],
     mutationFn: ({ id, note }: { id: number; note?: string }) =>
-      apiClient.post(`/hr/cases/disciplinary/${id}/acknowledge`, { note }),
+      apiClient.post<DisciplinaryAction>(`/hr/cases/disciplinary/${id}/acknowledge`, { note }, undefined, hrDisciplinaryActionLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
       toast.success("Acknowledged");

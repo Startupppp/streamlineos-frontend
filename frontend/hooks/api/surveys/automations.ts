@@ -2,9 +2,17 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const surveyAutomationRuleListC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutomationRuleListContract),
+);
+const surveyAutomationRuleC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutomationRuleContract),
+);
 
 export type AutomationEventType =
   | "survey.published"
@@ -39,7 +47,7 @@ export interface CreateAutomationInput {
 export function useSurveyAutomations(surveyId: number) {
   return useGatedQuery("surveys:automations:manage", {
     queryKey: knowledgeAndSurveysQueryKeys.surveys.automations(surveyId),
-    queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal, surveyAutomationRuleListC),
     staleTime: 30_000,
   });
 }
@@ -53,7 +61,7 @@ export function useCreateAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
   return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "create", surveyId] as const,
-    mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input),
+    mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input, undefined, surveyAutomationRuleC),
     onSuccess: invalidate,
   });
 }

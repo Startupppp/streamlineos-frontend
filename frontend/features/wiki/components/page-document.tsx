@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
+import { chatUsersContract, kbPageSearchContract } from "@/features/wiki/lib/wiki-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KbPageNotFound } from "./kb-page-not-found";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
@@ -35,7 +36,7 @@ const PlateDocumentEditor = dynamic(
 async function fetchMentionUsers(query: string) {
   const users = await apiClient.get<
     Array<{ id: string; name: string | null; email: string | null }>
-  >("/chat/users");
+  >("/chat/users", undefined, undefined, chatUsersContract);
   const lower = query.toLowerCase();
   const filtered = query
     ? users.filter((u) =>
@@ -52,7 +53,7 @@ async function fetchPageLinks(query: string) {
     items: Array<{ id: number; title: string; icon: string | null; snippet: string }>;
     hasMore: boolean;
     limit: number;
-  }>("/kb/pages/search", { q: query });
+  }>("/kb/pages/search", { q: query }, undefined, kbPageSearchContract);
   return page.items.map((r) => ({ id: r.id, label: r.title || "Untitled" }));
 }
 

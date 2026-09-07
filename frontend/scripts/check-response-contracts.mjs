@@ -18,13 +18,16 @@
  * permanently false and the WebRTC mesh had no peer ids. A runtime contract on
  * either route would have failed on the first request.
  *
- * WHY A RATCHET AND NOT A REQUIREMENT. `contracts/openapi.json` carries
- * **1 response schema across 3,613 operations** — measured, not assumed — so a
- * contract cannot be generated. Each one has to be derived from the backend's
- * Drizzle columns and service projection, because a contract written from the
- * frontend's own type would encode the drift instead of catching it. That is
- * per-route work and it cannot finish in this release. So: freeze the debt,
- * name it, and make the NEXT unparsed endpoint fail.
+ * WHY A RATCHET AND NOT A REQUIREMENT. When this gate was written,
+ * `contracts/openapi.json` carried **1 response schema across 3,613 operations**
+ * — measured, not assumed — so a contract could not be generated, and each one
+ * had to be derived by hand from the backend's Drizzle columns and service
+ * projection. That premise CHANGED on 2026-09-07: the backend now declares a
+ * response schema on all 3,666 operations and the vendored document carries
+ * them, so a contract can be checked against the wire shape rather than guessed
+ * at. The ratchet stays because the per-route frontend work is still unfinished,
+ * not because the contract is still unknowable. Freeze the debt, name it, and
+ * make the NEXT unparsed endpoint fail.
  *
  * WHAT THIS GATE DOES NOT CLAIM. It certifies that a call site PASSES a
  * contract, not that the contract is right. A contract copied from a wrong
@@ -129,7 +132,7 @@ const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/api/users/bulk-mutations.ts", 1],
   ["hooks/common/use-file-url.ts", 1],
   ["hooks/api/crm/bulk-import.ts", 1],
-  ["features/shared/import-export/import-export-grid.tsx", 1],
+  ["components/import-export/import-export-grid.tsx", 1],
   ["lib/ably.ts", 1],
 ]);
 
@@ -560,8 +563,11 @@ function main() {
     console.log(
       `PASS: ${result.validated}/${result.scanned} parsed, unparsed at or below the recorded baseline.`,
     );
+    const unparsedPct = result.scanned === 0
+      ? "0"
+      : (((result.scanned - result.validated) / result.scanned) * 100).toFixed(1);
     console.log(
-      "NOTE: 97.8% of the seam is still an unchecked cast. This gate freezes that debt; it does not retire it.",
+      `NOTE: ${unparsedPct}% of the seam is still an unchecked cast. This gate freezes that debt; it does not retire it.`,
     );
     return 0;
   }

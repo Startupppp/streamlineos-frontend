@@ -35,8 +35,13 @@ import { RecordDetail, asRecordValue } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
 import { DealEditForm } from "@/features/crm/deals/detail/deal-edit-form";
-import { toUpdateInput, type DealSubmission } from "@/features/crm/deals/deal-form";
+import {
+  toUpdateInput,
+  type DealSubmission,
+} from "@/features/crm/deals/deal-form";
 import { useDealLayout } from "@/features/crm/deals/use-deal-layout";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import {
@@ -51,6 +56,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
+const buildFromDealContract = lazyContract(() =>
+  import("zod").then((m) => m.z.object({ id: m.z.number().int() })),
+);
+
 export default function DealDetailPage({
   params,
 }: {
@@ -63,7 +72,13 @@ export default function DealDetailPage({
   const layout = useDealLayout();
   const money = useOrgDisplay();
 
-  const { data: deal, isLoading, isError, error, refetch } = useDealDetail(dealId);
+  const {
+    data: deal,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: "call" | "note" | "email" | "meeting";
@@ -86,8 +101,14 @@ export default function DealDetailPage({
   const updateStage = useUpdateDealStage();
   const cloneDeal = useCloneDeal();
   const { data: stages = [] } = useCrmStages("deal");
-  const wonStage = useMemo(() => stages.find((s) => s.stageType === "won")?.key ?? "WON", [stages]);
-  const lostStage = useMemo(() => stages.find((s) => s.stageType === "lost")?.key ?? "LOST", [stages]);
+  const wonStage = useMemo(
+    () => stages.find((s) => s.stageType === "won")?.key ?? "WON",
+    [stages],
+  );
+  const lostStage = useMemo(
+    () => stages.find((s) => s.stageType === "lost")?.key ?? "LOST",
+    [stages],
+  );
 
   const handleClone = useCallback(() => {
     cloneDeal.mutate(dealId, {
@@ -110,8 +131,14 @@ export default function DealDetailPage({
         { id: dealId, stage },
         {
           onSuccess: (result) => {
-            if (result && "approvalPending" in result && result.approvalPending) {
-              toast.info("Approval request submitted. Stage will update once approved.");
+            if (
+              result &&
+              "approvalPending" in result &&
+              result.approvalPending
+            ) {
+              toast.info(
+                "Approval request submitted. Stage will update once approved.",
+              );
             } else {
               toast.success("Stage updated");
             }
@@ -136,11 +163,19 @@ export default function DealDetailPage({
     [dealId, updateDeal],
   );
 
-  const handleRetryMeetings = useCallback(() => { void refetchMeetings(); }, [refetchMeetings]);
+  const handleRetryMeetings = useCallback(() => {
+    void refetchMeetings();
+  }, [refetchMeetings]);
   const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-  const handleMarkWon = useCallback(() => handleStageChange(wonStage), [handleStageChange, wonStage]);
-  const handleMarkLost = useCallback(() => handleStageChange(lostStage), [handleStageChange, lostStage]);
+  const handleMarkWon = useCallback(
+    () => handleStageChange(wonStage),
+    [handleStageChange, wonStage],
+  );
+  const handleMarkLost = useCallback(
+    () => handleStageChange(lostStage),
+    [handleStageChange, lostStage],
+  );
 
   const handleStagePipelineClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -154,7 +189,12 @@ export default function DealDetailPage({
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const raw = e.currentTarget.dataset.actionType;
       const label = e.currentTarget.dataset.actionLabel ?? "";
-      if (raw === "call" || raw === "note" || raw === "email" || raw === "meeting") {
+      if (
+        raw === "call" ||
+        raw === "note" ||
+        raw === "email" ||
+        raw === "meeting"
+      ) {
         setPendingAction({ type: raw, label });
       }
     },
@@ -165,7 +205,12 @@ export default function DealDetailPage({
     (notes: string) => {
       if (!pendingAction) return;
       logActivity.mutate(
-        { dealId, type: pendingAction.type, subject: pendingAction.label, notes },
+        {
+          dealId,
+          type: pendingAction.type,
+          subject: pendingAction.label,
+          notes,
+        },
         {
           onSuccess: () => {
             toast.success("Activity logged");
@@ -226,7 +271,14 @@ export default function DealDetailPage({
       try {
         const newProject = await apiClient.post<{ id: number }>(
           "/build/from-deal",
-          { dealId, name: data.name.trim(), startDate: data.startDate, endDate: data.endDate },
+          {
+            dealId,
+            name: data.name.trim(),
+            startDate: data.startDate,
+            endDate: data.endDate,
+          },
+          undefined,
+          buildFromDealContract,
         );
         toast.success("Project created successfully");
         setCreateProjectOpen(false);
@@ -240,10 +292,18 @@ export default function DealDetailPage({
     [dealId, router],
   );
 
-  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
-  const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
+  const handleOpenMeetingDialog = useCallback(
+    () => setMeetingDialogOpen(true),
+    [],
+  );
+  const handleOpenCreateProject = useCallback(
+    () => setCreateProjectOpen(true),
+    [],
+  );
 
   if (isLoading) {
     return (
@@ -309,7 +369,9 @@ export default function DealDetailPage({
           <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded select-all">
             {formatDealId(dealId)}
           </span>
-          <span className="tabular-nums">{formatMoneyCompact(dealValue, money)}</span>
+          <span className="tabular-nums">
+            {formatMoneyCompact(dealValue, money)}
+          </span>
         </span>
       }
       badge={
@@ -318,7 +380,10 @@ export default function DealDetailPage({
           className="text-xs px-2 py-0.5"
           style={
             currentStageInfo?.color
-              ? { borderColor: currentStageInfo.color, color: currentStageInfo.color }
+              ? {
+                  borderColor: currentStageInfo.color,
+                  color: currentStageInfo.color,
+                }
               : undefined
           }
         >
@@ -335,11 +400,7 @@ export default function DealDetailPage({
             <DealInlineAiMenu dealId={dealId} dealName={deal.name} />
             {isActiveDeal && (
               <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleMarkLost}
-                >
+                <Button size="sm" variant="outline" onClick={handleMarkLost}>
                   <XCircle className="h-3.5 w-3.5 mr-1" />
                   Lost
                 </Button>
@@ -354,7 +415,11 @@ export default function DealDetailPage({
               </>
             )}
             {deal.stage === wonStage && (
-              <Button size="sm" variant="outline" onClick={handleOpenCreateProject}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleOpenCreateProject}
+              >
                 <FolderKanban className="h-3.5 w-3.5 mr-1" />
                 Create Project
               </Button>
@@ -395,7 +460,10 @@ export default function DealDetailPage({
                 )}
                 style={
                   isActive && currentStageInfo?.color
-                    ? { backgroundColor: `${currentStageInfo.color}15`, color: currentStageInfo.color }
+                    ? {
+                        backgroundColor: `${currentStageInfo.color}15`,
+                        color: currentStageInfo.color,
+                      }
                     : undefined
                 }
               >
@@ -458,7 +526,10 @@ export default function DealDetailPage({
               nextStep={deal.nextStep}
               pipelineId={deal.pipelineId}
             />
-            <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
+            <DealLinkedRecordsCard
+              partyId={deal.partyId}
+              subjectId={deal.subjectId}
+            />
             <DealStageHistory dealId={dealId} card />
             <DealQuotesSection dealId={dealId} />
           </motion.div>

@@ -10,6 +10,7 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -26,6 +27,31 @@ import type {
 } from "@/types/hr";
 import { activeAttendancePollInterval } from "@/lib/query-request-policies";
 
+const attendanceStatusC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.attendanceStatusContract),
+);
+const attendanceHistoryC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.attendanceHistoryContract),
+);
+const attendanceRowListC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.attendanceRowListContract),
+);
+const checkInOutC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.checkInOutContract),
+);
+const timesheetRowListC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.timesheetRowListContract),
+);
+const timesheetRowSingleC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.timesheetRowSingleContract),
+);
+const teamAttendanceStatusC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.teamAttendanceStatusContract),
+);
+const regularizationRowC = lazyContract(() =>
+  import("@/hooks/api/hr/attendance-schema").then((m) => m.regularizationRowContract),
+);
+
 export interface AttendanceRegularization {
   id: number;
   orgId: string;
@@ -34,7 +60,7 @@ export interface AttendanceRegularization {
   requestedCheckIn: string | null;
   requestedCheckOut: string | null;
   reason: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: string;
   workflowInstanceId: string | null;
   approvedBy: string | null;
   approvedAt: string | null;
@@ -78,7 +104,7 @@ export function useHrAttendanceStatus(
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
     queryFn: ({ signal }) =>
-      apiClient.get<AttendanceStatusResult>("/me/attendance/status", undefined, signal),
+      apiClient.get<AttendanceStatusResult>("/me/attendance/status", undefined, signal, attendanceStatusC),
     staleTime: 2 * 60_000,
     refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
@@ -98,12 +124,12 @@ export function useHrAttendanceHistory(page: number, limit: number) {
       try {
         return await apiClient.get<AttendanceHistoryResponse>(
           "/me/attendance/history",
-          params, signal,
+          params, signal, attendanceHistoryC,
         );
       } catch (error) {
         if ((error as { status?: number }).status !== 404) throw error;
         const legacyData = await apiClient.get<AttendanceLog[]>(
-          "/me/attendance/logs", undefined, signal,
+          "/me/attendance/logs", undefined, signal, attendanceRowListC,
         );
         const offset = (page - 1) * limit;
         return {
@@ -136,7 +162,7 @@ export function useHrCheckIn(
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
-      apiClient.post<{ success: boolean }>("/me/attendance/check-in", data),
+      apiClient.post<{ success: boolean }>("/me/attendance/check-in", data, undefined, checkInOutC),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -210,7 +236,7 @@ export function useHrCheckOut(
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: () =>
-      apiClient.post<{ success: boolean }>("/me/attendance/check-out", {}),
+      apiClient.post<{ success: boolean }>("/me/attendance/check-out", {}, undefined, checkInOutC),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -265,7 +291,7 @@ export function useHrToggleBreak(
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>
-      apiClient.post<{ success: boolean }>("/me/attendance/break"),
+      apiClient.post<{ success: boolean }>("/me/attendance/break", undefined, undefined, checkInOutC),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -301,7 +327,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
           year: params.year,
           month: params.month,
           ...(params.userId ? { userId: params.userId } : {}),
-        }, signal,
+        }, signal, attendanceRowListC,
       ),
     staleTime: 2 * 60_000,
     enabled: isOtherUser ? hrEnabled && canManage : canSelf,
@@ -322,7 +348,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
 
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.workLogs(params),
-    queryFn: ({ signal }) => apiClient.get<WorkLog[]>("/hr/work-logs", params, signal),
+    queryFn: ({ signal }) => apiClient.get<WorkLog[]>("/hr/work-logs", params, signal, timesheetRowListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
   });
@@ -339,7 +365,7 @@ export function useUpsertWorkLog(
     ...options,
     mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>
-      apiClient.post<WorkLog>("/hr/work-logs", data),
+      apiClient.post<WorkLog>("/hr/work-logs", data, undefined, timesheetRowSingleC),
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workLogs() });
       options?.onSuccess?.(...args);
@@ -363,7 +389,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
     queryFn: ({ signal }) =>
       apiClient.get<TeamAttendanceStatusResponse>(
         "/hr/attendance/team-status",
-        params as Record<string, unknown> | undefined, signal,
+        params as Record<string, unknown> | undefined, signal, teamAttendanceStatusC,
       ),
     staleTime: 65_000,
     refetchInterval: 60_000,
@@ -389,7 +415,7 @@ export function useCreateRegularization(
     mutationFn: (data: CreateRegularizationInput) =>
       apiClient.post<AttendanceRegularization>(
         "/me/attendance/regularizations",
-        data,
+        data, undefined, regularizationRowC,
       ),
     onSuccess: (...args) => {
       qc.invalidateQueries({

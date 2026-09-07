@@ -1,7 +1,7 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmPanel } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PmPanel } from "@/components/pm-chrome";
 
 export default function AnalyticsLoading() {
   return (

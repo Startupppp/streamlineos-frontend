@@ -7,7 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
-import { PM_PANEL, PM_ROW } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL, PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

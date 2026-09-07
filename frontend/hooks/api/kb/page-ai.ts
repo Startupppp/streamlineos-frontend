@@ -1,6 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
@@ -11,11 +12,15 @@ import {
 
 type PageAiTextResult = { text: string; aiUsage?: AiUsageMeta | null };
 
+const kbPageAiBufferedContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbPageAiBufferedContract),
+);
+
 export function useKbPageSummarize(pageId: number) {
   return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "summarize"],
     mutationFn: (input) =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/summarize`, {}, { signal: input?.signal }),
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/summarize`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }
 
@@ -24,7 +29,7 @@ export function useKbPageAsk(pageId: number) {
     mutationKey: ["kb", "pages", pageId, "ai", "ask"],
     mutationFn: (input: AiAbortableScalar<string>) => {
       const { value: question, signal } = readAiAbortableScalar(input);
-      return apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }, { signal });
+      return apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }, { signal }, kbPageAiBufferedContract);
     },
   });
 }
@@ -33,7 +38,7 @@ export function useKbPageImprove(pageId: number) {
   return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "improve"],
     mutationFn: (input) =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/improve`, {}, { signal: input?.signal }),
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/improve`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }
 
@@ -41,6 +46,6 @@ export function useKbPageSuggestRelated(pageId: number) {
   return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "suggest-related"],
     mutationFn: (input) =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/suggest-related`, {}, { signal: input?.signal }),
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/suggest-related`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }

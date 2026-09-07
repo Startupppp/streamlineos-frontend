@@ -1,12 +1,17 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useEffect, useRef } from "react";
 import { streamAiResult, type AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
 import { kbAskResultSchema } from "./ask-result-schema";
 import type { KbAskInput, KbAskResponse, KbAiFeedbackInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+
+const kbAiFeedbackContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbAiFeedbackContract),
+);
 
 // Stable question keys prevent duplicate paid dispatch; streaming retries do not replay a completed body.
 export function useKbAsk() {
@@ -42,6 +47,6 @@ export function useKbAiAnswerFeedback() {
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ai-feedback"],
     mutationFn: (input: KbAiFeedbackInput) =>
-      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input),
+      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, undefined, kbAiFeedbackContract),
   });
 }

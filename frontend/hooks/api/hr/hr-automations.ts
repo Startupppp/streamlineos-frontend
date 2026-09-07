@@ -13,6 +13,7 @@ import type {
   CreateHrAutomationInput,
   UpdateHrAutomationInput,
 } from "@/types/hr/automations";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 const BASE = [...queryKeyBase, "hr", "automations"] as const;
@@ -38,7 +39,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal);
+      const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleListContract)));
       return page.items;
     },
     staleTime: 30_000,
@@ -52,7 +53,7 @@ export function useHrAutomationEvents() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.events(),
-    queryFn: ({ signal }) => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationEventsListContract))),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -74,7 +75,7 @@ export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; l
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`, undefined, signal);
+      return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRunListContract)));
     },
     staleTime: 15_000,
     placeholderData: keepPreviousData,
@@ -87,7 +88,7 @@ export function useCreateHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "create"],
     mutationFn: (input: CreateHrAutomationInput) =>
-      apiClient.post<HrAutomationRule>("/hr/automations", input),
+      apiClient.post<HrAutomationRule>("/hr/automations", input, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleDetailContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrAutomationKeys.all }),
   });
 }
@@ -97,7 +98,7 @@ export function useUpdateHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrAutomationInput & { id: number }) =>
-      apiClient.patch<HrAutomationRule>(`/hr/automations/${id}`, input),
+      apiClient.patch<HrAutomationRule>(`/hr/automations/${id}`, input, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleDetailContract))),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrAutomationKeys.all });
       qc.invalidateQueries({ queryKey: hrAutomationKeys.detail(vars.id) });
@@ -110,7 +111,7 @@ export function useToggleHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) =>
-      apiClient.post<HrAutomationRule>(`/hr/automations/${id}/toggle`, { isEnabled }),
+      apiClient.post<HrAutomationRule>(`/hr/automations/${id}/toggle`, { isEnabled }, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleDetailContract))),
     onMutate: async ({ id, isEnabled }) => {
       await qc.cancelQueries({ queryKey: hrAutomationKeys.all });
       const previous = qc.getQueriesData<HrAutomationRule[]>({ queryKey: hrAutomationKeys.all });
@@ -145,7 +146,7 @@ export function useTestHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
-      apiClient.post<HrTestResult>(`/hr/automations/${id}/test`, { payload }),
+      apiClient.post<HrTestResult>(`/hr/automations/${id}/test`, { payload }, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationTestResultContract))),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrAutomationKeys.runs(vars.id) });
     },

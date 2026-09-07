@@ -6,17 +6,28 @@ import { apiClient } from "@/lib/api-client";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const delegationsPageContract = lazyContract(() =>
+  import("@/hooks/api/delegations-schema").then((m) => m.delegationsPageContract),
+);
+const delegationRowContract = lazyContract(() =>
+  import("@/hooks/api/delegations-schema").then((m) => m.delegationRowContract),
+);
+const delegationMutationContract = lazyContract(() =>
+  import("@/hooks/api/delegations-schema").then((m) => m.delegationMutationContract),
+);
 
 export interface Delegation {
   id: string;
   orgId: string;
-  delegatorId: string;
-  delegateeId: string;
+  delegatorMembershipId: number;
+  delegateeMembershipId: number;
   delegatorName?: string | null;
   delegateeName?: string | null;
   permissions: string[];
   startsAt: string;
-  endsAt: string;
+  endsAt: string | null;
   reason: string | null;
   status: string;
   lifecycle: "ACTIVE" | "SCHEDULED" | "EXPIRED" | "REVOKED";
@@ -59,6 +70,7 @@ export function useReceivedDelegations(params: DelegationListParams) {
         `/access/delegations?${urlParams.toString()}`,
         undefined,
         signal,
+        delegationsPageContract,
       );
     },
     staleTime: 60_000,
@@ -76,6 +88,7 @@ export function useGrantedDelegations(params: DelegationListParams) {
         `/access/delegations/given?${urlParams.toString()}`,
         undefined,
         signal,
+        delegationsPageContract,
       );
     },
     staleTime: 60_000,
@@ -91,7 +104,7 @@ export function useRevokeDelegation(
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, string>("settings:rbac:manage", {
     mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
-    mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
+    mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`, undefined, undefined, delegationMutationContract),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({
@@ -117,7 +130,7 @@ export function useGrantDelegation(
         startsAt: new Date(values.startsAt).toISOString(),
         endsAt: new Date(values.endsAt).toISOString(),
         reason: values.reason || undefined,
-      }),
+      }, delegationRowContract),
     ...options,
   });
 }

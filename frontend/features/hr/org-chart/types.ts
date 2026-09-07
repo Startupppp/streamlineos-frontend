@@ -1,7 +1,7 @@
 export interface OrgChartNode {
   id: string;
-  name: string;
-  role: string;
+  name: string | null;
+  role: string | null;
   designation: string | null;
   image: string | null;
   departmentId: string | null;

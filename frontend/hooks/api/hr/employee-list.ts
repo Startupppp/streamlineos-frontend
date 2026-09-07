@@ -2,7 +2,12 @@
 
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const employeeListPageLazy = lazyContract(() =>
+  import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Employee,

@@ -7,6 +7,11 @@ import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type { AuditResponse } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const userAuditContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userAuditContract),
+);
 
 export const useUserAuditLog = (
   userId: string,
@@ -22,7 +27,7 @@ export const useUserAuditLog = (
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.from ? { from: params.from } : {}),
         ...(params?.to ? { to: params.to } : {}),
-      }, signal),
+      }, signal, userAuditContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),

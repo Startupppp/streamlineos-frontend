@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicApplicationStatus } from "@/lib/public-fetch";
+import { publicApplicationStatusContract } from "@/lib/public-schema";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -20,7 +21,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 
 export default async function ApplicationStatusPage({ params }: Props) {
   const { token } = await params;
-  const data = await publicGetNoStore<PublicApplicationStatus>(`/public/application-status/${token}`);
+  const data = await publicGetNoStore<PublicApplicationStatus>(`/public/application-status/${token}`, undefined, publicApplicationStatusContract);
   if (!data) return notFound();
 
   const config = STATUS_CONFIG[data.status] ?? { label: data.status, variant: "secondary" as const, description: "" };

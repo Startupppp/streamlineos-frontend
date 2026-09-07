@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AdjustmentDetail } from "@/types/inventory";
@@ -83,6 +84,13 @@ function signedQuantity(type: AdjustmentType, quantity: number): number {
   return type === "OUT" ? -magnitude : magnitude;
 }
 
+const listAdjustmentsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.listAdjustmentsContract),
+);
+const getAdjustmentContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.getAdjustmentContract),
+);
+
 export function useAdjustments(filters?: { page?: number; limit?: number; status?: string }) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentsResult, Error>({
@@ -92,7 +100,7 @@ export function useAdjustments(filters?: { page?: number; limit?: number; status
         page: filters?.page,
         limit: filters?.limit,
         status: filters?.status,
-      }, signal);
+      }, signal, listAdjustmentsContract);
       return {
         items: res.items.map(toAdjustmentListItem),
         total: res.total,
@@ -109,7 +117,7 @@ export function useAdjustmentDetail(adjustmentId: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentDetail, Error>({
     queryKey: [...queryKeys.inventory.adjustments(), adjustmentId] as const,
-    queryFn: ({ signal }) => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal, getAdjustmentContract),
     enabled: canView && adjustmentId > 0,
     staleTime: 60_000,
   });
@@ -131,7 +139,7 @@ export function useCreateAdjustment() {
             notes: data.notes,
           },
         ],
-      }),
+      }, undefined, getAdjustmentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -145,7 +153,7 @@ export function useApproveAdjustment() {
   return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:approve", {
     mutationKey: ["inventory", "adjustment", "approve"],
     mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}),
+      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}, undefined, getAdjustmentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },
@@ -161,6 +169,7 @@ export function usePostAdjustment() {
         `/inventory/stock/adjustments/${adjustmentId}/post`,
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        getAdjustmentContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -175,7 +184,7 @@ export function useCancelAdjustment() {
   return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "cancel"],
     mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}),
+      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, undefined, getAdjustmentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

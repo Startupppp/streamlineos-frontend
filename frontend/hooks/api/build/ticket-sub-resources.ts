@@ -8,6 +8,16 @@ import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-s
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TicketLabel, CreateLabelInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+
+const attachmentCreateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.attachmentCreateResultContract),
+);
 
 export interface AddCommentInput {
   ticketId: number;
@@ -72,7 +82,10 @@ export function useRemoveLabelFromTicket(
     mutationKey: ["projects", "tickets", "labels", "remove"],
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
       apiClient.delete<{ success: boolean }>(
-        `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`
+        `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`,
+        undefined,
+        undefined,
+        successLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
@@ -126,7 +139,7 @@ export function useAddAttachment(
         fileUrl,
         fileSize,
         mimeType,
-      }),
+      }, undefined, attachmentCreateResultLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
@@ -197,7 +210,10 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
     mutationKey: ["projects", "tickets", "relations", "remove"],
     mutationFn: (relatedId: number) =>
       apiClient.delete<{ success: boolean }>(
-        `/build/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`
+        `/build/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`,
+        undefined,
+        undefined,
+        successLazy,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

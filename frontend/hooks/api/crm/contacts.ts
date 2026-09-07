@@ -17,10 +17,25 @@ import type {
 } from "@/types/crm";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+
+import { lazyContract } from "@/lib/api-envelope";
+
+const contactListLazy = lazyContract(() =>
+  import("@/hooks/api/crm/contacts-schema").then((m) => m.contactListContract),
+);
+const contactDetailLazy = lazyContract(() =>
+  import("@/hooks/api/crm/contacts-schema").then((m) => m.contactDetailContract),
+);
+const contactRolesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/contacts-schema").then((m) => m.contactRolesListContract),
+);
+const duplicateContactsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/contacts-schema").then((m) => m.duplicateContactsContract),
+);
 export function useContacts(filters?: ContactFilters) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.list(filters),
-    queryFn: ({ signal }) => apiClient.get<PaginatedContacts>("/contacts", filters, signal),
+    queryFn: ({ signal }) => apiClient.get<PaginatedContacts>("/contacts", filters, signal, contactListLazy),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
@@ -29,7 +44,7 @@ export function useContacts(filters?: ContactFilters) {
 export function useContactDetail(id: number) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.detail(id),
-    queryFn: ({ signal }) => apiClient.get<Contact>(`/contacts/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Contact>(`/contacts/${id}`, undefined, signal, contactDetailLazy),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -78,7 +93,7 @@ export function useContactRoles(contactId: number, params?: { entityType?: strin
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactRoles.list(contactId, params as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>, signal),
+      apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>, signal, contactRolesLazy),
     staleTime: 2 * 60_000,
     enabled: contactId > 0,
   });
@@ -112,7 +127,7 @@ export function useContactDuplicates(params?: { page?: number; limit?: number })
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>, signal),
+      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>, signal, duplicateContactsLazy),
     staleTime: 5 * 60_000,
   });
 }

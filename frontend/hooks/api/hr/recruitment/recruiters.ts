@@ -1,8 +1,16 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const recruitersListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/recruiters-schema").then((m) => m.recruitersListContract),
+);
+const recruiterActivityListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/recruiters-schema").then((m) => m.recruiterActivityListContract),
+);
 
 type RecruiterActivityAction =
   | "CALL_MADE"
@@ -16,7 +24,7 @@ export interface RecruiterSummary {
   name: string | null;
   email: string;
   image: string | null;
-  role: string;
+  role?: string;
   assignedJobsCount: number;
   activitySummary: Partial<Record<RecruiterActivityAction, number>>;
 }
@@ -38,7 +46,7 @@ export interface RecruiterActivityEntry {
 export function useRecruiters() {
   return useGatedQuery("hr:employees:view", {
     queryKey: humanResourcesQueryKeys.hr.recruiters(),
-    queryFn: ({ signal }) => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters", undefined, signal, recruitersListC),
     staleTime: 2 * 60_000,
   });
 }
@@ -50,7 +58,7 @@ export function useRecruiterActivity(params?: { recruiterId?: string; limit?: nu
       const sp = new URLSearchParams();
       if (params?.recruiterId) sp.set("recruiterId", params.recruiterId);
       if (params?.limit) sp.set("limit", String(params.limit));
-      return apiClient.get<RecruiterActivityEntry[]>(`/hr/recruitment/recruiters/activity?${sp.toString()}`, undefined, signal);
+      return apiClient.get<RecruiterActivityEntry[]>(`/hr/recruitment/recruiters/activity?${sp.toString()}`, undefined, signal, recruiterActivityListC);
     },
     staleTime: 60_000,
   });

@@ -1,8 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const travelListContract = lazyContract(() =>
+  import("@/hooks/api/hr/travel-schema").then((m) => m.travelRequestListContract),
+);
+const travelRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/travel-schema").then((m) => m.travelRequestContract),
+);
 
 export interface TravelRequest {
   id: number;
@@ -24,17 +32,17 @@ export interface TravelRequest {
 }
 
 export function useMyTravelRequests() {
-  return useGatedQuery<TravelRequest[]>("hr:travel:view", {
+  return useGatedQuery("hr:travel:view", {
     queryKey: humanResourcesQueryKeys.hr.travelMine(),
-    queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/travel", undefined, signal, travelListContract),
     staleTime: 60_000,
   });
 }
 
 export function usePendingTravelApprovals() {
-  return useGatedQuery<TravelRequest[]>("hr:travel:manage", {
+  return useGatedQuery("hr:travel:manage", {
     queryKey: humanResourcesQueryKeys.hr.travelApprovals(),
-    queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel/approvals", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/travel/approvals", undefined, signal, travelListContract),
     staleTime: 30_000,
   });
 }
@@ -44,7 +52,7 @@ export function useCreateTravelRequest() {
   return useAuthorizedMutation("hr:travel:create", {
     mutationKey: ["hr", "travel", "create"],
     mutationFn: (data: Omit<TravelRequest, "id" | "orgId" | "userId" | "status" | "createdAt">) =>
-      apiClient.post<TravelRequest>("/hr/travel", data),
+      apiClient.post("/hr/travel", data, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
@@ -53,7 +61,7 @@ export function useManagerApproveTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "manager-approve"],
-    mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/manager-approve`),
+    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/manager-approve`, undefined, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
@@ -62,7 +70,7 @@ export function useFinanceApproveTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "finance-approve"],
-    mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/finance-approve`),
+    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/finance-approve`, undefined, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
@@ -72,7 +80,7 @@ export function useRejectTravelRequest() {
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch<TravelRequest>(`/hr/travel/${id}/reject`, { reason }),
+      apiClient.patch(`/hr/travel/${id}/reject`, { reason }, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }

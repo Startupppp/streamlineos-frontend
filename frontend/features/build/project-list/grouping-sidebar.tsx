@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import {
   getColorSafe,

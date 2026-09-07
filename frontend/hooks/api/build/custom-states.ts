@@ -3,10 +3,24 @@
 import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const projectCustomStateListContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectCustomStateListContract),
+);
+const projectCustomStateContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectCustomStateContract),
+);
+const bulkReorderStatesResultContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.bulkReorderStatesResultContract),
+);
+
+const customStateSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+);
 export interface CustomState {
   id: number;
   orgId: string;
@@ -50,7 +64,7 @@ export function useCustomStates(projectId: number) {
   return useQuery<CustomState[]>({
     queryKey: buildWorkQueryKeys.projects.customStates(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`, undefined, signal),
+      apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`, undefined, signal, projectCustomStateListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -65,7 +79,7 @@ export function useCreateCustomState(projectId: number) {
       color: string;
       type?: "unstarted" | "started" | "completed" | "cancelled";
     }) =>
-      apiClient.post<CustomState>(`/build/${projectId}/custom-states`, data),
+      apiClient.post<CustomState>(`/build/${projectId}/custom-states`, data, undefined, projectCustomStateContract),
     onSuccess: () => {
       invalidateStateCaches(qc, projectId);
     },
@@ -80,6 +94,8 @@ export function useUpdateCustomState(projectId: number) {
       apiClient.patch<CustomState>(
         `/build/${projectId}/custom-states/${stateId}`,
         data,
+        undefined,
+        projectCustomStateContract,
       ),
     onMutate: async (vars): Promise<UpdateContext> => {
       await qc.cancelQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
@@ -126,6 +142,8 @@ export function useReorderCustomStates(projectId: number) {
       return apiClient.put<BulkReorderResult>(
         `/build/${projectId}/custom-states`,
         { items: payload },
+        undefined,
+        bulkReorderStatesResultContract,
       );
     },
     onMutate: async (items): Promise<ReorderContext> => {

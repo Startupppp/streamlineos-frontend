@@ -2,10 +2,27 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+
+const chatLinkPreviewContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatLinkPreviewContract),
+);
+const chatEntityActionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatEntityActionsContract),
+);
+const chatSubmitActionContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSubmitActionContract),
+);
+const chatCreateTaskContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatCreateTaskContract),
+);
+const chatEntityActionOptionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatEntityActionOptionsContract),
+);
 
 interface LinkMeta {
   url: string;
@@ -19,7 +36,7 @@ export function useLinkPreview(url: string | null) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: [...collaborationQueryKeys.chat.all, "linkPreview", url] as const,
-    queryFn: ({ signal }) => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }, signal),
+    queryFn: ({ signal }) => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }, signal, chatLinkPreviewContract),
     enabled: canRead && Boolean(url) && url!.startsWith("http"),
     staleTime: 10 * 60_000,
     retry: false,
@@ -83,7 +100,7 @@ export function useEntityActions(
       apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
         channelId,
         references,
-      }, { signal }),
+      }, { signal }, chatEntityActionsContract),
     enabled: channelId > 0 && references.length > 0,
     staleTime: 30_000,
     select: (data) => {
@@ -116,6 +133,7 @@ export function useSubmitEntityAction() {
         "/chat/entity-actions/submit",
         body,
         operation.configFor(body),
+        chatSubmitActionContract,
       );
     },
     onSuccess: (_, variables) => {
@@ -151,6 +169,7 @@ export function useCreateTaskFromMessage() {
         "/chat/actions/create-task-from-message",
         input,
         operation.configFor(input),
+        chatCreateTaskContract,
       ),
     onSuccess: (_, variables) => {
       operation.settle();
@@ -186,6 +205,7 @@ export function useEntityActionOptions(
         "/chat/entity-actions/options",
         { channelId, reference: source },
         { signal },
+        chatEntityActionOptionsContract,
       ),
     enabled: channelId > 0 && Boolean(source),
     staleTime: 60_000,

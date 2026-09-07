@@ -5,6 +5,14 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import {
+  dimensionListContract,
+  dimensionCreatedContract,
+  dimensionUpdatedContract,
+  dimensionValueListContract,
+  dimensionValueCreatedContract,
+  dimensionValueUpdatedContract,
+} from "@/hooks/api/accounting/dimensions-schema";
 
 const dimensionKeys = {
   all: [...queryKeyBase, "accounting", "core", "dimensions"] as const,
@@ -58,7 +66,7 @@ export function useDimensions() {
   const can = useCan("accounting:dimensions:read");
   return useQuery<{ items: AccountingDimension[] }, Error>({
     queryKey: dimensionKeys.list(),
-    queryFn: ({ signal }) => apiClient.get<{ items: AccountingDimension[] }>("/accounting/dimensions", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/dimensions", undefined, signal, dimensionListContract),
     staleTime: 120_000,
     enabled: can,
   });
@@ -69,7 +77,7 @@ export function useCreateDimension() {
   return useAuthorizedMutation<AccountingDimension, Error, CreateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "create"],
     mutationFn: (body) =>
-      apiClient.post<AccountingDimension>("/accounting/dimensions", body),
+      apiClient.post("/accounting/dimensions", body, undefined, dimensionCreatedContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: dimensionKeys.list() });
     },
@@ -81,7 +89,7 @@ export function useUpdateDimension(dimensionId: number) {
   return useAuthorizedMutation<AccountingDimension, Error, UpdateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "update", dimensionId],
     mutationFn: (body) =>
-      apiClient.patch<AccountingDimension>(`/accounting/dimensions/${dimensionId}`, body),
+      apiClient.patch(`/accounting/dimensions/${dimensionId}`, body, undefined, dimensionUpdatedContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: dimensionKeys.list() });
     },
@@ -93,8 +101,8 @@ export function useDimensionValues(dimensionId: number, enabled = true) {
   return useQuery<{ items: AccountingDimensionValue[] }, Error>({
     queryKey: dimensionKeys.values(dimensionId),
     queryFn: ({ signal }) =>
-      apiClient.get<{ items: AccountingDimensionValue[] }>(
-        `/accounting/dimensions/${dimensionId}/values`, undefined, signal,
+      apiClient.get(
+        `/accounting/dimensions/${dimensionId}/values`, undefined, signal, dimensionValueListContract,
       ),
     staleTime: 60_000,
     enabled: can && enabled && dimensionId > 0,
@@ -106,9 +114,9 @@ export function useCreateDimensionValue(dimensionId: number) {
   return useAuthorizedMutation<AccountingDimensionValue, Error, CreateDimensionValueInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "create-value", dimensionId],
     mutationFn: (body) =>
-      apiClient.post<AccountingDimensionValue>(
+      apiClient.post(
         `/accounting/dimensions/${dimensionId}/values`,
-        body,
+        body, undefined, dimensionValueCreatedContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: dimensionKeys.values(dimensionId) });
@@ -122,9 +130,9 @@ export function useUpdateDimensionValue(dimensionId: number, valueId: number) {
   return useAuthorizedMutation<AccountingDimensionValue, Error, UpdateDimensionValueInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "update-value", dimensionId, valueId],
     mutationFn: (body) =>
-      apiClient.patch<AccountingDimensionValue>(
+      apiClient.patch(
         `/accounting/dimensions/${dimensionId}/values/${valueId}`,
-        body,
+        body, undefined, dimensionValueUpdatedContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: dimensionKeys.values(dimensionId) });

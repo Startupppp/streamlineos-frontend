@@ -21,7 +21,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getErrorMessage } from "@/lib/get-error-message";

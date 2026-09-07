@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -21,6 +22,72 @@ import {
   type RecruitmentListResponse,
 } from "./list-response";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const candidateListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateListResponseSchema,
+  ),
+);
+const candidateDuplicatesContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateDuplicateGroupListSchema,
+  ),
+);
+const candidateSuccessContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateSuccessSchema,
+  ),
+);
+const bulkShortlistContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateBulkShortlistResponseSchema,
+  ),
+);
+const candidateDetailContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateDetailSchema,
+  ),
+);
+const aiScoreContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.aiScoreResultSchema,
+  ),
+);
+const compositeScoreContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.compositeScoreResultSchema,
+  ),
+);
+const candidateCreateContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateSchema,
+  ),
+);
+const jobApplicationContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.jobApplicationResponseSchema,
+  ),
+);
+const pipelineContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.pipelineResponseSchema,
+  ),
+);
+const moveStageContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateMoveStageResponseSchema,
+  ),
+);
+const bulkRejectContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.candidateBulkRejectResponseSchema,
+  ),
+);
+const recruitmentAnalyticsContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then(
+    (m) => m.recruitmentAnalyticsSchema,
+  ),
+);
 
 interface AiScoreBreakdown {
   technicalSkills: number;
@@ -118,6 +185,7 @@ export function useCandidates(params?: CandidatesParams) {
         "/hr/recruitment/candidates",
         queryParams,
         signal,
+        candidateListContract,
       );
       return unwrapRecruitmentItems(res);
     },
@@ -142,6 +210,7 @@ export function useCandidatesPage(params?: CandidatesParams) {
         "/hr/recruitment/candidates",
         queryParams,
         signal,
+        candidateListContract,
       );
       const base = normalizeRecruitmentList(res, pageSize);
       const statusCounts =
@@ -181,7 +250,7 @@ export function useLinkDuplicateCandidate() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "link-duplicate"],
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }),
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }, undefined, candidateSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] });
@@ -194,7 +263,7 @@ export function useBulkShortlistCandidates() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bulk-shortlist"],
     mutationFn: (candidateIds: number[]) =>
-      apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }),
+      apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }, undefined, bulkShortlistContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
@@ -227,7 +296,9 @@ export function useGenerateCandidateAiScore() {
     mutationFn: (candidateId: number) =>
       apiClient.post<AiScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/ai-score`,
-        {}
+        {},
+        undefined,
+        aiScoreContract,
       ),
     onSuccess: (_, candidateId) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) });
@@ -242,7 +313,9 @@ export function useGenerateCandidateCompositeScore() {
     mutationFn: (candidateId: number) =>
       apiClient.post<CompositeScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/composite-score`,
-        {}
+        {},
+        undefined,
+        compositeScoreContract,
       ),
   });
 }
@@ -252,7 +325,7 @@ export function useCreateCandidate() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "create"],
     mutationFn: (data: CreateCandidateInput) =>
-      apiClient.post<Candidate>("/hr/recruitment/candidates", data),
+      apiClient.post<Candidate>("/hr/recruitment/candidates", data, undefined, candidateCreateContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -265,7 +338,7 @@ export function useUpdateCandidate() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data, undefined, candidateSuccessContract),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(id) });
@@ -279,7 +352,7 @@ export function useDeleteCandidate() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, undefined, undefined, candidateSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -295,7 +368,9 @@ export function useCreateApplication() {
     mutationFn: ({ candidateId, ...data }: { candidateId: number; jobPostingId: number; coverLetter?: string }) =>
       apiClient.post<CandidateApplication>(
         `/hr/recruitment/candidates/${candidateId}/applications`,
-        data
+        data,
+        undefined,
+        jobApplicationContract,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
@@ -308,7 +383,7 @@ export function useAtsKanban() {
   const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
-    queryFn: ({ signal }) => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline", undefined, signal, pipelineContract),
     staleTime: 2 * 60_000,
     enabled: canEmployees,
   });
@@ -321,7 +396,9 @@ export function useUpdateCandidateStage() {
     mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/stage`,
-        { stage }
+        { stage },
+        undefined,
+        moveStageContract,
       ),
     onMutate: async ({ candidateId, stage }) => {
       await qc.cancelQueries({ queryKey: ATS_KANBAN_KEY });
@@ -377,7 +454,9 @@ export function useBulkRejectCandidates() {
     mutationFn: (data: BulkRejectInput) =>
       apiClient.post<BulkRejectResult>(
         "/hr/recruitment/candidates/bulk-reject",
-        data
+        data,
+        undefined,
+        bulkRejectContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
@@ -390,7 +469,7 @@ export function useRecruitmentAnalytics() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.all, "recruitmentAnalytics"] as const,
-    queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal, recruitmentAnalyticsContract),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
   });

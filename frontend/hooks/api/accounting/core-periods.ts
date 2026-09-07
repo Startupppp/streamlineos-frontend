@@ -7,6 +7,15 @@ import { useCan } from "@/hooks/api/access";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { coreKeys } from "./core-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  periodListContract,
+  generatePeriodsContract,
+  periodCloseChecklistContract,
+  periodMutationContract,
+  reopenPeriodContract,
+  openingBalanceContract,
+  postOpeningBalancesContract,
+} from "@/hooks/api/accounting/core-periods-schema";
 
 export interface AccountingPeriod {
   id: number;
@@ -68,7 +77,7 @@ export function usePeriods() {
   const can = useCan("accounting:periods:read");
   return useQuery<AccountingPeriod[], Error>({
     queryKey: coreKeys.periods(),
-    queryFn: ({ signal }) => apiClient.get<AccountingPeriod[]>("/accounting/periods", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/periods", undefined, signal, periodListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -79,7 +88,7 @@ export function useGeneratePeriods() {
   return useAuthorizedMutation<{ created: number; total: number }, Error, { year: number }>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "generate-periods"],
     mutationFn: (body) =>
-      apiClient.post<{ created: number; total: number }>("/accounting/periods", body),
+      apiClient.post("/accounting/periods", body, undefined, generatePeriodsContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -92,7 +101,7 @@ export function usePeriodChecklist(periodId: number, enabled: boolean) {
   return useQuery<PeriodChecklist, Error>({
     queryKey: coreKeys.periodChecklist(periodId),
     queryFn: ({ signal }) =>
-      apiClient.get<PeriodChecklist>(`/accounting/periods/${periodId}/close-checklist`, undefined, signal),
+      apiClient.get(`/accounting/periods/${periodId}/close-checklist`, undefined, signal, periodCloseChecklistContract),
     staleTime: 30_000,
     enabled: can && enabled && Number.isInteger(periodId) && periodId > 0,
   });
@@ -103,7 +112,7 @@ export function useClosePeriod(periodId: number) {
   return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "close-period", periodId],
     mutationFn: () =>
-      apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/close`),
+      apiClient.post(`/accounting/periods/${periodId}/close`, undefined, undefined, periodMutationContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -116,7 +125,7 @@ export function useLockPeriod(periodId: number) {
   return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "lock-period", periodId],
     mutationFn: () =>
-      apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/lock`),
+      apiClient.post(`/accounting/periods/${periodId}/lock`, undefined, undefined, periodMutationContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -129,7 +138,7 @@ export function useReopenPeriod(periodId: number) {
   return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:reopen", {
     mutationKey: [...coreKeys.all, "reopen-period", periodId],
     mutationFn: () =>
-      apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/reopen`),
+      apiClient.post(`/accounting/periods/${periodId}/reopen`, undefined, undefined, reopenPeriodContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
@@ -141,7 +150,7 @@ export function useOpeningBalance() {
   const can = useCan("accounting:journal:read");
   return useQuery<OpeningBalanceResponse, Error>({
     queryKey: coreKeys.openingBalance(),
-    queryFn: ({ signal }) => apiClient.get<OpeningBalanceResponse>("/accounting/opening-balances", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/opening-balances", undefined, signal, openingBalanceContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -152,7 +161,7 @@ export function usePostOpeningBalances() {
   return useAuthorizedMutation<{ reimported: boolean }, Error, PostOpeningBalancesInput>("accounting:journal:create", {
     mutationKey: [...coreKeys.all, "post-opening-balances"],
     mutationFn: (body) =>
-      apiClient.post<{ reimported: boolean }>("/accounting/opening-balances", body),
+      apiClient.post("/accounting/opening-balances", body, undefined, postOpeningBalancesContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });

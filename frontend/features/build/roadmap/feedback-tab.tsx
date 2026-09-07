@@ -16,7 +16,7 @@ import {
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { FeedbackRow } from "./feedback-row";
 import { MergeFeedbackDialog } from "./merge-feedback-dialog";
 

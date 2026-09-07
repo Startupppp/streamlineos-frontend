@@ -19,6 +19,18 @@ import type {
   UpdateCategoryInput,
 } from "@/types/accounting/assets";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  assetCategoryContract,
+  assetCategoryListContract,
+  assetListContract,
+  assetDetailContract,
+  assetCreatedContract,
+  assetActivateContract,
+  assetDisposeContract,
+  depreciationRunListContract,
+  depreciationRunCreateContract,
+  depreciationRunReverseContract,
+} from "@/hooks/api/accounting/assets-schema";
 
 export interface ListCategoriesParams {
   cursor?: string;
@@ -63,7 +75,7 @@ export function useAssetCategories(params: ListCategoriesParams = {}) {
   return useQuery<CursorPage<AssetCategory>, Error>({
     queryKey: assetKeys.categories(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<AssetCategory>>("/accounting/assets/categories", toQuery(params), signal),
+      apiClient.get("/accounting/assets/categories", toQuery(params), signal, assetCategoryListContract),
     staleTime: 120_000,
     enabled: can,
   });
@@ -73,7 +85,7 @@ export function useCreateAssetCategory() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<AssetCategory, Error, CreateCategoryInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "categories", "create"],
-    mutationFn: (data) => apiClient.post<AssetCategory>("/accounting/assets/categories", data),
+    mutationFn: (data) => apiClient.post("/accounting/assets/categories", data, undefined, assetCategoryContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.categories() });
     },
@@ -85,7 +97,7 @@ export function useUpdateAssetCategory(id: number) {
   return useAuthorizedMutation<AssetCategory, Error, UpdateCategoryInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "categories", id, "update"],
     mutationFn: (data) =>
-      apiClient.patch<AssetCategory>(`/accounting/assets/categories/${id}`, data),
+      apiClient.patch(`/accounting/assets/categories/${id}`, data, undefined, assetCategoryContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.categories() });
     },
@@ -97,7 +109,7 @@ export function useAssets(params: ListAssetsParams = {}) {
   return useQuery<CursorPage<AssetListItem>, Error>({
     queryKey: assetKeys.assets(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<AssetListItem>>("/accounting/assets", toQuery(params), signal),
+      apiClient.get("/accounting/assets", toQuery(params), signal, assetListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -107,7 +119,7 @@ export function useCreateAsset() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<AssetListItem, Error, CreateAssetInput>("accounting:assets:create", {
     mutationKey: ["accounting", "assets", "create"],
-    mutationFn: (data) => apiClient.post<AssetListItem>("/accounting/assets", data),
+    mutationFn: (data) => apiClient.post("/accounting/assets", data, undefined, assetCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });
     },
@@ -118,7 +130,7 @@ export function useAsset(assetId: number) {
   const can = useCan("accounting:assets:read");
   return useQuery<AssetDetail, Error>({
     queryKey: assetKeys.asset(assetId),
-    queryFn: ({ signal }) => apiClient.get<AssetDetail>(`/accounting/assets/${assetId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/accounting/assets/${assetId}`, undefined, signal, assetDetailContract),
     staleTime: 30_000,
     enabled: can && assetId > 0,
   });
@@ -128,7 +140,7 @@ export function useUpdateAsset(assetId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<AssetDetail, Error, UpdateAssetInput>("accounting:assets:update", {
     mutationKey: ["accounting", "assets", assetId, "update"],
-    mutationFn: (data) => apiClient.patch<AssetDetail>(`/accounting/assets/${assetId}`, data),
+    mutationFn: (data) => apiClient.patch(`/accounting/assets/${assetId}`, data, undefined, assetDetailContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.asset(assetId) });
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });
@@ -140,7 +152,7 @@ export function useActivateAsset(assetId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<AssetDetail, Error, void>("accounting:assets:update", {
     mutationKey: ["accounting", "assets", assetId, "activate"],
-    mutationFn: () => apiClient.post<AssetDetail>(`/accounting/assets/${assetId}/activate`, {}),
+    mutationFn: () => apiClient.post(`/accounting/assets/${assetId}/activate`, {}, undefined, assetActivateContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.asset(assetId) });
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });
@@ -152,7 +164,7 @@ export function useDisposeAsset(assetId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<AssetDetail, Error, DisposeAssetInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", assetId, "dispose"],
-    mutationFn: (data) => apiClient.post<AssetDetail>(`/accounting/assets/${assetId}/dispose`, data),
+    mutationFn: (data) => apiClient.post(`/accounting/assets/${assetId}/dispose`, data, undefined, assetDisposeContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.asset(assetId) });
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });
@@ -165,7 +177,7 @@ export function useDepreciationRuns(params: ListRunsParams = {}) {
   return useQuery<CursorPage<DepreciationRun>, Error>({
     queryKey: assetKeys.runs(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params), signal),
+      apiClient.get("/accounting/assets/depreciation/runs", toQuery(params), signal, depreciationRunListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -176,7 +188,7 @@ export function useCreateDepreciationRun() {
   return useAuthorizedMutation<DepreciationRun, Error, CreateRunInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "depreciation-runs", "create"],
     mutationFn: (data) =>
-      apiClient.post<DepreciationRun>("/accounting/assets/depreciation/runs", data),
+      apiClient.post("/accounting/assets/depreciation/runs", data, undefined, depreciationRunCreateContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.runs() });
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });
@@ -189,7 +201,7 @@ export function useReverseDepreciationRun(runId: number) {
   return useAuthorizedMutation<DepreciationRun, Error, void>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "depreciation-runs", runId, "reverse"],
     mutationFn: () =>
-      apiClient.post<DepreciationRun>(`/accounting/assets/depreciation/runs/${runId}/reverse`, {}),
+      apiClient.post(`/accounting/assets/depreciation/runs/${runId}/reverse`, {}, undefined, depreciationRunReverseContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.runs() });
       queryClient.invalidateQueries({ queryKey: assetKeys.assets() });

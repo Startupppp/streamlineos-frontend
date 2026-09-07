@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -13,6 +14,20 @@ import type {
   UpdatePortfolioInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const portfolioPageContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioPageContract),
+);
+const portfolioRowContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioRowContract),
+);
+const portfolioDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioDetailContract),
+);
+const portfoliosSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfoliosSuccessContract),
+);
 
 interface ListFilters {
   cursor?: string;
@@ -28,7 +43,7 @@ export function usePortfolios(filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
   return useQuery<PortfoliosPage>({
     queryKey: buildWorkQueryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
-    queryFn: ({ signal }) => apiClient.get<PortfoliosPage>("/build/portfolios", params, signal),
+    queryFn: ({ signal }) => apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -37,7 +52,7 @@ export function usePortfolios(filters?: ListFilters) {
 export function usePortfolio(id: number) {
   return useGatedQuery<PortfolioDetail>("build:portfolios:view", {
     queryKey: buildWorkQueryKeys.projects.portfolios.detail(id),
-    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`, undefined, signal, portfolioDetailContract),
     enabled: !!id,
     staleTime: 60_000,
   });
@@ -48,7 +63,7 @@ export function useCreatePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "create"],
     mutationFn: (data: CreatePortfolioInput) =>
-      apiClient.post<Portfolio>("/build/portfolios", data),
+      apiClient.post<Portfolio>("/build/portfolios", data, undefined, portfolioRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
     },
@@ -60,7 +75,7 @@ export function useUpdatePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "update"],
     mutationFn: ({ id, ...data }: UpdatePortfolioInput & { id: number }) =>
-      apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data),
+      apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data, undefined, portfolioRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(vars.id) });
@@ -73,7 +88,7 @@ export function useDeletePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`, portfoliosSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
     },
@@ -85,7 +100,7 @@ export function useLinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "link"],
     mutationFn: (projectId: number) =>
-      apiClient.post<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects`, { projectId }),
+      apiClient.post<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects`, { projectId }, undefined, portfoliosSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
     },
@@ -97,7 +112,7 @@ export function useUnlinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`),
+      apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`, portfoliosSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
     },

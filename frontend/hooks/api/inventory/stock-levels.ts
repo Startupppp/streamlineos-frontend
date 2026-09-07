@@ -2,6 +2,7 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { StockAvailability } from "@/types/inventory";
@@ -115,13 +116,15 @@ interface StockTransactionsResult {
 
 interface RawStockLevel {
   id: number;
-  onHand: string;
+  on_hand: string;
   committed: string;
-  onOrder: string;
+  on_order: string;
   available: string;
-  blockedQty: string;
-  qualityHoldQty: string;
-  averageCost: string | null;
+  blocked_qty: string | null;
+  quality_hold_qty: string | null;
+  average_cost: string | null;
+  product_variant_id: number;
+  location_id: number;
   productVariant: {
     id: number;
     name: string | null;
@@ -179,13 +182,13 @@ function toStockLevelRow(r: RawStockLevel): StockLevelRow {
     sku: product?.sku ?? r.productVariant?.sku ?? "—",
     warehouseName: r.location?.warehouse?.name ?? null,
     locationCode: r.location?.code ?? null,
-    onHand: Number(r.onHand),
+    onHand: Number(r.on_hand),
     committed: Number(r.committed),
-    onOrder: Number(r.onOrder),
+    onOrder: Number(r.on_order),
     available: Number(r.available),
-    blockedQty: Number(r.blockedQty),
-    qualityHoldQty: Number(r.qualityHoldQty),
-    averageCost: r.averageCost ?? null,
+    blockedQty: Number(r.blocked_qty ?? 0),
+    qualityHoldQty: Number(r.quality_hold_qty ?? 0),
+    averageCost: r.average_cost ?? null,
     reorderPoint: product?.reorderPoint != null ? Number(product.reorderPoint) : null,
     minStockLevel: null,
     variantId: r.productVariant?.id ?? null,
@@ -224,6 +227,16 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
   };
 }
 
+const listStockLevelsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.listStockLevelsContract),
+);
+const stockAvailabilityContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.stockAvailabilityContract),
+);
+const listStockTransactionsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.listStockTransactionsContract),
+);
+
 export function useStockLevels(filters?: StockLevelFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StockLevelsResult, Error>({
@@ -241,7 +254,7 @@ export function useStockLevels(filters?: StockLevelFilters) {
         search: filters?.search,
         page: filters?.page,
         limit: filters?.limit,
-      }, signal);
+      }, signal, listStockLevelsContract);
       return {
         items: res.items.map(toStockLevelRow),
         page: res.page,
@@ -264,7 +277,7 @@ export function useStockAvailability(variantId: number, warehouseId?: number) {
       apiClient.get<StockAvailability>("/inventory/stock/availability", {
         variantId,
         ...(warehouseId !== undefined ? { warehouseId } : {}),
-      }, signal),
+      }, signal, stockAvailabilityContract),
     enabled: canView && variantId > 0,
     staleTime: 30_000,
   });
@@ -286,7 +299,7 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
         toDate: filters?.toDate,
         page: filters?.page,
         limit: filters?.limit,
-      }, signal);
+      }, signal, listStockTransactionsContract);
       return {
         items: res.items.map(toStockTransaction),
         total: res.total,

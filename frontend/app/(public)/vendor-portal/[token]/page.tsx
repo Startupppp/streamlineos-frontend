@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
 import { publicGetNoStore, type PublicVendorPortal } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
+import { publicVendorPortalContract } from "@/lib/public-schema";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -36,7 +37,7 @@ export default async function VendorPortalPage({ params }: Props) {
 
   let data: PublicVendorPortal | null;
   try {
-    data = await publicGetNoStore<PublicVendorPortal>(`/public/vendor-portal/${token}`);
+    data = await publicGetNoStore<PublicVendorPortal>(`/public/vendor-portal/${token}`, undefined, publicVendorPortalContract);
   } catch (e) {
     if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
     throw e;

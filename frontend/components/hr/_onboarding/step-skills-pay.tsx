@@ -65,7 +65,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
 
   const monthlySalary = Number(form.watch("monthlySalary")) || 0;
   const templateId = form.watch("salaryStructureTemplateId");
-  const selectedTemplate = templates?.find((t) => t.id === templateId);
+  const selectedTemplate = templates?.data.find((t) => t.id === templateId);
   const split = selectedTemplate
     ? splitFromTemplate(selectedTemplate)
     : DEFAULT_SALARY_SPLIT;
@@ -124,7 +124,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
           )}
         />
 
-        {canUseTemplates && templates && templates.length > 0 && (
+        {canUseTemplates && templates && templates.data.length > 0 && (
           <FormField
             control={form.control}
             name="salaryStructureTemplateId"
@@ -144,7 +144,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                     <SelectItem value={DEFAULT_TEMPLATE_VALUE}>
                       Organisation default
                     </SelectItem>
-                    {templates.map((template) => (
+                    {templates.data.map((template) => (
                       <SelectItem key={template.id} value={String(template.id)}>
                         {template.name}
                       </SelectItem>

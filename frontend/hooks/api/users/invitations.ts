@@ -11,6 +11,20 @@ import type {
   InviteUserPayload,
 } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const inviteUserContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.inviteUserContract),
+);
+const bulkInviteContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.bulkInviteContract),
+);
+const invitationsResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.invitationsResponseContract),
+);
+const userSuccessContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSuccessContract),
+);
 
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
@@ -24,6 +38,7 @@ export const useInviteUser = () => {
       apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>(
         "/users/invite",
         invitation,
+        inviteUserContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
@@ -50,7 +65,7 @@ export const useBulkInviteUsers = () => {
           invitationId?: string;
           error?: string;
         }>;
-      }>("/users/bulk-invite", invitationBatch),
+      }>("/users/bulk-invite", invitationBatch, bulkInviteContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
@@ -80,7 +95,7 @@ export const useInvitations = (
         ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.q ? { q: params.q } : {}),
-      }, signal),
+      }, signal, invitationsResponseContract),
     staleTime: 30_000,
     refetchOnWindowFocus: "always",
     ...options,
@@ -93,7 +108,7 @@ export const useResendInvite = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, string>("settings:organization:manage", {
     mutationKey: ["resend", "invite"],
     mutationFn: (invitationId) =>
-      apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
+      apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}, userSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
@@ -110,6 +125,7 @@ export const useChangeInvitationRole = () => {
       apiClient.patch<{ success: boolean }>(
         `/users/invitations/${invitationId}/role`,
         { role },
+        userSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
@@ -123,7 +139,7 @@ export const useCancelInvitation = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, string>("settings:organization:manage", {
     mutationKey: ["cancel", "invitation"],
     mutationFn: (invitationId) =>
-      apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`),
+      apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`, undefined, undefined, userSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });

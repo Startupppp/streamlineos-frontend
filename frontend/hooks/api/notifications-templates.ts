@@ -3,6 +3,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import {
+  notificationTemplatesListContract,
+  notificationTemplateContract,
+  notificationSuccessContract,
+  templatePreviewContract,
+} from "@/hooks/api/notifications-schema";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
@@ -39,7 +45,7 @@ export const useCreateNotificationTemplate = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<NotificationTemplate, Error, CreateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "create"],
-    mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto),
+    mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto, undefined, notificationTemplateContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
@@ -51,7 +57,7 @@ export const useUpdateNotificationTemplate = () => {
   return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
+      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto, undefined, notificationTemplateContract),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
@@ -64,7 +70,7 @@ export const useSetTemplateApproval = () => {
   return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "approval"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto),
+      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto, undefined, notificationTemplateContract),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
@@ -76,7 +82,7 @@ export const useDeleteNotificationTemplate = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "delete"],
-    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`),
+    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`, undefined, undefined, notificationSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
@@ -87,6 +93,6 @@ export const usePreviewTemplate = () => {
   return useAuthorizedMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>("notifications:templates:view", {
     mutationKey: ["notifications", "templates", "preview"],
     mutationFn: ({ id, variables }) =>
-      apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),
+      apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }, undefined, templatePreviewContract),
   });
 };

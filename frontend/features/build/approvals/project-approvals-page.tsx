@@ -35,7 +35,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 
 interface ProjectApprovalsPageProps {
   projectId: number;

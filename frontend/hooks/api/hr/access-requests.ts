@@ -3,9 +3,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const accessRequestListC = lazyContract(() =>
+  import("@/hooks/api/hr/access-requests-schema").then((m) => m.accessRequestListContract),
+);
+const accessRequestC = lazyContract(() =>
+  import("@/hooks/api/hr/access-requests-schema").then((m) => m.accessRequestContract),
+);
 
 export interface AccessRequest {
   id: string;
@@ -13,7 +21,7 @@ export interface AccessRequest {
   employeeId: string;
   systemName: string;
   accessLevel: string;
-  status: "requested" | "granted" | "revoked";
+  status: string;
   grantedBy: string | null;
   revokedAt: string | null;
   createdAt: string;
@@ -27,7 +35,7 @@ export interface CreateAccessRequestInput {
 }
 
 export interface PatchAccessRequestInput {
-  status: "requested" | "granted" | "revoked";
+  status: string;
   grantedBy?: string;
 }
 
@@ -37,7 +45,7 @@ export function useAccessRequests(employeeId?: string) {
   return useGatedQuery<AccessRequest[]>("hr:assets:view", {
     queryKey: humanResourcesQueryKeys.hr.hrAccessRequests({ employeeId }),
     queryFn: ({ signal }) =>
-      apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal),
+      apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal, accessRequestListC),
     staleTime: 60_000,
   });
 }
@@ -47,7 +55,7 @@ export function useCreateAccessRequest() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: [...AR_KEY, "create"],
     mutationFn: (data: CreateAccessRequestInput) =>
-      apiClient.post<AccessRequest>("/hr/access-requests", data),
+      apiClient.post<AccessRequest>("/hr/access-requests", data, undefined, accessRequestC),
     onSuccess: () => qc.invalidateQueries({ queryKey: AR_KEY }),
   });
 }
@@ -57,7 +65,7 @@ export function useUpdateAccessRequest() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: [...AR_KEY, "update"],
     mutationFn: ({ id, ...data }: PatchAccessRequestInput & { id: string }) =>
-      apiClient.patch<AccessRequest>(`/hr/access-requests/${id}`, data),
+      apiClient.patch<AccessRequest>(`/hr/access-requests/${id}`, data, undefined, accessRequestC),
     onSuccess: () => qc.invalidateQueries({ queryKey: AR_KEY }),
   });
 }

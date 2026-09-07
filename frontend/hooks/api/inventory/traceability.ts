@@ -5,7 +5,27 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { LotStatus, SerialStatus } from "@/features/inventory/lib";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const listLotsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.listLotsContract),
+);
+const getLotDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.getLotDetailContract),
+);
+const listSerialsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.listSerialsContract),
+);
+const getSerialDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.getSerialDetailContract),
+);
+const traceabilityChainContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.traceabilityChainContract),
+);
+const expiryItemsArrayContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.expiryItemsArrayContract),
+);
 
 interface LotListItem {
   id: number;
@@ -153,7 +173,7 @@ export function useLots(params?: LotsParams) {
         search: params?.search,
         page: params?.page,
         limit: params?.limit,
-      }, signal),
+      }, signal, listLotsContract),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -164,7 +184,7 @@ export function useLot(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<LotDetail, Error>({
     queryKey: queryKeys.inventory.lot(id),
-    queryFn: ({ signal }) => apiClient.get<LotDetail>(`/inventory/lots/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<LotDetail>(`/inventory/lots/${id}`, undefined, signal, getLotDetailContract),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -194,7 +214,7 @@ export function useSerials(params?: SerialsParams) {
         search: params?.search,
         page: params?.page,
         limit: params?.limit,
-      }, signal),
+      }, signal, listSerialsContract),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -205,7 +225,7 @@ export function useSerial(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<SerialDetail, Error>({
     queryKey: queryKeys.inventory.serial(id),
-    queryFn: ({ signal }) => apiClient.get<SerialDetail>(`/inventory/serials/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SerialDetail>(`/inventory/serials/${id}`, undefined, signal, getSerialDetailContract),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -216,7 +236,7 @@ export function useExpiryItems(params?: { days?: number }) {
   return useQuery<ExpiryItem[], Error>({
     queryKey: queryKeys.inventory.expiry(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }, signal),
+      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }, signal, expiryItemsArrayContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -230,7 +250,7 @@ export function useTraceability(params: { lotId?: number; serialId?: number }) {
       apiClient.get<TraceabilityResult>("/inventory/traceability", {
         lotId: params.lotId,
         serialId: params.serialId,
-      }, signal),
+      }, signal, traceabilityChainContract),
     staleTime: 60_000,
     enabled: canView && (params.lotId !== undefined || params.serialId !== undefined),
   });

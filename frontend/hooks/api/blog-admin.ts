@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useCan } from "@/hooks/api/access";
 import type { BlogCategory, BlogPostStatus } from "@/types/blog";
@@ -11,8 +12,8 @@ export interface AdminBlogPost {
   id: string;
   title: string;
   slug: string;
-  excerpt: string;
-  coverImage: string;
+  excerpt: string | null;
+  coverImage: string | null;
   status: BlogPostStatus;
   isFeatured: boolean;
   readingTime: number | null;
@@ -22,17 +23,29 @@ export interface AdminBlogPost {
   authorId: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  content: string | null;
+  contentText: string | null;
+  contentJson: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
   category: BlogCategory | null;
 }
 
-export interface AdminBlogPostsResponse {
-  posts: AdminBlogPost[];
-  total: number;
-  page: number;
-  limit: number;
-}
+const blogAdminPostListContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogAdminPostListContract),
+);
+
+const blogAdminPostContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogAdminPostContract),
+);
+
+const blogAdminCategoryListContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogAdminCategoryListContract),
+);
+
+const blogAdminCategoryContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogAdminCategoryContract),
+);
 
 export interface AdminBlogPostsParams {
   page?: number;
@@ -49,7 +62,7 @@ export function useAdminBlogPosts(params: AdminBlogPostsParams) {
   if (status && status !== "all") queryParams.status = status;
   return useQuery({
     queryKey: accessAndCrmQueryKeys.blogAdmin.posts(queryParams),
-    queryFn: ({ signal }) => apiClient.get<AdminBlogPostsResponse>("/blog/admin/posts", queryParams, signal),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogPost[]>("/blog/admin/posts", queryParams, signal, blogAdminPostListContract),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -59,7 +72,7 @@ export function useAdminBlogPost(postId: string) {
   const canManage = useCan("blog:posts:manage");
   return useQuery({
     queryKey: accessAndCrmQueryKeys.blogAdmin.post(postId),
-    queryFn: ({ signal }) => apiClient.get<AdminBlogPost>(`/blog/admin/posts/${postId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogPost>(`/blog/admin/posts/${postId}`, undefined, signal, blogAdminPostContract),
     staleTime: 60_000,
     enabled: canManage && !!postId,
   });
@@ -88,7 +101,7 @@ export function useCreateBlogPost() {
   return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "create"],
     mutationFn: (data: CreateBlogPostInput) =>
-      apiClient.post<AdminBlogPost>("/blog/admin/posts", data),
+      apiClient.post<AdminBlogPost>("/blog/admin/posts", data, undefined, blogAdminPostContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },
@@ -100,7 +113,7 @@ export function useUpdateBlogPost() {
   return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "update"],
     mutationFn: ({ postId, ...data }: { postId: string } & UpdateBlogPostInput) =>
-      apiClient.patch<AdminBlogPost>(`/blog/admin/posts/${postId}`, data),
+      apiClient.patch<AdminBlogPost>(`/blog/admin/posts/${postId}`, data, undefined, blogAdminPostContract),
     onSuccess: (_, { postId }) => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.post(postId), exact: true });
@@ -133,7 +146,7 @@ export function useAdminBlogCategories() {
   const canManage = useCan("blog:categories:manage");
   return useQuery({
     queryKey: accessAndCrmQueryKeys.blogAdmin.categories(),
-    queryFn: ({ signal }) => apiClient.get<AdminBlogCategory[]>("/blog/admin/categories", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogCategory[]>("/blog/admin/categories", undefined, signal, blogAdminCategoryListContract),
     staleTime: 2 * 60_000,
     enabled: canManage,
   });
@@ -152,7 +165,7 @@ export function useCreateBlogCategory() {
   return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "create"],
     mutationFn: (data: CreateBlogCategoryInput) =>
-      apiClient.post<AdminBlogCategory>("/blog/admin/categories", data),
+      apiClient.post<AdminBlogCategory>("/blog/admin/categories", data, undefined, blogAdminCategoryContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.categories() });
     },
@@ -164,7 +177,7 @@ export function useUpdateBlogCategory() {
   return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "update"],
     mutationFn: ({ categoryId, ...data }: { categoryId: string } & UpdateBlogCategoryInput) =>
-      apiClient.patch<AdminBlogCategory>(`/blog/admin/categories/${categoryId}`, data),
+      apiClient.patch<AdminBlogCategory>(`/blog/admin/categories/${categoryId}`, data, undefined, blogAdminCategoryContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.categories() });
     },

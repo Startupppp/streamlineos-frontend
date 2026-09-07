@@ -7,7 +7,12 @@ import type {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const allWorkPageContract = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.allWorkPageContract),
+);
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 
@@ -30,7 +35,7 @@ export function useAllWork(
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
     queryKey: buildWorkQueryKeys.projects.allWork(filters ? { ...filters } : undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined, signal),
+      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined, signal, allWorkPageContract),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...restOptions,
@@ -59,7 +64,7 @@ export function useInfiniteAllWork(
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
-      }, signal),
+      }, signal, allWorkPageContract),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,

@@ -2,7 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const programListContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.programListContract),
+);
+const programRowContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.programRowContract),
+);
 import { useCan } from "@/hooks/api/access";
 import type {
   Program,
@@ -25,7 +33,7 @@ export function usePrograms(filters?: ListFilters) {
     queryKey: buildWorkQueryKeys.projects.programs.list(
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<Program[]>("/build/programs", params, signal),
+    queryFn: ({ signal }) => apiClient.get<Program[]>("/build/programs", params, signal, programListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -36,7 +44,7 @@ export function useCreateProgram() {
   return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "create"],
     mutationFn: (data: CreateProgramInput) =>
-      apiClient.post<Program>("/build/programs", data),
+      apiClient.post<Program>("/build/programs", data, undefined, programRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
     },
@@ -48,7 +56,7 @@ export function useUpdateProgram() {
   return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "update"],
     mutationFn: ({ id, ...data }: UpdateProgramInput & { id: number }) =>
-      apiClient.patch<Program>(`/build/programs/${id}`, data),
+      apiClient.patch<Program>(`/build/programs/${id}`, data, undefined, programRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
       qc.invalidateQueries({

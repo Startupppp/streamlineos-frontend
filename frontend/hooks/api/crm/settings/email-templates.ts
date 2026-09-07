@@ -5,6 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const emailTemplatesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.emailTemplatesListContract),
+);
 
 export interface EmailTemplate {
   id: number;
@@ -33,7 +38,7 @@ export function useEmailTemplates(params?: { limit?: number; offset?: number }) 
   return useGatedQuery("crm:email-templates:manage", {
     queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>, signal),
+      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>, signal, emailTemplatesLazy),
     staleTime: 2 * 60_000,
   });
 }

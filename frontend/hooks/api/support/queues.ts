@@ -1,8 +1,13 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportQueueListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-workspace-schema").then((m) => m.supportQueueListContract),
+);
 
 export interface SupportQueue {
   id: number;
@@ -20,7 +25,7 @@ export interface SupportQueue {
 export function useSupportQueues() {
   return useGatedQuery("support:tickets:view", {
     queryKey: supportAndWorkflowsQueryKeys.supportQueues.list(),
-    queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal, supportQueueListContract),
     staleTime: 60_000,
   });
 }

@@ -33,6 +33,27 @@ const rolesPageContract = lazyContract(() =>
 const roleContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.roleContract),
 );
+const roleSuccessContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.roleSuccessContract),
+);
+const setRolePermissionsContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.setRolePermissionsContract),
+);
+const seedDefaultRolesContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.seedDefaultRolesContract),
+);
+const rolePermissionGrantsContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.rolePermissionGrantsContract),
+);
+const roleMembersContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.roleMembersContract),
+);
+const rolesAnalyticsContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.rolesAnalyticsContract),
+);
+const assignableDepartmentsContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.assignableDepartmentsContract),
+);
 
 type RolesPage = {
   data: RoleListItem[];
@@ -117,7 +138,7 @@ export const useDeleteRole = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, number>("settings:rbac:manage", {
     mutationKey: ["roles", "delete"],
     mutationFn: (id) =>
-      apiClient.delete<{ success: boolean }>(`/roles/${id}`),
+      apiClient.delete<{ success: boolean }>(`/roles/${id}`, undefined, undefined, roleSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
     },
@@ -129,7 +150,7 @@ export const useUpdateRole = (roleId: number) => {
   return useAuthorizedMutation<{ success: boolean }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "update", roleId],
     mutationFn: ({ name }) =>
-      apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }),
+      apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }, undefined, roleSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
       queryClient.invalidateQueries({
@@ -143,7 +164,7 @@ export function useMaterializeRoleTemplate() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
-    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
+    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data, roleContract),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all }),
   });
 }
@@ -161,7 +182,7 @@ export function useSeedDefaultRoles() {
   return useAuthorizedMutation("settings:rbac:manage", {
     mutationKey: ["roles", "seed-defaults"],
     mutationFn: () =>
-      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults"),
+      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults", undefined, seedDefaultRolesContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
     },
@@ -180,7 +201,7 @@ export const useRolePermissionGrants = (
   return useQuery<RolePermissionGrant[], Error>({
     queryKey: accessAndCrmQueryKeys.roles.permissions(roleId),
     queryFn: ({ signal }) =>
-      apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`, undefined, signal),
+      apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`, undefined, signal, rolePermissionGrantsContract),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && roleId > 0 && (options?.enabled ?? true),
@@ -192,7 +213,7 @@ export const useSetRolePermissions = () => {
   return useAuthorizedMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>("settings:rbac:manage", {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, version, items }) =>
-      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }),
+      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }, setRolePermissionsContract),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<import("@/types/organization").Role>(
         accessAndCrmQueryKeys.roles.detail(variables.roleId),
@@ -217,7 +238,7 @@ export const useRoleMembers = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleMember[], Error>({
     queryKey: accessAndCrmQueryKeys.roles.members(roleId),
-    queryFn: ({ signal }) => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`, undefined, signal, roleMembersContract),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && roleId > 0 && (options?.enabled ?? true),
@@ -229,7 +250,7 @@ export const useAssignRoleMember = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
-      apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
+      apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body, roleSuccessContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
@@ -245,7 +266,7 @@ export const useUnassignRoleMember = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, UnassignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
-      apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
+      apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body, undefined, roleSuccessContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
@@ -271,7 +292,7 @@ export function useRolesAnalytics(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RolesAnalytics, Error>({
     queryKey: accessAndCrmQueryKeys.roles.analytics(),
-    queryFn: ({ signal }) => apiClient.get<RolesAnalytics>("/roles/analytics", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<RolesAnalytics>("/roles/analytics", undefined, signal, rolesAnalyticsContract),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
@@ -289,7 +310,7 @@ export function useAssignableDepartments(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<AssignableDepartment[], Error>({
     queryKey: accessAndCrmQueryKeys.roles.departments(),
-    queryFn: ({ signal }) => apiClient.get<AssignableDepartment[]>("/roles/departments", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AssignableDepartment[]>("/roles/departments", undefined, signal, assignableDepartmentsContract),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),

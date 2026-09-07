@@ -6,10 +6,20 @@ import { apiClient } from "@/lib/api-client";
 import {
   bankAccountContract,
   bankAccountsPageContract,
+  bankTransactionListContract,
+  bankImportCreateContract,
+  reconWorkspaceContract,
+  reconRuleListContract,
+  reconRuleContract,
+  bankTransferListContract,
+  bankTransferContract,
   type BankAccountRecord,
   type BankAccountsPage,
   type BankAccountType as BankAccountTypeValue,
 } from "@/hooks/api/accounting/banking-schema";
+import { z } from "zod";
+
+const reconSuccessContract = z.object({ success: z.literal(true) });
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -176,9 +186,9 @@ export function useBankTransactions(bankAccountId: number, params: ListTxnParams
   return useQuery<CursorPage<BankTransaction>, Error>({
     queryKey: bankingKeys.transactions(bankAccountId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BankTransaction>>(
+      apiClient.get(
         `/finance/bank-accounts/${bankAccountId}/transactions`,
-        toQuery(params), signal,
+        toQuery(params), signal, bankTransactionListContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -201,7 +211,7 @@ export function useCreateBankAccount() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BankAccountRecord, Error, CreateBankAccountInput>("accounting:banking:manage", {
     mutationKey: ["banking", "createAccount"],
-    mutationFn: (data) => apiClient.post<BankAccountRecord>("/finance/bank-accounts", data),
+    mutationFn: (data) => apiClient.post("/finance/bank-accounts", data, undefined, bankAccountContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.all });
       toast.success("Bank account created");
@@ -233,7 +243,7 @@ export function useCreateBankImport() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BankImportResult, Error, CreateBankImportInput>("accounting:banking:import", {
     mutationKey: ["banking", "createImport"],
-    mutationFn: (data) => apiClient.post<BankImportResult>("/finance/bank-imports", data),
+    mutationFn: (data) => apiClient.post("/finance/bank-imports", data, undefined, bankImportCreateContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.all });
     },
@@ -248,8 +258,8 @@ export function useReconciliationWorkspace(bankAccountId: number) {
   return useQuery<ReconciliationWorkspace, Error>({
     queryKey: bankingKeys.reconciliation(bankAccountId),
     queryFn: ({ signal }) =>
-      apiClient.get<ReconciliationWorkspace>(
-        `/finance/reconciliation/${bankAccountId}`, undefined, signal,
+      apiClient.get(
+        `/finance/reconciliation/${bankAccountId}`, undefined, signal, reconWorkspaceContract,
       ),
     staleTime: 0,
     enabled: can,
@@ -273,7 +283,7 @@ export function useConfirmMatch(bankAccountId: number) {
   return useAuthorizedMutation<void, Error, ConfirmMatchInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "confirmMatch", bankAccountId],
     mutationFn: (data) =>
-      apiClient.post<void>(`/finance/reconciliation/${bankAccountId}/match`, data),
+      apiClient.post(`/finance/reconciliation/${bankAccountId}/match`, data, undefined, reconSuccessContract),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
       const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
@@ -311,7 +321,7 @@ export function useUnmatch(bankAccountId: number) {
   return useAuthorizedMutation<void, Error, UnmatchInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "unmatch", bankAccountId],
     mutationFn: (data) =>
-      apiClient.post<void>(`/finance/reconciliation/${bankAccountId}/unmatch`, data),
+      apiClient.post(`/finance/reconciliation/${bankAccountId}/unmatch`, data, undefined, reconSuccessContract),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
       const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
@@ -356,7 +366,7 @@ export function useIgnoreTransaction(bankAccountId: number) {
   return useAuthorizedMutation<void, Error, IgnoreInput, OptimisticContext>("accounting:banking:reconcile", {
     mutationKey: ["banking", "ignore", bankAccountId],
     mutationFn: (data) =>
-      apiClient.post<void>(`/finance/reconciliation/${bankAccountId}/ignore`, data),
+      apiClient.post(`/finance/reconciliation/${bankAccountId}/ignore`, data, undefined, reconSuccessContract),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
       const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
@@ -394,9 +404,9 @@ export function useReconciliationRules(bankAccountId: number, params: ListRulesP
   return useQuery<CursorPage<ReconciliationRule>, Error>({
     queryKey: bankingKeys.rules(bankAccountId),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<ReconciliationRule>>(
+      apiClient.get(
         `/finance/reconciliation/${bankAccountId}/rules`,
-        toQuery(params), signal,
+        toQuery(params), signal, reconRuleListContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -416,9 +426,9 @@ export function useCreateReconciliationRule(bankAccountId: number) {
   return useAuthorizedMutation<ReconciliationRule, Error, CreateRuleInput>("accounting:banking:reconcile", {
     mutationKey: ["banking", "createRule", bankAccountId],
     mutationFn: (data) =>
-      apiClient.post<ReconciliationRule>(
+      apiClient.post(
         `/finance/reconciliation/${bankAccountId}/rules`,
-        data,
+        data, undefined, reconRuleContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.rules(bankAccountId) });
@@ -435,8 +445,9 @@ export function useDeleteReconciliationRule(bankAccountId: number) {
   return useAuthorizedMutation<void, Error, number>("accounting:banking:reconcile", {
     mutationKey: ["banking", "deleteRule", bankAccountId],
     mutationFn: (ruleId) =>
-      apiClient.delete<void>(
+      apiClient.delete(
         `/finance/reconciliation/${bankAccountId}/rules/${ruleId}`,
+        undefined, undefined, reconSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.rules(bankAccountId) });
@@ -460,7 +471,7 @@ export function useTransfers(params: ListTransfersParams = {}) {
   return useQuery<CursorPage<BankTransfer>, Error>({
     queryKey: bankingKeys.transfers(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BankTransfer>>("/finance/transfers", toQuery(params), signal),
+      apiClient.get("/finance/transfers", toQuery(params), signal, bankTransferListContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -479,7 +490,7 @@ export function useCreateTransfer() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BankTransfer, Error, CreateTransferInput>("accounting:banking:manage", {
     mutationKey: ["banking", "createTransfer"],
-    mutationFn: (data) => apiClient.post<BankTransfer>("/finance/transfers", data),
+    mutationFn: (data) => apiClient.post("/finance/transfers", data, undefined, bankTransferContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.transfers() });
       void queryClient.invalidateQueries({ queryKey: bankingKeys.accounts() });

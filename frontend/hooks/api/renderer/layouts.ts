@@ -3,10 +3,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const layoutAdjustmentContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutAdjustmentContract),
+);
+const layoutAdjustmentSaveContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutAdjustmentSaveContract),
+);
+const layoutUsageContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutUsageContract),
+);
 
 /**
  * Where a tenant's arrangement of a record type lives.
@@ -63,7 +74,7 @@ export function useLayoutAdjustment(layoutKey: string) {
     queryKey: platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutAdjustment | null>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, undefined, signal,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, undefined, signal, layoutAdjustmentContract,
       ),
     // An arrangement changes when an administrator edits it, which is rare, and
     // every record surface in the product reads it.
@@ -106,6 +117,8 @@ export function useSaveLayoutAdjustment(layoutKey: string) {
       apiClient.put<LayoutAdjustment>(
         `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
         input,
+        undefined,
+        layoutAdjustmentSaveContract,
       ),
     onSuccess: (saved) => {
       queryClient.setQueryData(
@@ -143,7 +156,7 @@ export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean 
     queryKey: platformCoreQueryKeys.recordLayouts.usage(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutUsage>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal, layoutUsageContract,
       ),
     staleTime: 10 * 60_000,
     enabled: !!orgId && !!layoutKey && canReadUsage && (options?.enabled ?? true),

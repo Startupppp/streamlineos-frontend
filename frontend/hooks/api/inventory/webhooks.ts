@@ -4,7 +4,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const webhooksArrayContract = lazyContract(() =>
+  import("@/hooks/api/inventory/webhooks-schema").then((m) => m.webhooksArrayContract),
+);
+const webhookDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/webhooks-schema").then((m) => m.webhookDetailContract),
+);
+const listWebhookEventsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/webhooks-schema").then((m) => m.listWebhookEventsContract),
+);
+const retryEventContract = lazyContract(() =>
+  import("@/hooks/api/inventory/webhooks-schema").then((m) => m.retryEventContract),
+);
 
 export type WebhookEventType =
   | "inventory.product.created"
@@ -80,7 +94,7 @@ export function useWebhooks() {
   const canView = useCan("inventory:webhooks:manage");
   return useQuery<Webhook[], Error>({
     queryKey: queryKeys.inventory.webhooks(),
-    queryFn: ({ signal }) => apiClient.get<Webhook[]>("/inventory/webhooks", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Webhook[]>("/inventory/webhooks", undefined, signal, webhooksArrayContract),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -94,7 +108,7 @@ export function useCreateWebhook() {
     { url: string; events: WebhookEventType[]; isActive?: boolean }
   >("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "create"],
-    mutationFn: (data) => apiClient.post<Webhook>("/inventory/webhooks", data),
+    mutationFn: (data) => apiClient.post<Webhook>("/inventory/webhooks", data, undefined, webhookDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhooks() });
     },
@@ -110,7 +124,7 @@ export function useUpdateWebhook() {
   >("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "update"],
     mutationFn: ({ webhookId, ...data }) =>
-      apiClient.patch<Webhook>(`/inventory/webhooks/${webhookId}`, data),
+      apiClient.patch<Webhook>(`/inventory/webhooks/${webhookId}`, data, undefined, webhookDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhooks() });
     },
@@ -137,7 +151,7 @@ export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal),
+      }, signal, listWebhookEventsContract),
     enabled: canView && webhookId > 0,
     staleTime: 30_000,
   });
@@ -148,7 +162,7 @@ export function useRetryWebhookEvent() {
   return useAuthorizedMutation<WebhookEvent, Error, { webhookId: number; eventId: number }>("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "event", "retry"],
     mutationFn: ({ eventId }) =>
-      apiClient.post<WebhookEvent>(`/inventory/webhooks/events/${eventId}/retry`),
+      apiClient.post<WebhookEvent>(`/inventory/webhooks/events/${eventId}/retry`, undefined, undefined, retryEventContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhookEvents(vars.webhookId) });
     },

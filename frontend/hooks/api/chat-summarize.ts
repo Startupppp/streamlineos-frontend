@@ -1,7 +1,12 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+
+const chatSummarizeContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSummarizeContract),
+);
 
 /**
  * `POST /chat/channels/:channelId/summarize` is `@Idempotent("chat.summarize")` and charged:
@@ -16,6 +21,7 @@ export function useChatSummarize() {
       `/chat/channels/${channelId}/summarize`,
       undefined,
       operation.configFor({ channelId }),
+      chatSummarizeContract,
     );
     operation.settle();
     return { text: result.summary };

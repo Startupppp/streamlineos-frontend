@@ -12,7 +12,7 @@ import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";

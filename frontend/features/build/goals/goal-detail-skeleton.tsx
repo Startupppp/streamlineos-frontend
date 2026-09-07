@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export function GoalDetailSkeleton() {

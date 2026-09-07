@@ -2,10 +2,18 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+
+const createReimbursementC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.createReimbursementContract),
+);
+const processReimbursementC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.processReimbursementContract),
+);
 
 export interface Reimbursement {
   id: number;
@@ -43,7 +51,7 @@ export function useCreateReimbursement() {
   return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "create"],
     mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string }) =>
-      apiClient.post<Reimbursement>("/hr/reimbursements", data),
+      apiClient.post<Reimbursement>("/hr/reimbursements", data, undefined, createReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });
 }
@@ -53,7 +61,7 @@ export function useProcessReimbursement() {
   return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "process"],
     mutationFn: ({ id, ...data }: { id: number; status: string; rejectionReason?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data, undefined, processReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });
 }

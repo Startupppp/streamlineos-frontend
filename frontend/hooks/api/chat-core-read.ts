@@ -59,6 +59,22 @@ const pollPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatPollPageContract),
 );
 
+const channelDetailContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
+);
+
+const chatUnreadContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatUnreadContract),
+);
+
+const chatOnlineUsersContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOnlineUsersContract),
+);
+
+const chatOrgUsersContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOrgUsersContract),
+);
+
 /**
  * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
  * first page truncated the sidebar, the forward dialog and the channel combobox
@@ -153,7 +169,7 @@ export function useChatChannel(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.channel(channelId),
-    queryFn: ({ signal }) => apiClient.get<Channel>(`/chat/channels/${channelId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Channel>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
     enabled: canRead && channelId > 0,
   });
@@ -213,7 +229,7 @@ export function useChatUnreadTotal(enabled = true) {
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.unreadTotal(),
-    queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal, chatUnreadContract),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -224,7 +240,7 @@ export function useChatOnlineUsers(enabled = true) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.onlineUsers(),
-    queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal, chatOnlineUsersContract),
     refetchInterval: 60_000,
     staleTime: 65_000,
     enabled: enabled && canRead,
@@ -235,7 +251,7 @@ export function useChatOrgUsers(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.orgUsers(),
-    queryFn: ({ signal }) => apiClient.get<OrgUser[]>("/chat/users", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<OrgUser[]>("/chat/users", undefined, signal, chatOrgUsersContract),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });

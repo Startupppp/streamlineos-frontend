@@ -10,6 +10,10 @@ import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /** Deferred: `hooks/api/index.ts` re-exports this, and the schema pulls Zod. */
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+
 const watchersContract = lazyContract(() =>
   import("@/hooks/api/watchers-schema").then((m) => m.buildTicketWatchersContract),
 );
@@ -48,12 +52,17 @@ export function useToggleWatch(projectId: number) {
     }) => {
       if (watching) {
         return apiClient.delete<{ success: boolean }>(
-          `/build/${projectId}/tickets/${ticketId}/watchers`
+          `/build/${projectId}/tickets/${ticketId}/watchers`,
+          undefined,
+          undefined,
+          successLazy,
         );
       }
       return apiClient.post<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
-        {}
+        {},
+        undefined,
+        successLazy,
       );
     },
     onSuccess: (_, variables) => {
@@ -77,7 +86,9 @@ export function useAddWatcher(projectId: number) {
     }) =>
       apiClient.post<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
-        { userId }
+        { userId },
+        undefined,
+        successLazy,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

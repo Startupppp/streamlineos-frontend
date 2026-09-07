@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -135,12 +136,31 @@ function toDashboardMovement(row: RawTransactionRow): InventoryDashboardMovement
   };
 }
 
+const dashboardContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.dashboardContract),
+);
+const stockSummaryContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.stockSummaryContract),
+);
+const reorderReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.reorderReportContract),
+);
+const movementsReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.movementsReportContract),
+);
+const slowMovingReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.slowMovingReportContract),
+);
+const expiryReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/reports-schema").then((m) => m.expiryReportContract),
+);
+
 export function useInventoryDashboard() {
   const canView = useCan("inventory:reports:read");
   return useQuery<InventoryDashboard, Error>({
     queryKey: queryKeys.inventory.dashboard(),
     queryFn: async ({ signal }) => {
-      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard", undefined, signal);
+      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard", undefined, signal, dashboardContract);
       const summary = data.stockSummary;
       return {
         totalSkus: summary?.totalSkus ?? 0,
@@ -174,7 +194,7 @@ export function useStockSummary(params?: { page?: number; limit?: number }) {
       const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/stock-summary", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, stockSummaryContract);
       const items = (data.items ?? []).map(toStockSummaryRow);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -191,7 +211,7 @@ export function useReorderReport(params?: { page?: number; limit?: number }) {
       const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, reorderReportContract);
       const items = (data.items ?? []).map(toReorderRowFromFlat);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -212,7 +232,7 @@ export function useMovementsReport(params?: MovementsParams) {
         ...(params?.type !== undefined ? { type: params.type } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, movementsReportContract);
       const items = (data.items ?? []).map(toMovementRow);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -230,7 +250,7 @@ export function useSlowMovingReport(params?: SlowMovingParams) {
         ...(params?.days !== undefined ? { days: String(params.days) } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, slowMovingReportContract);
       return data;
     },
     staleTime: 5 * 60_000,
@@ -249,7 +269,7 @@ export function useExpiryReport(params?: ExpiryReportParams) {
         ...(params?.status !== undefined ? { status: params.status } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal);
+      }, signal, expiryReportContract);
       return data;
     },
     staleTime: 5 * 60_000,

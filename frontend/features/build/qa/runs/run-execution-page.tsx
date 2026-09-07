@@ -39,7 +39,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";

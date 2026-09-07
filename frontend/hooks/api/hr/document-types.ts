@@ -7,7 +7,15 @@ import {
 } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const documentTypeLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-types-schema").then((m) => m.documentTypeContract),
+);
+const documentTypeListPageLazy = lazyContract(() =>
+  import("@/hooks/api/hr/document-types-schema").then((m) => m.documentTypeListPageContract),
+);
 import { useCan } from "@/hooks/api/access";
 
 export interface HrDocumentType {
@@ -100,7 +108,7 @@ export function useCreateHrDocumentType() {
         isMandatory,
         sortOrder,
         applicableRoles,
-      }),
+      }, undefined, documentTypeLazy),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: humanResourcesQueryKeys.hr.documentTypes(),
@@ -116,7 +124,7 @@ export function useUpdateHrDocumentType() {
       documentTypeId,
       ...documentType
     }: HrDocumentTypeMutationInput & { documentTypeId: number }) =>
-      apiClient.patch(`/hr/document-types/${documentTypeId}`, documentType),
+      apiClient.patch(`/hr/document-types/${documentTypeId}`, documentType, undefined, documentTypeLazy),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: humanResourcesQueryKeys.hr.documentTypes(),
@@ -131,7 +139,7 @@ export function useDeactivateHrDocumentType() {
     mutationFn: (documentTypeId: number) =>
       apiClient.patch(`/hr/document-types/${documentTypeId}`, {
         isActive: false,
-      }),
+      }, undefined, documentTypeLazy),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: humanResourcesQueryKeys.hr.documentTypes(),

@@ -16,7 +16,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { latinNameFieldChange } from "./restricted-field-change";
+
+const checkEmailContract = lazyContract(() =>
+  import("@/components/hr/check-email-schema").then((m) => m.checkEmailContract),
+);
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -43,7 +48,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!isValidEmail) return;
     try {
-      const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
+      const res = await apiClient.get(`/hr/employees/check-email?email=${encodeURIComponent(email)}`, undefined, undefined, checkEmailContract);
       checkedEmailRef.current = email;
       if (res.exists) {
         form.setError("email", { type: "manual", message: "This email already belongs to an employee in your organization" });

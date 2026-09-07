@@ -16,7 +16,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PM_ROW } from "@/components/pm-chrome/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";

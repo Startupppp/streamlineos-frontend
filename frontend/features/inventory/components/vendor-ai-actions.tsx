@@ -4,6 +4,11 @@ import { useMemo } from "react";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const supplierDelayBriefingContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.supplierDelayBriefingContract),
+);
 import type { SupplierDelayBriefing } from "@/hooks/api/inv-ai-explain";
 
 interface VendorAiActionsProps {
@@ -54,6 +59,7 @@ export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) 
             "/inventory/ai/supplier-delay",
             { vendorId: String(vendorId) },
             signal,
+            supplierDelayBriefingContract,
           );
           return { text: briefingToText(briefing) };
         },

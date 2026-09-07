@@ -11,12 +11,23 @@ import type {
   UserPreferences,
 } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const userDetailResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userDetailResponseContract),
+);
+const userSuccessContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSuccessContract),
+);
+const userPreferencesContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userPreferencesContract),
+);
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<User, Error, { userId: string; data: UpdateUserInput }>("settings:organization:manage", {
     mutationKey: ["update", "user"],
-    mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data),
+    mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data, userDetailResponseContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
@@ -33,7 +44,7 @@ export const useUpdateUserStatus = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-status"],
     mutationFn: ({ userId, status, reason }) =>
-      apiClient.patch<{ success: boolean }>(`/users/${userId}/status`, { status, reason }),
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/status`, { status, reason }, userSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
@@ -47,7 +58,7 @@ export const useDeleteUser = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ success: boolean }, Error, string>("settings:organization:manage", {
     mutationKey: ["delete", "user"],
-    mutationFn: (userId) => apiClient.delete<{ success: boolean }>(`/users/${userId}`),
+    mutationFn: (userId) => apiClient.delete<{ success: boolean }>(`/users/${userId}`, undefined, undefined, userSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
@@ -65,7 +76,7 @@ export const useRevokeSession = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "revoke-session"],
     mutationFn: ({ userId, sessionId }) =>
-      apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions/${sessionId}`),
+      apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions/${sessionId}`, undefined, undefined, userSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.sessions(userId) });
     },
@@ -77,7 +88,7 @@ export const useRevokeAllSessions = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, string>("settings:organization:manage", {
     mutationKey: ["revoke", "all", "sessions"],
     mutationFn: (userId) =>
-      apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions`),
+      apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions`, undefined, undefined, userSuccessContract),
     onSuccess: (_, userId) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.sessions(userId) });
     },
@@ -93,7 +104,7 @@ export const useUpdateUserPreferences = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-preferences"],
     mutationFn: ({ userId, data }) =>
-      apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data),
+      apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data, userPreferencesContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.preferences(userId) });
     },

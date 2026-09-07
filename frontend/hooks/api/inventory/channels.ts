@@ -5,7 +5,24 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { SyncStatus } from "@/features/inventory/lib";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const listChannelsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.listChannelsContract),
+);
+const channelDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.channelDetailContract),
+);
+const listPublicationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.listPublicationsContract),
+);
+const listTplConnectionsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.listTplConnectionsContract),
+);
+const tplConnectionDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.tplConnectionDetailContract),
+);
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
 type ChannelStatus = "ACTIVE" | "PAUSED";
@@ -86,7 +103,7 @@ export function useChannels() {
   const canView = useCan("inventory:channels:manage");
   return useQuery<Channel[], Error>({
     queryKey: queryKeys.inventory.channels(),
-    queryFn: ({ signal }) => apiClient.get<Channel[]>("/inventory/channels", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Channel[]>("/inventory/channels", undefined, signal, listChannelsContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -101,7 +118,7 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
     queryFn: ({ signal }) =>
       apiClient.get<Publication[]>(
         `/inventory/channels/${channelId}/publications`,
-        statusFilter ? { status: statusFilter } : undefined, signal,
+        statusFilter ? { status: statusFilter } : undefined, signal, listPublicationsContract,
       ),
     enabled: canView && channelId > 0,
     staleTime: 30_000,
@@ -112,7 +129,7 @@ export function useCreateChannel() {
   const qc = useQueryClient();
   return useAuthorizedMutation<Channel, Error, CreateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "create"],
-    mutationFn: (data) => apiClient.post<Channel>("/inventory/channels", data),
+    mutationFn: (data) => apiClient.post<Channel>("/inventory/channels", data, undefined, channelDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
     },
@@ -124,7 +141,7 @@ export function useUpdateChannel() {
   return useAuthorizedMutation<Channel, Error, UpdateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "update"],
     mutationFn: ({ channelId, ...data }) =>
-      apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data),
+      apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data, undefined, channelDetailContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channel(vars.channelId) });
@@ -161,7 +178,7 @@ export function useThreePlConnections() {
   const canView = useCan("inventory:3pl:manage");
   return useQuery<ThreePlConnection[], Error>({
     queryKey: queryKeys.inventory.threePlConnections(),
-    queryFn: ({ signal }) => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections", undefined, signal, listTplConnectionsContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -172,7 +189,7 @@ export function useCreateThreePlConnection() {
   return useAuthorizedMutation<ThreePlConnection, Error, CreateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "create"],
     mutationFn: (data) =>
-      apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data),
+      apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data, undefined, tplConnectionDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.threePlConnections() });
     },
@@ -184,7 +201,7 @@ export function useUpdateThreePlConnection() {
   return useAuthorizedMutation<ThreePlConnection, Error, UpdateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "update"],
     mutationFn: ({ connectionId, ...data }) =>
-      apiClient.patch<ThreePlConnection>(`/inventory/3pl/connections/${connectionId}`, data),
+      apiClient.patch<ThreePlConnection>(`/inventory/3pl/connections/${connectionId}`, data, undefined, tplConnectionDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.threePlConnections() });
     },

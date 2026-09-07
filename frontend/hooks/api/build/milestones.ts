@@ -3,10 +3,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+
+const milestoneListContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneListContract),
+);
+const milestoneRowContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneRowContract),
+);
+const successContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
+);
+const projectBudgetContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.projectBudgetContract),
+);
+const projectBudgetUpdateContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.projectBudgetUpdateContract),
+);
 export type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 
 interface CreateMilestoneInput {
@@ -31,7 +48,7 @@ export function useProjectMilestones(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: milestoneKey(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`, undefined, signal, milestoneListContract),
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });
@@ -42,7 +59,7 @@ export function useCreateMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "create"],
     mutationFn: (input: CreateMilestoneInput) =>
-      apiClient.post<ProjectMilestone>(`/build/${projectId}/milestones`, input),
+      apiClient.post<ProjectMilestone>(`/build/${projectId}/milestones`, input, undefined, milestoneRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }
@@ -52,7 +69,7 @@ export function useUpdateMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "update"],
     mutationFn: ({ id, ...input }: UpdateMilestoneInput & { id: number }) =>
-      apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${id}`, input),
+      apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${id}`, input, undefined, milestoneRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }
@@ -62,7 +79,7 @@ export function useDeleteMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`, undefined, undefined, successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }
@@ -71,7 +88,7 @@ export function useProjectBudget(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery({
     queryKey: buildWorkQueryKeys.projects.budget(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`, undefined, signal, projectBudgetContract),
     enabled: canManage && !!projectId,
     staleTime: 60_000,
   });
@@ -82,7 +99,7 @@ export function useUpdateProjectBudget(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
-      apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`, { budget }),
+      apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`, { budget }, undefined, projectBudgetUpdateContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.budget(projectId) }),
   });
 }

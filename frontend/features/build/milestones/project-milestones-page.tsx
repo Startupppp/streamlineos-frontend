@@ -35,7 +35,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();

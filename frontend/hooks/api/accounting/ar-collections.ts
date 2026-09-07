@@ -19,6 +19,15 @@ import type {
 } from "@/types/accounting/ar";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import {
+  reminderPolicyContract,
+  reminderPolicyListContract,
+  reminderLogListContract,
+  collectionSummaryContract,
+  collectionActivityCreatedContract,
+  reminderPolicyDeleteContract,
+  invoiceCollectionUpdateContract,
+} from "@/hooks/api/accounting/ar-schema";
 
 const base = [...queryKeyBase, "accounting"] as const;
 
@@ -61,9 +70,9 @@ export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
   return useQuery<ListResponse<ReminderPolicy>, Error>({
     queryKey: accountingAndSupportQueryKeys.accounting.arReminderPolicies(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<ReminderPolicy>>(
+      apiClient.get(
         "/accounting/reminders/policies",
-        toQuery(params), signal,
+        toQuery(params), signal, reminderPolicyListContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -81,9 +90,9 @@ export function useReminderLog(params: ListReminderLogParams = {}) {
   return useQuery<ListResponse<ReminderLogEntry>, Error>({
     queryKey: arCollectionsKeys.reminders.log(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<ReminderLogEntry>>(
+      apiClient.get(
         "/accounting/reminders/log",
-        toQuery(params), signal,
+        toQuery(params), signal, reminderLogListContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -95,7 +104,7 @@ export function useCollectionsSummary() {
   return useQuery<CollectionsSummary, Error>({
     queryKey: arCollectionsKeys.collections.summary,
     queryFn: ({ signal }) =>
-      apiClient.get<CollectionsSummary>("/accounting/collections/summary", undefined, signal),
+      apiClient.get("/accounting/collections/summary", undefined, signal, collectionSummaryContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -106,7 +115,7 @@ export function useCreateReminderPolicy() {
   return useAuthorizedMutation<ReminderPolicy, Error, CreateReminderPolicyInput>("accounting:reminders:manage", {
     mutationKey: ["create-reminder-policy"],
     mutationFn: (body) =>
-      apiClient.post<ReminderPolicy>("/accounting/reminders/policies", body),
+      apiClient.post("/accounting/reminders/policies", body, undefined, reminderPolicyContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: arCollectionsKeys.reminders.policies });
     },
@@ -122,9 +131,9 @@ export function useUpdateReminderPolicy() {
   >("accounting:reminders:manage", {
     mutationKey: ["update-reminder-policy"],
     mutationFn: ({ policyId, ...body }) =>
-      apiClient.patch<ReminderPolicy>(
+      apiClient.patch(
         `/accounting/reminders/policies/${policyId}`,
-        body,
+        body, undefined, reminderPolicyContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: arCollectionsKeys.reminders.policies });
@@ -137,8 +146,9 @@ export function useDeleteReminderPolicy() {
   return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, { policyId: number }>("accounting:reminders:manage", {
     mutationKey: ["delete-reminder-policy"],
     mutationFn: ({ policyId }) =>
-      apiClient.delete<{ id: number; deleted: boolean }>(
+      apiClient.delete(
         `/accounting/reminders/policies/${policyId}`,
+        undefined, undefined, reminderPolicyDeleteContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: arCollectionsKeys.reminders.policies });
@@ -151,7 +161,7 @@ export function useCreateCollectionActivity() {
   return useAuthorizedMutation<CollectionActivity, Error, CreateCollectionActivityInput>("accounting:collections:manage", {
     mutationKey: ["create-collection-activity"],
     mutationFn: (body) =>
-      apiClient.post<CollectionActivity>("/accounting/collections/activities", body),
+      apiClient.post("/accounting/collections/activities", body, undefined, collectionActivityCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: arCollectionsKeys.collections.activities(),
@@ -180,9 +190,9 @@ export function useUpdateInvoiceCollection() {
   >("accounting:collections:manage", {
     mutationKey: ["update-invoice-collection"],
     mutationFn: ({ invoiceId, ...body }) =>
-      apiClient.patch<{ id: number; updated: boolean }>(
+      apiClient.patch(
         `/accounting/collections/invoices/${invoiceId}`,
-        body,
+        body, undefined, invoiceCollectionUpdateContract,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.invoice.all });

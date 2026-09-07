@@ -1,8 +1,25 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportOverviewC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.supportOverviewContract),
+);
+const agentPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.agentPerformanceListContract),
+);
+const queuePerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.queuePerformanceListContract),
+);
+const channelPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.channelPerformanceListContract),
+);
+const automationPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.automationPerformanceListContract),
+);
 
 export interface SupportReportFilters {
   dateFrom?: string;
@@ -68,7 +85,7 @@ export function useSupportOverviewReport(filters?: SupportReportFilters) {
   return useGatedQuery("support:reports:view", {
     queryKey: supportAndWorkflowsQueryKeys.supportReports.overview(toQueryParams(filters)),
     queryFn: ({ signal }) =>
-      apiClient.get<SupportOverviewReport>("/support/reports/overview", toQueryParams(filters), signal),
+      apiClient.get<SupportOverviewReport>("/support/reports/overview", toQueryParams(filters), signal, supportOverviewC),
     staleTime: 60_000,
   });
 }
@@ -79,7 +96,7 @@ export function useAgentPerformanceReport(filters?: SupportReportFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<AgentPerformanceRow[]>(
         "/support/reports/agent-performance",
-        toQueryParams(filters), signal,
+        toQueryParams(filters), signal, agentPerformanceListC,
       ),
     staleTime: 60_000,
   });
@@ -91,7 +108,7 @@ export function useQueuePerformanceReport(filters?: SupportReportFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<QueuePerformanceRow[]>(
         "/support/reports/queue-performance",
-        toQueryParams(filters), signal,
+        toQueryParams(filters), signal, queuePerformanceListC,
       ),
     staleTime: 60_000,
   });
@@ -103,7 +120,7 @@ export function useChannelPerformanceReport(filters?: SupportReportFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<ChannelPerformanceRow[]>(
         "/support/reports/channel-performance",
-        toQueryParams(filters), signal,
+        toQueryParams(filters), signal, channelPerformanceListC,
       ),
     staleTime: 60_000,
   });
@@ -115,7 +132,7 @@ export function useAutomationPerformanceReport(filters?: SupportReportFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<AutomationPerformanceRow[]>(
         "/support/reports/automation-performance",
-        toQueryParams(filters), signal,
+        toQueryParams(filters), signal, automationPerformanceListC,
       ),
     staleTime: 60_000,
   });

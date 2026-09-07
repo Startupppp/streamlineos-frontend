@@ -11,7 +11,6 @@ export const PM_PANEL =
 export const PM_PANEL_SOLID =
   "rounded-xl border border-border/80 bg-card shadow-sm";
 
-export { CONTENT_FILL_PANEL as PM_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 export const PM_FILL_SECTION = "flex min-h-0 flex-1 flex-col overflow-hidden";
 

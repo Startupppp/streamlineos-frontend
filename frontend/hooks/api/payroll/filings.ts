@@ -2,10 +2,24 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { downloadBlob } from "@/lib/download-blob";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const payrollFilingListC = lazyContract(() =>
+  import("@/hooks/api/payroll/filings-schema").then((m) => m.payrollFilingListContract),
+);
+const filingCapabilitiesC = lazyContract(() =>
+  import("@/hooks/api/payroll/filings-schema").then((m) => m.filingCapabilitiesResponseContract),
+);
+const filingExportJobC = lazyContract(() =>
+  import("@/hooks/api/payroll/filings-schema").then((m) => m.filingExportJobContract),
+);
+const payrollFilingC = lazyContract(() =>
+  import("@/hooks/api/payroll/filings-schema").then((m) => m.payrollFilingContract),
+);
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
@@ -90,7 +104,7 @@ export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.filingsAll,
-    queryFn: ({ signal }) => apiClient.get<PayrollFiling[]>("/payroll/filings", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PayrollFiling[]>("/payroll/filings", undefined, signal, payrollFilingListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -100,7 +114,7 @@ export function useFilingCapabilities() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.filingCapabilities(),
-    queryFn: ({ signal }) => apiClient.get<FilingCapability>("/payroll/filings/capabilities", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<FilingCapability>("/payroll/filings/capabilities", undefined, signal, filingCapabilitiesC),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -119,7 +133,7 @@ export function usePrepareFilingExport() {
       month?: string;
       runId?: number;
       entityId?: number;
-    }) => apiClient.post<FilingExportJob>("/payroll/filings/export", body),
+    }) => apiClient.post<FilingExportJob>("/payroll/filings/export", body, undefined, filingExportJobC),
   });
 }
 
@@ -132,6 +146,7 @@ export function useFilingExportJob(jobId: number | null) {
         `/payroll/filings/export/jobs/${jobId}`,
         undefined,
         signal,
+        filingExportJobC,
       ),
     enabled: canView && jobId != null,
     refetchInterval: (query) =>
@@ -156,7 +171,7 @@ export function useAttachAcknowledgement() {
     }) =>
       apiClient.patch<PayrollFiling>(
         `/payroll/filings/${filingId}/acknowledgement`,
-        { challanRef, acknowledgementRef },
+        { challanRef, acknowledgementRef }, undefined, payrollFilingC,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.filingsAll });

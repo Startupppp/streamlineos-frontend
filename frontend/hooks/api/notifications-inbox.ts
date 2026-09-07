@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { notificationListContract, notificationCountContract, notificationAckContract } from "@/hooks/api/notifications-schema";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Notification,
@@ -49,6 +50,7 @@ export const useNotifications = (
         "/notifications",
         params ? toStringParams(params as Record<string, unknown>) : undefined,
         signal,
+        notificationListContract,
       )).data,
     staleTime: 30_000,
     ...restOptions,
@@ -98,6 +100,7 @@ export const useInfiniteNotifications = (
           cursor: pageParam,
         }),
         signal,
+        notificationListContract,
       )).data,
     getNextPageParam: (lastPage) =>
       lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
@@ -120,6 +123,7 @@ export const useUnreadNotifications = (
         "/notifications",
         toStringParams(SHARED_UNREAD_PARAMS as Record<string, unknown>),
         signal,
+        notificationListContract,
       )).data,
     staleTime: 30_000,
     ...restOptions,
@@ -135,7 +139,7 @@ export const useUnreadNotificationCount = (
   return useQuery<UnreadCount, Error>({
     queryKey: platformCoreQueryKeys.notifications.unreadCount(),
     queryFn: ({ signal }) =>
-      apiClient.get<UnreadCount>("/notifications/unread-count", undefined, signal),
+      apiClient.get<UnreadCount>("/notifications/unread-count", undefined, signal, notificationCountContract),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
@@ -149,7 +153,7 @@ export const useMarkNotificationRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "mark-read"],
-    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/read`),
+    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/read`, undefined, undefined, notificationAckContract),
     onMutate: async (id) => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
@@ -173,7 +177,7 @@ export const useMarkAllNotificationsRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, void, NotifMutationContext>({
     mutationKey: ["notifications", "mark-all-read"],
-    mutationFn: () => apiClient.patch<NotificationAck>("/notifications/read-all"),
+    mutationFn: () => apiClient.patch<NotificationAck>("/notifications/read-all", undefined, undefined, notificationAckContract),
     onMutate: async () => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const previousLists = [
@@ -195,7 +199,7 @@ export const useArchiveNotification = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "archive"],
-    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/archive`),
+    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/archive`, undefined, undefined, notificationAckContract),
     onMutate: async (id) => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
@@ -217,7 +221,7 @@ export const useDeleteNotification = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "delete"],
-    mutationFn: (id) => apiClient.delete<NotificationAck>(`/notifications/${id}`),
+    mutationFn: (id) => apiClient.delete<NotificationAck>(`/notifications/${id}`, undefined, undefined, notificationAckContract),
     onMutate: async (id) => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
@@ -233,21 +237,21 @@ export const useDeleteNotification = () => {
 export const useUnarchiveNotification = () =>
   useNotificationRowPatch<number>({
     mutationKey: ["notifications", "unarchive"],
-    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unarchive`),
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unarchive`, undefined, undefined, notificationAckContract),
     patch: (id) => (n) => (n.id === id ? { ...n, archivedAt: null } : n),
   });
 
 export const usePinNotification = () =>
   useNotificationRowPatch<number>({
     mutationKey: ["notifications", "pin"],
-    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/pin`),
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/pin`, undefined, undefined, notificationAckContract),
     patch: (id) => (n) => (n.id === id ? { ...n, pinned: true } : n),
   });
 
 export const useUnpinNotification = () =>
   useNotificationRowPatch<number>({
     mutationKey: ["notifications", "unpin"],
-    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unpin`),
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unpin`, undefined, undefined, notificationAckContract),
     patch: (id) => (n) => (n.id === id ? { ...n, pinned: false } : n),
   });
 
@@ -255,7 +259,7 @@ export const useSnoozeNotification = () =>
   useNotificationRowPatch<{ id: number; snoozedUntil: string }>({
     mutationKey: ["notifications", "snooze"],
     request: ({ id, snoozedUntil }) =>
-      apiClient.patch<NotificationAck>(`/notifications/${id}/snooze`, { snoozedUntil }),
+      apiClient.patch<NotificationAck>(`/notifications/${id}/snooze`, { snoozedUntil }, undefined, notificationAckContract),
     patch:
       ({ id, snoozedUntil }) =>
       (n) =>
@@ -267,7 +271,7 @@ export const useBulkMarkRead = () => {
   return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-mark-read"],
     mutationFn: (ids) =>
-      apiClient.post<NotificationAck>("/notifications/bulk/read", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/read", { ids }, undefined, notificationAckContract),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
@@ -293,7 +297,7 @@ export const useBulkArchive = () => {
   return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-archive"],
     mutationFn: (ids) =>
-      apiClient.post<NotificationAck>("/notifications/bulk/archive", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/archive", { ids }, undefined, notificationAckContract),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
@@ -318,7 +322,7 @@ export const useBulkDelete = () => {
   return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-delete"],
     mutationFn: (ids) =>
-      apiClient.post<NotificationAck>("/notifications/bulk/delete", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/delete", { ids }, undefined, notificationAckContract),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
@@ -336,7 +340,7 @@ export const useApproveNotification = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number>({
     mutationKey: ["notifications", "approve"],
-    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/approve`),
+    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/approve`, undefined, undefined, notificationAckContract),
     onSettled: () => invalidateInbox(),
   });
 };
@@ -345,7 +349,7 @@ export const useRejectNotification = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number>({
     mutationKey: ["notifications", "reject"],
-    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/reject`),
+    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/reject`, undefined, undefined, notificationAckContract),
     onSettled: () => invalidateInbox(),
   });
 };

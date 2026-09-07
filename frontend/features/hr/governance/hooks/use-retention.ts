@@ -2,11 +2,31 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const retentionPolicyListContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.retentionPolicyListContract),
+);
+const retentionPolicyRowContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.retentionPolicyContract),
+);
+const dataRequestListContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.dataRequestListContract),
+);
+const dataRequestRowContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.dataRequestContract),
+);
+const processDataRequestContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.processDataRequestContract),
+);
+const retentionDeleteContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/retention-schema").then((m) => m.retentionDeleteContract),
+);
 
 export interface RetentionPolicy {
   id: number;
@@ -45,7 +65,7 @@ const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;
 
 export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
   const canManageRetention = useCan("hr:retention:manage");
-  return useQuery<RetentionListResponse<RetentionPolicy>>({
+  return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrRetentionPoliciesAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
@@ -53,7 +73,7 @@ export function useRetentionPolicies(params?: { recordType?: string; active?: bo
       if (params?.active !== undefined) p["active"] = params.active;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<RetentionListResponse<RetentionPolicy>>("/hr/governance/retention/policies", p, signal);
+      return apiClient.get("/hr/governance/retention/policies", p, signal, retentionPolicyListContract);
     },
     staleTime: 60_000,
     enabled: canManageRetention,
@@ -62,7 +82,7 @@ export function useRetentionPolicies(params?: { recordType?: string; active?: bo
 
 export function useDataRequests(params?: { status?: string; type?: string; page?: number; limit?: number }) {
   const canManageRetention = useCan("hr:retention:manage");
-  return useQuery<RetentionListResponse<DataRequest>>({
+  return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrRetentionRequestsAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
@@ -70,7 +90,7 @@ export function useDataRequests(params?: { status?: string; type?: string; page?
       if (params?.type) p["type"] = params.type;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<RetentionListResponse<DataRequest>>("/hr/governance/retention/requests", p, signal);
+      return apiClient.get("/hr/governance/retention/requests", p, signal, dataRequestListContract);
     },
     staleTime: 30_000,
     enabled: canManageRetention,
@@ -79,9 +99,9 @@ export function useDataRequests(params?: { status?: string; type?: string; page?
 
 export function useCreateRetentionPolicy() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<RetentionPolicy, Error, { recordType: string; retentionMonths: number; action: string; countryCode?: string; active?: boolean }>("hr:retention:manage", {
+  return useAuthorizedMutation<unknown, Error, { recordType: string; retentionMonths: number; action: string; countryCode?: string; active?: boolean }>("hr:retention:manage", {
     mutationKey: [...POLICIES_KEY, "create"],
-    mutationFn: (payload) => apiClient.post<RetentionPolicy>("/hr/governance/retention/policies", payload),
+    mutationFn: (payload) => apiClient.post("/hr/governance/retention/policies", payload, undefined, retentionPolicyRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: POLICIES_KEY });
       toast.success("Retention policy created");
@@ -94,7 +114,7 @@ export function useDeleteRetentionPolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("hr:retention:manage", {
     mutationKey: [...POLICIES_KEY, "delete"],
-    mutationFn: (policyId) => apiClient.delete<void>(`/hr/governance/retention/policies/${policyId}`),
+    mutationFn: (policyId) => apiClient.delete(`/hr/governance/retention/policies/${policyId}`, undefined, undefined, retentionDeleteContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: POLICIES_KEY });
       toast.success("Retention policy deleted");
@@ -105,9 +125,9 @@ export function useDeleteRetentionPolicy() {
 
 export function useCreateDataRequest() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<DataRequest, Error, { subjectUserId: string; type: string; reason?: string }>("hr:retention:manage", {
+  return useAuthorizedMutation<unknown, Error, { subjectUserId: string; type: string; reason?: string }>("hr:retention:manage", {
     mutationKey: [...REQUESTS_KEY, "create"],
-    mutationFn: (payload) => apiClient.post<DataRequest>("/hr/governance/retention/requests", payload),
+    mutationFn: (payload) => apiClient.post("/hr/governance/retention/requests", payload, undefined, dataRequestRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: REQUESTS_KEY });
       toast.success("Data request submitted");
@@ -118,9 +138,9 @@ export function useCreateDataRequest() {
 
 export function useApproveDataRequest() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<DataRequest, Error, number>("hr:retention:manage", {
+  return useAuthorizedMutation<unknown, Error, number>("hr:retention:manage", {
     mutationKey: [...REQUESTS_KEY, "approve"],
-    mutationFn: (requestId) => apiClient.post<DataRequest>(`/hr/governance/retention/requests/${requestId}/approve`),
+    mutationFn: (requestId) => apiClient.post(`/hr/governance/retention/requests/${requestId}/approve`, undefined, undefined, dataRequestRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: REQUESTS_KEY });
       toast.success("Data request approved");
@@ -133,7 +153,7 @@ export function useProcessDataRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation<Record<string, unknown>, Error, number>("hr:retention:manage", {
     mutationKey: [...REQUESTS_KEY, "process"],
-    mutationFn: (requestId) => apiClient.post<Record<string, unknown>>(`/hr/governance/retention/requests/${requestId}/process`),
+    mutationFn: (requestId) => apiClient.post(`/hr/governance/retention/requests/${requestId}/process`, undefined, undefined, processDataRequestContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: REQUESTS_KEY });
       toast.success("Data request processed");

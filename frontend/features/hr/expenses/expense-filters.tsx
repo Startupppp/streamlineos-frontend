@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
-import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
+import { STATUS_LABELS, type StatusFilter } from "@/lib/expense-constants";
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/common/use-expense-filters";
 

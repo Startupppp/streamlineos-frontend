@@ -3,9 +3,20 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
+
+const terminationListContract = lazyContract(() =>
+  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationListContract),
+);
+const terminationItemContract = lazyContract(() =>
+  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationItemContract),
+);
+const terminationSuccessContract = lazyContract(() =>
+  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationSuccessContract),
+);
 
 interface TerminationEmployee {
   id: string;
@@ -111,8 +122,8 @@ export function useTerminations(params: UseTerminationsParams = {}) {
       status: params.status ?? "ALL",
     }),
     queryFn: ({ signal }) =>
-      apiClient.get<TerminationListResponse>(
-        `/hr/termination?${search.toString()}`, undefined, signal,
+      apiClient.get(
+        `/hr/termination?${search.toString()}`, undefined, signal, terminationListContract,
       ),
     enabled: hrEnabled && canView,
     staleTime: 2 * 60_000,
@@ -124,10 +135,10 @@ export function useCreateTermination() {
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "create"],
     mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) =>
-      apiClient.post<Termination>("/hr/termination", {
+      apiClient.post("/hr/termination", {
         ...terminationInput,
         userId: employeeUserId,
-      }),
+      }, undefined, terminationItemContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: terminationKeys.all }),
   });
 }
@@ -137,8 +148,8 @@ export function useSubmitTermination() {
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "submit"],
     mutationFn: (terminationId: number) =>
-      apiClient.patch<{ success: boolean }>(
-        `/hr/termination/${terminationId}/submit`,
+      apiClient.patch(
+        `/hr/termination/${terminationId}/submit`, undefined, undefined, terminationSuccessContract,
       ),
     onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
@@ -162,12 +173,11 @@ export function useFinalReviewTermination() {
       decision: "approve" | "reject";
       remarks?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch(
         `/hr/termination/${terminationId}/final-review`,
-        {
-          decision,
-          remarks,
-        },
+        { decision, remarks },
+        undefined,
+        terminationSuccessContract,
       ),
     onSuccess: (_, { terminationId }) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
@@ -184,9 +194,11 @@ export function useSendTerminationEmail() {
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "send-email"],
     mutationFn: (terminationId: number) =>
-      apiClient.post<{ success: boolean }>(
+      apiClient.post(
         `/hr/termination/${terminationId}/send-email`,
         {},
+        undefined,
+        terminationSuccessContract,
       ),
     onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
@@ -202,8 +214,8 @@ export function useCompleteTermination() {
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "complete"],
     mutationFn: (terminationId: number) =>
-      apiClient.patch<{ success: boolean }>(
-        `/hr/termination/${terminationId}/complete`,
+      apiClient.patch(
+        `/hr/termination/${terminationId}/complete`, undefined, undefined, terminationSuccessContract,
       ),
     onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });

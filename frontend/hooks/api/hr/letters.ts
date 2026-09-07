@@ -3,8 +3,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const lettersListC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.lettersListContract),
+);
+const renderLetterC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.renderLetterContract),
+);
+const saveLetterC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.saveLetterContract),
+);
 
 export interface LetterRender {
   id: number;
@@ -55,7 +66,7 @@ export function useLetters(employmentId?: number) {
     queryFn: ({ signal }) =>
       apiClient.get<LetterRender[]>(
         "/hr/documents/letters",
-        employmentId ? { employmentId } : undefined, signal,
+        employmentId ? { employmentId } : undefined, signal, lettersListC,
       ),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
@@ -66,7 +77,7 @@ export function useRenderLetter() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "render"],
     mutationFn: (data: RenderLetterInput) =>
-      apiClient.post<RenderLetterPreview>("/hr/documents/letters/render", data),
+      apiClient.post<RenderLetterPreview>("/hr/documents/letters/render", data, undefined, renderLetterC),
   });
 }
 
@@ -75,7 +86,7 @@ export function useSaveLetter() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "save"],
     mutationFn: (data: SaveLetterInput) =>
-      apiClient.post<LetterRender>("/hr/documents/letters", data),
+      apiClient.post<LetterRender>("/hr/documents/letters", data, undefined, saveLetterC),
     onSuccess: () => qc.invalidateQueries({ queryKey: LETTERS_KEY }),
   });
 }

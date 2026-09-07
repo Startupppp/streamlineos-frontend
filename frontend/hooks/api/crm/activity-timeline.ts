@@ -13,6 +13,17 @@ import type {
   TimelinePage,
 } from "@/types/crm/activities";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const timelinePageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.timelinePageContract),
+);
+const myTasksPageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.myTasksPageContract),
+);
+const activityParticipantsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.activityParticipantsContract),
+);
 
 /** The anchor as the API takes it — exactly one identifier. */
 function anchorParams(anchor: TimelineAnchor): Record<string, string> {
@@ -48,6 +59,7 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
           }).toString()}`,
           undefined,
           signal,
+          timelinePageLazy,
         ),
       getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -77,6 +89,7 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
           }).toString()}`,
           undefined,
           signal,
+          myTasksPageLazy,
         ),
       getNextPageParam: (lastPage: TaskPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -92,7 +105,7 @@ export function useActivityParticipants(activityId: string | null) {
     queryKey: queryKeys.crm.activityParticipants(activityId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: ActivityParticipant[] }>(
-        `/crm/activities/${activityId}/participants`, undefined, signal,
+        `/crm/activities/${activityId}/participants`, undefined, signal, activityParticipantsLazy,
       ),
     staleTime: 60_000,
     enabled: !!activityId,

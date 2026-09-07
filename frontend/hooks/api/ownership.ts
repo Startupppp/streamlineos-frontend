@@ -7,6 +7,20 @@ import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-o
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const initiateTransferContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.initiateTransferContract),
+);
+const transfersPageContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.transfersPageContract),
+);
+const incomingTransfersContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.incomingTransfersContract),
+);
+const ownershipMutationContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.ownershipMutationContract),
+);
 
 export interface OrgTransferRecord {
   id: string;
@@ -57,6 +71,7 @@ export function useInitiateOrgTransfer() {
       apiClient.post<InitiateOrgTransferResult>(
         "/ownership/org/transfer",
         body,
+        initiateTransferContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -76,7 +91,7 @@ export function usePendingOrgTransfers() {
         scope: "ORGANIZATION",
         status: "PENDING",
         limit: "5",
-      }, signal),
+      }, signal, transfersPageContract),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -89,7 +104,7 @@ export function useIncomingOrgTransfers() {
   return useQuery<IncomingTransfersResponse, Error>({
     queryKey: directoryAndOwnershipQueryKeys.ownership.incomingTransfers(),
     queryFn: ({ signal }) =>
-      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming", undefined, signal),
+      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming", undefined, signal, incomingTransfersContract),
     enabled: !accessPending && canRespond,
     staleTime: 0,
     refetchOnMount: "always",
@@ -101,7 +116,7 @@ export function useCancelOrgTransfer() {
   return useAuthorizedMutation<{ success: true }, Error, string>("ownership:modules:manage", {
     mutationKey: ["ownership", "org", "transfer", "cancel"],
     mutationFn: (transferId) =>
-      apiClient.delete<{ success: true }>(`/ownership/transfers/${transferId}`),
+      apiClient.delete(`/ownership/transfers/${transferId}`, undefined, undefined, ownershipMutationContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
@@ -117,8 +132,10 @@ export function useAcceptTransfer() {
   return useAuthorizedMutation<{ success: true }, Error, string>("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "accept"],
     mutationFn: (transferId) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/ownership/transfers/${transferId}/accept`,
+        undefined,
+        ownershipMutationContract,
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -141,9 +158,10 @@ export function useDeclineTransfer() {
   >("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "decline"],
     mutationFn: ({ transferId, reason }) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/ownership/transfers/${transferId}/decline`,
         { reason },
+        ownershipMutationContract,
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({

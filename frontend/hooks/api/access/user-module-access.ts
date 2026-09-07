@@ -34,6 +34,7 @@ export function useSetUserModuleAccess(userId: string) {
       apiClient.patch<UserModuleAccessEntry[]>(
         `/access/user-module-access/${userId}`,
         variables,
+        userModuleAccessListContract,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: userModuleAccessKey(userId) });

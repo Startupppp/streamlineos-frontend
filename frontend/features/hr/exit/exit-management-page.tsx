@@ -5,7 +5,12 @@ import DOMPurify from "isomorphic-dompurify";
 import { useState, useCallback } from "react";
 import { useResignations, type Resignation } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+
+const exitLetterContract = lazyContract(() =>
+  import("@/features/hr/exit/exit-management-schema").then((m) => m.exitLetterContract),
+);
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -59,7 +64,7 @@ export function ExitManagementPage() {
 
   const handleViewLetter = useCallback(async (id: number) => {
     try {
-      const data = await apiClient.get<{ html: string }>(`/hr/exit/${id}/letter`);
+      const data = await apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract);
       const win = window.open("", "_blank");
       if (!win) {
         toast.error("Popup blocked — please allow popups to view the letter.");

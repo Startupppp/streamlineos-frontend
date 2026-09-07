@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,12 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AllWorkTicket } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const bulkUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+);
 
 type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -64,7 +70,9 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
       const calls = [...payload.ticketsByProject.entries()].map(([projectId, ticketIds]) =>
         apiClient.post<{ updated: number; ticketIds: number[] }>(
           `/build/${projectId}/tickets/bulk`,
-          { ticketIds, status: payload.status, priority: payload.priority, assigneeId: payload.assigneeId }
+          { ticketIds, status: payload.status, priority: payload.priority, assigneeId: payload.assigneeId },
+          undefined,
+          bulkUpdateResultLazy,
         )
       );
       const results = await Promise.all(calls);

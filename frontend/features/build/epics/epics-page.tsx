@@ -33,7 +33,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

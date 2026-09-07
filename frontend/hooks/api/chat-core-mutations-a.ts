@@ -3,9 +3,22 @@
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
+
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+
+const chatMessageContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
+);
+
+const chatReactionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatReactionsContract),
+);
 
 export function useSendMessage() {
   const queryClient = useQueryClient();
@@ -16,6 +29,8 @@ export function useSendMessage() {
       apiClient.post<Message>(
         `/chat/channels/${channelId}/messages`,
         body,
+        undefined,
+        chatMessageContract,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
@@ -91,6 +106,8 @@ export function useEditMessage() {
       apiClient.patch<{ ok: boolean }>(
         `/chat/channels/${channelId}/messages/${messageId}`,
         { content },
+        undefined,
+        chatOkContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
@@ -111,6 +128,9 @@ export function useDeleteMessage() {
     }) =>
       apiClient.delete<{ ok: boolean }>(
         `/chat/channels/${channelId}/messages/${messageId}`,
+        undefined,
+        undefined,
+        chatOkContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
@@ -123,7 +143,7 @@ export function useMarkChannelRead() {
   return useAuthorizedMutation("chat:messages:read", {
     mutationKey: ["chat", "channels", "mark-read"],
     mutationFn: ({ channelId }: { channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });

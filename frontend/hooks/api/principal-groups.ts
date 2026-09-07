@@ -11,6 +11,8 @@ import {
   principalGroupMembersContract,
   principalGroupPageContract,
   principalGroupRolesContract,
+  principalGroupSuccessContract,
+  principalGroupContract,
 } from "@/hooks/api/principal-groups-schema";
 import type {
   GroupMember,
@@ -95,7 +97,7 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<PrincipalGroup, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "create"],
-    mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data),
+    mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data, principalGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
@@ -107,7 +109,7 @@ export function useRenameGroup(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "rename", groupId],
     mutationFn: (data) =>
-      apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data),
+      apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
@@ -119,7 +121,7 @@ export function useAddGroupMember(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { membershipId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "add-member", groupId],
     mutationFn: (data) =>
-      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/members`, data),
+      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/members`, data, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
@@ -136,6 +138,7 @@ export function useRemoveGroupMember(groupId: string) {
     mutationFn: ({ membershipId }) =>
       apiClient.delete<{ success: true }>(
         `/principal-groups/${groupId}/members/${membershipId}`,
+        undefined, undefined, principalGroupSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -151,7 +154,7 @@ export function useAssignGroupRole(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { roleId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "assign-role", groupId],
     mutationFn: (data) =>
-      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data),
+      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
@@ -169,6 +172,7 @@ export function useUnassignGroupRole(groupId: string) {
     mutationFn: ({ roleId }) =>
       apiClient.delete<{ success: true }>(
         `/principal-groups/${groupId}/roles/${roleId}`,
+        undefined, undefined, principalGroupSuccessContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({

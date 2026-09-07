@@ -16,6 +16,27 @@ import type {
 } from "@/types/crm/autonomy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+
+import { lazyContract } from "@/lib/api-envelope";
+
+const decisionsPageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.decisionsPageContract),
+);
+const switchesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.switchesContract),
+);
+const scoreboardLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.scoreboardContract),
+);
+const reviewQueueLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.reviewQueueContract),
+);
+const autonomySettingsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.autonomySettingsContract),
+);
+const liveHoldsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.liveHoldsContract),
+);
 function toParams(filters: DecisionFilters, limit: number, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor !== undefined) params.set("cursor", cursor);
@@ -89,7 +110,7 @@ export function useReverseDecision() {
 export function useAutonomySwitches() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySwitches(),
-    queryFn: ({ signal }) => apiClient.get<SwitchesResponse>("/crm/autonomy/switches", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SwitchesResponse>("/crm/autonomy/switches", undefined, signal, switchesLazy),
     staleTime: 30_000,
   });
 }
@@ -127,7 +148,7 @@ export function useAutonomyScoreboard(days = 30) {
 export function useAutonomyReviewQueue() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyReviewQueue(),
-    queryFn: ({ signal }) => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue", undefined, signal, reviewQueueLazy),
     staleTime: 30_000,
   });
 }
@@ -151,7 +172,7 @@ export function useMarkReviewed() {
 export function useAutonomySettings() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySettings(),
-    queryFn: ({ signal }) => apiClient.get<AutonomySettings>("/crm/autonomy/settings", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AutonomySettings>("/crm/autonomy/settings", undefined, signal, autonomySettingsLazy),
     staleTime: 60_000,
   });
 }
@@ -179,7 +200,7 @@ export function useUpdateAutonomySettings() {
 export function useLiveHolds() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyHolds(),
-    queryFn: ({ signal }) => apiClient.get<LiveHold[]>("/crm/autonomy/holds", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<LiveHold[]>("/crm/autonomy/holds", undefined, signal, liveHoldsLazy),
     refetchInterval: 10_000,
     staleTime: 0,
   });

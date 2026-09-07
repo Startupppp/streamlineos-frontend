@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   SupportTicket,
@@ -13,6 +14,25 @@ import type {
 } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportTicketListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketListContract),
+);
+const supportTicketDetailContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketDetailContract),
+);
+const createTicketContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.createTicketContract),
+);
+const updateTicketContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.updateTicketContract),
+);
+const supportTicketMessageContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketMessageContract),
+);
+const supportTicketStatsContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketStatsContract),
+);
 
 interface SupportTicketsResponse {
   items: SupportTicket[];
@@ -64,14 +84,14 @@ interface AddMessageInput {
 export const useSupportTickets = (
   filters?: SupportFilters,
   options?: Omit<
-    UseQueryOptions<SupportTicketsResponse, Error>,
+    UseQueryOptions<unknown, Error>,
     "queryKey" | "queryFn"
   >
 ) => {
-  return useGatedQuery<SupportTicketsResponse, Error>("support:tickets:view", {
+  return useGatedQuery("support:tickets:view", {
     queryKey: platformCoreQueryKeys.support.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<SupportTicketsResponse>("/support", {
+      apiClient.get("/support", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.priority ? { priority: filters.priority } : {}),
         ...(filters?.assigneeId ? { assigneeId: filters.assigneeId } : {}),
@@ -80,7 +100,7 @@ export const useSupportTickets = (
         ...(filters?.snoozed !== undefined ? { snoozed: String(filters.snoozed) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }, signal),
+      }, signal, supportTicketListContract),
     staleTime: 2 * 60_000,
     ...options,
   });
@@ -89,13 +109,13 @@ export const useSupportTickets = (
 export const useSupportTicket = (
   id: number,
   options?: Omit<
-    UseQueryOptions<SupportTicket, Error>,
+    UseQueryOptions<unknown, Error>,
     "queryKey" | "queryFn" | "enabled"
   >
 ) => {
-  return useGatedQuery<SupportTicket, Error>("support:tickets:view", {
+  return useGatedQuery("support:tickets:view", {
     queryKey: platformCoreQueryKeys.support.detail(id),
-    queryFn: ({ signal }) => apiClient.get<SupportTicket>(`/support/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/support/${id}`, undefined, signal, supportTicketDetailContract),
     enabled: id > 0,
     staleTime: 2 * 60_000,
     ...options,
@@ -104,9 +124,9 @@ export const useSupportTicket = (
 
 export const useCreateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<SupportTicket, Error, CreateTicketInput>("support:tickets:create", {
+  return useAuthorizedMutation<unknown, Error, CreateTicketInput>("support:tickets:create", {
     mutationKey: ["create", "support", "ticket"],
-    mutationFn: (data) => apiClient.post<SupportTicket>("/support", data),
+    mutationFn: (data) => apiClient.post("/support", data, undefined, createTicketContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
@@ -118,7 +138,7 @@ export const useUpdateSupportTicket = () => {
   return useAuthorizedMutation<UpdateTicketResult, Error, UpdateTicketInput>("support:tickets:manage", {
     mutationKey: ["update", "support", "ticket"],
     mutationFn: ({ id, ...data }) =>
-      apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),
+      apiClient.patch<UpdateTicketResult>(`/support/${id}`, data, undefined, updateTicketContract),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.id) });
@@ -128,10 +148,10 @@ export const useUpdateSupportTicket = () => {
 
 export const useAddSupportMessage = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<SupportMessage, Error, AddMessageInput>("support:tickets:reply", {
+  return useAuthorizedMutation<unknown, Error, AddMessageInput>("support:tickets:reply", {
     mutationKey: ["add", "support", "message"],
     mutationFn: ({ ticketId, ...data }) =>
-      apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data),
+      apiClient.post(`/support/${ticketId}/messages`, data, undefined, supportTicketMessageContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.support.detail(variables.ticketId),
@@ -152,9 +172,9 @@ interface SupportStats {
 export const useSupportStats = (
   options?: Omit<UseQueryOptions<SupportStats, Error>, "queryKey" | "queryFn">
 ) => {
-  return useGatedQuery<SupportStats, Error>("support:tickets:view", {
+  return useGatedQuery("support:tickets:view", {
     queryKey: [...platformCoreQueryKeys.support.all, "stats"] as const,
-    queryFn: ({ signal }) => apiClient.get<SupportStats>("/support/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SupportStats>("/support/stats", undefined, signal, supportTicketStatsContract),
     staleTime: 5 * 60_000,
     ...options,
   });

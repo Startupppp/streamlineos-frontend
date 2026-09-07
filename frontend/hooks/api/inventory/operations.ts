@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -51,6 +52,25 @@ interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+const listGrnsOperationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.listGrnsOperationsContract),
+);
+const getGrnOperationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.getGrnOperationsContract),
+);
+const listVendorReturnsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.listVendorReturnsContract),
+);
+const getVendorReturnContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.getVendorReturnContract),
+);
+const listCustomerReturnsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.listCustomerReturnsContract),
+);
+const getCustomerReturnContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.getCustomerReturnContract),
+);
+
 export function useGoodsReceipts(filters?: GrnFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<GrnSummary>, Error>({
@@ -63,7 +83,7 @@ export function useGoodsReceipts(filters?: GrnFilters) {
         ...(filters?.dateTo !== undefined ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal),
+      }, signal, listGrnsOperationsContract),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -73,7 +93,7 @@ export function useGoodsReceipt(grnId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<GrnDetail, Error>({
     queryKey: queryKeys.inventory.goodsReceipt(grnId),
-    queryFn: ({ signal }) => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`, undefined, signal, getGrnOperationsContract),
     staleTime: 2 * 60_000,
     enabled: canView && grnId > 0,
   });
@@ -149,7 +169,7 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal),
+      }, signal, listVendorReturnsContract),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -160,7 +180,7 @@ export function useCreateVendorReturn() {
   return useAuthorizedMutation<VendorReturnSummary, Error, CreateVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "create"],
     mutationFn: (data) =>
-      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data),
+      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, undefined, getVendorReturnContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
     },
@@ -254,7 +274,7 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal),
+      }, signal, listCustomerReturnsContract),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -265,7 +285,7 @@ export function useCreateCustomerReturn() {
   return useAuthorizedMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "create"],
     mutationFn: (data) =>
-      apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data),
+      apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data, undefined, getCustomerReturnContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
     },

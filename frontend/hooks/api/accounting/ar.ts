@@ -5,6 +5,16 @@ import { apiClient } from "@/lib/api-client";
 import {
   arPaymentsPageContract,
   creditNotesPageContract,
+  creditNoteContract,
+  creditNoteCreatedContract,
+  creditNotePostContract,
+  creditNoteApplyContract,
+  recurringInvoiceTemplateListContract,
+  recurringInvoiceTemplateContract,
+  recurringTemplateDeleteContract,
+  recurringInvoiceRunNowContract,
+  voidInvoiceContract,
+  arPaymentCreatedContract,
   type ArPaymentsPage,
   type CreditNotesPage,
 } from "@/hooks/api/accounting/ar-schema";
@@ -88,9 +98,9 @@ export function useRecurringTemplates(
   return useQuery<CursorPage<RecurringInvoiceTemplate>, Error>({
     queryKey: arKeys.recurringTemplates.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<RecurringInvoiceTemplate>>(
+      apiClient.get(
         "/accounting/recurring-invoices",
-        toQuery(params), signal,
+        toQuery(params), signal, recurringInvoiceTemplateListContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -129,8 +139,9 @@ export function useVoidInvoice() {
   >("accounting:manage", {
     mutationKey: ["void-invoice"],
     mutationFn: ({ invoiceId }) =>
-      apiClient.post<{ id: number; status: string }>(
+      apiClient.post(
         `/invoices/${invoiceId}/void`,
+        undefined, undefined, voidInvoiceContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
@@ -147,7 +158,7 @@ export function useRecordPaymentWithAllocations() {
   >("accounting:create", {
     mutationKey: ["record-payment-ar"],
     mutationFn: ({ invoiceId, ...body }) =>
-      apiClient.post<{ id: number }>(`/invoices/${invoiceId}/payments`, body),
+      apiClient.post(`/invoices/${invoiceId}/payments`, body, undefined, arPaymentCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
@@ -159,7 +170,7 @@ export function useCreateCreditNote() {
   return useAuthorizedMutation<CreditNote, Error, CreateCreditNoteInput>("accounting:credit-notes:create", {
     mutationKey: ["create-credit-note"],
     mutationFn: (body) =>
-      apiClient.post<CreditNote>("/accounting/credit-notes", body),
+      apiClient.post("/accounting/credit-notes", body, undefined, creditNoteCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: arKeys.creditNotes.all,
@@ -178,8 +189,9 @@ export function usePostCreditNote() {
   >("accounting:credit-notes:manage", {
     mutationKey: ["post-credit-note"],
     mutationFn: ({ creditNoteId }) =>
-      apiClient.post<{ id: number; status: string; needsApproval?: boolean }>(
+      apiClient.post(
         `/accounting/credit-notes/${creditNoteId}/post`,
+        undefined, undefined, creditNotePostContract,
       ),
     onSuccess: (_, { creditNoteId }) => {
       queryClient.invalidateQueries({
@@ -202,9 +214,9 @@ export function useApplyCreditNote() {
   >("accounting:credit-notes:manage", {
     mutationKey: ["apply-credit-note"],
     mutationFn: ({ creditNoteId, ...body }) =>
-      apiClient.post<{ id: number; invoiceId: number; appliedAmount: number }>(
+      apiClient.post(
         `/accounting/credit-notes/${creditNoteId}/apply`,
-        body,
+        body, undefined, creditNoteApplyContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -225,9 +237,9 @@ export function useCreateRecurringTemplate() {
   >("accounting:recurring:manage", {
     mutationKey: ["create-recurring-template"],
     mutationFn: (body) =>
-      apiClient.post<RecurringInvoiceTemplate>(
+      apiClient.post(
         "/accounting/recurring-invoices",
-        body,
+        body, undefined, recurringInvoiceTemplateContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -247,9 +259,9 @@ export function useUpdateRecurringTemplate() {
   >("accounting:recurring:manage", {
     mutationKey: ["update-recurring-template"],
     mutationFn: ({ templateId, ...body }) =>
-      apiClient.patch<RecurringInvoiceTemplate>(
+      apiClient.patch(
         `/accounting/recurring-invoices/${templateId}`,
-        body,
+        body, undefined, recurringInvoiceTemplateContract,
       ),
     onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
@@ -272,8 +284,9 @@ export function useDeleteRecurringTemplate() {
   >("accounting:recurring:manage", {
     mutationKey: ["delete-recurring-template"],
     mutationFn: ({ templateId }) =>
-      apiClient.delete<{ id: number; deleted: boolean }>(
+      apiClient.delete(
         `/accounting/recurring-invoices/${templateId}`,
+        undefined, undefined, recurringTemplateDeleteContract,
       ),
     onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
@@ -292,8 +305,9 @@ export function useRunRecurringTemplate() {
   return useAuthorizedMutation<{ invoiceId: number }, Error, { templateId: number }>("accounting:recurring:manage", {
     mutationKey: ["run-recurring-template"],
     mutationFn: ({ templateId }) =>
-      apiClient.post<{ invoiceId: number }>(
+      apiClient.post(
         `/accounting/recurring-invoices/${templateId}/run-now`,
+        undefined, undefined, recurringInvoiceRunNowContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

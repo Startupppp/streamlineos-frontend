@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type {
   Holiday,
@@ -156,7 +157,7 @@ export function useHrHubSnapshot() {
 
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.hub(today),
-    queryFn: ({ signal }) => apiClient.get<HrHubSnapshot>("/hr/hub", { today }, signal),
+    queryFn: ({ signal }) => apiClient.get<HrHubSnapshot>("/hr/hub", { today }, signal, lazyContract(() => import("@/hooks/api/hr/hub-schema").then(m => m.hrHubSnapshotContract))),
     enabled: Boolean(orgId && userId),
     staleTime: 30_000,
     refetchInterval: 60_000,

@@ -11,6 +11,17 @@ import type {
   UserMembership,
 } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const loginHistoryContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.loginHistoryContract),
+);
+const userMembershipContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userMembershipContract),
+);
+const userSuccessContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSuccessContract),
+);
 
 export const useUserLoginHistory = (
   userId: string,
@@ -28,7 +39,7 @@ export const useUserLoginHistory = (
         ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.success !== undefined ? { success: String(params.success) } : {}),
-      }, signal),
+      }, signal, loginHistoryContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -42,7 +53,7 @@ export const useUserMembership = (
   const canView = useCan("settings:view");
   return useQuery<UserMembership, Error>({
     queryKey: usersAndCommerceQueryKeys.users.membership(userId),
-    queryFn: ({ signal }) => apiClient.get<UserMembership>(`/users/${userId}/membership`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<UserMembership>(`/users/${userId}/membership`, undefined, signal, userMembershipContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -58,7 +69,7 @@ export const useUpdateUserMembership = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
-      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data, userSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.membership(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });

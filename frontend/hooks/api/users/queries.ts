@@ -6,6 +6,20 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { userStatsContract } from "@/hooks/api/users/users-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+const usersResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.usersResponseContract),
+);
+const userDetailResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userDetailResponseContract),
+);
+const userSessionsContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSessionsContract),
+);
+const userPreferencesContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userPreferencesContract),
+);
 import type {
   User,
   UserListParams,
@@ -35,7 +49,7 @@ export const useUsers = (
         ...(params?.managerUserId ? { managerUserId: params.managerUserId } : {}),
         ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
         ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
-      }, signal),
+      }, signal, usersResponseContract),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -49,7 +63,7 @@ export const useUser = (
   const canView = useCan("settings:view");
   return useQuery<User, Error>({
     queryKey: usersAndCommerceQueryKeys.users.detail(userId),
-    queryFn: ({ signal }) => apiClient.get<User>(`/v2/users/${userId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<User>(`/v2/users/${userId}`, undefined, signal, userDetailResponseContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -63,7 +77,7 @@ export const useUserSessions = (
   const canManage = useCan("settings:organization:manage");
   return useQuery<UserSession[], Error>({
     queryKey: usersAndCommerceQueryKeys.users.sessions(userId),
-    queryFn: ({ signal }) => apiClient.get<UserSession[]>(`/users/${userId}/sessions`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<UserSession[]>(`/users/${userId}/sessions`, undefined, signal, userSessionsContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -77,7 +91,7 @@ export const useUserPreferences = (
   const canView = useCan("settings:view");
   return useQuery<UserPreferences, Error>({
     queryKey: usersAndCommerceQueryKeys.users.preferences(userId),
-    queryFn: ({ signal }) => apiClient.get<UserPreferences>(`/users/${userId}/preferences`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<UserPreferences>(`/users/${userId}/preferences`, undefined, signal, userPreferencesContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),

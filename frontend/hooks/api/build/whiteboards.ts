@@ -3,8 +3,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const whiteboardListContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardListContract),
+);
+const whiteboardDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardDetailContract),
+);
+const whiteboardSharingUpdateContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardSharingUpdateContract),
+);
+const whiteboardSharesContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardSharesContract),
+);
+const successContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
+);
 
 export type WhiteboardVisibility = "project" | "private" | "public";
 export type WhiteboardShareRole = "viewer" | "editor";
@@ -80,7 +97,7 @@ export function useWhiteboards(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId),
-    queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal, whiteboardListContract),
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });
@@ -91,7 +108,7 @@ export function useWhiteboard(projectId: number, whiteboardId: number | null) {
   return useQuery({
     queryKey: accountingAndSupportQueryKeys.whiteboards.detail(whiteboardId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`, undefined, signal),
+      apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`, undefined, signal, whiteboardDetailContract),
     enabled: canView && !!projectId && !!whiteboardId,
     staleTime: 60_000,
   });
@@ -102,7 +119,7 @@ export function useCreateWhiteboard(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "create"],
     mutationFn: (name: string) =>
-      apiClient.post<WhiteboardDetail>(`/build/${projectId}/whiteboards`, { name }),
+      apiClient.post<WhiteboardDetail>(`/build/${projectId}/whiteboards`, { name }, undefined, whiteboardDetailContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }
@@ -112,7 +129,7 @@ export function useUpdateWhiteboard(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "update"],
     mutationFn: ({ id, ...input }: UpdateWhiteboardInput) =>
-      apiClient.patch<WhiteboardDetail>(`/build/${projectId}/whiteboards/${id}`, input),
+      apiClient.patch<WhiteboardDetail>(`/build/${projectId}/whiteboards/${id}`, input, undefined, whiteboardDetailContract),
     onSuccess: (updated) => {
       qc.setQueryData(accountingAndSupportQueryKeys.whiteboards.detail(updated.id), updated);
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) });
@@ -125,7 +142,7 @@ export function useDeleteWhiteboard(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`, undefined, undefined, successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }
@@ -138,6 +155,8 @@ export function useUpdateWhiteboardSharing(projectId: number) {
       apiClient.patch<WhiteboardSharing>(
         `/build/${projectId}/whiteboards/${id}/sharing`,
         input,
+        undefined,
+        whiteboardSharingUpdateContract,
       ),
     onSuccess: (_: unknown, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });
@@ -154,6 +173,8 @@ export function useRotateWhiteboardShareToken(projectId: number) {
       apiClient.post<WhiteboardSharing>(
         `/build/${projectId}/whiteboards/${id}/sharing/rotate-token`,
         {},
+        undefined,
+        whiteboardSharingUpdateContract,
       ),
     onSuccess: (_: unknown, id) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(id) });
@@ -169,6 +190,8 @@ export function useSetWhiteboardShares(projectId: number) {
       apiClient.put<WhiteboardShareEntry[]>(
         `/build/${projectId}/whiteboards/${id}/shares`,
         { shares },
+        undefined,
+        whiteboardSharesContract,
       ),
     onSuccess: (_: unknown, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });
@@ -183,6 +206,7 @@ export function useRemoveWhiteboardShare(projectId: number) {
     mutationFn: ({ id, userId }: { id: number; userId: string }) =>
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/whiteboards/${id}/shares/${userId}`,
+        successContract,
       ),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });

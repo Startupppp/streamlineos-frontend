@@ -23,7 +23,7 @@ import {
   PmSection,
   PmPanel,
   PM_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { pmSnappy } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";

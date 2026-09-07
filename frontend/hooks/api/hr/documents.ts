@@ -2,7 +2,24 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const documentListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentListContract),
+);
+const documentStatsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentStatsContract),
+);
+const documentExpiryLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentExpiryContract),
+);
+const myOnboardingDocsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.myOnboardingDocsContract),
+);
+const onboardingDocsSummaryLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.onboardingDocsSummaryContract),
+);
 import type { Document, DocumentType } from "@/types/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
@@ -57,7 +74,7 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documentsStats(),
-    queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal, documentStatsLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
@@ -122,7 +139,7 @@ export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
     queryFn: ({ signal }) =>
-      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal),
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal, myOnboardingDocsLazy),
     staleTime: 60_000,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -141,7 +158,7 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
-      }, signal),
+      }, signal, onboardingDocsSummaryLazy),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -151,7 +168,7 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
         status: "APPROVED",
-      }, signal),
+      }, signal, onboardingDocsSummaryLazy),
     staleTime: 2 * 60_000,
     enabled,
   });

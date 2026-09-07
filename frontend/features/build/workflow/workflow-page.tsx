@@ -12,7 +12,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TransitionsTable } from "./transitions-table";
 import { WipRow } from "./wip-row";

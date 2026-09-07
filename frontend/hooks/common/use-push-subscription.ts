@@ -2,12 +2,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 
 export type PushPermissionState =
   | "unsupported"
   | "default"
   | "granted"
   | "denied";
+
+const pushSubscribeContract = lazyContract(() =>
+  import("@/hooks/common/push-schema").then((m) => m.pushSubscribeContract),
+);
+const pushUnsubscribeContract = lazyContract(() =>
+  import("@/hooks/common/push-schema").then((m) => m.pushUnsubscribeContract),
+);
+const vapidPublicKeyContract = lazyContract(() =>
+  import("@/hooks/common/push-schema").then((m) => m.vapidPublicKeyContract),
+);
 
 const OPT_OUT_KEY = "streamline.push.opted-out";
 
@@ -46,7 +57,7 @@ export function usePushSubscription(userId: string | undefined) {
         p256dh,
         auth,
         userAgent: navigator.userAgent.slice(0, 255),
-      }),
+      }, undefined, pushSubscribeContract),
     onSuccess: () => setIsSubscribed(true),
   });
 
@@ -244,7 +255,7 @@ async function subscribe(): Promise<void> {
     p256dh,
     auth,
     userAgent: navigator.userAgent.slice(0, 255),
-  });
+  }, undefined, pushSubscribeContract);
 }
 
 async function unsubscribeFromPush(): Promise<void> {
@@ -256,13 +267,15 @@ async function unsubscribeFromPush(): Promise<void> {
   await existing.unsubscribe();
   await apiClient.delete(
     `/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`,
+    undefined,
+    pushUnsubscribeContract,
   );
 }
 
 async function createSubscription(
   registration: ServiceWorkerRegistration,
 ): Promise<PushSubscription | null> {
-  const data = await apiClient.get<{ key: string }>("/push/vapid-public-key");
+  const data = await apiClient.get<{ key: string }>("/push/vapid-public-key", undefined, undefined, vapidPublicKeyContract);
   if (!data.key) return null;
   return registration.pushManager.subscribe({
     userVisibleOnly: true,

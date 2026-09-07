@@ -13,7 +13,7 @@ import {
   receiptKindEmoji,
   receiptKindLabel,
   type ExpenseReceipt,
-} from "../expense-constants";
+} from "@/lib/expense-constants";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 

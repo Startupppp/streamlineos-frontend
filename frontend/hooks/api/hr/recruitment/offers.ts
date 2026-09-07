@@ -3,9 +3,44 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const allOffersPageC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.allOffersPageContract),
+);
+const offerVersionsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.offerVersionsListContract),
+);
+const offerNegotiationsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.offerNegotiationsListContract),
+);
+const candidateOffersListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.candidateOffersListContract),
+);
+const createCandidateOfferC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.createCandidateOfferContract),
+);
+const updateCandidateOfferC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.updateCandidateOfferContract),
+);
+const deleteCandidateOfferC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.deleteCandidateOfferContract),
+);
+const respondToNegotiationC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.respondToNegotiationContract),
+);
+const submitOfferForApprovalC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.submitOfferForApprovalContract),
+);
+const approveOfferC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.approveOfferContract),
+);
+const rejectOfferApprovalC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.rejectOfferApprovalContract),
+);
 
 export interface CandidateOffer {
   id: number;
@@ -98,6 +133,7 @@ export function useAllOffers(params?: AllOffersParams) {
         "/hr/recruitment/offers",
         queryParams,
         signal,
+        allOffersPageC,
       );
     },
     staleTime: 60_000,
@@ -110,7 +146,7 @@ export function useOfferVersions(candidateId: number, offerId: number) {
   return useGatedQuery("hr:offers:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "offerVersions", offerId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`, undefined, signal),
+      apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`, undefined, signal, offerVersionsListC),
     enabled: candidateId > 0 && offerId > 0,
     staleTime: 60_000,
   });
@@ -120,7 +156,7 @@ export function useOfferNegotiations(candidateId: number, offerId: number) {
   return useGatedQuery("hr:offers:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "offerNegotiations", offerId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`, undefined, signal),
+      apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`, undefined, signal, offerNegotiationsListC),
     enabled: candidateId > 0 && offerId > 0,
     staleTime: 30_000,
   });
@@ -143,6 +179,8 @@ export function useRespondToNegotiation(candidateId: number) {
       apiClient.post<OfferNegotiation>(
         `/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`,
         data,
+        undefined,
+        respondToNegotiationC,
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "offerNegotiations", variables.offerId] });
@@ -157,7 +195,7 @@ export function useCandidateOffers(candidateId: number) {
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`, undefined, signal),
+      apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`, undefined, signal, candidateOffersListC),
     staleTime: 2 * 60_000,
     enabled: canView && candidateId > 0,
   });
@@ -175,7 +213,7 @@ export function useCreateCandidateOffer(candidateId: number) {
       offerLetterUrl?: string;
       validUntil?: string;
       notes?: string;
-    }) => apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers`, data),
+    }) => apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers`, data, undefined, createCandidateOfferC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -186,7 +224,7 @@ export function useUpdateCandidateOffer(candidateId: number) {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "update", candidateId],
     mutationFn: ({ offerId, ...data }: { offerId: number; offerStatus?: CandidateOffer["offerStatus"]; notes?: string; joiningDate?: string; validUntil?: string; offeredSalary?: number; offeredDesignation?: string }) =>
-      apiClient.patch<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, data),
+      apiClient.patch<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, data, undefined, updateCandidateOfferC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -197,7 +235,7 @@ export function useDeleteCandidateOffer(candidateId: number) {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "delete", candidateId],
     mutationFn: (offerId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, undefined, undefined, deleteCandidateOfferC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -208,7 +246,7 @@ export function useSubmitOfferForApproval(candidateId: number) {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "submit-approval", candidateId],
     mutationFn: (offerId: number) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}),
+      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}, undefined, submitOfferForApprovalC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -219,7 +257,7 @@ export function useApproveOffer(candidateId: number) {
   return useAuthorizedMutation("hr:offers:approve", {
     mutationKey: ["hr", "recruitment", "offers", "approve", candidateId],
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }),
+      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }, undefined, approveOfferC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -230,7 +268,7 @@ export function useRejectOfferApproval(candidateId: number) {
   return useAuthorizedMutation("hr:offers:approve", {
     mutationKey: ["hr", "recruitment", "offers", "reject-approval", candidateId],
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/reject-approval`, { remarks }),
+      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/reject-approval`, { remarks }, undefined, rejectOfferApprovalC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });

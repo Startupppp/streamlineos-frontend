@@ -18,7 +18,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import {
   useAutomations,
   useCreateAutomation,

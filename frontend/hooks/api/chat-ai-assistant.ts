@@ -3,6 +3,20 @@
 import { useCallback } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const aiConversationListContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.aiConversationListContract),
+);
+const aiConversationContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.aiConversationContract),
+);
+const aiDeleteConversationContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.aiDeleteConversationContract),
+);
+const aiConversationMessagesContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.aiConversationMessagesContract),
+);
 import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
@@ -46,7 +60,7 @@ export function useAiConversations(enabled: boolean) {
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
-      return apiClient.get<AiConversationListPage>("/chat/conversations", params, signal);
+      return apiClient.get<AiConversationListPage>("/chat/conversations", params, signal, aiConversationListContract);
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -60,7 +74,7 @@ export function useCreateAiConversation() {
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "create"],
     mutationFn: (input: { title?: string }) =>
-      apiClient.post<AiConversation>("/chat/conversations", input),
+      apiClient.post<AiConversation>("/chat/conversations", input, undefined, aiConversationContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
@@ -72,7 +86,7 @@ export function useRenameAiConversation() {
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "rename"],
     mutationFn: ({ id, title }: { id: number; title: string }) =>
-      apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }),
+      apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }, undefined, aiConversationContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
@@ -84,7 +98,7 @@ export function useDeleteAiConversation() {
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`),
+      apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`, undefined, undefined, aiDeleteConversationContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
@@ -100,7 +114,9 @@ export function useAiConversationMessages(conversationId: number | null, enabled
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<AskAiHistoryPage>(
         `/chat/conversations/${conversationId}/messages`,
-        params, signal,
+        params,
+        signal,
+        aiConversationMessagesContract,
       );
     },
     initialPageParam: undefined as number | undefined,

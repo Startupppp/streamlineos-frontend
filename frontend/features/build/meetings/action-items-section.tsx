@@ -21,7 +21,7 @@ import { ActionItemFormSheet } from "./action-item-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
-import { PM_ROW } from "@/components/pm-chrome/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 

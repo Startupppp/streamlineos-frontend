@@ -23,6 +23,30 @@ const membersPageContract = lazyContract(() =>
     (m) => m.orgMembersPageContract,
   ),
 );
+const orgSettingsContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.orgSettingsContract),
+);
+const orgSuccessContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.orgSuccessContract),
+);
+const archivedOrgListContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.archivedOrgListContract),
+);
+const archiveOrgContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.archiveOrgContract),
+);
+const restoreOrgContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.restoreOrgContract),
+);
+const createOrgContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.createOrgContract),
+);
+const leaveOrgContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.leaveOrgContract),
+);
+const deleteOrgContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.deleteOrgContract),
+);
 
 export type { OrgMember, OrgMembersPage } from "@/hooks/api/organization-schema";
 
@@ -33,7 +57,7 @@ export const useOrgSettings = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<OrgSettings, Error>({
     queryKey: platformCoreQueryKeys.organization.settings(),
-    queryFn: ({ signal }) => apiClient.get<OrgSettings>("/organization/settings", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<OrgSettings>("/organization/settings", undefined, signal, orgSettingsContract),
     staleTime: 30 * 60_000,
     ...restOptions,
     enabled: canViewSettings && (callerEnabled ?? true),
@@ -157,7 +181,7 @@ export const useUpdateOrgSettings = () => {
   >("settings:manage", {
     mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/settings", data),
+      apiClient.patch<{ success: boolean }>("/organization/settings", data, orgSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.settings(),
@@ -181,7 +205,7 @@ export const useUpdateOrgSecurity = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>("settings:manage", {
     mutationKey: ["organization", "security", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/security", data),
+      apiClient.patch<{ success: boolean }>("/organization/security", data, orgSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.settings(),
@@ -206,7 +230,7 @@ export const useArchivedOrganizations = (
   return useQuery<ArchivedOrganization[], Error>({
     queryKey: platformCoreQueryKeys.organization.archived(),
     queryFn: ({ signal }) =>
-      apiClient.get<ArchivedOrganization[]>("/organization/archived", undefined, signal),
+      apiClient.get<ArchivedOrganization[]>("/organization/archived", undefined, signal, archivedOrgListContract),
     staleTime: 30_000,
     ...restOptions,
     enabled: callerEnabled ?? true,
@@ -224,6 +248,7 @@ export const useArchiveOrg = () => {
       apiClient.post<{ success: boolean; nextOrgId: string | null }>(
         "/organization/archive",
         {},
+        archiveOrgContract,
       ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
@@ -242,6 +267,7 @@ export const useRestoreOrg = () => {
       apiClient.post<{ success: boolean; orgId: string }>(
         "/organization/restore",
         { orgId },
+        restoreOrgContract,
       ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
@@ -278,7 +304,7 @@ export const useCreateOrganization = () => {
   >({
     mutationKey: ["organization", "create"],
     mutationFn: (data) =>
-      apiClient.post<CreateOrganizationResult>("/organization", data),
+      apiClient.post<CreateOrganizationResult>("/organization", data, createOrgContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.all,
@@ -294,6 +320,7 @@ export const useLeaveOrg = () => {
       apiClient.post<{ success: boolean; nextOrgId?: string }>(
         "/organization/leave",
         {},
+        leaveOrgContract,
       ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
@@ -315,6 +342,8 @@ export const useDeleteOrg = () => {
       apiClient.delete<{ success: true; nextOrgId: string | null }>(
         "/organization",
         data,
+        undefined,
+        deleteOrgContract,
       ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);

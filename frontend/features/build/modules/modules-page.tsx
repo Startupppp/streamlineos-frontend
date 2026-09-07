@@ -43,7 +43,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_FILL_SECTION,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import {
   createModuleSchema,
   type CreateModuleForm,

@@ -2,6 +2,29 @@
 
 import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+const chatChannelDetailContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
+);
+const chatMuteResponseContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMuteResponseContract),
+);
+const chatInviteLinkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatInviteLinkContract),
+);
+const chatJoinViaInviteContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatJoinViaInviteContract),
+);
+const chatNotifPrefResponseContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatNotifPrefResponseContract),
+);
+const chatChannelFilesContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatChannelFilesContract),
+);
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -12,7 +35,7 @@ export function useArchiveChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "archive"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
@@ -28,7 +51,7 @@ export function useUnarchiveChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unarchive"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
@@ -46,6 +69,9 @@ export function useMarkChannelUnread() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(
         `/chat/channels/${channelId}/mark-unread`,
+        undefined,
+        undefined,
+        chatOkContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -62,7 +88,7 @@ export function useEntityChannel(
   return useQuery({
     queryKey: [...collaborationQueryKeys.chat.all, "entity", entityType, entityId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal),
+      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatChannelDetailContract),
     enabled: canRead && Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
@@ -82,6 +108,8 @@ export function useMuteChannel() {
       apiClient.post<{ ok: boolean; mutedUntil: string }>(
         `/chat/channels/${channelId}/mute`,
         { duration },
+        undefined,
+        chatMuteResponseContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -94,7 +122,7 @@ export function useUnmuteChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unmute"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
@@ -106,7 +134,7 @@ export function useFavoriteChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "favorite"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/favorite`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/favorite`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
@@ -118,7 +146,7 @@ export function useUnfavoriteChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unfavorite"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unfavorite`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unfavorite`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
@@ -134,6 +162,7 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
         `/chat/channels/${channelId}/invite-link`,
         undefined,
         { signal },
+        chatInviteLinkContract,
       ),
     enabled: canManage && enabled && channelId > 0,
     staleTime: 60_000,
@@ -147,6 +176,7 @@ export function useRegenerateInviteLink() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ token: string }>(
         `/chat/channels/${channelId}/invite-link/regenerate`,
+        undefined, undefined, chatInviteLinkContract,
       ),
     onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({
@@ -163,6 +193,9 @@ export function useJoinViaInviteLink() {
     mutationFn: (token: string) =>
       apiClient.post<{ ok: boolean; channelId: number }>(
         `/chat/invite-links/${token}/join`,
+        undefined,
+        undefined,
+        chatJoinViaInviteContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -184,7 +217,12 @@ export function useSetNotificationPreference() {
       apiClient.post<{
         ok: boolean;
         notificationPreference: ChatNotificationPreference;
-      }>(`/chat/channels/${channelId}/notification-preference`, { preference }),
+      }>(
+        `/chat/channels/${channelId}/notification-preference`,
+        { preference },
+        undefined,
+        chatNotifPrefResponseContract,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
@@ -207,7 +245,9 @@ export function useChannelFiles(channelId: number) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
         `/chat/channels/${channelId}/files`,
-        pageParam !== undefined ? { cursor: String(pageParam) } : undefined, signal,
+        pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
+        signal,
+        chatChannelFilesContract,
       ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,

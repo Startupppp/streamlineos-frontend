@@ -81,6 +81,7 @@ const CreateTicketDialog = dynamic(
 
 const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
 const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+const TICKET_PAGE_SIZE = 50;
 
 function isTicketStatus(v: string): v is SupportTicketStatus {
   return (TICKET_STATUSES as readonly string[]).includes(v);
@@ -98,6 +99,7 @@ function InboxContent() {
   const shellVariant = useShellVariant();
   const isDesktopShell = shellVariant === "desktop";
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
 
   const statusFilter = searchParams.get("status") || "all";
@@ -112,6 +114,7 @@ function InboxContent() {
       const params = new URLSearchParams(searchParams.toString());
       if (value === "all") params.delete(key);
       else params.set(key, value);
+      setPage(1);
       startTransition(() => {
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       });
@@ -126,6 +129,8 @@ function InboxContent() {
     ...(assigneeIdFilter ? { assigneeId: assigneeIdFilter } : {}),
     ...(channelFilter ? { channel: channelFilter } : {}),
     ...(snoozedFilter ? { snoozed: true } : {}),
+    page,
+    limit: TICKET_PAGE_SIZE,
   });
   const { data: ticketsData, isError, refetch } = ticketsResult;
   const isLoading = ticketsResult.isLoading || ticketsResult.access.pending;
@@ -152,6 +157,11 @@ function InboxContent() {
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
 
+  const handlePageChange = useCallback((nextPage: number) => {
+    setSelectedTicketId(null);
+    setPage(nextPage);
+  }, []);
+
   const handleToggleSnoozed = useCallback(
     () => updateFilter("snoozed", snoozedFilter ? "all" : "true"),
     [updateFilter, snoozedFilter],
@@ -171,6 +181,7 @@ function InboxContent() {
       if (typeof filter.priority === "string" && isTicketPriority(filter.priority)) {
         params.set("priority", filter.priority);
       }
+      setPage(1);
       startTransition(() => {
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       });
@@ -281,6 +292,10 @@ function InboxContent() {
             isLoading={isLoading}
             selectedTicketId={selectedTicketId}
             onSelect={setSelectedTicketId}
+            page={page}
+            pageSize={TICKET_PAGE_SIZE}
+            total={ticketsData?.total ?? 0}
+            onPageChange={handlePageChange}
           />
         )}
 

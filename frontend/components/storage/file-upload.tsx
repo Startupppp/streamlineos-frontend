@@ -7,7 +7,12 @@ import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const storageUploadC = lazyContract(() =>
+  import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
+);
 
 interface FileUploadProps {
   onUploadComplete: (key: string) => void;
@@ -91,6 +96,7 @@ export function FileUpload({
           const result = await apiClient.upload<{ key: string }>(
             "/storage/upload",
             formData,
+            storageUploadC,
           );
           setUploadedFiles((prev) => [...prev, { key: result.key, name: file.name }]);
           onUploadComplete(result.key);

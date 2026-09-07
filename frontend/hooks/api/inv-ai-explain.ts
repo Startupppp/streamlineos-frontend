@@ -3,7 +3,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { inventoryQueryKeys } from "@/lib/query-keys/inventory";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const explainInsightInvContract = lazyContract(() =>
+  import("@/hooks/api/inv-ai-explain-schema").then((m) => m.explainInsightInvContract),
+);
+const reorderProposalInvContract = lazyContract(() =>
+  import("@/hooks/api/inv-ai-explain-schema").then((m) => m.reorderProposalInvContract),
+);
+const supplierDelayBriefingInvContract = lazyContract(() =>
+  import("@/hooks/api/inv-ai-explain-schema").then((m) => m.supplierDelayBriefingInvContract),
+);
 
 export interface ExplainFactor {
   label: string;
@@ -22,7 +33,7 @@ export function useExplainInsight() {
   return useAuthorizedMutation<InsightNarration, Error, number>("inventory:reports:read", {
     mutationKey: ["inventory", "ai", "insight", "explain"],
     mutationFn: (insightId: number) =>
-      apiClient.post<InsightNarration>(`/inventory/ai/insights/${insightId}/explain`),
+      apiClient.post<InsightNarration>(`/inventory/ai/insights/${insightId}/explain`, undefined, undefined, explainInsightInvContract),
   });
 }
 
@@ -77,7 +88,7 @@ export function useReorderProposal() {
   return useAuthorizedMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal"],
     mutationFn: (body) =>
-      apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body),
+      apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body, undefined, reorderProposalInvContract),
   });
 }
 
@@ -99,7 +110,7 @@ export function useSupplierDelayBriefing(vendorId?: string) {
     queryFn: ({ signal }) =>
       apiClient.get<SupplierDelayBriefing>(
         "/inventory/ai/supplier-delay",
-        vendorId ? { vendorId } : {}, signal,
+        vendorId ? { vendorId } : {}, signal, supplierDelayBriefingInvContract,
       ),
     staleTime: 5 * 60_000,
   });

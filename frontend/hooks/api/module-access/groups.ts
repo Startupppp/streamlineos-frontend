@@ -20,8 +20,17 @@ import { lazyContract } from "@/lib/api-envelope";
 const roleGroupPageContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleRoleGroupPageContract),
 );
+const roleGroupContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleRoleGroupContract),
+);
 const groupMembersContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleGroupMembersContract),
+);
+const moduleSuccessContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleSuccessContract),
+);
+const moduleGroupPermissionsSetContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleGroupPermissionsSetContract),
 );
 
 export function useModuleRoleGroups(moduleKey: string) {
@@ -50,7 +59,7 @@ export function useCreateModuleRoleGroup(moduleKey: string) {
   return useMutation<ModuleRoleGroup, Error, { name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "create-group"],
     mutationFn: (body) =>
-      apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body),
+      apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body, roleGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
@@ -65,7 +74,7 @@ export function useRenameModuleRoleGroup(moduleKey: string) {
   return useMutation<ModuleRoleGroup, Error, { id: number; name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "rename-group"],
     mutationFn: ({ id, name }) =>
-      apiClient.patch<ModuleRoleGroup>(`/module-access/${moduleKey}/groups/${id}`, { name }),
+      apiClient.patch<ModuleRoleGroup>(`/module-access/${moduleKey}/groups/${id}`, { name }, roleGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
@@ -80,7 +89,7 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
   return useMutation<{ success: true }, Error, number>({
     mutationKey: ["moduleAccess", moduleKey, "delete-group"],
     mutationFn: (id) =>
-      apiClient.delete<{ success: true }>(`/module-access/${moduleKey}/groups/${id}`),
+      apiClient.delete(`/module-access/${moduleKey}/groups/${id}`, undefined, undefined, moduleSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
@@ -102,6 +111,7 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
       apiClient.put<{ success: true; version: number }>(
         `/module-access/${moduleKey}/groups/${groupId}/permissions`,
         { version, items },
+        moduleGroupPermissionsSetContract,
       ),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<InfiniteData<AuditCursorPage<ModuleRoleGroup>>>(
@@ -153,9 +163,10 @@ export function useAddModuleGroupMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { groupId: number; userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "add-member"],
     mutationFn: ({ groupId, userId }) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         { userId },
+        moduleSuccessContract,
       ),
     onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({
@@ -187,8 +198,11 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { groupId: number; userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "remove-member"],
     mutationFn: ({ groupId, userId }) =>
-      apiClient.delete<{ success: true }>(
+      apiClient.delete(
         `/module-access/${moduleKey}/groups/${groupId}/members/${userId}`,
+        undefined,
+        undefined,
+        moduleSuccessContract,
       ),
     onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({

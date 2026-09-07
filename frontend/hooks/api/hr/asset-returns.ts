@@ -7,7 +7,18 @@ import {
 } from "@tanstack/react-query";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
+
+const assetReturnListC = lazyContract(() =>
+  import("@/hooks/api/hr/asset-returns-schema").then((m) => m.assetReturnListContract),
+);
+const assetReturnC = lazyContract(() =>
+  import("@/hooks/api/hr/asset-returns-schema").then((m) => m.assetReturnContract),
+);
+const assetReturnSuccessC = lazyContract(() =>
+  import("@/hooks/api/hr/asset-returns-schema").then((m) => m.assetReturnSuccessContract),
+);
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { AssetReturn } from "@/features/hr/asset-returns/asset-return-constants";
@@ -32,7 +43,7 @@ export function useAssetReturns(
   return useQuery<AssetReturn[], Error>({
     queryKey: humanResourcesQueryKeys.hr.assetReturnsList(),
     queryFn: ({ signal }) =>
-      apiClient.get<AssetReturn[]>("/hr/asset-returns", undefined, signal),
+      apiClient.get<AssetReturn[]>("/hr/asset-returns", undefined, signal, assetReturnListC),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -46,7 +57,7 @@ export function useCreateAssetReturn(
   return useAuthorizedMutation<AssetReturn, Error, CreateAssetReturnInput>("hr:assets:manage", {
     mutationKey: ["hr", "asset-returns", "create"],
     mutationFn: (data: CreateAssetReturnInput) =>
-      apiClient.post<AssetReturn>("/hr/asset-returns", data),
+      apiClient.post<AssetReturn>("/hr/asset-returns", data, undefined, assetReturnC),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
@@ -56,16 +67,16 @@ export function useCreateAssetReturn(
 }
 
 export function useMarkAssetReturned(
-  options?: UseMutationOptions<{ success: boolean }, Error, MarkAssetReturnedInput>,
+  options?: UseMutationOptions<AssetReturn, Error, MarkAssetReturnedInput>,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "asset-returns", "mark-returned"],
     mutationFn: ({ id, condition }: MarkAssetReturnedInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, {
+      apiClient.patch<AssetReturn>(`/hr/asset-returns/${id}`, {
         status: "RETURNED",
         condition,
-      }),
+      }, undefined, assetReturnC),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });

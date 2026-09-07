@@ -18,6 +18,11 @@ import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
 import { useRoles } from "@/hooks/api/roles";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const checkEmailContract = lazyContract(() =>
+  import("@/components/hr/check-email-schema").then((m) => m.checkEmailContract),
+);
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -113,7 +118,7 @@ export function OnboardingWizard() {
         setIsCheckingEmail(true);
         let emailCheckPassed = false;
         try {
-          const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
+          const res = await apiClient.get(`/hr/employees/check-email?email=${encodeURIComponent(email)}`, undefined, undefined, checkEmailContract);
           checkedEmail.current = email;
           if (res.exists) {
             form.setError("email", { message: "This email already belongs to an employee in your organization" });

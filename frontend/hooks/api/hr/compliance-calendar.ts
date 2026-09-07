@@ -2,8 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+
+const complianceCalendarLazy = lazyContract(() =>
+  import("@/hooks/api/hr/compliance-calendar-schema").then((m) => m.complianceCalendarContract),
+);
 
 export interface ComplianceCalendarEvent {
   date: string;
@@ -27,7 +32,7 @@ export function useComplianceCalendar(year: number, month: number) {
       apiClient.get<ComplianceCalendarResponse>("/hr/compliance/calendar", {
         year: String(year),
         month: String(month),
-      }, signal),
+      }, signal, complianceCalendarLazy),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });

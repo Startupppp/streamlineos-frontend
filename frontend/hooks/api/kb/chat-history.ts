@@ -1,38 +1,58 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
-import type { KbAskCitation } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KbChatHistoryMessage {
-  id: number;
+  id: string;
+  conversationId: string;
   role: "user" | "assistant";
   content: string;
-  citations: KbAskCitation[] | null;
+  sources: Record<string, unknown>[] | null;
   createdAt: string;
 }
 
 export interface KbChatHistoryPage {
-  messages: KbChatHistoryMessage[];
-  nextCursor: number | null;
+  data: KbChatHistoryMessage[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export interface KbConversation {
-  id: number;
+  id: string;
+  orgId: string;
+  userId: string | null;
   title: string | null;
   createdAt: string;
   updatedAt: string;
+  messageCount: number;
 }
 
 export interface KbConversationListPage {
-  conversations: KbConversation[];
-  nextCursor: number | null;
+  data: KbConversation[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 const HISTORY_PAGE_SIZE = 30;
+
+const kbConversationListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-chat-schema").then((m) => m.kbConversationListPageContract),
+);
+
+const kbConversationResponseContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-chat-schema").then((m) => m.kbConversationResponseContract),
+);
+
+const kbChatSuccessContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-chat-schema").then((m) => m.kbChatSuccessContract),
+);
+
+const kbChatHistoryPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-chat-schema").then((m) => m.kbChatHistoryPageContract),
+);
 
 export function useKbConversations(enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
@@ -41,10 +61,10 @@ export function useKbConversations(enabled: boolean) {
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
-      return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal);
+      return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal, kbConversationListPageContract);
     },
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
     staleTime: 30_000,
   });
@@ -54,8 +74,8 @@ export function useRenameKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "rename"],
-    mutationFn: ({ id, title }: { id: number; title: string }) =>
-      apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }),
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }, undefined, kbConversationResponseContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },
@@ -66,18 +86,18 @@ export function useDeleteKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`),
+    mutationFn: (id: string) =>
+      apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`, undefined, undefined, kbChatSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },
   });
 }
 
-export function useKbConversationMessages(conversationId: number | null, enabled: boolean) {
+export function useKbConversationMessages(conversationId: string | null, enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(conversationId ?? 0),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(conversationId ?? ""),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -85,10 +105,11 @@ export function useKbConversationMessages(conversationId: number | null, enabled
         `/kb/ask/conversations/${conversationId}/messages`,
         params,
         signal,
+        kbChatHistoryPageContract,
       );
     },
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,
   });

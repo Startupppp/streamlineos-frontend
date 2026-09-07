@@ -3,6 +3,11 @@
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { lazyContract } from "@/lib/api-envelope";
+
+const employmentFactsContract = lazyContract(() =>
+  import("@/hooks/api/directory/employment-schema").then((m) => m.employmentFactsContract),
+);
 
 export interface EmploymentFacts {
   userId: string;
@@ -27,7 +32,7 @@ export const useEmploymentFacts = (userIds: readonly string[]) => {
     queryFn: ({ signal }) =>
       apiClient.get<EmploymentFactsResponse>("/directory/employment", {
         userIds: wanted.join(","),
-      }, signal),
+      }, signal, employmentFactsContract),
     staleTime: 30_000,
     enabled: wanted.length > 0,
   });

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyInboxIllustration } from "@/components/illustrations";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/utils";
 import type { SupportTicket } from "@/types/support";
 
@@ -94,6 +95,10 @@ interface TicketListProps {
   isLoading: boolean;
   selectedTicketId: number | null;
   onSelect: (id: number) => void;
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
 }
 
 export function TicketList({
@@ -101,7 +106,12 @@ export function TicketList({
   isLoading,
   selectedTicketId,
   onSelect,
+  page,
+  pageSize,
+  total,
+  onPageChange,
 }: TicketListProps) {
+  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
   return (
     <div
       className={cn(
@@ -109,7 +119,7 @@ export function TicketList({
         selectedTicketId && "hidden md:flex"
       )}
     >
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         {isLoading ? (
           <div className="space-y-1 p-2">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -142,6 +152,15 @@ export function TicketList({
           </div>
         )}
       </ScrollArea>
+      {!isLoading && totalPages > 1 ? (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={onPageChange}
+          showPageNumbers={false}
+        />
+      ) : null}
     </div>
   );
 }

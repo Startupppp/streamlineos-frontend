@@ -23,7 +23,7 @@ import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/components/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";

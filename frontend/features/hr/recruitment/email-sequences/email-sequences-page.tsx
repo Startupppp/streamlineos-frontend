@@ -5,7 +5,12 @@ import { useEmailSequences, useCreateEmailSequence, useUpdateEmailSequence, useD
 import { useQueryClient } from "@tanstack/react-query";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { Button } from "@/components/ui/button";
+
+const emailSequenceContract = lazyContract(() =>
+  import("@/features/hr/recruitment/email-sequences/email-sequences-schema").then((m) => m.emailSequenceWithStepsContract),
+);
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -353,7 +358,7 @@ export function EmailSequencesPage() {
   const handleToggleActive = useCallback(async (sequence: EmailSequence) => {
     setTogglingId(sequence.id);
     try {
-      await apiClient.patch(`/hr/recruitment/email-sequences/${sequence.id}`, { isActive: !sequence.isActive });
+      await apiClient.patch(`/hr/recruitment/email-sequences/${sequence.id}`, { isActive: !sequence.isActive }, undefined, emailSequenceContract);
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
       toast.success(sequence.isActive ? "Sequence paused" : "Sequence activated");
     } catch (e) {

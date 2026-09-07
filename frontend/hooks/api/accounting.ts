@@ -25,6 +25,30 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
+import {
+  journalEntryListContract,
+  journalEntryDetailContract,
+  reverseJournalEntryContract,
+  createJournalEntryContract,
+  postJournalEntryContract,
+  trialBalanceContract,
+  profitLossContract,
+  cashFlowContract,
+  customerListContract,
+  customerLedgerContract,
+  gstr1Contract,
+  balanceSheetContract,
+  agedReceivablesContract,
+  purchaseBillListContract,
+  purchaseBillDetailContract,
+  purchaseBillCreatedContract,
+  billStatusUpdateContract,
+  gstr3bContract,
+  vendorListContract,
+  vendorLedgerContract,
+  agedPayablesContract,
+  billPaymentCreatedContract,
+} from "@/hooks/api/accounting/accounting-schema";
 
 /**
  * The chart-of-accounts reads and writes moved to `accounting/chart-of-accounts.ts`
@@ -72,7 +96,7 @@ export function useJournal(params: ListJournalParams = {}) {
   return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: accountingAndSupportQueryKeys.accounting.journal(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params), signal),
+      apiClient.get("/accounting/journal", toQuery(params), signal, journalEntryListContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -81,7 +105,7 @@ export function useJournal(params: ListJournalParams = {}) {
 export function useJournalEntry(entryId: number) {
   return useGatedQuery<JournalEntry, Error>("accounting:journal:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.journalEntry(entryId),
-    queryFn: ({ signal }) => apiClient.get<JournalEntry>(`/accounting/journal/${entryId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/accounting/journal/${entryId}`, undefined, signal, journalEntryDetailContract),
     enabled: Number.isInteger(entryId) && entryId > 0,
     staleTime: 30_000,
   });
@@ -98,7 +122,7 @@ export function useReverseJournalEntry(entryId: number) {
   return useAuthorizedMutation<ReverseJournalEntryResult, Error, void>("accounting:journal:manage", {
     mutationKey: ["reverse", "journal", "entry"],
     mutationFn: () =>
-      apiClient.post<ReverseJournalEntryResult>(`/accounting/journal/${entryId}/reverse`),
+      apiClient.post(`/accounting/journal/${entryId}/reverse`, undefined, undefined, reverseJournalEntryContract),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.journalEntry(entryId) });
@@ -130,7 +154,7 @@ export function useCreateJournalEntry() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<CreateJournalEntryResult, Error, CreateJournalEntryInput>("accounting:journal:manage", {
     mutationKey: ["create", "journal", "entry"],
-    mutationFn: (input) => apiClient.post<CreateJournalEntryResult>("/accounting/journal", input),
+    mutationFn: (input) => apiClient.post("/accounting/journal", input, undefined, createJournalEntryContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
@@ -147,7 +171,7 @@ export function usePostJournalEntry(entryId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<PostJournalEntryResult, Error, void>("accounting:journal:manage", {
     mutationKey: ["post", "journal", "entry"],
-    mutationFn: () => apiClient.post<PostJournalEntryResult>(`/accounting/journal/${entryId}/post`),
+    mutationFn: () => apiClient.post(`/accounting/journal/${entryId}/post`, undefined, undefined, postJournalEntryContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.journalEntry(entryId) });
@@ -159,7 +183,7 @@ export function useTrialBalance(asOf: string) {
   return useGatedQuery<TrialBalanceResponse, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.trialBalance(asOf),
     queryFn: ({ signal }) =>
-      apiClient.get<TrialBalanceResponse>("/accounting/reports/trial-balance", { asOf }, signal),
+      apiClient.get("/accounting/reports/trial-balance", { asOf }, signal, trialBalanceContract),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -169,7 +193,7 @@ export function useProfitLoss(from: string, to: string) {
   return useGatedQuery<ProfitLossReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.profitLoss(from, to),
     queryFn: ({ signal }) =>
-      apiClient.get<ProfitLossReport>("/accounting/reports/profit-loss", { from, to }, signal),
+      apiClient.get("/accounting/reports/profit-loss", { from, to }, signal, profitLossContract),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -207,7 +231,7 @@ interface CashFlowParams {
 export function useCashFlow({ from, to }: CashFlowParams) {
   return useGatedQuery<CashFlowReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.cashFlow({ from, to }),
-    queryFn: ({ signal }) => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", { from, to }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/cash-flow", { from, to }, signal, cashFlowContract),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -224,7 +248,7 @@ export function useCustomersOutstanding(params: ListCustomersOutstandingParams =
   return useGatedQuery<CursorPage<CustomerOutstanding>, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.customersOutstanding(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params), signal),
+      apiClient.get("/accounting/customers", toQuery(params), signal, customerListContract),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -239,7 +263,7 @@ export function useCustomerLedger(clientId: number, params: CustomerLedgerParams
   return useGatedQuery<CustomerLedger, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.customerLedger(clientId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<CustomerLedger>(`/accounting/customers/${clientId}/ledger`, toQuery(params), signal),
+      apiClient.get(`/accounting/customers/${clientId}/ledger`, toQuery(params), signal, customerLedgerContract),
     enabled: Number.isInteger(clientId) && clientId > 0,
     staleTime: 60_000,
   });
@@ -248,7 +272,7 @@ export function useCustomerLedger(clientId: number, params: CustomerLedgerParams
 export function useGstr1(from: string, to: string) {
   return useGatedQuery<Gstr1Report, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.gstr1({ from, to }),
-    queryFn: ({ signal }) => apiClient.get<Gstr1Report>("/accounting/reports/gstr-1", { from, to }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/gstr-1", { from, to }, signal, gstr1Contract),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -257,7 +281,7 @@ export function useGstr1(from: string, to: string) {
 export function useBalanceSheet(asOf: string) {
   return useGatedQuery<BalanceSheetReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.balanceSheet({ asOf }),
-    queryFn: ({ signal }) => apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", { asOf }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/balance-sheet", { asOf }, signal, balanceSheetContract),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -266,7 +290,7 @@ export function useBalanceSheet(asOf: string) {
 export function useAgedReceivables(asOf: string) {
   return useGatedQuery<AgedReceivablesReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.agedReceivables({ asOf }),
-    queryFn: ({ signal }) => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/aged-receivables", { asOf }, signal, agedReceivablesContract),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -284,7 +308,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
   return useGatedQuery<CursorResponse<PurchaseBillSummary>, Error>("accounting:journal:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.purchaseBills(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params), signal),
+      apiClient.get("/accounting/purchase-bills", toQuery(params), signal, purchaseBillListContract),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -293,7 +317,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
 export function usePurchaseBill(billId: number) {
   return useGatedQuery<PurchaseBill, Error>("accounting:journal:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId),
-    queryFn: ({ signal }) => apiClient.get<PurchaseBill>(`/accounting/purchase-bills/${billId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/accounting/purchase-bills/${billId}`, undefined, signal, purchaseBillDetailContract),
     enabled: Number.isInteger(billId) && billId > 0,
     staleTime: 60_000,
   });
@@ -333,7 +357,7 @@ export function useCreatePurchaseBill() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<PurchaseBillCreateResult, Error, CreatePurchaseBillInput>("accounting:journal:manage", {
     mutationKey: ["create", "purchase", "bill"],
-    mutationFn: (input) => apiClient.post<PurchaseBillCreateResult>("/accounting/purchase-bills", input),
+    mutationFn: (input) => apiClient.post("/accounting/purchase-bills", input, undefined, purchaseBillCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
@@ -345,7 +369,7 @@ export function usePostPurchaseBill(billId: number) {
   return useAuthorizedMutation<{ id: number; status: PurchaseBillStatus }, Error, void>("accounting:journal:manage", {
     mutationKey: ["post", "purchase", "bill"],
     mutationFn: () =>
-      apiClient.patch<{ id: number; status: PurchaseBillStatus }>(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }),
+      apiClient.patch(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }, undefined, billStatusUpdateContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId) });
@@ -356,7 +380,7 @@ export function usePostPurchaseBill(billId: number) {
 export function useGstr3B(from: string, to: string) {
   return useGatedQuery<Gstr3BReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.gstr3B({ from, to }),
-    queryFn: ({ signal }) => apiClient.get<Gstr3BReport>("/accounting/reports/gstr-3b", { from, to }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/gstr-3b", { from, to }, signal, gstr3bContract),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -373,7 +397,7 @@ export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {})
   return useGatedQuery<CursorPage<VendorOutstanding>, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.vendorsOutstanding(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params), signal),
+      apiClient.get("/accounting/vendors", toQuery(params), signal, vendorListContract),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -388,7 +412,7 @@ export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {
   return useGatedQuery<VendorLedger, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.vendorLedger(vendorId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<VendorLedger>(`/accounting/vendors/${vendorId}/ledger`, toQuery(params), signal),
+      apiClient.get(`/accounting/vendors/${vendorId}/ledger`, toQuery(params), signal, vendorLedgerContract),
     enabled: Number.isInteger(vendorId) && vendorId > 0,
     staleTime: 60_000,
   });
@@ -397,7 +421,7 @@ export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {
 export function useAgedPayables(asOf: string) {
   return useGatedQuery<AgedPayablesReport, Error>("accounting:reports:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.agedPayables({ asOf }),
-    queryFn: ({ signal }) => apiClient.get<AgedPayablesReport>("/accounting/reports/aged-payables", { asOf }, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/aged-payables", { asOf }, signal, agedPayablesContract),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -424,7 +448,7 @@ export function useRecordVendorPayment(billId: number) {
   return useAuthorizedMutation<VendorPaymentResult, Error, RecordVendorPaymentInput>("accounting:journal:manage", {
     mutationKey: ["record", "vendor", "payment"],
     mutationFn: (input) =>
-      apiClient.post<VendorPaymentResult>(`/accounting/purchase-bills/${billId}/payments`, input),
+      apiClient.post(`/accounting/purchase-bills/${billId}/payments`, input, undefined, billPaymentCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId) });

@@ -17,8 +17,13 @@ import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-rev
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+
+const docsSummaryContract = lazyContract(() =>
+  import("@/features/hr/document-review/document-review-schema").then((m) => m.onboardingDocsSummaryContract),
+);
 
 const PAGE_SIZE = 20;
 
@@ -39,7 +44,7 @@ function useDocReviewSummary(cursor: string | undefined, search: string, status:
   const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<DocReviewSummaryResponse>({
     queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary(params),
-    queryFn: ({ signal }) => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/onboarding-docs/summary", params, signal, docsSummaryContract),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     enabled: canReviewDocs,

@@ -51,7 +51,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
   PM_TOOLBAR,
-} from "@/components/pm-chrome/pm-chrome";
+} from "@/components/pm-chrome";
 import {
   fadeUp,
   fadeUpReduced,

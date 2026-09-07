@@ -2,9 +2,14 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const kpiDeleteC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.kpiDeleteContract),
+);
 
 export interface KpiDefinition {
   id: number;
@@ -77,7 +82,7 @@ export function useDeleteKpi() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/kpis/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/kpis/${id}`, undefined, undefined, kpiDeleteC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -11,11 +12,30 @@ import type {
   ApproveStageResult,
 } from "@/types/payroll";
 
+const approvalListC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.approvalListContract),
+);
+const submitApprovalResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.submitApprovalResponseContract),
+);
+const approvalActionResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.approvalActionResponseContract),
+);
+const lockResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.lockResponseContract),
+);
+const reopenResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.reopenResponseContract),
+);
+const closeResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/approvals-schema").then((m) => m.closeResponseContract),
+);
+
 export function useRunApprovals(runId: number, options?: { enabled?: boolean }) {
   const canView = useCan("payroll:runs:view");
   return useQuery<PayrollApprovalRow[]>({
     queryKey: payrollQueryKeys.payroll.runApprovals(runId),
-    queryFn: ({ signal }) => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`, undefined, signal, approvalListC),
     staleTime: 30_000,
     enabled: canView && runId > 0 && (options?.enabled ?? true),
   });
@@ -26,7 +46,7 @@ export function useSubmitApproval() {
   return useAuthorizedMutation<SubmitApprovalResult, Error, { runId: number }>("payroll:runs:update", {
     mutationKey: ["payroll", "submit-approval"],
     mutationFn: ({ runId }) =>
-      apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`),
+      apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`, undefined, undefined, submitApprovalResponseC),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
@@ -47,6 +67,8 @@ export function useApproveStage() {
       apiClient.post<ApproveStageResult>(
         `/payroll/runs/${runId}/approvals/${approvalId}/approve`,
         { comment },
+        undefined,
+        approvalActionResponseC,
       ),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runApprovals(runId) });
@@ -68,6 +90,8 @@ export function useRejectStage() {
       apiClient.post<ApproveStageResult>(
         `/payroll/runs/${runId}/approvals/${approvalId}/reject`,
         { comment },
+        undefined,
+        approvalActionResponseC,
       ),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runApprovals(runId) });
@@ -87,17 +111,7 @@ function useInvalidateRunWorkspace() {
     void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
     void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runVariance(runId) });
     void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
-    // Lock/reopen/close change which payees are instructable, so the payout
-    // batch list and any open batch sheet are stale too. They hang off
-    // `payroll/payout/batches`, not `payroll/runs`, so the prefix above misses
-    // them; `bankValidation` does sit under `payroll/runs` and is covered.
     void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bankBatches() });
-    // Every payroll report response carries a `provisional` flag derived from
-    // the run's own status, and four report surfaces render it as "Figures are
-    // provisional until the run is locked". Lock/reopen/close are the exact
-    // transitions that flip it, and the reports hang off `payroll/reports`,
-    // which none of the prefixes above reaches — so at `staleTime: 60_000` the
-    // reports kept contradicting the lock that had just happened.
     void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "reports"] });
   };
 }
@@ -107,7 +121,7 @@ export function useLockRun() {
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "lock-run"],
     mutationFn: ({ runId }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`),
+      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`, undefined, undefined, lockResponseC),
     onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }
@@ -117,7 +131,7 @@ export function useReopenRun() {
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number; reason: string }>("payroll:runs:manage", {
     mutationKey: ["payroll", "reopen-run"],
     mutationFn: ({ runId, reason }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }),
+      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }, undefined, reopenResponseC),
     onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }
@@ -127,7 +141,7 @@ export function useCloseRun() {
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "close-run"],
     mutationFn: ({ runId }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`),
+      apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`, undefined, undefined, closeResponseC),
     onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }

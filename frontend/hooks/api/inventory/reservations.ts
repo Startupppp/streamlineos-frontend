@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { StockReservation, StockReservationStatus } from "@/types/inventory";
@@ -35,6 +36,13 @@ interface OpeningStockInput {
   notes?: string;
 }
 
+const listReservationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.listReservationsContract),
+);
+const createReservationContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.createReservationContract),
+);
+
 export function useReservations(filters?: ReservationsFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ReservationsResult, Error>({
@@ -47,7 +55,7 @@ export function useReservations(filters?: ReservationsFilters) {
         ...(filters?.warehouseId ? { warehouseId: filters.warehouseId } : {}),
         ...(filters?.page !== undefined ? { page: filters.page } : {}),
         ...(filters?.limit !== undefined ? { limit: filters.limit } : {}),
-      }, signal),
+      }, signal, listReservationsContract),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,

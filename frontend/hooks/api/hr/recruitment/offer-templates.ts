@@ -2,9 +2,26 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const offerTemplatesListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offer-templates-schema").then((m) => m.offerTemplatesListContract),
+);
+const createOfferTemplateC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offer-templates-schema").then((m) => m.createOfferTemplateContract),
+);
+const updateOfferTemplateC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offer-templates-schema").then((m) => m.updateOfferTemplateContract),
+);
+const deleteOfferTemplateC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offer-templates-schema").then((m) => m.deleteOfferTemplateContract),
+);
+const generateOfferPdfC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/offer-templates-schema").then((m) => m.generateOfferPdfContract),
+);
 
 export interface OfferLetterTemplate {
   id: number;
@@ -21,7 +38,7 @@ export interface OfferLetterTemplate {
 export function useOfferTemplates() {
   return useGatedQuery("hr:offers:view", {
     queryKey: humanResourcesQueryKeys.hr.offerTemplates(),
-    queryFn: ({ signal }) => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates", undefined, signal, offerTemplatesListC),
     staleTime: 5 * 60_000,
   });
 }
@@ -31,7 +48,7 @@ export function useCreateOfferTemplate() {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "create"],
     mutationFn: (data: { name: string; htmlContent: string; isDefault?: boolean }) =>
-      apiClient.post<OfferLetterTemplate>("/hr/recruitment/offer-templates", data),
+      apiClient.post<OfferLetterTemplate>("/hr/recruitment/offer-templates", data, undefined, createOfferTemplateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
@@ -43,7 +60,7 @@ export function useUpdateOfferTemplate(id: number) {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "update", id],
     mutationFn: (data: { name?: string; htmlContent?: string; isDefault?: boolean }) =>
-      apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data),
+      apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data, undefined, updateOfferTemplateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
@@ -55,7 +72,7 @@ export function useDeleteOfferTemplate() {
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`, undefined, undefined, deleteOfferTemplateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
@@ -79,7 +96,9 @@ export function useGenerateOfferPdf() {
     }) =>
       apiClient.post<{ base64: string; mimeType: string; fileName: string }>(
         `/hr/recruitment/offer-templates/${templateId}/generate-pdf`,
-        data
+        data,
+        undefined,
+        generateOfferPdfC,
       ),
   });
 }

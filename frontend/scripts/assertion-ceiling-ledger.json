@@ -449,15 +449,15 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/candidates/candidate-profile-card.tsx": {
+    "features/hr/recruitment/candidates/candidate-profile-card.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/candidates/candidate-sheets.tsx": {
+    "features/hr/recruitment/candidates/candidate-sheets.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/candidates/messages-tab.tsx": {
+    "features/hr/recruitment/candidates/messages-tab.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -1053,7 +1053,7 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/inbox/inbox-item-card.tsx": {
+    "features/notifications/unified-inbox/inbox-item-card.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -1110,10 +1110,6 @@
       "nonNull": 0
     },
     "features/landing/components/landing-apps.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/landing/contact-form.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -1261,7 +1257,7 @@
       "as": 0,
       "nonNull": 1
     },
-    "features/renderer/density-toggle.tsx": {
+    "components/renderer/density-toggle.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -1437,19 +1433,19 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/users/user-access-links-section.tsx": {
+    "features/directory/users/user-access-links-section.tsx": {
       "as": 10,
       "nonNull": 0
     },
-    "features/users/user-import-dialog.tsx": {
+    "features/directory/users/user-import-dialog.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/users/user-invitations-panel.tsx": {
+    "features/directory/users/user-invitations-panel.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/users/users-page.tsx": {
+    "features/directory/users/users-page.tsx": {
       "as": 3,
       "nonNull": 0
     },

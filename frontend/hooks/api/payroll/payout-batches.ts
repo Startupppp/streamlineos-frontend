@@ -2,10 +2,33 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+
+const payoutValidationC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.payoutValidationResponseContract),
+);
+const batchListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.batchListContract),
+);
+const batchDetailC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.batchDetailContract),
+);
+const createBatchC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.createBatchResponseContract),
+);
+const batchOperationC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.batchOperationResponseContract),
+);
+const importBankReturnC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.importBankReturnResponseContract),
+);
+const payoutBankDetailsC = lazyContract(() =>
+  import("@/hooks/api/payroll/payout-schema").then((m) => m.payoutBankDetailsContract),
+);
 import type {
   ValidationItem,
   PayoutBatch,
@@ -21,7 +44,7 @@ export function usePayoutValidation(runId: number) {
     queryKey: payrollQueryKeys.payroll.bankValidation(runId),
     queryFn: ({ signal }) =>
       apiClient.get<ValidationItem[]>(
-        `/payroll/runs/${runId}/payout/validation`, undefined, signal,
+        `/payroll/runs/${runId}/payout/validation`, undefined, signal, payoutValidationC,
       ),
     staleTime: 30_000,
     enabled: canManage && runId > 0,
@@ -40,7 +63,7 @@ export function usePayoutBatches(runId?: number) {
     queryFn: ({ signal }) =>
       apiClient.get<PayoutBatchesPage>(
         "/payroll/payout/batches",
-        runId ? { runId } : undefined, signal,
+        runId ? { runId } : undefined, signal, batchListC,
       ),
     staleTime: 30_000,
     enabled: canManage,
@@ -52,7 +75,7 @@ export function usePayoutBatch(batchId: number) {
   return useQuery<GetBatchResult>({
     queryKey: payrollQueryKeys.payroll.bankBatch(batchId),
     queryFn: ({ signal }) =>
-      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`, undefined, signal),
+      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`, undefined, signal, batchDetailC),
     staleTime: 30_000,
     enabled: canManage && batchId > 0,
   });
@@ -73,6 +96,7 @@ export function useCreatePayoutBatch() {
         idempotencyKey
           ? { headers: { "idempotency-key": idempotencyKey } }
           : undefined,
+        createBatchC,
       ),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({
@@ -136,6 +160,7 @@ export function useMarkBatchSent() {
         `/payroll/payout/batches/${variables.batchId}/mark-sent`,
         undefined,
         operation.configFor(variables),
+        batchOperationC,
       ),
     onSuccess: (_, { batchId, runId }) => {
       operation.settle();
@@ -158,6 +183,7 @@ export function useMarkBatchPaid() {
         `/payroll/payout/batches/${variables.batchId}/mark-paid`,
         { transactionRef: variables.transactionRef },
         operation.configFor(variables),
+        batchOperationC,
       ),
     onSuccess: (_, { batchId, runId }) => {
       operation.settle();
@@ -180,6 +206,7 @@ export function useMarkItemPaid() {
         `/payroll/payout/batches/${variables.batchId}/items/${variables.itemId}/mark-paid`,
         { transactionRef: variables.transactionRef },
         operation.configFor(variables),
+        batchOperationC,
       ),
     onSuccess: (_, { batchId, runId }) => {
       operation.settle();
@@ -202,6 +229,7 @@ export function useMarkItemFailed() {
         `/payroll/payout/batches/${variables.batchId}/items/${variables.itemId}/mark-failed`,
         { failureReason: variables.failureReason },
         operation.configFor(variables),
+        batchOperationC,
       ),
     onSuccess: (_, { batchId, runId }) => {
       operation.settle();
@@ -235,6 +263,7 @@ export function useImportBankReturn() {
         `/payroll/payout/batches/${variables.batchId}/import-return`,
         { csv: variables.csv },
         operation.configFor(variables),
+        importBankReturnC,
       ),
     onSuccess: (_, { batchId, runId }) => {
       operation.settle();
@@ -255,7 +284,7 @@ export function useEmployeeBankDetails(
     queryKey: payrollQueryKeys.payroll.employeeBank(employeeUserId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeBankDetails>(
-        `/payroll/employees/${employeeUserId}/bank`, undefined, signal,
+        `/payroll/employees/${employeeUserId}/bank`, undefined, signal, payoutBankDetailsC,
       ),
     staleTime: 0,
     enabled: enabled && !!employeeUserId && canView,

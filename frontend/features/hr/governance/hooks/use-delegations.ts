@@ -2,11 +2,22 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const delegationsListContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/delegations-schema").then((m) => m.delegationsListContract),
+);
+const proxyAccessContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/delegations-schema").then((m) => m.proxyAccessContract),
+);
+const proxyDeleteContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/delegations-schema").then((m) => m.proxyDeleteContract),
+);
 
 export interface ProxyAccess {
   id: number;
@@ -38,7 +49,7 @@ export function useOrgDelegations(params?: {
   limit?: number;
 }) {
   const canManageDelegations = useCan("hr:workflows:manage");
-  return useQuery<DelegationsListResponse>({
+  return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrDelegationsAll, "org", params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
@@ -46,10 +57,11 @@ export function useOrgDelegations(params?: {
       if (params?.active !== undefined) p["active"] = params.active;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<DelegationsListResponse>(
+      return apiClient.get(
         "/hr/governance/delegations",
         p,
         signal,
+        delegationsListContract,
       );
     },
     staleTime: 30_000,
@@ -60,7 +72,7 @@ export function useOrgDelegations(params?: {
 export function useGrantProxy() {
   const qc = useQueryClient();
   return useAuthorizedMutation<
-    ProxyAccess,
+    unknown,
     Error,
     {
       proxyUserId: string;
@@ -73,7 +85,7 @@ export function useGrantProxy() {
   >("hr:workflows:view", {
     mutationKey: [...DELEGATIONS_KEY, "grant"],
     mutationFn: (payload) =>
-      apiClient.post<ProxyAccess>("/hr/governance/delegations", payload),
+      apiClient.post("/hr/governance/delegations", payload, undefined, proxyAccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
       toast.success("Proxy access granted");
@@ -87,7 +99,7 @@ export function useRevokeProxy() {
   return useAuthorizedMutation<void, Error, number>("hr:workflows:view", {
     mutationKey: [...DELEGATIONS_KEY, "revoke"],
     mutationFn: (proxyId) =>
-      apiClient.delete<void>(`/hr/governance/delegations/${proxyId}`),
+      apiClient.delete(`/hr/governance/delegations/${proxyId}`, undefined, undefined, proxyDeleteContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
       toast.success("Proxy access revoked");

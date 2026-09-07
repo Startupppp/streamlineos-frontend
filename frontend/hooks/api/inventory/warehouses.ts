@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -91,6 +92,25 @@ interface CreateLocationInput {
   capacity?: number;
 }
 
+const listWarehousesContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.listWarehousesContract),
+);
+const getWarehouseContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.getWarehouseContract),
+);
+const listLocationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.listLocationsContract),
+);
+const invWarehouseContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.invWarehouseContract),
+);
+const invLocationContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.invLocationContract),
+);
+const getWarehouseStockContract = lazyContract(() =>
+  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.getWarehouseStockContract),
+);
+
 export function useWarehouses(filters?: WarehouseListFilters) {
   const canView = useCan("inventory:warehouses:read");
   const params: Record<string, unknown> = {};
@@ -107,7 +127,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<Warehouse>>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal)).items,
+      (await apiClient.get<OffsetPage<Warehouse>>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal, listWarehousesContract)).items,
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -118,7 +138,7 @@ export function useWarehouse(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<Warehouse, Error>({
     queryKey: queryKeys.inventory.warehouse(warehouseId),
-    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal, getWarehouseContract),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -129,7 +149,7 @@ export function useLocations(warehouseId: number) {
   return useQuery<WarehouseLocation[], Error>({
     queryKey: queryKeys.inventory.locations(warehouseId),
     queryFn: ({ signal }) =>
-      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal),
+      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal, listLocationsContract),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -139,7 +159,7 @@ export function useCreateWarehouse() {
   const qc = useQueryClient();
   return useAuthorizedMutation<Warehouse, Error, CreateWarehouseInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "create"],
-    mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data),
+    mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data, undefined, invWarehouseContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
@@ -151,7 +171,7 @@ export function useCreateLocation() {
   return useAuthorizedMutation<WarehouseLocation, Error, CreateLocationInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "locations", "create"],
     mutationFn: ({ warehouseId, ...data }) =>
-      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data),
+      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data, undefined, invLocationContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventory.locations(vars.warehouseId),
@@ -171,7 +191,7 @@ export function useSetDefaultWarehouse() {
   >("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
-      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
+      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }, undefined, invWarehouseContract),
     onMutate: async ({ warehouseId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.inventory.warehouses() });
       const previous = qc.getQueryData<Warehouse[]>(queryKeys.inventory.warehouses());
@@ -203,7 +223,7 @@ export function useWarehouseStock(
       apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
-      }, signal),
+      }, signal, getWarehouseStockContract),
     enabled: canView && warehouseId > 0,
     staleTime: 60_000,
   });

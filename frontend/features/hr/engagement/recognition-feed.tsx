@@ -35,8 +35,8 @@ interface Recognition {
   message: string;
   category: string;
   createdAt: string;
-  fromUser?: { name?: string; email: string };
-  toUser?: { name?: string; email: string };
+  fromUser?: { name: string | null; email: string | null };
+  toUser?: { name: string | null; email: string | null };
 }
 
 interface RecognitionFeedProps {
@@ -53,7 +53,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   ABOVE_AND_BEYOND: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
-function displayName(user?: { name?: string; email: string } | null): string {
+function displayName(user?: { name: string | null; email: string | null } | null): string {
   return user?.name ?? user?.email ?? "Unknown";
 }
 

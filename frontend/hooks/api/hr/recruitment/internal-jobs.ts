@@ -2,9 +2,21 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const internalJobListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/internal-jobs-schema").then(
+    (m) => m.internalJobListSchema,
+  ),
+);
+const internalJobApplicationContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/internal-jobs-schema").then(
+    (m) => m.internalJobApplicationSchema,
+  ),
+);
 
 export interface InternalJob {
   id: number;
@@ -26,7 +38,7 @@ export function useInternalJobs() {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.hrInternalJobs,
     queryFn: ({ signal }) =>
-      apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs", undefined, signal),
+      apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs", undefined, signal, internalJobListContract),
     staleTime: 2 * 60_000,
     enabled: can,
   });
@@ -39,7 +51,7 @@ export function useApplyToInternalJob(jobId: number) {
     {
       mutationKey: ["hr", "recruitment", "internal-jobs", "apply", jobId],
       mutationFn: (data) =>
-        apiClient.post(`/hr/recruitment/internal-jobs/${jobId}/apply`, data),
+        apiClient.post(`/hr/recruitment/internal-jobs/${jobId}/apply`, data, undefined, internalJobApplicationContract),
       onSuccess: () => {
         void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrInternalJobs });
       },

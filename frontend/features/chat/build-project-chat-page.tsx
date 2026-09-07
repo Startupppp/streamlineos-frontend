@@ -15,7 +15,7 @@ import { MessagePanel } from "./message-panel";
 import { ChannelInfoPanel } from "./channel-info-panel";
 import { useIsChatMobile } from "./use-chat-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome";
 
 interface ProjectChatPageProps {
   projectId: string;

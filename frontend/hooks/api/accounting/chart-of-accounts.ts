@@ -7,6 +7,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
 import type { Account, AccountType } from "@/types/accounting";
+import { ledgerAccountContract, ledgerAccountListContract } from "@/hooks/api/accounting/core-gl-schema";
 
 export interface ListAccountsParams {
   cursor?: string;
@@ -29,7 +30,7 @@ export function useAccounts(params: ListAccountsParams = {}) {
   return useGatedQuery<CursorPage<Account>, Error>("accounting:accounts:read", {
     queryKey: accountingAndSupportQueryKeys.accounting.accounts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<Account>>("/accounting/accounts", toQuery(params), signal),
+      apiClient.get("/accounting/accounts", toQuery(params), signal, ledgerAccountListContract),
     staleTime: 60_000,
   });
 }
@@ -70,10 +71,11 @@ export function useAllAccounts(
       let pages = 0;
 
       do {
-        const page: CursorPage<Account> = await apiClient.get<CursorPage<Account>>(
+        const page: CursorPage<Account> = await apiClient.get(
           "/accounting/accounts",
           toQuery({ ...params, limit: ACCOUNT_PAGE_SIZE, cursor }),
           signal,
+          ledgerAccountListContract,
         );
         rows.push(...page.data);
         pages += 1;
@@ -107,7 +109,7 @@ export function useCreateAccount() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Account, Error, CreateAccountInput>("accounting:accounts:create", {
     mutationKey: ["create", "account"],
-    mutationFn: (data) => apiClient.post<Account>("/accounting/accounts", data),
+    mutationFn: (data) => apiClient.post("/accounting/accounts", data, undefined, ledgerAccountContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
@@ -124,7 +126,7 @@ export function useUpdateAccount(accountId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Account, Error, UpdateAccountInput>("accounting:accounts:update", {
     mutationKey: ["update", "account"],
-    mutationFn: (data) => apiClient.patch<Account>(`/accounting/accounts/${accountId}`, data),
+    mutationFn: (data) => apiClient.patch(`/accounting/accounts/${accountId}`, data, undefined, ledgerAccountContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },

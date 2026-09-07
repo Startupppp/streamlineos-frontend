@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
@@ -17,7 +18,7 @@ export function useOrgJobRoles(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.orgRoles(),
-    queryFn: ({ signal }) => apiClient.get<HrJobRole[]>("/hr/org/roles", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrJobRole[]>("/hr/org/roles", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobRoleListContract))),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -27,7 +28,7 @@ export function useCreateJobRole() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "role", "create"],
-    mutationFn: (data: OrgCatalogInput) => apiClient.post<HrJobRole>("/hr/org/roles", data),
+    mutationFn: (data: OrgCatalogInput) => apiClient.post<HrJobRole>("/hr/org/roles", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobRoleRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgRoles() }),
   });
 }
@@ -37,7 +38,7 @@ export function useUpdateJobRole() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "role", "update"],
     mutationFn: ({ jobRoleId, ...jobRole }: OrgCatalogInput & { jobRoleId: number }) =>
-      apiClient.patch<HrJobRole>(`/hr/org/roles/${jobRoleId}`, jobRole),
+      apiClient.patch<HrJobRole>(`/hr/org/roles/${jobRoleId}`, jobRole, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobRoleRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgRoles() }),
   });
 }
@@ -57,7 +58,7 @@ export function useOrgJobLevels(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.orgLevels(),
-    queryFn: ({ signal }) => apiClient.get<HrJobLevel[]>("/hr/org/levels", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrJobLevel[]>("/hr/org/levels", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobLevelListContract))),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -67,7 +68,7 @@ export function useCreateJobLevel() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "level", "create"],
-    mutationFn: (data: OrgCatalogInput) => apiClient.post<HrJobLevel>("/hr/org/levels", data),
+    mutationFn: (data: OrgCatalogInput) => apiClient.post<HrJobLevel>("/hr/org/levels", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobLevelRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgLevels() }),
   });
 }
@@ -77,7 +78,7 @@ export function useUpdateJobLevel() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "level", "update"],
     mutationFn: ({ jobLevelId, ...jobLevel }: OrgCatalogInput & { jobLevelId: number }) =>
-      apiClient.patch<HrJobLevel>(`/hr/org/levels/${jobLevelId}`, jobLevel),
+      apiClient.patch<HrJobLevel>(`/hr/org/levels/${jobLevelId}`, jobLevel, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobLevelRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgLevels() }),
   });
 }
@@ -97,7 +98,7 @@ export function useOrgHeadcount(groupBy: "department" | "location" | "role" = "d
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.orgHeadcount(groupBy),
-    queryFn: ({ signal }) => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }, signal),
+    queryFn: ({ signal }) => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }, signal, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.headcountItemListContract))),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canEmployees,
   });

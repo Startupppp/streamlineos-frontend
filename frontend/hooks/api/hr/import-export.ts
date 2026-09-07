@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -134,7 +135,7 @@ export function useHrImportJobs(
         ...(cursor ? { cursor } : {}),
         limit: String(limit),
         ...(entity ? { entity } : {}),
-      }, signal),
+      }, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobListContract))),
     staleTime: 30_000,
     enabled: hrEnabled && canImport,
   });
@@ -146,7 +147,7 @@ export function useHrImportJob(jobId: string | null) {
   return useQuery<HrImportJobDetail>({
     queryKey: humanResourcesQueryKeys.hr.importJob(jobId ?? ""),
     queryFn: ({ signal }) =>
-      apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`, undefined, signal),
+      apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobDetailContract))),
     enabled: hrEnabled && canImport && !!jobId,
     staleTime: 10_000,
   });
@@ -157,7 +158,7 @@ export function useCreateImportJob() {
   return useAuthorizedMutation<CreateImportJobResult, Error, CreateImportJobPayload>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "create"],
     mutationFn: (body) =>
-      apiClient.post<CreateImportJobResult>("/hr/import/jobs", body),
+      apiClient.post<CreateImportJobResult>("/hr/import/jobs", body, undefined, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobCreateResultContract))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
     },
@@ -169,7 +170,7 @@ export function useCommitImportJob() {
   return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "commit"],
     mutationFn: ({ jobId }) =>
-      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}),
+      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
     onSuccess: (_, { jobId }) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
@@ -182,7 +183,7 @@ export function useRollbackImportJob() {
   return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "rollback"],
     mutationFn: ({ jobId }) =>
-      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/rollback`, {}),
+      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/rollback`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
     onSuccess: (_, { jobId }) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
@@ -206,6 +207,7 @@ export function useCreateHrEmployeeExportJob() {
         "/hr/export/jobs",
         { filters },
         { headers: { "Idempotency-Key": idempotencyKey } },
+        lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrExportJobContract)),
       );
     },
   });
@@ -228,7 +230,7 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
       exportJobId ?? "",
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<HrEmployeeExportJob>(`/hr/export/jobs/${exportJobId}`, undefined, signal),
+      apiClient.get<HrEmployeeExportJob>(`/hr/export/jobs/${exportJobId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrExportJobContract))),
     enabled:
       hrEnabled && canExport && Boolean(orgId && actorUserId && exportJobId),
     staleTime: 1_000,

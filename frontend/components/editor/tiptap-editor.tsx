@@ -14,7 +14,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { resolveImageUrl, storageKeyFromUrl } from "@/lib/utils";
+
+const storageUploadC = lazyContract(() =>
+  import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
+);
 
 export interface TiptapEditorProps {
   content?: unknown;
@@ -85,7 +90,7 @@ async function uploadImageFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", "editor-images");
-  const data = await apiClient.upload<UploadResult>("/storage/upload", formData);
+  const data = await apiClient.upload<UploadResult>("/storage/upload", formData, storageUploadC);
   return data.key;
 }
 

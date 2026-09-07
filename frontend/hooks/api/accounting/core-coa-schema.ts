@@ -70,3 +70,36 @@ export const setupStatusContract = z.object({
 
 export type SetupStep = z.infer<typeof setupStepContract>;
 export type SetupStatus = z.infer<typeof setupStatusContract>;
+
+const coaTemplateItemContract = z.object({
+  key: z.string(),
+  label: z.string(),
+  country: z.string(),
+  accountCount: z.number(),
+});
+
+export const coaTemplateListContract = z.object({
+  items: z.array(coaTemplateItemContract),
+});
+
+export const coaAccountStatusContract = z.object({
+  id: z.number(),
+  isActive: z.boolean(),
+});
+
+export const coaApplyTemplateContract = z.object({
+  templateKey: z.string(),
+  inserted: z.number(),
+  skipped: z.number(),
+});
+
+export const journalApprovalSubmitContract = z.object({
+  entryId: z.number(),
+  status: z.string(),
+});
+
+export const journalApprovalDecisionContract = z.object({
+  entryId: z.number(),
+  decision: z.string(),
+  entryStatus: z.string(),
+});

@@ -2,9 +2,26 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const generateReportC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/reports-schema").then((m) => m.generateReportContract),
+);
+const scheduledReportsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/reports-schema").then((m) => m.scheduledReportsListContract),
+);
+const createScheduledReportC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/reports-schema").then((m) => m.createScheduledReportContract),
+);
+const deleteScheduledReportC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/reports-schema").then((m) => m.deleteScheduledReportContract),
+);
+const diversityReportC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/reports-schema").then((m) => m.diversityReportContract),
+);
 
 export type ReportEntity = "candidates" | "jobs" | "interviews" | "offers";
 export type ReportSchedule = "WEEKLY" | "MONTHLY";
@@ -50,14 +67,14 @@ export function useGenerateReport() {
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "generate"],
     mutationFn: (config: ReportConfig) =>
-      apiClient.post<GenerateReportResult>("/hr/recruitment/reports/generate", config),
+      apiClient.post<GenerateReportResult>("/hr/recruitment/reports/generate", config, undefined, generateReportC),
   });
 }
 
 export function useScheduledReports() {
   return useGatedQuery("hr:interviews:view", {
     queryKey: humanResourcesQueryKeys.hr.scheduledReports(),
-    queryFn: ({ signal }) => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled", undefined, signal, scheduledReportsListC),
     staleTime: 5 * 60_000,
   });
 }
@@ -67,7 +84,7 @@ export function useCreateScheduledReport() {
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "create-scheduled"],
     mutationFn: (data: CreateScheduledReportInput) =>
-      apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data),
+      apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data, undefined, createScheduledReportC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scheduledReports() });
     },
@@ -78,7 +95,7 @@ export function useDeleteScheduledReport() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "delete-scheduled"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`, undefined, undefined, deleteScheduledReportC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scheduledReports() });
     },
@@ -160,7 +177,7 @@ export function useDiversityReport(filters: DiversityFilters) {
 
   return useGatedQuery<DiversityReport>("hr:employees:view", {
     queryKey: [...humanResourcesQueryKeys.hr.diversityReport(), params],
-    queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal),
+    queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal, diversityReportC),
     staleTime: 5 * 60_000,
   });
 }

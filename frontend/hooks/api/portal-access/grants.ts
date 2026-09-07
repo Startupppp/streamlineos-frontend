@@ -12,12 +12,23 @@ import type {
   UpdateGrantInput,
 } from "@/types/portal-access/grants";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const membershipListContract = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.membershipListContract),
+);
+const grantListContract = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.grantListContract),
+);
+const grantContract = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.grantContract),
+);
 
 export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships(params),
-    queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", { params }, signal),
+    queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", { params }, signal, membershipListContract),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -27,7 +38,7 @@ export function useProjectClientGrants(params?: { cursor?: string; limit?: numbe
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants(params),
-    queryFn: ({ signal }) => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", { params }, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", { params }, signal, grantListContract),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -38,7 +49,7 @@ export function useCreateGrant() {
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["portalAccess", "grants", "create"],
     mutationFn: (data: CreateGrantInput) =>
-      apiClient.post<ProjectClientGrant>("/portal-access/grants", data),
+      apiClient.post<ProjectClientGrant>("/portal-access/grants", data, grantContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
     },
@@ -53,6 +64,7 @@ export function useUpdateGrant(projectClientGrantId: string) {
       apiClient.patch<ProjectClientGrant>(
         `/portal-access/grants/${projectClientGrantId}`,
         data,
+        grantContract,
       ),
     onSuccess: (updated) => {
       qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);
@@ -69,6 +81,7 @@ export function useRevokeGrant(projectClientGrantId: string) {
       apiClient.post<ProjectClientGrant>(
         `/portal-access/grants/${projectClientGrantId}/revoke`,
         {},
+        grantContract,
       ),
     onSuccess: (updated) => {
       qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);

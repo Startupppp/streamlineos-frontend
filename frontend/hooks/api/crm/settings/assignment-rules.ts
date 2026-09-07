@@ -5,6 +5,14 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const assignmentRulesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentRulesListContract),
+);
+const assignmentPreviewLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentPreviewContract),
+);
 
 export type AssignmentType =
   | "assign_user"
@@ -86,7 +94,7 @@ export interface AssignmentPreviewResult {
 export function useAssignmentRules() {
   return useGatedQuery("crm:assignment-rules:manage", {
     queryKey: queryKeys.crmSettings.assignmentRules(),
-    queryFn: ({ signal }) => apiClient.get<AssignmentRule[]>("/crm/assignment-rules", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AssignmentRule[]>("/crm/assignment-rules", undefined, signal, assignmentRulesLazy),
     staleTime: 2 * 60_000,
   });
 }

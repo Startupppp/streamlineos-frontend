@@ -2,7 +2,15 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+
+const interviewBookingDataContract = lazyContract(() =>
+  import("@/hooks/api/public-booking-schema").then((m) => m.interviewBookingDataContract),
+);
+const confirmBookingContract = lazyContract(() =>
+  import("@/hooks/api/public-booking-schema").then((m) => m.confirmBookingContract),
+);
 
 interface InterviewBookingData {
   candidateName: string;
@@ -25,7 +33,7 @@ export function usePublicInterviewBooking(token: string) {
     queryKey: accessAndCrmQueryKeys.publicBooking.detail(token),
     queryFn: async ({ signal }) => {
       try {
-        return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`, undefined, signal);
+        return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`, undefined, signal, interviewBookingDataContract);
       } catch (e) {
         if (e instanceof Error && e.message.startsWith("410")) {
           throw new InterviewBookingExpiredError();
@@ -52,6 +60,6 @@ export function useConfirmInterviewBooking(token: string) {
   return useMutation<ConfirmBookingResponse, Error, ConfirmBookingInput>({
     mutationKey: ["confirm", "interview", "booking"],
     mutationFn: (input) =>
-      apiClient.post<ConfirmBookingResponse>(`/public/interview-booking/${token}`, input),
+      apiClient.post<ConfirmBookingResponse>(`/public/interview-booking/${token}`, input, undefined, confirmBookingContract),
   });
 }

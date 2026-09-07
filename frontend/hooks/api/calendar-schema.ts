@@ -1,0 +1,213 @@
+import { z } from "zod";
+
+/**
+ * Response contracts for the calendar module.
+ * Derived from backend `calendar-response.schemas.ts`.
+ * wireDate() → z.string() (ISO strings on the wire).
+ * NOT `.strict()`.
+ */
+
+/** `calendarEventsResponseSchema` */
+export const calendarEventsResponseContract = z.object({
+  events: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      start: z.string(),
+      end: z.string(),
+      allDay: z.boolean().optional(),
+      color: z.string().nullable().optional(),
+      category: z.string(),
+      source: z.enum(["event", "leave", "interview", "task", "holiday", "attendance"]),
+      timezone: z.string().nullable().optional(),
+      location: z.string().nullable().optional(),
+      description: z.string().nullable().optional(),
+      creatorName: z.string().nullable().optional(),
+      entityId: z.string().nullable().optional(),
+      entityType: z.string().nullable().optional(),
+      myRsvpStatus: z.string().nullable().optional(),
+      projectId: z.number().int().nullable().optional(),
+    }),
+  ),
+  failures: z.array(z.object({ key: z.string(), label: z.string() })),
+  truncated: z.boolean(),
+});
+
+/** `calendarSourcesResponseSchema` */
+export const calendarSourcesContract = z.array(
+  z.object({
+    key: z.string(),
+    label: z.string(),
+    module: z.string(),
+    enabled: z.boolean(),
+  }),
+);
+
+/** `calendarSourcePreferenceResponseSchema` */
+export const calendarSourcePreferenceContract = z.object({
+  sourceKey: z.string(),
+  enabled: z.boolean(),
+});
+
+/** `externalCalendarEventsResponseSchema` */
+export const calendarExternalEventsContract = z.object({
+  events: z.array(
+    z.object({
+      id: z.string(),
+      connectionId: z.number().int(),
+      toolkit: z.enum(["googlecalendar", "outlook"]),
+      accountEmail: z.string().nullable(),
+      providerEventId: z.string(),
+      title: z.string(),
+      start: z.string(),
+      end: z.string(),
+      allDay: z.boolean(),
+      location: z.string().nullable(),
+      meetingUrl: z.string().nullable(),
+      webLink: z.string().nullable(),
+    }),
+  ),
+  errors: z.array(
+    z.object({
+      connectionId: z.number().int(),
+      accountEmail: z.string().nullable(),
+      message: z.string(),
+    }),
+  ),
+});
+
+/** `calendarEventDetailSchema` */
+export const calendarEventDetailContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  allDay: z.boolean(),
+  timezone: z.string(),
+  color: z.string().nullable(),
+  category: z.string(),
+  entityType: z.string().nullable(),
+  entityId: z.string().nullable(),
+  location: z.string().nullable(),
+  meetingUrl: z.string().nullable(),
+  description: z.string().nullable(),
+  creatorName: z.string().nullable(),
+  myRsvpStatus: z.string().nullable(),
+  linkedTicket: z
+    .object({
+      id: z.number().int(),
+      key: z.string(),
+      title: z.string(),
+      projectId: z.number().int(),
+      status: z.string(),
+    })
+    .nullable(),
+  rrule: z.string().nullable(),
+  isRecurring: z.boolean(),
+});
+
+/** `calendarAttendeeListResponseSchema` */
+export const calendarAttendeesContract = z.array(
+  z.object({
+    id: z.number().int(),
+    status: z.string(),
+    user: z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    }),
+  }),
+);
+
+/** `calendarRsvpResponseSchema` */
+export const calendarRsvpContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  eventId: z.number().int(),
+  membershipId: z.number().int(),
+  status: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/** `calendarDeleteEventResponseSchema` */
+export const calendarDeleteEventContract = z.object({ deleted: z.boolean() });
+
+const calendarMutatedEventContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  location: z.string().nullable(),
+  meetingUrl: z.string().nullable(),
+  startDate: z.string(),
+  endDate: z.string(),
+  timezone: z.string(),
+  allDay: z.boolean(),
+  color: z.string().nullable(),
+  category: z.string(),
+  entityType: z.string().nullable(),
+  entityId: z.string().nullable(),
+  rrule: z.string().nullable(),
+  recurrenceEnd: z.string().nullable(),
+  localVersion: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/** `calendarCreateEventResponseSchema` */
+export const calendarCreateEventContract = z.object({
+  event: calendarMutatedEventContract,
+  oooConflicts: z.array(
+    z.object({
+      userId: z.string(),
+      userName: z.string().nullable(),
+      leaveStart: z.string(),
+      leaveEnd: z.string(),
+    }),
+  ),
+  eventConflicts: z.array(
+    z.object({
+      eventId: z.number().int(),
+      title: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      nominalStart: z.string(),
+      allDay: z.boolean(),
+      timezone: z.string(),
+      orgId: z.string(),
+    }),
+  ),
+  meetingUrl: z.string().nullable(),
+  syncQueued: z.boolean(),
+});
+
+/** `calendarUpdateEventResponseSchema` */
+export const calendarUpdateEventContract = calendarMutatedEventContract;
+
+/** `calendarOccurrenceExceptionResponseSchema` */
+export const calendarOccurrenceExceptionContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  eventId: z.number().int(),
+  occurrenceStart: z.string(),
+  isCancelled: z.boolean(),
+  modifiedTitle: z.string().nullable(),
+  modifiedStart: z.string().nullable(),
+  modifiedEnd: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/** Org member lightweight contract for calendar member lookup (`GET /org/members`). */
+export const calendarMemberListContract = z.array(
+  z.object({
+    userId: z.string().optional(),
+    membershipId: z.number().int().optional(),
+    name: z.string().nullable().optional(),
+    email: z.string().optional(),
+    image: z.string().nullable().optional(),
+    status: z.string().optional(),
+  }),
+);

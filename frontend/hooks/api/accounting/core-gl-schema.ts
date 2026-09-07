@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 /**
  * The general ledger — every posting the books are built from.
@@ -68,3 +69,22 @@ export const glAccountsContract = z.array(glAccountContract);
 export type GlRow = z.infer<typeof glRowContract>;
 export type GlResponse = z.infer<typeof glResponseContract>;
 export type GlAccount = z.infer<typeof glAccountContract>;
+
+export const ledgerAccountContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  code: z.string(),
+  name: z.string(),
+  accountType: z.string(),
+  parentAccountId: z.number().nullable(),
+  isActive: z.boolean(),
+  normalBalance: z.string().nullable(),
+  isSystem: z.boolean(),
+  description: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string().nullable(),
+});
+
+export const ledgerAccountListContract = cursorPageContract(ledgerAccountContract);
+
+export type LedgerAccount = z.infer<typeof ledgerAccountContract>;

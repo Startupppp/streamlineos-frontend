@@ -149,6 +149,9 @@ export const payrollReportSummaryContract = z.object({
     .nullable(),
 });
 
+export const runCreateResponseContract = z.object({ runId: z.number() });
+export const runOperationResponseContract = z.object({ ok: z.boolean() });
+
 export type PayrollRunStatus = z.infer<typeof payrollRunStatusContract>;
 export type PayrollWorkerType = z.infer<typeof payrollWorkerTypeContract>;
 export type PayrollRunListItem = z.infer<typeof payrollRunListItemContract>;

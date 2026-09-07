@@ -9,7 +9,7 @@ import type { ProjectMilestone } from "@/hooks/api/build";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

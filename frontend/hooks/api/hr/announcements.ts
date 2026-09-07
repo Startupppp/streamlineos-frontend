@@ -4,7 +4,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const announcementListC = lazyContract(() =>
+  import("@/hooks/api/hr/announcements-schema").then((m) => m.announcementListContract),
+);
+const announcementC = lazyContract(() =>
+  import("@/hooks/api/hr/announcements-schema").then((m) => m.announcementContract),
+);
+const announcementSuccessC = lazyContract(() =>
+  import("@/hooks/api/hr/announcements-schema").then((m) => m.announcementSuccessContract),
+);
 
 export interface HrAnnouncement {
   id: number;
@@ -12,12 +23,12 @@ export interface HrAnnouncement {
   title: string;
   content: string;
   authorId: string;
-  targetType: "ALL" | "DEPARTMENT" | "BRANCH" | "ROLE";
+  targetType: string;
   targetIds: string[];
   isPinned: boolean;
   publishAt?: string | null;
   expiresAt?: string | null;
-  status: "DRAFT" | "SCHEDULED" | "PUBLISHED" | "EXPIRED";
+  status: string;
   readCount: number;
   attachmentUrls: string[];
   createdAt: string;
@@ -29,7 +40,7 @@ export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { id:
 export function useHrAnnouncements() {
   return useQuery<HrAnnouncement[]>({
     queryKey: humanResourcesQueryKeys.hr.announcements(),
-    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal, announcementListC),
     staleTime: 60_000,
   });
 }
@@ -37,7 +48,7 @@ export function useHrAnnouncements() {
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
   return useGatedQuery<HrAnnouncement[]>("hr:announcements:manage", {
     queryKey: humanResourcesQueryKeys.hr.announcementsAll(),
-    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements/all", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements/all", undefined, signal, announcementListC),
     staleTime: 30_000,
     enabled: options?.enabled,
   });
@@ -48,7 +59,7 @@ export function useCreateHrAnnouncement() {
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "create"],
     mutationFn: (data: CreateHrAnnouncementData) =>
-      apiClient.post<HrAnnouncement>("/org/announcements", data),
+      apiClient.post<HrAnnouncement>("/org/announcements", data, undefined, announcementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }
@@ -58,7 +69,7 @@ export function useUpdateHrAnnouncement() {
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "update"],
     mutationFn: ({ id, ...data }: UpdateHrAnnouncementData) =>
-      apiClient.patch<HrAnnouncement>(`/org/announcements/${id}`, data),
+      apiClient.patch<HrAnnouncement>(`/org/announcements/${id}`, data, undefined, announcementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }
@@ -67,7 +78,7 @@ export function useDeleteHrAnnouncement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "delete"],
-    mutationFn: (id: number) => apiClient.delete<void>(`/org/announcements/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/org/announcements/${id}`, undefined, undefined, announcementSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }
@@ -76,7 +87,7 @@ export function useMarkHrAnnouncementRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "read"],
-    mutationFn: (id: number) => apiClient.post<void>(`/org/announcements/${id}/read`),
+    mutationFn: (id: number) => apiClient.post<{ success: boolean }>(`/org/announcements/${id}/read`, undefined, undefined, announcementSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -11,6 +12,17 @@ import type {
   ExecutionStatus,
 } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const workflowExecutionListContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowExecutionListContract),
+);
+const workflowExecutionTriggerContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowExecutionTriggerContract),
+);
+const workflowExecutionCancelContract = lazyContract(() =>
+  import("@/hooks/api/workflows-schema").then((m) => m.workflowExecutionCancelContract),
+);
+
 
 // The runner picks up pending as well as waiting, so a queued run is still moving.
 const ACTIVE_EXECUTION_STATUSES: ReadonlySet<ExecutionStatus> = new Set<ExecutionStatus>([
@@ -67,7 +79,7 @@ export function useTriggerWorkflow() {
     mutationKey: ["workflows", "trigger"],
     mutationFn: ({ id, data }: { id: string; data?: Record<string, unknown> }) => {
       assertPermission(canExecute);
-      return apiClient.post<WorkflowExecution>(`/workflows/${id}/trigger`, data);
+      return apiClient.post<WorkflowExecution>(`/workflows/${id}/trigger`, data, undefined, workflowExecutionTriggerContract);
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.executions(variables.id) });

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -12,6 +13,37 @@ import type {
   UpdateJobPostingInput,
 } from "@/types/hr";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const recruitmentStatsC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.recruitmentStatsContract),
+);
+const jobPostingsPageC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingsPageContract),
+);
+const createJobPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.createJobPostingContract),
+);
+const updateJobPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.updateJobPostingContract),
+);
+const deleteJobPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.deleteJobPostingContract),
+);
+const duplicateJobPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.duplicateJobPostingContract),
+);
+const publishJobC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.publishJobContract),
+);
+const sourcePortalsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.sourcePortalsListContract),
+);
+const upsertSourcePortalC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.upsertSourcePortalContract),
+);
+const jobShareLinksC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobShareLinksContract),
+);
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
@@ -59,7 +91,7 @@ export function useRecruitmentStats() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.recruitmentStats(),
-    queryFn: ({ signal }) => apiClient.get<RecruitmentStats>("/hr/recruitment/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<RecruitmentStats>("/hr/recruitment/stats", undefined, signal, recruitmentStatsC),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
   });
@@ -117,6 +149,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
         "/hr/recruitment/jobs",
         queryParams,
         signal,
+        jobPostingsPageC,
       );
     },
     staleTime: 2 * 60_000,
@@ -140,7 +173,7 @@ export function useCreateJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "create"],
     mutationFn: (data: CreateJobPostingInput) =>
-      apiClient.post<JobPosting>("/hr/recruitment/jobs", data),
+      apiClient.post<JobPosting>("/hr/recruitment/jobs", data, undefined, createJobPostingC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -153,7 +186,7 @@ export function useUpdateJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "update"],
     mutationFn: ({ id, ...data }: UpdateJobPostingInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data, undefined, updateJobPostingC),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.id) });
@@ -167,7 +200,7 @@ export function useDeleteJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, undefined, undefined, deleteJobPostingC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -180,7 +213,7 @@ export function useDuplicateJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "duplicate"],
     mutationFn: (id: number) =>
-      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}),
+      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}, undefined, duplicateJobPostingC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -193,7 +226,7 @@ export function usePublishJobToBoards() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "publish"],
     mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
-      apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
+      apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }, undefined, publishJobC),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.jobId) });
@@ -204,7 +237,7 @@ export function usePublishJobToBoards() {
 export function useSourcePortals() {
   return useGatedQuery("hr:employees:manage", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "sourcePortals"] as const,
-    queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal, sourcePortalsListC),
     staleTime: 2 * 60_000,
   });
 }
@@ -214,7 +247,7 @@ export function useUpsertSourcePortal() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "portals", "upsert"],
     mutationFn: (data: UpsertPortalInput) =>
-      apiClient.post<SourcePortal>("/hr/recruitment/portals", data),
+      apiClient.post<SourcePortal>("/hr/recruitment/portals", data, undefined, upsertSourcePortalC),
     onSuccess: () =>
       void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "sourcePortals"] as const }),
   });
@@ -224,7 +257,7 @@ export function useJobShareLinks(jobId: number) {
   return useGatedQuery("hr:employees:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "jobShare", jobId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal),
+      apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal, jobShareLinksC),
     staleTime: 2 * 60_000,
     enabled: jobId > 0,
   });

@@ -2,10 +2,21 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const candidateMessagesListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/messages-schema").then((m) => m.candidateMessagesListContract),
+);
+const messageThreadsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/messages-schema").then((m) => m.messageThreadsListContract),
+);
+const sendCandidateMessageC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/messages-schema").then((m) => m.sendCandidateMessageContract),
+);
 
 export type MessageDirection = "INBOUND" | "OUTBOUND";
 export type MessageChannel = "EMAIL" | "WHATSAPP" | "IN_APP";
@@ -52,7 +63,7 @@ export function useCandidateMessages(candidateId?: number) {
     queryKey: humanResourcesQueryKeys.hr.candidateMessages(candidateId),
     queryFn: ({ signal }) => {
       const params = candidateId ? `?candidateId=${candidateId}` : "";
-      return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal);
+      return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal, candidateMessagesListC);
     },
     staleTime: 30_000,
     enabled: canView && candidateId !== undefined,
@@ -62,7 +73,7 @@ export function useCandidateMessages(candidateId?: number) {
 export function useMessageThreads() {
   return useGatedQuery("hr:employees:view", {
     queryKey: humanResourcesQueryKeys.hr.messageThreads(),
-    queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal, messageThreadsListC),
     staleTime: 65_000,
     refetchInterval: 60_000,
   });
@@ -73,7 +84,7 @@ export function useSendCandidateMessage() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "messages", "send"],
     mutationFn: (data: SendCandidateMessageInput) =>
-      apiClient.post<CandidateMessage>("/hr/recruitment/messages", data),
+      apiClient.post<CandidateMessage>("/hr/recruitment/messages", data, undefined, sendCandidateMessageC),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateMessages(variables.candidateId) });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.messageThreads() });

@@ -5,6 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const scoringRulesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.scoringRulesListContract),
+);
 
 export interface ScoringRule {
   id: number;
@@ -34,7 +39,7 @@ export interface UpdateScoringRuleInput {
 export function useScoringRules() {
   return useGatedQuery("crm:scoring-rules:manage", {
     queryKey: queryKeys.crmSettings.scoringRules(),
-    queryFn: ({ signal }) => apiClient.get<ScoringRule[]>("/crm/scoring-rules", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ScoringRule[]>("/crm/scoring-rules", undefined, signal, scoringRulesLazy),
     staleTime: 2 * 60_000,
   });
 }

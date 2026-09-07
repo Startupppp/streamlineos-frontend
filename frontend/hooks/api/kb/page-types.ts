@@ -21,7 +21,7 @@ export type KbPage = {
   content: Record<string, unknown> | Record<string, unknown>[] | null;
   contentText: string | null;
   contentRevision: number;
-  sortOrder: number;
+  sortOrder: number | null;
   isLocked: boolean;
   createdById: string | null;
   lastEditedById: string | null;
@@ -52,11 +52,12 @@ export type KbPageTreeNode = {
   id: number;
   parentPageId: number | null;
   spaceId: number | null;
+  projectId: number | null;
   title: string;
   icon: string | null;
-  sortOrder: number;
+  sortOrder: number | null;
   hasChildren: boolean;
-  visibility: "private" | "org" | "public";
+  visibility: string;
   createdById: string | null;
   status: string;
 };

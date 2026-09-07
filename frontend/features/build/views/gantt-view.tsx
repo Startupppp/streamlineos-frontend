@@ -28,7 +28,7 @@ import { GanttMilestoneMarkers } from "./gantt/gantt-milestone-markers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome/pm-chrome";
+import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 

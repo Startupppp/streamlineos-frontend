@@ -22,7 +22,15 @@ import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const recognitionListContract = lazyContract(() =>
+  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
+);
+const recognitionRowContract = lazyContract(() =>
+  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -66,16 +74,16 @@ interface Recognition {
   message: string;
   category: string;
   createdAt: string;
-  fromUser?: { name?: string; email: string };
-  toUser?: { name?: string; email: string };
+  fromUser?: { name: string | null; email: string | null };
+  toUser?: { name: string | null; email: string | null };
 }
 
 function useRecognitions() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<Recognition[]>({
+  return useQuery({
     queryKey: humanResourcesQueryKeys.hr.hrRecognition,
-    queryFn: ({ signal }) => apiClient.get<Recognition[]>("/hr/recognition", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/recognition", undefined, signal, recognitionListContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -86,7 +94,7 @@ function useCreateRecognition() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "recognition", "create"],
     mutationFn: (data: { toUserId: string; message: string; category: string }) =>
-      apiClient.post<Recognition>("/hr/recognition", data),
+      apiClient.post("/hr/recognition", data, undefined, recognitionRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrRecognition }),
   });
 }

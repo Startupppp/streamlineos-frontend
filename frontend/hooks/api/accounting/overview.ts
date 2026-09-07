@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
+import { overviewContract } from "@/hooks/api/accounting/overview-schema";
 
 export interface BankAccountSummary {
   id: number;
@@ -56,7 +57,7 @@ export function useAccountingOverview(params: OverviewParams = {}) {
   return useQuery<AccountingOverview, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "overview", params],
     queryFn: ({ signal }) =>
-      apiClient.get<AccountingOverview>("/accounting/overview", toQuery(params), signal),
+      apiClient.get("/accounting/overview", toQuery(params), signal, overviewContract),
     staleTime: 60_000,
     enabled: can,
   });

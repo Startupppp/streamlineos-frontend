@@ -1,7 +1,7 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { PmPageShell, PmSection } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function QaLoading() {

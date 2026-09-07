@@ -3,8 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+
+const projectRosterContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectRosterContract),
+);
 
 export interface RosterTeam {
   id: number;
@@ -36,7 +41,7 @@ export function useProjectRoster(
 
   return useQuery<ProjectRoster, Error>({
     queryKey: buildWorkQueryKeys.projects.roster.detail(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`, undefined, signal, projectRosterContract),
     staleTime: 30_000,
     enabled,
     ...restOptions,

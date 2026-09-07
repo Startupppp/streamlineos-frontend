@@ -8,6 +8,7 @@ import {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -18,6 +19,64 @@ import type {
   UpdateHolidayInput,
   Holiday,
 } from "@/types/hr";
+
+const requestLeaveC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.requestLeaveContract),
+);
+const leaveApproveC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveApproveContract),
+);
+const leaveRejectC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveRejectContract),
+);
+const leaveCancelC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveCancelContract),
+);
+const leaveRevertC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveRevertContract),
+);
+const leaveTypesListC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveTypesListContract),
+);
+const seedLeaveTypesC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.seedLeaveTypesContract),
+);
+const updateLeaveTypeC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.updateLeaveTypeContract),
+);
+const deleteLeaveTypeC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.deleteLeaveTypeContract),
+);
+const createLeaveTypeC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.createLeaveTypeContract),
+);
+const leaveContextC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveContextContract),
+);
+const leaveApprovalsC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveApprovalsContract),
+);
+const leavesThisWeekC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leavesThisWeekContract),
+);
+const leaveRequestsPageC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveRequestsPageContract),
+);
+const addHolidayC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.addHolidayContract),
+);
+const deleteHolidayC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.deleteHolidayContract),
+);
+const updateHolidayC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.updateHolidayContract),
+);
+const leaveAnalyticsC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveAnalyticsContract),
+);
+const leavePolicyC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.leavePolicyContract),
+);
 
 interface HrLeaveAnalytics {
   year: number;
@@ -128,7 +187,7 @@ export function useRequestLeave() {
   return useAuthorizedMutation("self:leaves", {
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
-      apiClient.post<{ success: boolean }>("/me/time-off", data),
+      apiClient.post<{ success: boolean }>("/me/time-off", data, undefined, requestLeaveC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
@@ -146,7 +205,7 @@ export function useApproveLeaveDedicated() {
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
         comment,
-      }),
+      }, undefined, leaveApproveC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
@@ -175,7 +234,7 @@ export function useRejectLeaveDedicated() {
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, {
         reason,
         comment,
-      }),
+      }, undefined, leaveRejectC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
@@ -193,7 +252,7 @@ export function useCancelLeave() {
   return useAuthorizedMutation("self:leaves", {
     mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
-      apiClient.patch<{ success: boolean }>(`/me/time-off/${leaveId}/cancel`, {}),
+      apiClient.patch<{ success: boolean }>(`/me/time-off/${leaveId}/cancel`, {}, undefined, leaveCancelC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
@@ -213,7 +272,7 @@ export function useRevertLeave() {
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, {
         status: "PENDING",
-      }),
+      }, undefined, leaveRevertC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
@@ -237,7 +296,7 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: LEAVE_TYPES_KEY,
-    queryFn: ({ signal }) => apiClient.get<HrLeaveType[]>("/hr/leaves/types", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<HrLeaveType[]>("/hr/leaves/types", undefined, signal, leaveTypesListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -249,7 +308,7 @@ export function useSeedLeaveTypes() {
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "seed-types"],
     mutationFn: () =>
-      apiClient.post<{ seeded: number; skipped: number }>("/hr/leaves/types/seed-defaults"),
+      apiClient.post<{ seeded: number; skipped: number }>("/hr/leaves/types/seed-defaults", undefined, undefined, seedLeaveTypesC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
       void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
@@ -263,7 +322,7 @@ export function useUpdateLeaveType() {
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "update-type"],
     mutationFn: ({ id, ...patch }: { id: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
-      apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch),
+      apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch, undefined, updateLeaveTypeC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
       void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
@@ -276,7 +335,7 @@ export function useDeleteLeaveType() {
   const identity = useLeaveQueryIdentity();
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "delete-type"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`, undefined, undefined, deleteLeaveTypeC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
       void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
@@ -293,6 +352,8 @@ export function useCreateLeaveType() {
       apiClient.post<{ id: number; name: string; daysPerYear: number }>(
         "/hr/leaves/types",
         data,
+        undefined,
+        createLeaveTypeC,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });

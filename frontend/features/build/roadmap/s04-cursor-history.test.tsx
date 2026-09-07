@@ -16,7 +16,7 @@ jest.mock("@/components/ui/skeleton", () => ({ Skeleton: () => null }));
 jest.mock("@/components/shared/error-state", () => ({ ErrorState: () => null }));
 jest.mock("@/components/ui/confirm-dialog", () => ({ ConfirmDialog: () => null }));
 jest.mock("@/components/illustrations", () => ({ EmptyProjectsIllustration: () => null }));
-jest.mock("@/components/pm-chrome/pm-chrome", () => ({
+jest.mock("@/components/pm-chrome", () => ({
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PM_FILL_PANEL: "",

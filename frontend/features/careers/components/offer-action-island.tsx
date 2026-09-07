@@ -13,9 +13,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { PublicOffer } from "@/lib/public-fetch";
+
+const publicOfferRespondContract = lazyContract(() =>
+  import("@/lib/public-schema").then((m) => m.publicOfferRespondContract),
+);
 
 interface Props {
   offer: PublicOffer;
@@ -40,6 +45,8 @@ export function OfferActionIsland({ offer, token }: Props) {
       await apiClient.patch<{ success: boolean; status: string }>(
         `/public/offer/${token}/respond`,
         { action, ...extra },
+        undefined,
+        publicOfferRespondContract,
       );
       setDeclineOpen(false);
       setCounterOpen(false);

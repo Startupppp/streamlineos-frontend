@@ -3,8 +3,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+
+const probationListC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.probationListContract),
+);
+const extendProbationC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.extendProbationContract),
+);
+const confirmProbationC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.confirmProbationContract),
+);
 
 export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
 
@@ -19,9 +30,9 @@ export interface ProbationReview {
   extendedUntil: string | null;
   confirmedAt: string | null;
   createdAt: string;
-  firstName: string;
-  lastName: string;
-  workEmail: string;
+  firstName: string | null;
+  lastName: string | null;
+  workEmail: string | null;
 }
 
 const probationKeys = {
@@ -52,7 +63,7 @@ export function useProbationList(params: ProbationListParams = {}) {
       const searchParams = new URLSearchParams();
       searchParams.set("limit", String(params.limit ?? 20));
       if (params.cursor) searchParams.set("cursor", params.cursor);
-      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`, undefined, signal);
+      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`, undefined, signal, probationListC);
     },
     staleTime: 60_000,
     enabled: hrEnabled && canProbation,
@@ -75,7 +86,7 @@ export function useExtendProbation() {
       apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/extend`, {
         extendedUntil,
         reason,
-      }),
+      }, undefined, extendProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },
@@ -98,7 +109,7 @@ export function useConfirmProbation() {
       apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/confirm`, {
         confirmedAt,
         notes,
-      }),
+      }, undefined, confirmProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },

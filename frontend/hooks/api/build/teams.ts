@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   AddTeamMemberInput,
@@ -14,6 +15,17 @@ import type {
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+
+const teamPageContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamPageContract),
+);
+const teamDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamDetailContract),
+);
+const teamProjectItemListContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamProjectItemListContract),
+);
 
 export interface TeamProject {
   id: number;
@@ -34,7 +46,7 @@ export function useProjectTeams(params?: {
   if (params?.search) query["search"] = params.search;
   return useGatedQuery<TeamListResponse>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
-    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal),
+    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
     staleTime: 60_000,
   });
 }
@@ -42,7 +54,7 @@ export function useProjectTeams(params?: {
 export function useProjectTeam(teamId: number) {
   return useGatedQuery<ProjectTeamDetail>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.detail(teamId),
-    queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal, teamDetailContract),
     enabled: !!teamId,
     staleTime: 60_000,
   });
@@ -53,7 +65,7 @@ export function useCreateProjectTeam() {
   return useAuthorizedMutation("build:teams:create", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
-      apiClient.post<ProjectTeamDetail>("/build/teams", data),
+      apiClient.post<ProjectTeamDetail>("/build/teams", data, undefined, teamDetailContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
     },
@@ -65,7 +77,7 @@ export function useUpdateProjectTeam() {
   return useAuthorizedMutation("build:teams:update", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "update"],
     mutationFn: ({ id, ...data }: UpdateTeamInput & { id: number }) =>
-      apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data),
+      apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data, undefined, teamDetailContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.list() });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(vars.id) });
@@ -136,7 +148,7 @@ export function useTeamProjects(
 
   return useQuery<TeamProject[], Error>({
     queryKey: buildWorkQueryKeys.projects.teams.teamProjects(teamId),
-    queryFn: ({ signal }) => apiClient.get<TeamProject[]>(`/build/teams/${teamId}/projects`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TeamProject[]>(`/build/teams/${teamId}/projects`, undefined, signal, teamProjectItemListContract),
     staleTime: 30_000,
     enabled,
     ...restOptions,

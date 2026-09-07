@@ -1,6 +1,6 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmSection, PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PmPageShell, PmSection, PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function ProjectMeetingDetailLoading() {

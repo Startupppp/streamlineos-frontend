@@ -4,6 +4,7 @@ import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { serverGet } from "@/lib/server-fetch";
+import { notificationCursorPageContract, notificationUnreadCountContract } from "@/lib/prefetch/prefetch-schema";
 import type { Notification, UnreadCount } from "@/types/notifications";
 import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 
@@ -33,6 +34,7 @@ export async function prefetchNotificationsInbox() {
       queryFn: async () => {
         const page = await serverGet<IdCursorPage<Notification>>(
           `/notifications?section=ALL&limit=${INBOX_LIMIT}`,
+          notificationCursorPageContract,
         );
         return page.data;
       },
@@ -46,7 +48,7 @@ export async function prefetchNotificationsInbox() {
     queryClient.prefetchQuery({
       queryKey: platformCoreQueryKeys.notifications.unreadCount(),
       queryFn: () =>
-        serverGet<UnreadCount>("/notifications/unread-count"),
+        serverGet<UnreadCount>("/notifications/unread-count", notificationUnreadCountContract),
       staleTime: INBOX_STALE_TIME,
     }),
   ]);

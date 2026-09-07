@@ -2,7 +2,12 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const assetListPageC = lazyContract(() =>
+  import("@/hooks/api/hr/assets-schema").then((m) => m.assetListPageContract),
+);
 import { useCan } from "@/hooks/api/access";
 import type { Asset } from "@/types/hr";
 
@@ -37,7 +42,7 @@ export function useHrAssetList(params?: HrAssetListParams) {
   };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
-    queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal),
+    queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal, assetListPageC),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canAssets,

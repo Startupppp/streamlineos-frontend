@@ -2,10 +2,24 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AutomationTrigger } from "@/lib/automations/automation-triggers";
+
+const automationListContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationListContract),
+);
+const automationContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationContract),
+);
+const automationRunsContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationRunsContract),
+);
+const automationTestContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationTestContract),
+);
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage automations.");
@@ -114,7 +128,7 @@ export function useAutomations(params?: AutomationListParams) {
       if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`, undefined, signal);
+      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`, undefined, signal, automationListContract);
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -126,7 +140,7 @@ export function useAutomationRuns(ruleId: number) {
   const canView = useCan("settings:automations:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.automations.runs(ruleId),
-    queryFn: ({ signal }) => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`, undefined, signal, automationRunsContract),
     enabled: canView && Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 35_000,
     refetchInterval: 30_000,
@@ -141,7 +155,7 @@ export function useCreateAutomation() {
     mutationKey: ["automations", "create"],
     mutationFn: (input: CreateAutomationInput) => {
       assertPermission(canManage);
-      return apiClient.post<AutomationRule>("/settings/automations", input);
+      return apiClient.post<AutomationRule>("/settings/automations", input, undefined, automationContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
@@ -154,7 +168,7 @@ export function useUpdateAutomation() {
     mutationKey: ["automations", "update"],
     mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) => {
       assertPermission(canManage);
-      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input);
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input, undefined, automationContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
@@ -167,7 +181,7 @@ export function useToggleAutomation() {
     mutationKey: ["automations", "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) => {
       assertPermission(canManage);
-      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled });
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled }, undefined, automationContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
@@ -193,7 +207,7 @@ export function useTestAutomation() {
     mutationKey: ["automations", "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => {
       assertPermission(canManage);
-      return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload });
+      return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }, undefined, automationTestContract);
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.runs(variables.id) });

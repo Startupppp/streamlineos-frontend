@@ -2,9 +2,17 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+
+const ticketLabelListContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
+);
+const ticketLabelContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelContract),
+);
 
 export interface TicketLabel {
   id: number;
@@ -19,7 +27,7 @@ export function useOrgLabels() {
   const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
     queryKey: LABELS_KEY,
-    queryFn: ({ signal }) => apiClient.get<TicketLabel[]>("/build/labels", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TicketLabel[]>("/build/labels", undefined, signal, ticketLabelListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -30,7 +38,7 @@ export function useCreateLabel() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "create"],
     mutationFn: (data: { name: string; color: string }) =>
-      apiClient.post<TicketLabel>("/build/labels", data),
+      apiClient.post<TicketLabel>("/build/labels", data, undefined, ticketLabelContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),
   });
 }
@@ -40,7 +48,7 @@ export function useUpdateLabel() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; color?: string }) =>
-      apiClient.patch<TicketLabel>(`/build/labels/${id}`, data),
+      apiClient.patch<TicketLabel>(`/build/labels/${id}`, data, undefined, ticketLabelContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),
   });
 }

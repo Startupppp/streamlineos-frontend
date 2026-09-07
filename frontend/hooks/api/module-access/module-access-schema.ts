@@ -178,3 +178,15 @@ export const moduleOwnershipContract: ResponseContract<ModuleOwnership> =
       })
       .nullable(),
   });
+
+export const moduleSuccessContract = z.object({ success: z.literal(true) });
+
+export const moduleGroupPermissionsSetContract = z.object({
+  success: z.literal(true),
+  version: z.number(),
+});
+
+export const moduleMemberGrantsSetContract = z.object({
+  success: z.literal(true),
+  granted: z.number(),
+});

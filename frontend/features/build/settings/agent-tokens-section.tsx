@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/components/pm-chrome/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TokenRow, TokenListSkeleton, TokensEmptyHint } from "./agent-token-list";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
