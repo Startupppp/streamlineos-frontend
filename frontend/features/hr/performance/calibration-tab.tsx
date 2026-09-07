@@ -23,7 +23,7 @@ import { numericSelectChange } from "@/lib/numeric-field";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
-  const [editingEntry, setEditingEntry] = useState<Record<string, { performanceScore: string; potentialScore: string; note: string }>>({});
+  const [editingEntry, setEditingEntry] = useState<Record<string, { preRating: string; postRating: string; note: string }>>({});
   const [rowErrors, setRowErrors] = useState<Record<string, Record<string, string>>>({});
 
   const { data: cycles = [] } = useReviewCycles();
@@ -40,49 +40,49 @@ export function CalibrationTab() {
   }, [membersData]);
 
   const resolveMemberName = useCallback(
-    (userId: string) => {
-      const member = memberById.get(userId);
-      return member ? getUserDisplayName(member) : userId;
+    (employeeId: string) => {
+      const member = memberById.get(employeeId);
+      return member ? getUserDisplayName(member) : employeeId;
     },
     [memberById],
   );
 
   const handleChange = useCallback(
-    (userId: string, field: "performanceScore" | "potentialScore" | "note", value: string) => {
+    (employeeId: string, field: "preRating" | "postRating" | "note", value: string) => {
       setEditingEntry((prev) => {
-        const current = prev[userId] ?? { performanceScore: "", potentialScore: "", note: "" };
-        return { ...prev, [userId]: { ...current, [field]: value } };
+        const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
+        return { ...prev, [employeeId]: { ...current, [field]: value } };
       });
       setRowErrors((prev) => {
-        const current = prev[userId];
+        const current = prev[employeeId];
         if (!current) return prev;
         const nextRow = { ...current };
         delete nextRow[field];
-        return { ...prev, [userId]: nextRow };
+        return { ...prev, [employeeId]: nextRow };
       });
     },
     [],
   );
 
-  const handleSave = useCallback(async (userId: string) => {
-    const row = entries.find((e) => e.userId === userId);
-    const data = editingEntry[userId] ?? {
-      performanceScore: row?.performanceScore ?? "",
-      potentialScore: row?.potentialScore ?? "",
+  const handleSave = useCallback(async (employeeId: string) => {
+    const row = entries.find((e) => e.employeeId === employeeId);
+    const data = editingEntry[employeeId] ?? {
+      preRating: row?.preRating ?? "",
+      postRating: row?.postRating ?? "",
       note: row?.note ?? "",
     };
     const parsed = calibrationEntrySchema.safeParse(data);
     if (!parsed.success) {
-      setRowErrors((prev) => ({ ...prev, [userId]: zodFieldErrors(parsed.error) }));
+      setRowErrors((prev) => ({ ...prev, [employeeId]: zodFieldErrors(parsed.error) }));
       return;
     }
     setRowErrors((prev) => {
       const next = { ...prev };
-      delete next[userId];
+      delete next[employeeId];
       return next;
     });
     try {
-      await upsert.mutateAsync({ userId, ...parsed.data });
+      await upsert.mutateAsync({ employeeId, ...parsed.data });
       toast.success("Calibration saved");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -94,19 +94,19 @@ export function CalibrationTab() {
       key: "employee",
       header: "Employee",
       cell: (row) => (
-        <span className="text-sm font-medium">{resolveMemberName(row.userId)}</span>
+        <span className="text-sm font-medium">{resolveMemberName(row.employeeId)}</span>
       ),
     },
     {
-      key: "performanceScore",
+      key: "preRating",
       header: "Pre-Rating",
       cell: (row) => {
-        const editing = editingEntry[row.userId] ?? {
-          performanceScore: row.performanceScore ?? "",
-          potentialScore: row.potentialScore ?? "",
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
-        const error = rowErrors[row.userId]?.performanceScore;
+        const error = rowErrors[row.employeeId]?.preRating;
         return (
           <div className="space-y-1">
             <Input
@@ -115,8 +115,8 @@ export function CalibrationTab() {
               max="5"
               step="0.5"
               className="w-20 text-sm"
-              value={editing.performanceScore}
-              onChange={(e) => handleChange(row.userId, "performanceScore", e.target.value)}
+              value={editing.preRating}
+              onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
             />
             {error && <p className="text-micro text-destructive max-w-[8rem]">{error}</p>}
           </div>
@@ -124,15 +124,15 @@ export function CalibrationTab() {
       },
     },
     {
-      key: "potentialScore",
+      key: "postRating",
       header: "Post-Rating",
       cell: (row) => {
-        const editing = editingEntry[row.userId] ?? {
-          performanceScore: row.performanceScore ?? "",
-          potentialScore: row.potentialScore ?? "",
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
-        const error = rowErrors[row.userId]?.potentialScore;
+        const error = rowErrors[row.employeeId]?.postRating;
         return (
           <div className="space-y-1">
             <Input
@@ -141,8 +141,8 @@ export function CalibrationTab() {
               max="5"
               step="0.5"
               className="w-20 text-sm"
-              value={editing.potentialScore}
-              onChange={(e) => handleChange(row.userId, "potentialScore", e.target.value)}
+              value={editing.postRating}
+              onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
             />
             {error && <p className="text-micro text-destructive max-w-[8rem]">{error}</p>}
           </div>
@@ -153,18 +153,18 @@ export function CalibrationTab() {
       key: "note",
       header: "Note",
       cell: (row) => {
-        const editing = editingEntry[row.userId] ?? {
-          performanceScore: row.performanceScore ?? "",
-          potentialScore: row.potentialScore ?? "",
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
-        const error = rowErrors[row.userId]?.note;
+        const error = rowErrors[row.employeeId]?.note;
         return (
           <div className="space-y-1">
             <Input
               className="text-sm"
               value={editing.note}
-              onChange={(e) => handleChange(row.userId, "note", e.target.value)}
+              onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
             />
             {error && <p className="text-micro text-destructive">{error}</p>}
           </div>
@@ -179,7 +179,7 @@ export function CalibrationTab() {
           size="sm"
           variant="outline"
           isPending={upsert.isPending}
-          onClick={() => handleSave(row.userId)}
+          onClick={() => handleSave(row.employeeId)}
         >
           Save
         </LoadingButton>
@@ -211,7 +211,7 @@ export function CalibrationTab() {
             <DataTable
               data={entries}
               columns={columns}
-              getRowKey={(row) => row.userId}
+              getRowKey={(row) => row.employeeId}
               isLoading={isLoading}
               emptyState={
                 <EmptyState

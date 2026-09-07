@@ -1,11 +1,16 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import type {
+  calibrationEntryContract,
+  nineBoxEntryContract,
+} from "@/hooks/api/hr/calibration-schema";
 
 const calibrationEntryListC = lazyContract(() =>
   import("@/hooks/api/hr/calibration-schema").then((m) => m.calibrationEntryListContract),
@@ -17,26 +22,15 @@ const nineBoxListC = lazyContract(() =>
   import("@/hooks/api/hr/calibration-schema").then((m) => m.nineBoxListContract),
 );
 
-export interface CalibrationEntry {
-  id: number;
-  orgId: string;
-  cycleId: number | null;
-  userId: string;
-  performanceScore: string | null;
-  potentialScore: string | null;
-  box: string | null;
-  calibratedBy: string | null;
-  note: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type CalibrationEntry = z.infer<typeof calibrationEntryContract>;
 
-export interface NineBoxEntry {
+export type NineBoxEntry = z.infer<typeof nineBoxEntryContract>;
+
+export interface UpsertCalibrationEntryInput {
   employeeId: string;
-  performance: string | null;
-  potential: string | null;
-  box: string | null;
-  note: string | null;
+  preRating: string;
+  postRating: string;
+  note?: string;
 }
 
 const keys = {
@@ -71,7 +65,7 @@ export function useUpsertCalibrationEntry(cycleId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "calibration", "upsert", cycleId],
-    mutationFn: (body: { userId: string; performanceScore?: string; potentialScore?: string; box?: string; note?: string }) =>
+    mutationFn: (body: UpsertCalibrationEntryInput) =>
       apiClient.post<CalibrationEntry>(`/hr/performance/calibration/cycles/${cycleId}/entries`, body, undefined, calibrationEntryC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.entries(cycleId) });

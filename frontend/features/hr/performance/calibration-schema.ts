@@ -11,8 +11,8 @@ const ratingSchema = z
   }, "Rating must be between 1 and 5");
 
 export const calibrationEntrySchema = z.object({
-  performanceScore: ratingSchema,
-  potentialScore: ratingSchema,
+  preRating: ratingSchema,
+  postRating: ratingSchema,
   note: z
     .string()
     .trim()

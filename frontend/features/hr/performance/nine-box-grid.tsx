@@ -56,10 +56,9 @@ export function NineBoxGrid() {
 
   const grouped = new Map<string, NineBoxEntry[]>();
   for (const entry of entries) {
-    const boxKey = entry.box ?? "unknown";
-    const cell = grouped.get(boxKey) ?? [];
+    const cell = grouped.get(entry.box) ?? [];
     cell.push(entry);
-    grouped.set(boxKey, cell);
+    grouped.set(entry.box, cell);
   }
 
   return (
