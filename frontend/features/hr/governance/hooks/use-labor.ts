@@ -67,13 +67,6 @@ export interface LaborCase {
   createdAt: string;
 }
 
-export interface LaborListResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 const LABOR_KEY = ["hr", "governance", "labor"] as const;
 
 export function useUnionMemberships(params?: { unionName?: string; status?: string; page?: number; limit?: number }) {

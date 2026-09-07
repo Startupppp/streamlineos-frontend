@@ -14,7 +14,6 @@ export type HrFormFieldType =
   | "department_ref"
   | "currency";
 
-export type HrFormStatus = "draft" | "active" | "archived";
 export type HrFormAudience = "internal" | "public";
 export type HrFormSubmissionStatus = "submitted" | "in_review" | "approved" | "rejected";
 
@@ -67,18 +66,6 @@ export interface SubmitHrFormPayload {
   data: Record<string, unknown>;
   submittedByName?: string;
   subjectEmployeeId?: number;
-}
-
-export interface HrFormListResponse {
-  data: HrForm[];
-  total: number;
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
-export interface HrFormSubmissionListResponse {
-  data: HrFormSubmission[];
-  total: number;
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface HrCustomFieldSettings {

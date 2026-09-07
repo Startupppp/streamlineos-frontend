@@ -55,13 +55,6 @@ export interface DataRequest {
   updatedAt: string;
 }
 
-export interface RetentionListResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 const RETENTION_KEY = ["hr", "governance", "retention"] as const;
 const POLICIES_KEY = [...RETENTION_KEY, "policies"] as const;
 const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;

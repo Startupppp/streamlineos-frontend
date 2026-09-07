@@ -33,13 +33,6 @@ export interface ProxyAccess {
   createdAt: string;
 }
 
-export interface DelegationsListResponse {
-  data: ProxyAccess[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 const DELEGATIONS_KEY = ["hr", "governance", "delegations"] as const;
 
 export function useOrgDelegations(params?: {

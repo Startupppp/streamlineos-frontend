@@ -48,33 +48,6 @@ export interface ReorgScenario {
   createdAt: string;
 }
 
-export interface PositionsListResponse {
-  data: Position[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface ScenariosListResponse {
-  data: ReorgScenario[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface SimulationResult {
-  scenarioId: number;
-  scenarioName: string;
-  status: string;
-  projectedEffect: {
-    affectedPositions: number;
-    affectedReportingLines: number;
-    positionMoves: unknown[];
-    reportingMoves: unknown[];
-  };
-  warning: string;
-}
-
 const POSITIONS_KEY = ["hr", "governance", "positions"] as const;
 const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 

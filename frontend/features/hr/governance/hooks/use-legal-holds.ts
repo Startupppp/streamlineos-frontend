@@ -40,23 +40,6 @@ export interface LegalHold {
   updatedAt: string;
 }
 
-export interface HoldItem {
-  id: number;
-  holdId: number;
-  orgId: string;
-  itemType: "employee_profile" | "document" | "case_evidence";
-  itemRef: string;
-  locked: boolean;
-  createdAt: string;
-}
-
-export interface LegalHoldsListResponse {
-  data: LegalHold[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
