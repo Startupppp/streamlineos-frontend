@@ -102,7 +102,7 @@ export function useUpdateRecurringJournal(templateId: number) {
 
 export function useDeleteRecurringJournal(templateId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, void>("accounting:recurring:manage", {
+  return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, void>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "delete-recurring-journal", templateId],
     mutationFn: () =>
       apiClient.delete(`/accounting/recurring-journals/${templateId}`, undefined, undefined, recurringJournalDeleteContract),
@@ -114,7 +114,7 @@ export function useDeleteRecurringJournal(templateId: number) {
 
 export function useRunRecurringJournalNow(templateId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ created: boolean; entryId?: number }, Error, void>("accounting:recurring:manage", {
+  return useAuthorizedMutation<{ id: number; entryNumber: string }, Error, void>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "run-recurring-now", templateId],
     mutationFn: () =>
       apiClient.post(

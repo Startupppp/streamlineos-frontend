@@ -105,7 +105,7 @@ export function useUpdateApprovalPolicy(id: number) {
 
 export function useDeleteApprovalPolicy() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("accounting:settings:manage", {
+  return useAuthorizedMutation<{ deleted: true }, Error, number>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "delete"],
     mutationFn: (id) =>
       apiClient.delete(`/accounting/approval-policies/${id}`, undefined, undefined, approvalPolicyDeletedContract),

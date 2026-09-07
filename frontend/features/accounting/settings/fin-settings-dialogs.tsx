@@ -255,7 +255,7 @@ export function PolicyDialog({
       title={policy ? "Edit approval policy" : "Add approval policy"}
       resolver={zodResolver(policySchema)}
       defaultValues={{
-        recordType: policy?.recordType ?? "MANUAL_JOURNAL",
+        recordType: policy && isApprovalRecordType(policy.recordType) ? policy.recordType : "MANUAL_JOURNAL",
         minAmount: policy?.minAmount ?? "",
         approverRole: policy?.approverRole ?? "",
         isActive: policy?.isActive ?? true,

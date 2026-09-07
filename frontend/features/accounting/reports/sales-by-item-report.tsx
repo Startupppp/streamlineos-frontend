@@ -27,7 +27,7 @@ const SALES_BY_ITEM_COLUMNS: DataTableColumn<SalesByItemRow>[] = [
   {
     key: "description",
     header: "Description",
-    cell: (row) => <TruncatedText text={row.description} lines={2} className="text-sm" />,
+    cell: (row) => <TruncatedText text={row.description ?? "—"} lines={2} className="text-sm" />,
   },
   {
     key: "totalQuantity",
@@ -52,8 +52,8 @@ const SALES_BY_ITEM_COLUMNS: DataTableColumn<SalesByItemRow>[] = [
   },
 ];
 
-function getSalesByItemRowKey(row: SalesByItemRow): string {
-  return row.description;
+function getSalesByItemRowKey(row: SalesByItemRow, index: number): string | number {
+  return row.description ?? index;
 }
 
 export function SalesByItemReport() {

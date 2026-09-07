@@ -8,7 +8,7 @@ export interface FinExpenseUser {
   name?: string | null;
   firstName?: string | null;
   lastName?: string | null;
-  email: string;
+  email: string | null;
   image?: string | null;
 }
 
@@ -46,9 +46,7 @@ export interface FinExpenseItem {
   expenseCategory?: FinExpenseCategory | null;
 }
 
-export interface FinReceiptInboxItem extends FinExpenseItem {
-  policyFlag: string;
-}
+export type FinReceiptInboxItem = FinExpenseItem;
 
 export interface ReimbursementBatchItem {
   id: number;
@@ -67,7 +65,7 @@ export interface ReimbursementBatchCreator {
   name?: string | null;
   firstName?: string | null;
   lastName?: string | null;
-  email: string;
+  email: string | null;
 }
 
 export interface FinReimbursementBatch {

@@ -16,7 +16,7 @@ function formatDate(value: string): string {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
-function formatDateTime(value: Date): string {
+function formatDateTime(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleString(undefined, {

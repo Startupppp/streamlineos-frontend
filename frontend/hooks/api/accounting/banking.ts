@@ -118,9 +118,10 @@ export interface BankTransfer {
 }
 
 export interface BankImportResult {
+  id: number;
   importedCount: number;
   duplicateCount: number;
-  errors: string[];
+  totalRows: number;
 }
 
 const accountingBase = [...accountingAndSupportQueryKeys.accounting.all] as const;

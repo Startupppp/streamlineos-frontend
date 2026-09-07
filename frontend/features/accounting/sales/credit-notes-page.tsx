@@ -83,7 +83,7 @@ function CreditNoteRowActions({ credit, onApply, canManage }: CreditNoteRowActio
       { creditNoteId: credit.id },
       {
         onSuccess: (res) => {
-          if (res.needsApproval) {
+          if ("needsApproval" in res) {
             toast.info("Pending approval before posting");
           } else {
             toast.success("Credit note posted");

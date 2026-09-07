@@ -43,7 +43,7 @@ export function ReceiptCard({ item }: ReceiptCardProps) {
         <div className="flex items-center gap-1.5 rounded-md bg-status-warning-surface border border-status-warning-rule px-2 py-1">
           <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />
           <span className="text-dense text-status-warning-ink">
-            {FLAG_LABELS[item.policyFlag] ?? item.policyFlag}
+            {item.policyFlag ? (FLAG_LABELS[item.policyFlag] ?? item.policyFlag) : "Flagged"}
           </span>
         </div>
         <Button

@@ -130,7 +130,7 @@ function ReportTable({
       className="flex-1 min-h-0"
       data={data}
       columns={REPORT_COLUMNS}
-      getRowKey={(row) => row.id}
+      getRowKey={(row) => `${row.sourceType}-${row.sourceId}`}
       pagination={{ pageSize: 50 }}
       emptyState={
         <EmptyState

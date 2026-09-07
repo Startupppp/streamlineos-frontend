@@ -22,13 +22,13 @@ const columns: DataTableColumn<CustomerOutstanding>[] = [
     key: "clientName",
     header: "Customer",
     sortable: true,
-    sortValue: (row) => row.clientName,
+    sortValue: (row) => row.clientName ?? "",
     cell: (row) => (
       <Link
         href={`/accounting/customers/${row.clientId}`}
         className="text-sm font-medium text-foreground hover:text-primary hover:underline"
       >
-        {row.clientName}
+        {row.clientName ?? "Unnamed customer"}
       </Link>
     ),
   },

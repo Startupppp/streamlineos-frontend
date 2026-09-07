@@ -59,8 +59,8 @@ const SALES_BY_CUSTOMER_COLUMNS: DataTableColumn<SalesByCustomerRow>[] = [
   },
 ];
 
-function getSalesByCustomerRowKey(row: SalesByCustomerRow): string | number {
-  return row.clientId;
+function getSalesByCustomerRowKey(row: SalesByCustomerRow, index: number): string | number {
+  return row.clientId ?? index;
 }
 
 export function SalesByCustomerReport() {

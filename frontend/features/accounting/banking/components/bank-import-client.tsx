@@ -3,7 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Upload, ArrowRight, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Upload, ArrowRight } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -204,29 +204,12 @@ export function BankImportClient() {
               <p className="text-micro text-muted-foreground">Duplicates</p>
             </div>
             <div className="bg-muted/30 rounded-lg p-3">
-              <p className="text-lg font-semibold text-status-danger-ink">
-                {importResult.errors.length}
+              <p className="text-lg font-semibold text-foreground">
+                {importResult.totalRows}
               </p>
-              <p className="text-micro text-muted-foreground">Errors</p>
+              <p className="text-micro text-muted-foreground">Total Rows</p>
             </div>
           </div>
-
-          {importResult.errors.length > 0 && (
-            <div className="bg-status-danger-surface border border-status-danger-rule rounded-lg p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-status-danger-ink text-xs font-medium mb-1">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                Import errors
-              </div>
-              {importResult.errors.slice(0, 5).map((err, i) => (
-                <p key={i} className="text-dense text-status-danger-ink">{err}</p>
-              ))}
-              {importResult.errors.length > 5 && (
-                <p className="text-dense text-status-danger-ink">
-                  +{importResult.errors.length - 5} more errors
-                </p>
-              )}
-            </div>
-          )}
 
           <Button className="w-full" onClick={handleGoToReconciliation}>
             Go to Reconciliation
