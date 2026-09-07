@@ -19,14 +19,18 @@ const FAB_SIZE_PX = 40;
 
 type FabCoords = { left: number; top: number };
 
-type DragSession = {
-  pointerId: number;
-  startX: number;
-  startY: number;
+type DragGeometry = {
   originLeft: number;
   originTop: number;
   width: number;
   height: number;
+};
+
+type DragSession = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  geometry: DragGeometry | null;
   active: boolean;
   pendingLeft: number | null;
   pendingTop: number | null;
@@ -187,8 +191,9 @@ export function useMobileShellFabPosition(
     if (drag.pendingLeft === null || drag.pendingTop === null) return;
     const el = containerRef.current;
     if (!el) return;
-    const dx = drag.pendingLeft - drag.originLeft;
-    const dy = drag.pendingTop - drag.originTop;
+    if (!drag.geometry) return;
+    const dx = drag.pendingLeft - drag.geometry.originLeft;
+    const dy = drag.pendingTop - drag.geometry.originTop;
     drag.pendingLeft = null;
     drag.pendingTop = null;
     el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
@@ -201,15 +206,11 @@ export function useMobileShellFabPosition(
       if (!el) return;
 
       suppressClickRef.current = false;
-      const rect = el.getBoundingClientRect();
       dragRef.current = {
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
-        originLeft: rect.left,
-        originTop: rect.top,
-        width: rect.width,
-        height: rect.height,
+        geometry: null,
         active: false,
         pendingLeft: null,
         pendingTop: null,
@@ -232,27 +233,37 @@ export function useMobileShellFabPosition(
 
       if (!drag.active) {
         if (distance < DRAG_THRESHOLD_PX) return;
+        const el = containerRef.current;
+        if (!el) return;
+
+        const rect = el.getBoundingClientRect();
+        drag.geometry = {
+          originLeft: rect.left,
+          originTop: rect.top,
+          width: rect.width,
+          height: rect.height,
+        };
         drag.active = true;
         suppressClickRef.current = true;
         setIsDragging(true);
 
-        const el = containerRef.current;
-        if (el) {
-          el.style.left = `${drag.originLeft}px`;
-          el.style.top = `${drag.originTop}px`;
-          el.style.right = "auto";
-          el.style.bottom = "auto";
-          el.style.transform = "translate3d(0,0,0)";
-        }
-        setPosition({ left: drag.originLeft, top: drag.originTop });
+        el.style.left = `${rect.left}px`;
+        el.style.top = `${rect.top}px`;
+        el.style.right = "auto";
+        el.style.bottom = "auto";
+        el.style.transform = "translate3d(0,0,0)";
+        setPosition({ left: rect.left, top: rect.top });
       }
+
+      const geometry = drag.geometry;
+      if (!geometry) return;
 
       event.preventDefault();
       const next = clampCoords(
-        drag.originLeft + (event.clientX - drag.startX),
-        drag.originTop + (event.clientY - drag.startY),
-        drag.width,
-        drag.height,
+        geometry.originLeft + (event.clientX - drag.startX),
+        geometry.originTop + (event.clientY - drag.startY),
+        geometry.width,
+        geometry.height,
         bottomObstructionPx,
       );
       drag.pendingLeft = next.left;
@@ -277,9 +288,10 @@ export function useMobileShellFabPosition(
       const el = containerRef.current;
       const wasDrag = drag.active;
 
-      if (wasDrag) {
-        let finalLeft = drag.originLeft;
-        let finalTop = drag.originTop;
+      if (wasDrag && drag.geometry) {
+        const geometry = drag.geometry;
+        let finalLeft = geometry.originLeft;
+        let finalTop = geometry.originTop;
         if (drag.pendingLeft !== null && drag.pendingTop !== null) {
           finalLeft = drag.pendingLeft;
           finalTop = drag.pendingTop;
@@ -291,8 +303,8 @@ export function useMobileShellFabPosition(
         const clamped = clampCoords(
           finalLeft,
           finalTop,
-          drag.width,
-          drag.height,
+          geometry.width,
+          geometry.height,
           bottomObstructionPx,
         );
         if (el) {
@@ -304,8 +316,9 @@ export function useMobileShellFabPosition(
         }
         setPosition(clamped);
         persistPosition(clamped);
-        setIsDragging(false);
       }
+
+      if (wasDrag) setIsDragging(false);
 
       dragRef.current = null;
       if (el?.hasPointerCapture(event.pointerId)) {
