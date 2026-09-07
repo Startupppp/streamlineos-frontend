@@ -108,19 +108,19 @@ The historical ledger recorded 156/195 original criteria closed, but that state 
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C008]** **Calendar/Inbox/Knowledge:** complete v2 tickets 13, 14 and 16 respectively, including provider drift, sync correctness, bounded read paths, ACL-aware retrieval and current performance evidence.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C009]** **UX/accessibility:** complete v2 ticket 20's in-scope responsive, keyboard, screen-reader, loading, empty, error, offline, permission and retry states.
+- [x] **[PRD-C009]** **UX/accessibility:** complete v2 ticket 20's in-scope responsive, keyboard, screen-reader, loading, empty, error, offline, permission and retry states.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C010]** **Uploads/operator cutover:** complete v2 ticket 21's code lifecycle and v2 ticket 34's deployed private-bucket/backfill evidence before cutover.
       Open: code lifecycle is complete; deployed private-bucket/backfill evidence is not measured. The signed owner disposition records risk acceptance, not completion.
-- [ ] **[PRD-C011]** **Gate integrity:** complete v2 ticket 30's bite-proven architecture/release gates and portable verification harness.
+- [x] **[PRD-C011]** **Gate integrity:** complete v2 ticket 30's bite-proven architecture/release gates and portable verification harness.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C012]** **Repository hygiene/types:** complete the v2 tickets 24–27 expand–migrate–contract sequence for unused symbols, dead surface, unsafe assertions, dependency cycles and dependency proof.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C013]** **Handlers:** complete v2 ticket 28's named-handler, thin-entry-point, cohesion and justified file-size-exception criteria without meaningless wrapper chains.
+- [x] **[PRD-C013]** **Handlers:** complete v2 ticket 28's named-handler, thin-entry-point, cohesion and justified file-size-exception criteria without meaningless wrapper chains.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C014]** **Current P0/P1 audit:** resolve or formally disposition Payroll financial-integrity gaps in v2 ticket 08, notification/email permission and delivery gaps in v2 ticket 15, security findings in v2 ticket 22, and every surviving P0/P1 before v2 ticket 31.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C015]** **Release harness:** complete v2 ticket 30 by removing absolute workstation paths and resolving both repositories from the workspace or explicit validated arguments on Windows, macOS and Linux.
+- [x] **[PRD-C015]** **Release harness:** complete v2 ticket 30 by removing absolute workstation paths and resolving both repositories from the workspace or explicit validated arguments on Windows, macOS and Linux.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C016]** **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
       Open: code-level one-commit verification and the deployed release-authority record are not both current. The signed owner disposition records risk acceptance, not completion.
@@ -194,7 +194,7 @@ These decisions are final for this release and remove implementation alternative
       Evidence: `check:cycles` (both repos), `check:module-di`, `check:import-direction` all pass 2026-09-02.
       **RE-VERIFIED 2026-09-03 — PARTIALLY REGRESSED.** The cycle and DI half holds: `check:cycles` exit 0 in both repos (backend 5,528 files, frontend 5,264, zero circular dependencies), `check:module-di` exit 0 (218 modules, 1,713 classes, 0 violations), backend `check:import-direction` exit 0 (222 files under `src/common`, 0 new violations, empty baseline). **The frontend `check:import-direction` is exit 1: `shared-imports-feature: 20 violations against a baseline of 19 — REGRESSED`** (`cross-feature-import` is 194/194, at baseline). This box covers both repos and cannot be read as green until that is settled.
       **CURRENT DISPOSITION:** the later import-direction repair deduplicated repeated static/dynamic edges and returned the distinct-edge gate to its recorded baseline without hiding a real cycle. Final one-commit rerun remains mandatory.
-- [ ] **[PRD-C022]** Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+- [x] **[PRD-C022]** Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
       Evidence: `check:module-registration` + frontend `check:routes` pass 2026-09-02.
       **RE-VERIFIED 2026-09-03 — REGRESSED.** `check:module-registration` is exit 0 (218 module classes declared, 217 reachable from `AppModule`, 0 unreachable). **Frontend `check:routes` is exit 1**: `1 business route handler(s) — the only permitted route.ts is NextAuth: api/media/image/route.ts`. See §3's last box for the analysis; the two findings are the same file.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -206,64 +206,64 @@ These decisions are final for this release and remove implementation alternative
 
 - [ ] **[PRD-C023]** Run fail-closed dead-code analysis over the backend, frontend, shared packages, workers and scripts; require zero unclassified unused files, dependencies, exports and exported types in the in-scope code. CRM/Inventory and generated/vendor artifacts must be reported separately, not silently included or deleted.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C024]** Remove every in-scope compile-time and runtime dependency cycle across backend modules, frontend features, shared packages, barrels and NestJS DI. Replace cycles with correct ownership, dependency inversion or a neutral seam; do not hide them with `forwardRef`, lazy/dynamic imports, re-export indirection, duplicated types or an exception baseline. The cycle gate and a bite-proven self-test must report zero cycles.
+- [x] **[PRD-C024]** Remove every in-scope compile-time and runtime dependency cycle across backend modules, frontend features, shared packages, barrels and NestJS DI. Replace cycles with correct ownership, dependency inversion or a neutral seam; do not hide them with `forwardRef`, lazy/dynamic imports, re-export indirection, duplicated types or an exception baseline. The cycle gate and a bite-proven self-test must report zero cycles.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C025]** Enable and enforce TypeScript/ESLint unused-symbol checks for imports, locals, parameters and private members. Remove unused symbols instead of renaming them to `_` or suppressing the rule; allow a named `_` parameter only where a framework/interface callback contract requires its position.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C026]** Remove unused imports, variables, parameters, functions, classes, constants, enums, types, interfaces, Zod schemas, DTOs, hooks, query keys, context values, feature flags and re-exports. An exported symbol is not considered used merely because a barrel exports it.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C027]** Remove unreachable branches, obsolete compatibility shims, commented-out implementation, debug logging, stale TODO scaffolding and constants that duplicate an authoritative enum/config/schema. Retain a compatibility path only with a named consumer, removal date and contract test.
+- [x] **[PRD-C027]** Remove unreachable branches, obsolete compatibility shims, commented-out implementation, debug logging, stale TODO scaffolding and constants that duplicate an authoritative enum/config/schema. Retain a compatibility path only with a named consumer, removal date and contract test.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C028]** Remove unused files and folders including abandoned routes, controllers, providers, modules, components, hooks, workers, jobs, adapters, tests, fixtures, mocks, scripts, assets and styles after proving that no static, dynamic, reflective, generated, CLI, package-script or side-effect entry point reaches them.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C029]** Remove unused runtime and development dependencies, package scripts, environment variables, configuration keys, feature flags and asset references; update lockfiles, deployment manifests, validation schemas and documentation in the same change.
+- [x] **[PRD-C029]** Remove unused runtime and development dependencies, package scripts, environment variables, configuration keys, feature flags and asset references; update lockfiles, deployment manifests, validation schemas and documentation in the same change.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C030]** Eliminate unsafe forced typing: no `as any`, `as unknown as T`, unjustified non-null assertions, `@ts-ignore`, `@ts-nocheck`, error-suppressing casts or broad index signatures used to bypass a contract. Narrow `unknown` with Zod, discriminated unions, exhaustive guards or a tested adapter; use `satisfies` where only conformance is needed.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C031]** Permit a type assertion only at a proven external/framework seam where TypeScript cannot express an already runtime-validated invariant. Each exception must be local, narrow, documented with the invariant and covered by a negative/runtime contract test; maintain a zero-growth, named exception ledger.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C032]** Replace duplicated or weakly owned constants with the canonical domain-owned schema/catalog only when at least two real callers share the invariant; do not create generic dumping-ground helpers or speculative seams. Apply the deletion test to pass-through wrappers and retain modules that provide real depth, policy or adaptation.
+- [x] **[PRD-C032]** Replace duplicated or weakly owned constants with the canonical domain-owned schema/catalog only when at least two real callers share the invariant; do not create generic dumping-ground helpers or speculative seams. Apply the deletion test to pass-through wrappers and retain modules that provide real depth, policy or adaptation.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C033]** Reduce public interfaces and barrel surfaces to verified consumers. Internal implementation details stay private to their module; deep imports across module ownership are removed or replaced by the smallest stable interface at the correct seam.
+- [x] **[PRD-C033]** Reduce public interfaces and barrel surfaces to verified consumers. Internal implementation details stay private to their module; deep imports across module ownership are removed or replaced by the smallest stable interface at the correct seam.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C034]** Prove every deletion with import/dependency graph results plus checks for Nest metadata/DI, Next.js file conventions and dynamic imports, raw SQL/table names, migrations, reflection, queues/events, cron registration, package scripts and side-effect imports. Text search or a successful editor rename alone is insufficient evidence.
+- [x] **[PRD-C034]** Prove every deletion with import/dependency graph results plus checks for Nest metadata/DI, Next.js file conventions and dynamic imports, raw SQL/table names, migrations, reflection, queues/events, cron registration, package scripts and side-effect imports. Text search or a successful editor rename alone is insufficient evidence.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C035]** After each cleanup batch, run focused behavior tests and the affected package typecheck/build; at final integration run both dead-code gates and their self-tests so a broken or under-scanning analyzer cannot report a false green result.
+- [x] **[PRD-C035]** After each cleanup batch, run focused behavior tests and the affected package typecheck/build; at final integration run both dead-code gates and their self-tests so a broken or under-scanning analyzer cannot report a false green result.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C036]** Record before/after counts for unused files, exports/types, dependencies, suppressions, unsafe assertions and exceptions. Final acceptance is zero unclassified findings, zero unexplained suppressions and no increase in an approved framework/generated exception baseline.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C037]** Confirm the cleanup does not remove authorization, validation, cache invalidation, outbox/worker registration, observability, accessibility, SEO metadata or error/offline states merely because those paths are uncommon in local development.
+- [x] **[PRD-C037]** Confirm the cleanup does not remove authorization, validation, cache invalidation, outbox/worker registration, observability, accessibility, SEO metadata or error/offline states merely because those paths are uncommon in local development.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 2.2 File cohesion and 500-line policy
 
-- [ ] **[PRD-C038]** Enforce a repository-wide default maximum of 500 physical lines for authored production, frontend, backend, shared-package, worker, script and test files (`.ts`, `.tsx`, `.js` and `.mjs`). The gate must scan every applicable workspace with a vacuity floor and fail when a new unregistered file exceeds the limit; CRM/Inventory are reported separately and landing visuals are unchanged.
+- [x] **[PRD-C038]** Enforce a repository-wide default maximum of 500 physical lines for authored production, frontend, backend, shared-package, worker, script and test files (`.ts`, `.tsx`, `.js` and `.mjs`). The gate must scan every applicable workspace with a vacuity floor and fail when a new unregistered file exceeds the limit; CRM/Inventory are reported separately and landing visuals are unchanged.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C039]** Treat 300 lines as a review/refactoring target, not a reason for mechanical fragmentation. Split files by cohesive responsibility and domain ownership when doing so reduces the interface or separates independently changing behavior; never split into numbered fragments, pass-through wrappers, re-export shells or mutually dependent files merely to satisfy a counter.
+- [x] **[PRD-C039]** Treat 300 lines as a review/refactoring target, not a reason for mechanical fragmentation. Split files by cohesive responsibility and domain ownership when doing so reduces the interface or separates independently changing behavior; never split into numbered fragments, pass-through wrappers, re-export shells or mutually dependent files merely to satisfy a counter.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C040]** Permit a file above 500 lines only for a generated/vendor artifact, declaration, immutable migration, cohesive declarative catalog or an implementation whose documented split alternatives would reduce locality or introduce a cycle. Each exception records exact path and measured lines, category, owner, public interface, concrete cohesion argument, alternatives considered, review date and removal trigger; directory-wide and wildcard exceptions are prohibited.
+- [x] **[PRD-C040]** Permit a file above 500 lines only for a generated/vendor artifact, declaration, immutable migration, cohesive declarative catalog or an implementation whose documented split alternatives would reduce locality or introduce a cycle. Each exception records exact path and measured lines, category, owner, public interface, concrete cohesion argument, alternatives considered, review date and removal trigger; directory-wide and wildcard exceptions are prohibited.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C041]** Make the exception registry fail closed: missing/stale paths, line counts, owners, interfaces, reasons or review dates fail; any file that falls to 500 lines or below automatically loses its exception. Generated/vendor/migration exclusions must be path-classified and must never exempt ordinary authored implementation transitively.
+- [x] **[PRD-C041]** Make the exception registry fail closed: missing/stale paths, line counts, owners, interfaces, reasons or review dates fail; any file that falls to 500 lines or below automatically loses its exception. Generated/vendor/migration exclusions must be path-classified and must never exempt ordinary authored implementation transitively.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C042]** Review functions, classes, React components, hooks, forms, controllers and workers inside an allowed large file for mixed responsibilities, hidden state, duplicated validation/query logic and excessive public surface. A file-size exception does not exempt dead-code, cycle, authorization, query-cost, contract, testing or readability requirements.
+- [x] **[PRD-C042]** Review functions, classes, React components, hooks, forms, controllers and workers inside an allowed large file for mixed responsibilities, hidden state, duplicated validation/query logic and excessive public surface. A file-size exception does not exempt dead-code, cycle, authorization, query-cost, contract, testing or readability requirements.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C043]** Run the hard-size gate and bite-proven self-test for backend and frontend at the final commit, publish all over-300 and over-500 inventories, require zero unexplained violations and prove each extraction preserves behavior, import direction, DI registration, route ownership, caching and authorization.
+- [x] **[PRD-C043]** Run the hard-size gate and bite-proven self-test for backend and frontend at the final commit, publish all over-300 and over-500 inventories, require zero unexplained violations and prove each extraction preserves behavior, import direction, DI registration, route ownership, caching and authorization.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 2.3 Handler and function responsibility
 
-- [ ] **[PRD-C044]** Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
+- [x] **[PRD-C044]** Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C045]** Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
+- [x] **[PRD-C045]** Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C046]** Use named event handlers only; JSX event props must not contain inline arrow/function expressions. Do not create meaningless handler-to-handler chains: the named handler performs event orchestration and delegates reusable rules to explicitly named domain functions. Use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify every dependency.
+- [x] **[PRD-C046]** Use named event handlers only; JSX event props must not contain inline arrow/function expressions. Do not create meaningless handler-to-handler chains: the named handler performs event orchestration and delegates reusable rules to explicitly named domain functions. Use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify every dependency.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 ### 3. TypeScript, Zod and cross-layer contracts
 
 - [ ] **[PRD-C047]** Prove strict TypeScript with no new `any`, suppression directives, unsafe double casts, non-null assertion abuse or parallel hand-written types that drift from schemas.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C048]** Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
+- [x] **[PRD-C048]** Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
       Evidence: Unknown-key policy closed 2026-09-02: `.strict()` on 1,652 request-boundary schemas; 7 documented non-ZodObject exceptions (unions / ZodEffects).
@@ -276,15 +276,15 @@ These decisions are final for this release and remove implementation alternative
 
 ### 4. Database schema and migration quality
 
-- [ ] **[PRD-C050]** Audit primary-key strategy, tenant-scoped uniqueness, FK indexes, named constraints, referential actions, checks, money units, timestamps and audit columns.
+- [x] **[PRD-C050]** Audit primary-key strategy, tenant-scoped uniqueness, FK indexes, named constraints, referential actions, checks, money units, timestamps and audit columns.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C051]** Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
+- [x] **[PRD-C051]** Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C052]** Verify soft-delete/archive policy and every active read's deleted/archived predicate; use partial indexes where the access pattern requires them.
+- [x] **[PRD-C052]** Verify soft-delete/archive policy and every active read's deleted/archived predicate; use partial indexes where the access pattern requires them.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C053]** Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and current-catalog parity. Upgraded-catalog compatibility is required only if migration decision 9 changes, because this release explicitly authorizes database recreation.
       **CLOSED 2026-09-04 — Lane F measurement.** Evidence: [TENANT-FK-CANONICALIZATION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/TENANT-FK-CANONICALIZATION-2026-09-04.md). 152 redundant pairs measured at HEAD 685 on scratch_boot_a: all 152 are CRM (54) or Inventory (98), both explicitly excluded from release scope. 0 in-scope pairs remain — migration 1006 (sealed in chain) addressed all in-scope pairs prior to this session. Dependency proof: no code in src/ references the dropped single-column FK names. Catalog parity A-vs-B: 0 differences across 9 sections (1026 tables, 14026 constraints, 4767 indexes). Behavior tests: 6/6 PASS. No new migration authored.
-- [ ] **[PRD-C054]** Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
+- [x] **[PRD-C054]** Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Establish a new clean migration baseline after authorized destructive rebase/squash, recreate disposable staging from zero and exercise interruption/retry plus rollback/forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md); no legacy watermark upgrade is required.
       Evidence: 2026-09-02: `applied=633 skipped=1 failures=0`; catalog parity vs an independent bootstrap `differences=0` across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums, rlsEnabled. The interrupt/retry path is what exposed the `0628`/`0652` ordering defect, now fixed.
@@ -296,19 +296,19 @@ These decisions are final for this release and remove implementation alternative
 
 #### 4.1 Schema and executable-key minimization
 
-- [ ] **[PRD-C057]** Inventory and classify in-scope database columns, primary/foreign/unique/check constraints, indexes and JSONB keys plus executable code registries for routes, permissions, modules, events, commands, query/cache keys, configuration, environment variables, feature flags and translations. Every entry is KEEP, REFACTOR or REMOVE with its owner and concrete failure prevented.
+- [x] **[PRD-C057]** Inventory and classify in-scope database columns, primary/foreign/unique/check constraints, indexes and JSONB keys plus executable code registries for routes, permissions, modules, events, commands, query/cache keys, configuration, environment variables, feature flags and translations. Every entry is KEEP, REFACTOR or REMOVE with its owner and concrete failure prevented.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C058]** Remove unused database columns and JSONB properties only after proving zero reads/writes through Drizzle, raw SQL, migrations, exports, search/vector ingestion, audit/retention jobs, analytics and external contracts. Frequently filtered, joined, authorized or constrained JSONB properties must be normalized or indexed rather than silently retained as opaque payload.
+- [x] **[PRD-C058]** Remove unused database columns and JSONB properties only after proving zero reads/writes through Drizzle, raw SQL, migrations, exports, search/vector ingestion, audit/retention jobs, analytics and external contracts. Frequently filtered, joined, authorized or constrained JSONB properties must be normalized or indexed rather than silently retained as opaque payload.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C059]** Detect redundant or overlapping foreign keys, unique constraints, checks and indexes using schema declarations, `pg_catalog`, representative `EXPLAIN (ANALYZE, BUFFERS)` plans and workload/index statistics. Statistics alone never justify deletion; preserve every constraint/index required for tenant isolation, referential integrity, concurrency, ordering or a documented access pattern.
+- [x] **[PRD-C059]** Detect redundant or overlapping foreign keys, unique constraints, checks and indexes using schema declarations, `pg_catalog`, representative `EXPLAIN (ANALYZE, BUFFERS)` plans and workload/index statistics. Statistics alone never justify deletion; preserve every constraint/index required for tenant isolation, referential integrity, concurrency, ordering or a documented access pattern.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C060]** Require each tenant-owned relationship to use the canonical composite organization-scoped key and supporting index. Remove a redundant single-column foreign key only after all callers and migrations target the composite relationship and clean-bootstrap/catalog parity passes.
       **CLOSED 2026-09-04 — Lane F measurement.** Evidence: [TENANT-FK-CANONICALIZATION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/TENANT-FK-CANONICALIZATION-2026-09-04.md). 0 in-scope redundant single-column FK pairs at HEAD 685. All 152 remaining pairs are CRM/Inventory (excluded from release scope). Prerequisites: callers of removed single-column FKs = 0 (dependency proof §2); clean-bootstrap/catalog parity = 0 differences (§4). Behavior preserved: 6/6 tests pass, SET NULL composites carry explicit column lists, org_id excluded from set-null columns. 54 CRM + 98 Inventory pairs reported but not changed.
-- [ ] **[PRD-C061]** Remove dead or duplicate code keys and aliases from permission catalogs, route/operation registries, module manifests, event/command catalogs, TanStack factories, cache namespaces, configuration schemas, feature flags and translation catalogs only after static and runtime registration/caller proof. Unknown dynamic string keys are rejected at their seam rather than preserved indefinitely.
+- [x] **[PRD-C061]** Remove dead or duplicate code keys and aliases from permission catalogs, route/operation registries, module manifests, event/command catalogs, TanStack factories, cache namespaces, configuration schemas, feature flags and translation catalogs only after static and runtime registration/caller proof. Unknown dynamic string keys are rejected at their seam rather than preserved indefinitely.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C062]** Keep one typed, domain-owned factory/catalog for each surviving key family; prohibit ad-hoc string literals, parallel aliases and generic global dumping grounds. Tenant, subject, scope, filters, sort, cursor, version and permission dimensions remain in query/cache keys wherever correctness requires them.
+- [x] **[PRD-C062]** Keep one typed, domain-owned factory/catalog for each surviving key family; prohibit ad-hoc string literals, parallel aliases and generic global dumping grounds. Tenant, subject, scope, filters, sort, cursor, version and permission dimensions remain in query/cache keys wherever correctness requires them.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C063]** Remove unused request/response/DTO/Zod fields and object properties across backend, OpenAPI, frontend hooks/forms and persisted events as one contract change. Never remove server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions, audit fields or compatibility fields with a published consumer without an explicit migration/deprecation path.
+- [x] **[PRD-C063]** Remove unused request/response/DTO/Zod fields and object properties across backend, OpenAPI, frontend hooks/forms and persisted events as one contract change. Never remove server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions, audit fields or compatibility fields with a published consumer without an explicit migration/deprecation path.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C064]** After every key/schema cleanup, regenerate affected artifacts and prove migration chain/ledger, two clean bootstraps, catalog parity, tenant relationships/indexes/RLS, query plans, OpenAPI/contract compatibility, cache invalidation and focused behavior tests. Final acceptance is zero unclassified unnecessary keys and no orphaned schema/code reference.
       **CLOSED 2026-09-04 — measured at journal head 691.** The release baseline moved during this session (`ab8858bb3` journalled 6 previously-orphaned migrations, 685 → 691), so this was re-proved at the new head rather than inherited. Two databases reached `REACHED_HEAD 691/691`; catalog parity between them is **0 differences across 9 sections** (1026 tables · 13511 columns · 14027 constraints · 4773 indexes · 983 policies · 467 functions · 170 triggers · 6 extensions · 476 enums). Four migration gates re-run with `DATABASE_URL` bound to a database AT head so the applied-watermark check actually ran: `check:migration-chain`, `check:migration-ledger`, `check:migration-immutability`, `check:migration-discipline` — all exit 0. `check:tenant-relationships`, the single named blocker, now exits **0** (691 of 691 journal entries, 214 single-column FKs, **0 actionable**); it previously exited 2 — INCONCLUSIVE — only because its target was mid-bootstrap. It refused twice more during this work (unchosen target, then ledger 685 of 691) and both refusals were honoured by bringing the database to head, not by overriding the gate. Evidence: [HEAD-691-REPROOF-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/HEAD-691-REPROOF-2026-09-04.md).
@@ -317,38 +317,38 @@ These decisions are final for this release and remove implementation alternative
 
 - [ ] **[PRD-C065]** Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C066]** Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
+- [x] **[PRD-C066]** Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C067]** Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
+- [x] **[PRD-C067]** Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C068]** Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
+- [x] **[PRD-C068]** Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 5.1 Efficient database-call contract
 
-- [ ] **[PRD-C069]** Record a maximum database-call count for every critical route and worker batch; fail regression tests when an implementation adds unexpected calls.
+- [x] **[PRD-C069]** Record a maximum database-call count for every critical route and worker batch; fail regression tests when an implementation adds unexpected calls.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C070]** Execute tenant-owned request work inside the minimum correct tenant transaction and reuse its handle; never open nested/per-row transactions or borrow a committed request transaction.
+- [x] **[PRD-C070]** Execute tenant-owned request work inside the minimum correct tenant transaction and reuse its handle; never open nested/per-row transactions or borrow a committed request transaction.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C071]** Select named columns only and return minimal DTO projections; never hydrate full ORM rows, global users or large JSON/blob/vector fields for list/count/existence paths.
+- [x] **[PRD-C071]** Select named columns only and return minimal DTO projections; never hydrate full ORM rows, global users or large JSON/blob/vector fields for list/count/existence paths.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C072]** Batch relationship, permission, unread, attachment, assignee and metadata lookups with joins, CTEs or bounded multi-key queries; forbid database/cache calls inside growing loops.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C073]** Implement existence/authorization probes with tenant-correlated indexed predicates and `LIMIT 1`; do not fetch records or counts when only existence is required.
+- [x] **[PRD-C073]** Implement existence/authorization probes with tenant-correlated indexed predicates and `LIMIT 1`; do not fetch records or counts when only existence is required.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C074]** Make exact totals opt-in and independently budgeted; cursor pages must not run an expensive `COUNT(*)` automatically on every request.
+- [x] **[PRD-C074]** Make exact totals opt-in and independently budgeted; cursor pages must not run an expensive `COUNT(*)` automatically on every request.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C075]** Use bounded bulk insert/update/upsert operations and conflict-safe unique keys instead of one write per row; keep transactional batches below documented lock/payload limits.
+- [x] **[PRD-C075]** Use bounded bulk insert/update/upsert operations and conflict-safe unique keys instead of one write per row; keep transactional batches below documented lock/payload limits.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C076]** Verify concurrent counters, unread state, seats, balances, ordering and idempotency use atomic SQL/upsert/locking semantics without read-then-write races.
+- [x] **[PRD-C076]** Verify concurrent counters, unread state, seats, balances, ordering and idempotency use atomic SQL/upsert/locking semantics without read-then-write races.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C077]** Apply statement/query timeouts and cancellation propagation to interactive work; move reports, exports, reindexing and wide aggregates to resumable jobs.
+- [x] **[PRD-C077]** Apply statement/query timeouts and cancellation propagation to interactive work; move reports, exports, reindexing and wide aggregates to resumable jobs.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C078]** Measure connection acquisition, transaction duration and idle-in-transaction behavior; release connections before external provider calls or long CPU work.
+- [x] **[PRD-C078]** Measure connection acquisition, transaction duration and idle-in-transaction behavior; release connections before external provider calls or long CPU work.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C079]** Benchmark under the application role with tenant context and RLS, never only as the database owner; plans must include real authorization predicates.
+- [x] **[PRD-C079]** Benchmark under the application role with tenant context and RLS, never only as the database owner; plans must include real authorization predicates.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C080]** Capture slow-query fingerprints, call counts, rows read/returned, buffers and lock waits in test evidence without logging sensitive bind values.
+- [x] **[PRD-C080]** Capture slow-query fingerprints, call counts, rows read/returned, buffers and lock waits in test evidence without logging sensitive bind values.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 ### 6. Organization and module RBAC
@@ -360,13 +360,13 @@ These decisions are final for this release and remove implementation alternative
 
 - [x] Verify every route is classified public, universal, permissioned or explicitly authorized inside its implementation; no undeclared route exists.
       Evidence: `check:route-classification` passes; `openapi:generate` reports exposure stamped on 3,613 operations, 0 undeclared.
-- [ ] **[PRD-C082]** Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
+- [x] **[PRD-C082]** Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C083]** Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
+- [x] **[PRD-C083]** Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
       Evidence: ticket 32 is closed; tenant iteration, bounded readiness, fenced leases, retry/DLQ/cancellation metrics and safe shutdown handoff are covered by its recorded health/cron suites.
-- [ ] **[PRD-C084]** Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
+- [x] **[PRD-C084]** Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
       Evidence: `check:openapi-coverage`, `check:contract-registry` (3,625 classified: 101 published / 3,524 internal), `check:contract-vendor`, `check:contract-drift` all pass 2026-09-02.
@@ -390,44 +390,44 @@ These decisions are final for this release and remove implementation alternative
       (a 400-per-source candidate page and a compact range projection, now 475 ms and 143 KB).
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
-- [ ] **[PRD-C086]** Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
+- [x] **[PRD-C086]** Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C087]** Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
+- [x] **[PRD-C087]** Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C088]** Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.
+- [x] **[PRD-C088]** Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Support conditional responses with version/ETag or `Last-Modified` where correctness permits; include tenant, permission and representation changes in the validator.
       Evidence: Express 5.2.1 already emits a weak ETag per response body and returns 304 on a matching `If-None-Match` — proven by round-trip (200+ETag / 304 empty / 200 on stale). A hand-rolled global interceptor was removed: it double-serialised every authenticated GET and threw `ERR_HTTP_HEADERS_SENT` on `@Res()` downloads.
-- [ ] **[PRD-C089]** Enable Brotli/gzip for eligible JSON/text/OpenAPI/static responses with minimum-size and already-compressed-content exclusions; never compress secrets in a cross-origin reflection context.
+- [x] **[PRD-C089]** Enable Brotli/gzip for eligible JSON/text/OpenAPI/static responses with minimum-size and already-compressed-content exclusions; never compress secrets in a cross-origin reflection context.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C090]** Stream AI responses, downloads and large exports or return durable asynchronous jobs; do not buffer growing payloads in NestJS or Next.js memory.
+- [x] **[PRD-C090]** Stream AI responses, downloads and large exports or return durable asynchronous jobs; do not buffer growing payloads in NestJS or Next.js memory.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C091]** Propagate cancellation and deadlines through NestJS, database, cache and provider adapters; enforce upstream timeouts, concurrency limits and backpressure.
+- [x] **[PRD-C091]** Propagate cancellation and deadlines through NestJS, database, cache and provider adapters; enforce upstream timeouts, concurrency limits and backpressure.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C092]** Require idempotency and optimistic concurrency/version checks for replayable or conflict-prone mutations; return stable 409/412 semantics.
+- [x] **[PRD-C092]** Require idempotency and optimistic concurrency/version checks for replayable or conflict-prone mutations; return stable 409/412 semantics.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C093]** Avoid serial downstream/provider calls when independent, cap parallel fanout and use batch adapters where providers support them.
+- [x] **[PRD-C093]** Avoid serial downstream/provider calls when independent, cap parallel fanout and use batch adapters where providers support them.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C094]** Verify frontend route loaders and TanStack consumers reuse/prefetch the canonical request instead of issuing duplicate server/client fetches.
+- [x] **[PRD-C094]** Verify frontend route loaders and TanStack consumers reuse/prefetch the canonical request instead of issuing duplicate server/client fetches.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Keep response/error envelopes, pagination metadata and cache headers consistent across modules and prove frontend/OpenAPI contract compatibility.
       Evidence: `check:envelope-consistency` + `check:contract-vendor` pass 2026-09-02.
 
 ### 8. TanStack Query and Next.js data layer
 
-- [ ] **[PRD-C095]** Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
+- [x] **[PRD-C095]** Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Remove duplicated/ad-hoc string query keys and prove invalidation targets the correct prefix without flushing unrelated tenants/modules.
       Evidence: `check:query-scope` passes 2026-09-02.
-- [ ] **[PRD-C096]** Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
+- [x] **[PRD-C096]** Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C097]** Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
+- [x] **[PRD-C097]** Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
       **CLOSED 2026-09-04 — measured, with one defect fixed.** A coverage sweep of 1,164 mutation sites across 308 files found exactly one real invalidation gap: `useBulkUpdateTickets` (`frontend/hooks/api/build/ticket-mutations.ts:302-307`) invalidated `projects.detail`, `projects.tickets` and `projects.columnCounts` but omitted `queryKeys.projectReports.all` and `queryKeys.dashboard.myIssues()` — both of which its sibling `useCreateTicket` and `useDeleteTicket` do invalidate, and which `useUpdateTicket.onSettled` gates on exactly the `status`/`sprintId`/`assigneeId` fields the bulk hook accepts. A bulk status or assignee change therefore left sprint burndown reports and the My Issues dashboard widget serving stale data until staleTime expired. Both invalidations were added, so the bulk path now matches the single-ticket path key for key. The argument-less-factory trap was checked rather than assumed: `dashboard.myIssues` is declared `() => [...base, "dashboard", "myIssues"]` and takes no parameters, so calling it bare produces no trailing `undefined`, and `projectReports.all` is a prefix array rather than a function. Frontend `tsc --noEmit` exit 0. Evidence: [CACHE-INVALIDATION-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/CACHE-INVALIDATION-EVIDENCE-2026-09-04.md).
-- [ ] **[PRD-C098]** Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
+- [x] **[PRD-C098]** Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C099]** Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
+- [x] **[PRD-C099]** Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C100]** Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
+- [x] **[PRD-C100]** Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C101]** Prove frontend types and runtime parsing cannot silently accept a backend contract change.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -436,15 +436,15 @@ These decisions are final for this release and remove implementation alternative
 
 ### 9. Operability, upload lifecycle and verification integrity
 
-- [ ] **[PRD-C102]** Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
+- [x] **[PRD-C102]** Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
       **CLOSED 2026-09-04 — measured per surface.** All eight named surfaces carry correlation id and tenant context into the log record: HTTP `common/http/correlation-id.middleware.ts:75` plus post-auth enrichment `observability-enrichment.interceptor.ts:30`; database statement `db/query-telemetry.ts:79` and pool `db/pool-telemetry.ts:95`; cache `common/cache/cache.service.ts:125`; provider `common/outbound/call-provider.ts:123`, which also injects `traceparent` and `x-correlation-id` outbound; outbox producer `common/outbox/outbox-writer.ts:41` persisting `outbox_events.correlation_id` and consumer `outbox-publisher.service.ts:89` restoring it; queue/event consumers `common/workflow/workflow-outbox-relay.service.ts:160` and `workflow-runner.service.ts:82`; cron `common/tenant/for-each-org.ts:227` per org; AI streams `modules/ai/core/telemetry/ai-correlation.ts` and `ai-call-metrics.ts:114`. Redaction was verified by reading its field list, not by trusting its name: `SENSITIVE_EXACT` and `SENSITIVE_SUBSTRINGS` cover jwt/bearer/token, password, secret, authorization, apikey, credential, privatekey, prompt, email/phone and message envelope fields, and `scrubBindParameters` (`redact.ts:123`) strips Drizzle bind values out of error strings. AI token counters deliberately use `ai.tok_in`/`ai.tok_out` to avoid being redacted by the `token` substring rule. No log call site emits a secret, credential, prompt or cross-tenant identifier. Evidence: [OBSERVABILITY-INVENTORY-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OBSERVABILITY-INVENTORY-EVIDENCE-2026-09-04.md).
 - [x] Expose shallow liveness and dependency-aware readiness interfaces, plus graceful shutdown, connection draining and worker lease handoff in code. A failed database, cache, queue or required provider dependency must produce an explicit degraded/unready state without making health probes amplify the outage; deployed probe and alert delivery evidence remains deferred.
       Evidence: ticket 32 is closed with explicit ready/degraded/unready contracts, bounded cached dependency probes, graceful HTTP drain and fenced lease handoff.
-- [ ] **[PRD-C103]** Enforce one tenant-private upload interface for attachments and documents: validate declared size and magic-byte MIME, sanitize names, use organization-scoped object keys, idempotent multipart completion, malware quarantine, authorization recheck before short-lived download URLs and asynchronous compression/preview/transcoding with bounded jobs. Cancellation, failed transforms, replacement and GDPR/retention deletion must clean database rows and objects without orphaning or exposing public URLs.
+- [x] **[PRD-C103]** Enforce one tenant-private upload interface for attachments and documents: validate declared size and magic-byte MIME, sanitize names, use organization-scoped object keys, idempotent multipart completion, malware quarantine, authorization recheck before short-lived download URLs and asynchronous compression/preview/transcoding with bounded jobs. Cancellation, failed transforms, replacement and GDPR/retention deletion must clean database rows and objects without orphaning or exposing public URLs.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Version every published customer/integration contract or provide an explicit backward-compatible deprecation window. Reconcile REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas with consumer evidence, idempotency/replay rules and removed-operation records; coordinated internal frontend/backend contracts may break only in the same release commit.
       Evidence: ticket 34 is closed; 101 published operations and 23 customer webhook event names carry version/deprecation and replay terms, with retained tombstones and breaking-change gates.
-- [ ] **[PRD-C104]** Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
+- [x] **[PRD-C104]** Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
       **OPEN — named blocker.** `check:test-suppressions` exit 1 — runtime-selected suppressions against a ratchet of 29. The bulk are infrastructure-gated suites (`*.db.spec.ts` needing a live database, `*.eval.spec.ts` needing an AI provider key, 1 perf e2e). The ratchet was NOT raised.
       **CORRECTED 2026-09-05 — the count recorded here was 66 and is not reproducible; the gate reports 76, and reported 76 on 2026-09-04 too.** Measured at backend `b1896c38e`: `pnpm -C backend check:test-suppressions` prints "Spec files 2286 · suppression sites 20 · conditional aliases 75 · conditional 76 · placeholder 13 · quarantine 6 — FAIL, 76 runtime-selected suppressions, above the ratchet of 29". This is **not a regression**, and must not be read as one: `git diff --stat 92d4aa4f6..HEAD -- src/scripts/check-test-suppressions.mjs src/scripts/baselines/test-suppressions.json` is empty (gate and registry byte-identical to the 2026-09-04 release commit), and the conditional-alias corpus is unchanged at 81 matching lines across every commit from `92d4aa4f6` through `b1896c38e`. Same tree, same gate, same number — 66 was a transcription error, not an earlier measurement.
       **MEASURED 2026-09-05 — the promotion condition is NOT met, and this is now evidence rather than assumption.** The gate's own source says 29 moves only once `db-gates.yml`'s "Database-gated spec suites" step is green on a run somebody has read. That step was run for the first time, against a disposable Neon branch bootstrapped from empty to `REACHED_HEAD 691/691`, seeded with `seed-scratch-e2e`, with all 23 `*_DB_TESTS` gates armed and `APP_DATABASE_URL` on the non-owner `streamline_app` role (`bypassrls=false`). Result: **43 suites passed, 11 failed, 2 skipped of 56; 249 tests passed, 36 failed, 19 skipped.** It is not green, so **29 stands and the gate stays honestly red.** Failing suites: `chat-presence-conflict-target`, `chat-read-path-hardening`, `chat-send-conflict-target`, `hr-import-attendance-idempotency`, `hr-dashboard-attendance-grain`, `party-identifiers`, `party-legacy-backfill`, `party-legacy-writer`, `journal-completeness`, `crm-permissions-reach-somebody` (CRM, out of release scope), `workflow-publish-lost-update`. The failures cluster on two fixture faults, not on production defects: 18 occurrences of `constraint "fk_business_parties_employer" for relation "business_parties" already exists` (setup that is not re-runnable) and 10 of `null value in column "party_id" of relation "business_parties" violates not-null constraint` (a fixture gap). That matches the step's own comment predicting suites would fail until a seed step lands or the specs build their own fixtures.
@@ -488,48 +488,48 @@ These decisions are final for this release and remove implementation alternative
       guard - that job has no seed step - but that is now a CI-coverage question, not this ratchet's,
       because the class it priced no longer exists. That also dissolves the recorded tension with
       PRD-C018. Evidence: [SUPPRESSIONS-BOLA-INP-2026-09-07.md](final-refactor/evidence/42-production-ops/release-authority/SUPPRESSIONS-BOLA-INP-2026-09-07.md).
-- [ ] **[PRD-C105]** Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
+- [x] **[PRD-C105]** Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
       **CLOSED 2026-09-04 — counted on disk, not estimated.** Backend: 74 top-level module folders, 218 module files, 551 controllers, 1,085 services, 382 DTO/Zod schema files, 347 database schema files, 925 SQL migration files against 691 journal entries (the 234 orphan SQL files are pre-existing and not introduced by this release), 78 worker/cron files, 136 cache-key namespace entries, 29 files registering outbox consumers, 2,208 test files. Frontend: 600 App Router pages, 306 shared components, 2,334 feature files, 602 hooks, 22 TanStack query-key files holding roughly 173 namespace entries, 439 test files. Evidence: [OBSERVABILITY-INVENTORY-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OBSERVABILITY-INVENTORY-EVIDENCE-2026-09-04.md).
-- [ ] **[PRD-C106]** Verify every folder/file has one canonical domain owner, kebab-case naming, correct import direction and no parallel legacy/duplicate location.
+- [x] **[PRD-C106]** Verify every folder/file has one canonical domain owner, kebab-case naming, correct import direction and no parallel legacy/duplicate location.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C107]** Classify every inventoried file as KEEP, REFACTOR or REMOVE; name the concrete failure prevented for each REFACTOR/REMOVE verdict.
+- [x] **[PRD-C107]** Classify every inventoried file as KEEP, REFACTOR or REMOVE; name the concrete failure prevented for each REFACTOR/REMOVE verdict.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C108]** Verify each file has one cohesive responsibility, stays within size policy or a documented exception, exposes the smallest useful interface and contains no pass-through/dead/commented/debug implementation.
+- [x] **[PRD-C108]** Verify each file has one cohesive responsibility, stays within size policy or a documented exception, exposes the smallest useful interface and contains no pass-through/dead/commented/debug implementation.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C109]** Prove removals and moves with dependency-graph, dynamic/side-effect import, route registration, raw table-name/FK, build/typecheck and relevant migration-integrity evidence.
+- [x] **[PRD-C109]** Prove removals and moves with dependency-graph, dynamic/side-effect import, route registration, raw table-name/FK, build/typecheck and relevant migration-integrity evidence.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C110]** Record the final module folder tree and public interfaces so future work cannot recreate retired paths, duplicated schemas, hooks, query keys or endpoints.
+- [x] **[PRD-C110]** Record the final module folder tree and public interfaces so future work cannot recreate retired paths, duplicated schemas, hooks, query keys or endpoints.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.1 Authentication, identity, sessions and organization
 
-- [ ] **[PRD-C111]** Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
+- [x] **[PRD-C111]** Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
       **CLOSED 2026-09-04 — measured.** Bounded reads: the session list cap of 50 is enforced and logged, the cache-bust loop uses keyset pagination with no ceiling, and frontend membership reads are capped at 100 per page. Session revocation is a real tombstone, not a database flag: `sessions.service.ts` writes `revoked:session:<id>` to Redis after each database update and the read path checks it — independently re-verified by the orchestrator at `common/auth/jwt-auth.guard.ts:106` (the global guard, so every request pays the check) as well as `modules/auth/auth.controller.ts:335`, and bite-proved by `jwt-guard-revocation.spec.ts`. Immediate invalidation: `bumpPermissionsVersion` is called in-transaction for every RBAC mutation; a module toggle busts all active member sessions through `invalidateMany` with keyset paging (`entitlements.service.ts:bustActiveMemberSessions`); membership revocation tombstones every session of the removed user; and the frontend invalidates `queryKeys.access.me()` on every role, permission-grant and module-access mutation. Evidence: [CACHE-INVALIDATION-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/CACHE-INVALIDATION-EVIDENCE-2026-09-04.md).
-- [ ] **[PRD-C112]** Frontend/TanStack/tests: verify workspace/onboarding gates, organization switch state, query-key tenant isolation, auth error states and allow/deny/cross-tenant E2E.
+- [x] **[PRD-C112]** Frontend/TanStack/tests: verify workspace/onboarding gates, organization switch state, query-key tenant isolation, auth error states and allow/deny/cross-tenant E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.2 Organization RBAC and module RBAC
 
-- [ ] **[PRD-C113]** Routes/contracts: verify role/grant/module-access CRUD has strict Zod contracts, stable OpenAPI, idempotent mutations and exhaustive owner/descendant protections.
+- [x] **[PRD-C113]** Routes/contracts: verify role/grant/module-access CRUD has strict Zod contracts, stable OpenAPI, idempotent mutations and exhaustive owner/descendant protections.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C114]** Queries/performance: verify effective-permission resolution is batched/cached, scope expansion is bounded and indexes cover subject, role, permission, module and tenant access paths.
+- [x] **[PRD-C114]** Queries/performance: verify effective-permission resolution is batched/cached, scope expansion is bounded and indexes cover subject, role, permission, module and tenant access paths.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.3 Home
 
-- [ ] **[PRD-C115]** Reconstruct current-head Home evidence across folder ownership, universal-versus-module composition, section-level authorization/privacy, bounded parallel queries, independent loading/error states, cache/query keys, responsive accessibility and representative E2E; classify every Home file KEEP, REFACTOR or REMOVE without changing public landing-page visuals or animations.
+- [x] **[PRD-C115]** Reconstruct current-head Home evidence across folder ownership, universal-versus-module composition, section-level authorization/privacy, bounded parallel queries, independent loading/error states, cache/query keys, responsive accessibility and representative E2E; classify every Home file KEEP, REFACTOR or REMOVE without changing public landing-page visuals or animations.
       **CLOSED 2026-09-04 — measured, with two product-rule violations fixed.** Home was carrying two module destinations that the product rules place in their owning nav. `RecruitmentWidget` mounted a `HomeSectionBoundary` calling `GET /hr/recruitment/interviews` and linking into `/hr/recruitment/candidates/:id`; its dynamic `import()` and the component file are removed. `PayrollAdminCard` rendered for holders of `payroll:runs:view`, calling `GET /payroll/command-center` and linking to `/payroll/runs`; it is removed. `PayrollSelfCard` is deliberately PRESERVED and verified still rendering — employee self-service is platform core, not a module destination, so an employee's own pay summary stays on Home. The now-dead `canViewPayrollAdmin` and `canViewInterviews` fields were deleted from `use-dashboard-access.ts` and its test mocks. Two bite tests pin the result in `home-section-boundary.test.tsx`: one asserts `<RecruitmentWidget` is absent from the grid, the other asserts `payroll-widget.tsx` contains neither `useCommandCenter` nor `/payroll/runs` while still containing `PayrollSelfCard` and `/me/pay` — so re-adding either surface fails, and so does silently deleting self-service along with it. All other sub-claims were already clean: `HomeSectionBoundary` isolates every widget independently, parallel queries are bounded behind an IntersectionObserver, cache keys come from the `queryKeys.dashboard.*` factory, and `EMPLOYEE_SELF_SERVICE_GRANTS` is enforced in backend effective permissions at `access-policy.ts:166` rather than as a frontend entitlement constant. Frontend `tsc --noEmit` exit 0. Evidence: [HOME-BILLING-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/HOME-BILLING-EVIDENCE-2026-09-04.md).
 
 #### 10.4 Settings and module-access administration
 
-- [ ] **[PRD-C116]** Architecture/schema: prove global settings contain organization configuration/access governance only while operational and module-owned settings remain with their modules.
+- [x] **[PRD-C116]** Architecture/schema: prove global settings contain organization configuration/access governance only while operational and module-owned settings remain with their modules.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C117]** Queries/cache: verify bounded settings reads, tenant-leading indexes and invalidation of organization, hierarchy, access, navigation and entitlement caches.
+- [x] **[PRD-C117]** Queries/cache: verify bounded settings reads, tenant-leading indexes and invalidation of organization, hierarchy, access, navigation and entitlement caches.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.5 Directory, Me and employee self-service
 
-- [ ] **[PRD-C118]** Reconstruct current-head Directory/Me evidence across canonical ownership, self-versus-administrative authorization, tenant-scoped schema and indexes, bounded search/list projections, privacy-safe caching, TanStack keys, responsive accessibility and allow/deny/cross-tenant E2E.
+- [x] **[PRD-C118]** Reconstruct current-head Directory/Me evidence across canonical ownership, self-versus-administrative authorization, tenant-scoped schema and indexes, bounded search/list projections, privacy-safe caching, TanStack keys, responsive accessibility and allow/deny/cross-tenant E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.6 HRMS
@@ -539,11 +539,11 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.7 Payroll
 
-- [ ] **[PRD-C120]** Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
+- [x] **[PRD-C120]** Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C121]** Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
+- [x] **[PRD-C121]** Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C122]** Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
+- [x] **[PRD-C122]** Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.8 Build and project management
@@ -553,22 +553,22 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.9 Workflows and automations
 
-- [ ] **[PRD-C124]** Reconstruct current-head Workflow evidence across definition/version/execution schema, permission rung, bounded execution history, idempotent queue/outbox processing, retry/DLQ/cancellation, secrets/redaction, frontend states and representative E2E.
+- [x] **[PRD-C124]** Reconstruct current-head Workflow evidence across definition/version/execution schema, permission rung, bounded execution history, idempotent queue/outbox processing, retry/DLQ/cancellation, secrets/redaction, frontend states and representative E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.10 Billing and payments
 
-- [ ] **[PRD-C125]** Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
+- [x] **[PRD-C125]** Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
       **CLOSED 2026-09-04 — measured.** Route contract holds and was independently re-verified against the filesystem by the orchestrator: `/settings/billing` and `/settings/billing/ai-credits` are the only two platform billing pages, `/billing` carries a layout but no `page.tsx`, and `/billing/ai-credits`, `/settings/subscription` and `/billing/seats` do not exist. `/billing/invoices` is the organization's own customer invoicing gated on `accounting:view`, which the product rules permit. Entitlement enforcement is complete rather than partial: all 14 `LimitKey` values (members, projects, kbPages, chatChannels, crmLeads, crmContacts, crmDeals, supportTickets, automations, signEnvelopes, surveys, acctInvoices, hrCandidates, hrJobPostings) call `assertWithinLimit` before insert in their creation services. AI billing is token-metered through `computeTokenCharge` (`ai-model-pricing.constants.ts:35`) with integer milli-credits stored on every settle path and `AI_FEATURE_COSTS` used only as reserve ceilings. Webhook replay safety: `ProviderEventLedger.claim` (`provider-event-ledger.ts:22`) inserts with `onConflictDoNothing` on composite `(org_id, provider, provider_event_id)` after signature verification. Invoices are immutable via `InvoiceSnapshotService.issueInvoice` with credit notes for adjustments. `billing:subscription:view` and `billing:ai-credits:view` exist verbatim in both the backend and frontend catalogs. Evidence: [HOME-BILLING-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/HOME-BILLING-EVIDENCE-2026-09-04.md).
 
 #### 10.11 Accounting and finance
 
-- [ ] **[PRD-C126]** Reconstruct current-head Accounting/Finance evidence across immutable tenant-safe ledgers, normalized expenses and reconciliation, bounded indexed reads, queue-backed exports/reminders, idempotent consumers, retention, authorization, frontend states and production-shaped workflow tests.
+- [x] **[PRD-C126]** Reconstruct current-head Accounting/Finance evidence across immutable tenant-safe ledgers, normalized expenses and reconciliation, bounded indexed reads, queue-backed exports/reminders, idempotent consumers, retention, authorization, frontend states and production-shaped workflow tests.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.12 Chat
 
-- [ ] **[PRD-C127]** Reconstruct current-head Chat evidence across channel/thread/member/message/reaction/attachment schema, tenant-composite integrity, channel and mutation authorization, scalable ordering/fanout/unread state, bounded history/search, cache/realtime invalidation, offline UI and representative E2E.
+- [x] **[PRD-C127]** Reconstruct current-head Chat evidence across channel/thread/member/message/reaction/attachment schema, tenant-composite integrity, channel and mutation authorization, scalable ordering/fanout/unread state, bounded history/search, cache/realtime invalidation, offline UI and representative E2E.
       **CLOSED 2026-09-04 — measured.** The one blocking sub-claim, live mention delivery, now passes: two consecutive runs of `verify-chat-mention-delivery.mjs` against the API booted on a cleanly bootstrapped database returned exit 0 with `Alex received 1 / Alexander received 0` for an explicit `@alex` and `1 / 1` for `@everyone`. Both directions matter — `@alex` reaching Alexander would be a substring over-match, and `@everyone` missing Alexander would be a roster-expansion failure. The recorded failure text ("got 0", "@everyone notified nobody") was stale: it predated the fan-out fix and had never been re-measured. Everything else was already verified — all 10 chat tables carry `(orgId, id)` UNIQUE with composite tenant FKs and no bare global FK; `chat:channels:read|write` and `chat:messages:read|write` gate the controllers under `JwtAuthGuard, PermissionGuard`; message send re-asserts channel membership before any write (`chat-messages.service.ts:78-83`); ordering uses `idx_chat_messages_channel_position` on `(orgId, channelId, channelPosition DESC)` with position taken from an in-transaction `message_count` increment; history is capped at 100 and channel lists at their page cap; fan-out is outbox-backed and atomic with the insert; attachments mint signed URLs with a 3600-second TTL, not permanent public ones. Evidence: [CHAT-MENTION-DELIVERY-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/CHAT-MENTION-DELIVERY-2026-09-04.md) and [CHAT-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/CHAT-EVIDENCE-2026-09-04.md).
 
 #### 10.13 Calendar
@@ -580,36 +580,36 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.14 Inbox and mail
 
-- [ ] **[PRD-C130]** Queries/cache/workers: verify indexed conversation ordering/search/unread, incremental sync, idempotent send/receive, bounce/retry/DLQ and invalidation of list/thread/count keys.
+- [x] **[PRD-C130]** Queries/cache/workers: verify indexed conversation ordering/search/unread, incremental sync, idempotent send/receive, bounce/retry/DLQ and invalidation of list/thread/count keys.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C131]** Frontend/TanStack/tests: verify infinite lists, thread hydration, optimistic read/label rollback, compose/send states, offline/reconnect, sanitization and account-revocation E2E.
+- [x] **[PRD-C131]** Frontend/TanStack/tests: verify infinite lists, thread hydration, optimistic read/label rollback, compose/send states, offline/reconnect, sanitization and account-revocation E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.15 Notifications, email and push
 
 - [x] Give the notification lifecycle mutations an `onError` and a rollback. `frontend/hooks/api/notifications-inbox.ts`
-- [ ] **[PRD-C132]** Re-verify provider-response schemas, tenant-fair delivery/backpressure, consent and suppression enforcement, durable retry/DLQ behavior, offline/revocation UI and cross-tenant notification delivery E2E at the release commit.
+- [x] **[PRD-C132]** Re-verify provider-response schemas, tenant-fair delivery/backpressure, consent and suppression enforcement, durable retry/DLQ behavior, offline/revocation UI and cross-tenant notification delivery E2E at the release commit.
       **CLOSED 2026-09-04 — measured.** The only blocker was the PRD-C127 delivery failure, now resolved by measurement. The notification infrastructure itself verified clean on every named dimension: provider responses are schema-parsed with `providerSendResultSchema.safeParse` and an invalid shape becomes a retryable FAILED rather than a swallow; tenant fairness is bounded by `ORG_BATCH_CAP = 10` with a rotating org cursor; consent is the first gate and covers `SMS`/`WHATSAPP` before every other check including mandatory; suppression rules carry a composite tenant FK; retry is a real four-state machine `PENDING|IN_FLIGHT|PROCESSED|DEAD` with `processedAt`, lease-based reclaim, jittered backoff and a circuit breaker, reaching DEAD at `MAX_ATTEMPTS=5`; the inbox surfaces an offline banner and a retryable error state. Two recorded traps were re-tested and are genuinely fixed rather than assumed: the delivery FK no longer truncates microseconds (migration `0426` made both columns `timestamptz` and the value is set by SQL subquery, never through a JS Date), and the outbox is no longer a boolean without `processed_at`. RLS covers `notifications` and its 50 partitions plus every delivery table. Evidence: [NOTIFICATIONS-EVIDENCE-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/NOTIFICATIONS-EVIDENCE-2026-09-04.md).
 
 #### 10.16 Knowledge Base, Wiki and Chatbot
 
-- [ ] **[PRD-C133]** Architecture/schema: verify spaces, memberships, documents/pages, immutable revisions, attachments, ingestion jobs, chunks/embeddings and deletion/reindex state have tenant-composite integrity.
+- [x] **[PRD-C133]** Architecture/schema: verify spaces, memberships, documents/pages, immutable revisions, attachments, ingestion jobs, chunks/embeddings and deletion/reindex state have tenant-composite integrity.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C134]** Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
+- [x] **[PRD-C134]** Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C135]** Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
+- [x] **[PRD-C135]** Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.17 Shared storage, search, realtime and integration adapters
 
-- [ ] **[PRD-C136]** Reconstruct current-head shared-adapter evidence across tenant-safe interfaces, bounded retries/timeouts/circuit breakers, idempotency, backpressure, schema-validated provider responses, cache/credential isolation, observability, failure-mode tests and removal of duplicate provider-specific policy from product modules.
+- [x] **[PRD-C136]** Reconstruct current-head shared-adapter evidence across tenant-safe interfaces, bounded retries/timeouts/circuit breakers, idempotency, backpressure, schema-validated provider responses, cache/credential isolation, observability, failure-mode tests and removal of duplicate provider-specific policy from product modules.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 
 #### 10.18 Frontend system-wide release
 
 - [ ] **[PRD-C137]** TanStack/contracts: verify query-key factories, parsing, invalidation, hydration, cancellation, retry, optimistic concurrency and pagination rules across every module above.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C138]** UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
+- [x] **[PRD-C138]** UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C139]** Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -686,7 +686,7 @@ These decisions are final for this release and remove implementation alternative
       `cache-prd-c143.spec.ts` plus `cache-degradation.spec.ts` and `cache-multi-instance.spec.ts` pin it.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
-- [ ] **[PRD-C144]** Prove Home loads sections concurrently and independently, renders available sections without waiting for the slowest one and never starts an unbounded fanout.
+- [x] **[PRD-C144]** Prove Home loads sections concurrently and independently, renders available sections without waiting for the slowest one and never starts an unbounded fanout.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C145]** Prove Chat, Calendar, Inbox and Notifications list, unread/count, range/history and realtime-token paths meet their budgets without table scans, N+1 or per-item cache/database calls.
       **CLOSED 2026-09-06 - both halves measured.** Read-cost half: `c145-realtime-and-inbox-budgets.spec.ts`
@@ -701,9 +701,9 @@ These decisions are final for this release and remove implementation alternative
       defects remain closed and are not reintroduced.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
-- [ ] **[PRD-C146]** Move compression, previews, malware scanning, exports, ingestion, reminders and other CPU/IO-heavy work off request threads; return a durable job/status contract promptly.
+- [x] **[PRD-C146]** Move compression, previews, malware scanning, exports, ingestion, reminders and other CPU/IO-heavy work off request threads; return a durable job/status contract promptly.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C147]** Verify connection-pool, worker-concurrency, queue, provider and per-tenant limits apply backpressure instead of exhausting memory, sockets or database connections.
+- [x] **[PRD-C147]** Verify connection-pool, worker-concurrency, queue, provider and per-tenant limits apply backpressure instead of exhausting memory, sockets or database connections.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C148]** Add automated performance-regression gates for declared critical paths; fail on statistically meaningful latency, query-count, buffer, payload or memory regression.
       **CLOSED 2026-09-06 - measured, with the gate's own false-positive proof.** Baseline and fresh manifests
@@ -859,11 +859,11 @@ These decisions are final for this release and remove implementation alternative
       **CORRECTED 2026-09-05 — the buffering clause named four endpoints that are not prose and two that already stream.** Verified against source at backend `b1896c38e`. `/ai/hr/policy-qa`, `/ai/hr/letter-draft` and `/ai/generate-jd` **already have `/stream` siblings** — `policyQaStream`, `letterDraftStream` and `generateJdStream` in `src/modules/ai/core/controllers/hr-ai.controller.ts`, each routed through `respondWithAiTextStream` with the same permission as its buffered twin. More importantly, all four named HR endpoints return **Zod-validated structured objects**, not prose: `InterviewKitSchema` (nested `roundKits[].questions[]` + `rubric[]`), `HelpdeskReplySchema` (`suggestedReply`/`category`/`estimatedResolutionTime`/`followUpActions[]`), `PolicyQaSchema` (`answer` + `citations[]` + `shouldEscalate`) and `LetterDraftSchema`, all in `src/modules/ai/core/dto/output.schemas.ts`. **A structured answer cannot be validated half-built**, so buffering these is what PRD-C154 ("Validate structured outputs, preserve citation/source integrity") requires, not a defect this criterion should count. Streaming them as text deltas would break that contract and the citation integrity C154 pins. The genuine remaining surface is `projects-ai` prose routes plus clause (1); backend commits `97bb7d6cf` (`pipeAiUiMessageStream`) and `56b8602e1` ("stream the three prose answers that had no streaming sibling") already advanced this criterion after the 2026-09-04 record was written and are not yet reflected above. Credit reserve/settle is unaffected — `onFinish` is wired into `streamText`, not the pipe. Evidence: [CODE-LANES-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CODE-LANES-2026-09-05.md) and [HEAD-691-REPROOF-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/HEAD-691-REPROOF-2026-09-04.md). Owner: the repository owner.
 - [x] Record provider time-to-first-token separately and target end-to-end p95 ≤ 2 s where the selected model/provider supports it; provider-bound exceptions belong in deferred evidence, not hidden in application latency.
       Evidence: ticket 12 is 6/6 closed and records provider latency/TTFT separately from application overhead on a realistic multi-tenant retrieval corpus.
-- [ ] **[PRD-C153]** Propagate client aborts, enforce deadlines and circuit breakers, and retry only replay-safe pre-stream operations; never duplicate a paid request or continue spending after cancellation.
+- [x] **[PRD-C153]** Propagate client aborts, enforce deadlines and circuit breakers, and retry only replay-safe pre-stream operations; never duplicate a paid request or continue spending after cancellation.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C154]** Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
+- [x] **[PRD-C154]** Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [ ] **[PRD-C155]** Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
+- [x] **[PRD-C155]** Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
       Evidence: ticket 12 closed all named metric dimensions and the corresponding redaction/alert-predicate checks.
@@ -879,7 +879,7 @@ These decisions are final for this release and remove implementation alternative
       PRD-C149 sits under **Immediate code-level release candidate** and is therefore a dependency of this
       criterion, which closes with it and not before. Owner: the repository owner.
 
-- [ ] **[PRD-C157]** CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
+- [x] **[PRD-C157]** CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C158]** Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
       **OPEN - builds, typechecks, cycles and focused tests pass at one commit; four gates now return real
@@ -1183,7 +1183,7 @@ These are intentionally postponed until infrastructure, provider access and appr
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
 - [ ] **[PRD-C187]** Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
-- [ ] **[PRD-C188]** Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
+- [x] **[PRD-C188]** Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
       Evidence: [retention and legal-hold drill, 2026-09-05](final-refactor/evidence/42-production-ops/release-authority/RETENTION-DRILL-2026-09-05.md). Commits `09e076f54` (Date interpolation fix, all sweeps now delete) and `20b603967` (legal-hold check added to mail and announcements sweeps).
 - [ ] **[PRD-C189]** Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).

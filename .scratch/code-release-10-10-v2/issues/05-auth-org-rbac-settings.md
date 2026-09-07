@@ -12,9 +12,9 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C004** — **Organization/RBAC/Settings:** complete v2 ticket 05's organization authority, module permission, owner/descendant protection, cache invalidation, contract and frontend criteria.
+- [ ] **PRD-C004** — **Organization/RBAC/Settings:** complete v2 ticket 05's organization authority, module permission, owner/descendant protection, cache invalidation, contract and frontend criteria.
   PARTIAL: rolls up the seven below — closed once C112 is exercised and D1 (membership-FK drift) is fixed by the schema owner.
-- [x] **PRD-C081** — Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
+- [ ] **PRD-C081** — Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
   Measured as non-owner `streamline_app` (`rolbypassrls=f`): 824 RLS tables with `org_id` swept, **0 leaks**, 70 tables returned own-org rows (anti-vacuity), 0 tenant tables without RLS, fail-closed `42501` with no GUC, inverse direction clean. Static audit of all 199 territory files: 145 id-keyed loads, 29 without an in-window org predicate, **0 real defects** after triage. NOT COVERED: no booted-API HTTP test — 404-vs-403 rests on reading every load site, not on observed status codes.
 - [x] **PRD-C111** — Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
   Resolution reads capped (`.limit(500)` ×5, `.limit(100)` ×1); every RBAC table carries an `org_id`-leading composite; invalidation proven by `access-resolution-cost.spec.ts` re-reading the version after a bump. `check:cache-invalidation` EXIT 0 (1076 service files, 475 invalidate sites) — but its verdict rests on 13 hardcoded checks, not a general rule.

@@ -10,7 +10,7 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C017** — **PRD-to-ticket traceability:** complete v2 ticket 01 and keep its manifest fail-closed so every PRD criterion has exactly one ticket owner, ticket-only criteria are rejected and the restored module evidence cannot disappear again.
+- [ ] **PRD-C017** — **PRD-to-ticket traceability:** complete v2 ticket 01 and keep its manifest fail-closed so every PRD criterion has exactly one ticket owner, ticket-only criteria are rejected and the restored module evidence cannot disappear again.
 
 ## Completion evidence
 

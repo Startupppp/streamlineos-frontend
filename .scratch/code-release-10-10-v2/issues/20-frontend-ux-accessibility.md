@@ -12,7 +12,7 @@
 
 - [x] **PRD-C009** — **UX/accessibility:** complete v2 ticket 20's in-scope responsive, keyboard, screen-reader, loading, empty, error, offline, permission and retry states.
 - [x] **PRD-C138** — UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
-- [x] **PRD-C150** — Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
+- [ ] **PRD-C150** — Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
 
 ## Completion evidence
 

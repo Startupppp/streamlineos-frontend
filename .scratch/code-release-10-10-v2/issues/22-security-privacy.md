@@ -10,7 +10,7 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C003** — **Authorization/security:** complete v2 ticket 22's live BOLA/IDOR, valid mutating-body, same-tenant control, abuse-protection and privacy criteria.
+- [ ] **PRD-C003** — **Authorization/security:** complete v2 ticket 22's live BOLA/IDOR, valid mutating-body, same-tenant control, abuse-protection and privacy criteria.
     PARTIAL: `test/security` went 8 failed / 592 passed / 600 total -> 0 failed / 604 passed / 604 total (44 suites), and the wider
     `--testPathPattern=security` run is 56 suites / 768 tests / 0 failures. Four defects closed, each bite-proved by planting the
     defect the spec exists to catch: (1) `src/common/db/bulk-update.ts` reviewed — its `sql.raw` cast is NOT reachable from request

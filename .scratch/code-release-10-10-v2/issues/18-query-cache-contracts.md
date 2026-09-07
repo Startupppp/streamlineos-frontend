@@ -12,14 +12,14 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C065** — Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
+- [ ] **PRD-C065** — Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
 - [x] **PRD-C066** — Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
 - [x] **PRD-C067** — Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
 - [x] **PRD-C068** — Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
 - [x] **PRD-C069** — Record a maximum database-call count for every critical route and worker batch; fail regression tests when an implementation adds unexpected calls.
 - [x] **PRD-C070** — Execute tenant-owned request work inside the minimum correct tenant transaction and reuse its handle; never open nested/per-row transactions or borrow a committed request transaction.
 - [x] **PRD-C071** — Select named columns only and return minimal DTO projections; never hydrate full ORM rows, global users or large JSON/blob/vector fields for list/count/existence paths.
-- [x] **PRD-C072** — Batch relationship, permission, unread, attachment, assignee and metadata lookups with joins, CTEs or bounded multi-key queries; forbid database/cache calls inside growing loops.
+- [ ] **PRD-C072** — Batch relationship, permission, unread, attachment, assignee and metadata lookups with joins, CTEs or bounded multi-key queries; forbid database/cache calls inside growing loops.
 - [x] **PRD-C073** — Implement existence/authorization probes with tenant-correlated indexed predicates and `LIMIT 1`; do not fetch records or counts when only existence is required.
 - [x] **PRD-C074** — Make exact totals opt-in and independently budgeted; cursor pages must not run an expensive `COUNT(*)` automatically on every request.
 - [x] **PRD-C075** — Use bounded bulk insert/update/upsert operations and conflict-safe unique keys instead of one write per row; keep transactional batches below documented lock/payload limits.
