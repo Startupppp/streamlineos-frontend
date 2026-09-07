@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -11,6 +12,13 @@ import {
   type PayrollRunDetail as RunDetail,
   type PayrollRunsPage as RunsPage,
 } from "@/hooks/api/payroll/runs-schema";
+
+const runCreateC = lazyContract(() =>
+  import("@/hooks/api/payroll/runs-schema").then((m) => m.runCreateResponseContract),
+);
+const runOperationC = lazyContract(() =>
+  import("@/hooks/api/payroll/runs-schema").then((m) => m.runOperationResponseContract),
+);
 
 export function usePayrollRuns(params?: {
   cursor?: string;
@@ -60,7 +68,7 @@ export function useCreateRun() {
     mutationFn: (input: string | CreateRunInput) => {
       const body: CreateRunInput =
         typeof input === "string" ? { month: input } : input;
-      return apiClient.post<{ runId: number }>("/payroll/runs", body);
+      return apiClient.post<{ runId: number }>("/payroll/runs", body, undefined, runCreateC);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
@@ -74,7 +82,7 @@ export function useGenerateRun() {
   return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "runs", "generate"],
     mutationFn: (runId: number) =>
-      apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`),
+      apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`, undefined, undefined, runOperationC),
     onSuccess: (_, runId) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
@@ -91,7 +99,7 @@ export function useRecalculateRun() {
   return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "runs", "recalculate"],
     mutationFn: (runId: number) =>
-      apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`),
+      apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`, undefined, undefined, runOperationC),
     onSuccess: (_, runId) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });

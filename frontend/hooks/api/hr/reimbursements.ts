@@ -22,7 +22,7 @@ export interface Reimbursement {
   amount: string;
   description: string | null;
   receiptUrl: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | null;
+  status: string | null;
   approvedBy: string | null;
   rejectionReason: string | null;
   createdAt: Date | string | null;

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -14,6 +15,13 @@ import type {
   UpdateEntryInput,
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const entriesListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entriesListResponseContract),
+);
+const entryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entryContract),
+);
 
 function toParams(query: EntriesQuery): Record<string, unknown> {
   return {
@@ -34,7 +42,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const params = toParams(query);
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.entries(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal, entriesListC),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -46,7 +54,7 @@ export function useCreateTimesheetEntry() {
   return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "entries", "create"],
     mutationFn: (data: CreateEntryInput) =>
-      apiClient.post<TimesheetEntry>("/timesheets/entries", data),
+      apiClient.post<TimesheetEntry>("/timesheets/entries", data, undefined, entryC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
@@ -61,7 +69,7 @@ export function useUpdateTimesheetEntry() {
   return useAuthorizedMutation("timesheets:entries:update", {
     mutationKey: ["timesheets", "entries", "update"],
     mutationFn: ({ entryId, data }: { entryId: number; data: UpdateEntryInput }) =>
-      apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data),
+      apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data, undefined, entryC),
     onMutate: async ({ entryId, data }) => {
       await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
@@ -111,7 +119,7 @@ export function useVoidTimesheetEntry() {
   return useAuthorizedMutation("timesheets:entries:void", {
     mutationKey: ["timesheets", "entries", "void"],
     mutationFn: ({ entryId, reason }: { entryId: number; reason: string }) =>
-      apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }),
+      apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }, undefined, undefined),
     onMutate: async ({ entryId }) => {
       await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({

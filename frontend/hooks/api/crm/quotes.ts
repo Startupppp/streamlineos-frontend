@@ -12,6 +12,14 @@ import type {
   UpdateQuoteInput,
 } from "@/types/crm/quotes";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const quoteListLazy = lazyContract(() => import("@/hooks/api/crm/quotes-schema").then((m) => m.quoteListContract));
+const quoteDetailLazy = lazyContract(() => import("@/hooks/api/crm/quotes-schema").then((m) => m.quoteDetailContract));
+const quoteLazy = lazyContract(() => import("@/hooks/api/crm/quotes-schema").then((m) => m.quoteContract));
+const quoteDeleteLazy = lazyContract(() => import("@/hooks/api/crm/quotes-schema").then((m) => m.quoteDeleteContract));
+const quoteConvertLazy = lazyContract(() => import("@/hooks/api/crm/quotes-schema").then((m) => m.quoteConvertToInvoiceContract));
+
 
 export interface QuoteListResponse {
   quotes: QuoteListItem[];
@@ -37,7 +45,7 @@ export function useQuotes(params?: QuotesParams) {
       if (params?.search !== undefined) p.search = params.search;
       if (params?.cursor !== undefined) p.cursor = params.cursor;
       if (params?.pageSize !== undefined) p.pageSize = params.pageSize;
-      return apiClient.get<QuoteListResponse>("/quotes", p, signal);
+      return apiClient.get<QuoteListResponse>("/quotes", p, signal, quoteListLazy);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -47,7 +55,7 @@ export function useQuotes(params?: QuotesParams) {
 export function useQuoteDetail(id: number) {
   return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.detail(id),
-    queryFn: ({ signal }) => apiClient.get<Quote>(`/quotes/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Quote>(`/quotes/${id}`, undefined, signal, quoteDetailLazy),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -56,7 +64,7 @@ export function useQuoteDetail(id: number) {
 export function useDealQuotes(dealId: number) {
   return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.byDeal(dealId),
-    queryFn: ({ signal }) => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }, signal),
+    queryFn: ({ signal }) => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }, signal, quoteListLazy),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
@@ -79,7 +87,7 @@ export function useCreateQuote() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:quotes:create", {
     mutationKey: ["quotes", "create"],
-    mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input),
+    mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
 }
@@ -89,7 +97,7 @@ export function useUpdateQuote() {
   return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "update"],
     mutationFn: ({ id, ...input }: UpdateQuoteInput & { dealId?: number }) =>
-      apiClient.patch<Quote>(`/quotes/${id}`, input),
+      apiClient.patch<Quote>(`/quotes/${id}`, input, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
@@ -107,7 +115,7 @@ export function useUpdateQuoteStatus() {
       status: QuoteStatus;
       rejectionReason?: string;
       dealId?: number;
-    }) => apiClient.patch<Quote>(`/quotes/${id}`, { status, rejectionReason }),
+    }) => apiClient.patch<Quote>(`/quotes/${id}`, { status, rejectionReason }, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
@@ -117,7 +125,7 @@ export function useDeleteQuote() {
   return useAuthorizedMutation("crm:quotes:delete", {
     mutationKey: ["quotes", "delete"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
-      apiClient.delete<{ success: boolean }>(`/quotes/${id}`),
+      apiClient.delete<{ success: boolean }>(`/quotes/${id}`, undefined, undefined, quoteDeleteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
 }
@@ -131,7 +139,7 @@ export function useApproveQuote() {
   return useAuthorizedMutation("crm:quotes:approve", {
     mutationKey: ["quotes", "approve"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
-      apiClient.post<Quote>(`/quotes/${id}/approve`),
+      apiClient.post<Quote>(`/quotes/${id}/approve`, undefined, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
@@ -141,7 +149,7 @@ export function useRejectQuote() {
   return useAuthorizedMutation("crm:quotes:approve", {
     mutationKey: ["quotes", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string; dealId?: number }) =>
-      apiClient.post<Quote>(`/quotes/${id}/reject`, { reason }),
+      apiClient.post<Quote>(`/quotes/${id}/reject`, { reason }, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
@@ -153,6 +161,9 @@ export function useConvertQuoteToInvoice() {
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<{ invoice: { id: number; invoiceNumber: string }; quoteId: number }>(
         `/quotes/${id}/convert-to-invoice`,
+        undefined,
+        undefined,
+        quoteConvertLazy,
       ),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
@@ -163,7 +174,7 @@ export function useMarkQuoteSigned() {
   return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "mark-signed"],
     mutationFn: ({ id, documentRef }: { id: number; documentRef?: string; dealId?: number }) =>
-      apiClient.post<Quote>(`/quotes/${id}/mark-signed`, { documentRef }),
+      apiClient.post<Quote>(`/quotes/${id}/mark-signed`, { documentRef }, undefined, quoteLazy),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }

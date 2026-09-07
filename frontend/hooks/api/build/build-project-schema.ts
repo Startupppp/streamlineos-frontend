@@ -43,6 +43,8 @@ const projectRowSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
+  clientId: z.string().nullable(),
+  managerId: z.string().nullable(),
   clientMembershipId: z.number().nullable(),
   managerMembershipId: z.number().nullable(),
   startDate: z.string().nullable(),
@@ -117,6 +119,7 @@ const projectMemberRowSchema = z.object({
   orgId: z.string(),
   projectId: z.number(),
   membershipId: z.number(),
+  userId: z.string(),
   role: z.string(),
   hourlyRate: z.string(),
   hourlyRateMinor: z.number(),
@@ -136,12 +139,10 @@ const projectCustomStateSchema = z.object({
   orgId: z.string(),
   projectId: z.number(),
   name: z.string(),
-  order: z.number(),
   color: z.string().nullable(),
-  type: z.string(),
-  wipLimit: z.number().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  order: z.number(),
+  type: z.enum(["unstarted", "started", "completed", "cancelled"]).optional(),
+  wipLimit: z.number().nullable().optional(),
 });
 
 const bulkReorderStatesResultSchema = z.object({
@@ -151,32 +152,31 @@ const bulkReorderStatesResultSchema = z.object({
 const buildCustomFieldSchema = z.object({
   id: z.number(),
   orgId: z.string(),
-  projectId: z.number().nullable(),
+  projectId: z.number(),
   name: z.string(),
-  type: z.string(),
+  type: z.enum(["text", "number", "date", "user", "select", "multi_select", "checkbox", "url", "currency"]),
   options: z.array(z.string()).nullable(),
-  required: z.boolean().nullable(),
-  position: z.number().nullable(),
+  required: z.boolean(),
+  position: z.number(),
   createdAt: z.string(),
 });
 
 const ticketFieldValueSchema = z.object({
   id: z.number(),
-  orgId: z.string(),
   ticketId: z.number(),
   fieldId: z.number(),
-  value: z.unknown(),
+  value: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   field: z.object({
     id: z.number(),
     orgId: z.string(),
-    projectId: z.number().nullable(),
+    projectId: z.number(),
     name: z.string(),
-    type: z.string(),
+    type: z.enum(["text", "number", "date", "user", "select", "multi_select", "checkbox", "url", "currency"]),
     options: z.array(z.string()).nullable(),
-    required: z.boolean().nullable(),
-    position: z.number().nullable(),
+    required: z.boolean(),
+    position: z.number(),
     createdAt: z.string(),
   }),
 });
@@ -237,15 +237,6 @@ const webhookTestResultSchema = z.object({
   responseCode: z.number().nullable(),
 });
 
-const projectAutomationListItemSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  triggerEvent: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
 const projectAutomationConditionSchema = z.object({
   field: z.string(),
   operator: z.enum(['equals', 'not_equals', 'contains', 'is_empty', 'is_not_empty']),
@@ -255,6 +246,17 @@ const projectAutomationConditionSchema = z.object({
 const projectAutomationActionSchema = z.object({
   type: z.enum(['set_status', 'set_assignee', 'set_priority', 'add_label', 'add_comment']),
   value: z.string(),
+});
+
+const projectAutomationListItemSchema = z.object({
+  id: z.number(),
+  projectId: z.number(),
+  name: z.string(),
+  isActive: z.boolean(),
+  triggerEvent: z.string(),
+  conditions: z.array(projectAutomationConditionSchema),
+  actions: z.array(projectAutomationActionSchema),
+  createdAt: z.string(),
 });
 
 const projectAutomationRowSchema = z.object({

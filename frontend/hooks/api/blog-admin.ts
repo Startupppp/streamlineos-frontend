@@ -47,6 +47,10 @@ const blogAdminCategoryContract = lazyContract(() =>
   import("@/hooks/api/blog-schema").then((m) => m.blogAdminCategoryContract),
 );
 
+const blogSuccessContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogSuccessContract),
+);
+
 export interface AdminBlogPostsParams {
   page?: number;
   limit?: number;
@@ -125,7 +129,7 @@ export function useDeleteBlogPost() {
   const qc = useQueryClient();
   return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "delete"],
-    mutationFn: (postId: string) => apiClient.delete(`/blog/admin/posts/${postId}`),
+    mutationFn: (postId: string) => apiClient.delete<{ success: true }>(`/blog/admin/posts/${postId}`, undefined, undefined, blogSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },
@@ -189,7 +193,7 @@ export function useDeleteBlogCategory() {
   return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "delete"],
     mutationFn: (categoryId: string) =>
-      apiClient.delete(`/blog/admin/categories/${categoryId}`),
+      apiClient.delete<{ success: true }>(`/blog/admin/categories/${categoryId}`, undefined, undefined, blogSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },

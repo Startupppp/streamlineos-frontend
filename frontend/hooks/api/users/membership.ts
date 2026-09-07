@@ -69,7 +69,7 @@ export const useUpdateUserMembership = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
-      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data, userSuccessContract),
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data, undefined, userSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.membership(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });

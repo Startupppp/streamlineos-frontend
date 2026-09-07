@@ -87,6 +87,13 @@ const MOCK_TICKETS: SupportTicket[] = [
   makeTicket({ id: 3, title: "Cannot reset password", priority: "URGENT", status: "WAITING" }),
 ];
 
+const PAGINATION_PROPS = {
+  page: 1,
+  pageSize: 50,
+  total: MOCK_TICKETS.length,
+  onPageChange: jest.fn(),
+};
+
 describe("a11y — Support/Inbox surface (TicketList)", () => {
   it("passes axe with ticket list at desktop (1280px)", async () => {
     const restore = atViewport("desktop");
@@ -97,6 +104,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
           isLoading={false}
           selectedTicketId={null}
           onSelect={jest.fn()}
+          {...PAGINATION_PROPS}
         />,
       );
       await expectNoAxeViolations(baseElement);
@@ -114,6 +122,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
           isLoading={false}
           selectedTicketId={null}
           onSelect={jest.fn()}
+          {...PAGINATION_PROPS}
         />,
       );
       await expectNoAxeViolations(baseElement);
@@ -131,6 +140,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
           isLoading={false}
           selectedTicketId={null}
           onSelect={jest.fn()}
+          {...PAGINATION_PROPS}
         />,
       );
       await expectNoAxeViolations(baseElement);
@@ -146,6 +156,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
         isLoading={false}
         selectedTicketId={null}
         onSelect={jest.fn()}
+        {...PAGINATION_PROPS}
       />,
     );
     expect(screen.getByText("Login Button Unresponsive")).toBeInTheDocument();
@@ -159,6 +170,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
         isLoading={false}
         selectedTicketId={null}
         onSelect={jest.fn()}
+        {...PAGINATION_PROPS}
       />,
     );
     const buttons = screen.getAllByRole("button");
@@ -174,6 +186,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
         isLoading={true}
         selectedTicketId={null}
         onSelect={jest.fn()}
+        {...PAGINATION_PROPS}
       />,
     );
     await expectNoAxeViolations(baseElement);
@@ -186,6 +199,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
         isLoading={false}
         selectedTicketId={null}
         onSelect={jest.fn()}
+        {...PAGINATION_PROPS}
       />,
     );
     expect(screen.getByText("No tickets found")).toBeInTheDocument();
@@ -198,6 +212,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
         isLoading={false}
         selectedTicketId={null}
         onSelect={jest.fn()}
+        {...PAGINATION_PROPS}
       />,
     );
     const btn = screen.getByRole("button");
@@ -213,6 +228,7 @@ describe("a11y — Support/Inbox surface (TicketList)", () => {
           isLoading={false}
           selectedTicketId={null}
           onSelect={jest.fn()}
+          {...PAGINATION_PROPS}
         />,
       );
       expect(screen.getByText("Login Button Unresponsive")).toBeInTheDocument();

@@ -78,8 +78,10 @@ export function useClientOpportunities(clientId?: number) {
     queryFn: ({ signal }) =>
       apiClient.get<ClientOpportunity[]>(
         "/clients/opportunities",
-        clientId ? { clientId } : undefined
-      , signal),
+        clientId ? { clientId } : undefined,
+        signal,
+        clientOpportunitiesLazy,
+      ),
     staleTime: 2 * 60_000,
   });
 }
@@ -100,7 +102,7 @@ export function useToggleOnboardingItem() {
     mutationFn: ({ id, completed }: { id: number; completed: boolean; clientId: number }) =>
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
-      }),
+      }, undefined, onboardingItemsLazy),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }

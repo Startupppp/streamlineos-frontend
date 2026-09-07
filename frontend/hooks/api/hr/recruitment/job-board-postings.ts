@@ -26,23 +26,23 @@ export interface JobBoardPosting {
   orgId: string;
   jobPostingId: number;
   platform: string;
-  externalPostUrl?: string;
-  status: JobBoardPostingStatus;
-  postedBy?: string;
-  postedAt?: string;
-  expiryDate?: string;
-  spend?: string;
+  externalPostUrl?: string | null;
+  status: string;
+  postedBy?: string | null;
+  postedAt?: string | null;
+  expiryDate?: string | null;
+  spend?: string | null;
   applicantCount: number;
   qualifiedCount: number;
   hiredCount: number;
-  notes?: string;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateJobBoardPostingInput {
   platform: string;
-  externalPostUrl?: string;
+  externalPostUrl?: string | null;
   status?: JobBoardPostingStatus;
   postedAt?: string;
   expiryDate?: string;
@@ -51,7 +51,7 @@ export interface CreateJobBoardPostingInput {
 }
 
 export interface UpdateJobBoardPostingInput {
-  externalPostUrl?: string;
+  externalPostUrl?: string | null;
   status?: JobBoardPostingStatus;
   postedAt?: string;
   expiryDate?: string;

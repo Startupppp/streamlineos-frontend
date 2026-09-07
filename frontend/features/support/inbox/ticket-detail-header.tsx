@@ -165,7 +165,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
       description: "Condense the full conversation into key points",
       run: async () => {
         const results = await analyzeTicket.mutateAsync();
-        const found = results.find((s) => s.type === "summary");
+        const found = results?.find((s) => s.type === "summary");
         if (found?.type === "summary") return { text: found.payload.text };
         return { text: "" };
       },

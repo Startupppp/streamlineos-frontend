@@ -5,7 +5,18 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const ticketListPageLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketListPageContract),
+);
+const ticketDetailLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+);
+const columnCountsLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
+);
 import type {
   Ticket,
   TicketLabel,
@@ -26,7 +37,7 @@ export function useTickets(
   return useQuery<CursorPageResponse<Ticket>>({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal),
+      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal, ticketListPageLazy),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -78,7 +89,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
-      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal);
+      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
@@ -118,7 +129,7 @@ export function useTicket(
   return useQuery<Ticket | null>({
     queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
     queryFn: ({ signal }) =>
-      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal),
+      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal, ticketDetailLazy),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -136,7 +147,7 @@ export function useTicketByKey(
     queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
     queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
-        `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal,
+        `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal, ticketDetailLazy,
       );
       if (ticket) {
         queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(ticket.id), ticket);
@@ -173,7 +184,7 @@ export function useTicketColumnCounts(projectId: number) {
   return useQuery<Record<string, number>>({
     queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal),
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal, columnCountsLazy),
     enabled: canView && projectId > 0,
     staleTime: 30_000,
   });

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -14,11 +15,21 @@ import type {
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const timerNullableC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timerNullableResponseContract),
+);
+const timerC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timerContract),
+);
+const entryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entryContract),
+);
+
 export function useActiveTimer() {
   const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.timerActive(),
-    queryFn: ({ signal }) => apiClient.get<TimerSession | null>("/timesheets/timer/active", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TimerSession | null>("/timesheets/timer/active", undefined, signal, timerNullableC),
     staleTime: 30_000,
     refetchInterval: (query) => (query.state.data ? 30_000 : 120_000),
     refetchIntervalInBackground: false,
@@ -31,7 +42,7 @@ export function useStartTimer() {
   return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "start"],
     mutationFn: (data: StartTimerInput) =>
-      apiClient.post<TimerSession>("/timesheets/timer/start", data),
+      apiClient.post<TimerSession>("/timesheets/timer/start", data, undefined, timerC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
     },
@@ -44,7 +55,7 @@ function useTimerAction(action: "pause" | "resume" | "stop") {
   return useMutation({
     mutationKey: ["timesheets", "timer", action],
     mutationFn: (timerId: number) =>
-      apiClient.post<TimerSession>(`/timesheets/timer/${timerId}/${action}`),
+      apiClient.post<TimerSession>(`/timesheets/timer/${timerId}/${action}`, undefined, undefined, timerC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
     },
@@ -65,7 +76,7 @@ export function useDiscardTimer() {
   return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "discard"],
     mutationFn: (timerId: number) =>
-      apiClient.post<{ success: boolean }>(`/timesheets/timer/${timerId}/discard`),
+      apiClient.post<{ success: boolean }>(`/timesheets/timer/${timerId}/discard`, undefined, undefined, undefined),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
       toast.success("Timer discarded");
@@ -79,7 +90,7 @@ export function useConvertTimer() {
   return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "convert"],
     mutationFn: ({ timerId, data }: { timerId: number; data: ConvertTimerInput }) =>
-      apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data),
+      apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data, undefined, entryC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });

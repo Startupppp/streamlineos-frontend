@@ -71,6 +71,7 @@ export function useInitiateOrgTransfer() {
       apiClient.post<InitiateOrgTransferResult>(
         "/ownership/org/transfer",
         body,
+        undefined,
         initiateTransferContract,
       ),
     onSuccess: () => {
@@ -135,6 +136,7 @@ export function useAcceptTransfer() {
       apiClient.post(
         `/ownership/transfers/${transferId}/accept`,
         undefined,
+        undefined,
         ownershipMutationContract,
       ),
     onSettled: () => {
@@ -161,6 +163,7 @@ export function useDeclineTransfer() {
       apiClient.post(
         `/ownership/transfers/${transferId}/decline`,
         { reason },
+        undefined,
         ownershipMutationContract,
       ),
     onSettled: () => {

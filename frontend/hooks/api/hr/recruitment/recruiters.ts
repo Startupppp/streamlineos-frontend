@@ -22,17 +22,17 @@ type RecruiterActivityAction =
 export interface RecruiterSummary {
   userId: string;
   name: string | null;
-  email: string;
+  email: string | null;
   image: string | null;
   role?: string;
   assignedJobsCount: number;
-  activitySummary: Partial<Record<RecruiterActivityAction, number>>;
+  activitySummary: Record<string, number>;
 }
 
 export interface RecruiterActivityEntry {
   id: number;
   recruiterId: string;
-  action: RecruiterActivityAction;
+  action: string;
   candidateId: number | null;
   jobPostingId: number | null;
   notes: string | null;

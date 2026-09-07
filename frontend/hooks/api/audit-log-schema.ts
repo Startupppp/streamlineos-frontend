@@ -11,7 +11,7 @@ import { z } from "zod";
  */
 
 const auditLogItemContract = z.object({
-  id: z.string(),
+  id: z.number(),
   action: z.string(),
   userId: z.string().nullable(),
   userName: z.string().nullable(),

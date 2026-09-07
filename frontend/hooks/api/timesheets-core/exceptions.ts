@@ -5,6 +5,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
@@ -16,6 +17,19 @@ import type {
   TimesheetExceptionRecord,
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const exceptionsListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionsListResponseContract),
+);
+const exceptionsSummaryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionsSummaryResponseContract),
+);
+const exceptionResolutionC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionResolutionResponseContract),
+);
+const detectorC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.detectorResponseContract),
+);
 
 const exceptionsListPrefix = usersAndCommerceQueryKeys.timesheets
   .exceptions(undefined)
@@ -47,7 +61,7 @@ export function useTimesheetExceptions(
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetException>>(
         "/timesheets/exceptions",
-        params, signal,
+        params, signal, exceptionsListC,
       );
     },
     initialPageParam: undefined as string | undefined,
@@ -61,7 +75,7 @@ export function useExceptionsSummary(enabled = true) {
   return useGatedQuery("timesheets:exceptions:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.exceptionsSummary(),
     queryFn: ({ signal }) =>
-      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal),
+      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal, exceptionsSummaryC),
     staleTime: 60_000,
     enabled,
   });
@@ -75,6 +89,8 @@ export function useResolveException() {
       apiClient.post<TimesheetExceptionRecord>(
         `/timesheets/exceptions/${exceptionId}/resolve`,
         { reason },
+        undefined,
+        exceptionResolutionC,
       ),
     onSuccess: () => {
       invalidateExceptionQueries(qc);
@@ -92,6 +108,8 @@ export function useDismissException() {
       apiClient.post<TimesheetExceptionRecord>(
         `/timesheets/exceptions/${exceptionId}/dismiss`,
         { reason },
+        undefined,
+        exceptionResolutionC,
       ),
     onSuccess: () => {
       invalidateExceptionQueries(qc);
@@ -106,7 +124,7 @@ export function useRunExceptionDetection() {
   return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "run-detection"],
     mutationFn: () =>
-      apiClient.post<RunDetectionResult>("/timesheets/exceptions/run-detection"),
+      apiClient.post<RunDetectionResult>("/timesheets/exceptions/run-detection", undefined, undefined, detectorC),
     onSuccess: (res) => {
       invalidateExceptionQueries(qc);
       toast.success(

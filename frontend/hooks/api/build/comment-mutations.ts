@@ -2,9 +2,14 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const commentEditResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentEditResultContract),
+);
 
 interface UpdateCommentInput {
   commentId: number;
@@ -26,7 +31,9 @@ export function useUpdateComment() {
     mutationFn: ({ commentId, ticketId, projectId, content }) =>
       apiClient.patch<{ id: number; content: string; updatedAt: string }>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
-        { content }
+        { content },
+        undefined,
+        commentEditResultLazy,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

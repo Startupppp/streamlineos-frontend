@@ -41,7 +41,7 @@ export interface ReportConfig {
 
 export interface GenerateReportResult {
   rows: Record<string, unknown>[];
-  entity: ReportEntity;
+  entity: string;
   fields: string[];
   total: number;
 }
@@ -49,8 +49,8 @@ export interface GenerateReportResult {
 export interface ScheduledReport {
   id: number;
   name: string;
-  reportConfig: ReportConfig;
-  schedule: ReportSchedule;
+  reportConfig: { entity: string; fields: string[]; filters?: Record<string, unknown> };
+  schedule: string;
   recipients: string[];
   lastRunAt: string | null;
   createdAt: string;

@@ -41,6 +41,6 @@ export function useSubmitNpsResponse(token: string) {
   return useMutation({
     mutationKey: ["nps", "respond"] as const,
     mutationFn: (input: SubmitNpsResponseInput) =>
-      apiClient.post<{ success: boolean }>(`/public/nps/${token}`, input),
+      apiClient.post<{ success: boolean }>(`/public/nps/${token}`, input, undefined, submitNpsResponseLazy),
   });
 }

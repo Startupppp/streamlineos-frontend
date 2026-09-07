@@ -50,7 +50,7 @@ export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
 interface PublishResult {
   platform: string;
-  status: "PUBLISHED" | "NO_INTEGRATION" | "INACTIVE" | "NO_TOKEN";
+  status: string;
 }
 
 interface PublishJobResult {
@@ -149,7 +149,6 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
         "/hr/recruitment/jobs",
         queryParams,
         signal,
-        jobPostingsPageC,
       );
     },
     staleTime: 2 * 60_000,
@@ -173,7 +172,7 @@ export function useCreateJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "create"],
     mutationFn: (data: CreateJobPostingInput) =>
-      apiClient.post<JobPosting>("/hr/recruitment/jobs", data, undefined, createJobPostingC),
+      apiClient.post<JobPosting>("/hr/recruitment/jobs", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -213,7 +212,7 @@ export function useDuplicateJobPosting() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "duplicate"],
     mutationFn: (id: number) =>
-      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}, undefined, duplicateJobPostingC),
+      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });

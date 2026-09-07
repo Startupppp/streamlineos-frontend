@@ -59,7 +59,7 @@ export function useCreateModuleRoleGroup(moduleKey: string) {
   return useMutation<ModuleRoleGroup, Error, { name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "create-group"],
     mutationFn: (body) =>
-      apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body, roleGroupContract),
+      apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body, undefined, roleGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
@@ -74,7 +74,7 @@ export function useRenameModuleRoleGroup(moduleKey: string) {
   return useMutation<ModuleRoleGroup, Error, { id: number; name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "rename-group"],
     mutationFn: ({ id, name }) =>
-      apiClient.patch<ModuleRoleGroup>(`/module-access/${moduleKey}/groups/${id}`, { name }, roleGroupContract),
+      apiClient.patch<ModuleRoleGroup>(`/module-access/${moduleKey}/groups/${id}`, { name }, undefined, roleGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
@@ -111,6 +111,7 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
       apiClient.put<{ success: true; version: number }>(
         `/module-access/${moduleKey}/groups/${groupId}/permissions`,
         { version, items },
+        undefined,
         moduleGroupPermissionsSetContract,
       ),
     onSuccess: (data, variables) => {
@@ -166,6 +167,7 @@ export function useAddModuleGroupMember(moduleKey: string) {
       apiClient.post(
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         { userId },
+        undefined,
         moduleSuccessContract,
       ),
     onSuccess: (_, { groupId, userId }) => {

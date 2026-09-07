@@ -27,7 +27,7 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<User, Error, { userId: string; data: UpdateUserInput }>("settings:organization:manage", {
     mutationKey: ["update", "user"],
-    mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data, userDetailResponseContract),
+    mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data, undefined, userDetailResponseContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
@@ -44,7 +44,7 @@ export const useUpdateUserStatus = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-status"],
     mutationFn: ({ userId, status, reason }) =>
-      apiClient.patch<{ success: boolean }>(`/users/${userId}/status`, { status, reason }, userSuccessContract),
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/status`, { status, reason }, undefined, userSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
@@ -104,7 +104,7 @@ export const useUpdateUserPreferences = () => {
   >("settings:organization:manage", {
     mutationKey: ["users", "update-preferences"],
     mutationFn: ({ userId, data }) =>
-      apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data, userPreferencesContract),
+      apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data, undefined, userPreferencesContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.preferences(userId) });
     },

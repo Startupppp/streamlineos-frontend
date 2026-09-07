@@ -13,6 +13,17 @@ import type {
   ExchangeRate,
 } from "@/types/accounting/taxes";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  approvalPolicyListContract,
+  approvalPolicyCreatedContract,
+  approvalPolicyUpdatedContract,
+  approvalPolicyDeletedContract,
+  approvalQueueContract,
+  approvalCountsContract,
+  approvalDecisionContract,
+  exchangeRateListContract,
+  exchangeRateCreatedContract,
+} from "@/hooks/api/accounting/settings-schema";
 
 const settingsKeys = {
   all: [...accountingAndSupportQueryKeys.accounting.all, "settings"] as const,
@@ -48,9 +59,9 @@ export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
   return useQuery<CursorPage<ApprovalPolicy>, Error>({
     queryKey: settingsKeys.policies(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<ApprovalPolicy>>(
+      apiClient.get(
         "/accounting/approval-policies",
-        toQuery(params), signal,
+        toQuery(params), signal, approvalPolicyListContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -70,7 +81,7 @@ export function useCreateApprovalPolicy() {
   return useAuthorizedMutation<ApprovalPolicy, Error, CreateApprovalPolicyInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "create"],
     mutationFn: (data) =>
-      apiClient.post<ApprovalPolicy>("/accounting/approval-policies", data),
+      apiClient.post("/accounting/approval-policies", data, undefined, approvalPolicyCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all });
     },
@@ -84,7 +95,7 @@ export function useUpdateApprovalPolicy(id: number) {
   return useAuthorizedMutation<ApprovalPolicy, Error, UpdateApprovalPolicyInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "update", id],
     mutationFn: (data) =>
-      apiClient.patch<ApprovalPolicy>(`/accounting/approval-policies/${id}`, data),
+      apiClient.patch(`/accounting/approval-policies/${id}`, data, undefined, approvalPolicyUpdatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all });
     },
@@ -96,7 +107,7 @@ export function useDeleteApprovalPolicy() {
   return useAuthorizedMutation<void, Error, number>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "delete"],
     mutationFn: (id) =>
-      apiClient.delete<void>(`/accounting/approval-policies/${id}`),
+      apiClient.delete(`/accounting/approval-policies/${id}`, undefined, undefined, approvalPolicyDeletedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all });
     },
@@ -115,9 +126,9 @@ export function useApprovals(params: ListApprovalsParams = {}) {
   return useQuery<CursorPage<ApprovalRequest>, Error>({
     queryKey: approvalsKeys.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<ApprovalRequest>>(
+      apiClient.get(
         "/accounting/approvals",
-        toQuery(params), signal,
+        toQuery(params), signal, approvalQueueContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -134,7 +145,7 @@ export function useApprovalCounts() {
   const can = useCan("accounting:approvals:read");
   return useQuery<ApprovalCounts, Error>({
     queryKey: approvalsKeys.counts,
-    queryFn: ({ signal }) => apiClient.get<ApprovalCounts>("/accounting/approvals/counts", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/approvals/counts", undefined, signal, approvalCountsContract),
     staleTime: 30_000,
     enabled: can,
   });
@@ -149,9 +160,9 @@ export function useApproveRequest(requestId: number) {
   return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "approve", requestId],
     mutationFn: (data) =>
-      apiClient.post<ApprovalRequest>(
+      apiClient.post(
         `/accounting/approvals/${requestId}/approve`,
-        data,
+        data, undefined, approvalDecisionContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: approvalsKeys.all });
@@ -164,9 +175,9 @@ export function useRejectRequest(requestId: number) {
   return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "reject", requestId],
     mutationFn: (data) =>
-      apiClient.post<ApprovalRequest>(
+      apiClient.post(
         `/accounting/approvals/${requestId}/reject`,
-        data,
+        data, undefined, approvalDecisionContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: approvalsKeys.all });
@@ -184,9 +195,9 @@ export function useExchangeRates(params: ListExchangeRatesParams = {}) {
   return useQuery<CursorPage<ExchangeRate>, Error>({
     queryKey: settingsKeys.rates(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<ExchangeRate>>(
+      apiClient.get(
         "/accounting/exchange-rates",
-        toQuery(params), signal,
+        toQuery(params), signal, exchangeRateListContract,
       ),
     staleTime: 120_000,
     enabled: can,
@@ -204,7 +215,7 @@ export function useUpsertExchangeRate() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<ExchangeRate, Error, UpsertExchangeRateInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "exchange-rates", "upsert"],
-    mutationFn: (data) => apiClient.post<ExchangeRate>("/accounting/exchange-rates", data),
+    mutationFn: (data) => apiClient.post("/accounting/exchange-rates", data, undefined, exchangeRateCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all });
     },

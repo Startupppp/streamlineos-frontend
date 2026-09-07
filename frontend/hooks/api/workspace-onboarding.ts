@@ -32,6 +32,7 @@ export function useGenerateWorkspace() {
       apiClient.post<WorkspaceGenerationResult>(
         "/workspace-onboarding/generate",
         data,
+        undefined,
         generateWorkspaceContract,
       ),
   });

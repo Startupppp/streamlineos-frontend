@@ -25,7 +25,7 @@ export interface ProbationReview {
   employmentId: number;
   personId: number;
   probationEndDate: string;
-  status: ProbationStatus;
+  status: string;
   extensionCount: number;
   extendedUntil: string | null;
   confirmedAt: string | null;
@@ -86,7 +86,7 @@ export function useExtendProbation() {
       apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/extend`, {
         extendedUntil,
         reason,
-      }, undefined, extendProbationC),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },
@@ -109,7 +109,7 @@ export function useConfirmProbation() {
       apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/confirm`, {
         confirmedAt,
         notes,
-      }, undefined, confirmProbationC),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },

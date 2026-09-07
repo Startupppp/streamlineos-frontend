@@ -7,6 +7,16 @@ import { useCan } from "@/hooks/api/access";
 import {
   expenseByCategoryContract,
   taxSummaryContract,
+  reportCatalogContract,
+  customerStatementContract,
+  vendorStatementContract,
+  salesByCustomerContract,
+  salesByItemContract,
+  projectProfitabilityContract,
+  departmentProfitabilityContract,
+  workingCapitalContract,
+  burnRateContract,
+  cashRunwayContract,
   type ExpenseByCategoryRow,
   type TaxSummaryRow,
 } from "@/hooks/api/accounting/reports-schema";
@@ -104,7 +114,7 @@ export function useReportsCatalog() {
   const can = useCan("accounting:reports:read");
   return useQuery<ReportCatalogItem[], Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "catalog"],
-    queryFn: ({ signal }) => apiClient.get<ReportCatalogItem[]>("/accounting/reports/catalog", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/catalog", undefined, signal, reportCatalogContract),
     staleTime: 300_000,
     enabled: can,
   });
@@ -115,9 +125,9 @@ export function useCustomerStatement(clientId: number | null, from?: string, to?
   return useQuery<CustomerStatement, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "customer-statement", clientId, from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<CustomerStatement>(
+      apiClient.get(
         `/accounting/reports/customer-statement/${clientId}`,
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, customerStatementContract,
       ),
     staleTime: 60_000,
     enabled: can && clientId !== null && clientId > 0,
@@ -129,9 +139,9 @@ export function useVendorStatement(vendorId: number | null, from?: string, to?: 
   return useQuery<VendorStatement, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "vendor-statement", vendorId, from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<VendorStatement>(
+      apiClient.get(
         `/accounting/reports/vendor-statement/${vendorId}`,
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, vendorStatementContract,
       ),
     staleTime: 60_000,
     enabled: can && vendorId !== null && vendorId > 0,
@@ -143,9 +153,9 @@ export function useSalesByCustomer(from?: string, to?: string) {
   return useQuery<SalesByCustomerRow[], Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "sales-by-customer", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<SalesByCustomerRow[]>(
+      apiClient.get(
         "/accounting/reports/sales-by-customer",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, salesByCustomerContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -157,9 +167,9 @@ export function useSalesByItem(from?: string, to?: string) {
   return useQuery<SalesByItemRow[], Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "sales-by-item", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<SalesByItemRow[]>(
+      apiClient.get(
         "/accounting/reports/sales-by-item",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, salesByItemContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -200,9 +210,9 @@ export function useProjectProfitability(from?: string, to?: string) {
   return useQuery<ProfitabilityRow[], Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "project-profitability", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<ProfitabilityRow[]>(
+      apiClient.get(
         "/accounting/reports/project-profitability",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, projectProfitabilityContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -214,9 +224,9 @@ export function useDepartmentProfitability(from?: string, to?: string) {
   return useQuery<ProfitabilityRow[], Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "department-profitability", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<ProfitabilityRow[]>(
+      apiClient.get(
         "/accounting/reports/department-profitability",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, departmentProfitabilityContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -228,9 +238,9 @@ export function useWorkingCapital(asOf?: string) {
   return useQuery<WorkingCapital, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "working-capital", asOf],
     queryFn: ({ signal }) =>
-      apiClient.get<WorkingCapital>(
+      apiClient.get(
         "/accounting/reports/working-capital",
-        toQuery({ asOf }), signal,
+        toQuery({ asOf }), signal, workingCapitalContract,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -241,7 +251,7 @@ export function useBurnRate() {
   const can = useCan("accounting:reports:read");
   return useQuery<BurnRateReport, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "burn-rate"],
-    queryFn: ({ signal }) => apiClient.get<BurnRateReport>("/accounting/reports/burn-rate", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/burn-rate", undefined, signal, burnRateContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -251,7 +261,7 @@ export function useCashRunway() {
   const can = useCan("accounting:reports:read");
   return useQuery<CashRunwayReport, Error>({
     queryKey: [...accountingAndSupportQueryKeys.accounting.all, "reports", "cash-runway"],
-    queryFn: ({ signal }) => apiClient.get<CashRunwayReport>("/accounting/reports/cash-runway", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/reports/cash-runway", undefined, signal, cashRunwayContract),
     staleTime: 60_000,
     enabled: can,
   });

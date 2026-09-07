@@ -97,7 +97,7 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<PrincipalGroup, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "create"],
-    mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data, principalGroupContract),
+    mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data, undefined, principalGroupContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
@@ -109,7 +109,7 @@ export function useRenameGroup(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "rename", groupId],
     mutationFn: (data) =>
-      apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data, principalGroupSuccessContract),
+      apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data, undefined, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
@@ -121,7 +121,7 @@ export function useAddGroupMember(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { membershipId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "add-member", groupId],
     mutationFn: (data) =>
-      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/members`, data, principalGroupSuccessContract),
+      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/members`, data, undefined, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
@@ -154,7 +154,7 @@ export function useAssignGroupRole(groupId: string) {
   return useAuthorizedMutation<{ success: true }, Error, { roleId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "assign-role", groupId],
     mutationFn: (data) =>
-      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data, principalGroupSuccessContract),
+      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data, undefined, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),

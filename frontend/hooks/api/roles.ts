@@ -164,7 +164,7 @@ export function useMaterializeRoleTemplate() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
-    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data, roleContract),
+    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data, undefined, roleContract),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all }),
   });
 }
@@ -182,7 +182,7 @@ export function useSeedDefaultRoles() {
   return useAuthorizedMutation("settings:rbac:manage", {
     mutationKey: ["roles", "seed-defaults"],
     mutationFn: () =>
-      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults", undefined, seedDefaultRolesContract),
+      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults", undefined, undefined, seedDefaultRolesContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
     },
@@ -213,7 +213,7 @@ export const useSetRolePermissions = () => {
   return useAuthorizedMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>("settings:rbac:manage", {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, version, items }) =>
-      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }, setRolePermissionsContract),
+      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }, undefined, setRolePermissionsContract),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<import("@/types/organization").Role>(
         accessAndCrmQueryKeys.roles.detail(variables.roleId),
@@ -250,7 +250,7 @@ export const useAssignRoleMember = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
-      apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body, roleSuccessContract),
+      apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body, undefined, roleSuccessContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),

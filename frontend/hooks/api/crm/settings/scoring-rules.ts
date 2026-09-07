@@ -11,7 +11,13 @@ const scoringRulesLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.scoringRulesListContract),
 );
 
-export interface ScoringRule {
+export interface ScoringRule
+const scoringRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.scoringRuleContract),
+);
+const deleteScoringRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.deleteScoringRuleContract),
+); {
   id: number;
   orgId: string;
   field: string;
@@ -49,7 +55,7 @@ export function useCreateScoringRule() {
   return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "create"],
     mutationFn: (input: CreateScoringRuleInput) =>
-      apiClient.post<ScoringRule>("/crm/scoring-rules", input),
+      apiClient.post<ScoringRule>("/crm/scoring-rules", input, undefined, scoringRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.scoringRules() });
     },
@@ -61,7 +67,7 @@ export function useUpdateScoringRule() {
   return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateScoringRuleInput) =>
-      apiClient.patch<ScoringRule>(`/crm/scoring-rules/${id}`, data),
+      apiClient.patch<ScoringRule>(`/crm/scoring-rules/${id}`, data, undefined, scoringRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.scoringRules() });
     },
@@ -73,7 +79,7 @@ export function useDeleteScoringRule() {
   return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/scoring-rules/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/scoring-rules/${id}`, undefined, undefined, deleteScoringRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.scoringRules() });
     },

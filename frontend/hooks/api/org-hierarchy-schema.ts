@@ -16,6 +16,8 @@ import { cursorPageInfoContract } from "@/hooks/api/cursor-page-schema";
  * NOT `.strict()`: extra response fields are backward-compatible.
  */
 
+const nodeStatusEnum = z.enum(["ACTIVE", "DISABLED", "ARCHIVED"]);
+
 const orgUnitTimestamps = {
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -29,7 +31,7 @@ const businessUnitItemContract = z.object({
   name: z.string(),
   code: z.string().nullable(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   ...orgUnitTimestamps,
 });
 
@@ -50,7 +52,7 @@ const branchItemContract = z.object({
   postalCode: z.string().nullable(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   businessUnitName: z.string().nullable().optional(),
   ...orgUnitTimestamps,
 });
@@ -66,7 +68,7 @@ const departmentItemContract = z.object({
   name: z.string(),
   code: z.string().nullable(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   branchName: z.string().nullable().optional(),
   ...orgUnitTimestamps,
 });
@@ -80,10 +82,10 @@ const teamItemContract = z.object({
   name: z.string(),
   code: z.string().nullable(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   departmentId: z.string().nullable(),
   leadUserId: z.string().nullable(),
-  capacity: z.string().nullable(),
+  capacity: z.number().nullable(),
   departmentName: z.string().nullable().optional(),
   ...orgUnitTimestamps,
 });
@@ -95,11 +97,11 @@ const locationItemContract = z.object({
   id: z.string(),
   orgId: z.string(),
   name: z.string(),
-  type: z.string(),
+  type: z.enum(["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"]),
   address: z.string().nullable(),
   latitude: z.string().nullable(),
   longitude: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   ...orgUnitTimestamps,
 });
 
@@ -112,7 +114,7 @@ const costCenterItemContract = z.object({
   code: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: nodeStatusEnum,
   ...orgUnitTimestamps,
 });
 
@@ -128,12 +130,12 @@ export const hierarchyOverviewContract = z.object({
   costCenters: z.number(),
 });
 
-export const hierarchyTreeContract = z.array(z.record(z.string(), z.unknown()));
+export const hierarchyTreeContract = z.array(z.unknown());
 
 export const dependencyPreviewContract = z.object({
   unitId: z.string(),
-  unitKind: z.string(),
-  mode: z.string(),
+  unitKind: z.enum(["BUSINESS_UNIT", "BRANCH", "DEPARTMENT", "TEAM", "LOCATION", "COST_CENTER"]),
+  mode: z.enum(["archive", "retire"]),
   dependencies: z.array(z.object({
     key: z.string(),
     label: z.string(),
@@ -147,7 +149,7 @@ export const hierarchyParentListContract = cursorPageInfoContract(
     id: z.string(),
     orgId: z.string(),
     name: z.string(),
-    status: z.string(),
+    status: nodeStatusEnum,
     deletedAt: z.string().nullable(),
   }),
 );

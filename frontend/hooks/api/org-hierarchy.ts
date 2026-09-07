@@ -33,9 +33,6 @@ const hierarchyParentListContract = lazyContract(() =>
 const dependencyPreviewContract = lazyContract(() =>
   import("@/hooks/api/org-hierarchy-schema").then((m) => m.dependencyPreviewContract),
 );
-const hierarchyTreeContract = lazyContract(() =>
-  import("@/hooks/api/org-hierarchy-schema").then((m) => m.hierarchyTreeContract),
-);
 const hierarchyOverviewContract = lazyContract(() =>
   import("@/hooks/api/org-hierarchy-schema").then((m) => m.hierarchyOverviewContract),
 );
@@ -168,7 +165,7 @@ export function useOrgTree() {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: platformHierarchyQueryKeys.hierarchy.tree(),
-    queryFn: ({ signal }) => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
+    queryFn: ({ signal }) => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -206,7 +203,7 @@ export function useCreateBusinessUnit() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "business", "unit"],
     mutationFn: (data: { name: string; code: string; description?: string }) =>
-      apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data, businessUnitContract),
+      apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data, undefined, businessUnitContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -216,7 +213,7 @@ export function useUpdateBusinessUnit() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "business", "unit"],
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
-      apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data, businessUnitContract),
+      apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data, undefined, businessUnitContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -248,7 +245,7 @@ export function useCreateOrgBranch() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "branch"],
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.post<OrgBranch>("/org-hierarchy/branches", data, orgBranchContract),
+      apiClient.post<OrgBranch>("/org-hierarchy/branches", data, undefined, orgBranchContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -258,7 +255,7 @@ export function useUpdateOrgBranch() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data, orgBranchContract),
+      apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data, undefined, orgBranchContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -290,7 +287,7 @@ export function useCreateOrgDepartment() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "department"],
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
-      apiClient.post<OrgDepartment>("/org-hierarchy/departments", data, departmentContract),
+      apiClient.post<OrgDepartment>("/org-hierarchy/departments", data, undefined, departmentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -300,7 +297,7 @@ export function useUpdateOrgDepartment() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "department"],
     mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data, departmentContract),
+      apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data, undefined, departmentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -328,7 +325,7 @@ export function useCreateOrgTeam() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "team"],
     mutationFn: (data: { name: string; code: string; departmentId: string; leadUserId?: string; description?: string; capacity?: number }) =>
-      apiClient.post<OrgTeam>("/org-hierarchy/teams", data, teamContract),
+      apiClient.post<OrgTeam>("/org-hierarchy/teams", data, undefined, teamContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
@@ -339,7 +336,7 @@ export function useUpdateOrgTeam() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "team"],
     mutationFn: ({ teamId, ...data }: { teamId: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data, teamContract),
+      apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data, undefined, teamContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
@@ -366,7 +363,7 @@ export function useCreateOrgLocation() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
-      apiClient.post<OrgLocation>("/org-hierarchy/locations", data, locationContract),
+      apiClient.post<OrgLocation>("/org-hierarchy/locations", data, undefined, locationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -376,7 +373,7 @@ export function useUpdateOrgLocation() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data, locationContract),
+      apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data, undefined, locationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -405,7 +402,7 @@ export function useCreateOrgCostCenter() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
-      apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, costCenterContract),
+      apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, undefined, costCenterContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -415,7 +412,7 @@ export function useUpdateOrgCostCenter() {
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, costCenterContract),
+      apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, undefined, costCenterContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
@@ -457,7 +454,7 @@ export function useCreateOrgHoliday(
   return useAuthorizedMutation<OrgHoliday, Error, AddHolidayInput>("settings:manage", {
     mutationKey: ["org", "holidays", "create"],
     mutationFn: (input: AddHolidayInput) =>
-      apiClient.post<OrgHoliday>("/organization/holidays", input, createHolidayContract),
+      apiClient.post<OrgHoliday>("/organization/holidays", input, undefined, createHolidayContract),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });

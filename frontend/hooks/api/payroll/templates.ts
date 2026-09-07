@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -11,6 +12,13 @@ import type {
   PaginatedResult,
 } from "@/types/payroll/setup";
 import { templatePreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
+
+const templateListC = lazyContract(() =>
+  import("@/hooks/api/payroll/templates-schema").then((m) => m.templateListResponseContract),
+);
+const payrollTemplateC = lazyContract(() =>
+  import("@/hooks/api/payroll/templates-schema").then((m) => m.payrollTemplateContract),
+);
 
 type TemplateListParams = {
   country?: string;
@@ -40,7 +48,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<TemplateRow>>(
         "/payroll/templates",
-        params as Record<string, unknown> | undefined, signal,
+        params as Record<string, unknown> | undefined, signal, templateListC,
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
@@ -66,7 +74,7 @@ export function useDeleteTemplate() {
   return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<void>(`/payroll/templates/${templateId}`),
+      apiClient.delete<void>(`/payroll/templates/${templateId}`, undefined, undefined, undefined),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "template"] });
@@ -82,6 +90,8 @@ export function useDuplicateTemplate() {
       apiClient.post<TemplateRow>(
         `/payroll/templates/${templateId}/duplicate`,
         { name, description },
+        undefined,
+        payrollTemplateC,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });

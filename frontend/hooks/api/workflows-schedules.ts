@@ -44,6 +44,7 @@ export function useAllSchedules() {
         "/workflows/schedules",
         pageParam === undefined ? undefined : { cursor: pageParam },
         signal,
+        workflowScheduleListContract,
       ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>
@@ -67,6 +68,8 @@ export function useUpdateSchedule() {
       return apiClient.patch<WorkflowSchedule>(
         `/workflows/${workflowId}/schedules/${scheduleId}`,
         input,
+        undefined,
+        workflowScheduleUpdateContract,
       );
     },
     onSuccess: (_, variables) =>

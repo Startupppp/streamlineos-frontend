@@ -102,7 +102,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
 
   const { mutate: doImport, isPending } = useMutation<ImportResult, Error, ImportRow[]>({
     mutationKey: ["users", "import"],
-    mutationFn: (rows) => apiClient.post<ImportResult>("/users/import", { rows }, importUsersContract),
+    mutationFn: (rows) => apiClient.post<ImportResult>("/users/import", { rows }, undefined, importUsersContract),
     onSuccess: (result) => {
       setImportResult(result);
       if (result.succeeded > 0) {

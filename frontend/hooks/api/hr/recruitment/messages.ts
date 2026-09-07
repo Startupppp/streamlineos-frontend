@@ -24,8 +24,8 @@ export type MessageChannel = "EMAIL" | "WHATSAPP" | "IN_APP";
 export interface CandidateMessage {
   id: number;
   candidateId: number;
-  direction: MessageDirection;
-  channel: MessageChannel;
+  direction: string;
+  channel: string;
   subject: string | null;
   body: string;
   sentBy: string | null;
@@ -40,11 +40,11 @@ export interface CandidateMessage {
 
 export interface MessageThread {
   candidateId: number;
-  lastMessageAt: string;
+  lastMessageAt: string | null;
   messageCount: number;
   unreadCount: number;
-  lastBody: string;
-  lastDirection: MessageDirection;
+  lastBody: string | null;
+  lastDirection: string | null;
   candidateFirstName: string | null;
   candidateLastName: string | null;
   candidateEmail: string | null;

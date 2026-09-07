@@ -15,6 +15,20 @@ import type {
   CreateTaxAdjustmentInput,
 } from "@/types/accounting/taxes";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  taxCodeListContract,
+  taxCodeCreatedContract,
+  taxCodeUpdatedContract,
+  taxCodeSeedContract,
+  taxDashboardContract,
+  taxOutputReportContract,
+  taxInputReportContract,
+  taxLiabilitySummaryContract,
+  taxPaymentListContract,
+  taxPaymentCreatedContract,
+  taxPaymentDeleteContract,
+  taxAdjustmentCreatedContract,
+} from "@/hooks/api/accounting/taxes-schema";
 
 interface ListResponse<T> {
   items: T[];
@@ -62,7 +76,7 @@ export function useListTaxCodes(params: ListTaxCodesParams = {}) {
   return useQuery<CursorPage<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params), signal),
+      apiClient.get("/accounting/tax-codes", toQuery(params), signal, taxCodeListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -83,7 +97,7 @@ export function useCreateTaxCode() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<TaxCode, Error, CreateTaxCodeInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "create"],
-    mutationFn: (data) => apiClient.post<TaxCode>("/accounting/tax-codes", data),
+    mutationFn: (data) => apiClient.post("/accounting/tax-codes", data, undefined, taxCodeCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
     },
@@ -96,7 +110,7 @@ export function useUpdateTaxCode(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<TaxCode, Error, UpdateTaxCodeInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "update", id],
-    mutationFn: (data) => apiClient.patch<TaxCode>(`/accounting/tax-codes/${id}`, data),
+    mutationFn: (data) => apiClient.patch(`/accounting/tax-codes/${id}`, data, undefined, taxCodeUpdatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
     },
@@ -108,7 +122,7 @@ export function useSeedDefaultTaxCodes() {
   return useAuthorizedMutation<{ seeded: number }, Error, void>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "seed-defaults"],
     mutationFn: () =>
-      apiClient.post<{ seeded: number }>("/accounting/tax-codes/seed-defaults"),
+      apiClient.post("/accounting/tax-codes/seed-defaults", undefined, undefined, taxCodeSeedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
     },
@@ -120,7 +134,7 @@ export function useTaxDashboard(from: string, to: string) {
   return useQuery<TaxDashboard, Error>({
     queryKey: taxKeys.dashboard(from, to),
     queryFn: ({ signal }) =>
-      apiClient.get<TaxDashboard>("/accounting/taxes/dashboard", { from, to }, signal),
+      apiClient.get("/accounting/taxes/dashboard", { from, to }, signal, taxDashboardContract),
     enabled: can && !!from && !!to,
     staleTime: 120_000,
   });
@@ -139,9 +153,9 @@ export function useTaxReportOutput(params: TaxReportParams = {}) {
   return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportOutput(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<TaxReportLine>>(
+      apiClient.get(
         "/accounting/taxes/reports/output",
-        toQuery(params), signal,
+        toQuery(params), signal, taxOutputReportContract,
       ),
     enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
@@ -153,9 +167,9 @@ export function useTaxReportInput(params: TaxReportParams = {}) {
   return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportInput(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<TaxReportLine>>(
+      apiClient.get(
         "/accounting/taxes/reports/input",
-        toQuery(params), signal,
+        toQuery(params), signal, taxInputReportContract,
       ),
     enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
@@ -167,9 +181,9 @@ export function useTaxLiabilitySummary(from: string, to: string) {
   return useQuery<LiabilitySummaryResponse, Error>({
     queryKey: taxKeys.liabilitySummary(from, to),
     queryFn: ({ signal }) =>
-      apiClient.get<LiabilitySummaryResponse>(
+      apiClient.get(
         "/accounting/taxes/reports/liability-summary",
-        { from, to }, signal,
+        { from, to }, signal, taxLiabilitySummaryContract,
       ),
     enabled: can && !!from && !!to,
     staleTime: 30_000,
@@ -189,9 +203,9 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
   return useQuery<ListResponse<TaxPayment>, Error>({
     queryKey: taxKeys.payments(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<TaxPayment>>(
+      apiClient.get(
         "/accounting/taxes/payments",
-        toQuery(params), signal,
+        toQuery(params), signal, taxPaymentListContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -202,7 +216,7 @@ export function useCreateTaxPayment() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<TaxPayment, Error, TaxPaymentInput>("accounting:taxes:pay", {
     mutationKey: ["accounting", "taxes", "payments", "create"],
-    mutationFn: (data) => apiClient.post<TaxPayment>("/accounting/taxes/payments", data),
+    mutationFn: (data) => apiClient.post("/accounting/taxes/payments", data, undefined, taxPaymentCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
     },
@@ -214,7 +228,7 @@ export function useDeleteTaxPayment() {
   return useAuthorizedMutation<void, Error, number>("accounting:taxes:pay", {
     mutationKey: ["accounting", "taxes", "payments", "delete"],
     mutationFn: (paymentId) =>
-      apiClient.delete<void>(`/accounting/taxes/payments/${paymentId}`),
+      apiClient.delete(`/accounting/taxes/payments/${paymentId}`, undefined, undefined, taxPaymentDeleteContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
     },
@@ -226,9 +240,9 @@ export function useCreateTaxAdjustment() {
   return useAuthorizedMutation<{ journalEntryId: number; entryNumber: string }, Error, CreateTaxAdjustmentInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "taxes", "adjustments", "create"],
     mutationFn: (data) =>
-      apiClient.post<{ journalEntryId: number; entryNumber: string }>(
+      apiClient.post(
         "/accounting/taxes/adjustments",
-        data,
+        data, undefined, taxAdjustmentCreatedContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });

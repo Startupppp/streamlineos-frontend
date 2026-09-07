@@ -26,7 +26,7 @@ function useBulkLifecycleMutation(endpoint: string, mutationKey: string) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
     mutationKey: ["bulk", mutationKey],
-    mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload, bulkActionResultContract),
+    mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload, undefined, bulkActionResultContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
@@ -49,7 +49,7 @@ export const useBulkUpdateUsers = () => {
   return useAuthorizedMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>("settings:organization:manage", {
     mutationKey: ["bulk", "update", "users"],
     mutationFn: (payload) =>
-      apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", payload, bulkUpdateContract),
+      apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", payload, undefined, bulkUpdateContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
     },
@@ -63,6 +63,7 @@ export const useSendSigninLink = () => {
       apiClient.post<{ success: boolean; email: string }>(
         `/users/${userId}/send-signin-link`,
         {},
+        undefined,
         sendSigninLinkContract,
       ),
   });
@@ -80,6 +81,7 @@ export const useUpdateUserRole = () => {
       apiClient.post<{ success: boolean; userId: string; role: string }>(
         `/settings/users/${userId}/role`,
         { role },
+        undefined,
         updateUserRoleContract,
       ),
     onSuccess: (_, { userId }) => {

@@ -19,6 +19,18 @@ const attachmentCreateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.attachmentCreateResultContract),
 );
 
+const commentRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentRowContract),
+);
+
+const ticketRelationListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRelationListContract),
+);
+
+const ticketLabelLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelContract),
+);
+
 export interface AddCommentInput {
   ticketId: number;
   projectId?: number;
@@ -36,7 +48,9 @@ export function useAddComment(
     mutationFn: ({ ticketId, projectId = 0, content, parentCommentId }) =>
       apiClient.post<{ id: number; content: string; createdAt: string }>(
         `/build/${projectId}/tickets/${ticketId}/comments`,
-        { content, parentCommentId }
+        { content, parentCommentId },
+        undefined,
+        commentRowLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
@@ -58,7 +72,7 @@ export function useAddLabelToTicket(
     ...options,
     mutationKey: ["projects", "tickets", "labels", "add"],
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
-      apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }),
+      apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }, undefined, successLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
@@ -83,8 +97,6 @@ export function useRemoveLabelFromTicket(
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`,
-        undefined,
-        undefined,
         successLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
@@ -109,7 +121,7 @@ export function useCreateOrgLabel(
     ...options,
     mutationKey: ["projects", "labels", "create"],
     mutationFn: (data) =>
-      apiClient.post<TicketLabel>("/build/labels", data),
+      apiClient.post<TicketLabel>("/build/labels", data, undefined, ticketLabelLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -184,7 +196,7 @@ export function useTicketRelations(ticketId: number, projectId: number) {
   return useQuery({
     queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
     queryFn: ({ signal }) =>
-      apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`, undefined, signal),
+      apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`, undefined, signal, ticketRelationListLazy),
     staleTime: 2 * 60_000,
     enabled: canView && !!ticketId && !!projectId,
   });
@@ -211,8 +223,6 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
     mutationFn: (relatedId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`,
-        undefined,
-        undefined,
         successLazy,
       ),
     onSuccess: () => {

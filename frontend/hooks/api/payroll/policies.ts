@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -14,6 +15,25 @@ import type {
   VersionRow,
 } from "@/types/payroll/setup";
 import { policyPreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
+
+const policyCurrentC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.policyCurrentResponseContract),
+);
+const policyToggleImpactC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.policyToggleImpactResponseContract),
+);
+const payrollPolicyRowC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.payrollPolicyRowContract),
+);
+const policyActivateC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.policyActivateResponseContract),
+);
+const policyVersionsListC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.policyVersionsListResponseContract),
+);
+const payrollPolicyVersionRowC = lazyContract(() =>
+  import("@/hooks/api/payroll/policies-schema").then((m) => m.payrollPolicyVersionRowContract),
+);
 
 type CreatePolicyInput = {
   country: string;
@@ -62,7 +82,7 @@ export function usePayrollPolicyCurrent() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.policy(),
-    queryFn: ({ signal }) => apiClient.get<PolicyCurrentResult>("/payroll/policies/current", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PolicyCurrentResult>("/payroll/policies/current", undefined, signal, policyCurrentC),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -75,7 +95,7 @@ export function useToggleImpact(toggle: string, enabled = false) {
     queryFn: ({ signal }) =>
       apiClient.get<ToggleImpactResult>("/payroll/policies/toggle-impact", {
         toggle,
-      }, signal),
+      }, signal, policyToggleImpactC),
     staleTime: 30_000,
     enabled: enabled && !!toggle && canView,
   });
@@ -86,7 +106,7 @@ export function useCreatePolicy() {
   return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "create"],
     mutationFn: (data: CreatePolicyInput) =>
-      apiClient.post<PolicyRow>("/payroll/policies", data),
+      apiClient.post<PolicyRow>("/payroll/policies", data, undefined, payrollPolicyRowC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() }),
   });
@@ -110,7 +130,7 @@ export function useUpdatePolicy() {
   return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "update"],
     mutationFn: ({ policyId, data }: UpdatePolicyInput) =>
-      apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, data),
+      apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, data, undefined, payrollPolicyRowC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() }),
   });
@@ -124,6 +144,8 @@ export function useActivatePolicy() {
       apiClient.post<ActivateResult>(
         `/payroll/policies/${policyId}/activate`,
         data,
+        undefined,
+        policyActivateC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.all }),
@@ -135,7 +157,7 @@ export function usePolicyVersions(policyId: number, enabled = true) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.policyVersions(policyId),
     queryFn: ({ signal }) =>
-      apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`, undefined, signal),
+      apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`, undefined, signal, policyVersionsListC),
     staleTime: 2 * 60_000,
     enabled: enabled && policyId > 0 && canView,
   });
@@ -149,6 +171,8 @@ export function useCreatePolicyVersion() {
       apiClient.post<VersionRow>(
         `/payroll/policies/${policyId}/versions`,
         data,
+        undefined,
+        payrollPolicyVersionRowC,
       ),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({

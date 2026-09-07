@@ -7,27 +7,24 @@ export const generateReportContract = z.object({
   total: z.number().int(),
 });
 
-export const scheduledReportsListContract = z.array(z.object({
+const scheduledReportRowSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  reportType: z.string().optional(),
-  schedule: z.string().optional(),
-  createdBy: z.string().optional(),
-  name: z.string().optional(),
+  name: z.string(),
+  reportConfig: z.object({
+    entity: z.string(),
+    fields: z.array(z.string()),
+    filters: z.record(z.string(), z.unknown()).optional(),
+  }),
+  schedule: z.string(),
+  recipients: z.array(z.string()),
+  lastRunAt: z.string().nullable(),
   createdAt: z.string(),
-  updatedAt: z.string().optional(),
-}));
-
-export const createScheduledReportContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  reportType: z.string().optional(),
-  schedule: z.string().optional(),
-  createdBy: z.string().optional(),
-  name: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string().optional(),
 });
+
+export const scheduledReportsListContract = z.array(scheduledReportRowSchema);
+
+export const createScheduledReportContract = scheduledReportRowSchema;
 
 export const deleteScheduledReportContract = z.object({ success: z.literal(true) });
 

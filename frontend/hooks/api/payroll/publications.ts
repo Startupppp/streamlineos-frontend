@@ -2,18 +2,26 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import type { PayslipPublication, PublishResult } from "@/types/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const publicationListC = lazyContract(() =>
+  import("@/hooks/api/payroll/publications-schema").then((m) => m.publicationListContract),
+);
+const publishResponseC = lazyContract(() =>
+  import("@/hooks/api/payroll/publications-schema").then((m) => m.publishResponseContract),
+);
+
 export function useRunPublications(runId: number) {
   const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipPublication[]>({
     queryKey: payrollQueryKeys.payroll.runPublications(runId),
     queryFn: ({ signal }) =>
-      apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`, undefined, signal),
+      apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`, undefined, signal, publicationListC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });
@@ -26,7 +34,7 @@ export function usePublishPayslips() {
     mutationFn: ({ runId, userIds }) =>
       apiClient.post<PublishResult>(`/payroll/runs/${runId}/payslips/publish`, {
         userIds,
-      }),
+      }, undefined, publishResponseC),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runPublications(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });

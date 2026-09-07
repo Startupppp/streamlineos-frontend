@@ -130,7 +130,7 @@ export function useGrantDelegation(
         startsAt: new Date(values.startsAt).toISOString(),
         endsAt: new Date(values.endsAt).toISOString(),
         reason: values.reason || undefined,
-      }, delegationRowContract),
+      }, undefined, delegationRowContract),
     ...options,
   });
 }

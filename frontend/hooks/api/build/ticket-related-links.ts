@@ -3,7 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const relatedLinkCreateLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.relatedLinkCreateContract),
+);
 
 export interface TicketRelatedLink {
   id: number;
@@ -30,7 +35,7 @@ export function useAddRelatedLink(
     ...options,
     mutationKey: ["projects", "tickets", "related-links", "add"],
     mutationFn: ({ projectId, ticketId, url, label }) =>
-      apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }),
+      apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }, undefined, relatedLinkCreateLazy),
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
       options?.onSuccess?.(data, variables, onMutateResult, context);

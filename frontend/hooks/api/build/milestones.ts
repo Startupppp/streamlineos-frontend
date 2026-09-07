@@ -79,7 +79,7 @@ export function useDeleteMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`, undefined, undefined, successContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`, successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }

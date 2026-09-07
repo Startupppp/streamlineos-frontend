@@ -307,7 +307,7 @@ const rateCardContract = z.object({
   updatedAt: z.string(),
 });
 
-const rateContract = z.object({
+export const rateContract = z.object({
   id: z.number(),
   orgId: z.string(),
   rateCardId: z.number().nullable(),

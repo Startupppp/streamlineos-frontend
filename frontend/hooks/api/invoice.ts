@@ -23,6 +23,15 @@ const statsContract = lazyContract(() =>
 const pageContract = lazyContract(() =>
   import("@/hooks/api/invoice-schema").then((m) => m.invoicesPageContract),
 );
+const invoiceCreatedContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoiceContract),
+);
+const invoiceSuccessContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoiceSuccessContract),
+);
+const invoicePaymentCreatedContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoicePaymentContract),
+);
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface InvoiceFilters {
@@ -126,7 +135,7 @@ export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Invoice, Error, CreateInvoiceInput>("accounting:create", {
     mutationKey: ["create", "invoice"],
-    mutationFn: (data) => apiClient.post<Invoice>("/invoices", data),
+    mutationFn: (data) => apiClient.post("/invoices", data, undefined, invoiceCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
@@ -138,7 +147,7 @@ export const useUpdateInvoice = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, UpdateInvoiceInput>("accounting:update", {
     mutationKey: ["update", "invoice"],
     mutationFn: ({ id, ...data }) =>
-      apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
+      apiClient.patch(`/invoices/${id}`, data, undefined, invoiceSuccessContract),
     onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(vars.id) });
@@ -152,7 +161,7 @@ export const useVoidInvoice = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, number>("accounting:manage", {
     mutationKey: ["void", "invoice"],
     mutationFn: (id) =>
-      apiClient.post<{ success: boolean }>(`/invoices/${id}/void`),
+      apiClient.post(`/invoices/${id}/void`, undefined, undefined, invoiceSuccessContract),
     onSuccess: (_, id) => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(id) });
@@ -176,7 +185,7 @@ export const useRecordPayment = () => {
   return useAuthorizedMutation<Payment, Error, RecordPaymentInput>("accounting:create", {
     mutationKey: ["record", "payment"],
     mutationFn: ({ invoiceId, ...data }) =>
-      apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
+      apiClient.post(`/invoices/${invoiceId}/payments`, data, undefined, invoicePaymentCreatedContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
       queryClient.invalidateQueries({

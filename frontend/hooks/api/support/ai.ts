@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -8,12 +9,22 @@ import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workf
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type {
+  supportAiSuggestionRowContract,
+  aiReplySourceContract,
+} from "./support-ai-schema";
 
 const supportAiSuggestionListC = lazyContract(() =>
   import("./support-ai-schema").then((m) => m.supportAiSuggestionListContract),
 );
 const supportAiSuggestionNullableC = lazyContract(() =>
   import("./support-ai-schema").then((m) => m.supportAiSuggestionNullableContract),
+);
+const supportAiSuggestionRowC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiSuggestionRowContract),
+);
+const supportAiAnalyzeResultC = lazyContract(() =>
+  import("./support-ai-schema").then((m) => m.supportAiAnalyzeResultContract),
 );
 const supportAiTranslationC = lazyContract(() =>
   import("./support-ai-schema").then((m) => m.supportAiTranslationContract),
@@ -30,144 +41,20 @@ export type AiSuggestionFeedback = "helpful" | "not_helpful";
 export type AiSentimentValue = "positive" | "neutral" | "negative";
 export type AiPriorityValue = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
-export interface AiSummaryPayload {
-  text: string;
-}
+export type AiSuggestion = z.infer<typeof supportAiSuggestionRowContract>;
+export type AiReplySource = z.infer<typeof aiReplySourceContract>;
 
-export interface AiSentimentPayload {
-  sentiment: AiSentimentValue;
-}
-
-export interface AiCategoryPayload {
-  category: string;
-}
-
-export interface AiPriorityPayload {
-  priority: AiPriorityValue;
-}
-
-export interface AiSpamPayload {
-  isSpam: true;
-}
-
-export interface AiReplySource {
-  title: string;
-  url: string;
-  articleId: number;
-}
-
-export interface AiReplyPayload {
-  body: string;
-  sources?: AiReplySource[];
-  escalated?: boolean;
-}
-
-export interface AiMacroPayload {
-  macroId: number;
-  reason: string;
-}
-
-export interface AiKbArticlePayload {
-  articles: { articleId: number; title: string; slug: string; similarity: number }[];
-}
-
-export interface AiDuplicatePayload {
-  candidateTicketId: number;
-  title: string;
-}
-
-export interface AiHandoffSummaryPayload {
-  summary: string;
-  keyPoints: string[];
-  suggestedNextStep: string;
-  sources?: AiReplySource[];
-}
-
-export interface AiRootCauseClusterPayload {
-  relatedTicketIds: number[];
-  rootCause: string;
-  summary: string;
-}
-
-interface AiSuggestionBase {
-  id: number;
-  orgId: string;
-  ticketId: number;
-  confidence: string | null;
-  status: AiSuggestionStatus;
-  feedback: AiSuggestionFeedback | null;
-  resolvedAt: string | null;
-  resolvedBy: string | null;
-  createdAt: string;
-}
-
-export interface AiSummarySuggestion extends AiSuggestionBase {
-  type: "summary";
-  payload: AiSummaryPayload;
-}
-
-export interface AiSentimentSuggestion extends AiSuggestionBase {
-  type: "sentiment";
-  payload: AiSentimentPayload;
-}
-
-export interface AiCategorySuggestion extends AiSuggestionBase {
-  type: "category";
-  payload: AiCategoryPayload;
-}
-
-export interface AiPrioritySuggestion extends AiSuggestionBase {
-  type: "priority";
-  payload: AiPriorityPayload;
-}
-
-export interface AiSpamSuggestion extends AiSuggestionBase {
-  type: "spam";
-  payload: AiSpamPayload;
-}
-
-export interface AiReplySuggestion extends AiSuggestionBase {
-  type: "reply";
-  payload: AiReplyPayload;
-}
-
-export interface AiMacroSuggestion extends AiSuggestionBase {
-  type: "macro";
-  payload: AiMacroPayload;
-}
-
-export interface AiKbArticleSuggestion extends AiSuggestionBase {
-  type: "kb_article";
-  payload: AiKbArticlePayload;
-}
-
-export interface AiDuplicateSuggestion extends AiSuggestionBase {
-  type: "duplicate";
-  payload: AiDuplicatePayload;
-}
-
-export interface AiHandoffSummarySuggestion extends AiSuggestionBase {
-  type: "handoff_summary";
-  payload: AiHandoffSummaryPayload;
-}
-
-export interface AiRootCauseClusterSuggestion extends AiSuggestionBase {
-  type: "root_cause_cluster";
-  payload: AiRootCauseClusterPayload;
-}
-
-export type AiSuggestion =
-  | AiSummarySuggestion
-  | AiSentimentSuggestion
-  | AiCategorySuggestion
-  | AiPrioritySuggestion
-  | AiSpamSuggestion
-  | AiReplySuggestion
-  | AiMacroSuggestion
-  | AiKbArticleSuggestion
-  | AiDuplicateSuggestion
-  | AiHandoffSummarySuggestion
-  | AiRootCauseClusterSuggestion;
+export type AiSummarySuggestion = Extract<AiSuggestion, { type: "summary" }>;
+export type AiSentimentSuggestion = Extract<AiSuggestion, { type: "sentiment" }>;
+export type AiCategorySuggestion = Extract<AiSuggestion, { type: "category" }>;
+export type AiPrioritySuggestion = Extract<AiSuggestion, { type: "priority" }>;
+export type AiSpamSuggestion = Extract<AiSuggestion, { type: "spam" }>;
+export type AiReplySuggestion = Extract<AiSuggestion, { type: "reply" }>;
+export type AiMacroSuggestion = Extract<AiSuggestion, { type: "macro" }>;
+export type AiKbArticleSuggestion = Extract<AiSuggestion, { type: "kb_article" }>;
+export type AiDuplicateSuggestion = Extract<AiSuggestion, { type: "duplicate" }>;
+export type AiHandoffSummarySuggestion = Extract<AiSuggestion, { type: "handoff_summary" }>;
+export type AiRootCauseClusterSuggestion = Extract<AiSuggestion, { type: "root_cause_cluster" }>;
 
 export interface TranslateMessageResult {
   translatedText: string;
@@ -195,10 +82,10 @@ export function useTicketAiSuggestions(ticketId: number) {
 
 export function useAnalyzeTicket(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<AiSuggestion[], Error, AiAbortInput | void>("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion[] | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "analyze", ticketId],
     mutationFn: (input) =>
-      apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`, undefined, { signal: input?.signal }, supportAiSuggestionListC),
+      apiClient.post<AiSuggestion[] | null>(`/support/${ticketId}/ai/analyze`, undefined, { signal: input?.signal }, supportAiAnalyzeResultC),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -281,7 +168,7 @@ export function useResolveAiSuggestion(ticketId: number) {
   return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "resolve", ticketId],
     mutationFn: ({ suggestionId, status, feedback }: ResolveAiSuggestionInput) =>
-      apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }, undefined, supportAiSuggestionNullableC),
+      apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }, undefined, supportAiSuggestionRowC),
     onSuccess: () => {
       invalidateSuggestions(qc, ticketId);
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(ticketId) });

@@ -10,6 +10,12 @@ import { lazyContract } from "@/lib/api-envelope";
 const emailTemplatesLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.emailTemplatesListContract),
 );
+const emailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.emailTemplateContract),
+);
+const deleteEmailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.deleteEmailTemplateContract),
+);
 
 export interface EmailTemplate {
   id: number;
@@ -48,7 +54,7 @@ export function useCreateEmailTemplate() {
   return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "create"],
     mutationFn: (input: CreateEmailTemplateInput) =>
-      apiClient.post<EmailTemplate>("/crm/email-templates", input),
+      apiClient.post<EmailTemplate>("/crm/email-templates", input, undefined, emailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },
@@ -60,7 +66,7 @@ export function useUpdateEmailTemplate() {
   return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
-      apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data),
+      apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data, undefined, emailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },
@@ -72,7 +78,7 @@ export function useDeleteEmailTemplate() {
   return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`, undefined, undefined, deleteEmailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },

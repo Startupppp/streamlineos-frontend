@@ -52,7 +52,7 @@ export function usePatchOnboardingSessionMutation() {
   return useMutation({
     mutationKey: ["onboarding", "session", "patch"],
     mutationFn: (payload: OnboardingSessionPatch) =>
-      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload, onboardingSessionContract),
+      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload, undefined, onboardingSessionContract),
     retry: false,
     onSuccess: (session) => {
       queryClient.setQueryData(platformCoreQueryKeys.onboardingFlow.session(), session);
@@ -102,7 +102,7 @@ export function useCompleteChecklistItem() {
   return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "complete-item"],
     mutationFn: ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}, checklistProgressContract),
+      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}, undefined, checklistProgressContract),
     onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
   });
 }
@@ -112,7 +112,7 @@ export function useDismissModuleChecklist() {
   return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "dismiss"],
     mutationFn: (moduleKey: string) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}, checklistProgressContract),
+      apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}, undefined, checklistProgressContract),
     onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }
@@ -147,7 +147,7 @@ export function useSaveTourProgress() {
   return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "save-progress"],
     mutationFn: ({ tourKey, currentStep }: { tourKey: string; currentStep: number }) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }, tourProgressRowContract),
+      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }, undefined, tourProgressRowContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },
@@ -159,7 +159,7 @@ export function useDismissTour() {
   return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "dismiss"],
     mutationFn: (tourKey: string) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}, tourProgressRowContract),
+      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}, undefined, tourProgressRowContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },

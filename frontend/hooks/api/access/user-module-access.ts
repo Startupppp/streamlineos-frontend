@@ -34,6 +34,7 @@ export function useSetUserModuleAccess(userId: string) {
       apiClient.patch<UserModuleAccessEntry[]>(
         `/access/user-module-access/${userId}`,
         variables,
+        undefined,
         userModuleAccessListContract,
       ),
     onMutate: async (variables) => {

@@ -127,6 +127,8 @@ export const scenarioDeleteContract = z.object({ success: z.literal(true) });
 
 export const scenarioSeedDefaultsContract = z.array(scenarioContract);
 
+export const replaceLinesSuccessContract = z.object({ success: z.literal(true) });
+
 export type BudgetList = z.infer<typeof budgetListContract>;
 export type BudgetDetail = z.infer<typeof budgetDetailContract>;
 export type ForecastResult = z.infer<typeof forecastContract>;

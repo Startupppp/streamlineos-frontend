@@ -333,14 +333,14 @@ export interface CandidateReferral {
   jobPostingId: number | null;
   relationship: string | null;
   notes: string | null;
-  status: ReferralStatus;
+  status: string;
   bonusEligible: boolean;
   bonusAmount: string | null;
   bonusPaidAt: string | null;
   createdAt: string;
   updatedAt: string;
-  candidate?: { id: number; firstName: string; lastName: string; email: string };
-  referrer?: { id: string; name: string | null; email: string };
+  candidate?: { id: number; firstName: string; lastName: string; email: string } | null;
+  referrer?: { id: string; name: string | null; email: string | null } | null;
   jobPosting?: { id: number; title: string } | null;
 }
 

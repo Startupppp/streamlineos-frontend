@@ -142,7 +142,7 @@ export function useDeleteWhiteboard(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`, undefined, undefined, successContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`, successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }

@@ -64,7 +64,7 @@ export function useHeadcountRequests(
   return useQuery<HeadcountRequest[], Error>({
     queryKey: humanResourcesQueryKeys.hr.headcountRequests(),
     queryFn: ({ signal }) =>
-      apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountListPageContract))),
+      apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

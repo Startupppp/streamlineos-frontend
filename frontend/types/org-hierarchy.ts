@@ -27,7 +27,7 @@ export interface OrgBusinessUnit {
   orgId: string;
   parentId: string | null;
   name: string;
-  code: string;
+  code: string | null;
   description: string | null;
   status: NodeStatus;
   createdAt: string;
@@ -42,7 +42,7 @@ export interface OrgBranch {
   businessUnitName?: string | null;
   managerUserId: string | null;
   name: string;
-  code: string;
+  code: string | null;
   address: string | null;
   city: string | null;
   state: string | null;
@@ -63,7 +63,7 @@ export interface OrgDepartment {
   branchName?: string | null;
   headUserId: string | null;
   name: string;
-  code: string;
+  code: string | null;
   description: string | null;
   status: NodeStatus;
   createdAt: string;
@@ -78,7 +78,7 @@ export interface OrgTeam {
   departmentName?: string | null;
   leadUserId: string | null;
   name: string;
-  code: string;
+  code: string | null;
   description: string | null;
   capacity: number | null;
   status: NodeStatus;

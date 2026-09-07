@@ -7,6 +7,8 @@ import {
   aiCreditsUsageContract,
   aiCreditsWalletContract,
   aiCreditTransactionsPageContract,
+  autoTopUpResponseContract,
+  purchaseAiCreditsContract,
   type AiCreditPack,
   type AiCreditsUsage,
   type AiCreditsWallet,
@@ -67,7 +69,7 @@ export function useConfigureAutoTopUp() {
       enabled: boolean;
       packId?: number;
       threshold?: number;
-    }) => apiClient.post("/billing/ai-credits/auto-topup", data),
+    }) => apiClient.post("/billing/ai-credits/auto-topup", data, undefined, autoTopUpResponseContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
       toast.success("Auto top-up settings saved");
@@ -95,7 +97,7 @@ export function usePurchaseAiCredits() {
   return useAuthorizedMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "purchase"],
     mutationFn: (data) =>
-      apiClient.post<PurchaseAiPackOrder | PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+      apiClient.post("/billing/ai-credits/purchase", data, undefined, purchaseAiCreditsContract),
     onSuccess: (result) => {
       if ("balance" in result) {
         void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
@@ -135,7 +137,7 @@ export function useVerifyAiCreditPurchase() {
   >("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "verify"],
     mutationFn: (data) =>
-      apiClient.post<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+      apiClient.post("/billing/ai-credits/purchase", data, undefined, purchaseAiCreditsContract),
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.all });

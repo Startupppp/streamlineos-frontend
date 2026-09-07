@@ -137,6 +137,8 @@ export const invoiceStatsContract = z.object({
   totalPaid: z.number(),
 });
 
+export const invoiceSuccessContract = z.object({ success: z.literal(true) });
+
 export type InvoiceStatus = z.infer<typeof invoiceStatusContract>;
 export type InvoiceItem = z.infer<typeof invoiceItemContract>;
 export type Payment = z.infer<typeof invoicePaymentContract>;

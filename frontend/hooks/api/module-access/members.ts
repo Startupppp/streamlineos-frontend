@@ -62,7 +62,7 @@ export function useAddModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
     mutationFn: (body) =>
-      apiClient.post(`/module-access/${moduleKey}/members`, body, moduleSuccessContract),
+      apiClient.post(`/module-access/${moduleKey}/members`, body, undefined, moduleSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
@@ -93,6 +93,7 @@ export function useUpdateModuleMember(moduleKey: string) {
       apiClient.patch(
         `/module-access/${moduleKey}/members/${userId}`,
         { groupIds },
+        undefined,
         moduleSuccessContract,
       ),
     onSuccess: (_, { userId }) => {
@@ -214,6 +215,7 @@ export function useSetModuleMemberGrants(moduleKey: string) {
       apiClient.put<{ success: true; granted: number }>(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
         { items, reason },
+        undefined,
         moduleMemberGrantsSetContract,
       ),
     onSuccess: (_, { membershipId }) => {

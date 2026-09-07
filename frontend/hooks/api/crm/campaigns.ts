@@ -10,6 +10,8 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 import { lazyContract } from "@/lib/api-envelope";
 
+const campaignLazy = lazyContract(() => import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignContract));
+
 const campaignsListLazy = lazyContract(() =>
   import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignsListContract),
 );
@@ -61,7 +63,7 @@ export function useCreateCampaign() {
   return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "create"] as const,
     mutationFn: (input: CreateCampaignInput) =>
-      apiClient.post<CrmCampaign>("/crm/campaigns", input),
+      apiClient.post<CrmCampaign>("/crm/campaigns", input, undefined, campaignLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
     },
@@ -73,7 +75,7 @@ export function useUpdateCampaign() {
   return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateCampaignInput) =>
-      apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data),
+      apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data, undefined, campaignLazy),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.detail(variables.id) });
@@ -96,7 +98,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
-    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal),
+    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal, campaignLeadsLazy),
     staleTime: 60_000,
   });
 }

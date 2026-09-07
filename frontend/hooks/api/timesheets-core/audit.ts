@@ -2,9 +2,14 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { AuditEvent, CursorPage } from "@/features/timesheets/types";
+
+const auditListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.auditListResponseContract),
+);
 
 interface AuditQuery {
   entityType?: string;
@@ -26,7 +31,7 @@ export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params, signal);
+      return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params, signal, auditListC);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const milestoneRowSchema = z.object({
   id: z.number(),
@@ -6,8 +6,8 @@ const milestoneRowSchema = z.object({
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  targetDate: z.string().nullable(),
-  status: z.string().nullable(),
+  targetDate: z.string(),
+  status: z.enum(["PENDING", "ACHIEVED", "MISSED"]),
   createdBy: z.string().nullable(),
   clientVisible: z.boolean(),
   deletedAt: z.string().nullable(),
@@ -17,20 +17,20 @@ const milestoneRowSchema = z.object({
 
 const intakeItemSchema = z.object({
   id: z.number(),
-  projectId: z.number().nullable(),
+  projectId: z.number(),
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.string(),
-  status: z.string(),
+  source: z.enum(["manual", "web_form", "email"]),
+  status: z.enum(["pending", "accepted", "declined", "duplicate"]),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
-  priority: z.string().nullable(),
-  requestType: z.string().nullable(),
+  priority: z.enum(["low", "medium", "high", "urgent"]).nullable(),
+  requestType: z.enum(["bug", "feature", "task", "question", "other"]).nullable(),
   linkedWorkItemId: z.number().nullable(),
   declineReason: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 const intakeListSchema = z.object({
@@ -42,16 +42,16 @@ const viewRowSchema = z.object({
   id: z.number(),
   projectId: z.number().nullable(),
   orgId: z.string(),
-  createdBy: z.string().nullable(),
+  createdBy: z.string(),
   name: z.string(),
-  filters: z.unknown(),
+  filters: z.record(z.string(), z.unknown()),
   groupBy: z.string().nullable(),
   orderBy: z.string().nullable(),
-  layoutType: z.string(),
+  layoutType: z.enum(["board", "list", "table", "calendar", "gantt"]),
   isPinned: z.boolean(),
-  visibility: z.string().nullable(),
-  displayOptions: z.unknown(),
-  scope: z.string().nullable(),
+  visibility: z.enum(["private", "shared"]),
+  displayOptions: z.record(z.string(), z.unknown()).nullable(),
+  scope: z.enum(["project", "workspace"]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -86,7 +86,7 @@ const whiteboardDetailSchema = z.object({
   name: z.string(),
   data: z.unknown(),
   visibility: z.string(),
-  access: z.enum(['view', 'edit', 'manage']),
+  access: z.enum(["view", "edit", "manage"]),
   sharing: z.object({ visibility: z.string(), publicAccess: z.string().nullable(), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
   shares: z.array(whiteboardShareSchema).nullable(),
   createdBy: z.string().nullable(),
@@ -97,7 +97,7 @@ const whiteboardDetailSchema = z.object({
 const publicWhiteboardSchema = z.object({
   name: z.string(),
   data: z.unknown(),
-  access: z.enum(['edit', 'view']),
+  access: z.enum(["edit", "view"]),
   allowExport: z.boolean(),
   updatedAt: z.string(),
 });
@@ -122,15 +122,15 @@ const projectBudgetSchema = z.object({
 });
 
 const analyticsSchema = z.object({
-  stateDistribution: z.unknown(),
-  priorityBreakdown: z.unknown(),
-  assigneeCompletion: z.unknown(),
-  volumeOverTime: z.unknown(),
-  cycleVelocity: z.unknown(),
-  estimateVsActual: z.unknown(),
-  healthScore: z.number(),
-  healthStatus: z.string(),
-  healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number() }),
+  stateDistribution: z.array(z.object({ status: z.string(), count: z.number() })),
+  priorityBreakdown: z.array(z.object({ priority: z.string().nullable(), count: z.number() })),
+  assigneeCompletion: z.array(z.object({ assigneeId: z.string().nullable(), assigneeName: z.string().nullable(), total: z.number(), completed: z.number() })),
+  volumeOverTime: z.array(z.object({ week: z.string(), count: z.number() })),
+  cycleVelocity: z.array(z.object({ cycleId: z.number(), cycleName: z.string(), completedPoints: z.number() })),
+  estimateVsActual: z.array(z.object({ ticketId: z.number(), title: z.string(), estimated: z.string().nullable(), actual: z.number() })),
+  healthScore: z.number().optional(),
+  healthStatus: z.string().optional(),
+  healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number() }).optional(),
 });
 
 export const milestoneListContract = z.array(milestoneRowSchema);

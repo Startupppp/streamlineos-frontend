@@ -2,7 +2,12 @@
 
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
+import { lazyContract } from '@/lib/api-envelope';
 import { IDEMPOTENCY_HEADER, newIdempotencyKey } from '@/lib/idempotency-key';
+
+const kbMediaUploadContract = lazyContract(() =>
+  import('@/hooks/api/kb/kb-import-schema').then((m) => m.kbMediaUploadContract),
+);
 import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
 
 export type UploadedKbMedia = UploadedEditorMedia;
@@ -101,7 +106,7 @@ export async function uploadKbMedia(file: File, pageId?: number): Promise<Upload
   if (pageId != null) fd.append('pageId', String(pageId));
 
   const signature = uploadSignature(file, pageId);
-  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, undefined, {
+  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, kbMediaUploadContract, {
     headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
   });
   mediaUploadKeys.delete(signature);

@@ -49,7 +49,7 @@ export function useCreateGrant() {
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["portalAccess", "grants", "create"],
     mutationFn: (data: CreateGrantInput) =>
-      apiClient.post<ProjectClientGrant>("/portal-access/grants", data, grantContract),
+      apiClient.post<ProjectClientGrant>("/portal-access/grants", data, undefined, grantContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
     },
@@ -64,6 +64,7 @@ export function useUpdateGrant(projectClientGrantId: string) {
       apiClient.patch<ProjectClientGrant>(
         `/portal-access/grants/${projectClientGrantId}`,
         data,
+        undefined,
         grantContract,
       ),
     onSuccess: (updated) => {
@@ -81,6 +82,7 @@ export function useRevokeGrant(projectClientGrantId: string) {
       apiClient.post<ProjectClientGrant>(
         `/portal-access/grants/${projectClientGrantId}/revoke`,
         {},
+        undefined,
         grantContract,
       ),
     onSuccess: (updated) => {

@@ -22,7 +22,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const expenseEmailReportContract = lazyContract(() =>
+  import("@/components/expenses/expense-export/expense-export-schema").then(
+    (m) => m.expenseExportJobContract,
+  ),
+);
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import {
   useCreateExpenseExportJob,
@@ -42,7 +49,7 @@ async function emailExpenseReport(
   sendTo: ExpenseReportEmailTarget,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await apiClient.post("/hr/expenses/email-report", { filters, sendTo });
+    await apiClient.post("/hr/expenses/email-report", { filters, sendTo }, undefined, expenseEmailReportContract);
     return { success: true };
   } catch (error) {
     return { success: false, error: getErrorMessage(error) };

@@ -268,6 +268,7 @@ async function unsubscribeFromPush(): Promise<void> {
   await apiClient.delete(
     `/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`,
     undefined,
+    undefined,
     pushUnsubscribeContract,
   );
 }

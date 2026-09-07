@@ -13,14 +13,17 @@ export const initiateTransferContract = z.object({
   expiresAt: z.string(),
 });
 
+const transferScopeEnum = z.enum(["ORGANIZATION", "MODULE"]);
+const transferStatusEnum = z.enum(["PENDING", "ACCEPTED", "DECLINED", "CANCELLED", "EXPIRED"]);
+
 const transferItemContract = z.object({
   id: z.string(),
-  scope: z.string(),
+  scope: transferScopeEnum,
   moduleKey: z.string().nullable(),
   fromMembershipId: z.number(),
   initiatedByMembershipId: z.number(),
   toMembershipId: z.number(),
-  status: z.string(),
+  status: transferStatusEnum,
   initiatedAt: z.string(),
   respondedAt: z.string().nullable(),
   expiresAt: z.string(),
@@ -31,12 +34,12 @@ export const transfersPageContract = cursorPageContract(transferItemContract);
 
 const incomingTransferItemContract = z.object({
   id: z.string(),
-  scope: z.string(),
+  scope: transferScopeEnum,
   moduleKey: z.string().nullable(),
   fromMembershipId: z.number(),
   initiatedByMembershipId: z.number(),
   toMembershipId: z.number(),
-  status: z.string(),
+  status: transferStatusEnum,
   initiatedAt: z.string(),
   expiresAt: z.string(),
   reason: z.string().nullable(),

@@ -22,6 +22,21 @@ import type {
   BudgetWorkflowInput,
 } from "@/types/accounting/planning";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  budgetListContract,
+  budgetDetailContract,
+  budgetWorkflowContract,
+  budgetRevisionListContract,
+  budgetSeedDefaultsContract,
+  bvaContract,
+  forecastContract,
+  scenarioCompareContract,
+  scenarioListContract,
+  scenarioCreatedContract,
+  scenarioUpdatedContract,
+  scenarioDeleteContract,
+  replaceLinesSuccessContract,
+} from "@/hooks/api/accounting/planning-schema";
 
 interface ListResponse<T> {
   items: T[];
@@ -80,7 +95,7 @@ export function useBudgets(params: ListBudgetsParams = {}) {
   return useQuery<CursorPage<BudgetSummary>, Error>({
     queryKey: planningKeys.budgets(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BudgetSummary>>("/accounting/budgets", toQuery(params), signal),
+      apiClient.get("/accounting/budgets", toQuery(params), signal, budgetListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -90,7 +105,7 @@ export function useCreateBudget() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BudgetSummary, Error, CreateBudgetInput>("accounting:budgets:create", {
     mutationKey: ["accounting", "planning", "budgets", "create"],
-    mutationFn: (data) => apiClient.post<BudgetSummary>("/accounting/budgets", data),
+    mutationFn: (data) => apiClient.post("/accounting/budgets", data, undefined, budgetWorkflowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.all });
     },
@@ -101,7 +116,7 @@ export function useBudget(id: number) {
   const can = useCan("accounting:budgets:read");
   return useQuery<BudgetDetail, Error>({
     queryKey: planningKeys.budget(id),
-    queryFn: ({ signal }) => apiClient.get<BudgetDetail>(`/accounting/budgets/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/accounting/budgets/${id}`, undefined, signal, budgetDetailContract),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -111,7 +126,7 @@ export function useReplaceBudgetLines(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BudgetDetail, Error, ReplaceBudgetLinesInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "lines"],
-    mutationFn: (data) => apiClient.put<BudgetDetail>(`/accounting/budgets/${id}/lines`, data),
+    mutationFn: (data) => apiClient.put(`/accounting/budgets/${id}/lines`, data, undefined, replaceLinesSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.budget(id) });
       queryClient.invalidateQueries({ queryKey: planningKeys.budgets() });
@@ -123,7 +138,7 @@ export function useSubmitBudget(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "submit"],
-    mutationFn: (data) => apiClient.post<BudgetDetail>(`/accounting/budgets/${id}/submit`, data),
+    mutationFn: (data) => apiClient.post(`/accounting/budgets/${id}/submit`, data, undefined, budgetWorkflowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.all });
     },
@@ -134,7 +149,7 @@ export function useApproveBudget(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:approve", {
     mutationKey: ["accounting", "planning", "budgets", id, "approve"],
-    mutationFn: (data) => apiClient.post<BudgetDetail>(`/accounting/budgets/${id}/approve`, data),
+    mutationFn: (data) => apiClient.post(`/accounting/budgets/${id}/approve`, data, undefined, budgetWorkflowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.all });
     },
@@ -145,7 +160,7 @@ export function useBudgetRevisions(id: number) {
   const can = useCan("accounting:budgets:read");
   return useQuery<{ items: BudgetRevision[] }, Error>({
     queryKey: planningKeys.budgetRevisions(id),
-    queryFn: ({ signal }) => apiClient.get<{ items: BudgetRevision[] }>(`/accounting/budgets/${id}/revisions`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/accounting/budgets/${id}/revisions`, undefined, signal, budgetRevisionListContract),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -155,7 +170,7 @@ export function useDuplicateBudget(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BudgetSummary, Error, DuplicateBudgetInput>("accounting:budgets:create", {
     mutationKey: ["accounting", "planning", "budgets", id, "duplicate"],
-    mutationFn: (data) => apiClient.post<BudgetSummary>(`/accounting/budgets/${id}/duplicate`, data),
+    mutationFn: (data) => apiClient.post(`/accounting/budgets/${id}/duplicate`, data, undefined, budgetWorkflowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.budgets() });
     },
@@ -167,7 +182,7 @@ export function useBudgetVsActual(id: number, params: BvaParams = {}) {
   return useQuery<BvaResponse, Error>({
     queryKey: planningKeys.bva(id, params),
     queryFn: ({ signal }) =>
-      apiClient.get<BvaResponse>(`/accounting/budgets/${id}/vs-actual`, toQuery(params), signal),
+      apiClient.get(`/accounting/budgets/${id}/vs-actual`, toQuery(params), signal, bvaContract),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -178,7 +193,7 @@ export function useForecast(params: ForecastParams = {}) {
   return useQuery<ForecastResponse, Error>({
     queryKey: planningKeys.forecast(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ForecastResponse>("/accounting/forecast", toQuery(params), signal),
+      apiClient.get("/accounting/forecast", toQuery(params), signal, forecastContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -189,9 +204,9 @@ export function useForecastCompare(scenarioIds: number[]) {
   return useQuery<ScenarioCompareResponse, Error>({
     queryKey: planningKeys.forecastCompare(scenarioIds),
     queryFn: ({ signal }) =>
-      apiClient.get<ScenarioCompareResponse>("/accounting/forecast/compare", {
+      apiClient.get("/accounting/forecast/compare", {
         scenarioIds: scenarioIds.join(","),
-      }, signal),
+      }, signal, scenarioCompareContract),
     staleTime: 60_000,
     enabled: can && scenarioIds.length >= 2,
   });
@@ -201,7 +216,7 @@ export function useScenarios() {
   const can = useCan("accounting:forecast:read");
   return useQuery<ListResponse<Scenario>, Error>({
     queryKey: planningKeys.scenarios(),
-    queryFn: ({ signal }) => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/scenarios", undefined, signal, scenarioListContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -211,7 +226,7 @@ export function useCreateScenario() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Scenario, Error, CreateScenarioInput>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", "create"],
-    mutationFn: (data) => apiClient.post<Scenario>("/accounting/scenarios", data),
+    mutationFn: (data) => apiClient.post("/accounting/scenarios", data, undefined, scenarioCreatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.scenarios() });
     },
@@ -222,7 +237,7 @@ export function useUpdateScenario(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Scenario, Error, UpdateScenarioInput>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "update"],
-    mutationFn: (data) => apiClient.patch<Scenario>(`/accounting/scenarios/${id}`, data),
+    mutationFn: (data) => apiClient.patch(`/accounting/scenarios/${id}`, data, undefined, scenarioUpdatedContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.scenarios() });
       queryClient.invalidateQueries({ queryKey: planningKeys.forecast() });
@@ -234,7 +249,7 @@ export function useDeleteScenario(id: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<void, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "delete"],
-    mutationFn: () => apiClient.delete<void>(`/accounting/scenarios/${id}`),
+    mutationFn: () => apiClient.delete(`/accounting/scenarios/${id}`, undefined, undefined, scenarioDeleteContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.scenarios() });
     },
@@ -245,7 +260,7 @@ export function useSeedDefaultScenarios() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ seeded: number }, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", "seed"],
-    mutationFn: () => apiClient.post<{ seeded: number }>("/accounting/scenarios/seed-defaults", {}),
+    mutationFn: () => apiClient.post("/accounting/scenarios/seed-defaults", {}, undefined, budgetSeedDefaultsContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.scenarios() });
     },

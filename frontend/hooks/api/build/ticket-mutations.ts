@@ -19,6 +19,10 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
 
+const ticketRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowContract),
+);
+
 const ticketUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
 );
@@ -103,7 +107,7 @@ export function useCreateTicket(
     ...options,
     mutationKey: ["projects", "tickets", "create"],
     mutationFn: ({ projectId, ...data }) =>
-      apiClient.post<Ticket>(`/build/${projectId}/tickets`, data),
+      apiClient.post<Ticket>(`/build/${projectId}/tickets`, data, undefined, ticketRowLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),

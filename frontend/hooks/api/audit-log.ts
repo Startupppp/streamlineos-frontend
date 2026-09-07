@@ -20,7 +20,7 @@ const auditLogTargetTypesContract = lazyContract(() =>
 export interface AuditLogRow {
   id: number;
   action: string;
-  userId: string;
+  userId: string | null;
   userName: string | null;
   userEmail: string | null;
   userImage: string | null;
@@ -28,7 +28,7 @@ export interface AuditLogRow {
   targetType: string | null;
   metadata: Record<string, unknown> | null;
   ipAddress: string | null;
-  createdAt: Date;
+  createdAt: string;
 }
 
 interface AuditLogPagination {

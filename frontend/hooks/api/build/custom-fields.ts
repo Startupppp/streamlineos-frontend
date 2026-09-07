@@ -59,6 +59,8 @@ export function useCreateProjectCustomField(projectId: number) {
       apiClient.post<ProjectCustomField>(
         `/build/${projectId}/custom-fields`,
         data,
+        undefined,
+        cfLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
@@ -70,7 +72,7 @@ export function useDeleteProjectCustomField(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-fields", "delete"],
     mutationFn: (fieldId: number) =>
-      apiClient.delete<{success:true}>(`/build/${projectId}/custom-fields/${fieldId}`, undefined, undefined, cfDeleteLazy),
+      apiClient.delete<{success:true}>(`/build/${projectId}/custom-fields/${fieldId}`, cfDeleteLazy),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
   });
@@ -107,6 +109,8 @@ export function useUpsertTicketCustomFieldValues(
       apiClient.post(
         `/build/${projectId}/tickets/${ticketId}/custom-field-values`,
         { values },
+        undefined,
+        tfvCreateLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({

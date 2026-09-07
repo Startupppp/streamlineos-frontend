@@ -8,11 +8,25 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const approvalsListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.approvalsListResponseContract),
+);
+const timesheetPeriodC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timesheetPeriodContract),
+);
+const bulkApproveC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.bulkApproveResponseContract),
+);
+const bulkRejectC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.bulkRejectResponseContract),
+);
 
 interface ApprovalsQuery {
   status?: PeriodStatus;
@@ -36,7 +50,7 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params, signal);
+      return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params, signal, approvalsListC);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -65,7 +79,7 @@ export function useApprovePeriod() {
   return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "approve"],
     mutationFn: (periodId: number) =>
-      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`),
+      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`, undefined, undefined, timesheetPeriodC),
     onMutate: async (periodId) => {
       await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
@@ -101,7 +115,7 @@ export function useRejectPeriod() {
   return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "reject"],
     mutationFn: ({ periodId, reason }: { periodId: number; reason: string }) =>
-      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }),
+      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }, undefined, timesheetPeriodC),
     onMutate: async ({ periodId, reason }) => {
       await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
@@ -138,7 +152,7 @@ export function useBulkApprove() {
   return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "bulk-approve"],
     mutationFn: (periodIds: number[]) =>
-      apiClient.post<{ approved: number }>("/timesheets/approvals/bulk-approve", { periodIds }),
+      apiClient.post<{ approved: number }>("/timesheets/approvals/bulk-approve", { periodIds }, undefined, bulkApproveC),
     onSuccess: (res) => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
@@ -153,7 +167,7 @@ export function useBulkReject() {
   return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "bulk-reject"],
     mutationFn: ({ periodIds, reason }: { periodIds: number[]; reason: string }) =>
-      apiClient.post<{ rejected: number }>("/timesheets/approvals/bulk-reject", { periodIds, reason }),
+      apiClient.post<{ rejected: number }>("/timesheets/approvals/bulk-reject", { periodIds, reason }, undefined, bulkRejectC),
     onSuccess: (res) => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });

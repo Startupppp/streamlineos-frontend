@@ -109,6 +109,32 @@ export const aiCreditsUsageContract = z.object({
   daily: z.array(aiCreditsUsageDailyContract),
 });
 
+export const autoTopUpResponseContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  balance: z.number(),
+  autoTopUpEnabled: z.boolean(),
+  autoTopUpPackId: z.number().nullable(),
+  autoTopUpThreshold: z.number().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const purchaseAiCreditsContract = z.union([
+  z.object({
+    orderId: z.string(),
+    amount: z.number(),
+    currency: z.string(),
+    keyId: z.string(),
+    pack: aiCreditPackContract,
+  }),
+  z.object({
+    balance: z.number(),
+    creditsAdded: z.number(),
+    pack: aiCreditPackContract,
+  }),
+]);
+
 export type AiCreditPack = z.infer<typeof aiCreditPackContract>;
 export type AiCreditTransaction = z.infer<typeof aiCreditTransactionContract>;
 export type AiCreditsWallet = z.infer<typeof aiCreditsWalletContract>;

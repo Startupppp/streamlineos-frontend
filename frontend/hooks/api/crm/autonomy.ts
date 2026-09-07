@@ -65,7 +65,7 @@ export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) 
     useInfiniteQuery({
       queryKey: queryKeys.crm.autonomyDecisions({ ...filters, limit }),
       queryFn: ({ pageParam, signal }) =>
-        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam as string | undefined)}`, undefined, signal),
+        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam as string | undefined)}`, undefined, signal, decisionsPageLazy),
       getNextPageParam: (lastPage: DecisionPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
       // Short, because a manager watching the feed wants to see the system act.
@@ -100,6 +100,8 @@ export function useReverseDecision() {
       apiClient.post<{ reversed: boolean; action: string }>(
         `/crm/autonomy/decisions/${decisionId}/reverse`,
         { ...(reason ? { reason } : {}), consented: consented ?? false },
+        undefined,
+        switchesLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
@@ -128,7 +130,7 @@ export function useSetAutonomySwitch() {
   return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "switches", "set"],
     mutationFn: (input: { kind: string; enabled: boolean; reason?: string }) =>
-      apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
+      apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input, undefined, switchesLazy),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySwitches(), data);
     },
@@ -139,7 +141,7 @@ export function useSetAutonomySwitch() {
 export function useAutonomyScoreboard(days = 30) {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyScoreboard(days),
-    queryFn: ({ signal }) => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`, undefined, signal, scoreboardLazy),
     staleTime: 60_000,
   });
 }
@@ -162,6 +164,8 @@ export function useMarkReviewed() {
       apiClient.post<{ reviewed: boolean }>(
         `/crm/autonomy/review-queue/${shadowScoreId}/reviewed`,
         {},
+        undefined,
+        reviewQueueLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyReviewQueue() });
@@ -183,7 +187,7 @@ export function useUpdateAutonomySettings() {
   return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "settings", "update"],
     mutationFn: (patch: Partial<AutonomySettings>) =>
-      apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
+      apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch, undefined, autonomySettingsLazy),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySettings(), data);
     },
@@ -214,7 +218,7 @@ export function useCancelHold() {
     mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
       apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {
         ...(reason ? { reason } : {}),
-      }),
+      }, undefined, liveHoldsLazy),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },

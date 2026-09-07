@@ -42,7 +42,7 @@ export interface OrgSettings {
 export type { OrgMember } from "@/hooks/api/organization-schema";
 
 export interface Branch {
-  id: number;
+  id: string;
   orgId: string;
   name: string;
   code: string;
@@ -53,23 +53,19 @@ export interface Branch {
   address: string | null;
   phone: string | null;
   email: string | null;
-  branchManagerId: string | null;
-  branchHrId: string | null;
   status: "ACTIVE" | "INACTIVE";
   branchManager: {
     id: string;
     name: string | null;
     image: string | null;
-    email?: string;
   } | null;
   branchHr: {
     id: string;
     name: string | null;
     image: string | null;
-    email?: string;
   } | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type { Role } from "@/hooks/api/roles-schema";

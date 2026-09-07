@@ -17,7 +17,13 @@ const slaBreachedLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaBreachedListContract),
 );
 
-export interface SlaPolicy {
+export interface SlaPolicy
+const slaPolicyLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaPolicyContract),
+);
+const deleteSlaLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.deleteSlaContract),
+); {
   id: number;
   orgId: string;
   name: string;
@@ -90,7 +96,7 @@ export function useCreateSlaPolicy() {
   return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "create"],
     mutationFn: (input: CreateSlaPolicyInput) =>
-      apiClient.post<SlaPolicy>("/crm/sla/policies", input),
+      apiClient.post<SlaPolicy>("/crm/sla/policies", input, undefined, slaPolicyLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },
@@ -102,7 +108,7 @@ export function useUpdateSlaPolicy() {
   return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "update"],
     mutationFn: ({ id, ...data }: UpdateSlaPolicyInput) =>
-      apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data),
+      apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data, undefined, slaPolicyLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },
@@ -114,7 +120,7 @@ export function useDeleteSlaPolicy() {
   return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`, undefined, undefined, deleteSlaLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },

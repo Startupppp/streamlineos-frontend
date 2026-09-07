@@ -48,7 +48,7 @@ export interface CandidateOffer {
   candidateId: number;
   jobPostingId: number | null;
   offeredBy: string | null;
-  offerStatus: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "DECLINED" | "COUNTERED" | "EXPIRED" | "PENDING_APPROVAL" | "APPROVAL_REJECTED";
+  offerStatus: string;
   offeredSalary: string | null;
   offeredDesignation: string | null;
   joiningDate: string | null;
@@ -74,7 +74,7 @@ export interface OfferListItem {
   candidateEmail: string;
   jobPostingId: number | null;
   jobTitle: string | null;
-  offerStatus: CandidateOffer["offerStatus"];
+  offerStatus: string;
   offeredSalary: string | null;
   offeredDesignation: string | null;
   joiningDate: string | null;
@@ -101,7 +101,7 @@ export interface OfferVersion {
 export interface OfferNegotiation {
   id: number;
   offerId: number;
-  direction: "CANDIDATE_COUNTER" | "INTERNAL_RESPONSE";
+  direction: string;
   proposedSalary: string | null;
   proposedJoiningDate: string | null;
   message: string | null;

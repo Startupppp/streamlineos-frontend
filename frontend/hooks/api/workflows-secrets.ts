@@ -41,6 +41,7 @@ export function useGlobalSecrets() {
         "/workflows/secrets",
         pageParam === undefined ? undefined : { cursor: pageParam },
         signal,
+        workflowSecretListContract,
       ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>

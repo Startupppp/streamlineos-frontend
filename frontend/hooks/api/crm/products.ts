@@ -25,7 +25,7 @@ export function useCreateProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:products:manage", {
     mutationKey: ["crm", "products", "create"],
-    mutationFn: (input: CreateProductInput) => apiClient.post<Product>("/crm/products", input),
+    mutationFn: (input: CreateProductInput) => apiClient.post<Product>("/crm/products", input, undefined, crmProductLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmProducts.all });
     },
@@ -37,7 +37,7 @@ export function useUpdateProduct() {
   return useAuthorizedMutation("crm:products:manage", {
     mutationKey: ["crm", "products", "update"],
     mutationFn: ({ id, ...data }: UpdateProductInput) =>
-      apiClient.patch<Product>(`/crm/products/${id}`, data),
+      apiClient.patch<Product>(`/crm/products/${id}`, data, undefined, crmProductLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmProducts.all });
     },
@@ -48,7 +48,7 @@ export function useDeleteProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:products:manage", {
     mutationKey: ["crm", "products", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/crm/products/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/crm/products/${id}`, undefined, undefined, deleteProductLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmProducts.all });
     },

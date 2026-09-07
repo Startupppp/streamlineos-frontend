@@ -6,6 +6,10 @@ import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+import { lazyContract } from "@/lib/api-envelope";
+const tasksListLazy = lazyContract(() => import("@/hooks/api/crm/crm-activities-schema").then((m) => m.tasksListContract));
+const taskRowLazy = lazyContract(() => import("@/hooks/api/crm/crm-activities-schema").then((m) => m.taskRowContract));
+
 export type CrmActivityType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
 export type CrmActivityEntityType = "LEAD" | "DEAL" | "CONTACT";
 export type CrmActivityStatus = "pending" | "completed" | "cancelled";
@@ -69,7 +73,7 @@ export function useCrmActivities(filters?: CrmActivitiesFilters) {
   return useGatedQuery("tasks:read", {
     queryKey: queryKeys.crmActivities.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<CrmActivitiesResponse>("/tasks", buildParams(filters), signal),
+      apiClient.get<CrmActivitiesResponse>("/tasks", buildParams(filters), signal, tasksListLazy),
     staleTime: 60_000,
   });
 }
@@ -79,7 +83,7 @@ export function useLogCrmActivity() {
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["crm-activities", "create"] as const,
     mutationFn: (input: LogCrmActivityInput) =>
-      apiClient.post<CrmActivity>("/tasks", input),
+      apiClient.post<CrmActivity>("/tasks", input, undefined, taskRowLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmActivities.all });
       void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
@@ -92,7 +96,7 @@ export function useCompleteCrmActivity() {
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["crm-activities", "complete"] as const,
     mutationFn: (activityId: number) =>
-      apiClient.post<CrmActivity>(`/tasks/${activityId}/complete`, {}),
+      apiClient.post<CrmActivity>(`/tasks/${activityId}/complete`, {}, undefined, taskRowLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmActivities.all });
     },

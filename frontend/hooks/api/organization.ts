@@ -181,7 +181,7 @@ export const useUpdateOrgSettings = () => {
   >("settings:manage", {
     mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/settings", data, orgSuccessContract),
+      apiClient.patch<{ success: boolean }>("/organization/settings", data, undefined, orgSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.settings(),
@@ -205,7 +205,7 @@ export const useUpdateOrgSecurity = () => {
   return useAuthorizedMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>("settings:manage", {
     mutationKey: ["organization", "security", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/security", data, orgSuccessContract),
+      apiClient.patch<{ success: boolean }>("/organization/security", data, undefined, orgSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.settings(),
@@ -248,6 +248,7 @@ export const useArchiveOrg = () => {
       apiClient.post<{ success: boolean; nextOrgId: string | null }>(
         "/organization/archive",
         {},
+        undefined,
         archiveOrgContract,
       ),
     onMutate: () => {
@@ -267,6 +268,7 @@ export const useRestoreOrg = () => {
       apiClient.post<{ success: boolean; orgId: string }>(
         "/organization/restore",
         { orgId },
+        undefined,
         restoreOrgContract,
       ),
     onMutate: () => {
@@ -304,7 +306,7 @@ export const useCreateOrganization = () => {
   >({
     mutationKey: ["organization", "create"],
     mutationFn: (data) =>
-      apiClient.post<CreateOrganizationResult>("/organization", data, createOrgContract),
+      apiClient.post<CreateOrganizationResult>("/organization", data, undefined, createOrgContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.all,
@@ -320,6 +322,7 @@ export const useLeaveOrg = () => {
       apiClient.post<{ success: boolean; nextOrgId?: string }>(
         "/organization/leave",
         {},
+        undefined,
         leaveOrgContract,
       ),
     onMutate: () => {

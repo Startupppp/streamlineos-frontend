@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -18,6 +19,37 @@ import type {
   HrPolicyType,
   HrPolicyStatus,
 } from "@/types/hr/policies";
+
+const hrPolicyListC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyListContract),
+);
+const createHrPolicyC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.createHrPolicyContract),
+);
+const updateHrPolicyC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.updateHrPolicyContract),
+);
+const createPolicyVersionC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.createPolicyVersionContract),
+);
+const activatePolicyC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.activatePolicyContract),
+);
+const policyConflictsC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.policyConflictsContract),
+);
+const policyOrgConflictsC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.policyOrgConflictsContract),
+);
+const archivePolicyC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.archivePolicyContract),
+);
+const policyPreviewC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.policyPreviewContract),
+);
+const seedPoliciesC = lazyContract(() =>
+  import("@/hooks/api/hr/policies-schema").then((m) => m.seedPoliciesContract),
+);
 
 export function useHrPolicies(params?: {
   page?: number;
@@ -43,6 +75,7 @@ export function useHrPolicies(params?: {
         `/hr/policies${qs ? `?${qs}` : ""}`,
         undefined,
         signal,
+        hrPolicyListC,
       ),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -55,7 +88,7 @@ export function useCreateHrPolicy() {
   return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "create"],
     mutationFn: (data: CreatePolicyInput) =>
-      apiClient.post<HrPolicy>("/hr/policies", data),
+      apiClient.post<HrPolicy>("/hr/policies", data, undefined, createHrPolicyC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
@@ -66,7 +99,7 @@ export function useUpdateHrPolicy() {
   return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "update"],
     mutationFn: ({ id, ...data }: UpdatePolicyInput & { id: number }) =>
-      apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data),
+      apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data, undefined, updateHrPolicyC),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPolicyDetail(vars.id) });
@@ -79,7 +112,7 @@ export function useCreatePolicyVersion() {
   return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "create-version"],
     mutationFn: (policyId: number) =>
-      apiClient.post<HrPolicy>(`/hr/policies/${policyId}/versions`, {}),
+      apiClient.post<HrPolicy>(`/hr/policies/${policyId}/versions`, {}, undefined, createPolicyVersionC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
@@ -94,7 +127,7 @@ export function useActivatePolicy() {
       const force = typeof input === "number" ? false : Boolean(input.force);
       return apiClient.post<HrPolicy>(`/hr/policies/${policyId}/activate`, {
         force,
-      });
+      }, undefined, activatePolicyC);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll });
@@ -125,6 +158,7 @@ export function usePolicyConflicts(policyId: number) {
         `/hr/policies/${policyId}/conflicts`,
         undefined,
         signal,
+        policyConflictsC,
       ),
     enabled: canView && hrEnabled && policyId > 0,
     staleTime: 30_000,
@@ -142,6 +176,7 @@ export function useOrgPolicyConflicts(type?: HrPolicyType) {
         `/hr/policies/conflicts${qs}`,
         undefined,
         signal,
+        policyOrgConflictsC,
       ),
     staleTime: 30_000,
     enabled: canView && hrEnabled,
@@ -156,6 +191,8 @@ export function useArchivePolicy() {
       apiClient.post<{ success: boolean }>(
         `/hr/policies/${policyId}/archive`,
         {},
+        undefined,
+        archivePolicyC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
@@ -184,6 +221,7 @@ export function usePolicyPreview(
         `/hr/policies/${policyId}/preview?${qs}`,
         undefined,
         signal,
+        policyPreviewC,
       );
     },
     staleTime: 30_000,
@@ -204,6 +242,8 @@ export function useSeedDefaultPolicies() {
       apiClient.post<{ seeded: boolean; count?: number }>(
         "/hr/policies/seed-defaults",
         {},
+        undefined,
+        seedPoliciesC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),

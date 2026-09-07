@@ -57,7 +57,7 @@ export default async function CareersPage({ params }: Props) {
 
   let data: CareersPageData;
   try {
-    data = (await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`)) ?? notFound();
+    data = (await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`, undefined, publicJobListContract)) ?? notFound();
   } catch {
     notFound();
   }

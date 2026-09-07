@@ -79,7 +79,7 @@ export function useCreateWorkflow() {
     mutationKey: ["workflows", "create"],
     mutationFn: (input: CreateWorkflowInput) => {
       assertPermission(canCreate);
-      return apiClient.post<Workflow>("/workflows", input);
+      return apiClient.post<Workflow>("/workflows", input, undefined, workflowCreateContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
@@ -92,7 +92,7 @@ export function useUpdateWorkflow() {
     mutationKey: ["workflows", "update"],
     mutationFn: ({ id, ...input }: UpdateWorkflowInput & { id: string }) => {
       assertPermission(canUpdate);
-      return apiClient.patch<Workflow>(`/workflows/${id}`, input);
+      return apiClient.patch<Workflow>(`/workflows/${id}`, input, undefined, workflowUpdateContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
@@ -118,7 +118,7 @@ export function usePublishWorkflow() {
     mutationKey: ["workflows", "publish"],
     mutationFn: ({ id, ...input }: PublishWorkflowInput & { id: string }) => {
       assertPermission(canPublish);
-      return apiClient.post<WorkflowVersion>(`/workflows/${id}/publish`, input);
+      return apiClient.post<WorkflowVersion>(`/workflows/${id}/publish`, input, undefined, workflowPublishContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
@@ -131,7 +131,7 @@ export function useDuplicateWorkflow() {
     mutationKey: ["workflows", "duplicate"],
     mutationFn: (id: string) => {
       assertPermission(canCreate);
-      return apiClient.post<Workflow>(`/workflows/${id}/duplicate`);
+      return apiClient.post<Workflow>(`/workflows/${id}/duplicate`, undefined, undefined, workflowCreateContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });

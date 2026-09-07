@@ -82,7 +82,7 @@ export function useRemoveProjectWorkspaceMember() {
   return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<unknown>(`/build/members/${userId}`, undefined, undefined, workspaceMemberSuccessContract),
+      apiClient.delete<unknown>(`/build/members/${userId}`, workspaceMemberSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workspaceMembers.all });
     },

@@ -60,7 +60,7 @@ export function useDeleteWebhook(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "delete"],
     mutationFn: (webhookId: number) =>
-      apiClient.delete(`/build/${projectId}/webhooks/${webhookId}`, undefined, undefined, webhookSuccessContract),
+      apiClient.delete(`/build/${projectId}/webhooks/${webhookId}`, webhookSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
   });
 }

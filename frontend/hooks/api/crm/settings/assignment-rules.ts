@@ -13,6 +13,12 @@ const assignmentRulesLazy = lazyContract(() =>
 const assignmentPreviewLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentPreviewContract),
 );
+const assignmentRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentRuleContract),
+);
+const deleteAssignmentRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.deleteAssignmentRuleContract),
+);
 
 export type AssignmentType =
   | "assign_user"
@@ -104,7 +110,7 @@ export function useCreateAssignmentRule() {
   return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "create"],
     mutationFn: (input: CreateAssignmentRuleInput) =>
-      apiClient.post<AssignmentRule>("/crm/assignment-rules", input),
+      apiClient.post<AssignmentRule>("/crm/assignment-rules", input, undefined, assignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -116,7 +122,7 @@ export function useUpdateAssignmentRule() {
   return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateAssignmentRuleInput) =>
-      apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data),
+      apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data, undefined, assignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -128,7 +134,7 @@ export function useDeleteAssignmentRule() {
   return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`, undefined, undefined, deleteAssignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -140,7 +146,7 @@ export function useReorderAssignmentRules() {
   return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "reorder"],
     mutationFn: (input: ReorderAssignmentRulesInput) =>
-      apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input),
+      apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input, undefined, deleteAssignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -156,6 +162,6 @@ export function usePreviewAssignmentRule() {
       score?: number;
       city?: string;
     }) =>
-      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }),
+      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }, undefined, assignmentPreviewLazy),
   });
 }

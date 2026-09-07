@@ -14,6 +14,9 @@ const listInsightsContract = lazyContract(() =>
 const updateInsightStatusContract = lazyContract(() =>
   import("@/hooks/api/inventory/ai-schema").then((m) => m.updateInsightStatusContract),
 );
+const generateInsightsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.generateInsightsContract),
+);
 
 interface InsightsParams {
   status?: "NEW" | "ACKNOWLEDGED" | "DISMISSED";
@@ -51,9 +54,15 @@ export function useInventoryInsights(params?: InsightsParams) {
 
 export function useGenerateInsights() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, void>("inventory:ai:manage", {
+  return useAuthorizedMutation<{ generated: number }, Error, void>("inventory:ai:manage", {
     mutationKey: ["inventory", "ai", "insights", "generate"],
-    mutationFn: () => apiClient.post("/inventory/ai/insights/generate"),
+    mutationFn: () =>
+      apiClient.post<{ generated: number }>(
+        "/inventory/ai/insights/generate",
+        undefined,
+        undefined,
+        generateInsightsContract,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

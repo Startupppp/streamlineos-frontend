@@ -1,66 +1,56 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-const approvalPolicyConditionContract = z.object({
-  field: z.string(),
-  operator: z.string(),
-  value: z.unknown(),
-});
-
-const approvalPolicyStepContract = z.object({
-  order: z.number(),
-  approverType: z.string(),
-  approverId: z.string().nullable(),
-  approverRole: z.string().nullable(),
-});
-
-const approvalPolicyContract = z.object({
+export const approvalPolicyContract = z.object({
   id: z.number(),
   orgId: z.string(),
-  name: z.string(),
-  entityType: z.string(),
+  recordType: z.string(),
+  minAmount: z.string().nullable(),
+  approverRole: z.string().nullable(),
+  approverUserId: z.string().nullable(),
+  approverMembershipId: z.number().nullable(),
   isActive: z.boolean(),
-  conditions: z.array(approvalPolicyConditionContract),
-  steps: z.array(approvalPolicyStepContract),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-export const approvalPolicyListContract = z.array(approvalPolicyContract);
+export const approvalPolicyListContract = cursorPageContract(approvalPolicyContract);
 
 export const approvalPolicyCreatedContract = approvalPolicyContract;
 
 export const approvalPolicyUpdatedContract = approvalPolicyContract;
 
-export const approvalPolicyDeletedContract = z.object({ success: z.literal(true) });
+export const approvalPolicyDeletedContract = z.object({ deleted: z.literal(true) });
 
-const approvalQueueItemContract = z.object({
+const approvalRequestBaseContract = z.object({
   id: z.number(),
   orgId: z.string(),
-  entityType: z.string(),
-  entityId: z.number(),
-  status: z.string(),
+  recordType: z.string(),
+  recordId: z.number(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
   requestedBy: z.string(),
-  requestedAt: z.string(),
+  note: z.string().nullable(),
   decidedBy: z.string().nullable(),
   decidedAt: z.string().nullable(),
-  notes: z.string().nullable(),
-  entitySummary: z.record(z.string(), z.unknown()).nullable(),
+  decisionComment: z.string().nullable(),
+  createdAt: z.string(),
 });
 
-export const approvalQueueContract = cursorPageContract(approvalQueueItemContract);
+const approvalRequestEnrichedContract = approvalRequestBaseContract.extend({
+  requesterDisplayName: z.string(),
+  recordLabel: z.string().nullable(),
+  recordAmount: z.string().nullable(),
+});
+
+export const approvalQueueContract = cursorPageContract(approvalRequestEnrichedContract);
 
 export const approvalCountsContract = z.object({
-  pending: z.number(),
-  approved: z.number(),
-  rejected: z.number(),
-  total: z.number(),
+  PENDING: z.number(),
+  APPROVED: z.number(),
+  REJECTED: z.number(),
 });
 
-export const approvalDecisionContract = z.object({
-  id: z.number(),
-  status: z.string(),
-});
+export const approvalDecisionContract = approvalRequestBaseContract;
 
 const exchangeRateContract = z.object({
   id: z.number(),
@@ -68,19 +58,11 @@ const exchangeRateContract = z.object({
   fromCurrency: z.string(),
   toCurrency: z.string(),
   rate: z.string(),
-  effectiveDate: z.string(),
-  source: z.string(),
+  asOfDate: z.string(),
   createdAt: z.string(),
 });
 
-export const exchangeRateListContract = z.object({
-  items: z.array(exchangeRateContract),
-  pagination: z.object({
-    limit: z.number(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const exchangeRateListContract = cursorPageContract(exchangeRateContract);
 
 export const exchangeRateCreatedContract = exchangeRateContract;
 

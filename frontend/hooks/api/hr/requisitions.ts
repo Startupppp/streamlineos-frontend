@@ -30,22 +30,22 @@ export interface JobRequisition {
   id: number;
   orgId: string;
   title: string;
-  department?: string;
-  location?: string;
+  department?: string | null;
+  location?: string | null;
   headcount: number;
   budgetMin?: string;
   budgetMax?: string;
-  hiringManagerId?: string;
+  hiringManagerId?: string | null;
   priority: string;
   type: string;
   status: string;
   requestedBy: string;
-  approverId?: string;
-  approvedAt?: string;
-  rejectionReason?: string;
-  justification?: string;
-  targetDate?: string;
-  linkedJobId?: number;
+  approverId?: string | null;
+  approvedAt?: string | null;
+  rejectionReason?: string | null;
+  justification?: string | null;
+  targetDate?: string | null;
+  linkedJobId?: number | null;
   createdAt: string;
 }
 

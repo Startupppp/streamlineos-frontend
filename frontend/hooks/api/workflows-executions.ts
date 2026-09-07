@@ -46,7 +46,7 @@ export function useWorkflowExecutions(workflowId: string, params?: ExecutionList
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         `/workflows/${workflowId}/executions`,
-        params as Record<string, unknown>, signal,
+        params as Record<string, unknown>, signal, workflowExecutionListContract,
       ),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
@@ -60,7 +60,7 @@ export function useAllExecutions(params?: ExecutionListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         "/workflows/executions",
-        params as Record<string, unknown>, signal,
+        params as Record<string, unknown>, signal, workflowExecutionListContract,
       ),
     staleTime: 15_000,
     refetchInterval: (query) => {
@@ -97,6 +97,9 @@ export function useCancelExecution() {
       assertPermission(canManage);
       return apiClient.post<WorkflowExecution>(
         `/workflows/${workflowId}/executions/${executionId}/cancel`,
+        undefined,
+        undefined,
+        workflowExecutionCancelContract,
       );
     },
     onSuccess: (_, variables) => {

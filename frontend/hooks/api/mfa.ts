@@ -35,7 +35,7 @@ export function useMfaSetup() {
         secret: string;
         manualEntryKey: string;
         backupCodes: string[];
-      }>("/auth/mfa/setup", undefined, mfaSetupContract),
+      }>("/auth/mfa/setup", undefined, undefined, mfaSetupContract),
   });
 }
 
@@ -44,7 +44,7 @@ export function useMfaVerify() {
   return useMutation({
     mutationKey: ["mfa", "verify"],
     mutationFn: (data: { token: string } | { backupCode: string }) =>
-      apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data, mfaVerifyContract),
+      apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data, undefined, mfaVerifyContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
@@ -57,7 +57,7 @@ export function useMfaDisable() {
   return useMutation({
     mutationKey: ["mfa", "disable"],
     mutationFn: (token: string) =>
-      apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }, mfaDisableContract),
+      apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }, undefined, mfaDisableContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });

@@ -55,7 +55,7 @@ export function useCreateContact() {
   return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "create"] as const,
     mutationFn: (input: CreateContactInput) =>
-      apiClient.post<Contact>("/contacts", input),
+      apiClient.post<Contact>("/contacts", input, undefined, contactDetailLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
     },
@@ -67,7 +67,7 @@ export function useUpdateContact() {
   return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "update"] as const,
     mutationFn: (input: UpdateContactInput) =>
-      apiClient.patch<Contact>(`/contacts/${input.id}`, input),
+      apiClient.patch<Contact>(`/contacts/${input.id}`, input, undefined, contactDetailLazy),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
       void qc.invalidateQueries({
@@ -82,7 +82,7 @@ export function useDeleteContact() {
   return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "delete"] as const,
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/contacts/${id}`),
+      apiClient.delete<{ success: boolean }>(`/contacts/${id}`, undefined, undefined, duplicateContactsLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
     },
@@ -104,7 +104,7 @@ export function useAddContactRole() {
   return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contactRoles", "add"] as const,
     mutationFn: ({ contactId, input }: { contactId: number; input: ContactRoleCreateInput }) =>
-      apiClient.post<ContactRole>(`/contacts/${contactId}/roles`, input),
+      apiClient.post<ContactRole>(`/contacts/${contactId}/roles`, input, undefined, contactRolesLazy),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
     },
@@ -116,7 +116,7 @@ export function useRemoveContactRole() {
   return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contactRoles", "remove"] as const,
     mutationFn: ({ contactId, roleId }: { contactId: number; roleId: string }) =>
-      apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`),
+      apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`, undefined, undefined, duplicateContactsLazy),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
     },
@@ -137,7 +137,7 @@ export function useMergeContacts() {
   return useAuthorizedMutation("crm:contacts:merge", {
     mutationKey: ["contacts", "merge"] as const,
     mutationFn: (input: MergeContactsInput) =>
-      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/contacts/merge", input),
+      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/contacts/merge", input, undefined, contactDetailLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
       void qc.invalidateQueries({ queryKey: queryKeys.contactDuplicates.all });

@@ -38,7 +38,7 @@ export function useSnoozeCrmTask() {
   return useAuthorizedMutation("crm:tasks:update", {
     mutationKey: ["crm-inbox", "snooze"] as const,
     mutationFn: ({ taskId, until }: { taskId: number; until: string }) =>
-      apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/snooze`, { until }),
+      apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/snooze`, { until }, undefined, dismissInboxItemLazy),
     onMutate: async ({ taskId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.crmInbox.data() });
       const snapshot = qc.getQueryData<CrmInboxResponse>(queryKeys.crmInbox.data());
@@ -72,7 +72,7 @@ export function useCompleteCrmTask() {
   return useAuthorizedMutation("crm:tasks:update", {
     mutationKey: ["crm-inbox", "complete"] as const,
     mutationFn: ({ taskId }: { taskId: number }) =>
-      apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/complete`, {}),
+      apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/complete`, {}, undefined, dismissInboxItemLazy),
     onMutate: async ({ taskId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.crmInbox.data() });
       const snapshot = qc.getQueryData<CrmInboxResponse>(queryKeys.crmInbox.data());

@@ -2,11 +2,19 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
+
+const taxDeclarationListC = lazyContract(() =>
+  import("@/hooks/api/payroll/tax-schema").then((m) => m.taxDeclarationListContract),
+);
+const taxDeclarationListItemC = lazyContract(() =>
+  import("@/hooks/api/payroll/tax-schema").then((m) => m.taxDeclarationListItemContract),
+);
 
 export function useTaxDeclarationsAdmin(params: {
   financialYear?: string;
@@ -15,7 +23,7 @@ export function useTaxDeclarationsAdmin(params: {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.taxDeclarations(params as Record<string, unknown> | undefined),
-    queryFn: ({ signal }) => apiClient.get<TaxDeclarationAdmin[]>("/payroll/tax/declarations", params, signal),
+    queryFn: ({ signal }) => apiClient.get<TaxDeclarationAdmin[]>("/payroll/tax/declarations", params, signal, taxDeclarationListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -28,6 +36,9 @@ export function useApproveDeclaration() {
     mutationFn: ({ declarationId }: { declarationId: number }) =>
       apiClient.patch<TaxDeclarationAdmin>(
         `/payroll/tax/declarations/${declarationId}/approve`,
+        undefined,
+        undefined,
+        taxDeclarationListItemC,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });
@@ -43,6 +54,8 @@ export function useRejectDeclaration() {
       apiClient.patch<TaxDeclarationAdmin>(
         `/payroll/tax/declarations/${declarationId}/reject`,
         { note },
+        undefined,
+        taxDeclarationListItemC,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });
