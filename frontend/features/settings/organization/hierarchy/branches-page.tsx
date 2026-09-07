@@ -426,7 +426,7 @@ export function OrgBranchesPage() {
             <BranchForm
               defaultValues={{
                 name: editingBranch.name,
-                code: editingBranch.code,
+                code: editingBranch.code ?? "",
                 businessUnitId: editingBranch.businessUnitId ?? "",
                 managerUserId: editingBranch.managerUserId ?? "",
                 city: editingBranch.city ?? "",

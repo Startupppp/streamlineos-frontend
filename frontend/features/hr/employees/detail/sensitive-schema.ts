@@ -63,7 +63,7 @@ export function salaryInputToCents(value: string): number | null {
   return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
 }
 
-export function sensitiveToForm(data: HrSensitiveData | undefined): SensitiveFormValues {
+export function sensitiveToForm(data: HrSensitiveData | null | undefined): SensitiveFormValues {
   return {
     salaryAmount: salaryCentsToInput(data?.salaryAmountCents),
     salaryCurrency: data?.salaryCurrency ?? "",
@@ -80,7 +80,7 @@ export function sensitiveToForm(data: HrSensitiveData | undefined): SensitiveFor
   };
 }
 
-export function formToSensitive(values: SensitiveFormValues, existing: HrSensitiveData | undefined): Partial<HrSensitiveData> {
+export function formToSensitive(values: SensitiveFormValues, existing: HrSensitiveData | null | undefined): Partial<HrSensitiveData> {
   return {
     salaryAmountCents: salaryInputToCents(values.salaryAmount),
     salaryCurrency: values.salaryCurrency === "" ? null : values.salaryCurrency.toUpperCase(),

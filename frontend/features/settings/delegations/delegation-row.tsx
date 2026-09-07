@@ -28,7 +28,7 @@ export function DelegationSkeletons({ count }: { count: number }) {
 export interface DelegationRowProps {
   delegation: Delegation;
   memberMap: Map<string, string>;
-  nameField: "delegatorId" | "delegateeId";
+  nameField: "delegator" | "delegatee";
   canRevoke?: boolean;
   onRevoke?: (delegation: Delegation) => void;
   isRevoking?: boolean;
@@ -47,12 +47,10 @@ export function DelegationRow({
     [delegation, onRevoke],
   );
 
-  const principalId = delegation[nameField];
   const displayName =
-    (nameField === "delegatorId"
+    (nameField === "delegator"
       ? delegation.delegatorName
       : delegation.delegateeName) ??
-    memberMap.get(principalId) ??
     "Team member";
   const isRevoked = delegation.lifecycle === "REVOKED";
   const isExpired = delegation.lifecycle === "EXPIRED";
@@ -97,7 +95,7 @@ export function DelegationRow({
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {lifecycleLabel} {formatRelative(new Date(lifecycleDate), new Date())}
+          {lifecycleLabel} {lifecycleDate ? formatRelative(new Date(lifecycleDate), new Date()) : ""}
           {delegation.reason && (
             <span className="text-muted-foreground/60">
               {" "}

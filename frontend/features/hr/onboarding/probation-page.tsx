@@ -95,7 +95,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <span className="text-micro font-bold text-primary">
-            {review.firstName[0]}{review.lastName[0]}
+            {(review.firstName ?? "")[0]}{(review.lastName ?? "")[0]}
           </span>
         </div>
 

@@ -110,8 +110,8 @@ interface ProbationItem {
   id: number;
   status: string;
   probationEndDate: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
 }
 
 interface ResignationItem {

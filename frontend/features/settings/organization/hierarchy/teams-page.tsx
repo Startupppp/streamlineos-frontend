@@ -411,7 +411,7 @@ export function OrgTeamsPage() {
             <TeamForm
               defaultValues={{
                 name: editingTeam.name,
-                code: editingTeam.code,
+                code: editingTeam.code ?? "",
                 departmentId: editingTeam.departmentId ?? "",
                 leadUserId: editingTeam.leadUserId ?? "",
                 description: editingTeam.description ?? "",

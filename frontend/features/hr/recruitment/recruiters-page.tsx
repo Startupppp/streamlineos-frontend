@@ -36,9 +36,9 @@ const ACTION_COLORS: Record<string, string> = {
   INTERVIEW_SCHEDULED: "bg-status-warning-surface text-status-warning-ink",
 };
 
-function initials(name: string | null, email: string) {
+function initials(name: string | null, email: string | null) {
   if (name) return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
-  return email.slice(0, 2).toUpperCase();
+  return (email ?? "??").slice(0, 2).toUpperCase();
 }
 
 function totalActivity(summary: RecruiterSummary["activitySummary"]) {
@@ -131,8 +131,8 @@ function RecruiterCard({
             <AvatarFallback className="text-xs">{initials(recruiter.name, recruiter.email)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-sm"><TruncatedText text={recruiter.name ?? recruiter.email} /></CardTitle>
-            <TruncatedText text={recruiter.email} className="text-xs text-muted-foreground" />
+            <CardTitle className="text-sm"><TruncatedText text={recruiter.name ?? recruiter.email ?? ""} /></CardTitle>
+            <TruncatedText text={recruiter.email ?? ""} className="text-xs text-muted-foreground" />
           </div>
           <Badge variant="secondary" className="text-micro shrink-0">{recruiter.role}</Badge>
         </div>

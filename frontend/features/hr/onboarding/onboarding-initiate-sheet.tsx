@@ -43,7 +43,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
   const { data: onboardingStatuses } = useOnboardingStatus();
 
   const initiatedUserIds = useMemo(
-    () => (onboardingStatuses ?? []).map((s) => s.userId),
+    () => (onboardingStatuses ?? []).map((s) => s.userId).filter((id): id is string => id !== null),
     [onboardingStatuses],
   );
 

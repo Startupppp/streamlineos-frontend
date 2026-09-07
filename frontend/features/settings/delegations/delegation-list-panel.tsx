@@ -18,7 +18,7 @@ export interface DelegationListPanelProps {
   listState: { search: string; limit: number };
   page: number;
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-  nameField: "delegatorId" | "delegateeId";
+  nameField: "delegator" | "delegatee";
   errorTitle: string;
   emptyTitle: string;
   emptyDescription: string;

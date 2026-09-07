@@ -62,7 +62,7 @@ function resolveAffectedUser(log: AuditLogEntry): string | null {
   return null;
 }
 
-function formatTimestamp(value: Date): string {
+function formatTimestamp(value: string | Date): string {
   const date = value instanceof Date ? value : new Date(value);
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",

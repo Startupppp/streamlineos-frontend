@@ -68,7 +68,7 @@ function ThreadItem({
             </Badge>
           )}
           <span className="text-micro text-muted-foreground">
-            {format(new Date(thread.lastMessageAt), "MMM d")}
+            {thread.lastMessageAt ? format(new Date(thread.lastMessageAt), "MMM d") : ""}
           </span>
         </div>
       </div>

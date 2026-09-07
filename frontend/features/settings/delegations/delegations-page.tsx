@@ -293,7 +293,6 @@ export function DelegationsPage() {
     activeTab === "received" ? receivedSearchInput : grantedSearchInput;
   const revokeDescription = revokeTarget
     ? (revokeTarget.delegateeName ??
-        memberMap.get(revokeTarget.delegateeId) ??
         "This member") +
       " will lose " +
       revokeTarget.permissions.length +
@@ -361,7 +360,7 @@ export function DelegationsPage() {
                 listState={receivedState}
                 page={receivedCursors.length}
                 pagination={receivedPagination}
-                nameField="delegatorId"
+                nameField="delegator"
                 onRetry={handleRetryReceived}
                 onPrevious={handleReceivedPrevious}
                 onNext={handleReceivedNext}
@@ -394,7 +393,7 @@ export function DelegationsPage() {
                 listState={grantedState}
                 page={grantedCursors.length}
                 pagination={grantedPagination}
-                nameField="delegateeId"
+                nameField="delegatee"
                 onRetry={handleRetryGiven}
                 onPrevious={handleGrantedPrevious}
                 onNext={handleGrantedNext}
