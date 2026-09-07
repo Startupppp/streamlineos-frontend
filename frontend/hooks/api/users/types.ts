@@ -40,7 +40,7 @@ export interface UserPreferences {
   weekStartDay: string | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export type UpdateUserPreferencesInput = Partial<
@@ -78,16 +78,16 @@ export interface User {
   isActive: boolean;
   userStatus?: string | null;
   archivedAt?: string | null;
-  team: string | null;
-  bio: string | null;
-  linkedinUrl: string | null;
-  twitterUrl: string | null;
-  githubUrl: string | null;
-  websiteUrl: string | null;
-  emergencyContact: EmergencyContact | null;
-  joinedAt: string | null;
+  team?: string | null;
+  bio?: string | null;
+  linkedinUrl?: string | null;
+  twitterUrl?: string | null;
+  githubUrl?: string | null;
+  websiteUrl?: string | null;
+  emergencyContact?: EmergencyContact | null;
+  joinedAt?: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   lastSeenAt?: string | null;
   teams?: string[];
 }

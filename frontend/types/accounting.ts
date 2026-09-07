@@ -19,10 +19,10 @@ export interface JournalLine {
   accountId: number;
   accountCode: string;
   accountName: string;
-  debit: string;
-  credit: string;
+  debit: string | null;
+  credit: string | null;
   description: string | null;
-  lineOrder: number;
+  lineOrder: number | null;
 }
 
 export type JournalEntryStatus = "DRAFT" | "POSTED" | "VOID" | "PENDING_APPROVAL";
@@ -32,15 +32,23 @@ export interface JournalEntry {
   orgId: string;
   entryNumber: string;
   entryDate: string;
+  postingDate: string | null;
   description: string | null;
+  periodId: number | null;
+  currency: string;
   sourceType: string;
   sourceId: string | null;
   sourceEvent: string | null;
-  status: JournalEntryStatus;
-  reversedEntryId?: number | null;
+  status: string;
   createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdByMembershipId: number | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  postedBy: string | null;
+  postedAt: string | null;
+  reversedEntryId: number | null;
+  createdAt: string;
+  updatedAt: string | null;
   lines?: JournalLine[];
   createdByName?: string | null;
   createdByEmail?: string | null;

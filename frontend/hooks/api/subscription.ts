@@ -58,6 +58,15 @@ const profileContract = lazyContract(() =>
 const seatsContract = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then((m) => m.seatInfoContract),
 );
+const createOrderContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.createOrderContract),
+);
+const verifySubscriptionContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.verifySubscriptionContract),
+);
+const updateBillingProfileContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.billingProfileContract),
+);
 
 interface CreateOrderResponse {
   orderId: string;
@@ -96,7 +105,7 @@ export function useSubscription() {
 export function useCreateSubscriptionOrder() {
   return useAuthorizedMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "create-order"],
-    mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/checkout", data),
+    mutationFn: (data) => apiClient.post("/billing/checkout", data, undefined, createOrderContract),
   });
 }
 
@@ -104,7 +113,7 @@ export function useVerifySubscription() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "confirm"],
-    mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/checkout", data),
+    mutationFn: (data) => apiClient.patch("/billing/checkout", data, undefined, verifySubscriptionContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.subscription() });
       queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
@@ -154,7 +163,7 @@ export function useUpdateBillingProfile() {
   return useAuthorizedMutation("billing:profile:update", {
     mutationKey: ["billing", "profile", "update"],
     mutationFn: (data: Partial<BillingProfile>) =>
-      apiClient.patch<BillingProfile>("/billing/profile", data),
+      apiClient.patch("/billing/profile", data, undefined, updateBillingProfileContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.profile() });
     },

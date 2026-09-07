@@ -33,7 +33,7 @@ export const orgSettingsContract = z.object({
   maxConcurrentSessions: z.number().nullable(),
   ownerMembershipId: z.number(),
   onboardingCompletedAt: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]),
   statusV2: z.string().nullable(),
   purgeScheduledAt: z.string().nullable(),
   purgeScheduledBy: z.string().nullable(),
@@ -61,7 +61,7 @@ export const orgSettingsContract = z.object({
   allowedEmailDomains: z.array(z.string()),
   primaryColor: z.string().nullable(),
   loginBgUrl: z.string().nullable(),
-  ipAllowlist: z.array(z.unknown()),
+  ipAllowlist: z.array(z.string()),
   directoryPublic: z.boolean(),
 });
 

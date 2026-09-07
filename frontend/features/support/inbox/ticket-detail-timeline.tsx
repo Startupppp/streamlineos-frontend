@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Lock, FileText, Image as ImageIcon } from "lucide-react";
+import { Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,11 +14,6 @@ import type { SupportTicket } from "@/types/support";
 function toSentenceCase(str: string) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function fileMimeIcon(mimeType: string) {
-  if (mimeType.startsWith("image/")) return ImageIcon;
-  return FileText;
 }
 
 interface TicketDetailTimelineProps {
@@ -38,12 +33,6 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
       <div className="space-y-3">
         {messages.map((msg) => {
           const isInternalMsg = msg.isInternal;
-          const attachments = (msg.attachments ?? []) as {
-            fileName: string;
-            fileUrl: string;
-            fileSize: number;
-            mimeType: string;
-          }[];
           return (
             <div
               key={msg.id}
@@ -78,25 +67,6 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
                 )}
                 {msg.body && msg.body !== "(attachment)" && (
                   <MessageTranslateControl ticketId={ticket.id} messageId={msg.id} />
-                )}
-                {attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {attachments.map((att, i) => {
-                      const Icon = fileMimeIcon(att.mimeType);
-                      return (
-                        <a
-                          key={i}
-                          href={att.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-dense text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
-                        >
-                          <Icon className="h-3 w-3 shrink-0" />
-                          <span className="truncate max-w-[120px]">{att.fileName}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
                 )}
               </div>
             </div>

@@ -6,13 +6,13 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { useWarehouseStock } from "@/hooks/api/inventory/warehouses";
-import type { WarehouseStockRow } from "@/types/inventory";
+import type { StockRow } from "@/hooks/api/inventory/warehouses";
 
 interface WarehouseStockTabProps {
   warehouseId: number;
 }
 
-const columns: DataTableColumn<WarehouseStockRow>[] = [
+const columns: DataTableColumn<StockRow>[] = [
   {
     key: "location",
     header: "Location",

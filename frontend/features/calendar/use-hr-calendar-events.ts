@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { addDays, differenceInCalendarDays, format, subDays } from "date-fns";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const hrCalendarEventListContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.hrCalendarEventListContract),
+);
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
@@ -70,7 +75,7 @@ export function useHrCalendarEventsMapped(
         from,
         to,
         types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL",
-      }, signal),
+      }, signal, hrCalendarEventListContract),
     staleTime: 5 * 60_000,
     retry: false,
     enabled: !forbidden && hrVisible && canView && hrModuleEnabled,

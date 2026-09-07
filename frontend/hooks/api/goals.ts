@@ -2,6 +2,14 @@
 
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const goalStatsContract = lazyContract(() =>
+  import("@/hooks/api/goals-schema").then((m) => m.goalStatsContract),
+);
+const goalSuccessContract = lazyContract(() =>
+  import("@/hooks/api/goals-schema").then((m) => m.goalSuccessContract),
+);
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -176,7 +184,7 @@ export function useGoal(id: number) {
 export function useGoalStats() {
   return useGatedQuery("build:goals:view", {
     queryKey: accountingAndSupportQueryKeys.goals.stats(),
-    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal, goalStatsContract),
     staleTime: 60_000,
   });
 }
@@ -209,7 +217,7 @@ export function useDeleteGoal() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["delete", "goal"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/${id}`, undefined, undefined, goalSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
     },
@@ -248,7 +256,7 @@ export function useRemoveGoalLink(goalId: number) {
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["remove", "goal", "link"],
     mutationFn: (linkId: number) =>
-      apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`),
+      apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`, undefined, undefined, goalSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });

@@ -32,7 +32,7 @@ import {
   useDeleteProduct,
 } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
-import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
+import type { TrackingMethod } from "@/types/inventory";
 
 export function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -124,7 +124,12 @@ export function TrackingBadge({
   );
 }
 
-export function ProductRowActions({ product }: { product: InventoryProduct }) {
+interface ProductRowItem {
+  id: number;
+  status: string;
+}
+
+export function ProductRowActions({ product }: { product: ProductRowItem }) {
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
   const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
     useAnimatedIcon();
@@ -191,10 +196,10 @@ export function ProductRowActions({ product }: { product: InventoryProduct }) {
             </DropdownMenuItem>
           )}
           {(canUpdate || canDelete) && <DropdownMenuSeparator />}
-          {canUpdate && !product.isArchived && product.status === "ACTIVE" && (
+          {canUpdate && product.status === "ACTIVE" && (
             <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
           )}
-          {canUpdate && product.isArchived && (
+          {canUpdate && product.status === "INACTIVE" && (
             <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
           )}
           {canDelete && (

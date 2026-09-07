@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateChannel } from "@/hooks/api";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Channel } from "@/types/chat";
@@ -87,7 +92,7 @@ export function ChannelInfoPanelProfile({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "chat-avatars");
-        const data = await apiClient.upload<{ key: string }>("/storage/upload", formData);
+        const data = await apiClient.upload<{ key: string }>("/storage/upload", formData, storageUploadContract);
         if (!data.key) {
           toast.error("Upload failed");
           return;

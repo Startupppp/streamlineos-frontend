@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-const sprintTicketSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  status: z.string(),
-  points: z.number().nullable(),
-  sprintId: z.number().nullable(),
-});
-
 const sprintListItemSchema = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -16,8 +8,7 @@ const sprintListItemSchema = z.object({
   startDate: z.string(),
   endDate: z.string(),
   goal: z.string().nullable(),
-  status: z.string(),
-  tickets: z.array(sprintTicketSchema),
+  status: z.string().nullable(),
 });
 
 const sprintRowSchema = z.object({

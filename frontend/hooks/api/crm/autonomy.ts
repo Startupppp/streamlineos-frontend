@@ -37,6 +37,15 @@ const autonomySettingsLazy = lazyContract(() =>
 const liveHoldsLazy = lazyContract(() =>
   import("@/hooks/api/crm/autonomy-schema").then((m) => m.liveHoldsContract),
 );
+const reverseDecisionLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.reverseDecisionContract),
+);
+const markReviewedLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.markReviewedContract),
+);
+const cancelHoldLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.cancelHoldContract),
+);
 function toParams(filters: DecisionFilters, limit: number, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor !== undefined) params.set("cursor", cursor);
@@ -101,7 +110,7 @@ export function useReverseDecision() {
         `/crm/autonomy/decisions/${decisionId}/reverse`,
         { ...(reason ? { reason } : {}), consented: consented ?? false },
         undefined,
-        switchesLazy,
+        reverseDecisionLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
@@ -165,7 +174,7 @@ export function useMarkReviewed() {
         `/crm/autonomy/review-queue/${shadowScoreId}/reviewed`,
         {},
         undefined,
-        reviewQueueLazy,
+        markReviewedLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyReviewQueue() });
@@ -218,7 +227,7 @@ export function useCancelHold() {
     mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
       apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {
         ...(reason ? { reason } : {}),
-      }, undefined, liveHoldsLazy),
+      }, undefined, cancelHoldLazy),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },

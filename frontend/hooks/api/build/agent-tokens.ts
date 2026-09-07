@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
+import type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
@@ -19,7 +19,7 @@ const agentTokenSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/agent-tokens-schema").then((m) => m.agentTokenSuccessContract),
 );
 
-export type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
+export type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");
@@ -47,7 +47,7 @@ export function useRevokeAgentToken() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "revoke"],
-    mutationFn: (tokenId: string) =>
+    mutationFn: (tokenId: number) =>
       apiClient.delete<{ success: boolean }>(`/agent-tokens/${tokenId}`, agentTokenSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentTokens() });

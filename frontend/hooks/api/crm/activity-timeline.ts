@@ -24,6 +24,12 @@ const myTasksPageLazy = lazyContract(() =>
 const activityParticipantsLazy = lazyContract(() =>
   import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.activityParticipantsContract),
 );
+const logActivityLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.logActivityContract),
+);
+const completeTaskLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.completeTaskContract),
+);
 
 /** The anchor as the API takes it — exactly one identifier. */
 function anchorParams(anchor: TimelineAnchor): Record<string, string> {
@@ -116,7 +122,7 @@ export function useLogActivity() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "create"],
-    mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input),
+    mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input, undefined, logActivityLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });
     },
@@ -128,7 +134,7 @@ export function useCompleteActivityTask() {
   return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "complete"],
     mutationFn: (activityId: string) =>
-      apiClient.post(`/crm/activities/${activityId}/complete`, {}),
+      apiClient.post(`/crm/activities/${activityId}/complete`, {}, undefined, completeTaskLazy),
     onSuccess: () => {
       // The same row appears on a timeline and in the person's own task list.
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });

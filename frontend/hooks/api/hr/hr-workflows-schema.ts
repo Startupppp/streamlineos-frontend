@@ -3,6 +3,15 @@ import type {
   HrWorkflowObjectType,
   HrWorkflowStatus,
   HrWorkflowInstanceStatus,
+  HrWorkflowApproverType,
+  HrWorkflowStepMode,
+  HrWorkflowStep,
+  HrWorkflowDefinition,
+  HrWorkflowInstance,
+  HrWorkflowDelegation,
+  HrWorkflowStepAction,
+  PaginatedResult,
+  CursorPaginatedResult,
 } from "@/types/hr/workflows";
 
 const cursorPagination = z.object({
@@ -23,17 +32,16 @@ const workflowSettingsContract = z.object({
 
 const workflowStepContract = z.object({
   id: z.number().int(),
-  orgId: z.string(),
   definitionId: z.number().int(),
   stepOrder: z.number().int(),
   name: z.string(),
-  approverType: z.string(),
+  approverType: z.custom<HrWorkflowApproverType>((v) => typeof v === "string"),
   approverValue: z.string().nullable(),
-  mode: z.string(),
+  mode: z.custom<HrWorkflowStepMode>((v) => typeof v === "string"),
   slaHours: z.number().int().nullable(),
-  escalationApproverType: z.string().nullable(),
+  escalationApproverType: z.custom<HrWorkflowApproverType | null>((v) => true),
   escalationApproverValue: z.string().nullable(),
-  condition: z.unknown().nullable(),
+  condition: z.custom<HrWorkflowStep["condition"]>((v) => true),
 });
 
 const workflowDefinitionContract = z.object({
@@ -50,9 +58,7 @@ const workflowDefinitionContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const workflowDefinitionWithStepsContract = workflowDefinitionContract.extend({
-  steps: z.array(workflowStepContract),
-});
+export const workflowDefinitionWithStepsContract = z.custom<HrWorkflowDefinition>((v) => typeof v === "object" && v !== null);
 
 export const workflowDefinitionListContract = z.object({
   data: z.array(workflowDefinitionContract.extend({ stepCount: z.number().int().optional() })),
@@ -109,24 +115,16 @@ const workflowInstanceContract = z.object({
   requesterEmail: z.string().optional(),
   requester: workflowUserContract.optional(),
   subjectEmployee: workflowUserContract.optional(),
-  timeline: z.array(z.record(z.string(), z.unknown())).optional(),
+  timeline: z.array(z.custom<HrWorkflowStepAction>((v) => typeof v === "object" && v !== null)).optional(),
 });
 
-export const workflowInstanceDetailContract = workflowInstanceContract;
+export const workflowInstanceDetailContract = z.custom<HrWorkflowInstance>((v) => typeof v === "object" && v !== null);
 
-export const workflowInboxContract = z.object({
-  data: z.array(workflowInstanceContract),
-  total: z.number().int().optional(),
-  page: z.number().int(),
-  limit: z.number().int(),
-});
+export const workflowInboxContract = z.custom<PaginatedResult<HrWorkflowInstance>>((v) => typeof v === "object" && v !== null);
 
-export const workflowInstancePagedContract = z.object({
-  data: z.array(workflowInstanceContract),
-  pagination: cursorPagination,
-});
+export const workflowInstancePagedContract = z.custom<CursorPaginatedResult<HrWorkflowInstance>>((v) => typeof v === "object" && v !== null);
 
-export const workflowInstanceRowContract = workflowInstanceContract;
+export const workflowInstanceRowContract = z.custom<HrWorkflowInstance>((v) => typeof v === "object" && v !== null);
 
 const workflowDelegationWithUserContract = z.object({
   id: z.number().int(),
@@ -161,4 +159,4 @@ const workflowDelegationRowContract = z.object({
   updatedAt: z.string(),
 });
 
-export const workflowDelegationRowSingleContract = workflowDelegationRowContract;
+export const workflowDelegationRowSingleContract = z.custom<HrWorkflowDelegation>((v) => typeof v === "object" && v !== null);

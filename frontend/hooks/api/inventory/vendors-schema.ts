@@ -3,20 +3,25 @@ import { z } from "zod";
 export const invVendorContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
+  clientId: z.number().int().nullable(),
   name: z.string(),
-  code: z.string().nullable(),
-  contactName: z.string().nullable(),
-  contactEmail: z.string().nullable(),
-  contactPhone: z.string().nullable(),
+  code: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
   address: z.string().nullable(),
-  currency: z.string().nullable(),
-  paymentTerms: z.string().nullable(),
-  leadTimeDays: z.number().int().nullable(),
-  notes: z.string().nullable(),
+  gstin: z.string().nullable(),
+  leadTimeDays: z.number().int(),
+  paymentTermsDays: z.number().int(),
+  currency: z.string(),
   isActive: z.boolean(),
+  notes: z.string().nullable(),
+  createdBy: z.string(),
+  createdByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+export type VendorResponse = z.infer<typeof invVendorContract>;
 
 export const listVendorsContract = z.object({
   items: z.array(invVendorContract),
@@ -27,10 +32,12 @@ export const listVendorsContract = z.object({
 
 export const vendorPerformanceContract = z.object({
   vendorId: z.number().int(),
-  vendorName: z.string(),
-  totalOrders: z.number().int(),
+  onTimeRate: z.number(),
+  fillRate: z.number(),
+  avgLeadTimeDays: z.number(),
+  returnRate: z.number(),
+  openPoCount: z.number().int(),
   totalSpend: z.number(),
-  avgLeadTime: z.number().nullable(),
-  onTimeRate: z.number().nullable(),
-  defectRate: z.number().nullable(),
 });
+
+export type VendorPerformanceData = z.infer<typeof vendorPerformanceContract>;

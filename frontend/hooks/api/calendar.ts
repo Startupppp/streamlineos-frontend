@@ -2,6 +2,20 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const calendarEventsResponseContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarEventsResponseContract),
+);
+const calendarSourcesContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSourcesContract),
+);
+const calendarSourcePreferenceContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSourcePreferenceContract),
+);
+const calendarExternalEventsContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarExternalEventsContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -87,7 +101,7 @@ export function useCalendarEvents(start: Date, end: Date) {
       apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }, signal),
+      }, signal, calendarEventsResponseContract),
     staleTime: 2 * 60 * 1000,
     enabled: canView,
   });
@@ -98,7 +112,7 @@ export function useCalendarSources() {
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.sources(),
     queryFn: ({ signal }) =>
-      apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal),
+      apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -112,6 +126,8 @@ export function useSetCalendarSourcePreference() {
       apiClient.put<{ sourceKey: string; enabled: boolean }>(
         `/calendar/sources/${sourceKey}`,
         { enabled },
+        undefined,
+        calendarSourcePreferenceContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
@@ -130,7 +146,7 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
       apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }, signal),
+      }, signal, calendarExternalEventsContract),
     enabled: canView && enabled,
     staleTime: 60_000,
   });

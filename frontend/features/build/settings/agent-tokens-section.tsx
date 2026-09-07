@@ -22,18 +22,18 @@ export function AgentTokensSection() {
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<number | null>(null);
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
 
-  const handleRevoke = useCallback((id: string) => setRevokeId(id), []);
+  const handleRevoke = useCallback((id: number) => setRevokeId(id), []);
 
   const handleRevokeDialogChange = useCallback((open: boolean) => {
     if (!open) setRevokeId(null);
   }, []);
 
   const handleConfirmRevoke = useCallback(() => {
-    if (!revokeId) return;
+    if (revokeId === null) return;
     revokeToken.mutate(revokeId, {
       onSuccess: () => {
         toast.success("Token revoked");

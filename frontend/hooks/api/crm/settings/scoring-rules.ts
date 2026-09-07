@@ -11,13 +11,14 @@ const scoringRulesLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.scoringRulesListContract),
 );
 
-export interface ScoringRule
 const scoringRuleLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.scoringRuleContract),
 );
 const deleteScoringRuleLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/scoring-rules-schema").then((m) => m.deleteScoringRuleContract),
-); {
+);
+
+export interface ScoringRule {
   id: number;
   orgId: string;
   field: string;

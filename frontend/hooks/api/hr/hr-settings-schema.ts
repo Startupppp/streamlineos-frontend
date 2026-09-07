@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { WfhRequest } from "@/types/hr/attendance";
 
 const cursorPagination = z.object({
   limit: z.number().int(),
@@ -91,19 +92,6 @@ export const goalContract = z.object({
   updatedAt: z.string(),
 });
 
-export const wfhRequestContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  userId: z.string(),
-  date: z.string(),
-  reason: z.string().nullable(),
-  status: z.enum(["PENDING", "APPROVED", "REJECTED"]).nullable(),
-  approverId: z.string().nullable(),
-  approverMembershipId: z.number().int().nullable(),
-  userMembershipId: z.number().int().nullable(),
-  rejectionReason: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const wfhRequestContract = z.custom<WfhRequest>((v) => typeof v === "object" && v !== null);
 
 export const wfhRequestListContract = z.array(wfhRequestContract);

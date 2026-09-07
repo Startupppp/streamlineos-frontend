@@ -16,7 +16,7 @@ export const dashboardStatsContract = z
     activeProjects: z.number().int().nonnegative().nullable(),
     presentToday: z.number().int().nonnegative().nullable(),
   })
-  .strict();
+  ;
 
 /** `dashboardPersonalResponseSchema` */
 export const personalDashboardContract = z.object({
@@ -253,7 +253,7 @@ export const birthdaysContract = z.array(
 /** `todayActivitiesSchema` */
 export const todayActivitiesContract = z.array(
   z.object({
-    type: z.string().nullable(),
+    type: z.string(),
     subject: z.string().nullable(),
   }),
 );

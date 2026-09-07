@@ -1,11 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { supportCustomFieldContract as supportCustomFieldContractType } from "@/hooks/api/support/support-channel-schema";
 
 const supportCustomFieldListContract = lazyContract(() =>
   import("@/hooks/api/support/support-channel-schema").then((m) => m.supportCustomFieldListContract),
@@ -19,20 +21,7 @@ const channelSuccessContract = lazyContract(() =>
 
 export type CustomFieldType = "text" | "number" | "select" | "checkbox" | "date";
 
-export interface SupportCustomField {
-  id: number;
-  orgId: string;
-  key: string;
-  label: string;
-  fieldType: CustomFieldType;
-  options: string[] | null;
-  required: boolean;
-  category: string | null;
-  sortOrder: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SupportCustomField = z.infer<typeof supportCustomFieldContractType>;
 
 export interface CreateCustomFieldInput {
   key: string;

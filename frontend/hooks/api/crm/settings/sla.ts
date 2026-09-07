@@ -17,13 +17,14 @@ const slaBreachedLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaBreachedListContract),
 );
 
-export interface SlaPolicy
 const slaPolicyLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaPolicyContract),
 );
 const deleteSlaLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/sla-schema").then((m) => m.deleteSlaContract),
-); {
+);
+
+export interface SlaPolicy {
   id: number;
   orgId: string;
   name: string;

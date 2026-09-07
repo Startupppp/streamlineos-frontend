@@ -27,6 +27,15 @@ const automationRulesLazy = lazyContract(() =>
 const automationRunsLazy = lazyContract(() =>
   import("@/hooks/api/crm/automations-schema").then((m) => m.automationRunsPageContract),
 );
+const automationRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.automationRuleContract),
+);
+const deleteAutomationRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.deleteAutomationRuleContract),
+);
+const testRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/automations-schema").then((m) => m.testRuleResultContract),
+);
 interface AutomationRunsResponse {
   runs: AutomationRun[];
   total: number;
@@ -94,7 +103,7 @@ export function useCreateCrmAutomationRule() {
   return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "create"] as const,
     mutationFn: (input: CreateRuleInput) =>
-      apiClient.post<CrmAutomationRule>("/crm/automations", input, undefined, automationRulesLazy),
+      apiClient.post<CrmAutomationRule>("/crm/automations", input, undefined, automationRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmAutomations.all });
     },
@@ -106,7 +115,7 @@ export function useUpdateCrmAutomationRule() {
   return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateRuleInput) =>
-      apiClient.patch<CrmAutomationRule>(`/crm/automations/${id}`, data, undefined, automationRulesLazy),
+      apiClient.patch<CrmAutomationRule>(`/crm/automations/${id}`, data, undefined, automationRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmAutomations.all });
     },
@@ -118,7 +127,7 @@ export function useDeleteCrmAutomationRule() {
   return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "delete"] as const,
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/automations/${id}`, undefined, undefined, automationRulesLazy),
+      apiClient.delete<{ success: boolean }>(`/crm/automations/${id}`, undefined, undefined, deleteAutomationRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmAutomations.all });
     },
@@ -134,7 +143,7 @@ export function useEnableCrmAutomationRule() {
         `/crm/automations/${ruleId}/enable`,
         {},
         undefined,
-        automationRulesLazy,
+        automationRuleLazy,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmAutomations.all });
@@ -151,7 +160,7 @@ export function useDisableCrmAutomationRule() {
         `/crm/automations/${ruleId}/disable`,
         {},
         undefined,
-        automationRulesLazy,
+        automationRuleLazy,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmAutomations.all });
@@ -165,7 +174,7 @@ export function useTestCrmAutomationRule() {
     mutationFn: ({ id, payload }: TestRuleInput) =>
       apiClient.post<TestRuleResult>(`/crm/automations/${id}/test`, {
         payload,
-      }, undefined, automationRulesLazy),
+      }, undefined, testRuleLazy),
   });
 }
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { supportChannelContract as supportChannelContractType } from "@/hooks/api/support/support-channel-schema";
 
 const supportChannelListContract = lazyContract(() =>
   import("@/hooks/api/support/support-channel-schema").then((m) => m.supportChannelListContract),
@@ -19,16 +21,7 @@ const channelSuccessContract = lazyContract(() =>
 
 export type SupportChannelType = "email" | "chat" | "whatsapp" | "sms";
 
-export interface SupportChannel {
-  id: number;
-  orgId: string;
-  type: string;
-  name: string;
-  config: Record<string, unknown>;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SupportChannel = z.infer<typeof supportChannelContractType>;
 
 export interface CreateSupportChannelInput {
   type: SupportChannelType;

@@ -2,6 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const calendarEventDetailContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarEventDetailContract),
+);
+const calendarSyncStatusContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncStatusContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type { CalendarEventDetail, EventSyncStatusResponse } from "./calendar-types";
@@ -31,7 +39,7 @@ export function useCalendarEvent(eventId: number | null) {
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.eventDetail(eventId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<CalendarEventDetail>(`/calendar/events/${eventId}`, undefined, signal),
+      apiClient.get<CalendarEventDetail>(`/calendar/events/${eventId}`, undefined, signal, calendarEventDetailContract),
     enabled: can && eventId !== null,
     staleTime: 60 * 1000,
   });
@@ -69,6 +77,7 @@ export function useEventSyncStatus(eventId: number | null) {
         `/calendar/events/${eventId}/sync-status`,
         undefined,
         signal,
+        calendarSyncStatusContract,
       ),
     enabled: eventId !== null,
     staleTime: 15_000,

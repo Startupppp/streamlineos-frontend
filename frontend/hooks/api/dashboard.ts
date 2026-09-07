@@ -4,6 +4,35 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const dashboardStatsContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.dashboardStatsContract),
+);
+const todayActivitiesContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.todayActivitiesContract),
+);
+const leavesTodayContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.leavesTodayContract),
+);
+const upcomingHolidaysContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.upcomingHolidaysContract),
+);
+const birthdaysContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.birthdaysContract),
+);
+const pendingApprovalsContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.pendingApprovalsContract),
+);
+const announcementsListContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.announcementsListContract),
+);
+const dashboardSuccessContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.dashboardSuccessContract),
+);
+const executiveDashboardContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.executiveDashboardContract),
+);
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -53,7 +82,7 @@ export const useDashboardStats = (
   const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
     queryKey: collaborationQueryKeys.dashboard.stats(),
-    queryFn: ({ signal }) => apiClient.get<DashboardStats>("/dashboard/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<DashboardStats>("/dashboard/stats", undefined, signal, dashboardStatsContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -86,7 +115,7 @@ export const useTodayActivities = (
   const canView = useCan("crm:leads:view");
   return useQuery<ScheduledActivity[], Error>({
     queryKey: collaborationQueryKeys.dashboard.todayActivities(),
-    queryFn: ({ signal }) => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities", undefined, signal, todayActivitiesContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -221,7 +250,7 @@ export const useLeavesToday = (
   const canView = useCan("hr:leaves:view");
   return useQuery<LeavesTodayPage, Error>({
     queryKey: collaborationQueryKeys.dashboard.leavesToday(),
-    queryFn: ({ signal }) => apiClient.get<LeavesTodayPage>("/dashboard/leaves-today", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<LeavesTodayPage>("/dashboard/leaves-today", undefined, signal, leavesTodayContract),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -234,7 +263,7 @@ export const useUpcomingHolidays = () => {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<UpcomingHoliday[]>({
     queryKey: collaborationQueryKeys.dashboard.upcomingHolidays(),
-    queryFn: ({ signal }) => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays", undefined, signal, upcomingHolidaysContract),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     enabled: !!orgId && hrEnabled,
   });
@@ -260,7 +289,7 @@ export const useBirthdays = (
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<BirthdayEntry[], Error>({
     queryKey: collaborationQueryKeys.dashboard.birthdays(),
-    queryFn: ({ signal }) => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays", undefined, signal, birthdaysContract),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     ...options,
     enabled: !!orgId && hrEnabled && (options?.enabled ?? true),
@@ -276,7 +305,7 @@ export const usePendingApprovals = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
     queryKey: collaborationQueryKeys.dashboard.pendingApprovals(),
-    queryFn: ({ signal }) => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals", undefined, signal, pendingApprovalsContract),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
@@ -347,7 +376,7 @@ export const useAnnouncements = (
   const orgId = session?.orgId ?? "";
   return useQuery<Announcement[], Error>({
     queryKey: collaborationQueryKeys.dashboard.announcements(),
-    queryFn: ({ signal }) => apiClient.get<Announcement[]>("/dashboard/announcements", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<Announcement[]>("/dashboard/announcements", undefined, signal, announcementsListContract),
     staleTime: 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -371,7 +400,7 @@ export const useDeleteAnnouncement = () => {
   return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),
+      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`, undefined, undefined, dashboardSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.announcements() });
     },
@@ -400,7 +429,7 @@ export const useExecutiveDashboard = (
   const canView = useCan("hr:analytics:read");
   return useQuery<ExecutiveDashboard, Error>({
     queryKey: collaborationQueryKeys.dashboard.executive(),
-    queryFn: ({ signal }) => apiClient.get<ExecutiveDashboard>("/dashboard/executive", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ExecutiveDashboard>("/dashboard/executive", undefined, signal, executiveDashboardContract),
     staleTime: 5 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),

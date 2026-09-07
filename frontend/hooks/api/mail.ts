@@ -7,6 +7,26 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const mailAccountListContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailAccountListContract),
+);
+const mailListResponseContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailListResponseContract),
+);
+const mailThreadContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailThreadContract),
+);
+const mailMessageContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailMessageContract),
+);
+const mailAiThreadSummaryContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailAiThreadSummaryContract),
+);
+const mailAiDraftContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailAiDraftContract),
+);
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -29,7 +49,7 @@ export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
   return useQuery({
     queryKey: directoryAndOwnershipQueryKeys.mail.accounts(),
-    queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal, mailAccountListContract),
     staleTime: 5 * 60_000,
     enabled: can,
   });
@@ -52,7 +72,7 @@ export function useMailMessages(params: MailMessagesParams) {
       if (params.q) searchParams.set("q", params.q);
       if (params.limit) searchParams.set("limit", String(params.limit));
       if (pageParam !== undefined) searchParams.set("cursor", String(pageParam));
-      return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal);
+      return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal, mailListResponseContract);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -68,7 +88,7 @@ export function useMailThread(accountId: number | undefined, threadId: string | 
     queryKey: directoryAndOwnershipQueryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail[]>(
-        `/mail/threads/${threadId}?accountId=${accountId}`, undefined, signal,
+        `/mail/threads/${threadId}?accountId=${accountId}`, undefined, signal, mailThreadContract,
       ),
     enabled: can && accountId !== undefined && threadId !== undefined && threadId !== "",
     staleTime: 2 * 60_000,
@@ -81,7 +101,7 @@ export function useMailMessage(accountId: number | undefined, messageId: string 
     queryKey: directoryAndOwnershipQueryKeys.mail.message(accountId ?? 0, messageId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail>(
-        `/mail/messages/${messageId}?accountId=${accountId}`, undefined, signal,
+        `/mail/messages/${messageId}?accountId=${accountId}`, undefined, signal, mailMessageContract,
       ),
     enabled: can && accountId !== undefined && messageId !== undefined && messageId !== "",
     staleTime: 2 * 60_000,
@@ -155,7 +175,7 @@ export function useMailThreadSummary() {
   return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "thread-summary"],
     mutationFn: ({ signal, ...params }: { accountId: number; threadId: string } & AiAbortInput) =>
-      apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params, { signal }),
+      apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params, { signal }, mailAiThreadSummaryContract),
   });
 }
 
@@ -170,7 +190,7 @@ export function useMailAiDraft() {
       instruction: string;
       accountId?: number;
       threadId?: string;
-    } & AiAbortInput) => apiClient.post<MailAiDraftResult>("/mail/ai/draft", params, { signal }),
+    } & AiAbortInput) => apiClient.post<MailAiDraftResult>("/mail/ai/draft", params, { signal }, mailAiDraftContract),
   });
 }
 

@@ -211,3 +211,63 @@ export const calendarMemberListContract = z.array(
     status: z.string().optional(),
   }),
 );
+
+/** `syncStatusResponseSchema` from `sync-status.schemas.ts` */
+export const calendarSyncStatusContract = z.object({
+  status: z.enum(["synced", "pending", "in_flight", "failed", "not_synced"]),
+  attemptCount: z.number(),
+  lastError: z.string().nullable(),
+  operation: z.enum(["create", "update", "delete"]).nullable(),
+  queuedAt: z.string().nullable(),
+  processedAt: z.string().nullable(),
+  retryable: z.boolean(),
+});
+
+/** `attendanceRowSchema` from `time-attendance-response.schemas.ts` */
+export const attendanceLogContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  userId: z.string(),
+  date: z.string(),
+  checkIn: z.string().nullable(),
+  checkOut: z.string().nullable(),
+  status: z.string(),
+  workHours: z.string().nullable(),
+  breakHours: z.string(),
+  breaks: z.array(
+    z.object({ start: z.string(), end: z.string().optional() }),
+  ),
+  locationData: z
+    .object({
+      lat: z.number().optional(),
+      lng: z.number().optional(),
+      address: z.string().optional(),
+    })
+    .nullable(),
+  isOvertime: z.boolean(),
+  autoCheckedOut: z.boolean(),
+  createdAt: z.string(),
+});
+
+/** `hrCalendarEventSchema` from `helpdesk-response.schemas.ts` — array form */
+export const hrCalendarEventListContract = z.array(
+  z.object({
+    id: z.string(),
+    type: z.enum([
+      "HOLIDAY",
+      "LEAVE",
+      "BIRTHDAY",
+      "ANNIVERSARY",
+      "REVIEW_CYCLE",
+      "TRAVEL",
+      "INTERVIEW",
+    ]),
+    title: z.string(),
+    date: z.string(),
+    endDate: z.string().optional(),
+    meta: z.record(z.string(), z.unknown()).optional(),
+  }),
+);
+
+/** Array of attendance log rows for monthly attendance calls */
+export const attendanceLogListContract = z.array(attendanceLogContract);

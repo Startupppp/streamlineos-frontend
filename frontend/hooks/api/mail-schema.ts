@@ -21,7 +21,7 @@ const mailAttachmentContract = z.object({
 /** `mailAccountSchema` */
 export const mailAccountContract = z.object({
   id: z.number().int(),
-  provider: z.string(),
+  provider: z.enum(["gmail", "outlook"]),
   accountEmail: z.string().nullable(),
   accountLabel: z.string().nullable(),
   status: z.enum(["active", "needs_reauth", "disabled"]),
@@ -43,9 +43,9 @@ export const mailListResponseContract = z.object({
   messages: z.array(
     z.object({
       id: z.string(),
-      threadId: z.string(),
+      threadId: z.string().nullable(),
       accountId: z.number().int(),
-      provider: z.string(),
+      provider: z.enum(["gmail", "outlook"]),
       from: mailAddressContract,
       to: z.array(mailAddressContract),
       subject: z.string(),
@@ -62,9 +62,9 @@ export const mailListResponseContract = z.object({
 
 const mailMessageDetailContract = z.object({
   id: z.string(),
-  threadId: z.string(),
+  threadId: z.string().nullable(),
   accountId: z.number().int(),
-  provider: z.string(),
+  provider: z.enum(["gmail", "outlook"]),
   from: mailAddressContract,
   to: z.array(mailAddressContract),
   subject: z.string(),

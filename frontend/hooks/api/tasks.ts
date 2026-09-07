@@ -2,6 +2,17 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const taskRowContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskRowContract),
+);
+const taskSuccessContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskSuccessContract),
+);
+const taskAnalyticsContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskAnalyticsContract),
+);
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -89,7 +100,7 @@ export function useCreateTask() {
   const qc = useQueryClient();
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "create"],
-    mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input),
+    mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input, undefined, taskRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
@@ -101,7 +112,7 @@ export function useUpdateTask() {
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "update"],
     mutationFn: ({ taskId, input }: { taskId: number; input: UpdateTaskInput }) =>
-      apiClient.patch<Task>(`/tasks/${taskId}`, input),
+      apiClient.patch<Task>(`/tasks/${taskId}`, input, undefined, taskRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
@@ -113,7 +124,7 @@ export function useDeleteTask() {
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "delete"],
     mutationFn: (taskId: number) =>
-      apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`),
+      apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`, undefined, undefined, taskSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
@@ -125,7 +136,7 @@ export function useCompleteTask() {
   return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "complete"],
     mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt?: string }) =>
-      apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }),
+      apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }, undefined, taskRowContract),
     onMutate: async ({ taskId }) => {
       await qc.cancelQueries({ queryKey: accessAndCrmQueryKeys.tasks.myQueue() });
       const prev = qc.getQueryData<TaskWithBucket[]>(accessAndCrmQueryKeys.tasks.myQueue());
@@ -166,7 +177,7 @@ interface TaskAnalytics {
 export function useTaskAnalytics(days = 30) {
   return useGatedQuery("tasks:read", {
     queryKey: [...accessAndCrmQueryKeys.tasks.all, "analytics", days] as const,
-    queryFn: ({ signal }) => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`, undefined, signal, taskAnalyticsContract),
     staleTime: 120_000,
   });
 }

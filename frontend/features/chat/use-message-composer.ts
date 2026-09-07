@@ -2,6 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import type React from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Message, MessageMetadata, TicketEntityRef } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
@@ -74,7 +79,7 @@ export function useMessageComposer({
         if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
         const formData = new FormData(); formData.append("file", file); formData.append("folder", "chat");
         try {
-          const result = await apiClient.upload<{ key: string; size?: number; mimeType?: string }>("/storage/upload", formData);
+          const result = await apiClient.upload<{ key: string; size?: number; mimeType?: string }>("/storage/upload", formData, storageUploadContract);
           setPendingAttachments((prev) => [...prev, { fileName: file.name, fileUrl: result.key, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type }]);
         } catch (error) { toast.error(`Failed: ${getErrorMessage(error) || file.name}`); }
       }

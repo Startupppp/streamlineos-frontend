@@ -1,4 +1,9 @@
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const iceServersContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.iceServersContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export const MAX_QUEUED_CANDIDATES = 64;
@@ -36,6 +41,9 @@ export const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
 export async function fetchIceServers(): Promise<RTCIceServer[]> {
   const { iceServers } = await apiClient.get<{ iceServers: RTCIceServer[] }>(
     "/realtime/ice-servers",
+    undefined,
+    undefined,
+    iceServersContract,
   );
   return iceServers.length > 0 ? iceServers : FALLBACK_ICE_SERVERS;
 }

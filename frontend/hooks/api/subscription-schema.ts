@@ -121,6 +121,22 @@ export const couponValidationContract = z.object({
   message: z.string(),
 });
 
+export const createOrderContract = z.object({
+  orderId: z.string(),
+  amount: z.number(),
+  currency: z.string(),
+  keyId: z.string(),
+  plan: z.string(),
+  billingCycle: z.string(),
+  discountAmount: z.number(),
+});
+
+export const verifySubscriptionContract = z.object({
+  success: z.literal(true),
+  plan: z.string(),
+  status: z.literal("ACTIVE"),
+});
+
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanContract>;
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusContract>;
 export type SubscriptionPayment = z.infer<typeof subscriptionPaymentContract>;

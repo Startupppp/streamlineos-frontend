@@ -3,15 +3,9 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
-  InventoryProduct,
-  InventoryCategory,
-  InventoryUom,
-  InventoryProductVariant,
-  ProductVariantFlat,
   ProductStatus,
   ProductType,
   CreateProductInput,
@@ -19,6 +13,16 @@ import type {
   CreateProductVariantInput,
   CreateUomInput,
 } from "@/types/inventory";
+import type {
+  InvUomShape,
+  InvCategoryShape,
+  InvProductVariantShape,
+  InvProductBaseShape,
+  InvProductShape,
+  InvProductListShape,
+  InvVariantListShape,
+  InvVariantFlatShape,
+} from "@/hooks/api/inventory/products-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ProductFilters {
@@ -29,13 +33,6 @@ interface ProductFilters {
   limit?: number;
   status?: ProductStatus;
   productType?: ProductType;
-}
-
-interface ProductListResponse {
-  items: InventoryProduct[];
-  total: number;
-  page: number;
-  totalPages: number;
 }
 
 type UpdateProductPayload = UpdateProductInput & { productId?: number };
@@ -78,6 +75,9 @@ const listProductsContract = lazyContract(() =>
 const getProductContract = lazyContract(() =>
   import("@/hooks/api/inventory/products-schema").then((m) => m.getProductContract),
 );
+const invProductBaseResultContract = lazyContract(() =>
+  import("@/hooks/api/inventory/products-schema").then((m) => m.invProductBaseContract),
+);
 const listCategoriesContract = lazyContract(() =>
   import("@/hooks/api/inventory/products-schema").then((m) => m.listCategoriesContract),
 );
@@ -97,12 +97,23 @@ const invUomContract = lazyContract(() =>
   import("@/hooks/api/inventory/products-schema").then((m) => m.invUomContract),
 );
 
+export type {
+  InvUomShape,
+  InvCategoryShape,
+  InvProductVariantShape,
+  InvProductBaseShape,
+  InvProductShape,
+  InvProductListShape,
+  InvVariantListShape,
+  InvVariantFlatShape,
+};
+
 export function useProducts(filters?: ProductFilters) {
   const canView = useCan("inventory:products:read");
-  return useQuery<ProductListResponse, Error>({
+  return useQuery<InvProductListShape, Error>({
     queryKey: queryKeys.inventory.products(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<ProductListResponse>("/inventory/products", {
+      apiClient.get<InvProductListShape>("/inventory/products", {
         ...(filters?.categoryId ? { categoryId: String(filters.categoryId) } : {}),
         ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
@@ -118,9 +129,9 @@ export function useProducts(filters?: ProductFilters) {
 
 export function useProduct(productId: number) {
   const canView = useCan("inventory:products:read");
-  return useQuery<InventoryProduct, Error>({
+  return useQuery<InvProductShape, Error>({
     queryKey: queryKeys.inventory.product(productId),
-    queryFn: ({ signal }) => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`, undefined, signal, getProductContract),
+    queryFn: ({ signal }) => apiClient.get<InvProductShape>(`/inventory/products/${productId}`, undefined, signal, getProductContract),
     enabled: canView && productId > 0,
     staleTime: 2 * 60_000,
   });
@@ -128,9 +139,9 @@ export function useProduct(productId: number) {
 
 export function useCategories() {
   const canView = useCan("inventory:products:read");
-  return useQuery<InventoryCategory[], Error>({
+  return useQuery<InvCategoryShape[], Error>({
     queryKey: queryKeys.inventory.categories(),
-    queryFn: ({ signal }) => apiClient.get<InventoryCategory[]>("/inventory/products/categories", undefined, signal, listCategoriesContract),
+    queryFn: ({ signal }) => apiClient.get<InvCategoryShape[]>("/inventory/products/categories", undefined, signal, listCategoriesContract),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -138,9 +149,9 @@ export function useCategories() {
 
 export function useUom() {
   const canView = useCan("inventory:products:read");
-  return useQuery<InventoryUom[], Error>({
+  return useQuery<InvUomShape[], Error>({
     queryKey: queryKeys.inventory.uom(),
-    queryFn: ({ signal }) => apiClient.get<InventoryUom[]>("/inventory/products/uom", undefined, signal, listUomContract),
+    queryFn: ({ signal }) => apiClient.get<InvUomShape[]>("/inventory/products/uom", undefined, signal, listUomContract),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -148,10 +159,10 @@ export function useUom() {
 
 export function useCreateProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryProduct, Error, CreateProductInput>("inventory:products:create", {
+  return useAuthorizedMutation<InvProductBaseShape, Error, CreateProductInput>("inventory:products:create", {
     mutationKey: ["inventory", "product", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data), undefined, getProductContract),
+      apiClient.post<InvProductBaseShape>("/inventory/products", serializeProductWrite(data), undefined, invProductBaseResultContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
@@ -160,16 +171,16 @@ export function useCreateProduct() {
 
 export function useUpdateProduct(id?: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryProduct, Error, UpdateProductPayload>("inventory:products:update", {
+  return useAuthorizedMutation<InvProductBaseShape, Error, UpdateProductPayload>("inventory:products:update", {
     mutationKey: ["inventory", "product", "update"],
     mutationFn: ({ productId, ...data }) => {
       const resolvedId = id ?? productId;
       if (resolvedId === undefined) throw new Error("Product id is required");
-      return apiClient.patch<InventoryProduct>(
+      return apiClient.patch<InvProductBaseShape>(
         `/inventory/products/${resolvedId}`,
         serializeProductWrite(data),
         undefined,
-        getProductContract,
+        invProductBaseResultContract,
       );
     },
     onSuccess: (_, vars) => {
@@ -196,10 +207,10 @@ export function useDeleteProduct() {
 
 export function useArchiveProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
+  return useAuthorizedMutation<InvProductBaseShape, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
-      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}, undefined, getProductContract),
+      apiClient.post<InvProductBaseShape>(`/inventory/products/${productId}/archive`, {}, undefined, invProductBaseResultContract),
     onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -209,10 +220,10 @@ export function useArchiveProduct() {
 
 export function useRestoreProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
+  return useAuthorizedMutation<InvProductBaseShape, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
-      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}, undefined, getProductContract),
+      apiClient.post<InvProductBaseShape>(`/inventory/products/${productId}/restore`, {}, undefined, invProductBaseResultContract),
     onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -222,10 +233,10 @@ export function useRestoreProduct() {
 
 export function useProductVariants(filters?: ProductVariantFilters) {
   const canView = useCan("inventory:products:read");
-  return useQuery<ProductVariantFlat[], Error>({
+  return useQuery<InvVariantFlatShape[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<ProductVariantFlat>>("/inventory/products/variants", {
+      (await apiClient.get<InvVariantListShape>("/inventory/products/variants", {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
       }, signal, listVariantsContract)).items,
     staleTime: 2 * 60_000,
@@ -235,10 +246,10 @@ export function useProductVariants(filters?: ProductVariantFilters) {
 
 export function useCreateProductVariant(productId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryProductVariant, Error, CreateProductVariantInput>("inventory:products:update", {
+  return useAuthorizedMutation<InvProductVariantShape, Error, CreateProductVariantInput>("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryProductVariant>(
+      apiClient.post<InvProductVariantShape>(
         `/inventory/products/${productId}/variants`,
         serializeVariantWrite(data),
         undefined,
@@ -253,10 +264,10 @@ export function useCreateProductVariant(productId: number) {
 
 export function useCreateCategory() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryCategory, Error, CreateCategoryInput>("inventory:products:create", {
+  return useAuthorizedMutation<InvCategoryShape, Error, CreateCategoryInput>("inventory:products:create", {
     mutationKey: ["inventory", "category", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryCategory>("/inventory/products/categories", data, undefined, invCategoryContract),
+      apiClient.post<InvCategoryShape>("/inventory/products/categories", data, undefined, invCategoryContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -265,10 +276,10 @@ export function useCreateCategory() {
 
 export function useCreateUom() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InventoryUom, Error, CreateUomInput>("inventory:products:create", {
+  return useAuthorizedMutation<InvUomShape, Error, CreateUomInput>("inventory:products:create", {
     mutationKey: ["inventory", "uom", "create"],
     mutationFn: (data) =>
-      apiClient.post<InventoryUom>("/inventory/products/uom", data, undefined, invUomContract),
+      apiClient.post<InvUomShape>("/inventory/products/uom", data, undefined, invUomContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
     },

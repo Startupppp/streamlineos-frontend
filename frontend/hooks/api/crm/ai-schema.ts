@@ -42,6 +42,10 @@ export const emailDraftContract = z.object({
 });
 
 export const leadEnrichmentContract = z.object({
-  enriched: z.boolean(),
-  fields: z.record(z.string(), z.unknown()).optional(),
+  companyInsight: z.string(),
+  estimatedCompanySize: z.string(),
+  industry: z.string(),
+  talkingPoints: z.array(z.string()),
+  potentialNeeds: z.array(z.string()),
+  recommendedApproach: z.string(),
 });

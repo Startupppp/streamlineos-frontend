@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -12,6 +13,10 @@ import type {
   SupportTicketPriority,
   SupportMessageAttachment,
 } from "@/types/support";
+import type {
+  supportTicketListContract as supportTicketListContractType,
+  createTicketContract as createTicketContractType,
+} from "@/hooks/api/support/support-ticket-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -34,12 +39,8 @@ const supportTicketStatsContract = lazyContract(() =>
   import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketStatsContract),
 );
 
-interface SupportTicketsResponse {
-  items: SupportTicket[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+type SupportTicketsResponse = z.infer<typeof supportTicketListContractType>;
+type CreateTicketResult = z.infer<typeof createTicketContractType>;
 
 interface SupportFilters {
   status?: SupportTicketStatus;
@@ -84,14 +85,14 @@ interface AddMessageInput {
 export const useSupportTickets = (
   filters?: SupportFilters,
   options?: Omit<
-    UseQueryOptions<unknown, Error>,
+    UseQueryOptions<SupportTicketsResponse, Error>,
     "queryKey" | "queryFn"
   >
 ) => {
   return useGatedQuery("support:tickets:view", {
     queryKey: platformCoreQueryKeys.support.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get("/support", {
+      apiClient.get<SupportTicketsResponse>("/support", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.priority ? { priority: filters.priority } : {}),
         ...(filters?.assigneeId ? { assigneeId: filters.assigneeId } : {}),
@@ -109,13 +110,13 @@ export const useSupportTickets = (
 export const useSupportTicket = (
   id: number,
   options?: Omit<
-    UseQueryOptions<unknown, Error>,
+    UseQueryOptions<SupportTicket, Error>,
     "queryKey" | "queryFn" | "enabled"
   >
 ) => {
   return useGatedQuery("support:tickets:view", {
     queryKey: platformCoreQueryKeys.support.detail(id),
-    queryFn: ({ signal }) => apiClient.get(`/support/${id}`, undefined, signal, supportTicketDetailContract),
+    queryFn: ({ signal }) => apiClient.get<SupportTicket>(`/support/${id}`, undefined, signal, supportTicketDetailContract),
     enabled: id > 0,
     staleTime: 2 * 60_000,
     ...options,
@@ -124,9 +125,9 @@ export const useSupportTicket = (
 
 export const useCreateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, CreateTicketInput>("support:tickets:create", {
+  return useAuthorizedMutation<CreateTicketResult, Error, CreateTicketInput>("support:tickets:create", {
     mutationKey: ["create", "support", "ticket"],
-    mutationFn: (data) => apiClient.post("/support", data, undefined, createTicketContract),
+    mutationFn: (data) => apiClient.post<CreateTicketResult>("/support", data, undefined, createTicketContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
@@ -148,10 +149,10 @@ export const useUpdateSupportTicket = () => {
 
 export const useAddSupportMessage = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, AddMessageInput>("support:tickets:reply", {
+  return useAuthorizedMutation<SupportMessage, Error, AddMessageInput>("support:tickets:reply", {
     mutationKey: ["add", "support", "message"],
     mutationFn: ({ ticketId, ...data }) =>
-      apiClient.post(`/support/${ticketId}/messages`, data, undefined, supportTicketMessageContract),
+      apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data, undefined, supportTicketMessageContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.support.detail(variables.ticketId),

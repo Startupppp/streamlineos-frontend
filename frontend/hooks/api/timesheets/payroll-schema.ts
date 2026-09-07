@@ -109,6 +109,10 @@ export const payrollAckExportResponseContract = z.object({
   export: timesheetExportDtoContract,
 });
 
+export const payrollRunExportResponseContract = z.object({
+  export: timesheetExportDtoContract,
+});
+
 export const payrollSettingsResponseContract = z.object({
   payPeriod: z.string(),
   overtimeDailyHours: z.number(),

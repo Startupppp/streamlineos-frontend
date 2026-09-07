@@ -6,20 +6,10 @@ import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { WarehouseStockResult } from "@/types/inventory";
+import type { StockResult, StockRow, LocationType } from "@/hooks/api/inventory/warehouses-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type LocationType =
-  | "ZONE"
-  | "AISLE"
-  | "RACK"
-  | "BIN"
-  | "RECEIVING"
-  | "SHIPPING"
-  | "QUARANTINE"
-  | "SCRAP"
-  | "TRANSIT"
-  | "RETURNS";
+export type { LocationType };
 
 export interface WarehouseLocation {
   id: number;
@@ -31,14 +21,14 @@ export interface WarehouseLocation {
   locationType: LocationType;
   isPickable: boolean;
   isReceivable: boolean;
-  isSellable: boolean;
-  capacity: number | null;
+  capacity: string | null;
   isActive: boolean;
-  isSpecial?: boolean;
   createdAt: string;
   updatedAt: string;
   children?: WarehouseLocation[];
 }
+
+export type { StockRow, StockResult };
 
 export interface Warehouse {
   id: number;
@@ -217,10 +207,10 @@ export function useWarehouseStock(
   filters?: { page?: number; limit?: number },
 ) {
   const canView = useCan("inventory:stock:read");
-  return useQuery<WarehouseStockResult, Error>({
+  return useQuery<StockResult, Error>({
     queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
+      apiClient.get<StockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
       }, signal, getWarehouseStockContract),

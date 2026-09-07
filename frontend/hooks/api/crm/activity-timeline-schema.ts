@@ -1,25 +1,28 @@
 import { z } from "zod";
 
-const timelineAnchorSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("party"), partyId: z.string() }),
-  z.object({ kind: z.literal("deal"), dealId: z.string() }),
-  z.object({ kind: z.literal("subject"), subjectId: z.string() }),
-]);
-
 const timelineEntrySchema = z.object({
   activityId: z.string(),
-  kind: z.string(),
+  kind: z.enum(["call", "email", "meeting", "note", "task"]),
   occurredAt: z.string(),
   subject: z.string().nullable(),
   body: z.string().nullable(),
   threadId: z.string().nullable(),
-  actorKind: z.string(),
+  actorKind: z.enum(["human", "system"]),
   actorLabel: z.string().nullable(),
   actorName: z.string().nullable(),
   dueAt: z.string().nullable(),
   completedAt: z.string().nullable(),
   source: z.string(),
-  anchor: timelineAnchorSchema,
+});
+
+const taskAnchorRefSchema = z.object({
+  kind: z.enum(["party", "deal", "subject"]),
+  id: z.string(),
+  name: z.string().nullable(),
+});
+
+const taskEntrySchema = timelineEntrySchema.extend({
+  anchor: taskAnchorRefSchema.nullable(),
 });
 
 const paginationSchema = z.object({
@@ -33,14 +36,23 @@ export const timelinePageContract = z.object({
   pagination: paginationSchema,
 });
 
-export const myTasksPageContract = timelinePageContract;
+export const myTasksPageContract = z.object({
+  data: z.array(taskEntrySchema),
+  pagination: paginationSchema,
+});
 
 const activityParticipantSchema = z.object({
-  userId: z.string(),
-  name: z.string().nullable(),
-  email: z.string().nullable(),
+  activityParticipantId: z.string(),
+  partyId: z.string().nullable(),
+  userId: z.string().nullable(),
+  userName: z.string().nullable(),
+  address: z.string().nullable(),
+  role: z.string(),
 });
 
 export const activityParticipantsContract = z.object({
   data: z.array(activityParticipantSchema),
 });
+
+export const logActivityContract = timelineEntrySchema;
+export const completeTaskContract = timelineEntrySchema;

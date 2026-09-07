@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "hooks/api/crm/**/*",
+    "hooks/api/leads.ts",
+    "hooks/api/leads-schema.ts",
+    "features/crm/**/*",
+    "lib/api-envelope.ts",
+    "lib/api-client.ts"
+  ]
+}

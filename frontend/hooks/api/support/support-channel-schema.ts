@@ -64,7 +64,7 @@ const supportCustomFieldRowContract = z.object({
   orgId: z.string(),
   key: z.string(),
   label: z.string(),
-  fieldType: z.string(),
+  fieldType: z.enum(["text", "number", "select", "checkbox", "date"]),
   options: z.array(z.string()).nullable(),
   required: z.boolean(),
   category: z.string().nullable(),

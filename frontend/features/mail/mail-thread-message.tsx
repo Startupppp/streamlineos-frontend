@@ -11,6 +11,11 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const mailDownloadContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailDownloadContract),
+);
 import { MailHtmlViewer } from "./mail-html-viewer";
 import type { MailMessageDetail } from "@/types/mail";
 
@@ -50,6 +55,9 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
           fileName: string;
         }>(
           `/mail/messages/${messageId}/attachments/${attachmentId}?accountId=${accountId}&fileName=${encodeURIComponent(fileName)}`,
+          undefined,
+          undefined,
+          mailDownloadContract,
         );
         window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
       } catch (err) {

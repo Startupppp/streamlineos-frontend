@@ -93,7 +93,7 @@ const STATUS_LABELS: Record<FinanceStatus, string> = {
 type BadgeSize = "row" | "chip";
 
 type FinanceStatusBadgeProps = {
-  status: FinanceStatus;
+  status: string;
   size?: BadgeSize;
   className?: string;
 };
@@ -103,17 +103,24 @@ const SIZE_CLASSES: Record<BadgeSize, string> = {
   chip: "text-xs px-2 py-0.5",
 };
 
+function isFinanceStatus(status: string): status is FinanceStatus {
+  return Object.prototype.hasOwnProperty.call(STATUS_CLASSES, status);
+}
+
 export function FinanceStatusBadge({
   status,
   size = "row",
   className,
 }: FinanceStatusBadgeProps) {
+  const known = isFinanceStatus(status);
+  const toneClass = known ? STATUS_CLASSES[status] : "bg-muted text-muted-foreground border-border";
+  const label = known ? STATUS_LABELS[status] : status;
   return (
     <Badge
       variant="outline"
-      className={cn(STATUS_CLASSES[status], SIZE_CLASSES[size], className)}
+      className={cn(toneClass, SIZE_CLASSES[size], className)}
     >
-      {STATUS_LABELS[status]}
+      {label}
     </Badge>
   );
 }

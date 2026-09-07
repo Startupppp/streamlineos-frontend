@@ -7,6 +7,16 @@ import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 
+import type { ReportOverview } from "@/features/timesheets/types";
+import type {
+  ApprovalSlaReport,
+  BillingLeakageReport,
+  ClientProfitabilityReport,
+  ComplianceReport,
+  ReportRangeParams,
+  UtilizationReport,
+} from "@/features/timesheets/reports/reports-types";
+
 const reportsOverviewC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.reportsOverviewResponseContract),
 );
@@ -25,15 +35,6 @@ const approvalSlaC = lazyContract(() =>
 const billingLeakageC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.billingLeakageResponseContract),
 );
-import type { ReportOverview } from "@/features/timesheets/types";
-import type {
-  ApprovalSlaReport,
-  BillingLeakageReport,
-  ClientProfitabilityReport,
-  ComplianceReport,
-  ReportRangeParams,
-  UtilizationReport,
-} from "@/features/timesheets/reports/reports-types";
 
 interface OverviewQuery {
   startDate?: string;

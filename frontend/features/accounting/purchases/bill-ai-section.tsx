@@ -12,6 +12,7 @@ import type {
   VarianceExplainResult,
   ExtractedDocumentDraft,
 } from "@/hooks/api/accounting/accounting-ai";
+import { explainVarianceContract } from "@/hooks/api/accounting/accounting-ai-schema";
 
 interface BillAiSectionProps {
   bill: PurchaseBill;
@@ -63,7 +64,7 @@ function buildBillActions(bill: PurchaseBill): AiAction[] {
       label: "Explain bill spend",
       description: "AI narrates bill composition and tax evidence",
       run: async (signal) => {
-        const result = await apiClient.post<VarianceExplainResult>(
+        const result = await apiClient.post(
           "/finance/ai/variance-explain",
           {
             periodLabel: bill.billDate ?? "Unknown date",
@@ -76,6 +77,7 @@ function buildBillActions(bill: PurchaseBill): AiAction[] {
             notes: bill.notes ?? undefined,
           },
           { signal },
+          explainVarianceContract,
         );
         return { text: narrationToText(result) };
       },

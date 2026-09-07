@@ -2,6 +2,20 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const calendarCreateEventContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarCreateEventContract),
+);
+const calendarUpdateEventContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarUpdateEventContract),
+);
+const calendarDeleteEventContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarDeleteEventContract),
+);
+const calendarOccurrenceExceptionContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarOccurrenceExceptionContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CalendarOooConflict, CalendarEventConflict } from "./calendar-types";
 
@@ -96,7 +110,7 @@ export function useCreateCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "create"],
     mutationFn: (payload: CreateCalendarEventPayload) =>
-      apiClient.post<MutateCalendarEventResponse>("/calendar/events", payload),
+      apiClient.post<MutateCalendarEventResponse>("/calendar/events", payload, undefined, calendarCreateEventContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
@@ -107,7 +121,7 @@ export function useUpdateCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "update"],
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
-      apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
+      apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload, undefined, calendarUpdateEventContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
@@ -117,7 +131,7 @@ export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`, undefined, undefined, calendarDeleteEventContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
@@ -131,6 +145,8 @@ export function useUpsertOccurrenceException() {
       apiClient.patch<{ id: number }>(
         `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
         body,
+        undefined,
+        calendarOccurrenceExceptionContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
@@ -144,6 +160,9 @@ export function useCancelOccurrence() {
     mutationFn: ({ eventId, occurrenceStart }: { eventId: number; occurrenceStart: string }) =>
       apiClient.delete<{ id: number }>(
         `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
+        undefined,
+        undefined,
+        calendarOccurrenceExceptionContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),

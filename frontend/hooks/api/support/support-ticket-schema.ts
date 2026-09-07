@@ -57,7 +57,7 @@ export const supportTicketRowContract = z.object({
   updatedAt: z.string(),
 });
 
-const ticketWithRelationsContract = supportTicketRowContract.and(
+export const ticketWithRelationsContract = supportTicketRowContract.and(
   z.object({
     client: clientMinimalContract.nullable(),
     assigneeMembership: membershipMinimalContract.nullable(),

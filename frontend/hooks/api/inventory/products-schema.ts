@@ -45,7 +45,7 @@ export const invProductVariantContract = z.object({
   updatedAt: z.string(),
 });
 
-const invProductBaseContract = z.object({
+export const invProductBaseContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   categoryId: z.number().int().nullable(),
@@ -115,3 +115,12 @@ export const listVariantsContract = z.object({
   pageSize: z.number().int(),
   totalPages: z.number().int(),
 });
+
+export type InvUomShape = z.infer<typeof invUomContract>;
+export type InvCategoryShape = z.infer<typeof invCategoryContract>;
+export type InvProductVariantShape = z.infer<typeof invProductVariantContract>;
+export type InvProductBaseShape = z.infer<typeof invProductBaseContract>;
+export type InvProductShape = z.infer<typeof getProductContract>;
+export type InvProductListShape = z.infer<typeof listProductsContract>;
+export type InvVariantListShape = z.infer<typeof listVariantsContract>;
+export type InvVariantFlatShape = InvVariantListShape["items"][number];

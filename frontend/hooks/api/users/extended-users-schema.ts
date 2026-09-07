@@ -29,6 +29,8 @@ const emergencyContactContract = z.object({
   email: z.string().optional(),
 });
 
+const orgRoleEnum = z.enum(["OWNER", "ORG_ADMIN", "MEMBER"]);
+
 const userListItemContract = z.object({
   membershipId: z.number(),
   id: z.string(),
@@ -37,7 +39,7 @@ const userListItemContract = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   image: z.string().nullable(),
-  role: z.string(),
+  role: orgRoleEnum,
   isOwner: z.boolean(),
   emailVerified: z.boolean().nullable(),
   phone: z.string().nullable(),
@@ -60,7 +62,7 @@ const userDetailContract = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   image: z.string().nullable(),
-  role: z.string(),
+  role: orgRoleEnum,
   isOwner: z.boolean(),
   phone: z.string().nullable(),
   whatsappNumber: z.string().nullable(),
@@ -117,7 +119,7 @@ export const userPreferencesContract = z.object({
   timeFormat: z.string(),
   numberFormat: z.string().nullable(),
   weekStartDay: z.string().nullable(),
-  notificationPreferences: z.record(z.string(), z.unknown()),
+  notificationPreferences: z.record(z.string(), z.boolean()),
   dashboardPreferences: z.record(z.string(), z.unknown()),
   updatedAt: z.string().optional(),
 });
@@ -130,6 +132,7 @@ export const userMembershipContract = z.object({
   departmentId: z.string().nullable(),
   teamId: z.string().nullable(),
   managerUserId: z.string().nullable(),
+  isPrimary: z.boolean(),
 });
 
 const loginHistoryItemContract = z.object({
@@ -156,10 +159,11 @@ const invitationItemContract = z.object({
   id: z.string(),
   email: z.string(),
   role: z.string(),
+  invitedBy: z.string(),
   expiresAt: z.string(),
   acceptedAt: z.string().nullable(),
   createdAt: z.string(),
-  status: z.string(),
+  status: z.enum(["PENDING", "ACCEPTED", "DECLINED", "EXPIRED", "REVOKED"]),
   revokedAt: z.string().nullable(),
   deliveryFailed: z.boolean(),
 });

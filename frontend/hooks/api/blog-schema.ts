@@ -43,7 +43,7 @@ const blogPostContract = z.object({
   updatedAt: z.string(),
 });
 
-const blogPostWithRelationsContract = blogPostContract.extend({
+export const blogPostWithRelationsContract = blogPostContract.extend({
   category: blogCategoryContract.nullable(),
   author: blogAuthorContract.nullable(),
 });
@@ -55,6 +55,8 @@ export const blogFeedContract = z.object({
 });
 
 export const blogAdminPostListContract = z.array(blogPostWithRelationsContract);
+
+export const blogAdminPostDetailContract = blogPostWithRelationsContract;
 
 export const blogAdminPostContract = blogPostContract;
 

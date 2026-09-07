@@ -35,8 +35,8 @@ export interface OrgSettings {
   companySize?: string | null;
   country?: string | null;
   enabledModules?: string[] | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type { OrgMember } from "@/hooks/api/organization-schema";

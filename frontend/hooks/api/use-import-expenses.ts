@@ -1,7 +1,12 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const importExpensesResultC = lazyContract(() =>
+  import("@/hooks/api/import-expenses-schema").then((m) => m.importExpensesResultContract),
+);
 
 interface ImportVariables {
   file: File;
@@ -29,7 +34,7 @@ async function importExpensesRequest({
     fileName: file.name,
     content,
     autoApprove,
-  });
+  }, undefined, importExpensesResultC);
   if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
   }

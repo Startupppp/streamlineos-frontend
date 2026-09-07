@@ -1,29 +1,38 @@
 import { z } from "zod";
 
 export const kbAnalyticsOverviewContract = z.object({
+  totalCount: z.number().int(),
+  publishedCount: z.number().int(),
+  archivedCount: z.number().int(),
   totalViews: z.number().int(),
-  uniqueVisitors: z.number().int(),
-  avgRating: z.number().nullable(),
-  totalSearches: z.number().int(),
-  noResultsRate: z.number(),
+  helpfulUp: z.number().int(),
+  helpfulDown: z.number().int(),
+  helpfulRatio: z.number(),
+  searches: z.number().int(),
+  noResults: z.number().int(),
+  searchSuccessRate: z.number(),
+  aiAnswers: z.number().int(),
+  aiNoContext: z.number().int(),
+  views: z.number().int(),
+  verifiedPublished: z.number().int(),
+  trustScore: z.number(),
   topArticles: z.array(
     z.object({
       id: z.number().int(),
       title: z.string(),
-      views: z.number().int(),
-      helpfulRatio: z.number().nullable(),
+      slug: z.string(),
+      spaceId: z.number().int().nullable(),
+      viewCount: z.number().int(),
+      helpfulCount: z.number().int(),
+      notHelpfulCount: z.number().int(),
     }),
-  ),
-  viewTrend: z.array(
-    z.object({ date: z.string(), views: z.number().int() }),
   ),
 });
 
 export const kbAnalyticsNoResultsContract = z.array(
   z.object({
-    query: z.string(),
+    query: z.string().nullable(),
     count: z.number().int(),
-    lastSearchedAt: z.string(),
   }),
 );
 
@@ -31,27 +40,28 @@ export const kbAnalyticsPagesContract = z.array(
   z.object({
     id: z.number().int(),
     title: z.string(),
-    views: z.number().int(),
-    uniqueVisitors: z.number().int(),
-    avgTimeOnPage: z.number().nullable(),
+    status: z.enum(["draft", "in_review", "published", "archived"]),
+    trustState: z.enum(["unverified", "verified", "verification_expired"]),
+    updatedAt: z.string(),
+    uniqueViewers: z.number().int(),
+    commentCount: z.number().int(),
+    versionCount: z.number().int(),
   }),
 );
 
 export const kbAnalyticsGapsContract = z.array(
   z.object({
-    query: z.string(),
+    query: z.string().nullable(),
     count: z.number().int(),
-    suggestion: z.string().nullable(),
+    lastOccurredAt: z.string(),
   }),
 );
 
-export const kbAnalyticsContentGapsContract = z.object({
-  gaps: z.array(
-    z.object({
-      topic: z.string(),
-      searchVolume: z.number().int(),
-      coverageScore: z.number(),
-    }),
-  ),
-  recommendations: z.array(z.string()),
-});
+export const kbAnalyticsContentGapsContract = z.array(
+  z.object({
+    query: z.string().nullable(),
+    count: z.number().int(),
+    lastOccurredAt: z.string(),
+    gapKind: z.enum(["search", "ai_no_context"]),
+  }),
+);

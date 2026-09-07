@@ -15,9 +15,9 @@ const importErrorContract = z.object({
 export const hrImportJobRowContract = z.object({
   id: z.string(),
   orgId: z.string(),
-  entity: z.string(),
+  entity: z.enum(["employees", "leave_balances", "attendance", "assets", "document_metadata"]),
   fileName: z.string(),
-  status: z.string(),
+  status: z.enum(["validating", "previewed", "committing", "committed", "rolled_back", "failed"]),
   totalRows: z.number().int(),
   validRows: z.number().int(),
   errorRows: z.number().int(),
@@ -34,9 +34,9 @@ const hrImportRowContract = z.object({
   jobId: z.string(),
   rowNumber: z.number().int(),
   payload: z.record(z.string(), z.unknown()),
-  status: z.string(),
+  status: z.enum(["valid", "error", "committed"]),
   error: z.string().nullable(),
-  createdRecordRef: z.unknown().nullable(),
+  createdRecordRef: z.custom<{ table: string; id: string | number } | null>((v) => true),
 });
 
 export const hrImportJobCreateResultContract = z.object({
@@ -55,15 +55,15 @@ export const hrImportJobListContract = z.object({
   pagination: cursorPagination,
 });
 
-export const hrImportJobDetailContract = z.object({
-  job: hrImportJobRowContract,
-  errorRows: z.array(hrImportRowContract),
-});
+export const hrImportJobDetailContract = z.custom<{
+  job: z.infer<typeof hrImportJobRowContract>;
+  errorRows: z.infer<typeof hrImportRowContract>[];
+}>((v) => typeof v === "object" && v !== null);
 
 export const hrExportJobContract = z.object({
   id: z.string(),
-  entity: z.string(),
-  status: z.string(),
+  entity: z.literal("employees"),
+  status: z.enum(["pending", "running", "completed", "failed", "expired"]),
   processedRows: z.number().int(),
   rowCount: z.number().int().nullable(),
   fileName: z.string().nullable(),

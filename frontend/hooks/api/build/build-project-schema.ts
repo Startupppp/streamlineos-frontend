@@ -20,10 +20,11 @@ const projectListItemSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
-  status: z.string(),
-  priority: z.string().nullable(),
+  status: z.enum(['ACTIVE', 'COMPLETED', 'ARCHIVED']).nullable(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
+  managedProductId: z.number().nullable(),
   manager: z.object({ id: z.string(), firstName: z.string().nullable(), lastName: z.string().nullable(), image: z.string().nullable() }).nullable(),
   progress: z.object({ total: z.number(), done: z.number(), percentage: z.number() }),
   health: z.enum(['on_track', 'at_risk', 'off_track']),
@@ -49,7 +50,7 @@ const projectRowSchema = z.object({
   managerMembershipId: z.number().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(['ACTIVE', 'COMPLETED', 'ARCHIVED']).nullable(),
   priority: z.string().nullable(),
   dealId: z.number().nullable(),
   managedProductId: z.number().nullable(),
@@ -57,7 +58,7 @@ const projectRowSchema = z.object({
   budget: z.string().nullable(),
   budgetMinor: z.number().nullable(),
   budgetCurrency: z.string().nullable(),
-  settings: z.unknown(),
+  settings: z.object({ modules: z.object({ sprints: z.boolean(), epics: z.boolean(), timeTracking: z.boolean(), wiki: z.boolean() }), projectType: z.string().optional(), workflow: z.string().optional(), features: z.record(z.string(), z.boolean()).optional() }).nullable(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -75,22 +76,13 @@ const projectStatusRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const projectDetailMemberUserSchema = z.object({
-  id: z.string(),
-  name: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  email: z.string(),
-  image: z.string().nullable(),
-});
-
 const projectDetailMemberSchema = z.object({
   id: z.number(),
-  orgId: z.string(),
   projectId: z.number(),
-  membershipId: z.number(),
-  role: z.string(),
-  user: z.object({ id: z.number(), user: projectDetailMemberUserSchema }),
+  userId: z.string(),
+  role: z.string().nullable(),
+  joinedAt: z.string().nullable(),
+  user: z.object({ id: z.string(), name: z.string().nullable(), firstName: z.string().nullable(), lastName: z.string().nullable(), email: z.string().nullable(), image: z.string().nullable() }).optional(),
 });
 
 const projectDetailSchema = projectRowSchema.extend({
@@ -183,30 +175,26 @@ const ticketFieldValueSchema = z.object({
 
 const projectReleaseListItemSchema = z.object({
   id: z.number(),
-  orgId: z.string(),
   projectId: z.number(),
   name: z.string(),
   version: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(['draft', 'released', 'archived']),
   releaseDate: z.string().nullable(),
-  createdBy: z.string().nullable(),
+  ticketCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  ticketCount: z.number(),
 });
 
 const projectReleaseRowSchema = z.object({
   id: z.number(),
-  orgId: z.string(),
   projectId: z.number(),
   name: z.string(),
   version: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(['draft', 'released', 'archived']),
   releaseDate: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  deletedAt: z.string().nullable(),
+  ticketCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -225,7 +213,7 @@ const webhookDeliverySchema = z.object({
   id: z.number(),
   webhookId: z.number(),
   event: z.string(),
-  status: z.string(),
+  status: z.enum(['success', 'failed', 'pending']),
   responseCode: z.number().nullable(),
   attempts: z.number(),
   lastError: z.string().nullable(),
@@ -275,7 +263,7 @@ const projectAutomationRowSchema = z.object({
 
 const workspaceMemberItemSchema = z.object({
   id: z.string(),
-  role: z.string(),
+  role: z.enum(['member', 'admin']),
   addedAt: z.string(),
   name: z.string().nullable(),
   firstName: z.string().nullable(),

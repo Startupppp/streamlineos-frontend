@@ -5,7 +5,8 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { InventoryVendor, CreateVendorInput, UpdateVendorInput, VendorPerformance } from "@/types/inventory";
+import type { InventoryVendor, CreateVendorInput, UpdateVendorInput } from "@/types/inventory";
+import type { VendorPerformanceData } from "@/hooks/api/inventory/vendors-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type VendorFilters = {
@@ -92,9 +93,9 @@ export function useUpdateVendor(vendorId?: number) {
 
 export function useVendorPerformance(vendorId: number) {
   const canView = useCan("inventory:vendors:read");
-  return useQuery<VendorPerformance, Error>({
+  return useQuery<VendorPerformanceData, Error>({
     queryKey: [...queryKeys.inventory.vendor(vendorId), "performance"],
-    queryFn: ({ signal }) => apiClient.get<VendorPerformance>(`/inventory/vendors/${vendorId}/performance`, undefined, signal, vendorPerformanceContract),
+    queryFn: ({ signal }) => apiClient.get<VendorPerformanceData>(`/inventory/vendors/${vendorId}/performance`, undefined, signal, vendorPerformanceContract),
     staleTime: 5 * 60_000,
     enabled: canView && vendorId > 0,
   });

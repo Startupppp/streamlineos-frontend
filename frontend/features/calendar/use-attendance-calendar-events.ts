@@ -7,6 +7,11 @@ import { useCan } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useHrWfhRequests } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const attendanceLogListContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.attendanceLogListContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { AttendanceLog } from "@/types/hr";
 
@@ -37,7 +42,7 @@ export function useAttendanceCalendarEvents(
       return {
         queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
         queryFn: ({ signal }) =>
-          apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params, signal),
+          apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params, signal, attendanceLogListContract),
         staleTime: 2 * 60_000,
         enabled: canViewAttendance && attendanceVisible,
       };

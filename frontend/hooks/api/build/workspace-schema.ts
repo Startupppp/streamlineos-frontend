@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const milestoneRowSchema = z.object({
   id: z.number(),
-  projectId: z.number().nullable(),
+  projectId: z.number(),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -60,46 +60,48 @@ const whiteboardListItemSchema = z.object({
   id: z.number(),
   name: z.string(),
   elementCount: z.number(),
-  visibility: z.string(),
+  visibility: z.enum(['project', 'private', 'public']),
   createdBy: z.string().nullable(),
-  updatedAt: z.string(),
+  updatedAt: z.string().nullable(),
 });
 
 const whiteboardShareSchema = z.object({
   userId: z.string(),
-  role: z.string(),
+  role: z.enum(['viewer', 'editor']),
   name: z.string().nullable(),
-  email: z.string(),
+  email: z.string().nullable(),
 });
 
 const whiteboardSharingUpdateSchema = z.object({
-  visibility: z.string(),
-  publicAccess: z.string().nullable(),
+  visibility: z.enum(['project', 'private', 'public']),
+  publicAccess: z.enum(['viewer', 'editor']),
   shareToken: z.string().nullable(),
   linkExpiresAt: z.string().nullable(),
   allowExport: z.boolean(),
 });
 
+const excalidrawSceneDataSchema = z.object({ type: z.string().optional(), version: z.number().optional(), source: z.string().optional(), elements: z.array(z.unknown()), appState: z.record(z.string(), z.unknown()).optional(), files: z.record(z.string(), z.unknown()).optional() });
+
 const whiteboardDetailSchema = z.object({
   id: z.number(),
-  projectId: z.number().nullable(),
+  projectId: z.number(),
   name: z.string(),
-  data: z.unknown(),
-  visibility: z.string(),
+  data: excalidrawSceneDataSchema,
+  visibility: z.enum(["project", "private", "public"]),
   access: z.enum(["view", "edit", "manage"]),
-  sharing: z.object({ visibility: z.string(), publicAccess: z.string().nullable(), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
+  sharing: z.object({ visibility: z.enum(["project", "private", "public"]), publicAccess: z.enum(["viewer", "editor"]), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
   shares: z.array(whiteboardShareSchema).nullable(),
   createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 const publicWhiteboardSchema = z.object({
   name: z.string(),
-  data: z.unknown(),
+  data: excalidrawSceneDataSchema,
   access: z.enum(["edit", "view"]),
   allowExport: z.boolean(),
-  updatedAt: z.string(),
+  updatedAt: z.string().nullable(),
 });
 
 const publicWhiteboardUpdateSchema = z.object({
@@ -152,7 +154,7 @@ export const successContract = z.object({ success: z.literal(true) });
 
 const workspaceMemberItemSchema = z.object({
   id: z.string(),
-  role: z.string(),
+  role: z.enum(['member', 'admin']),
   addedAt: z.string(),
   name: z.string().nullable(),
   firstName: z.string().nullable(),
