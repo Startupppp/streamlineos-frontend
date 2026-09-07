@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { z } from "zod";
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, DollarSign, Users, Target, Clock } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -9,14 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useUpdateLead } from "@/hooks/api/leads";
+import { BANT_QUALIFICATION_FIELD, leadQualificationContract } from "@/hooks/api/leads-schema";
 
-interface BANTData {
-  budget: boolean;
-  authority: boolean;
-  need: boolean;
-  timeline: boolean;
-  notes: string;
-}
+type BANTData = z.infer<typeof leadQualificationContract>;
 
 const BANT_CRITERIA = [
   { key: "budget" as const, label: "Budget", icon: DollarSign, description: "Has confirmed budget" },
@@ -43,18 +39,17 @@ const DEFAULT_BANT: BANTData = { budget: false, authority: false, need: false, t
 
 interface LeadQualificationPanelProps {
   leadId: number;
-  qualificationJson: string | null;
+  customData: Record<string, unknown> | null;
 }
 
-export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualificationPanelProps) {
-  const [bant, setBant] = useState<BANTData>(() => {
-    if (!qualificationJson) return DEFAULT_BANT;
-    try {
-      return { ...DEFAULT_BANT, ...(JSON.parse(qualificationJson) as Partial<BANTData>) };
-    } catch {
-      return DEFAULT_BANT;
-    }
-  });
+function readBant(customData: Record<string, unknown> | null): BANTData {
+  if (!customData) return DEFAULT_BANT;
+  const parsed = leadQualificationContract.safeParse(customData[BANT_QUALIFICATION_FIELD]);
+  return parsed.success ? parsed.data : DEFAULT_BANT;
+}
+
+export function LeadQualificationPanel({ leadId, customData }: LeadQualificationPanelProps) {
+  const [bant, setBant] = useState<BANTData>(() => readBant(customData));
   const [dirty, setDirty] = useState(false);
   const updateLead = useUpdateLead();
 
@@ -83,7 +78,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
 
   const handleSave = useCallback(async () => {
     try {
-      await updateLead.mutateAsync({ id: leadId, qualificationNotes: JSON.stringify(bant) });
+      await updateLead.mutateAsync({ id: leadId, qualification: bant });
       setDirty(false);
       toast.success("Qualification saved");
     } catch {

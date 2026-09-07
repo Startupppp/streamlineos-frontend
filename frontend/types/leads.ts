@@ -1,3 +1,5 @@
+import type { LeadQualification } from "@/hooks/api/leads-schema";
+
 import type { z } from "zod";
 import type {
   leadPartyContract,
@@ -154,13 +156,13 @@ export interface UpdateLeadInput {
   tags?: string[];
   lostReason?: string;
   priority?: LeadPriority;
-  qualificationNotes?: string;
+  qualification?: LeadQualification;
 }
 
 export interface UpdateLeadStatusInput {
   leadId: number;
   status: PipelineStatus;
-  expectedStatus?: PipelineStatus;
+  expectedStatus?: string;
   lostReason?: string;
   estimatedInvestment?: string;
   conversionNotes?: string;

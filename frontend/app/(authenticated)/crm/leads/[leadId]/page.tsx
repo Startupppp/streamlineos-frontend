@@ -174,10 +174,7 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
-            <LeadQualificationPanel
-              leadId={leadId}
-              qualificationJson={lead.qualificationNotes ?? null}
-            />
+            <LeadQualificationPanel leadId={leadId} customData={lead.customData} />
           </div>
         </motion.div>
       </motion.div>

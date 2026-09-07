@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+export const BANT_QUALIFICATION_FIELD = "bantQualification";
+
+export const leadQualificationContract = z.object({
+  budget: z.boolean(),
+  authority: z.boolean(),
+  need: z.boolean(),
+  timeline: z.boolean(),
+  notes: z.string().max(5000),
+});
+
+export type LeadQualification = z.infer<typeof leadQualificationContract>;
+
 const leadPartySchema = z.object({
   id: z.number().int(),
   partyId: z.string(),
