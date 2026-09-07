@@ -15,7 +15,14 @@ const executiveBriefSnapshotSchema = z.object({
   citations: briefCitationsSchema,
   uncertaintyNotes: z.array(z.string()),
   generatedAt: z.string(),
-  aiUsage: z.record(z.string(), z.unknown()).nullable().optional(),
+  aiUsage: z.object({
+    model: z.string(),
+    promptTokens: z.number().int(),
+    completionTokens: z.number().int(),
+    totalTokens: z.number().int(),
+    credits: z.number(),
+    costUsd: z.number(),
+  }).nullable(),
 });
 
 export const executiveBriefGetLatestContract = z.object({
