@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { terminationItemContract as terminationItemContractDef } from "@/hooks/api/hr/termination-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -34,39 +36,7 @@ export type TerminationStatus =
   | "SENT"
   | "COMPLETED";
 
-export interface Termination {
-  id: number;
-  orgId: string;
-  userId: string;
-  status: TerminationStatus | null;
-  reasons: string[] | null;
-  detailedExplanation: string | null;
-  effectiveDate: string | null;
-  severanceAmount: string | null;
-  noticePeriodWaived: boolean | null;
-  terminationLetterUrl: string | null;
-  supportingDocUrls: string[] | null;
-  internalNotes: string | null;
-  finalRemarks: string | null;
-  finalReviewedBy: string | null;
-  finalReviewedAt: string | null;
-  emailSentAt: string | null;
-  emailStatus: string | null;
-  initiatedBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-  employee?: TerminationEmployee;
-  user?: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email: string;
-    designation: string | null;
-    joiningDate?: string | null;
-  } | null;
-  initiator?: { id: string; name: string | null } | null;
-  finalReviewer?: { id: string; name: string | null } | null;
-}
+export type Termination = z.infer<typeof terminationItemContractDef>;
 
 interface CreateTerminationInput {
   employeeUserId: string;

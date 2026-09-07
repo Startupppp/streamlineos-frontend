@@ -70,7 +70,7 @@ export const awardBadgeContract = z.object({
 
 export const leaderboardContract = z.array(leaderboardEntryContract);
 
-const pollContract = z.object({
+export const pollContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   question: z.string(),
@@ -116,7 +116,7 @@ const communityMemberContract = z.object({
   role: z.enum(["member", "moderator"]),
 });
 
-const communityBaseContract = z.object({
+export const communityBaseContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),

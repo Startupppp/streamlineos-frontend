@@ -13,7 +13,7 @@ const workforcePlanProjectionContract = z.object({
 
 export const workforcePlansContract = z.array(workforcePlanProjectionContract);
 
-const headcountPlanRowContract = z.object({
+export const headcountPlanRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   fiscalYear: z.number().int(),

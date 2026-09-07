@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { resignationContract } from "@/hooks/api/hr/exit-schema";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -7,35 +9,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export interface Resignation {
-  id: number;
-  orgId: string;
-  userId: string;
-  reason: string | null;
-  reasonCategory: string | null;
-  lastWorkingDate: string | null;
-  noticePeriodDays: number | null;
-  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "FINAL_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
-  hasResignationLetter: boolean;
-  approvedBy: string | null;
-  approvedAt: Date | string | null;
-  hrReviewedBy: string | null;
-  hrReviewedAt: Date | string | null;
-  hrRemarks: string | null;
-  finalReviewedBy: string | null;
-  finalReviewedAt: Date | string | null;
-  finalRemarks: string | null;
-  willingForExitInterview: boolean | null;
-  companyFeedback: string | null;
-  exitInterviewNotes: string | null;
-  exitInterviewDate: Date | string | null;
-  feedback: { question: string; answer: string }[] | null;
-  createdAt: Date | string | null;
-  user?: { id: string; name: string | null; image: string | null; email: string; designation: string | null; joiningDate?: string | null } | null;
-  hrReviewer?: { id: string; name: string | null } | null;
-  finalReviewer?: { id: string; name: string | null } | null;
-  checklists?: { id: number; item: string; status: string | null; completedAt: Date | string | null }[];
-}
+export type Resignation = z.infer<typeof resignationContract>;
 
 interface ResignationProgressStep {
   step: string;

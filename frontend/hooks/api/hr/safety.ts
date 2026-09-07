@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { safetyIncidentContract } from "@/hooks/api/hr/safety-schema";
 
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -35,21 +37,7 @@ export type IncidentType = "injury" | "accident" | "near_miss" | "hazard" | "env
 export type IncidentSeverity = "low" | "medium" | "high" | "critical";
 export type IncidentStatus = "open" | "investigating" | "mitigated" | "closed";
 
-export interface SafetyIncident {
-  id: number;
-  incidentNumber: string;
-  type: IncidentType;
-  location: string;
-  occurredAt: string;
-  reportedBy: string;
-  description: string;
-  severity: IncidentSeverity;
-  status: IncidentStatus;
-  medicalAttention: boolean;
-  confidentialMedicalNote: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SafetyIncident = z.infer<typeof safetyIncidentContract>;
 
 export interface WellnessCheckin {
   id: number;

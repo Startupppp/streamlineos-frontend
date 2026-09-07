@@ -59,9 +59,24 @@ const expenseStatsContract = z.object({
   avgExpenseAmount: z.number(),
 });
 
+const expensePersonRefContract = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+
+export const expensePageDataRowContract = expenseRowContract.extend({
+  user: expensePersonRefContract.nullable(),
+  approver: expensePersonRefContract.nullable(),
+  expenseCategory: expenseCategoryRowContract.nullable(),
+});
+
 export const expensePageDataContract = z.object({
-  expenses: z.array(expenseRowContract),
-  pendingExpenses: z.array(expenseRowContract),
+  expenses: z.array(expensePageDataRowContract),
+  pendingExpenses: z.array(expensePageDataRowContract),
   stats: expenseStatsContract.nullable(),
   categories: z.array(expenseCategoryRowContract),
   pagination: z.object({
