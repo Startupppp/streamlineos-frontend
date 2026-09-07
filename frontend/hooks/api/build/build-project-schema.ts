@@ -96,7 +96,7 @@ const projectDetailMemberSchema = z.object({
   projectId: m.projectId,
   userId: m.user.user.id,
   role: m.role,
-  joinedAt: null as null,
+  joinedAt: null,
   user: {
     id: m.user.user.id,
     name: m.user.user.name,

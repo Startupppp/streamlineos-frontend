@@ -15,7 +15,7 @@ function isSourceRef(v: unknown): v is SourceRef {
     v !== null &&
     "table" in v &&
     "id" in v &&
-    typeof (v as Record<string, unknown>)["table"] === "string"
+    typeof v.table === "string"
   );
 }
 

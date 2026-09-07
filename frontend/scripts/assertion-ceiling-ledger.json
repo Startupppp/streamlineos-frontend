@@ -193,6 +193,10 @@
       "as": 0,
       "nonNull": 1
     },
+    "components/renderer/density-toggle.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
     "components/ui/calendar-event-combobox.tsx": {
       "as": 0,
       "nonNull": 1
@@ -449,18 +453,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidates/candidate-profile-card.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/hr/recruitment/candidates/candidate-sheets.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/hr/recruitment/candidates/messages-tab.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/chat/channel-item-menu.tsx": {
       "as": 2,
       "nonNull": 0
@@ -553,10 +545,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/crm/leads/detail/lead-qualification-panel.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/crm/leads/detail/lead-sidebar.tsx": {
       "as": 1,
       "nonNull": 0
@@ -574,10 +562,6 @@
       "nonNull": 0
     },
     "features/crm/leads/lead-followup-tab.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/crm/reports/components/conversion-funnel-card.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -609,10 +593,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/crm/shared/metadata/crm-color-tokens.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/crm/tasks/task-type-icon.tsx": {
       "as": 0,
       "nonNull": 1
@@ -623,6 +603,22 @@
     },
     "features/dashboard/hr-widgets.tsx": {
       "as": 2,
+      "nonNull": 0
+    },
+    "features/directory/users/user-access-links-section.tsx": {
+      "as": 10,
+      "nonNull": 0
+    },
+    "features/directory/users/user-import-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/directory/users/user-invitations-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/directory/users/users-page.tsx": {
+      "as": 3,
       "nonNull": 0
     },
     "features/directory/workers/worker-form-dialog.tsx": {
@@ -921,8 +917,20 @@
       "as": 1,
       "nonNull": 0
     },
+    "features/hr/recruitment/candidates/candidate-profile-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidates/candidate-sheets.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
     "features/hr/recruitment/candidates/candidates-page.tsx": {
       "as": 4,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidates/messages-tab.tsx": {
+      "as": 1,
       "nonNull": 0
     },
     "features/hr/recruitment/components/automations-client.tsx": {
@@ -1053,10 +1061,6 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/notifications/unified-inbox/inbox-item-card.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/inventory/components/channels/channel-publications-panel.tsx": {
       "as": 1,
       "nonNull": 0
@@ -1097,12 +1101,8 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/inventory/components/tools/inventory-settings-client.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "features/inventory/components/tools/inventory-settings-form.tsx": {
-      "as": 4,
+      "as": 3,
       "nonNull": 0
     },
     "features/inventory/components/tools/webhook-create-sheet.tsx": {
@@ -1151,6 +1151,10 @@
     },
     "features/notifications/preferences-page.tsx": {
       "as": 3,
+      "nonNull": 0
+    },
+    "features/notifications/unified-inbox/inbox-item-card.tsx": {
+      "as": 1,
       "nonNull": 0
     },
     "features/org-setup/components/goal-chip.tsx": {
@@ -1257,10 +1261,6 @@
       "as": 0,
       "nonNull": 1
     },
-    "components/renderer/density-toggle.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/settings/audit-log/audit-log-constants.ts": {
       "as": 1,
       "nonNull": 0
@@ -1318,10 +1318,6 @@
       "nonNull": 0
     },
     "features/support/inbox/ticket-detail-relations.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/support/inbox/ticket-detail-timeline.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -1431,22 +1427,6 @@
     },
     "features/timesheets/settings/settings-view.tsx": {
       "as": 1,
-      "nonNull": 0
-    },
-    "features/directory/users/user-access-links-section.tsx": {
-      "as": 10,
-      "nonNull": 0
-    },
-    "features/directory/users/user-import-dialog.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/directory/users/user-invitations-panel.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/directory/users/users-page.tsx": {
-      "as": 3,
       "nonNull": 0
     },
     "features/wiki/components/import-page.tsx": {
@@ -1625,10 +1605,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "hooks/api/crm/organizations.ts": {
-      "as": 2,
-      "nonNull": 0
-    },
     "hooks/api/crm/quotes.ts": {
       "as": 1,
       "nonNull": 0
@@ -1771,10 +1747,6 @@
     },
     "hooks/api/kb/research-briefs.ts": {
       "as": 1,
-      "nonNull": 0
-    },
-    "hooks/api/leads.ts": {
-      "as": 5,
       "nonNull": 0
     },
     "hooks/api/mail.ts": {
