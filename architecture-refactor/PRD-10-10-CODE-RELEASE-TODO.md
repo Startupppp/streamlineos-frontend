@@ -889,6 +889,30 @@ These decisions are final for this release and remove implementation alternative
       live/known-no-404.json`. Not acted on: a run that stopped before scoring those routes is not evidence
       they are fixed, and unpinning on that basis deletes a recorded defect instead of repairing it.
       be read as passing.**
+      **The frontend typecheck number recorded above is STALE as of 2026-09-07, and this is not a
+      regression in behaviour.** That line reads `frontend tsc --noEmit` **0 errors** at root `1fa2a3aeb`.
+      It was true, and it was true because the frontend was not typechecking its API responses:
+      `apiClient.get<T>()` without a contract is a **cast**, so `T` was an assertion about the wire that
+      nothing verified. Attaching the real Zod contracts made the compiler read the wire for the first
+      time, and it immediately reported **1,299** errors. They are not new defects; they are the same
+      drift that was previously unobservable, and repairing them has already turned up shipping bugs on
+      surfaces that typechecked clean for months - a bank reconciliation that persisted the wrong
+      matched record, an Edit Asset form that 400'd on every save, a BANT panel that could neither read
+      nor write, two paginations that always returned page 1, and one query parameter that 400'd every
+      call to `GET /inventory/expiry`.
+      The count is being driven down lane by lane and stands at **643** at the time of writing, with the
+      accounting (450 -> 0), KB/sign (34 -> 0), payroll, surveys and CRM lanes closed. **This is a
+      moving, uncommitted number and is deliberately NOT offered as a measurement** - the tree is dirty
+      with in-flight work, and a figure taken mid-sweep is not a gate result. C158's typecheck line must
+      be **re-measured at a new clean commit pair** once the sweep reaches zero; until then that line
+      does not describe this repository, and the "at ONE commit" requirement is further from met than it
+      was, not closer.
+      A new gate, `pnpm check:request-params`, was added and is green at a ceiling of 0: it compares
+      every literal query-parameter object passed to `apiClient.get`/`delete` against the parameters the
+      generated OpenAPI document declares for that route. It carries a six-case self-test, because a scan
+      that reports zero from a regex matching nothing reads exactly like a clean repository. It covers
+      **143** literal call sites and explicitly reports the **353** that forward a variable or spread as
+      NOT covered.
       Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
       Owner: the repository owner.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-06.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-06.md).
