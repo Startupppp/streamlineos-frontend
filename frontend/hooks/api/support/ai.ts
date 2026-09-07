@@ -199,8 +199,6 @@ export interface TranslateDraftResult {
 export interface SupportAiReportParams {
   dateFrom?: string;
   dateTo?: string;
-  cursor?: number;
-  limit?: number;
 }
 
 export interface SupportAiReportResult {
@@ -234,8 +232,6 @@ function reportParamsToRecord(params?: SupportAiReportParams): Record<string, un
   const out: Record<string, unknown> = {};
   if (params.dateFrom !== undefined) out["dateFrom"] = params.dateFrom;
   if (params.dateTo !== undefined) out["dateTo"] = params.dateTo;
-  if (params.cursor !== undefined) out["cursor"] = params.cursor;
-  if (params.limit !== undefined) out["limit"] = params.limit;
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
