@@ -408,22 +408,35 @@ export const chatCreateTaskContract = z.object({
   ticketNumber: z.number().int(),
 });
 
-/**
- * `chatAvailableActionsSchema` — backend `actions` is `z.array(z.string())`, NOT
- * `EntityAction[]`. The client must map after fetch.
- */
+/** `chatAvailableActionsSchema` */
+const entityActionInputSpecSchema = z.object({
+  name: z.string(),
+  kind: z.enum(["text", "date", "user", "choice"]),
+  required: z.boolean(),
+  choices: z.array(z.string()).optional(),
+  options: z.object({ from: z.object({ type: z.string(), id: z.string() }) }).optional(),
+});
+
 export const chatEntityActionsContract = z.object({
   references: z.array(
     z.object({
       reference: z.object({ type: z.string(), id: z.string() }),
-      actions: z.array(z.string()),
+      actions: z.array(z.object({
+        id: z.string(),
+        label: z.string(),
+        inputs: z.array(entityActionInputSpecSchema),
+      })),
     }),
   ),
 });
 
-/** `chatActionOptionsSchema` — free-form option objects from a provider. */
+/** `chatActionOptionsSchema` */
 export const chatEntityActionOptionsContract = z.object({
-  options: z.array(z.record(z.string(), z.unknown())),
+  options: z.array(z.object({
+    value: z.string(),
+    label: z.string(),
+    imageUrl: z.string().nullable().optional(),
+  })),
 });
 
 /** `chatSubmitActionSchema` */
@@ -438,7 +451,7 @@ export const chatUnreadContract = z
 export const chatOnlineUsersContract = z.array(
   z.object({
     userId: z.string(),
-    status: z.string(),
+    status: z.enum(["ONLINE", "AWAY", "OFFLINE"]),
     lastSeenAt: z.string(),
     userName: z.string().nullable(),
     userImage: z.string().nullable(),
@@ -452,7 +465,7 @@ export const chatOrgUsersContract = z.array(
     name: z.string().nullable(),
     email: z.string(),
     image: z.string().nullable(),
-    role: z.string().optional(),
+    role: z.string().nullable(),
   }),
 );
 
@@ -486,7 +499,7 @@ export const chatMuteResponseContract = z.object({
 /** `channelNotifPrefResponseSchema` */
 export const chatNotifPrefResponseContract = z.object({
   ok: z.literal(true),
-  notificationPreference: z.string(),
+  notificationPreference: z.enum(["DEFAULT", "ALL", "MENTIONS", "NOTHING"]),
 });
 
 /** `channelFilesResponseSchema` */
@@ -494,6 +507,7 @@ export const chatChannelFilesContract = z.object({
   files: z.array(
     z.object({
       id: z.number().int(),
+      messageId: z.number().int(),
       fileName: z.string(),
       fileUrl: z.string(),
       fileKey: z.string(),
@@ -517,6 +531,7 @@ export const chatThreadPageContract = z.object({
 export const chatPinItemContract = z.object({
   id: z.number().int(),
   channelId: z.number().int(),
+  messageId: z.number().int(),
   pinnedAt: z.string(),
   pinnedBy: z.object({ id: z.string(), name: z.string().nullable() }),
   message: chatMessageContract,

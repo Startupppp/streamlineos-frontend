@@ -3,7 +3,7 @@ import { z } from "zod";
 export const orgSetupSessionContract = z.object({
   id: z.number().int(),
   type: z.string(),
-  status: z.string(),
+  status: z.enum(["not_started", "in_progress", "completed", "skipped", "abandoned"]),
   currentStep: z.string().nullable(),
   completedSteps: z.array(z.string()),
   skippedSteps: z.array(z.string()),

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const wireDate = () => z.string().transform((s) => new Date(s));
+const nullableWireDate = () =>
+  z
+    .string()
+    .nullable()
+    .transform((s) => (s ? new Date(s) : null));
+
 const blogAuthorContract = z.object({
   id: z.string(),
   name: z.string(),
@@ -9,7 +16,7 @@ const blogAuthorContract = z.object({
   role: z.string().nullable(),
   twitter: z.string().nullable(),
   linkedin: z.string().nullable(),
-  createdAt: z.string(),
+  createdAt: wireDate(),
 });
 
 const blogCategoryContract = z.object({
@@ -18,29 +25,28 @@ const blogCategoryContract = z.object({
   slug: z.string(),
   description: z.string().nullable(),
   color: z.string().nullable(),
-  createdAt: z.string(),
+  createdAt: wireDate(),
 });
 
 const blogPostContract = z.object({
   id: z.string(),
   title: z.string(),
   slug: z.string(),
-  excerpt: z.string().nullable(),
-  coverImage: z.string().nullable(),
+  excerpt: z.string(),
+  coverImage: z.string(),
   metaTitle: z.string().nullable(),
   metaDescription: z.string().nullable(),
-  content: z.string().nullable(),
-  contentText: z.string().nullable(),
+  content: z.string(),
   contentJson: z.record(z.string(), z.unknown()).nullable(),
   categoryId: z.string().nullable(),
   authorId: z.string().nullable(),
-  status: z.enum(["draft", "published"]),
+  status: z.enum(["draft", "published", "archived"]),
   isFeatured: z.boolean(),
   readingTime: z.number().int().nullable(),
-  publishedAt: z.string().nullable(),
+  publishedAt: nullableWireDate(),
   tags: z.array(z.string()),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: wireDate(),
+  updatedAt: wireDate(),
 });
 
 export const blogPostWithRelationsContract = blogPostContract.extend({
@@ -72,7 +78,7 @@ export const blogAdminCategoryListContract = z.array(
     slug: z.string(),
     description: z.string().nullable(),
     color: z.string().nullable(),
-    createdAt: z.string(),
+    createdAt: wireDate(),
     postCount: z.number().int(),
   }),
 );

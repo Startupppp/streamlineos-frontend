@@ -11,20 +11,29 @@ import { idCursorPageContract } from "@/hooks/api/id-cursor-page-schema";
 const notificationItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  userId: z.string(),
-  eventKey: z.string(),
+  userId: z.string().nullable(),
+  type: z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]),
+  priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
+  category: z.enum([
+    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
+    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
+    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
+  ]),
+  sourceModule: z.string().nullable(),
+  eventKey: z.string().nullable().optional(),
+  entityType: z.string().nullable().optional(),
+  entityId: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
   title: z.string(),
-  body: z.string(),
-  data: z.record(z.string(), z.unknown()).optional(),
-  priority: z.string(),
-  channels: z.array(z.string()),
+  message: z.string().nullable(),
+  link: z.string().nullable(),
   isRead: z.boolean(),
-  isArchived: z.boolean(),
-  isPinned: z.boolean(),
-  isSnoozed: z.boolean(),
-  snoozedUntil: z.string().nullable().optional(),
+  pinned: z.boolean(),
+  channel: z.string(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  archivedAt: z.string().nullable(),
+  snoozedUntil: z.string().nullable(),
   createdAt: z.string(),
-  readAt: z.string().nullable().optional(),
   actions: z
     .array(z.object({ label: z.string(), url: z.string().optional(), action: z.string().optional() }))
     .optional(),
@@ -45,8 +54,8 @@ export const notificationAckContract = z.object({ success: z.literal(true) }).st
 export const notificationProviderContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  channel: z.string(),
-  provider: z.string(),
+  channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]),
+  provider: z.enum(["SMTP", "TWILIO", "META_WHATSAPP", "WEBHOOK", "WEB_PUSH", "INTERNAL", "SANDBOX"]),
   displayName: z.string(),
   enabled: z.boolean(),
   sandboxMode: z.boolean(),
@@ -66,74 +75,75 @@ export const notificationProvidersListContract = z.array(notificationProviderCon
 
 /** `notificationProviderTestSchema` */
 export const notificationProviderTestContract = z.object({
-  status: z.string(),
+  status: z.enum(["SENT", "FAILED"]),
   sandbox: z.boolean(),
   message: z.string(),
   providerMessageId: z.string().nullable(),
 });
 
-/** `notificationEventsListSchema` */
-export const notificationEventsListContract = z.array(
-  z.object({
-    eventKey: z.string(),
-    displayName: z.string(),
-    description: z.string(),
-    category: z.string(),
-    sourceModule: z.string().nullable(),
-    defaultPriority: z.string(),
-    defaultChannels: z.array(z.string()),
-    allowedChannels: z.array(z.string()),
-    mandatory: z.boolean(),
-    userConfigurable: z.boolean(),
-    enabled: z.boolean(),
-    overridden: z.boolean().optional(),
-  }),
-);
+const notificationChannelEnum = z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]);
+const notificationPriorityEnum = z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]);
+const notificationTypeEnum = z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]);
 
-/** `notificationEventDefinitionSchema` (single row update) */
-export const notificationEventDefinitionContract = z.object({
+const notificationEventDefinitionBase = z.object({
   eventKey: z.string(),
   displayName: z.string(),
   description: z.string(),
   category: z.string(),
-  sourceModule: z.string().nullable(),
-  defaultPriority: z.string(),
-  defaultChannels: z.array(z.string()),
-  allowedChannels: z.array(z.string()),
+  sourceModule: z.string(),
+  defaultPriority: notificationPriorityEnum,
+  defaultType: notificationTypeEnum,
+  defaultChannels: z.array(notificationChannelEnum),
+  allowedChannels: z.array(notificationChannelEnum),
   mandatory: z.boolean(),
   userConfigurable: z.boolean(),
+  adminConfigurable: z.boolean(),
+  quietHoursBehavior: z.enum(["respect", "bypass_if_high", "always_bypass"]),
+  dedupeWindowSeconds: z.number().int(),
+  rateLimitWindowSeconds: z.number().int(),
+  rateLimitMax: z.number().int(),
+  templateKey: z.string().optional(),
+  audienceResolver: z.string().optional(),
   enabled: z.boolean(),
-  overridden: z.boolean().optional(),
+  overridden: z.boolean(),
 });
 
-/** `notificationPolicyListSchema` */
-export const notificationPoliciesListContract = z.array(
-  z.object({
-    id: z.number().int(),
-    orgId: z.string(),
-    scopeType: z.string(),
-    scopeId: z.string().nullable(),
-    defaultChannels: z.array(z.string()).nullable(),
-    canUserOverride: z.boolean().nullable(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-  }),
-);
+/** `notificationEventsListSchema` */
+export const notificationEventsListContract = z.array(notificationEventDefinitionBase);
 
-/** `notificationPolicyRowSchema` */
-export const notificationPolicyRowContract = z.object({
+/** `notificationEventDefinitionSchema` (single row update) */
+export const notificationEventDefinitionContract = notificationEventDefinitionBase;
+
+const policyOverrideSchema = z.object({
+  channels: z.array(notificationChannelEnum).optional(),
+  muted: z.boolean().optional(),
+});
+
+const notificationPolicyBase = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  scopeType: z.string(),
+  scopeType: z.enum(["ORG", "ROLE", "DEPARTMENT", "TEAM", "PROJECT"]),
   scopeId: z.string().nullable(),
-  defaultChannels: z.array(z.string()).nullable(),
-  canUserOverride: z.boolean().nullable(),
+  defaultChannels: z.array(notificationChannelEnum),
+  eventOverrides: z.record(z.string(), policyOverrideSchema),
+  categoryOverrides: z.record(z.string(), policyOverrideSchema),
+  moduleOverrides: z.record(z.string(), policyOverrideSchema),
+  canUserOverride: z.boolean(),
+  resolutionOrder: z.number().int(),
+  createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
+/** `notificationPolicyListSchema` */
+export const notificationPoliciesListContract = z.array(notificationPolicyBase);
+
+/** `notificationPolicyRowSchema` */
+export const notificationPolicyRowContract = notificationPolicyBase;
+
 /** `notificationPreferenceSchema` */
 export const notificationPreferenceContract = z.object({
+  id: z.number().int(),
   userId: z.string(),
   orgId: z.string(),
   emailEnabled: z.boolean(),
@@ -146,7 +156,7 @@ export const notificationPreferenceContract = z.object({
   quietHoursEnd: z.string().nullable(),
   quietHoursWeekends: z.boolean(),
   allowCriticalOverride: z.boolean(),
-  digestMode: z.string(),
+  digestMode: z.enum(["disabled", "hourly", "daily", "weekly"]),
   categories: z.record(z.string(), z.boolean()),
   channelCategories: z.record(z.string(), z.record(z.string(), z.boolean())),
   eventPreferences: z.record(z.string(), z.unknown()),
@@ -154,31 +164,25 @@ export const notificationPreferenceContract = z.object({
   inherited: z
     .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
     .optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
-/** `notificationSuppressionsListSchema` */
-export const suppressionsListContract = z.array(
-  z.object({
-    id: z.number().int(),
-    scopeType: z.string(),
-    scopeKey: z.string(),
-    channel: z.string().nullable(),
-    reason: z.string(),
-    expiresAt: z.string().nullable(),
-    createdAt: z.string(),
-  }),
-);
-
-/** `suppressionRowSchema` */
-export const suppressionRowContract = z.object({
+const suppressionBase = z.object({
   id: z.number().int(),
-  scopeType: z.string(),
+  scopeType: z.enum(["event", "module", "category"]),
   scopeKey: z.string(),
-  channel: z.string().nullable(),
+  channel: notificationChannelEnum.nullable(),
   reason: z.string(),
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
 });
+
+/** `notificationSuppressionsListSchema` */
+export const suppressionsListContract = z.array(suppressionBase);
+
+/** `suppressionRowSchema` */
+export const suppressionRowContract = suppressionBase;
 
 /** `notificationSuccessSchema` */
 export const notificationSuccessContract = z.object({ success: z.literal(true) });
@@ -189,15 +193,19 @@ export const notificationTemplateContract = z.object({
   orgId: z.string(),
   templateKey: z.string(),
   name: z.string(),
-  channel: z.string(),
-  category: z.string(),
+  channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]),
+  category: z.enum([
+    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
+    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
+    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
+  ]),
   locale: z.string(),
   subject: z.string().nullable(),
   body: z.string(),
   variables: z.array(z.string()),
   version: z.number().int(),
   isActive: z.boolean(),
-  approvalStatus: z.string(),
+  approvalStatus: z.enum(["NOT_REQUIRED", "PENDING", "APPROVED", "REJECTED"]),
   providerTemplateName: z.string().nullable(),
   approvalCheckedAt: z.string().nullable(),
   approvalRejectionReason: z.string().nullable(),
@@ -216,10 +224,17 @@ export const notificationTemplatesListContract = z.object({
 
 /** `templatePreviewSchema` */
 export const templatePreviewContract = z.object({
-  subject: z.string().optional(),
+  subject: z.string().nullable(),
   body: z.string(),
-  channel: z.string(),
-  templateKey: z.string(),
+  channel: z.string().optional(),
+  templateKey: z.string().optional(),
+});
+
+const broadcastAudienceSchema = z.object({
+  type: z.enum(["all", "roles", "departments", "users"]),
+  roleIds: z.array(z.string()).optional(),
+  departmentIds: z.array(z.string()).optional(),
+  userIds: z.array(z.string()).optional(),
 });
 
 /** `broadcastRowSchema` */
@@ -227,20 +242,30 @@ export const broadcastRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
-  body: z.string(),
-  status: z.string(),
+  message: z.string(),
+  type: notificationTypeEnum,
+  priority: notificationPriorityEnum,
+  category: z.enum([
+    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
+    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
+    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
+  ]),
   channels: z.array(z.string()),
-  audienceType: z.string(),
+  audience: broadcastAudienceSchema,
+  status: z.enum(["DRAFT", "SCHEDULED", "QUEUED", "SENDING", "SENT", "CANCELLED", "FAILED"]),
   scheduledAt: z.string().nullable(),
   sentAt: z.string().nullable(),
+  recipientCount: z.number().int(),
+  deliveredCount: z.number().int(),
+  createdBy: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-/** `broadcastListResponseSchema` — cursor page with string cursor. */
+/** `broadcastListResponseSchema` — cursor page with integer cursor. */
 export const broadcastListContract = z.object({
   items: z.array(broadcastRowContract),
-  nextCursor: z.string().nullable(),
+  nextCursor: z.number().int().optional(),
 });
 
 /** `broadcastSuccessSchema` */

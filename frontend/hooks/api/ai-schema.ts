@@ -12,7 +12,7 @@ const leadScoreSchema = z.object({
   suggestedActions: z.array(z.string()),
 });
 
-export const scoreLeadSingleContract = leadScoreSchema.nullable();
+export const scoreLeadSingleContract = leadScoreSchema;
 
 export const scoreLeadBatchContract = z.object({
   results: z.record(z.string(), leadScoreSchema),
@@ -32,14 +32,14 @@ export const predictDealContract = z.object({
   riskFactors: z.array(z.string()),
   positiveSignals: z.array(z.string()),
   recommendedActions: z.array(z.string()),
-}).nullable();
+});
 
 export const nextActionContract = z.object({
   action: z.string(),
   urgency: z.enum(["low", "medium", "high", "critical"]),
   reasoning: z.string(),
   template: z.string(),
-}).nullable();
+});
 
 export const enrichLeadContract = z.object({
   companyInsight: z.string(),

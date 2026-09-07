@@ -4,7 +4,7 @@ import { dehydrate, type DehydratedState } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { serverGet } from "@/lib/server-fetch";
-import { projectDetailContract } from "@/lib/prefetch/prefetch-schema";
+import { projectDetailContract } from "@/hooks/api/build/build-project-schema";
 
 import type { ProjectWithDetails } from "@/types/projects";
 

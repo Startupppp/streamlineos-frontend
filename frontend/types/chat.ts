@@ -273,17 +273,16 @@ export interface EditMessageInput {
 export interface ThreadPage {
   parentMessage: Message;
   replies: Message[];
-  nextCursor?: number;
+  nextCursor: number | null;
 }
 
 export interface PinnedMessage {
   id: number;
   channelId: number;
   messageId: number;
-  pinnedBy: string;
+  pinnedBy: { id: string; name: string | null };
   pinnedAt: Date | string;
-  message: Message & { sender: { id: string; name: string | null; image: string | null } | null };
-  pinnedByUser: { id: string; name: string | null } | null;
+  message: Message;
 }
 
 /**

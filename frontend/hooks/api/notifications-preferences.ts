@@ -37,7 +37,7 @@ export const useUpdateNotificationPreferences = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationPreferences, Error, UpdatePreferencesInput>({
     mutationKey: ["notifications", "preferences", "update"],
-    mutationFn: (dto) => apiClient.patch<NotificationPreferences>("/notification-preferences", dto, notificationPreferenceContract),
+    mutationFn: (dto) => apiClient.patch<NotificationPreferences>("/notification-preferences", dto, undefined, notificationPreferenceContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.preferences() });
     },
@@ -64,7 +64,7 @@ export const useCreateSuppression = () => {
   return useMutation<SuppressionRule, Error, CreateSuppressionInput>({
     mutationKey: ["notifications", "suppressions", "create"],
     mutationFn: (dto) =>
-      apiClient.post<SuppressionRule>("/notification-preferences/suppressions", dto, suppressionRowContract),
+      apiClient.post<SuppressionRule>("/notification-preferences/suppressions", dto, undefined, suppressionRowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.suppressions() });
     },

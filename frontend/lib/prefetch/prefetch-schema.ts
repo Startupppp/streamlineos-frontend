@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { notificationListContract } from "@/hooks/api/notifications-schema";
 
 const wireDate = () => z.string();
 const nullableWireDate = () => z.string().nullable();
@@ -28,11 +29,12 @@ export const projectDetailContract = z.object({
 });
 
 export const dashboardStatsContract = z.object({
-  openTickets: z.number().int().optional(),
-  completedThisWeek: z.number().int().optional(),
-  overdueItems: z.number().int().optional(),
-  teamVelocity: z.number().optional(),
-}).catchall(z.unknown());
+  orgName: z.string(),
+  orgSlug: z.string(),
+  totalEmployees: z.number().int().nullable(),
+  activeProjects: z.number().int().nullable(),
+  presentToday: z.number().int().nullable(),
+});
 
 const hrDocumentSchema = z.object({
   id: z.number().int(),
@@ -74,23 +76,7 @@ export const hrAssetListContract = z.object({
   }),
 });
 
-const notificationSchema = z.object({
-  id: z.number().int(),
-  type: z.string(),
-  title: z.string(),
-  body: z.string().nullable(),
-  isRead: z.boolean(),
-  createdAt: wireDate(),
-}).catchall(z.unknown());
-
-export const notificationCursorPageContract = z.object({
-  data: z.array(notificationSchema),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.number().int().nullable(),
-  }),
-});
+export const notificationCursorPageContract = notificationListContract;
 
 export const notificationUnreadCountContract = z.object({
   count: z.number().int(),

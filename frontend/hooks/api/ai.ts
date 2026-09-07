@@ -92,7 +92,7 @@ export function useAIBatchScoreLeads() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["a", "i", "batch", "score", "leads"],
     mutationFn: (leadIds: number[]) =>
-      apiClient.post<{ results: Record<number, LeadScoreResult>; scored: number }>(
+      apiClient.post<{ results: Record<string, LeadScoreResult>; scored: number }>(
         "/ai/score-lead",
         { leadIds },
         undefined,

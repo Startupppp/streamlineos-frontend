@@ -45,8 +45,8 @@ export const gitConnectionDeleteContract = z.object({ success: z.literal(true) }
 
 const ticketGitLinkSchema = z.object({
   id: z.number().int(),
-  provider: z.string(),
-  refType: z.string(),
+  provider: z.enum(["github", "gitlab", "bitbucket"]),
+  refType: z.enum(["commit", "pull_request", "branch"]),
   externalId: z.string(),
   title: z.string().nullable(),
   url: z.string().nullable(),
