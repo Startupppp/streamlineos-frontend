@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { TemplateRow } from "@/types/payroll/setup";
 import { COMPLEXITY_CONFIG } from "@/features/payroll/setup/lib/constants";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 
 const TOGGLE_CHIP_LABELS: Record<string, string> = {
   pf: "PF",
@@ -45,14 +45,14 @@ const TOGGLE_CHIP_LABELS: Record<string, string> = {
 };
 
 type TemplateCardProps = {
-  template: TemplateRow;
+  template: PayrollTemplate;
   selected?: boolean;
   onSelect?: () => void;
   actions?: ReactNode;
 };
 
 export function TemplateCard({ template, selected, onSelect, actions }: TemplateCardProps) {
-  const complexity = COMPLEXITY_CONFIG[template.complexity];
+  const complexity = template.complexity ? COMPLEXITY_CONFIG[template.complexity] : COMPLEXITY_CONFIG.SIMPLE;
   const shownComponents = template.defaultComponents.slice(0, 4);
   const extraCount = template.defaultComponents.length - shownComponents.length;
   const enabledToggles = Object.entries(template.defaultToggles)

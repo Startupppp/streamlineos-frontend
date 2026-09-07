@@ -49,11 +49,10 @@ export interface PayrollChecklistItem {
 }
 
 export interface CalcExplainStep {
-  method: string;
-  formula?: string;
-  inputs: Record<string, number>;
   steps: string[];
   note?: string;
+  formula?: string;
+  inputs?: Record<string, number>;
 }
 
 export interface CalculationSnapshotLine {

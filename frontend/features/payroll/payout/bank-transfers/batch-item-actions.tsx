@@ -22,11 +22,11 @@ import {
   useEmployeeBankDetails,
 } from "@/hooks/api/payroll/payout-batches";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
-import type { PayoutBatchItem } from "@/types/payroll";
+import type { BatchItemRow } from "@/hooks/api/payroll/payout-schema";
 
 interface ItemActionDialogProps {
   type: "paid" | "failed";
-  item: PayoutBatchItem;
+  item: BatchItemRow;
   batchId: number;
   runId: number;
   onClose: () => void;

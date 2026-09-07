@@ -106,7 +106,7 @@ export function LoansTable() {
 
   const handleOpenAdjust = useCallback(
     (row: LoanAdminItem, defaultType: LoanAdjustmentType) => {
-      setAdjustState({ loanId: row.id, employeeName: row.user.name ?? row.user.email, defaultType });
+      setAdjustState({ loanId: row.id, employeeName: row.user?.name ?? row.user?.email ?? "", defaultType });
     },
     [],
   );
@@ -170,7 +170,7 @@ export function LoansTable() {
           mobileCard={(row) => (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
+                <p className="text-sm font-medium truncate">{row.user?.name ?? row.user?.email ?? ""}</p>
                 <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
                   {row.status}
                 </span>

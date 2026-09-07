@@ -9,7 +9,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { useActivatePolicy } from "@/hooks/api/payroll";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
-import type { ActivateResult, ToggleKey } from "@/types/payroll/setup";
+import type { ToggleKey } from "@/types/payroll/setup";
+import type { PolicyActivateResult } from "@/hooks/api/payroll/policies-schema";
 import { toast } from "sonner";
 
 function toOverridesRecord(
@@ -34,7 +35,7 @@ type StepActivateProps = {
 };
 
 export function StepActivate({ draft, clearAll }: StepActivateProps) {
-  const [activated, setActivated] = useState<ActivateResult | null>(null);
+  const [activated, setActivated] = useState<PolicyActivateResult | null>(null);
   const activate = useActivatePolicy();
   const shouldReduceMotion = useReducedMotion();
 

@@ -32,7 +32,7 @@ import { usePayrollTemplates, usePayrollPolicyCurrent, useDeleteTemplate } from 
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
-import type { TemplateRow } from "@/types/payroll/setup";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 import { toast } from "sonner";
 
 const CATEGORIES = [
@@ -61,9 +61,9 @@ export function TemplatesPageContent() {
   const complexity = searchParams.get("complexity") ?? "all";
 
   const [searchInput, setSearchInput] = useState<string>(search);
-  const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
-  const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
-  const [deleteTemplate, setDeleteTemplate] = useState<TemplateRow | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<PayrollTemplate | null>(null);
+  const [duplicateTemplate, setDuplicateTemplate] = useState<PayrollTemplate | null>(null);
+  const [deleteTemplate, setDeleteTemplate] = useState<PayrollTemplate | null>(null);
 
   const debouncedSearchInput = useDebouncedValue(searchInput, 300);
 
@@ -107,7 +107,7 @@ export function TemplatesPageContent() {
   }, [updateUrl]);
 
   const handleUseInSetup = useCallback(
-    (template: TemplateRow) => {
+    (template: PayrollTemplate) => {
       if (template.key) {
         router.push(`/payroll/setup?template=${template.key}`);
       } else {
@@ -117,15 +117,15 @@ export function TemplatesPageContent() {
     [router],
   );
 
-  const handlePreviewOpen = useCallback((t: TemplateRow) => {
+  const handlePreviewOpen = useCallback((t: PayrollTemplate) => {
     setPreviewTemplate(t);
   }, []);
 
-  const handleDuplicateOpen = useCallback((t: TemplateRow) => {
+  const handleDuplicateOpen = useCallback((t: PayrollTemplate) => {
     setDuplicateTemplate(t);
   }, []);
 
-  const handleDeleteOpen = useCallback((t: TemplateRow) => {
+  const handleDeleteOpen = useCallback((t: PayrollTemplate) => {
     setDeleteTemplate(t);
   }, []);
 

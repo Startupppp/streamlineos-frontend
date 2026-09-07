@@ -16,7 +16,6 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { usePublishPayslips } from "@/hooks/api/payroll";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
-import type { PublishResult } from "@/types/payroll";
 
 interface Props {
   runId: number;
@@ -44,7 +43,7 @@ export function PublishPayslipsAction({ runId, status }: Props) {
     mutate(
       { runId },
       {
-        onSuccess: (data: PublishResult) => {
+        onSuccess: (data) => {
           setOpen(false);
           if (data.published < data.total) {
             toast.warning(`Published ${data.published} of ${data.total} payslip(s)`, {

@@ -264,7 +264,7 @@ export function FilingsTab() {
 
       <DataTable
         className="flex-1 min-h-0"
-        data={data ?? []}
+        data={data?.data ?? []}
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={isLoading}

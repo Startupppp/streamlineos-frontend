@@ -33,11 +33,11 @@ export interface LoanAdminItem {
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  user: {
+  user?: {
     id: string;
     name: string | null;
     email: string;
-  };
+  } | null;
 }
 
 export function useAdminLoans() {

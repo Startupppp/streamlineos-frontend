@@ -9,7 +9,9 @@ import { TemplateDuplicateDialog } from "@/features/payroll/setup/components/tem
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { usePayrollTemplates } from "@/hooks/api/payroll";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
-import type { TemplateRow } from "@/types/payroll/setup";
+import { TOGGLE_KEYS } from "@/types/payroll/setup";
+import type { ToggleKey } from "@/types/payroll/setup";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -38,15 +40,15 @@ export function StepTemplate({
   const [selectedId, setSelectedId] = useState<number | null>(
     draft.templateId ?? preselectedId ?? null,
   );
-  const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
-  const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<PayrollTemplate | null>(null);
+  const [duplicateTemplate, setDuplicateTemplate] = useState<PayrollTemplate | null>(null);
 
   if (preselectedKey && selectedId === null && templates.length > 0) {
     const found = templates.find((t) => t.key === preselectedKey);
     if (found) setSelectedId(found.id);
   }
 
-  function handleSelectTemplate(t: TemplateRow) {
+  function handleSelectTemplate(t: PayrollTemplate) {
     setSelectedId(t.id);
   }
 
@@ -58,7 +60,7 @@ export function StepTemplate({
     if (!open) setDuplicateTemplate(null);
   }
 
-  function handleDuplicateSuccess(newTemplate: TemplateRow) {
+  function handleDuplicateSuccess(newTemplate: PayrollTemplate) {
     setSelectedId(newTemplate.id);
   }
 
@@ -76,10 +78,16 @@ export function StepTemplate({
       toast.error("Please select a template to continue");
       return;
     }
+    const rawToggles = selected.defaultToggles;
+    const narrowedToggles: Partial<Record<ToggleKey, boolean>> = {};
+    for (const key of TOGGLE_KEYS) {
+      const v = rawToggles[key];
+      if (typeof v === "boolean") narrowedToggles[key] = v;
+    }
     updateDraft({
       templateKey: selected.key,
       templateId: selected.id,
-      templateDefaultToggles: selected.defaultToggles,
+      templateDefaultToggles: narrowedToggles,
     });
     goNext();
   }

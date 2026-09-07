@@ -19,7 +19,8 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/payroll";
+import type { BankBatchStatus, BankItemStatus } from "@/types/payroll";
+import type { BatchItemRow } from "@/hooks/api/payroll/payout-schema";
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
   PENDING: "bg-muted text-muted-foreground",
@@ -46,23 +47,23 @@ interface BatchDetailSheetProps {
 
 function buildColumns(
   canManage: boolean,
-  onAction: (type: "paid" | "failed", item: PayoutBatchItem) => void,
+  onAction: (type: "paid" | "failed", item: BatchItemRow) => void,
   resolveMemberName: (userId: string) => string,
-): DataTableColumn<PayoutBatchItem>[] {
-  const cols: DataTableColumn<PayoutBatchItem>[] = [
+): DataTableColumn<BatchItemRow>[] {
+  const cols: DataTableColumn<BatchItemRow>[] = [
     {
       key: "userId",
       header: "Employee",
       className: "max-w-[180px]",
       cell: (row) => (
-        <TruncatedText text={resolveMemberName(row.userId)} className="font-medium text-foreground" />
+        <TruncatedText text={resolveMemberName(row.userId ?? "")} className="font-medium text-foreground" />
       ),
     },
     {
       key: "account",
       header: "Account",
       cell: (row) =>
-        canManage ? (
+        canManage && row.userId ? (
           <RevealCell userId={row.userId} masked={row.accountMasked} />
         ) : (
           <span className="font-mono text-xs text-muted-foreground">{row.accountMasked}</span>
@@ -141,7 +142,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [actionDialog, setActionDialog] = useState<{
     type: "paid" | "failed";
-    item: PayoutBatchItem;
+    item: BatchItemRow;
   } | null>(null);
 
   const memberById = useMemo(() => {
@@ -178,7 +179,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     setActionDialog(null);
   }
 
-  const handleAction = useCallback((type: "paid" | "failed", item: PayoutBatchItem) => {
+  const handleAction = useCallback((type: "paid" | "failed", item: BatchItemRow) => {
     setActionDialog({ type, item });
   }, []);
 
