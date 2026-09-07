@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import type { OnboardingChecklistDoc } from "@/hooks/api/hr/onboarding";
 import { format } from "date-fns";
 import { CheckCircle2, RefreshCw } from "lucide-react";
 import { ExternalLinkIcon } from "@animateicons/react/lucide";
@@ -10,22 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { viewProtectedFile } from "@/hooks/common/use-file-url";
 
-export interface OnboardingDoc {
-  id: number;
-  documentTypeId: number;
-  documentTypeName: string;
-  isMandatory: boolean;
-  hasFile: boolean;
-  fileName: string;
-  fileSize: number | null;
-  mimeType: string | null;
-  version: number | null;
-  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
-  reviewedAt: string | null;
-  reviewerName: string | null;
-  remarks: string | null;
-  createdAt: string | null;
-}
+export type OnboardingDoc = OnboardingChecklistDoc;
 
 export function getDocStatusBadgeClass(status: OnboardingDoc["status"]): string {
   switch (status) {

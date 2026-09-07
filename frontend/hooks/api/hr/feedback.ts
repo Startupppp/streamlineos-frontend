@@ -7,6 +7,15 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+export interface CreateFeedbackCycleInput {
+  name: string;
+  type?: string;
+  startDate: string;
+  endDate: string;
+  isAnonymous?: boolean;
+  questions?: { id: string; text: string; type: "rating" | "text" }[];
+}
+
 export interface FeedbackCycle {
   id: number;
   orgId: string;
@@ -60,9 +69,7 @@ export function useCreateFeedbackCycle() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "feedback", "cycles", "create"],
-    mutationFn: (
-      data: Omit<FeedbackCycle, "id" | "orgId" | "status" | "createdAt">,
-    ) => apiClient.post<FeedbackCycle[]>("/hr/feedback/cycles", data, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.createCycleContract))),
+    mutationFn: (data: CreateFeedbackCycleInput) => apiClient.post<FeedbackCycle[]>("/hr/feedback/cycles", data, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.createCycleContract))),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() }),
   });

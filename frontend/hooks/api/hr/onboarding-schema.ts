@@ -91,7 +91,7 @@ const onboardingDocListItemSchema = z.object({
   fileSize: z.number().int().nullable(),
   mimeType: z.string().nullable(),
   version: z.number().int(),
-  status: z.string(),
+  status: z.enum(["PENDING", "SUBMITTED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED"]),
   reviewedBy: z.string().nullable(),
   reviewedAt: z.string().nullable(),
   remarks: z.string().nullable(),

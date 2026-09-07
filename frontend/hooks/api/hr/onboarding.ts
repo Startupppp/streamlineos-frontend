@@ -200,7 +200,7 @@ export interface OnboardingChecklistDoc {
   fileSize: number | null;
   mimeType: string | null;
   version: number;
-  status: string;
+  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
   reviewedBy: string | null;
   reviewedAt: string | null;
   remarks: string | null;

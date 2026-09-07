@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { myOnboardingDocsContract as onboardingDocListContractDef } from "@/hooks/api/hr/onboarding-schema";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -16,27 +18,9 @@ const onboardingDocRowLazy = lazyContract(() =>
 
 const REVIEW_DOCS_PAGE_SIZE = 20;
 
-export interface EmployeeOnboardingDoc {
-  id: number;
-  documentTypeId: number;
-  documentTypeName: string;
-  isMandatory: boolean;
-  hasFile: boolean;
-  fileName: string;
-  fileSize: number | null;
-  mimeType: string | null;
-  version: number | null;
-  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
-  reviewedAt: string | null;
-  reviewerName: string | null;
-  remarks: string | null;
-  createdAt: string | null;
-}
+export type EmployeeOnboardingDoc = z.infer<typeof onboardingDocListContractDef>["data"][number];
 
-export interface EmployeeOnboardingDocsResponse {
-  data: EmployeeOnboardingDoc[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
+export type EmployeeOnboardingDocsResponse = z.infer<typeof onboardingDocListContractDef>;
 
 export function useEmployeeOnboardingDocs(
   userId: string | null,

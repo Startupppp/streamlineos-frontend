@@ -1,6 +1,6 @@
 "use client";
 import type { z } from "zod";
-import type { headcountPlanRowContract } from "@/hooks/api/hr/workforce-schema";
+import type { workforcePlansContract as workforcePlansContractDef } from "@/hooks/api/hr/workforce-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -32,7 +32,7 @@ const updateHeadcountPlanContract = lazyContract(() =>
   import("@/hooks/api/hr/workforce-schema").then((m) => m.updateHeadcountPlanContract),
 );
 
-export type HeadcountPlan = z.infer<typeof headcountPlanRowContract>;
+export type HeadcountPlan = z.infer<typeof workforcePlansContractDef>[number];
 
 export interface BudgetVsActual {
   planId: number;
