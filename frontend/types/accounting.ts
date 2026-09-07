@@ -5,12 +5,14 @@ export interface Account {
   orgId: string;
   code: string;
   name: string;
-  accountType: AccountType;
+  accountType: string;
   parentAccountId: number | null;
   isActive: boolean;
+  normalBalance: string | null;
+  isSystem: boolean;
   description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface JournalLine {

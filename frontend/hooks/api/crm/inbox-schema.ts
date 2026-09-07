@@ -20,7 +20,14 @@ const inboxSectionSchema = z.object({
 
 export const inboxContract = z.object({
   sections: z.array(inboxSectionSchema),
-  aiActions: z.array(z.record(z.string(), z.unknown())),
+  aiActions: z.array(z.object({
+    type: z.string(),
+    entityType: z.enum(["lead", "deal", "quote"]),
+    entityId: z.number().int(),
+    title: z.string(),
+    reason: z.string(),
+    href: z.string(),
+  })),
 });
 
 export const inboxCountsContract = z.object({

@@ -14,3 +14,9 @@ export const handbookRowContract = z.object({
 });
 
 export const handbookListContract = z.array(handbookRowContract);
+
+export const handbookMutationSuccessContract = z.object({
+  success: z.boolean(),
+});
+
+export const successResponseContract = z.object({ success: z.boolean() });

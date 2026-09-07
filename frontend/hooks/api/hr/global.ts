@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -110,12 +111,64 @@ export interface ContractsParams {
   days?: number;
 }
 
+const _listWorkAuthsContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.listWorkAuthsContract),
+);
+const _createWorkAuthContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.createWorkAuthContract),
+);
+const _updateWorkAuthContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.updateWorkAuthContract),
+);
+const _voidContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.voidContract),
+);
+const _listComplianceRequirementsContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.listComplianceRequirementsContract),
+);
+const _createComplianceRequirementContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.createComplianceRequirementContract),
+);
+const _updateComplianceRequirementContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.updateComplianceRequirementContract),
+);
+const _listComplianceEventsContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.listComplianceEventsContract),
+);
+const _markEventDoneContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.markEventDoneContract),
+);
+const _generateEventsContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.generateEventsContract),
+);
+const _seedCountryPackContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.seedCountryPackContract),
+);
+const _listContractsContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.listContractsContract),
+);
+const _createContractContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.createContractContract),
+);
+const _updateContractContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.updateContractContract),
+);
+const _endContractContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.endContractContract),
+);
+const _convertToEmployeeContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.convertToEmployeeContract),
+);
+const _internshipCertificateContract = lazyContract(() =>
+  import("@/hooks/api/hr/global-schema").then((m) => m.internshipCertificateContract),
+);
+
 export function useWorkAuthorizations(params?: WorkAuthorizationsParams) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<WorkAuthorization>>({
     queryKey: humanResourcesQueryKeys.hr.workAuthorizations(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>, signal, _listWorkAuthsContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -125,7 +178,7 @@ export function useCreateWorkAuth() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "create"],
-    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/work-authorizations", body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/work-authorizations", body, undefined, _createWorkAuthContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorizations() });
       toast.success("Work authorization added");
@@ -138,7 +191,7 @@ export function useUpdateWorkAuth(id: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/work-authorizations/${id}`, body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/work-authorizations/${id}`, body, undefined, _updateWorkAuthContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorizations() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorization(id) });
@@ -152,7 +205,7 @@ export function useDeleteWorkAuth() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/global/work-authorizations/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/hr/global/work-authorizations/${id}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorizations() });
       toast.success("Work authorization removed");
@@ -166,7 +219,7 @@ export function useComplianceRequirements(params?: ComplianceRequirementsParams)
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceRequirement>>({
     queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>, signal, _listComplianceRequirementsContract),
     staleTime: 120_000,
     enabled: canManage && hrEnabled,
   });
@@ -176,7 +229,7 @@ export function useCreateComplianceRequirement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "create"],
-    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/compliance/requirements", body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/compliance/requirements", body, undefined, _createComplianceRequirementContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
       toast.success("Compliance requirement created");
@@ -189,7 +242,7 @@ export function useUpdateComplianceRequirement(id: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/compliance/requirements/${id}`, body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/compliance/requirements/${id}`, body, undefined, _updateComplianceRequirementContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirement(id) });
@@ -203,7 +256,7 @@ export function useDeleteComplianceRequirement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/global/compliance/requirements/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/hr/global/compliance/requirements/${id}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
       toast.success("Compliance requirement deleted");
@@ -217,7 +270,7 @@ export function useComplianceEvents(params?: ComplianceEventsParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceEvent>>({
     queryKey: humanResourcesQueryKeys.hr.complianceEvents(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>, signal, _listComplianceEventsContract),
     staleTime: 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -228,7 +281,7 @@ export function useMarkEventDone() {
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "markDone"],
     mutationFn: ({ eventId, notes }: { eventId: number; notes?: string }) =>
-      apiClient.post(`/hr/global/compliance/events/${eventId}/done`, { notes }),
+      apiClient.post(`/hr/global/compliance/events/${eventId}/done`, { notes }, undefined, _markEventDoneContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceEvents() });
       toast.success("Marked as complete");
@@ -243,13 +296,17 @@ export function useGenerateComplianceEvents() {
     mutationKey: ["hr", "global", "compliance", "generateEvents"],
     mutationFn: (requirementId?: number) =>
       requirementId === undefined
-        ? apiClient.post<{ generated: number }>(
+        ? apiClient.post(
             "/hr/global/compliance/generate-events",
             {},
+            undefined,
+            _generateEventsContract,
           )
-        : apiClient.post<{ generated: number }>(
+        : apiClient.post(
             `/hr/global/compliance/generate-events?requirementId=${requirementId}`,
             {},
+            undefined,
+            _generateEventsContract,
           ),
     onSuccess: (res: { generated: number }) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceEvents() });
@@ -264,7 +321,7 @@ export function useSeedCountryPack() {
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "seedPack"],
     mutationFn: (body: { country: string; year?: number }) =>
-      apiClient.post<{ holidays: number; requirements: number; country: string }>("/hr/global/compliance/seed-country-pack", body),
+      apiClient.post("/hr/global/compliance/seed-country-pack", body, undefined, _seedCountryPackContract),
     onSuccess: (res: { holidays: number; requirements: number; country: string }) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
       toast.success(`Seeded ${res.holidays} holidays and ${res.requirements} requirements for ${res.country}`);
@@ -278,7 +335,7 @@ export function useContracts(params?: ContractsParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
     queryKey: humanResourcesQueryKeys.hr.contracts(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params as Record<string, unknown>, signal, _listContractsContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -288,7 +345,7 @@ export function useCreateContract() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "create"],
-    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/contracts", body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/contracts", body, undefined, _createContractContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contracts() });
       toast.success("Contract created");
@@ -301,7 +358,7 @@ export function useUpdateContract(id: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${id}`, body),
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${id}`, body, undefined, _updateContractContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contracts() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contract(id) });
@@ -316,7 +373,7 @@ export function useEndContract() {
   return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "end"],
     mutationFn: ({ contractId, notes }: { contractId: number; notes?: string }) =>
-      apiClient.post(`/hr/global/contracts/${contractId}/end`, { notes }),
+      apiClient.post(`/hr/global/contracts/${contractId}/end`, { notes }, undefined, _endContractContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contracts() });
       toast.success("Contract ended");
@@ -330,7 +387,7 @@ export function useConvertToEmployee() {
   return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "convert"],
     mutationFn: ({ contractId, ...body }: { contractId: number; effectiveDate?: string; notes?: string }) =>
-      apiClient.post(`/hr/global/contracts/${contractId}/convert-to-employee`, body),
+      apiClient.post(`/hr/global/contracts/${contractId}/convert-to-employee`, body, undefined, _convertToEmployeeContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contracts() });
       toast.success("Converted to full-time employee");
@@ -344,7 +401,7 @@ export function useInternshipCertificate(contractId: number, enabled = false) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<{ html: string; templateId: number | null }>({
     queryKey: humanResourcesQueryKeys.hr.internshipCertificate(contractId),
-    queryFn: ({ signal }) => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`, undefined, signal, _internshipCertificateContract),
     enabled: canView && hrEnabled && enabled,
     staleTime: 300_000,
   });

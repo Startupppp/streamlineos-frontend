@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { SyncStatus } from "@/features/inventory/lib";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -25,45 +24,54 @@ const tplConnectionDetailContract = lazyContract(() =>
 );
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
-type ChannelStatus = "ACTIVE" | "PAUSED";
 export type PublicationStatus = "PENDING" | "PUBLISHED" | "FAILED" | "SKIPPED";
 
 export interface Channel {
   id: number;
   orgId: string;
   name: string;
-  channelType: ChannelType;
-  status: ChannelStatus;
-  safetyBuffer: number | null;
-  publishThreshold: number | null;
-  warehouseIds: number[];
-  lastSyncStatus: SyncStatus | null;
-  lastSyncAt: string | null;
+  type?: string;
+  status?: string;
+  safetyBuffer: string | null;
+  publishThreshold: string | null;
+  warehouseIds: number[] | null;
+  settings: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Publication {
   id: number;
+  orgId: string;
   channelId: number;
-  variantId: number;
-  variantName: string;
-  status: PublicationStatus;
-  errorMessage: string | null;
-  syncedAt: string | null;
+  productVariantId: number;
+  publishedQty: string;
+  availableQty: string;
+  status: string;
+  error: string | null;
+  publishedAt: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+interface PublicationListResponse {
+  items: Publication[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface ThreePlConnection {
   id: number;
   orgId: string;
   name: string;
-  providerKey: string;
-  isActive: boolean;
-  lastSyncStatus: SyncStatus | null;
+  provider: string;
+  status?: string;
+  externalWarehouseRef: string | null;
+  skuMapping: Record<string, string> | null;
   lastSyncAt: string | null;
-  lastSyncError: string | null;
-  config?: Record<string, string> | null;
+  lastSyncStatus: string | null;
+  settings: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,7 +82,7 @@ interface CreateChannelInput {
   safetyBuffer?: number;
   publishThreshold?: number;
   warehouseIds?: number[];
-  status?: ChannelStatus;
+  status?: string;
 }
 
 interface UpdateChannelInput {
@@ -83,12 +91,12 @@ interface UpdateChannelInput {
   safetyBuffer?: number;
   publishThreshold?: number;
   warehouseIds?: number[];
-  status?: ChannelStatus;
+  status?: string;
 }
 
 interface CreateThreePlInput {
   name: string;
-  providerKey: string;
+  provider: string;
   config?: Record<string, string>;
 }
 
@@ -111,12 +119,12 @@ export function useChannels() {
 
 export function useChannelPublications(channelId: number, statusFilter?: PublicationStatus) {
   const canView = useCan("inventory:channels:manage");
-  return useQuery<Publication[], Error>({
+  return useQuery<PublicationListResponse, Error>({
     queryKey: statusFilter
       ? [...queryKeys.inventory.channelPublications(channelId), statusFilter]
       : queryKeys.inventory.channelPublications(channelId),
     queryFn: ({ signal }) =>
-      apiClient.get<Publication[]>(
+      apiClient.get<PublicationListResponse>(
         `/inventory/channels/${channelId}/publications`,
         statusFilter ? { status: statusFilter } : undefined, signal, listPublicationsContract,
       ),

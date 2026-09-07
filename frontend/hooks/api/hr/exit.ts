@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -70,6 +71,19 @@ const exitKeys = {
     [...exitKeys.all, "progress", resignationId] as const,
 };
 
+const _resignationListContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationListContract),
+);
+const _resignationContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationContract),
+);
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.successContract),
+);
+const _resignationProgressContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationProgressContract),
+);
+
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -81,7 +95,7 @@ export function useResignations(params?: ResignationListParams) {
       if (params?.limit) search.set("limit", String(params.limit));
       if (params?.status) search.set("status", params.status);
       const qs = search.toString();
-      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`, undefined, signal);
+      return apiClient.get(`/hr/exit${qs ? `?${qs}` : ""}`, undefined, signal, _resignationListContract);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -101,7 +115,7 @@ export function useCreateResignation() {
       willingForExitInterview?: boolean;
       companyFeedback?: string;
       resignationLetterUrl?: string;
-    }) => apiClient.post<Resignation>("/hr/exit", data),
+    }) => apiClient.post("/hr/exit", data, undefined, _resignationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -111,7 +125,7 @@ export function useHrReviewResignation() {
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
+      apiClient.patch(`/hr/exit/${id}/hr-review`, { decision: action, remarks }, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -121,7 +135,7 @@ export function useFinalReviewResignation() {
   return useAuthorizedMutation("hr:exit:approve", {
     mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/final-review`, { decision: action, remarks }),
+      apiClient.patch(`/hr/exit/${id}/final-review`, { decision: action, remarks }, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -131,7 +145,7 @@ export function useWithdrawResignation() {
   return useAuthorizedMutation("hr:exit:view", {
     mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/withdraw`, {}),
+      apiClient.patch(`/hr/exit/${id}/withdraw`, {}, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -145,9 +159,8 @@ export function useResignationProgress(
   return useQuery({
     queryKey: exitKeys.progress(resignationId),
     queryFn: ({ signal }) =>
-      apiClient.get<ResignationProgress>(`/hr/exit/${resignationId}/progress`, undefined, signal),
+      apiClient.get(`/hr/exit/${resignationId}/progress`, undefined, signal, _resignationProgressContract),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && resignationId > 0 && enabled,
   });
 }
-

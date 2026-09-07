@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
@@ -34,6 +35,19 @@ interface ExpensePageFilters {
   maxAmount?: number;
 }
 
+const _expensePageDataContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expensePageDataContract),
+);
+const _expenseRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseRowContract),
+);
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.successContract),
+);
+const _expenseExportJobContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseExportJobContract),
+);
+
 export function useExpensePageData(
   filters: ExpensePageFilters = {},
   options?: { enabled?: boolean; selfService?: boolean },
@@ -59,21 +73,11 @@ export function useExpensePageData(
       params,
     ] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<{
-        expenses: ExpenseWithRelations[];
-        pendingExpenses: ExpenseWithRelations[];
-        stats: ExpenseStats | null;
-        categories: ExpenseCategoryRecord[];
-        pagination: {
-          page: number;
-          pageSize: number;
-          total: number;
-          totalPages: number;
-        };
-        isAdmin: boolean;
-      }>(
+      apiClient.get(
         options?.selfService ? "/me/expenses" : "/hr/expenses/page-data",
         Object.keys(params).length ? params : undefined,
+        signal,
+        _expensePageDataContract,
       ),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -85,7 +89,7 @@ export function useCreateExpense() {
   return useAuthorizedMutation("self:expenses", {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
-      apiClient.post<Expense>("/me/expenses", data),
+      apiClient.post("/me/expenses", data, undefined, _expenseRowContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
@@ -96,7 +100,7 @@ export function useUpdateExpenseStatus() {
   return useAuthorizedMutation("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
+      apiClient.patch(`/hr/expenses/${expenseId}`, data, undefined, _successContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
@@ -120,9 +124,11 @@ export function useUpdateExpense(options?: { selfService?: boolean }) {
       receiptUrl?: string;
       receiptFileName?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch(
         `${options?.selfService ? "/me/expenses" : "/hr/expenses"}/${expenseId}`,
         data,
+        undefined,
+        _successContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
@@ -164,9 +170,9 @@ export function useCreateExpenseExportJob() {
   >("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "create"],
     mutationFn: ({ input, idempotencyKey }) =>
-      apiClient.post<ExpenseExportJob>("/hr/expenses/export/jobs", input, {
+      apiClient.post("/hr/expenses/export/jobs", input, {
         headers: { "Idempotency-Key": idempotencyKey },
-      }),
+      }, _expenseExportJobContract),
   });
 }
 
@@ -175,7 +181,7 @@ export function useExpenseExportJob(jobId: string | null) {
   return useQuery<ExpenseExportJob, Error>({
     queryKey: humanResourcesQueryKeys.hr.expenseExportJob(jobId ?? ""),
     queryFn: ({ signal }) =>
-      apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`, undefined, signal),
+      apiClient.get(`/hr/expenses/export/jobs/${jobId}`, undefined, signal, _expenseExportJobContract),
     enabled: canRead && !!jobId,
     staleTime: 1_000,
     refetchInterval: (query) => {

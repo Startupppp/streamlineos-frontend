@@ -31,12 +31,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { OrderLineTable } from "@/features/inventory/components/order-line-table";
 import { poEditSchema, type PoEditFormValues } from "@/features/inventory/lib/po-schema";
 import { toNum, round2 } from "@/features/inventory/lib/order-line-helpers";
-import type { PurchaseOrder } from "@/types/inventory";
+import type { LocalPurchaseOrder } from "@/hooks/api/inventory/purchase-orders";
 
 interface PoEditSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  po: PurchaseOrder;
+  po: LocalPurchaseOrder;
 }
 
 export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {

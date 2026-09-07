@@ -11,6 +11,8 @@ const variantRefContract = z.object({
   product: productRefContract.optional(),
 });
 
+const poStatusEnum = z.enum(["DRAFT", "SENT", "PARTIAL", "RECEIVED", "CLOSED", "CANCELLED"]);
+
 const poLineContract = z.object({
   id: z.number().int(),
   poId: z.number().int(),
@@ -32,7 +34,7 @@ const invPoContract = z.object({
   poNumber: z.string(),
   vendorId: z.number().int(),
   warehouseId: z.number().int().nullable(),
-  status: z.string(),
+  status: poStatusEnum,
   orderDate: z.string(),
   subtotal: z.string(),
   taxAmount: z.string(),
@@ -62,7 +64,9 @@ export const listPosContract = z.object({
   totalPages: z.number().int(),
 });
 
-export const getPoContract = invPoContract;
+const poDetailContract = invPoContract.extend({ lines: z.array(poLineContract) });
+
+export const getPoContract = poDetailContract;
 
 const grnLineContract = z.object({
   id: z.number().int(),
@@ -99,7 +103,9 @@ export const listGrnsContract = z.object({
   totalPages: z.number().int(),
 });
 
-export const getGrnContract = grnContract;
+const grnDetailContract = grnContract.extend({ lines: z.array(grnLineContract) });
+
+export const getGrnContract = grnDetailContract;
 
 export const reverseGrnContract = z.object({
   reversalGrnId: z.number().int(),

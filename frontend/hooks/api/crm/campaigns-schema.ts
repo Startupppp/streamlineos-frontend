@@ -25,9 +25,9 @@ const campaignSchema = z.object({
 
 export const campaignsListContract = z.object({
   items: z.array(campaignSchema),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
-  total: z.number().int().optional(),
+  total: z.number().int(),
+  page: z.number().int(),
+  limit: z.number().int(),
 });
 
 export const campaignContract = campaignSchema;

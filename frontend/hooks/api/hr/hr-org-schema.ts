@@ -35,3 +35,5 @@ export const headcountItemContract = z.object({
 });
 
 export const headcountItemListContract = z.array(headcountItemContract);
+
+export const successResponseContract = z.object({ success: z.boolean() });

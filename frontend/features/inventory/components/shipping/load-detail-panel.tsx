@@ -152,31 +152,24 @@ export function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           <span className="text-xs text-muted-foreground">{formatDate(load.createdAt)}</span>
         </div>
 
-        {load.name && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Name</p>
-            <p className="text-sm font-medium">{load.name}</p>
-          </div>
-        )}
+        <div>
+          <p className="text-xs text-muted-foreground mb-0.5">Load Number</p>
+          <p className="text-sm font-medium font-mono">{load.loadNumber}</p>
+        </div>
 
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Members ({load.members?.length ?? 0})</p>
-          {load.members && load.members.length > 0 ? (
+          <p className="text-xs text-muted-foreground mb-2">Packages ({load.packages?.length ?? 0})</p>
+          {load.packages && load.packages.length > 0 ? (
             <div className="divide-y divide-border rounded-lg border">
-              {load.members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between px-3 py-2">
-                  <div>
-                    <span className="text-xs text-muted-foreground">{member.type}</span>
-                    <span className="ml-2 text-sm font-mono">#{member.referenceId}</span>
-                  </div>
-                  {member.status && (
-                    <span className="text-xs text-muted-foreground">{member.status}</span>
-                  )}
+              {load.packages.map((pkg) => (
+                <div key={pkg.id} className="flex items-center justify-between px-3 py-2">
+                  <span className="text-sm font-mono">{pkg.packageNumber}</span>
+                  <span className="text-xs text-muted-foreground">{pkg.status}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">No members</p>
+            <p className="text-xs text-muted-foreground">No packages</p>
           )}
         </div>
 

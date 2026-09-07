@@ -48,7 +48,7 @@ export function useDeleteJobRole() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "role", "delete"],
     mutationFn: (jobRoleId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/org/roles/${jobRoleId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/org/roles/${jobRoleId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgRoles() }),
   });
 }
@@ -88,7 +88,7 @@ export function useDeleteJobLevel() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "level", "delete"],
     mutationFn: (jobLevelId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/org/levels/${jobLevelId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/org/levels/${jobLevelId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgLevels() }),
   });
 }

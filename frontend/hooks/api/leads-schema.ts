@@ -178,6 +178,10 @@ export const leadsDuplicateGroupsContract = z.object({
   total: z.number().int(),
 });
 
+export const leadsCheckDuplicatesContract = z.object({
+  duplicates: z.array(z.record(z.string(), z.unknown())),
+});
+
 export const leadsMergeContract = z.object({
   merged: z.literal(true),
   winner: leadPartySchema,
@@ -259,3 +263,20 @@ export const leadsAnalyticsContract = z.object({
 });
 
 export const leadsDeleteContract = z.object({ success: z.boolean() });
+
+export const leadsSalesLeaderboardContract = z.array(
+  z.object({
+    userId: z.string(),
+    name: z.string().nullable(),
+    count: z.number().int(),
+  }),
+);
+
+export const leadsSalesTeamCapacityContract = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    image: z.string().nullable(),
+    activeLeads: z.number().int(),
+  }),
+);

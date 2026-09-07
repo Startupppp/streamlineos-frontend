@@ -11,7 +11,7 @@ const kbResearchBriefBaseContract = {
   userId: z.string().nullable(),
   topic: z.string(),
   spaceId: z.number().int().nullable(),
-  status: z.string(),
+  status: z.enum(["queued", "running", "completed", "failed"]),
   jobId: z.number().int().nullable(),
   sourceCount: z.number().int(),
   errorMessage: z.string().nullable(),

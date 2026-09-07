@@ -4,22 +4,19 @@ const invChannelContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
-  channelType: z.string(),
-  config: z.record(z.string(), z.unknown()).nullable(),
-  isActive: z.boolean(),
-  lastSyncAt: z.string().nullable(),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  safetyBuffer: z.string().nullable(),
+  publishThreshold: z.string().nullable(),
+  warehouseIds: z.array(z.number().int()).nullable(),
+  settings: z.record(z.string(), z.unknown()).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
 export const channelDetailContract = invChannelContract;
 
-export const listChannelsContract = z.object({
-  items: z.array(invChannelContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  totalPages: z.number().int(),
-});
+export const listChannelsContract = z.array(invChannelContract);
 
 export const syncStockContract = z.object({
   channelId: z.number().int(),
@@ -33,14 +30,13 @@ const publicationContract = z.object({
   orgId: z.string(),
   channelId: z.number().int(),
   productVariantId: z.number().int(),
+  publishedQty: z.string(),
+  availableQty: z.string(),
   status: z.string(),
-  externalId: z.string().nullable(),
-  lastPublishedAt: z.string().nullable(),
-  errorMessage: z.string().nullable(),
+  error: z.string().nullable(),
+  publishedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  productVariant: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }).optional(),
-  channel: z.object({ id: z.number().int(), name: z.string(), channelType: z.string() }).optional(),
 });
 
 export const listPublicationsContract = z.object({
@@ -60,19 +56,17 @@ const tplConnectionContract = z.object({
   orgId: z.string(),
   name: z.string(),
   provider: z.string(),
-  config: z.record(z.string(), z.unknown()).nullable(),
-  status: z.string(),
+  status: z.string().optional(),
+  externalWarehouseRef: z.string().nullable(),
+  skuMapping: z.record(z.string(), z.string()).nullable(),
   lastSyncAt: z.string().nullable(),
+  lastSyncStatus: z.string().nullable(),
+  settings: z.record(z.string(), z.unknown()).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-export const listTplConnectionsContract = z.object({
-  items: z.array(tplConnectionContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  totalPages: z.number().int(),
-});
+export const listTplConnectionsContract = z.array(tplConnectionContract);
 
 export const tplConnectionDetailContract = tplConnectionContract;
 

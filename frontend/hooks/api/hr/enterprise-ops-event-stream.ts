@@ -1,6 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -48,10 +49,23 @@ const streamKeys = {
   metrics: [...queryKeyBase, "hr-event-stream", "metrics"] as const,
 };
 
+const _listHrEventsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listHrEventsContract),
+);
+const _getDataDictionaryContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getDataDictionaryContract),
+);
+const _hrMetricDefinitionsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrMetricDefinitionsContract),
+);
+const _hrEventsExportContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrEventsExportContract),
+);
+
 export function useHrEvents(params: ListEventsParams = {}) {
   return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params as Record<string, unknown>, signal, _listHrEventsContract),
     staleTime: 30_000,
   });
 }
@@ -59,7 +73,7 @@ export function useHrEvents(params: ListEventsParams = {}) {
 export function useHrEventDataDictionary() {
   return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.dictionary,
-    queryFn: ({ signal }) => apiClient.get<{ catalog: EventCatalogEntry[]; immutable: boolean }>(`${BASE}/data-dictionary`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/data-dictionary`, undefined, signal, _getDataDictionaryContract),
     staleTime: 300_000,
   });
 }
@@ -67,7 +81,7 @@ export function useHrEventDataDictionary() {
 export function useHrMetricDefinitions() {
   return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.metrics,
-    queryFn: ({ signal }) => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/metric-definitions`, undefined, signal, _hrMetricDefinitionsContract),
     staleTime: 300_000,
   });
 }
@@ -82,11 +96,7 @@ export function useExportHrEvents() {
       entityType?: string;
       fromDate?: string;
       toDate?: string;
-    }) => apiClient.post<{
-      exportedAt: string;
-      data: HrEvent[];
-      pagination: PaginatedResult<HrEvent>["pagination"];
-    }>(`${BASE}/export`, body),
+    }) => apiClient.post(`${BASE}/export`, body, undefined, _hrEventsExportContract),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }

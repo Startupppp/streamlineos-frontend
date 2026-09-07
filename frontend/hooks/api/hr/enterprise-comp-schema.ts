@@ -164,3 +164,5 @@ export const costByLocationContract = z.array(z.object({
   headcount: z.unknown().nullable(),
   monthly_cost_cents: z.unknown().nullable(),
 }));
+
+export const voidContract = z.undefined();

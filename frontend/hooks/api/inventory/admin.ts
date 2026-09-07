@@ -36,41 +36,46 @@ const createExportJobContract = lazyContract(() =>
   import("@/hooks/api/inventory/settings-schema").then((m) => m.createExportJobContract),
 );
 
-type ReservationStrategy = "MANUAL" | "AUTO_ON_CONFIRM" | "FEFO" | "FIFO";
-type ExpiryPolicy = "BLOCK" | "WARN" | "ALLOW";
-type CostingMethod = "FIFO" | "LIFO" | "WEIGHTED_AVG" | "STANDARD";
-
 export interface InventorySettings {
   allowNegativeStock: boolean;
   allowBackorders: boolean;
-  reservationStrategy: ReservationStrategy;
-  defaultCostingMethod: CostingMethod;
-  expiryReservationPolicy: ExpiryPolicy;
+  reservationStrategy: string;
+  defaultCostingMethod: string;
+  expiryReservationPolicy: string;
   inspectionOnReceipt: boolean;
   inspectionOnReturn: boolean;
-  overReceiptTolerancePct: number;
+  overReceiptTolerancePct: string;
   requirePoApproval: boolean;
-  adjustmentApprovalThreshold: number;
+  adjustmentApprovalThreshold: string | null;
   autoReserveOnConfirm: boolean;
   allowPartialShipment: boolean;
   packageRequiredForShipping: boolean;
+  channelPublishPolicy: string | null;
 }
 
 export interface NumberSequence {
-  id: number;
-  sequenceType: string;
-  label: string;
+  id?: number;
+  orgId?: string;
+  docType: string;
   prefix: string;
-  padding: number;
   nextNumber: number;
+  padding: number;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface SettingsHealth {
-  reconciliationSampleResult: string | null;
-  expiredReservationsCount: number;
-  failedJobsCount: number;
-  failedWebhooksCount: number;
-  failedPublicationsCount: number;
+  ledgerReconciliation: {
+    sampleSize: number;
+    transactionCount: number;
+    status: string;
+  };
+  activeExpiredReservations: number;
+  failedImportJobs: number;
+  failedExportJobs: number;
+  failedWebhookEvents: number;
+  failedChannelPublications: number;
 }
 
 export type BarcodeLookupResult =
@@ -91,18 +96,21 @@ export interface ImportPreviewResult {
 
 interface ImportJobListItem {
   id: number;
-  importType: string;
-  status: JobStatus;
+  orgId: string;
+  jobType: string;
+  status: string;
+  fileName: string | null;
   totalRows: number;
   processedRows: number;
-  errorCount: number;
+  errorRows: number;
+  errors: { row: number; field: string; message: string }[] | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
-  completedAt: string | null;
+  updatedAt: string;
 }
 
-interface ImportJobDetail extends ImportJobListItem {
-  errors: { row: number; field: string; message: string }[];
-}
+interface ImportJobDetail extends ImportJobListItem {}
 
 interface ImportJobListResponse {
   items: ImportJobListItem[];
@@ -249,18 +257,18 @@ export type ExportType = "products" | "stock" | "movements" | "reorder" | "valua
 export interface ExportJob {
   id: number;
   orgId: string;
-  jobType: ExportType;
-  status: JobStatus;
+  jobType: string;
+  status: string;
   fileName: string | null;
   totalRows: number;
   processedRows: number;
   errorRows: number;
   errors: { row: number; field: string; message: string }[] | null;
   createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
 }
-
 
 interface CreateExportJobInput {
   exportType: ExportType;
@@ -284,4 +292,3 @@ export function useDownloadExportJob() {
     mutationFn: (jobId) => apiClient.download(`/inventory/export/jobs/${jobId}/download`),
   });
 }
-

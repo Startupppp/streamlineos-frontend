@@ -56,11 +56,11 @@ interface PackageDetailSheetProps {
   packageId: number | null;
 }
 
-function buildDefaultLines(lines?: { variantId: number; qty: number; lotId?: number | null; serialId?: number | null }[]): EditableLine[] {
-  if (!lines || lines.length === 0) return [];
-  return lines.map((l) => ({
-    variantId: String(l.variantId),
-    qty: String(l.qty),
+function buildDefaultLines(items?: { productVariantId: number; quantity: string; lotId: number | null; serialId: number | null }[]): EditableLine[] {
+  if (!items || items.length === 0) return [];
+  return items.map((l) => ({
+    variantId: String(l.productVariantId),
+    qty: l.quantity,
     lotId: l.lotId ? String(l.lotId) : "",
     serialId: l.serialId ? String(l.serialId) : "",
   }));
@@ -202,7 +202,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
   if (pkg && hydratedPackageId !== pkg.id) {
     setHydratedPackageId(pkg.id);
-    setEditableLines(buildDefaultLines(pkg.lines));
+    setEditableLines(buildDefaultLines(pkg.items));
   }
 
   function handleAddLine(): void {
@@ -374,23 +374,23 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                 </div>
               ) : (
                 <div className="divide-y divide-border rounded-lg border">
-                  {pkg.lines && pkg.lines.length > 0 ? (
-                    pkg.lines.map((line) => (
-                      <div key={line.id} className="flex items-center justify-between px-3 py-2">
+                  {pkg.items && pkg.items.length > 0 ? (
+                    pkg.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between px-3 py-2">
                         <div>
-                          <span className="text-sm font-medium">{line.variantName}</span>
-                          {line.lotId && (
-                            <span className="ml-2 text-xs text-muted-foreground">Lot #{line.lotId}</span>
+                          <span className="text-sm font-medium">{item.productVariant?.name ?? `Variant #${item.productVariantId}`}</span>
+                          {item.lotId && (
+                            <span className="ml-2 text-xs text-muted-foreground">Lot #{item.lotId}</span>
                           )}
-                          {line.serialId && (
-                            <span className="ml-2 text-xs text-muted-foreground">S/N #{line.serialId}</span>
+                          {item.serialId && (
+                            <span className="ml-2 text-xs text-muted-foreground">S/N #{item.serialId}</span>
                           )}
                         </div>
-                        <span className="text-sm tabular-nums">{line.qty}</span>
+                        <span className="text-sm tabular-nums">{item.quantity}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-xs text-muted-foreground">No lines</div>
+                    <div className="px-3 py-3 text-xs text-muted-foreground">No items</div>
                   )}
                 </div>
               )}

@@ -26,7 +26,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Unlock } from "lucide-react";
-import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
+import { useReservations, useReleaseReservation, type ReservationApiItem } from "@/hooks/api/inventory/stock";
 import { useCan } from "@/hooks/api/access";
 import {
   RESERVATION_STATUS_BADGE,
@@ -39,17 +39,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 
-type ReservationItem = {
-  id: number;
-  sourceType: string;
-  sourceId: string;
-  reservedQty: string;
-  status: StockReservationStatus;
-  expiresAt: string | null;
-  createdAt: string;
-  productVariant: { id: number; sku: string; name: string | null } | null;
-  warehouse: { id: number; name: string } | null;
-};
+type ReservationItem = ReservationApiItem;
 
 const PAGE_LIMIT = 50;
 

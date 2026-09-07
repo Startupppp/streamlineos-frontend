@@ -86,3 +86,5 @@ export const expenseExportJobContract = z.object({
   completedAt: z.string().nullable(),
   expiresAt: z.string().nullable(),
 });
+
+export const successContract = z.object({ success: z.boolean() });

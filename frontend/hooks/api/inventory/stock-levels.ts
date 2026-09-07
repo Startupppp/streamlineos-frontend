@@ -80,7 +80,7 @@ export interface StockLevelRow {
 interface StockLevelsResult {
   items: StockLevelRow[];
   page: number;
-  limit: number;
+  limit?: number;
   total?: number;
   totalPages?: number;
 }
@@ -122,27 +122,26 @@ interface RawStockLevel {
   available: string;
   blocked_qty: string | null;
   quality_hold_qty: string | null;
-  average_cost: string | null;
+  average_cost?: string | null;
   product_variant_id: number;
   location_id: number;
-  productVariant: {
+  productVariant?: {
     id: number;
     name: string | null;
     sku: string | null;
-    product: { id: number; name: string; sku: string; reorderPoint: string | null } | null;
+    product?: { id: number; name: string; sku: string; reorderPoint: string | null } | null;
   } | null;
-  location: {
+  location?: {
     id: number;
     name: string;
     code: string;
-    warehouse: { id: number; name: string } | null;
+    warehouse?: { id: number; name: string } | null;
   } | null;
 }
 
 interface RawStockLevelsResponse {
   items: RawStockLevel[];
   page: number;
-  limit: number;
   total?: number;
   totalPages?: number;
 }
@@ -159,11 +158,11 @@ interface RawTransaction {
   referenceId: string | null;
   productVariant: {
     id: number;
-    name: string | null;
-    sku: string | null;
+    name: string;
+    sku: string;
     product: { id: number; name: string; sku: string } | null;
   } | null;
-  location: { id: number; name: string; code: string; warehouse: { id: number; name: string } | null } | null;
+  location: { id: number; name: string; code: string; warehouse?: { id: number; name: string } | null } | null;
   creator: { id: string; name: string | null } | null;
 }
 
@@ -258,7 +257,6 @@ export function useStockLevels(filters?: StockLevelFilters) {
       return {
         items: res.items.map(toStockLevelRow),
         page: res.page,
-        limit: res.limit,
         total: res.total,
         totalPages: res.totalPages,
       };

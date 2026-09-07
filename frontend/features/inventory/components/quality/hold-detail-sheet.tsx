@@ -123,7 +123,6 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
               />
               <HoldInfoRow label="Reason" value={hold.reason} />
               {hold.lotId && <HoldInfoRow label="Lot" value={`Lot #${hold.lotId}`} />}
-              {hold.serialId && <HoldInfoRow label="Serial" value={`S/N #${hold.serialId}`} />}
               {hold.locationId && (
                 <HoldInfoRow label="Location" value={`Location #${hold.locationId}`} />
               )}

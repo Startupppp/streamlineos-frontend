@@ -199,15 +199,13 @@ export function useProfitLoss(from: string, to: string) {
   });
 }
 
-type CashFlowSectionKey = "operating" | "investing" | "financing";
-
 interface CashFlowLineItem {
   label: string;
   amount: string;
 }
 
 export interface CashFlowSection {
-  key: CashFlowSectionKey;
+  key: string;
   label: string;
   items: CashFlowLineItem[];
   total: string;

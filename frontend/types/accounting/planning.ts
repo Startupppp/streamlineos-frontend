@@ -10,14 +10,18 @@ export type BudgetDimensionType = "NONE" | "DEPARTMENT" | "PROJECT";
 
 export interface BudgetSummary {
   id: number;
+  orgId: string;
   name: string;
   fiscalYear: string;
   periodType: BudgetPeriodType;
   dimensionType: BudgetDimensionType | null;
   status: BudgetStatus;
   totalAmount: string;
-  createdBy: string;
+  createdByMembershipId: number | null;
+  approvedByMembershipId: number | null;
+  approvedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface BudgetLineRow {
@@ -26,24 +30,11 @@ export interface BudgetLineRow {
   accountName: string;
   periodKey: string;
   amount: string;
-  departmentId: number | null;
+  departmentId: string | null;
   projectId: number | null;
 }
 
-export interface BudgetDetail {
-  id: number;
-  orgId: string;
-  name: string;
-  fiscalYear: string;
-  periodType: string;
-  dimensionType: string | null;
-  status: string;
-  totalAmount: string;
-  createdBy: string;
-  approvedBy: string | null;
-  approvedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+export interface BudgetDetail extends BudgetSummary {
   lines: BudgetLineRow[];
 }
 
@@ -52,7 +43,7 @@ export interface BudgetRevision {
   revisionNumber: number;
   note: string | null;
   createdBy: string;
-  createdAt: Date;
+  createdAt: string;
   lineCount: number;
 }
 
@@ -60,7 +51,7 @@ export interface BudgetLineInput {
   accountId: number;
   periodKey: string;
   amount: number;
-  departmentId?: number;
+  departmentId?: string;
   projectId?: number;
 }
 
@@ -153,11 +144,14 @@ export interface ScenarioAssumptions {
 
 export interface Scenario {
   id: number;
+  orgId: string;
   name: string;
   kind: ScenarioKind;
   isDefault: boolean;
   assumptions: ScenarioAssumptions;
+  createdByMembershipId: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateScenarioInput {

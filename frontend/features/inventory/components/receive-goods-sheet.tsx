@@ -24,7 +24,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useReceiveGoods } from "@/hooks/api/inventory";
 import { WarehouseSelect } from "@/components/inventory/warehouse-select";
 import { LocationSelect } from "@/components/inventory/location-select";
-import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
+import type { ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
+import type { LocalPurchaseOrder } from "@/hooks/api/inventory/purchase-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { TrackingMethod } from "@/types/inventory";
 
@@ -68,7 +69,7 @@ interface DraftLineMeta {
 export interface ReceiveGoodsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  po: PurchaseOrder;
+  po: LocalPurchaseOrder;
 }
 
 interface GrnLineRowProps {

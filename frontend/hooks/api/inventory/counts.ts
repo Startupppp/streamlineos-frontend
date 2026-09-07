@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -23,41 +22,72 @@ const physicalAuditDetailContract = lazyContract(() =>
 
 export interface CycleCountLine {
   id: number;
-  variantId: number;
-  variantSku: string;
-  productName: string;
+  countId: number;
+  productVariantId: number;
   locationId: number | null;
-  locationName: string | null;
-  systemQty: number;
-  countedQty: number | null;
-  variance: number | null;
+  lotId: number | null;
+  serialId: number | null;
+  systemQty: string;
+  countedQty: string | null;
+  variance: string | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string };
+}
+
+export interface PhysicalAuditLine {
+  id: number;
+  auditId: number;
+  productVariantId: number;
+  locationId: number | null;
+  lotId: number | null;
+  serialId: number | null;
+  systemQty: string;
+  countedQty: string | null;
+  variance: string | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string };
 }
 
 interface CycleCount {
   id: number;
+  orgId: string;
   countNumber: string;
-  status: CycleCountStatus;
   warehouseId: number;
-  warehouseName: string;
   locationId: number | null;
-  locationName: string | null;
   categoryId: number | null;
-  categoryName: string | null;
-  lines: CycleCountLine[];
-  createdAt: string;
-  startedAt: string | null;
+  status: string;
+  createdBy: string;
+  createdByMembershipId: number | null;
+  approvedBy: string | null;
+  approvedByMembershipId: number | null;
   postedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  creator?: { id: string; name: string | null };
+  lines?: CycleCountLine[];
 }
 
 export interface CycleCountListItem {
   id: number;
+  orgId: string;
   countNumber: string;
-  status: CycleCountStatus;
-  warehouseName: string;
-  locationName: string | null;
-  categoryName: string | null;
-  lineCount: number;
+  warehouseId: number;
+  locationId: number | null;
+  categoryId: number | null;
+  status: string;
+  createdBy: string;
+  createdByMembershipId: number | null;
+  approvedBy: string | null;
+  approvedByMembershipId: number | null;
+  postedAt: string | null;
+  cancelledAt: string | null;
   createdAt: string;
+  updatedAt: string;
+  creator?: { id: string; name: string | null };
+  lines?: CycleCountLine[];
 }
 
 interface CycleCountListResponse {
@@ -79,23 +109,38 @@ interface UpdateLinesPayload {
 
 interface PhysicalAudit {
   id: number;
+  orgId: string;
   auditNumber: string;
-  status: CycleCountStatus;
   warehouseId: number;
-  warehouseName: string;
-  lines: CycleCountLine[];
-  createdAt: string;
-  startedAt: string | null;
+  status: string;
+  createdBy: string;
+  createdByMembershipId: number | null;
+  approvedBy: string | null;
+  approvedByMembershipId: number | null;
   postedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  creator?: { id: string; name: string | null };
+  lines?: PhysicalAuditLine[];
 }
 
 export interface PhysicalAuditListItem {
   id: number;
+  orgId: string;
   auditNumber: string;
-  status: CycleCountStatus;
-  warehouseName: string;
-  lineCount: number;
+  warehouseId: number;
+  status: string;
+  createdBy: string;
+  createdByMembershipId: number | null;
+  approvedBy: string | null;
+  approvedByMembershipId: number | null;
+  postedAt: string | null;
+  cancelledAt: string | null;
   createdAt: string;
+  updatedAt: string;
+  creator?: { id: string; name: string | null };
+  lines?: PhysicalAuditLine[];
 }
 
 interface PhysicalAuditListResponse {

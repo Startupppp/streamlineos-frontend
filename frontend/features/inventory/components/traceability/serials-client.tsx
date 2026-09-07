@@ -74,8 +74,8 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <TruncatedText text={row.productName} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
+        <TruncatedText text={row.productVariant?.name ?? "—"} className="font-medium text-foreground" />
+        <span className="text-muted-foreground font-mono text-micro">{row.productVariant?.sku ?? "—"}</span>
       </>
     ),
   },
@@ -92,25 +92,11 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     ),
   },
   {
-    key: "locationName",
+    key: "location",
     header: "Location",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-muted-foreground" />,
-  },
-  {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
-  },
-  {
-    key: "lotNumber",
-    header: "Lot #",
-    headerClassName: "hidden lg:table-cell",
-    className: "font-mono text-muted-foreground hidden lg:table-cell",
-    cell: (row) => <>{row.lotNumber ?? "—"}</>,
+    cell: (row) => <TruncatedText text={row.location?.name ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "createdAt",

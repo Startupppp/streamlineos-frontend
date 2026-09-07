@@ -9,7 +9,7 @@ const userRefSchema = z.object({
 const clientAccountRowSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  branchId: z.string().nullable(),
+  branchId: z.number().int().nullable(),
   leadId: z.number().int(),
   salesRepId: z.string(),
   salesRepMembershipId: z.number().int().nullable(),
@@ -71,16 +71,18 @@ export const clientAccountDetailContract = clientAccountRowSchema.extend({
 
 export const clientTimelineContract = z.object({
   events: z.array(z.object({
+    id: z.string(),
     type: z.string(),
     title: z.string(),
     description: z.string(),
     date: z.string(),
+    user: z.string().optional(),
   })),
   total: z.number().int(),
 });
 
 export const simpleClientsListContract = z.array(
-  z.object({ id: z.number().int(), name: z.string().nullable() }),
+  z.object({ id: z.number().int(), name: z.string() }),
 );
 
 const opportunityRowSchema = z.object({

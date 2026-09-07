@@ -6,12 +6,11 @@ import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
-  PurchaseOrder,
   PurchaseOrderSummary,
   PurchaseOrderStatus,
+  PurchaseOrderLine,
   CreatePurchaseOrderInput,
   ReceiveGoodsInput,
-  GoodsReceiptNote,
 } from "@/types/inventory";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -20,6 +19,40 @@ interface PaginatedResponse<T> {
   total: number;
   page: number;
   totalPages: number;
+}
+
+export interface LocalPurchaseOrder {
+  id: number;
+  orgId: string;
+  poNumber: string;
+  vendorId: number;
+  warehouseId: number | null;
+  status: PurchaseOrderStatus;
+  orderDate: string;
+  subtotal: string;
+  taxAmount: string;
+  discount: string;
+  total: string;
+  currency: string;
+  expectedDeliveryDate: string | null;
+  sentAt: string | null;
+  approvedBy: string | null;
+  approvedByMembershipId: number | null;
+  approvedAt: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  vendor?: { id: number; name: string; code: string };
+  warehouse?: { id: number; name: string; code: string };
+  creator?: { id: string; name: string | null };
+  lines: PurchaseOrderLine[];
+}
+
+interface LocalGrn {
+  id: number;
+  grnNumber: string;
 }
 
 type PurchaseOrderFilters = {
@@ -92,9 +125,9 @@ export function useVendorPurchaseOrders(vendorId: number) {
 
 export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
-  return useQuery<PurchaseOrder, Error>({
+  return useQuery<LocalPurchaseOrder, Error>({
     queryKey: queryKeys.inventory.purchaseOrder(poId),
-    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal, getPoContract),
+    queryFn: ({ signal }) => apiClient.get<LocalPurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal, getPoContract),
     staleTime: 2 * 60_000,
     enabled: canView && poId > 0,
   });
@@ -146,10 +179,10 @@ export function useSendPurchaseOrder(poId?: number) {
 
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
+  return useAuthorizedMutation<LocalGrn, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
-      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, undefined, getGrnContract),
+      apiClient.post<LocalGrn>(`/inventory/purchase-orders/${poId}/receive`, data, undefined, getGrnContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });

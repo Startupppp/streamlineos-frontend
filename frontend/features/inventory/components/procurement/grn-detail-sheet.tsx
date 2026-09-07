@@ -60,55 +60,28 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
   {
     key: "quality",
     header: "Quality",
-    cell: (line) => (
-      <>
-        <Badge
-          variant="outline"
-          className={cn(
-            "h-4 text-micro px-1.5 py-0",
-            GRN_QUALITY_BADGE[line.qualityStatus],
-          )}
-        >
-          {GRN_QUALITY_LABEL[line.qualityStatus]}
-        </Badge>
-        {line.rejectionReason && (
-          <TruncatedText text={line.rejectionReason} lines={2} className="text-micro text-muted-foreground mt-0.5" />
-        )}
-      </>
-    ),
-  },
-  {
-    key: "lotSerial",
-    header: "Lot / Serial",
-    className: "font-mono",
     cell: (line) => {
-      if (line.lotNumber) {
-        return (
-          <div>
-            <span className="text-muted-foreground text-micro">LOT:</span>{" "}
-            {line.lotNumber}
-            {line.expiryDate && (
-              <div className="text-micro text-muted-foreground">
-                Exp: {formatDate(line.expiryDate)}
-              </div>
-            )}
-          </div>
-        );
-      }
-      if (line.serialNumbers && line.serialNumbers.length > 0) {
-        return (
-          <div>
-            <span className="text-muted-foreground text-micro">S/N:</span>{" "}
-            {line.serialNumbers.slice(0, 3).join(", ")}
-            {line.serialNumbers.length > 3 && (
-              <span className="text-muted-foreground">
-                {" "}+{line.serialNumbers.length - 3} more
-              </span>
-            )}
-          </div>
-        );
-      }
-      return <span className="text-muted-foreground">—</span>;
+      const quality = (line.status === "ACCEPTED" || line.status === "REJECTED") ? line.status : null;
+      return (
+        <>
+          {quality ? (
+            <Badge
+              variant="outline"
+              className={cn(
+                "h-4 text-micro px-1.5 py-0",
+                GRN_QUALITY_BADGE[quality],
+              )}
+            >
+              {GRN_QUALITY_LABEL[quality]}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground text-micro">{line.status}</span>
+          )}
+          {line.rejectionReason && (
+            <TruncatedText text={line.rejectionReason} lines={2} className="text-micro text-muted-foreground mt-0.5" />
+          )}
+        </>
+      );
     },
   },
 ];

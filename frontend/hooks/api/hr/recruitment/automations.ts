@@ -48,7 +48,7 @@ export interface PipelineAutomation {
   trigger: Trigger;
   action: Action;
   createdAt: string;
-  creator?: { name: string | null };
+  creator?: { name: string | null } | null;
 }
 
 interface CreateAutomationInput {
@@ -68,7 +68,7 @@ export function useRecruitmentAutomations() {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
     queryFn: ({ signal }) =>
-      apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations", undefined, signal),
+      apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations", undefined, signal, automationListContract),
     staleTime: 60_000,
     enabled: can,
   });

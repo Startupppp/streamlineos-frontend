@@ -17,7 +17,7 @@ export const kbCategoryRowContract = z.object({
 
 export const kbCategoryListContract = z.array(kbCategoryRowContract);
 
-export const kbArticleListItemContract = z.object({
+export const kbArticleRowContract = z.object({
   id: z.number(),
   orgId: z.string(),
   categoryId: z.number().nullable(),
@@ -36,7 +36,7 @@ export const kbArticleListItemContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbArticleListContract = z.array(kbArticleListItemContract);
+export const kbArticleListContract = z.array(kbArticleRowContract);
 
 export const kbArticleDetailContract = z.object({
   id: z.number(),

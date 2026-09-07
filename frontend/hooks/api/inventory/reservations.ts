@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockReservation, StockReservationStatus } from "@/types/inventory";
+import type { StockReservationStatus } from "@/types/inventory";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ReservationsFilters {
@@ -17,8 +17,30 @@ interface ReservationsFilters {
   limit?: number;
 }
 
+export interface ReservationApiItem {
+  id: number;
+  orgId: string;
+  sourceType: string;
+  sourceId: string;
+  sourceLineId: string | null;
+  productVariantId: number;
+  warehouseId: number | null;
+  locationId: number | null;
+  lotId: number | null;
+  serialId: number | null;
+  reservedQty: string;
+  status: string;
+  idempotencyKey: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string };
+  warehouse?: { id: number; name: string };
+}
+
 interface ReservationsResult {
-  items: StockReservation[];
+  items: ReservationApiItem[];
   total: number;
   page: number;
   totalPages: number;

@@ -105,12 +105,45 @@ export const scenarioCompareContract = z.object({
   weeks: z.array(compareRowContract),
 });
 
+const plannedSpendItemContract = z.object({
+  label: z.string(),
+  amount: z.number(),
+  startWeek: z.number(),
+  recurringWeekly: z.boolean(),
+});
+
+const scenarioAssumptionsShapeContract = z.object({
+  collectionRatePct: z.number(),
+  payDelayDays: z.number(),
+  revenueGrowthPct: z.number(),
+  plannedSpend: z.array(plannedSpendItemContract),
+});
+
+const DEFAULT_SCENARIO_ASSUMPTIONS = {
+  collectionRatePct: 90,
+  payDelayDays: 0,
+  revenueGrowthPct: 0,
+  plannedSpend: [] as { label: string; amount: number; startWeek: number; recurringWeekly: boolean }[],
+};
+
+/**
+ * The wire type is `unknown | null` (a jsonb column the backend does not
+ * strictly type on the way out); this transform parses it against the same
+ * shape the backend's own create/update schema enforces on the way in, and
+ * falls back to the backend's own defaults rather than surfacing `unknown`
+ * to every consumer that renders a scenario's assumptions.
+ */
+const scenarioAssumptionsContract = z.unknown().nullable().transform((value) => {
+  const parsed = scenarioAssumptionsShapeContract.safeParse(value);
+  return parsed.success ? parsed.data : DEFAULT_SCENARIO_ASSUMPTIONS;
+});
+
 export const scenarioContract = z.object({
   id: z.number(),
   orgId: z.string(),
   name: z.string(),
   kind: z.enum(["CONSERVATIVE", "EXPECTED", "AGGRESSIVE", "CUSTOM"]),
-  assumptions: z.unknown().nullable(),
+  assumptions: scenarioAssumptionsContract,
   isDefault: z.boolean(),
   createdByMembershipId: z.number().nullable(),
   createdAt: z.string(),

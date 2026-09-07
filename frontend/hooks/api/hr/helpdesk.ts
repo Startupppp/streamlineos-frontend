@@ -206,7 +206,7 @@ export function useDeleteHelpdeskRouting() {
   return useAuthorizedMutation("hr:helpdesk:manage", {
     mutationKey: ["hr", "helpdesk", "routing", "delete"],
     mutationFn: (ruleId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.routing() });
     },

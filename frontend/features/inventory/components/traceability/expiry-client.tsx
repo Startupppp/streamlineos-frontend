@@ -46,14 +46,16 @@ const DAY_OPTIONS = [
   { value: "90", label: "90 days" },
 ] as const;
 
-function getExpiryColorClass(daysUntilExpiry: number): string {
+function getExpiryColorClass(daysUntilExpiry: number | null): string {
+  if (daysUntilExpiry === null) return "text-muted-foreground";
   if (daysUntilExpiry < 0) return "text-status-danger-ink font-semibold";
   if (daysUntilExpiry <= 30) return "text-status-warning-ink font-semibold";
   if (daysUntilExpiry <= 60) return "text-status-warning-ink font-medium";
   return "text-muted-foreground";
 }
 
-function formatDaysLabel(days: number): string {
+function formatDaysLabel(days: number | null): string {
+  if (days === null) return "—";
   if (days < 0) return `${Math.abs(days)}d expired`;
   if (days === 0) return "Today";
   return `${days}d`;
@@ -62,8 +64,10 @@ function formatDaysLabel(days: number): string {
 type ExpiryItem = NonNullable<ReturnType<typeof useExpiryItems>["data"]>[number];
 
 function getExpiryRowClassName(row: ExpiryItem): string {
-  if (row.daysUntilExpiry < 0) return "bg-status-danger-surface hover:bg-status-danger-surface";
-  if (row.daysUntilExpiry <= 30) return "bg-status-warning-surface hover:bg-status-warning-surface";
+  const days = row.daysUntilExpiry;
+  if (days === null) return "";
+  if (days < 0) return "bg-status-danger-surface hover:bg-status-danger-surface";
+  if (days <= 30) return "bg-status-warning-surface hover:bg-status-warning-surface";
   return "";
 }
 
@@ -93,7 +97,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     className: "tabular-nums",
     cell: (row) => (
       <span className={getExpiryColorClass(row.daysUntilExpiry)}>
-        {new Date(row.expiryDate).toLocaleDateString()}
+        {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
       </span>
     ),
   },
@@ -109,18 +113,11 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     ),
   },
   {
-    key: "currentStock",
+    key: "onHand",
     header: "Stock Qty",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
-    cell: (row) => <>{row.currentStock.toLocaleString()}</>,
-  },
-  {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
+    cell: (row) => <>{row.onHand}</>,
   },
   {
     key: "actions",

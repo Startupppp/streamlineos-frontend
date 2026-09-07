@@ -111,7 +111,7 @@ export function useDeleteHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/webhooks/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/webhooks/${id}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrWebhookKeys.all }),
   });
 }
@@ -136,6 +136,8 @@ export function useRedeliverHrWebhook() {
       apiClient.post<{ success: boolean }>(
         `/hr/webhooks/${subscriptionId}/deliveries/${deliveryId}/redeliver`,
         {},
+        undefined,
+        lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.successResponseContract)),
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.deliveries(vars.subscriptionId) });

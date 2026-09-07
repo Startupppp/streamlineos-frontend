@@ -37,7 +37,7 @@ export function useUpdateAsset() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
@@ -47,7 +47,7 @@ export function useAssignAsset() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
-      apiClient.patch<{ success: boolean }>("/hr/assets", data),
+      apiClient.patch<{ success: boolean }>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
@@ -85,7 +85,7 @@ export function useDeleteDocument() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "delete"],
     mutationFn: (documentId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
@@ -162,7 +162,7 @@ export function useCreateWfhRequest() {
   return useAuthorizedMutation("self:attendance", {
     mutationKey: ["hr", "wfh", "create"],
     mutationFn: (data: CreateWfhRequestInput) =>
-      apiClient.post<{ success: boolean }>("/me/time-off/wfh", data),
+      apiClient.post<{ success: boolean }>("/me/time-off/wfh", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
@@ -175,7 +175,7 @@ export function useProcessWfhRequest() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "wfh", "process"],
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });

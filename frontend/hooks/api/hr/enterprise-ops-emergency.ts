@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -49,10 +50,32 @@ const emergencyKeys = {
   status: (id: string) => [...queryKeyBase, "hr-emergency", "status", id] as const,
 };
 
+const _listEmergencyEventsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listEmergencyEventsContract),
+);
+const _getEmergencyEventContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getEmergencyEventContract),
+);
+const _getEventStatusContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getEventStatusContract),
+);
+const _createEmergencyEventContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createEmergencyEventContract),
+);
+const _updateEmergencyEventContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.updateEmergencyEventContract),
+);
+const _broadcastResponseContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.broadcastResponseContract),
+);
+const _respondToEventContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.respondToEventContract),
+);
+
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.list(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params as Record<string, unknown>, signal, _listEmergencyEventsContract),
     staleTime: 30_000,
   });
 }
@@ -60,7 +83,7 @@ export function useEmergencyEvents(params: { cursor?: string; status?: Emergency
 export function useEmergencyEvent(eventId: string) {
   return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.detail(eventId),
-    queryFn: ({ signal }) => apiClient.get<EmergencyEvent>(`${BASE}/events/${eventId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events/${eventId}`, undefined, signal, _getEmergencyEventContract),
     enabled: !!eventId,
     staleTime: 15_000,
   });
@@ -69,7 +92,7 @@ export function useEmergencyEvent(eventId: string) {
 export function useEmergencyEventStatus(eventId: string) {
   return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.status(eventId),
-    queryFn: ({ signal }) => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events/${eventId}/status`, undefined, signal, _getEventStatusContract),
     enabled: !!eventId,
     staleTime: 35_000,
     refetchInterval: 30_000,
@@ -85,7 +108,7 @@ export function useCreateEmergencyEvent() {
       type: EmergencyEventType;
       locationId?: string;
       message: string;
-    }) => apiClient.post<EmergencyEvent>(`${BASE}/events`, body),
+    }) => apiClient.post(`${BASE}/events`, body, undefined, _createEmergencyEventContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: emergencyKeys.all });
       toast.success("Emergency event created");
@@ -99,7 +122,7 @@ export function useUpdateEmergencyEvent(eventId: string) {
   return useAuthorizedMutation("hr:emergency:manage", {
     mutationKey: ["hr-emergency", "update", eventId],
     mutationFn: (body: Partial<{ name: string; message: string; status: EmergencyEventStatus }>) =>
-      apiClient.patch<EmergencyEvent>(`${BASE}/events/${eventId}`, body),
+      apiClient.patch(`${BASE}/events/${eventId}`, body, undefined, _updateEmergencyEventContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: emergencyKeys.detail(eventId) });
       void qc.invalidateQueries({ queryKey: emergencyKeys.all });
@@ -114,7 +137,7 @@ export function useBroadcastEmergency(eventId: string) {
   return useAuthorizedMutation("hr:emergency:manage", {
     mutationKey: ["hr-emergency", "broadcast", eventId],
     mutationFn: (body: { message?: string }) =>
-      apiClient.post<{ broadcasted: number; eventId: string }>(`${BASE}/events/${eventId}/broadcast`, body),
+      apiClient.post(`${BASE}/events/${eventId}/broadcast`, body, undefined, _broadcastResponseContract),
     onSuccess: (data) => {
       void qc.invalidateQueries({ queryKey: emergencyKeys.status(eventId) });
       toast.success(`Broadcast sent to ${data.broadcasted} employees`);
@@ -128,7 +151,7 @@ export function useRespondToEmergency(eventId: string) {
   return useMutation({
     mutationKey: ["hr-emergency", "respond", eventId],
     mutationFn: (body: { status: "safe" | "need_help"; note?: string }) =>
-      apiClient.post<EmergencyResponse>(`${BASE}/events/${eventId}/respond`, body),
+      apiClient.post(`${BASE}/events/${eventId}/respond`, body, undefined, _respondToEventContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: emergencyKeys.status(eventId) });
       toast.success("Response recorded");

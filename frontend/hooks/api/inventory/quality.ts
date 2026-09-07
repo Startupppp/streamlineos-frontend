@@ -38,32 +38,36 @@ interface InspectionFilters {
 
 interface InspectionLine {
   id: number;
-  variantId: number;
-  variantName: string;
-  lotId?: number | null;
-  serialId?: number | null;
-  qty: number;
-  disposition?: string | null;
-}
-
-interface TimelineEntry {
-  status: InspectionStatus;
-  at: string;
+  inspectionId: number;
+  productVariantId: number;
+  lotId: number | null;
+  serialId: number | null;
+  quantityInspected: string;
+  quantityPassed: string | null;
+  quantityFailed: string | null;
+  disposition: string | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 interface Inspection {
   id: number;
   orgId: string;
+  referenceNumber: string;
+  sourceType: string | null;
+  sourceId: number | null;
   status: InspectionStatus;
-  source: string | null;
-  lines: InspectionLine[];
-  statusTimeline?: TimelineEntry[];
+  inspectedBy: string | null;
+  inspectedByMembershipId: number | null;
+  inspectedAt: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
-}
-
-interface InspectionDetail extends Inspection {
-  statusTimeline: TimelineEntry[];
+  inspector?: { id: string; name: string | null } | null;
+  creator?: { id: string; name: string | null };
+  lines?: InspectionLine[];
 }
 
 type InspectionListResponse = {
@@ -76,21 +80,22 @@ type InspectionListResponse = {
 interface QualityHold {
   id: number;
   orgId: string;
-  status: QualityHoldStatus;
   productVariantId: number;
-  locationId?: number | null;
-  lotId?: number | null;
-  serialId?: number | null;
+  locationId: number | null;
+  lotId: number | null;
   quantity: string;
   reason: string;
-  releasedBy?: string | null;
-  releasedAt?: string | null;
-  createdBy?: string | null;
+  notes: string | null;
+  status: QualityHoldStatus;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
-  variantName?: string;
-  variantSku?: string;
-  productName?: string;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string } | null;
+  creator?: { id: string; name: string | null };
 }
 
 type HoldListResponse = {
@@ -102,31 +107,32 @@ type HoldListResponse = {
 
 interface RecallLine {
   id: number;
-  lotId?: number | null;
-  serialId?: number | null;
-  lotNumber?: string | null;
-  serialNumber?: string | null;
-}
-
-interface AffectedCustomer {
-  shipmentId: number;
-  salesOrderId?: number | null;
-  clientName?: string | null;
-  shippedAt?: string | null;
+  recallId: number;
+  productVariantId: number;
+  lotId: number | null;
+  estimatedQty: string | null;
+  confirmedQty: string | null;
+  status: string;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 interface Recall {
   id: number;
   orgId: string;
+  referenceNumber: string;
   title: string;
-  reason: string;
-  severity?: string | null;
+  description: string | null;
+  severity: string;
   status: RecallStatus;
-  notes?: string | null;
-  lines: RecallLine[];
-  affectedCustomers?: AffectedCustomer[];
+  initiatedAt: string | null;
+  resolvedAt: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
+  creator?: { id: string; name: string | null };
+  lines?: RecallLine[];
 }
 
 type RecallListResponse = {
@@ -136,7 +142,7 @@ type RecallListResponse = {
   totalPages: number;
 };
 
-export type { Inspection, InspectionLine, QualityHold, Recall };
+export type { Inspection, InspectionLine, QualityHold, Recall, RecallLine };
 
 export function useQualityInspections(filters?: InspectionFilters) {
   const canView = useCan("inventory:quality:read");
@@ -157,10 +163,10 @@ export function useQualityInspections(filters?: InspectionFilters) {
 
 export function useQualityInspection(inspectionId: number) {
   const canView = useCan("inventory:quality:read");
-  return useQuery<InspectionDetail, Error>({
+  return useQuery<Inspection, Error>({
     queryKey: queryKeys.inventory.qualityInspection(inspectionId),
     queryFn: ({ signal }) =>
-      apiClient.get<InspectionDetail>(`/inventory/quality/inspections/${inspectionId}`, undefined, signal, inspectionContract),
+      apiClient.get<Inspection>(`/inventory/quality/inspections/${inspectionId}`, undefined, signal, inspectionContract),
     staleTime: 60_000,
     enabled: canView && inspectionId > 0,
   });

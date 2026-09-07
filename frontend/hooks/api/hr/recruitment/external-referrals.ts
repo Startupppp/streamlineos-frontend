@@ -12,9 +12,9 @@ const externalReferralListContract = lazyContract(() =>
     (m) => m.externalReferralListSchema,
   ),
 );
-const externalReferralRawContract = lazyContract(() =>
+const externalReferralRowContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
-    (m) => m.externalReferralRawSchema,
+    (m) => m.externalReferralWithRelationsSchema,
   ),
 );
 const externalReferrerListContract = lazyContract(() =>
@@ -78,7 +78,7 @@ export function useUpdateExternalReferral() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrals", "update"],
     mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
-      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data),
+      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data, undefined, externalReferralRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },

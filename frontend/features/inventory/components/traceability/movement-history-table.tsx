@@ -1,6 +1,5 @@
 "use client";
 
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import type { LotMovement } from "@/hooks/api/inventory/traceability";
@@ -9,8 +8,9 @@ interface MovementHistoryTableProps {
   movements: LotMovement[];
 }
 
-function formatQty(qty: number): string {
-  return `${qty >= 0 ? "+" : ""}${qty}`;
+function formatQty(quantityChange: string): string {
+  const n = parseFloat(quantityChange);
+  return `${n >= 0 ? "+" : ""}${quantityChange}`;
 }
 
 const columns: DataTableColumn<LotMovement>[] = [
@@ -21,45 +21,21 @@ const columns: DataTableColumn<LotMovement>[] = [
     cell: (row) => new Date(row.createdAt).toLocaleString(),
   },
   {
-    key: "type",
+    key: "transactionType",
     header: "Type",
     className: "font-medium text-foreground",
-    cell: (row) => row.type,
+    cell: (row) => row.transactionType,
   },
   {
-    key: "qty",
+    key: "quantityChange",
     header: "Qty",
     className: "text-right font-mono tabular-nums font-semibold",
     headerClassName: "text-right",
     cell: (row) => (
-      <span className={row.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}>
-        {formatQty(row.qty)}
+      <span className={parseFloat(row.quantityChange) >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}>
+        {formatQty(row.quantityChange)}
       </span>
     ),
-  },
-  {
-    key: "reference",
-    header: "Reference",
-    className: "hidden md:table-cell text-muted-foreground",
-    headerClassName: "hidden md:table-cell",
-    cell: (row) =>
-      row.referenceType && row.referenceId
-        ? `${row.referenceType} #${row.referenceId}`
-        : "—",
-  },
-  {
-    key: "notes",
-    header: "Notes",
-    className: "hidden lg:table-cell text-muted-foreground",
-    headerClassName: "hidden lg:table-cell",
-    cell: (row) => <TruncatedText text={row.notes ?? "—"} className="max-w-[200px]" />,
-  },
-  {
-    key: "by",
-    header: "By",
-    className: "hidden md:table-cell text-muted-foreground",
-    headerClassName: "hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.performedBy ?? "—"} className="text-muted-foreground" />,
   },
 ];
 

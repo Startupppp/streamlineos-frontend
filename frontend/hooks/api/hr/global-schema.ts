@@ -121,3 +121,7 @@ export const internshipCertificateContract = z.object({
   html: z.string(),
   templateId: z.number().int().nullable(),
 });
+
+export const successContract = z.object({ success: z.boolean() });
+export const voidContract = z.undefined();
+export const markEventDoneContract = z.object({ success: z.boolean() });

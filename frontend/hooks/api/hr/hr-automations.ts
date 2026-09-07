@@ -136,7 +136,7 @@ export function useDeleteHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/automations/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/automations/${id}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.successResponseContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrAutomationKeys.all }),
   });
 }

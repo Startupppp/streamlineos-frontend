@@ -227,3 +227,32 @@ export const compareSimulationContract = z.object({
   resolvedOldPolicy: z.record(z.string(), z.unknown()).nullable(),
   resolvedNewPolicy: z.record(z.string(), z.unknown()).nullable(),
 });
+
+export const voidContract = z.undefined();
+
+export const hrMetricDefinitionsContract = z.object({
+  metrics: z.array(z.object({
+    name: z.string(),
+    description: z.string(),
+    aggregation: z.string(),
+  })),
+});
+
+export const hrEventsExportContract = z.object({
+  exportedAt: z.string(),
+  data: z.array(z.object({
+    id: z.string(),
+    orgId: z.string(),
+    source: z.string(),
+    eventType: z.string(),
+    payload: z.record(z.string(), z.unknown()),
+    occurredAt: z.string(),
+    correlationId: z.string().nullable(),
+    createdAt: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});

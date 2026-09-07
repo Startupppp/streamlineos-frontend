@@ -16,16 +16,11 @@ const columns: DataTableColumn<LotStockByLocation>[] = [
     cell: (row) => <TruncatedText text={row.locationName} className="font-medium text-foreground" />,
   },
   {
-    key: "warehouse",
-    header: "Warehouse",
-    cell: (row) => <TruncatedText text={row.warehouseName} className="text-muted-foreground" />,
-  },
-  {
-    key: "qty",
+    key: "onHand",
     header: "Qty",
     className: "text-right font-mono tabular-nums font-semibold text-foreground",
     headerClassName: "text-right",
-    cell: (row) => row.qty.toLocaleString(),
+    cell: (row) => Number(row.onHand).toLocaleString(),
   },
 ];
 

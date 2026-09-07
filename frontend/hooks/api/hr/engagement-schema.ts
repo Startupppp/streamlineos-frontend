@@ -152,3 +152,7 @@ const campaignContract = z.object({
 export const listCampaignsContract = z.array(campaignContract);
 export const createCampaignContract = campaignContract;
 export const updateCampaignContract = campaignContract;
+
+export const successContract = z.object({ success: z.boolean() });
+export const voteIdContract = z.object({ id: z.number().int() });
+export const deleteCampaignContract = z.object({ success: z.boolean() });

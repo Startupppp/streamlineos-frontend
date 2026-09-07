@@ -31,6 +31,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
 const leadListLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadListContract));
+const leadPartyLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadPartyContract));
 const leadDetailLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadDetailContract));
 const leadBoardLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadBoardContract));
 const leadStatsLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadStatsContract));
@@ -42,7 +43,9 @@ const leadsBulkUpdateLazy = lazyContract(() => import("@/hooks/api/leads-schema"
 const leadsBulkDeleteLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsBulkDeleteContract));
 const leadsDistributeLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsDistributeContract));
 const leadScoreExplanationLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadScoreExplanationContract));
-const leadsDuplicateLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsDuplicateGroupsContract));
+const leadsCheckDuplicatesLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsCheckDuplicatesContract));
+const leadsSalesLeaderboardLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsSalesLeaderboardContract));
+const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsSalesTeamCapacityContract));
 
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {

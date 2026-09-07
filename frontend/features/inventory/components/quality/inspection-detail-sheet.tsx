@@ -68,8 +68,8 @@ const LineDispositionRow = memo(function LineDispositionRow({
 
   return (
     <div className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
-      <TruncatedText text={line.variantName} className="flex-1 text-xs" />
-      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">{line.qty}</span>
+      <TruncatedText text={line.productVariant?.name ?? "—"} className="flex-1 text-xs" />
+      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">{line.quantityInspected}</span>
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="Choose..." />
@@ -88,17 +88,17 @@ const LineDispositionRow = memo(function LineDispositionRow({
 
 const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
   {
-    key: "variantName",
+    key: "productVariant",
     header: "Variant",
     className: "text-xs",
-    cell: (line) => <TruncatedText text={line.variantName} className="max-w-[160px]" />,
+    cell: (line) => <TruncatedText text={line.productVariant?.name ?? "—"} className="max-w-[160px]" />,
   },
   {
-    key: "qty",
+    key: "quantityInspected",
     header: "Qty",
     className: "text-right tabular-nums text-xs",
     headerClassName: "text-right",
-    cell: (line) => line.qty,
+    cell: (line) => line.quantityInspected,
   },
   {
     key: "disposition",
@@ -147,9 +147,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
   function handleShowFail(): void {
     setShowFailForm(true);
     const initial: Record<number, string> = {};
-    for (const line of inspection?.lines ?? []) {
-      initial[line.id] = "QUARANTINE";
-    }
+    for (const line of inspection?.lines ?? []) initial[line.id] = "QUARANTINE";
     setFailDispositions(initial);
   }
 
@@ -159,7 +157,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
 
   function handleSubmitFail(): void {
     if (!inspectionId || !inspection) return;
-    const lines = inspection.lines.map((l) => ({
+    const lines = (inspection.lines ?? []).map((l) => ({
       lineId: l.id,
       disposition: (failDispositions[l.id] ?? "QUARANTINE") as Disposition,
     }));
@@ -285,8 +283,8 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
             >
               {INSPECTION_STATUS_LABEL[inspection.status]}
             </Badge>
-            {inspection.source && (
-              <span className="text-xs text-muted-foreground">Source: {inspection.source}</span>
+            {inspection.sourceType && (
+              <span className="text-xs text-muted-foreground">Source: {inspection.sourceType}</span>
             )}
             <span className="text-xs text-muted-foreground">
               {format(new Date(inspection.createdAt), "dd MMM yyyy")}
@@ -296,7 +294,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
           {showFailForm ? (
             <div className="space-y-2">
               <p className="text-xs font-medium text-foreground">Set disposition per line:</p>
-              {inspection.lines.map((line) => (
+              {(inspection.lines ?? []).map((line) => (
                 <LineDispositionRow
                   key={line.id}
                   line={line}
@@ -306,35 +304,14 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
               ))}
             </div>
           ) : (
-            <>
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-foreground">Lines</p>
-                <DataTable
-                  data={inspection.lines}
-                  columns={INSPECTION_LINE_COLUMNS}
-                  getRowKey={(line) => line.id}
-                />
-              </div>
-
-              {inspection.statusTimeline && inspection.statusTimeline.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-foreground">Timeline</p>
-                  <div className="space-y-1">
-                    {inspection.statusTimeline.map((entry, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs">
-                        <Badge
-                          variant="outline"
-                          className={cn("h-4 text-micro px-1.5 py-0 border shrink-0", INSPECTION_STATUS_BADGE[entry.status])}
-                        >
-                          {INSPECTION_STATUS_LABEL[entry.status]}
-                        </Badge>
-                        <span className="text-muted-foreground">{format(new Date(entry.at), "dd MMM yyyy HH:mm")}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Lines</p>
+              <DataTable
+                data={inspection.lines ?? []}
+                columns={INSPECTION_LINE_COLUMNS}
+                getRowKey={(line) => line.id}
+              />
+            </div>
           )}
         </div>
       )}

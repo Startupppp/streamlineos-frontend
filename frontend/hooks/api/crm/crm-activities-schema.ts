@@ -5,10 +5,10 @@ const taskRowSchema = z.object({
   orgId: z.string(),
   title: z.string(),
   notes: z.string().nullable(),
-  entityType: z.string().nullable(),
+  entityType: z.enum(["LEAD", "DEAL", "CONTACT"]).nullable(),
   entityId: z.number().int().nullable(),
-  type: z.string(),
-  status: z.string(),
+  type: z.enum(["CALL", "EMAIL", "MEETING", "CUSTOM"]),
+  status: z.enum(["pending", "completed", "cancelled"]),
   snoozedUntil: z.string().nullable(),
   assigneeId: z.string().nullable(),
   assigneeMembershipId: z.number().int().nullable(),
@@ -22,15 +22,15 @@ const taskRowSchema = z.object({
   parentTaskId: z.number().int().nullable(),
   isTemplate: z.boolean(),
   templateName: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 export const tasksListContract = z.object({
   tasks: z.array(taskRowSchema),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
-  total: z.number().int().optional(),
+  total: z.number().int(),
+  page: z.number().int(),
+  limit: z.number().int(),
 });
 
 export const taskRowContract = taskRowSchema;

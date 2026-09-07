@@ -1,12 +1,11 @@
 "use client";
 
 import { memo, type ReactNode } from "react";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   TraceabilityResult,
-  TraceabilityEvent,
-  LotStockByLocation,
+  TraceabilityNode,
+  TraceabilityEdge,
 } from "@/hooks/api/inventory/traceability";
 
 interface TraceabilityTimelineProps {
@@ -37,52 +36,61 @@ function TimelineSection({ dotClass, label, children }: TimelineSectionProps) {
   );
 }
 
-const EventRow = memo(function EventRow({
-  event,
-}: {
-  event: TraceabilityEvent;
-}) {
+const NodeRow = memo(function NodeRow({ node }: { node: TraceabilityNode }) {
   return (
     <div className="flex items-start justify-between gap-2 text-dense py-0.5">
       <div className="min-w-0 flex-1">
-        <span className="font-medium text-foreground">{event.eventType}</span>
-        {event.referenceType && event.referenceId && (
-          <span className="text-muted-foreground ml-1.5">
-            {event.referenceType} #{event.referenceId}
-          </span>
-        )}
-        {event.notes && (
-          <TruncatedText text={event.notes} className="text-muted-foreground mt-0.5" />
-        )}
-      </div>
-      <div className="text-right shrink-0 text-muted-foreground tabular-nums">
-        <p>{new Date(event.date).toLocaleDateString()}</p>
-        <p
-          className={`font-semibold ${event.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}`}
-        >
-          {event.qty >= 0 ? "+" : ""}
-          {event.qty}
-        </p>
-      </div>
-    </div>
-  );
-});
-
-const StockRow = memo(function StockRow({ loc }: { loc: LotStockByLocation }) {
-  return (
-    <div className="flex items-center justify-between text-dense py-0.5">
-      <div>
-        <span className="font-medium text-foreground">{loc.locationName}</span>
-        <span className="text-muted-foreground ml-1.5">
-          {loc.warehouseName}
+        <span className="font-medium text-foreground">{node.label}</span>
+        <span className="text-muted-foreground ml-1.5 font-mono text-[10px]">
+          {node.id}
         </span>
       </div>
-      <span className="font-mono tabular-nums font-semibold text-foreground">
-        {loc.qty.toLocaleString()}
+      <span className="text-muted-foreground text-[10px] uppercase tracking-wider shrink-0">
+        {node.type}
       </span>
     </div>
   );
 });
+
+const EdgeRow = memo(function EdgeRow({ edge }: { edge: TraceabilityEdge }) {
+  return (
+    <div className="flex items-center gap-2 text-dense py-0.5 text-muted-foreground">
+      <span className="font-mono text-[10px] shrink-0 truncate max-w-[6rem]">
+        {edge.fromId}
+      </span>
+      <span className="text-[10px]">→</span>
+      <span className="font-mono text-[10px] shrink-0 truncate max-w-[6rem]">
+        {edge.toId}
+      </span>
+      <span className="ml-auto text-[10px] uppercase tracking-wider shrink-0">
+        {edge.relationship}
+      </span>
+    </div>
+  );
+});
+
+function groupNodesByType(nodes: TraceabilityNode[]): Map<string, TraceabilityNode[]> {
+  const map = new Map<string, TraceabilityNode[]>();
+  for (const node of nodes) {
+    const group = map.get(node.type) ?? [];
+    group.push(node);
+    map.set(node.type, group);
+  }
+  return map;
+}
+
+const NODE_TYPE_DOT: Record<string, string> = {
+  LOT: "bg-primary",
+  SERIAL: "bg-primary",
+  RECEIPT: "bg-status-success-fill",
+  SHIPMENT: "bg-status-warning-fill",
+  RETURN: "bg-status-warning-fill",
+  ADJUSTMENT: "bg-muted-foreground/40",
+};
+
+function getDotClass(type: string): string {
+  return NODE_TYPE_DOT[type] ?? "bg-primary/60";
+}
 
 export function TraceabilityTimeline({
   result,
@@ -104,7 +112,7 @@ export function TraceabilityTimeline({
     );
   }
 
-  if (!result) {
+  if (!result || result.nodes.length === 0) {
     return (
       <p className="text-xs text-muted-foreground">
         No traceability data available.
@@ -112,78 +120,27 @@ export function TraceabilityTimeline({
     );
   }
 
+  const grouped = groupNodesByType(result.nodes);
+
   return (
     <div className="space-y-0 pl-1">
-      <TimelineSection dotClass="bg-primary" label="Origin">
-        {result.origin ? (
-          <div className="text-dense">
-            <span className="font-medium text-foreground">
-              {result.origin.vendorName ?? "Unknown vendor"}
-            </span>
-            {result.origin.receiptDate && (
-              <span className="text-muted-foreground ml-1.5">
-                {new Date(result.origin.receiptDate).toLocaleDateString()}
-              </span>
-            )}
-            {result.origin.receiptId && (
-              <span className="text-muted-foreground ml-1.5">
-                Receipt #{result.origin.receiptId}
-              </span>
-            )}
-          </div>
-        ) : (
-          <p className="text-dense text-muted-foreground">No origin data</p>
-        )}
-      </TimelineSection>
-
-      {result.receipts.length > 0 && (
-        <TimelineSection dotClass="bg-status-success-fill" label="Receipts">
+      {Array.from(grouped.entries()).map(([type, nodes]) => (
+        <TimelineSection key={type} dotClass={getDotClass(type)} label={type}>
           <div className="space-y-0.5">
-            {result.receipts.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {nodes.map((node) => (
+              <NodeRow key={node.id} node={node} />
             ))}
           </div>
         </TimelineSection>
-      )}
-
-      <TimelineSection dotClass="bg-muted-foreground/40" label="Current Stock">
-        {result.currentStock.length > 0 ? (
+      ))}
+      {result.edges.length > 0 && (
+        <TimelineSection dotClass="bg-muted-foreground/40" label="Relationships">
           <div className="space-y-0.5">
-            {result.currentStock.map((loc) => (
-              <StockRow key={loc.locationId} loc={loc} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-dense text-muted-foreground">No stock on hand</p>
-        )}
-      </TimelineSection>
-
-      {result.shipments.length > 0 && (
-        <TimelineSection dotClass="bg-status-warning-fill" label="Shipments">
-          <div className="space-y-0.5">
-            {result.shipments.map((e) => (
-              <EventRow key={e.id} event={e} />
-            ))}
-          </div>
-        </TimelineSection>
-      )}
-
-      {(result.vendorReturns.length > 0 ||
-        result.customerReturns.length > 0) && (
-        <TimelineSection dotClass="bg-status-warning-fill" label="Returns">
-          <div className="space-y-0.5">
-            {[...result.vendorReturns, ...result.customerReturns].map((e) => (
-              <EventRow key={e.id} event={e} />
-            ))}
-          </div>
-        </TimelineSection>
-      )}
-
-      {result.events.length > 0 && (
-        <TimelineSection dotClass="bg-primary/60" label="Other Events">
-          <div className="space-y-0.5">
-            {result.events.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {result.edges.map((edge) => (
+              <EdgeRow
+                key={`${edge.fromId}__${edge.toId}__${edge.relationship}`}
+                edge={edge}
+              />
             ))}
           </div>
         </TimelineSection>

@@ -20,19 +20,21 @@ const cycleCountLineContract = z.object({
 export const cycleCountContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  referenceNumber: z.string(),
-  warehouseId: z.number().int().nullable(),
+  countNumber: z.string(),
+  warehouseId: z.number().int(),
+  locationId: z.number().int().nullable(),
+  categoryId: z.number().int().nullable(),
   status: z.string(),
-  notes: z.string().nullable(),
-  completedAt: z.string().nullable(),
-  postedAt: z.string().nullable(),
   createdBy: z.string(),
   createdByMembershipId: z.number().int().nullable(),
+  approvedBy: z.string().nullable(),
+  approvedByMembershipId: z.number().int().nullable(),
+  postedAt: z.string().nullable(),
+  cancelledAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   creator: userRefContract.optional(),
   lines: z.array(cycleCountLineContract).optional(),
-  warehouse: z.object({ id: z.number().int(), name: z.string() }).nullable().optional(),
 });
 
 export const listCycleCountsContract = z.object({
@@ -41,7 +43,6 @@ export const listCycleCountsContract = z.object({
   page: z.number().int(),
   totalPages: z.number().int(),
 });
-
 
 const auditLineContract = z.object({
   id: z.number().int(),
@@ -61,21 +62,19 @@ const auditLineContract = z.object({
 const physicalAuditContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  referenceNumber: z.string(),
-  warehouseId: z.number().int().nullable(),
+  auditNumber: z.string(),
+  warehouseId: z.number().int(),
   status: z.string(),
-  notes: z.string().nullable(),
-  scheduledAt: z.string().nullable(),
-  startedAt: z.string().nullable(),
-  completedAt: z.string().nullable(),
-  postedAt: z.string().nullable(),
   createdBy: z.string(),
   createdByMembershipId: z.number().int().nullable(),
+  approvedBy: z.string().nullable(),
+  approvedByMembershipId: z.number().int().nullable(),
+  postedAt: z.string().nullable(),
+  cancelledAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   creator: userRefContract.optional(),
   lines: z.array(auditLineContract).optional(),
-  warehouse: z.object({ id: z.number().int(), name: z.string() }).nullable().optional(),
 });
 
 export const listAuditsContract = z.object({

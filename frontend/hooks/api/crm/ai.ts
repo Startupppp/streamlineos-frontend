@@ -10,6 +10,13 @@ const dealSummaryLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").t
 const nextBestActionsLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.nextBestActionsContract));
 const emailDraftLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.emailDraftContract));
 const leadEnrichmentLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.leadEnrichmentContract));
+const summarizeNotesLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.summarizeNotesContract));
+const objectionHelpLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.objectionHelpContract));
+const duplicateSuggestionsLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.duplicateSuggestionsContract));
+const leadSummaryWithCitationsLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.leadSummaryWithCitationsContract));
+const dealSummaryWithCitationsLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.dealSummaryWithCitationsContract));
+const accountSummaryWithCitationsLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.accountSummaryWithCitationsContract));
+const meetingFollowUpLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.meetingFollowUpContract));
 
 
 interface LeadSummaryResult {
@@ -181,7 +188,7 @@ export function useSummarizeNotes() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-summarize-notes"],
     mutationFn: (text: string) =>
-      apiClient.post<SummarizeNotesResult>("/ai/crm/summarize-notes", { text }, undefined, leadSummaryLazy),
+      apiClient.post<SummarizeNotesResult>("/ai/crm/summarize-notes", { text }, undefined, summarizeNotesLazy),
   });
 }
 
@@ -192,7 +199,7 @@ export function useCrmObjectionHelp() {
       signal,
       ...input
     }: { objection: string; context?: string } & AiAbortInput) =>
-      apiClient.post<ObjectionHelpResult>("/ai/crm/objection-help", input, { signal }, leadEnrichmentLazy),
+      apiClient.post<ObjectionHelpResult>("/ai/crm/objection-help", input, { signal }, objectionHelpLazy),
   });
 }
 
@@ -204,7 +211,7 @@ export function useDuplicateSuggestions() {
         `/ai/crm/duplicate-suggestions/${leadId}`,
         {},
         { signal },
-        leadSummaryLazy,
+        duplicateSuggestionsLazy,
       ),
   });
 }
@@ -217,7 +224,7 @@ export function useLeadSummaryWithCitations() {
         `/ai/crm/leads/${leadId}/summary-with-citations`,
         {},
         { signal },
-        leadSummaryLazy,
+        leadSummaryWithCitationsLazy,
       ),
   });
 }
@@ -230,7 +237,7 @@ export function useDealSummaryWithCitations() {
         `/ai/crm/deals/${dealId}/summary-with-citations`,
         {},
         { signal },
-        dealSummaryLazy,
+        dealSummaryWithCitationsLazy,
       ),
   });
 }
@@ -243,7 +250,7 @@ export function useAccountSummaryWithCitations() {
         "/ai/crm/account-summary-with-citations",
         { clientId },
         { signal },
-        leadSummaryLazy,
+        accountSummaryWithCitationsLazy,
       ),
   });
 }
@@ -252,6 +259,6 @@ export function useMeetingFollowUpDraft() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-meeting-follow-up"],
     mutationFn: ({ signal, ...input }: MeetingFollowUpInput & AiAbortInput) =>
-      apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input, { signal }, emailDraftLazy),
+      apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input, { signal }, meetingFollowUpLazy),
   });
 }

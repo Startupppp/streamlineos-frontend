@@ -27,8 +27,6 @@ import {
 import {
   SHIPMENT_STATUS_BADGE,
   SHIPMENT_STATUS_LABEL,
-  PACKAGE_STATUS_BADGE,
-  PACKAGE_STATUS_LABEL,
 } from "@/features/inventory/lib";
 import {
   useShipment,
@@ -250,30 +248,8 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                 <div className="divide-y divide-border rounded-lg border">
                   {shipment.lines.map((line) => (
                     <div key={line.id} className="flex items-center justify-between px-3 py-2">
-                      <span className="text-sm">{line.variantName}</span>
-                      <span className="text-sm tabular-nums">{line.qty}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {shipment.packages && shipment.packages.length > 0 && (
-              <div>
-                <p className="text-xs font-medium mb-2">Packages ({shipment.packages.length})</p>
-                <div className="divide-y divide-border rounded-lg border">
-                  {shipment.packages.map((pkg) => (
-                    <div key={pkg.id} className="flex items-center justify-between px-3 py-2">
-                      <span className="text-sm font-mono">#{pkg.id}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "h-4 text-micro px-1.5 py-0 border",
-                          PACKAGE_STATUS_BADGE[pkg.status],
-                        )}
-                      >
-                        {PACKAGE_STATUS_LABEL[pkg.status]}
-                      </Badge>
+                      <span className="text-sm">{line.productVariant?.name ?? `Variant #${line.productVariantId}`}</span>
+                      <span className="text-sm tabular-nums">{line.quantity}</span>
                     </div>
                   ))}
                 </div>

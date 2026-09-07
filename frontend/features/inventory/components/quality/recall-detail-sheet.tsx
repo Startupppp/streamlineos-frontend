@@ -13,8 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
+import { useRecall, useUpdateRecall, type RecallLine } from "@/hooks/api/inventory/quality";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RECALL_STATUS_BADGE,
@@ -28,26 +27,24 @@ interface Props {
   recallId: number | null;
 }
 
-interface RecallLine {
-  id: number;
-  lotId?: number | null;
-  serialId?: number | null;
-  lotNumber?: string | null;
-  serialNumber?: string | null;
-}
-
 const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
   {
-    key: "lotNumber",
-    header: "Lot #",
-    className: "text-muted-foreground text-xs",
-    cell: (line) => line.lotNumber ?? (line.lotId ? String(line.lotId) : "—"),
+    key: "productVariant",
+    header: "Product / SKU",
+    className: "text-xs",
+    cell: (line) => line.productVariant?.name ?? `Variant #${line.productVariantId}`,
   },
   {
-    key: "serialNumber",
-    header: "Serial #",
+    key: "lotId",
+    header: "Lot #",
     className: "text-muted-foreground text-xs",
-    cell: (line) => line.serialNumber ?? (line.serialId ? String(line.serialId) : "—"),
+    cell: (line) => line.lotId ? `Lot #${line.lotId}` : "—",
+  },
+  {
+    key: "status",
+    header: "Status",
+    className: "text-muted-foreground text-xs",
+    cell: (line) => line.status,
   },
 ];
 
@@ -62,7 +59,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const isLoading = recallQuery.isLoading;
 
   function handleEditNotes(): void {
-    setNotesValue(recall?.notes ?? "");
+    setNotesValue("");
     setEditingNotes(true);
   }
 
@@ -188,10 +185,12 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
             </span>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-foreground">Reason</p>
-            <p className="text-xs text-muted-foreground">{recall.reason}</p>
-          </div>
+          {recall.description && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Description</p>
+              <p className="text-xs text-muted-foreground">{recall.description}</p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -219,38 +218,18 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">{recall.notes || "—"}</p>
+              <p className="text-xs text-muted-foreground">—</p>
             )}
           </div>
 
-          {recall.lines.length > 0 && (
+          {(recall.lines ?? []).length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Affected Lines ({recall.lines.length})</p>
+              <p className="text-xs font-medium text-foreground">Affected Lines ({(recall.lines ?? []).length})</p>
               <DataTable
-                data={recall.lines}
+                data={recall.lines ?? []}
                 columns={RECALL_LINE_COLUMNS}
                 getRowKey={(line) => line.id}
               />
-            </div>
-          )}
-
-          {recall.affectedCustomers && recall.affectedCustomers.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Affected Customers ({recall.affectedCustomers.length})</p>
-              <div className="space-y-1.5">
-                {recall.affectedCustomers.map((c) => (
-                  <div key={c.shipmentId} className="flex items-start gap-3 rounded-md border border-border/60 px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <TruncatedText text={c.clientName ?? "Unknown"} className="text-xs font-medium" />
-                      <p className="text-micro text-muted-foreground">
-                        Shipment #{c.shipmentId}
-                        {c.salesOrderId ? ` · SO #${c.salesOrderId}` : ""}
-                        {c.shippedAt ? ` · ${format(new Date(c.shippedAt), "dd MMM yyyy")}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>

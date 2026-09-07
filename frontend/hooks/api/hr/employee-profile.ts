@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
@@ -15,20 +16,33 @@ import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
   BulkOnboardEmployeeRow,
-  BulkOnboardResult,
 } from "@/types/hr";
-import type {
-  HrEmployment,
-  HrTimelineResponse,
-  HrSensitiveData,
-} from "@/types/hr/core";
+
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.successContract),
+);
+const _onboardEmployeeContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.onboardEmployeeResponseContract),
+);
+const _bulkOnboardContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.bulkOnboardResultContract),
+);
+const _employmentContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.employmentByUserIdContract),
+);
+const _timelineContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.timelinePageContract),
+);
+const _sensitiveContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.sensitiveRowContract),
+);
 
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:update", {
     mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
+      apiClient.patch(`/hr/employees/${userId}`, data, undefined, _successContract),
     onSuccess: (_, { userId }) => {
       void invalidateHrWorkforceQueries(qc, userId);
     },
@@ -40,7 +54,7 @@ export function useOnboardEmployee() {
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
-      apiClient.post<{ success: boolean; userId: string }>("/hr/employees/onboard", data),
+      apiClient.post("/hr/employees/onboard", data, undefined, _onboardEmployeeContract),
     onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
   });
 }
@@ -50,10 +64,11 @@ export function useBulkOnboardEmployees() {
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard", "bulk"],
     mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
-      apiClient.post<BulkOnboardResult>(
+      apiClient.post(
         "/hr/employees/onboard/bulk",
         { employees },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        _bulkOnboardContract,
       ),
     onSuccess: () => void invalidateHrWorkforceQueries(qc),
   });
@@ -64,7 +79,7 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeEmployment(userId),
-    queryFn: ({ signal }) => apiClient.get<HrEmployment>(`/hr/employees/${userId}/employment`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/hr/employees/${userId}/employment`, undefined, signal, _employmentContract),
     enabled: hrEnabled && !!userId && canView,
     staleTime: 5 * 60_000,
   });
@@ -80,12 +95,14 @@ export function useEmployeeTimeline(
   return useInfiniteQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeTimeline(employmentId ?? 0, { limit }),
     queryFn: ({ pageParam, signal }: { pageParam: string | null; signal: AbortSignal }) =>
-      apiClient.get<HrTimelineResponse>(
+      apiClient.get(
         `/hr/employees/${employmentId}/timeline`,
         {
           limit,
           ...(pageParam !== null ? { cursor: pageParam } : {}),
-        }, signal,
+        },
+        signal,
+        _timelineContract,
       ),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor,
@@ -99,7 +116,7 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId ?? 0),
-    queryFn: ({ signal }) => apiClient.get<HrSensitiveData>(`/hr/employees/${employmentId}/sensitive`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/hr/employees/${employmentId}/sensitive`, undefined, signal, _sensitiveContract),
     enabled: hrEnabled && !!employmentId && canViewSensitive,
     staleTime: 30_000,
   });
@@ -109,8 +126,8 @@ export function useUpdateSensitive(employmentId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:sensitive:manage", {
     mutationKey: ["hr", "employee", "sensitive", "update", employmentId],
-    mutationFn: (data: Partial<HrSensitiveData>) =>
-      apiClient.patch<{ success: boolean }>(`/hr/employees/${employmentId}/sensitive`, data),
+    mutationFn: (data: Record<string, unknown>) =>
+      apiClient.patch(`/hr/employees/${employmentId}/sensitive`, data, undefined, _successContract),
     onSuccess: () => void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId) }),
   });
 }

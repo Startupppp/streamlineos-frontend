@@ -1,32 +1,32 @@
 import { z } from "zod";
 
 export const invSettingsContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  defaultCostingMethod: z.string().nullable(),
   allowNegativeStock: z.boolean(),
-  autoReorderEnabled: z.boolean(),
-  defaultCurrency: z.string().nullable(),
-  stockAlertEmail: z.string().nullable(),
-  lowStockThreshold: z.string().nullable(),
-  trackLots: z.boolean(),
-  trackSerials: z.boolean(),
-  requireInspection: z.boolean(),
-  defaultWarehouseId: z.number().int().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  allowBackorders: z.boolean(),
+  reservationStrategy: z.string(),
+  defaultCostingMethod: z.string(),
+  expiryReservationPolicy: z.string(),
+  inspectionOnReceipt: z.boolean(),
+  inspectionOnReturn: z.boolean(),
+  overReceiptTolerancePct: z.string(),
+  requirePoApproval: z.boolean(),
+  adjustmentApprovalThreshold: z.string().nullable(),
+  autoReserveOnConfirm: z.boolean(),
+  allowPartialShipment: z.boolean(),
+  packageRequiredForShipping: z.boolean(),
+  channelPublishPolicy: z.string().nullable(),
 });
 
 const numberSequenceContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  sequenceType: z.string(),
-  prefix: z.string().nullable(),
-  suffix: z.string().nullable(),
+  id: z.number().int().optional(),
+  orgId: z.string().optional(),
+  docType: z.string(),
+  prefix: z.string(),
   nextNumber: z.number().int(),
   padding: z.number().int(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  isDefault: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export const numberSequencesArrayContract = z.array(numberSequenceContract);
@@ -41,11 +41,16 @@ export const listNumberSequencesContract = z.object({
 export const updateNumberSequenceContract = numberSequenceContract;
 
 export const healthContract = z.object({
-  status: z.string(),
-  checks: z.record(z.string(), z.object({
+  ledgerReconciliation: z.object({
+    sampleSize: z.number().int(),
+    transactionCount: z.number().int(),
     status: z.string(),
-    message: z.string().nullable().optional(),
-  })),
+  }),
+  activeExpiredReservations: z.number().int(),
+  failedImportJobs: z.number().int(),
+  failedExportJobs: z.number().int(),
+  failedWebhookEvents: z.number().int(),
+  failedChannelPublications: z.number().int(),
 });
 
 export const expireReservationsContract = z.object({
@@ -65,15 +70,18 @@ const importJobErrorContract = z.object({ row: z.number().int(), field: z.string
 
 const importJobContract = z.object({
   id: z.number().int(),
-  orgId: z.string().optional(),
-  importType: z.string(),
+  orgId: z.string(),
+  jobType: z.string(),
   status: z.string(),
+  fileName: z.string().nullable(),
   totalRows: z.number().int(),
   processedRows: z.number().int(),
-  errorCount: z.number().int(),
-  errors: z.array(importJobErrorContract).optional(),
+  errorRows: z.number().int(),
+  errors: z.array(importJobErrorContract).nullable(),
+  createdBy: z.string(),
+  createdByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
-  completedAt: z.string().nullable(),
+  updatedAt: z.string(),
 });
 
 export const importPreviewContract = z.object({
@@ -104,6 +112,7 @@ const exportJobContract = z.object({
   errorRows: z.number().int(),
   errors: z.array(importJobErrorContract).nullable(),
   createdBy: z.string(),
+  createdByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

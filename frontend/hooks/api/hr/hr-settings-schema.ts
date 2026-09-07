@@ -95,3 +95,5 @@ export const goalContract = z.object({
 export const wfhRequestContract = z.custom<WfhRequest>((v) => typeof v === "object" && v !== null);
 
 export const wfhRequestListContract = z.array(wfhRequestContract);
+
+export const successResponseContract = z.object({ success: z.boolean() });

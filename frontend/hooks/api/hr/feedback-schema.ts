@@ -47,6 +47,8 @@ export const getMyPendingReviewsContract = z.array(z.object({
   createdAt: z.string(),
 }));
 
+export const successResponseContract = z.object({ success: z.boolean() });
+
 export const getFeedbackResultsContract = z.object({
   subjectId: z.string(),
   totalRequests: z.number().int(),

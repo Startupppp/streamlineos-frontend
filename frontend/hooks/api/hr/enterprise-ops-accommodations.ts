@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -61,10 +62,26 @@ const accKeys = {
   tasks: (id: string) => [...queryKeyBase, "hr-accommodations", "tasks", id] as const,
 };
 
+const _listAccommodationsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listAccommodationsContract),
+);
+const _getAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getAccommodationContract),
+);
+const _listAccommodationTasksContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listAccommodationTasksContract),
+);
+const _createAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createAccommodationContract),
+);
+const _approveAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.approveAccommodationContract),
+);
+
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get(BASE, params as Record<string, unknown>, signal, _listAccommodationsContract),
     staleTime: 30_000,
   });
 }
@@ -72,7 +89,7 @@ export function useAccommodations(params: ListAccommodationsParams = {}) {
 export function useAccommodation(id: string) {
   return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.detail(id),
-    queryFn: ({ signal }) => apiClient.get<AccommodationRequest>(`${BASE}/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/${id}`, undefined, signal, _getAccommodationContract),
     enabled: !!id,
     staleTime: 30_000,
   });
@@ -81,7 +98,7 @@ export function useAccommodation(id: string) {
 export function useAccommodationTasks(requestId: string) {
   return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.tasks(requestId),
-    queryFn: ({ signal }) => apiClient.get<AccommodationTask[]>(`${BASE}/${requestId}/tasks`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/${requestId}/tasks`, undefined, signal, _listAccommodationTasksContract),
     enabled: !!requestId,
     staleTime: 30_000,
   });
@@ -96,7 +113,7 @@ export function useCreateAccommodation() {
       type: AccommodationType;
       description: string;
       confidentialMedicalNote?: string;
-    }) => apiClient.post<AccommodationRequest>(BASE, body),
+    }) => apiClient.post(BASE, body, undefined, _createAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.all });
       toast.success("Accommodation request created");
@@ -112,7 +129,7 @@ export function useApproveAccommodation(id: string) {
     mutationFn: (body: {
       note?: string;
       tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
-    }) => apiClient.post<AccommodationRequest>(`${BASE}/${id}/approve`, body),
+    }) => apiClient.post(`${BASE}/${id}/approve`, body, undefined, _approveAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.detail(id) });
       void qc.invalidateQueries({ queryKey: accKeys.all });
@@ -121,4 +138,3 @@ export function useApproveAccommodation(id: string) {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
-

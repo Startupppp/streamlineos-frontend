@@ -29,16 +29,17 @@ const expiryItemsArrayContract = lazyContract(() =>
 
 interface LotListItem {
   id: number;
+  orgId: string;
+  productVariantId: number;
   lotNumber: string;
-  variantId: number;
-  variantSku: string;
-  productName: string;
-  status: LotStatus;
   expiryDate: string | null;
-  currentStock: number;
-  warehouseId: number | null;
-  warehouseName: string | null;
+  manufacturedDate: string | null;
+  status: LotStatus;
+  notes: string | null;
+  attributes: Record<string, unknown> | null;
   createdAt: string;
+  updatedAt: string;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 interface LotListResponse {
@@ -51,48 +52,47 @@ interface LotListResponse {
 export interface LotStockByLocation {
   locationId: number;
   locationName: string;
-  warehouseName: string;
-  qty: number;
+  onHand: string;
 }
 
 export interface LotMovement {
   id: number;
-  type: string;
-  qty: number;
+  transactionType: string;
+  quantityChange: string;
   createdAt: string;
-  referenceType: string | null;
-  referenceId: string | null;
-  notes: string | null;
-  performedBy: string | null;
 }
 
 interface LotDetail {
   id: number;
+  orgId: string;
+  productVariantId: number;
   lotNumber: string;
-  variantId: number;
-  variantSku: string;
-  productName: string;
-  status: LotStatus;
   expiryDate: string | null;
-  currentStock: number;
-  stockByLocation: LotStockByLocation[];
-  movements: LotMovement[];
+  manufacturedDate: string | null;
+  status: LotStatus;
+  notes: string | null;
+  attributes: Record<string, unknown> | null;
   createdAt: string;
+  updatedAt: string;
+  productVariant?: { id: number; name: string; sku: string };
+  stockLevels?: LotStockByLocation[];
+  transactions?: LotMovement[];
 }
 
 interface SerialListItem {
   id: number;
+  orgId: string;
+  productVariantId: number;
   serialNumber: string;
-  variantId: number;
-  variantSku: string;
-  productName: string;
   status: SerialStatus;
-  locationId: number | null;
-  locationName: string | null;
-  warehouseName: string | null;
   lotId: number | null;
-  lotNumber: string | null;
+  locationId: number | null;
+  notes: string | null;
+  attributes: Record<string, unknown> | null;
   createdAt: string;
+  updatedAt: string;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string } | null;
 }
 
 interface SerialListResponse {
@@ -103,43 +103,41 @@ interface SerialListResponse {
 }
 
 interface SerialDetail extends SerialListItem {
-  movements: LotMovement[];
+  transactions?: LotMovement[];
 }
 
 export interface ExpiryItem {
   lotId: number;
   lotNumber: string;
+  productVariantId: number;
   variantSku: string;
+  variantName: string;
   productName: string;
-  expiryDate: string;
-  daysUntilExpiry: number;
-  currentStock: number;
-  warehouseName: string | null;
+  expiryDate: string | null;
+  daysUntilExpiry: number | null;
+  onHand: string;
+  locationId: number | null;
+  locationName: string | null;
 }
 
-export interface TraceabilityEvent {
-  id: number;
-  eventType: string;
-  referenceType: string | null;
-  referenceId: string | null;
-  date: string;
-  qty: number;
-  notes: string | null;
-  performedBy: string | null;
+export interface TraceabilityNode {
+  type: string;
+  id: string;
+  label: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TraceabilityEdge {
+  fromId: string;
+  toId: string;
+  relationship: string;
 }
 
 export interface TraceabilityResult {
-  origin: {
-    receiptId: number | null;
-    receiptDate: string | null;
-    vendorName: string | null;
-  } | null;
-  receipts: TraceabilityEvent[];
-  currentStock: LotStockByLocation[];
-  shipments: TraceabilityEvent[];
-  vendorReturns: TraceabilityEvent[];
-  customerReturns: TraceabilityEvent[];
-  events: TraceabilityEvent[];
+  sourceType: string;
+  sourceId: string;
+  nodes: TraceabilityNode[];
+  edges: TraceabilityEdge[];
 }
 
 type LotsParams = {

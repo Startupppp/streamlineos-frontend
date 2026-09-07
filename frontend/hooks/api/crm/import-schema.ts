@@ -18,7 +18,48 @@ export const importProgressContract = z.object({
   revertDeadlineAt: z.string().nullable(),
 });
 
-export const importPreviewContract = z.record(z.string(), z.unknown());
+const columnMappingSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("mapped"), field: z.string(), confidence: z.number() }),
+  z.object({ kind: z.literal("custom"), key: z.string() }),
+  z.object({ kind: z.literal("ambiguous"), candidates: z.array(z.string()) }),
+  z.object({ kind: z.literal("unmapped") }),
+]);
+
+const mappedColumnSchema = z.object({
+  header: z.string(),
+  mapping: columnMappingSchema,
+});
+
+const plannedRowSchema = z.object({
+  rowNumber: z.number().int(),
+  action: z.enum(["create", "update", "merge", "review", "skip"]),
+  reason: z.string(),
+  values: z.record(z.string(), z.string()),
+  customFields: z.record(z.string(), z.string()),
+  matchedRecordId: z.string().optional(),
+  duplicateOfRow: z.number().int().optional(),
+  match: z.object({
+    score: z.number(),
+    signals: z.array(z.string()),
+    candidateName: z.string().optional(),
+  }).optional(),
+});
+
+export const importPreviewContract = z.object({
+  crmImportId: z.string(),
+  columns: z.array(mappedColumnSchema),
+  needsConfirmation: z.array(mappedColumnSchema),
+  summary: z.object({
+    create: z.number().int(),
+    update: z.number().int(),
+    merge: z.number().int(),
+    review: z.number().int(),
+    skip: z.number().int(),
+    total: z.number().int(),
+  }),
+  rows: z.array(plannedRowSchema),
+  warnings: z.array(z.string()),
+});
 
 const importRowSchema = z.object({
   crmImportRowId: z.string(),

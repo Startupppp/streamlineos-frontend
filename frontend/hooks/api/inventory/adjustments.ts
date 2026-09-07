@@ -64,8 +64,8 @@ interface AdjDetailApiLine {
 interface AdjDetailApi {
   id: number;
   referenceNumber: string;
-  reason: AdjustmentReason;
-  status: AdjustmentStatus;
+  reason: string;
+  status: string;
   notes: string | null;
   createdAt: string;
   approvedAt: string | null;
@@ -77,12 +77,24 @@ interface AdjDetailApi {
 interface RawAdjustment {
   id: number;
   referenceNumber: string;
-  reason: AdjustmentReason;
-  status: AdjustmentStatus;
+  reason: string;
+  status: string;
   notes: string | null;
   createdAt: string;
   creator: { id: string; name: string | null } | null;
   lines: Array<{ id: number }>;
+}
+
+function toAdjStatus(s: string): AdjustmentStatus {
+  if (s === "DRAFT" || s === "PENDING_APPROVAL" || s === "APPROVED" || s === "POSTED" || s === "CANCELLED")
+    return s;
+  throw new Error(`Unknown adjustment status: ${s}`);
+}
+
+function toAdjReason(s: string): AdjustmentReason {
+  if (s === "PURCHASE" || s === "SALE" || s === "RETURN" || s === "DAMAGE" || s === "EXPIRY" || s === "THEFT" || s === "RECOUNT" || s === "OTHER")
+    return s;
+  throw new Error(`Unknown adjustment reason: ${s}`);
 }
 
 interface RawAdjustmentsResponse {
@@ -97,7 +109,7 @@ function toAdjustmentDetail(raw: AdjDetailApi): AdjustmentDetail {
     id: raw.id,
     referenceNumber: raw.referenceNumber,
     reason: raw.reason,
-    status: raw.status,
+    status: toAdjStatus(raw.status),
     notes: raw.notes,
     createdAt: raw.createdAt,
     approvedAt: raw.approvedAt,
@@ -120,8 +132,8 @@ function toAdjustmentListItem(r: RawAdjustment): AdjustmentListItem {
   return {
     id: r.id,
     referenceNumber: r.referenceNumber,
-    reason: r.reason,
-    status: r.status,
+    reason: toAdjReason(r.reason),
+    status: toAdjStatus(r.status),
     notes: r.notes,
     createdAt: r.createdAt,
     createdByName: r.creator?.name ?? null,
@@ -221,13 +233,15 @@ export function usePostAdjustment() {
   const qc = useQueryClient();
   return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:post", {
     mutationKey: ["inventory", "adjustment", "post"],
-    mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(
+    mutationFn: async (adjustmentId) => {
+      const raw = await apiClient.post<AdjDetailApi>(
         `/inventory/stock/adjustments/${adjustmentId}/post`,
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
         getAdjustmentContract,
-      ),
+      );
+      return toAdjustmentDetail(raw);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -240,8 +254,10 @@ export function useCancelAdjustment() {
   const qc = useQueryClient();
   return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "cancel"],
-    mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, undefined, getAdjustmentContract),
+    mutationFn: async (adjustmentId) => {
+      const raw = await apiClient.post<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, undefined, getAdjustmentContract);
+      return toAdjustmentDetail(raw);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

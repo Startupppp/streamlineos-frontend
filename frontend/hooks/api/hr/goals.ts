@@ -58,7 +58,7 @@ export function useCreateHrGoal() {
       userId: string;
       targetValue?: string;
       unit?: string;
-    }) => apiClient.post<HrGoal>("/hr/performance/goals", data),
+    }) => apiClient.post<HrGoal>("/hr/performance/goals", data, undefined, goalLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.goals() }),
   });
 }

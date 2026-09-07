@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -49,7 +50,7 @@ export function useFeedbackCycles() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
-    queryFn: ({ signal }) => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles", undefined, signal, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.listCyclesContract))),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -61,7 +62,7 @@ export function useCreateFeedbackCycle() {
     mutationKey: ["hr", "feedback", "cycles", "create"],
     mutationFn: (
       data: Omit<FeedbackCycle, "id" | "orgId" | "status" | "createdAt">,
-    ) => apiClient.post<FeedbackCycle>("/hr/feedback/cycles", data),
+    ) => apiClient.post<FeedbackCycle[]>("/hr/feedback/cycles", data, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.createCycleContract))),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() }),
   });
@@ -72,7 +73,7 @@ export function useUpdateFeedbackCycleStatus() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "feedback", "cycles", "updateStatus"],
     mutationFn: ({ id, status }: { id: number; status: string }) =>
-      apiClient.patch<FeedbackCycle>(`/hr/feedback/cycles/${id}`, { status }),
+      apiClient.patch<FeedbackCycle[]>(`/hr/feedback/cycles/${id}`, { status }, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.updateCycleStatusContract))),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() });
       qc.invalidateQueries({
@@ -88,7 +89,7 @@ export function useMyPendingReviews() {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.myPendingReviews(),
     queryFn: ({ signal }) =>
-      apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews", undefined, signal),
+      apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews", undefined, signal, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.getMyPendingReviewsContract))),
     staleTime: 30_000,
     enabled: canView && hrEnabled,
   });
@@ -110,6 +111,8 @@ export function useSubmitFeedbackResponse() {
       apiClient.post<{ success: boolean }>(
         `/hr/feedback/requests/${requestId}/respond`,
         { responses, overallRating },
+        undefined,
+        lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.successResponseContract)),
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myPendingReviews() }),
@@ -122,7 +125,7 @@ export function useFeedbackResults(subjectId: string) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.feedbackResults(subjectId),
     queryFn: ({ signal }) =>
-      apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`, undefined, signal),
+      apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.getFeedbackResultsContract))),
     staleTime: 2 * 60_000,
     enabled: subjectId.length > 0 && canView && hrEnabled,
   });

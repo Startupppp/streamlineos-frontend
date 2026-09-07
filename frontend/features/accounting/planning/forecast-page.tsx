@@ -183,7 +183,7 @@ export function ForecastPage() {
   function handleSeedDefaults(): void {
     seedMutation.mutate(undefined, {
       onSuccess: (data) =>
-        toast.success(`Seeded ${data.seeded} default scenario(s)`),
+        toast.success(`Seeded ${data.created} default scenario(s)`),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }

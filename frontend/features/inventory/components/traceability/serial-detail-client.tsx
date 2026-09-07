@@ -72,27 +72,26 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
     <PageWrapper
       backHref="/inventory/serials"
       title={`Serial ${serial.serialNumber}`}
-      subtitle={`${serial.productName} · ${serial.variantSku}`}
+      subtitle={`${serial.productVariant?.name ?? "—"} · ${serial.productVariant?.sku ?? "—"}`}
       badge={SERIAL_STATUS_LABEL[serial.status]}
     >
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
         <StatCardGrid>
-          <StatCard label="Product" value={serial.productName} />
-          <StatCard label="SKU" value={serial.variantSku} />
+          <StatCard label="Product" value={serial.productVariant?.name ?? "—"} />
+          <StatCard label="SKU" value={serial.productVariant?.sku ?? "—"} />
           <StatCard
             label="Location"
-            value={serial.locationName ?? "—"}
-            subtitle={serial.warehouseName ?? undefined}
+            value={serial.location?.name ?? "—"}
           />
           <StatCard
             label="Lot #"
-            value={serial.lotNumber ?? "—"}
+            value={serial.lotId ? `#${serial.lotId}` : "—"}
             href={serial.lotId ? `/inventory/lots/${serial.lotId}` : undefined}
           />
         </StatCardGrid>
 
         <PageSection title="Movement History">
-          <MovementHistoryTable movements={serial.movements} />
+          <MovementHistoryTable movements={serial.transactions ?? []} />
         </PageSection>
 
         <PageSection

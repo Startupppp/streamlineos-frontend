@@ -48,22 +48,28 @@ export const resignationContract = z.object({
 
 export const resignationListContract = z.object({
   data: z.array(resignationContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  limit: z.number().int(),
-  totalPages: z.number().int(),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
 });
 
 const resignationProgressStepContract = z.object({
-  key: z.string(),
+  step: z.string(),
   label: z.string(),
   status: z.string(),
-  completedAt: z.string().nullable(),
+  timestamp: z.string().optional(),
 });
 
 export const resignationProgressContract = z.object({
-  resignationId: z.number().int(),
+  label: z.string(),
   status: z.string(),
-  currentStep: z.string().nullable(),
+  actor: z.string().nullable(),
+  timestamp: z.string().nullable(),
+  remarks: z.string().nullable(),
   steps: z.array(resignationProgressStepContract),
 });
+
+export const successContract = z.object({ success: z.boolean() });

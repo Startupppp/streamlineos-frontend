@@ -31,7 +31,7 @@ export type WebhookEventType =
   | "inventory.transfer.completed"
   | "inventory.adjustment.posted";
 
-export const WEBHOOK_EVENT_LABELS: Record<WebhookEventType, string> = {
+export const WEBHOOK_EVENT_LABELS: Record<string, string | undefined> = {
   "inventory.product.created": "Product Created",
   "inventory.stock.changed": "Stock Changed",
   "inventory.stock.low": "Stock Low",
@@ -59,26 +59,29 @@ export interface Webhook {
   id: number;
   orgId: string;
   url: string;
-  events: WebhookEventType[];
+  events: string[];
   isActive: boolean;
+  lastDeliveryAt: string | null;
+  lastDeliveryStatus: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface WebhookEvent {
   id: number;
-  webhookId: number;
-  eventType: WebhookEventType;
-  status: "PENDING" | "DELIVERED" | "FAILED";
-  responseCode?: number | null;
+  orgId: string;
+  webhookId: number | null;
+  eventType: string;
+  payload: Record<string, unknown>;
+  status: string;
   attempts: number;
+  deliveredAt: string | null;
   createdAt: string;
-  deliveredAt?: string | null;
 }
 
 interface WebhookEventsParams {
   [key: string]: unknown;
-  status?: "PENDING" | "DELIVERED" | "FAILED";
+  status?: string;
   page?: number;
   limit?: number;
 }

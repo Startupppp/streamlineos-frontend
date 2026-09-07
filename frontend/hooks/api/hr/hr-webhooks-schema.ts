@@ -69,3 +69,5 @@ export const hrWebhookTestResponseContract = z.object({
   deliveryId: z.number().int(),
   event: z.string(),
 });
+
+export const successResponseContract = z.object({ success: z.boolean() });

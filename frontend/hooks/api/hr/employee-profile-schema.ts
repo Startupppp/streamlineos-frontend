@@ -62,3 +62,5 @@ export const sensitiveRowContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 }).nullable();
+
+export const successContract = z.object({ success: z.boolean() });

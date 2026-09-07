@@ -93,7 +93,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
     <PageWrapper
       backHref="/inventory/lots"
       title={`Lot ${lot.lotNumber}`}
-      subtitle={`${lot.productName} · ${lot.variantSku}`}
+      subtitle={`${lot.productVariant?.name ?? "—"} · ${lot.productVariant?.sku ?? "—"}`}
       badge={LOT_STATUS_LABEL[lot.status]}
       actions={
         canToggleStatus ? (
@@ -127,16 +127,15 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
             value={lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : "No expiry"}
             tone={expiryClass.includes("red") ? "red" : expiryClass.includes("amber") ? "amber" : "default"}
           />
-          <StatCard label="Current Stock" value={lot.currentStock.toLocaleString()} />
           <StatCard label="Created" value={new Date(lot.createdAt).toLocaleDateString()} />
         </StatCardGrid>
 
         <PageSection title="Stock by Location">
-          <LotStockTable stockByLocation={lot.stockByLocation} />
+          <LotStockTable stockByLocation={lot.stockLevels ?? []} />
         </PageSection>
 
         <PageSection title="Movement History">
-          <MovementHistoryTable movements={lot.movements} />
+          <MovementHistoryTable movements={lot.transactions ?? []} />
         </PageSection>
 
         <PageSection

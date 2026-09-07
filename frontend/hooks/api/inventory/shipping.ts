@@ -33,23 +33,30 @@ const carrierDetailContract = lazyContract(() =>
   import("@/hooks/api/inventory/shipping-schema").then((m) => m.carrierDetailContract),
 );
 
-interface PackageLine {
+interface PackageItem {
   id: number;
-  variantId: number;
-  variantName: string;
-  lotId?: number | null;
-  serialId?: number | null;
-  qty: number;
+  packageId: number;
+  productVariantId: number;
+  quantity: string;
+  lotId: number | null;
+  serialId: number | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 export interface Package {
   id: number;
   orgId: string;
+  packageNumber: string;
+  shipmentId: number | null;
+  loadId: number | null;
+  packageType: string | null;
+  weight: string | null;
+  weightUnit: string | null;
+  dimensions: Record<string, unknown> | null;
   status: PackageStatus;
-  shipmentId?: number | null;
-  lines?: PackageLine[];
   createdAt: string;
   updatedAt: string;
+  items?: PackageItem[];
 }
 
 type PackageListResponse = {
@@ -61,25 +68,34 @@ type PackageListResponse = {
 
 interface ShipmentLine {
   id: number;
-  variantId: number;
-  variantName: string;
-  qty: number;
+  shipmentId: number;
+  productVariantId: number;
+  quantity: string;
+  lotId: number | null;
+  serialId: number | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 export interface Shipment {
   id: number;
   orgId: string;
+  shipmentNumber: string;
+  soId: number | null;
+  warehouseId: number | null;
+  carrierId: number | null;
   status: ShipmentStatus;
-  soId?: number | null;
-  warehouseId?: number | null;
-  carrierId?: number | null;
-  carrierName?: string | null;
-  trackingNumber?: string | null;
-  notes?: string | null;
-  lines?: ShipmentLine[];
-  packages?: Package[];
+  trackingNumber: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
+  carrier?: Carrier | null;
+  lines?: ShipmentLine[];
 }
 
 type ShipmentListResponse = {
@@ -89,21 +105,22 @@ type ShipmentListResponse = {
   totalPages: number;
 };
 
-interface LoadMember {
-  id: number;
-  type: "SHIPMENT" | "TRANSFER";
-  referenceId: number;
-  status?: string | null;
-}
-
 export interface Load {
   id: number;
   orgId: string;
-  name?: string | null;
+  loadNumber: string;
+  carrierId: number | null;
   status: LoadStatus;
-  members?: LoadMember[];
+  departedAt: string | null;
+  arrivedAt: string | null;
+  cancelledAt: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
+  carrier?: Carrier | null;
+  packages?: Package[];
 }
 
 type LoadListResponse = {
@@ -117,8 +134,8 @@ export interface Carrier {
   id: number;
   orgId: string;
   name: string;
-  code: string;
-  trackingUrlTemplate?: string | null;
+  code: string | null;
+  trackingUrlTemplate: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const customer360SectionSchema = z.object({
-  items: z.array(z.unknown()),
+  items: z.array(z.object({ id: z.number().int() })),
   total: z.number().int(),
 });
 
@@ -20,6 +20,12 @@ export const customer360Contract = z.object({
 });
 
 export const customer360TimelineContract = z.object({
-  items: z.array(z.unknown()),
+  items: z.array(z.object({
+    type: z.enum(["contact_created", "deal_created", "lead_linked"]),
+    entityId: z.number().int(),
+    label: z.string(),
+    meta: z.string().nullable(),
+    date: z.string(),
+  })),
   nextCursor: z.string().nullable(),
 });

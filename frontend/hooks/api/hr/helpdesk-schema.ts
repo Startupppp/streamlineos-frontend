@@ -76,3 +76,5 @@ export const helpdeskRoutingRuleContract = z.object({
 });
 
 export const helpdeskRoutingListContract = z.array(helpdeskRoutingRuleContract);
+
+export const successResponseContract = z.object({ success: z.boolean() });

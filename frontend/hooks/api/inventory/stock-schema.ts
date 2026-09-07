@@ -34,6 +34,23 @@ const stockLevelItemContract = z.object({
   average_cost: z.string().nullable().optional(),
   updated_at: z.string(),
   available: z.string(),
+  productVariant: z.object({
+    id: z.number().int(),
+    name: z.string().nullable(),
+    sku: z.string().nullable(),
+    product: z.object({
+      id: z.number().int(),
+      name: z.string(),
+      sku: z.string(),
+      reorderPoint: z.string().nullable(),
+    }).nullable().optional(),
+  }).nullable().optional(),
+  location: z.object({
+    id: z.number().int(),
+    name: z.string(),
+    code: z.string(),
+    warehouse: z.object({ id: z.number().int(), name: z.string() }).nullable().optional(),
+  }).nullable().optional(),
 });
 
 export const listStockLevelsContract = z.object({
@@ -48,7 +65,14 @@ const stockTransactionItemContract = z.object({
   orgId: z.string(),
   productVariantId: z.number().int(),
   locationId: z.number().int().nullable(),
-  transactionType: z.string(),
+  transactionType: z.enum([
+    "PURCHASE", "SALE", "ADJUSTMENT_IN", "ADJUSTMENT_OUT",
+    "TRANSFER_IN", "TRANSFER_OUT", "RETURN_IN", "RETURN_OUT",
+    "GRN", "OPENING_BALANCE", "VENDOR_RETURN", "CUSTOMER_RETURN",
+    "CYCLE_COUNT_GAIN", "CYCLE_COUNT_LOSS", "SCRAP",
+    "QUARANTINE_IN", "QUARANTINE_OUT",
+    "RESERVATION_CREATE", "RESERVATION_RELEASE", "RESERVATION_CONSUME",
+  ]),
   quantityChange: z.string(),
   quantityBefore: z.string(),
   quantityAfter: z.string(),
@@ -171,6 +195,14 @@ const transferLineContract = z.object({
   lotId: z.number().int().nullable(),
   serialId: z.number().int().nullable(),
   notes: z.string().nullable(),
+  productVariant: z.object({
+    id: z.number().int(),
+    name: z.string().nullable(),
+    sku: z.string().nullable(),
+    product: z.object({ id: z.number().int(), name: z.string(), sku: z.string() }).nullable().optional(),
+  }).nullable().optional(),
+  lot: z.object({ id: z.number().int(), lotNumber: z.string() }).nullable().optional(),
+  serial: z.object({ id: z.number().int(), serialNumber: z.string() }).nullable().optional(),
 });
 
 export const transferItemContract = z.object({
@@ -181,7 +213,7 @@ export const transferItemContract = z.object({
   toLocationId: z.number().int(),
   fromWarehouseId: z.number().int().nullable(),
   toWarehouseId: z.number().int().nullable(),
-  status: z.string(),
+  status: z.enum(["PENDING", "RESERVED", "IN_TRANSIT", "COMPLETED", "CANCELLED"]),
   notes: z.string().nullable(),
   reservedAt: z.string().nullable(),
   dispatchedAt: z.string().nullable(),

@@ -3,37 +3,29 @@ import { z } from "zod";
 const webhookContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  name: z.string(),
   url: z.string(),
   events: z.array(z.string()),
   isActive: z.boolean(),
-  secret: z.string().nullable(),
-  lastTriggeredAt: z.string().nullable(),
+  lastDeliveryAt: z.string().nullable(),
+  lastDeliveryStatus: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-export const listWebhooksContract = z.object({
-  items: z.array(webhookContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  totalPages: z.number().int(),
-});
+export const webhooksArrayContract = z.array(webhookContract);
 
 export const webhookDetailContract = webhookContract;
 
 const webhookEventContract = z.object({
   id: z.number().int(),
-  webhookId: z.number().int(),
+  orgId: z.string(),
+  webhookId: z.number().int().nullable(),
   eventType: z.string(),
-  status: z.string(),
   payload: z.record(z.string(), z.unknown()),
-  response: z.record(z.string(), z.unknown()).nullable(),
+  status: z.string(),
   attempts: z.number().int(),
-  nextRetryAt: z.string().nullable(),
   deliveredAt: z.string().nullable(),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const listWebhookEventsContract = z.object({
@@ -50,4 +42,9 @@ export const deleteWebhookContract = z.object({
   id: z.number().int(),
 });
 
-export const webhooksArrayContract = z.array(webhookContract);
+export const listWebhooksContract = z.object({
+  items: z.array(webhookContract),
+  total: z.number().int(),
+  page: z.number().int(),
+  totalPages: z.number().int(),
+});

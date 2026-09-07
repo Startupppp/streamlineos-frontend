@@ -67,10 +67,10 @@ export const salesDashboardContract = z.object({
 
 export const supportDashboardContract = z.object({
   supportDashboardStats: z.object({
-    openTickets: statWithTrendSchema,
-    avgResolution: statWithTrendSchema,
-    csatScore: statWithTrendSchema,
-    responseRate: statWithTrendSchema,
+    openTickets: z.object({ value: z.number(), trend: trendSchema }),
+    avgResolution: z.object({ value: z.string(), trend: trendSchema }),
+    csatScore: z.object({ value: z.string(), trend: trendSchema }),
+    responseRate: z.object({ value: z.string(), trend: trendSchema }),
   }),
   ticketStatusBreakdown: z.array(
     z.object({ label: z.string(), value: z.number().int(), color: z.string() }),
@@ -79,7 +79,12 @@ export const supportDashboardContract = z.object({
     z.object({ month: z.string(), value: z.number() }),
   ),
   supportActivityFeed: z.array(
-    z.object({ type: z.string(), message: z.string(), time: z.string(), person: z.string() }),
+    z.object({
+      type: z.enum(["deal_won", "meeting", "proposal", "call", "email", "ticket", "escalation"]),
+      message: z.string(),
+      time: z.string(),
+      person: z.string(),
+    }),
   ),
   supportTeamMembers: z.array(
     z.object({
@@ -87,7 +92,7 @@ export const supportDashboardContract = z.object({
       role: z.string(),
       access: z.string(),
       avatar: z.string(),
-      status: z.literal("online"),
+      status: z.enum(["online", "away", "offline"]),
     }),
   ),
   ticketsByPriority: z.array(

@@ -30,6 +30,8 @@ export const fnfRowContract = z.object({
   user: fnfUserContract,
 });
 
+export const successResponseContract = z.object({ success: z.boolean() });
+
 export const fnfListContract = z.object({
   items: z.array(fnfRowContract),
   total: z.number().int(),

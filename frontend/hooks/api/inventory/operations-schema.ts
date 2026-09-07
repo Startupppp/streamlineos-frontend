@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const userRefContract = z.object({ id: z.string(), name: z.string().nullable() });
+const returnStatusEnum = z.enum(["DRAFT", "POSTED", "CANCELLED"]);
 
 const grnLineContract = z.object({
   id: z.number().int(),
@@ -37,7 +38,9 @@ export const listGrnsOperationsContract = z.object({
   totalPages: z.number().int(),
 });
 
-export const getGrnOperationsContract = grnContract;
+const grnDetailContract = grnContract.extend({ lines: z.array(grnLineContract) });
+
+export const getGrnOperationsContract = grnDetailContract;
 
 const vendorReturnLineContract = z.object({
   id: z.number().int(),
@@ -57,7 +60,7 @@ const vendorReturnContract = z.object({
   vendorId: z.number().int(),
   poId: z.number().int().nullable(),
   grnId: z.number().int().nullable(),
-  status: z.string(),
+  status: returnStatusEnum,
   notes: z.string().nullable(),
   createdBy: z.string(),
   createdByMembershipId: z.number().int().nullable(),
@@ -98,7 +101,7 @@ const customerReturnContract = z.object({
   soId: z.number().int().nullable(),
   shipmentId: z.number().int().nullable(),
   clientId: z.number().int().nullable(),
-  status: z.string(),
+  status: returnStatusEnum,
   notes: z.string().nullable(),
   createdBy: z.string(),
   createdByMembershipId: z.number().int().nullable(),

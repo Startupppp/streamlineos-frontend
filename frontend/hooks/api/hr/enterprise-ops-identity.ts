@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -58,6 +59,25 @@ const identityKeys = {
   exitVerification: (userId: string) => [...queryKeyBase, "hr-identity", "exit-verification", userId] as const,
 };
 
+const _listProvisioningContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listProvisioningContract),
+);
+const _listTemplatesContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listTemplatesContract),
+);
+const _getExitVerificationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getExitVerificationContract),
+);
+const _createProvisioningContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createProvisioningContract),
+);
+const _createTemplateContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createTemplateContract),
+);
+const _voidContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.voidContract),
+);
+
 export function useAccessProvisioning(params: {
   cursor?: string;
   userId?: string;
@@ -66,7 +86,7 @@ export function useAccessProvisioning(params: {
 } = {}) {
   return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.provisioning(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/provisioning`, params as Record<string, unknown>, signal, _listProvisioningContract),
     staleTime: 30_000,
   });
 }
@@ -74,7 +94,7 @@ export function useAccessProvisioning(params: {
 export function useProvisioningTemplates() {
   return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.templates,
-    queryFn: ({ signal }) => apiClient.get<ProvisioningTemplate[]>(`${BASE}/templates`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/templates`, undefined, signal, _listTemplatesContract),
     staleTime: 60_000,
   });
 }
@@ -82,7 +102,7 @@ export function useProvisioningTemplates() {
 export function useExitVerification(userId: string) {
   return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.exitVerification(userId),
-    queryFn: ({ signal }) => apiClient.get<ExitVerificationResult>(`${BASE}/exit-verification`, { userId }, signal),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/exit-verification`, { userId }, signal, _getExitVerificationContract),
     enabled: !!userId,
     staleTime: 15_000,
   });
@@ -97,7 +117,7 @@ export function useCreateProvisioning() {
       systemName: string;
       action: ProvisioningAction;
       triggeredBy: ProvisioningTrigger;
-    }) => apiClient.post<AccessProvisioningRecord>(`${BASE}/provisioning`, body),
+    }) => apiClient.post(`${BASE}/provisioning`, body, undefined, _createProvisioningContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.all });
       toast.success("Provisioning record created");
@@ -114,7 +134,7 @@ export function useCreateProvisioningTemplate() {
       name: string;
       triggeredBy: "joiner" | "mover" | "leaver";
       systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
-    }) => apiClient.post<ProvisioningTemplate>(`${BASE}/templates`, body),
+    }) => apiClient.post(`${BASE}/templates`, body, undefined, _createTemplateContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template created");
@@ -127,7 +147,7 @@ export function useDeleteProvisioningTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-delete"],
-    mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`),
+    mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template deleted");

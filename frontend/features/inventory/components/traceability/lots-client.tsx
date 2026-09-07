@@ -75,8 +75,8 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <TruncatedText text={row.productName} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
+        <TruncatedText text={row.productVariant?.name ?? "—"} className="font-medium text-foreground" />
+        <span className="text-muted-foreground font-mono text-micro">{row.productVariant?.sku ?? "—"}</span>
       </>
     ),
   },
@@ -93,13 +93,6 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     ),
   },
   {
-    key: "currentStock",
-    header: "Stock",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    cell: (row) => <>{row.currentStock.toLocaleString()}</>,
-  },
-  {
     key: "expiryDate",
     header: "Expiry Date",
     className: "tabular-nums",
@@ -108,13 +101,6 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
         {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
       </span>
     ),
-  },
-  {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "createdAt",

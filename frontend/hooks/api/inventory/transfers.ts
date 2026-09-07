@@ -93,10 +93,10 @@ interface RawTransferListItem {
   notes: string | null;
   completedAt: string | null;
   createdAt: string;
-  fromLocation: { id: number; name: string; code: string } | null;
-  toLocation: { id: number; name: string; code: string } | null;
-  creator: { id: string; name: string | null } | null;
-  lines: Array<{ id: number }>;
+  fromLocation?: { id: number; name: string; code: string } | null;
+  toLocation?: { id: number; name: string; code: string } | null;
+  creator?: { id: string; name: string | null } | null;
+  lines?: Array<{ id: number }>;
 }
 
 interface RawTransferDetailLine {
@@ -106,13 +106,13 @@ interface RawTransferDetailLine {
   notes: string | null;
   lotId: number | null;
   serialId: number | null;
-  lot: { id: number; lotNumber: string } | null;
-  serial: { id: number; serialNumber: string } | null;
-  productVariant: {
+  lot?: { id: number; lotNumber: string } | null;
+  serial?: { id: number; serialNumber: string } | null;
+  productVariant?: {
     id: number;
     name: string | null;
     sku: string | null;
-    product: { id: number; name: string; sku: string } | null;
+    product?: { id: number; name: string; sku: string } | null;
   } | null;
 }
 
@@ -130,10 +130,10 @@ interface RawTransferDetail {
   notes: string | null;
   createdAt: string;
   completedAt: string | null;
-  creator: { id: string; name: string | null } | null;
-  fromLocation: RawTransferLocation | null;
-  toLocation: RawTransferLocation | null;
-  lines: RawTransferDetailLine[];
+  creator?: { id: string; name: string | null } | null;
+  fromLocation?: RawTransferLocation | null;
+  toLocation?: RawTransferLocation | null;
+  lines?: RawTransferDetailLine[];
 }
 
 function toTransferListItem(r: RawTransferListItem): TransferListItem {
@@ -165,9 +165,9 @@ function toTransferDetail(r: RawTransferDetail): TransferDetail {
     createdAt: r.createdAt,
     completedAt: r.completedAt,
     createdByName: r.creator?.name ?? null,
-    fromLocation: toTransferLocationRef(r.fromLocation),
-    toLocation: toTransferLocationRef(r.toLocation),
-    lines: r.lines.map((l) => ({
+    fromLocation: toTransferLocationRef(r.fromLocation ?? null),
+    toLocation: toTransferLocationRef(r.toLocation ?? null),
+    lines: (r.lines ?? []).map((l) => ({
       id: l.id,
       productName: l.productVariant?.product?.name ?? l.productVariant?.name ?? "—",
       sku: l.productVariant?.product?.sku ?? l.productVariant?.sku ?? "—",

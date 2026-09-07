@@ -51,6 +51,7 @@ const dealActivityLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema
 const dealStageTransitionsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStageTransitionsContract));
 const dealUpdateResultLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealUpdateResultContract));
 const dealDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealDeleteContract));
+const stakeholderDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.stakeholderDeleteContract));
 
 
 export type {
@@ -393,7 +394,7 @@ export function useDeleteStakeholder(dealId: number) {
   return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "stakeholders", "delete", dealId] as const,
     mutationFn: (stakeholderId: string) =>
-      apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`, undefined, undefined, dealDeleteLazy),
+      apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`, undefined, undefined, stakeholderDeleteLazy),
     onMutate: async (stakeholderId) => {
       await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
       const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));

@@ -38,14 +38,6 @@ import {
   replaceLinesSuccessContract,
 } from "@/hooks/api/accounting/planning-schema";
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export interface ListBudgetsParams {
   cursor?: string;
   limit?: number;
@@ -124,7 +116,7 @@ export function useBudget(id: number) {
 
 export function useReplaceBudgetLines(id: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BudgetDetail, Error, ReplaceBudgetLinesInput>("accounting:budgets:update", {
+  return useAuthorizedMutation<{ success: true }, Error, ReplaceBudgetLinesInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "lines"],
     mutationFn: (data) => apiClient.put(`/accounting/budgets/${id}/lines`, data, undefined, replaceLinesSuccessContract),
     onSuccess: () => {
@@ -136,7 +128,7 @@ export function useReplaceBudgetLines(id: number) {
 
 export function useSubmitBudget(id: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:update", {
+  return useAuthorizedMutation<BudgetSummary, Error, BudgetWorkflowInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "submit"],
     mutationFn: (data) => apiClient.post(`/accounting/budgets/${id}/submit`, data, undefined, budgetWorkflowContract),
     onSuccess: () => {
@@ -147,7 +139,7 @@ export function useSubmitBudget(id: number) {
 
 export function useApproveBudget(id: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:approve", {
+  return useAuthorizedMutation<BudgetSummary, Error, BudgetWorkflowInput>("accounting:budgets:approve", {
     mutationKey: ["accounting", "planning", "budgets", id, "approve"],
     mutationFn: (data) => apiClient.post(`/accounting/budgets/${id}/approve`, data, undefined, budgetWorkflowContract),
     onSuccess: () => {
@@ -214,7 +206,7 @@ export function useForecastCompare(scenarioIds: number[]) {
 
 export function useScenarios() {
   const can = useCan("accounting:forecast:read");
-  return useQuery<ListResponse<Scenario>, Error>({
+  return useQuery<Scenario[], Error>({
     queryKey: planningKeys.scenarios(),
     queryFn: ({ signal }) => apiClient.get("/accounting/scenarios", undefined, signal, scenarioListContract),
     staleTime: 60_000,
@@ -247,7 +239,7 @@ export function useUpdateScenario(id: number) {
 
 export function useDeleteScenario(id: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, void>("accounting:forecast:manage", {
+  return useAuthorizedMutation<{ success: true }, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "delete"],
     mutationFn: () => apiClient.delete(`/accounting/scenarios/${id}`, undefined, undefined, scenarioDeleteContract),
     onSuccess: () => {
@@ -258,7 +250,7 @@ export function useDeleteScenario(id: number) {
 
 export function useSeedDefaultScenarios() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ seeded: number }, Error, void>("accounting:forecast:manage", {
+  return useAuthorizedMutation<{ created: number }, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", "seed"],
     mutationFn: () => apiClient.post("/accounting/scenarios/seed-defaults", {}, undefined, budgetSeedDefaultsContract),
     onSuccess: () => {

@@ -92,3 +92,5 @@ const automationEventItemContract = z.object({
 export const automationEventsListContract = z.object({
   events: z.array(automationEventItemContract),
 });
+
+export const successResponseContract = z.object({ success: z.boolean() });
