@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -15,148 +15,37 @@ import {
   bankTransferContract,
   type BankAccountRecord,
   type BankAccountsPage,
-  type BankAccountType as BankAccountTypeValue,
 } from "@/hooks/api/accounting/banking-schema";
-import { z } from "zod";
-
-const reconSuccessContract = z.object({ success: z.literal(true) });
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { reconSuccessContract } from "@/hooks/api/accounting/banking-reconciliation-schema";
+import { bankingKeys } from "@/hooks/api/accounting/banking-keys";
+import type {
+  BankImportResult,
+  BankTransaction,
+  BankTransfer,
+  BankTxnStatus,
+  ConfirmMatchInput,
+  CreateBankAccountInput,
+  CreateBankImportInput,
+  CreateRuleInput,
+  CreateTransferInput,
+  IgnoreInput,
+  ListBankAccountsParams,
+  ListRulesParams,
+  ListTransfersParams,
+  ListTxnParams,
+  OptimisticContext,
+  ReconciliationRule,
+  ReconciliationTxn,
+  ReconciliationWorkspace,
+  UnmatchInput,
+} from "@/hooks/api/accounting/banking-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { CursorPage } from "@/hooks/api/accounting";
+import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type { BankAccountType } from "@/hooks/api/accounting/banking-schema";
-export type BankTxnStatus = "UNMATCHED" | "SUGGESTED" | "MATCHED" | "RECONCILED" | "IGNORED";
-export type MatchType =
-  | "CUSTOMER_PAYMENT"
-  | "VENDOR_PAYMENT"
-  | "MANUAL_JOURNAL"
-  | "BANK_FEE"
-  | "TRANSFER";
-
-export type { BankAccountRecord as BankAccount } from "@/hooks/api/accounting/banking-schema";
-
-export interface BankTransaction {
-  id: number;
-  orgId: string;
-  bankAccountId: number;
-  importId: number | null;
-  txnDate: string;
-  description: string | null;
-  reference: string | null;
-  counterparty: string | null;
-  amount: string;
-  balanceAfter: string | null;
-  fingerprint: string;
-  status: BankTxnStatus;
-  matchedJournalEntryId: number | null;
-  createdAt: string;
-}
-
-export interface ReconciliationSuggestedMatch {
-  id: number;
-  orgId: string;
-  bankTransactionId: number;
-  journalEntryId: number | null;
-  matchedType: string;
-  matchedRecordId: number | null;
-  amount: string;
-  confidence: string | null;
-  isConfirmed: boolean;
-  confirmedByMembershipId: number | null;
-  confirmedAt: string | null;
-  createdAt: string;
-}
-
-export interface ReconciliationTxn extends BankTransaction {
-  suggestedMatches?: ReconciliationSuggestedMatch[];
-}
-
-export interface ReconciliationWorkspace {
-  unmatched: ReconciliationTxn[];
-  suggested: ReconciliationTxn[];
-  reconciledCount: number;
-  ledgerBalance: string | null;
-  bankBalance: string;
-}
-
-export interface ReconciliationRuleCondition {
-  field: "description" | "counterparty" | "amount";
-  op: "contains" | "equals" | "gt" | "lt";
-  value: string;
-}
-
-export type ReconciliationRuleAction =
-  | { type: "categorize"; accountPurposeOrId: string | number; memo?: string }
-  | { type: "transfer" }
-  | { type: "fee" };
-
-export interface ReconciliationRule {
-  id: number;
-  orgId: string;
-  name: string;
-  priority: number;
-  conditions: ReconciliationRuleCondition[];
-  action: ReconciliationRuleAction;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BankTransfer {
-  id: number;
-  orgId: string;
-  fromBankAccountId: number;
-  toBankAccountId: number;
-  amount: string;
-  transferDate: string;
-  reference: string | null;
-  journalEntryId: number | null;
-  createdByMembershipId: number | null;
-  createdAt: string;
-}
-
-export interface BankImportResult {
-  id: number;
-  importedCount: number;
-  duplicateCount: number;
-  totalRows: number;
-}
-
-const accountingBase = [...accountingAndSupportQueryKeys.accounting.all] as const;
-
-export const bankingKeys = {
-  all: [...accountingBase, "banking"] as const,
-  accounts: (params?: object) =>
-    [...accountingBase, "banking", "accounts", params] as const,
-  account: (id: number) =>
-    [...accountingBase, "banking", "accounts", id] as const,
-  transactions: (id: number, params?: object) =>
-    [...accountingBase, "banking", "transactions", id, params] as const,
-  imports: (params?: object) =>
-    [...accountingBase, "banking", "imports", params] as const,
-  reconciliation: (id: number) =>
-    [...accountingBase, "banking", "reconciliation", id] as const,
-  rules: (id: number) =>
-    [...accountingBase, "banking", "rules", id] as const,
-  transfers: (params?: object) =>
-    [...accountingBase, "banking", "transfers", params] as const,
-};
-
-function toQuery<P extends object>(params: P): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === null || v === "") continue;
-    out[k] = String(v);
-  }
-  return out;
-}
-
-export interface ListBankAccountsParams {
-  cursor?: string;
-  limit?: number;
-}
+export * from "@/hooks/api/accounting/banking-types";
+export { bankingKeys } from "@/hooks/api/accounting/banking-keys";
 
 export function useBankAccounts(params: ListBankAccountsParams = {}) {
   const can = useCan("accounting:banking:read");
@@ -180,15 +69,6 @@ export function useBankAccount(id: number) {
   });
 }
 
-type ListTxnParams = {
-  status?: BankTxnStatus;
-  from?: string;
-  to?: string;
-  q?: string;
-  cursor?: string;
-  limit?: number;
-};
-
 export function useBankTransactions(bankAccountId: number, params: ListTxnParams = {}) {
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankTransaction>, Error>({
@@ -201,18 +81,6 @@ export function useBankTransactions(bankAccountId: number, params: ListTxnParams
     staleTime: 30_000,
     enabled: can,
   });
-}
-
-export interface CreateBankAccountInput {
-  name: string;
-  accountType: BankAccountTypeValue;
-  bankName?: string;
-  accountNumberMasked?: string;
-  ifsc?: string;
-  currency: string;
-  ledgerAccountId?: number;
-  openingBalance: string;
-  openingBalanceDate?: string;
 }
 
 export function useCreateBankAccount() {
@@ -228,23 +96,6 @@ export function useCreateBankAccount() {
       toast.error(getErrorMessage(err));
     },
   });
-}
-
-export interface CreateBankImportInput {
-  bankAccountId: number;
-  fileName: string;
-  columnMapping: {
-    date: string;
-    description: string;
-    amount?: string;
-    debit?: string;
-    credit?: string;
-    reference?: string;
-    counterparty?: string;
-  };
-  rows: string[][];
-  dateFormat: string;
-  hasHeaderRow: boolean;
 }
 
 export function useCreateBankImport() {
@@ -272,18 +123,6 @@ export function useReconciliationWorkspace(bankAccountId: number) {
     staleTime: 0,
     enabled: can,
   });
-}
-
-interface ConfirmMatchInput {
-  transactionId: number;
-  matchType: MatchType;
-  matchedRecordId?: number;
-  counterAccountId?: number;
-  memo?: string;
-}
-
-interface OptimisticContext {
-  snapshot: ReconciliationWorkspace | undefined;
 }
 
 export function useConfirmMatch(bankAccountId: number) {
@@ -318,10 +157,6 @@ export function useConfirmMatch(bankAccountId: number) {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
     },
   });
-}
-
-interface UnmatchInput {
-  transactionId: number;
 }
 
 export function useUnmatch(bankAccountId: number) {
@@ -365,10 +200,6 @@ export function useUnmatch(bankAccountId: number) {
   });
 }
 
-interface IgnoreInput {
-  transactionId: number;
-}
-
 export function useIgnoreTransaction(bankAccountId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ success: true }, Error, IgnoreInput, OptimisticContext>("accounting:banking:reconcile", {
@@ -402,11 +233,6 @@ export function useIgnoreTransaction(bankAccountId: number) {
   });
 }
 
-export interface ListRulesParams {
-  cursor?: string;
-  limit?: number;
-}
-
 export function useReconciliationRules(bankAccountId: number, params: ListRulesParams = {}) {
   const can = useCan("accounting:banking:reconcile");
   return useQuery<CursorPage<ReconciliationRule>, Error>({
@@ -419,14 +245,6 @@ export function useReconciliationRules(bankAccountId: number, params: ListRulesP
     staleTime: 60_000,
     enabled: can,
   });
-}
-
-export interface CreateRuleInput {
-  name: string;
-  priority: number;
-  conditions: ReconciliationRuleCondition[];
-  action: ReconciliationRuleAction;
-  isActive: boolean;
 }
 
 export function useCreateReconciliationRule(bankAccountId: number) {
@@ -467,13 +285,6 @@ export function useDeleteReconciliationRule(bankAccountId: number) {
   });
 }
 
-export interface ListTransfersParams {
-  cursor?: string;
-  limit?: number;
-  from?: string;
-  to?: string;
-}
-
 export function useTransfers(params: ListTransfersParams = {}) {
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankTransfer>, Error>({
@@ -483,15 +294,6 @@ export function useTransfers(params: ListTransfersParams = {}) {
     staleTime: 30_000,
     enabled: can,
   });
-}
-
-export interface CreateTransferInput {
-  fromBankAccountId: number;
-  toBankAccountId: number;
-  amount: string;
-  transferDate: string;
-  reference?: string;
-  description?: string;
 }
 
 export function useCreateTransfer() {

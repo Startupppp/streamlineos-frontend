@@ -146,6 +146,13 @@ export const humanResourcesQueryKeys = {
       userId: string,
       accessVersion: number,
     ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests"] as const,
+    leavesMyRequestsPages: (
+      orgId: string,
+      userId: string,
+      accessVersion: number,
+    ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests", "pages"] as const,
+    leaveAnalytics: (year: number) =>
+      [...base, "hr", "leaveAnalytics", year] as const,
     dashboardMetrics: () => [...base, "hr", "dashboard", "metrics"] as const,
     leaveCalendar: (month: number, year: number) =>
       [...base, "hr", "leaveCalendar", month, year] as const,
