@@ -13,7 +13,7 @@ export const paymentProviderRowContract = z.object({
   orgId: z.string(),
   providerKey: z.string(),
   displayName: z.string(),
-  status: z.string(),
+  status: z.enum(["not_configured", "test_mode_ready", "needs_credentials", "needs_business_details", "needs_kyc", "kyc_pending", "kyc_rejected", "needs_webhook", "webhook_failing", "test_payment_required", "ready_for_live", "live", "degraded", "disabled"]),
   environment: z.string(),
   isPrimary: z.boolean(),
   supportedCurrencies: z.array(z.string()),
@@ -22,7 +22,7 @@ export const paymentProviderRowContract = z.object({
   updatedAt: z.string(),
 });
 
-const paymentProviderWithCredentialsContract = paymentProviderRowContract.extend({
+export const paymentProviderWithCredentialsContract = paymentProviderRowContract.extend({
   credentials: z.array(publicCredentialContract),
 });
 
@@ -44,7 +44,7 @@ export const paymentCatalogContract = z.array(catalogEntryContract);
 
 export const credentialSaveContract = z.object({
   credential: publicCredentialContract,
-  warning: z.string().optional(),
+  warning: z.object({ code: z.string(), message: z.string() }).nullable(),
 });
 
 export const paymentDisconnectContract = z.object({ success: z.literal(true) });
@@ -66,6 +66,10 @@ export const paymentTestTransactionContract = z.object({
   createdAt: z.string(),
 });
 
+export const paymentTestTransactionCreatedContract = paymentTestTransactionContract.extend({
+  keyId: z.string().nullable(),
+});
+
 export const paymentTestTransactionListContract = z.array(paymentTestTransactionContract);
 
 export const webhookEndpointContract = z.object({
@@ -83,7 +87,7 @@ export const webhookEndpointContract = z.object({
   updatedAt: z.string(),
 });
 
-const webhookEventContract = z.object({
+export const webhookEventContract = z.object({
   id: z.number(),
   orgId: z.string(),
   providerId: z.number(),

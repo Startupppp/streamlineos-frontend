@@ -1,5 +1,6 @@
 "use client";
 
+import type { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
@@ -13,6 +14,7 @@ import {
   paymentDisconnectContract,
   paymentTestTransactionListContract,
   paymentTestTransactionContract,
+  paymentTestTransactionCreatedContract,
   webhookEndpointContract,
   webhookEventListContract,
   webhookEventRowContract,
@@ -20,6 +22,8 @@ import {
   paymentAuditListContract,
   paymentManualMethodListContract,
   paymentManualMethodContract,
+  webhookEventContract,
+  paymentProviderWithCredentialsContract,
 } from "@/hooks/api/payments-schema";
 
 export type PaymentEnvironment = "test" | "live";
@@ -60,17 +64,7 @@ export type PaymentProviderStatus =
   | "degraded"
   | "disabled";
 
-export type PaymentProvider = {
-  id: number;
-  providerKey: string;
-  displayName: string;
-  status: PaymentProviderStatus;
-  environment: PaymentEnvironment;
-  isPrimary: boolean;
-  supportedCurrencies: string[];
-  supportedPaymentMethods: string[];
-  credentials: PaymentProviderCredentialPublic[];
-};
+export type PaymentProvider = z.infer<typeof paymentProviderWithCredentialsContract>;
 
 export function usePaymentCatalog() {
   const canView = useCan("payments:providers:view");
@@ -168,7 +162,7 @@ export function useCreateTestTransaction(providerKey: string) {
   return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["create", "test", "transaction"],
     mutationFn: (payload: { amount: string; currency: string }) =>
-      apiClient.post(`/payments/providers/${providerKey}/test-transactions`, payload, undefined, paymentTestTransactionContract),
+      apiClient.post(`/payments/providers/${providerKey}/test-transactions`, payload, undefined, paymentTestTransactionCreatedContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey) }),
   });
 }
@@ -210,18 +204,7 @@ export function useGenerateWebhook(providerKey: string) {
   });
 }
 
-export type PaymentWebhookEvent = {
-  id: number;
-  environment: PaymentEnvironment;
-  providerEventId: string;
-  eventType: string;
-  signatureValid: boolean;
-  processingStatus: "received" | "processed" | "failed" | "ignored_duplicate";
-  payloadRedacted: Record<string, unknown>;
-  receivedAt: string;
-  processedAt: string | null;
-  errorMessage: string | null;
-};
+export type PaymentWebhookEvent = z.infer<typeof webhookEventContract>;
 
 export function useWebhookEvents(providerKey: string, enabled = true) {
   const canView = useCan("payments:webhooks:view");
@@ -296,20 +279,7 @@ export function usePaymentAudit(providerKey: string, enabled = true) {
 export type ManualMethodType = "bank_transfer" | "upi" | "cheque" | "cash" | "other";
 export type ManualMethodStatus = "enabled" | "missing_instructions" | "disabled";
 
-export type PaymentManualMethod = {
-  id: number;
-  methodType: ManualMethodType;
-  displayName: string;
-  instructions: string | null;
-  bankName: string | null;
-  accountHolder: string | null;
-  maskedAccountNumber: string | null;
-  ifscSwiftIban: string | null;
-  upiId: string | null;
-  paymentReferenceInstructions: string | null;
-  requireManualApproval: boolean;
-  status: ManualMethodStatus;
-};
+export type PaymentManualMethod = z.infer<typeof paymentManualMethodContract>;
 
 export type SaveManualMethodPayload = {
   methodType: ManualMethodType;
