@@ -5,7 +5,7 @@ Scope: Home, Settings, Authentication/Organization/RBAC, HRMS, Payroll, Build/PM
 
 ## Status and evidence
 
-Checkbox census at this revision: **156 closed, 39 open, 195 total**. Applying the [closure definition](../.scratch/code-release-10-10-v2/CLOSURE-DEFINITION.md) gives **155/159 CODE criteria closed (97.5%), 4 CODE criteria open** — C006, C149, C156 and C158. The header stood stale at 146/145/91.2% until 2026-09-06, and then at 155/40/5-open through 2026-09-07; it is recomputed here from the live checkboxes rather than carried forward. **C104 moved twice and is now closed**: it was corrected from checked to unchecked on 2026-09-06 because its own status text read "OPEN — named blocker" against a red `check:test-suppressions` (76 runtime-selected suppressions against a ratchet of 29), then re-closed on 2026-09-07 by `b54c52bf5` when that suppression class was retired rather than repriced — 76 down to 20 with the ratchet lowered, not raised. The previous revision's note that "the count therefore went DOWN by one" described the 09-06 state and no longer holds. These five include roll-ups; they are not five independent implementation defects. PRD-C188 retention/legal-hold is closed with its linked drill evidence. A checked criterion is either measured or explicitly labelled owner-dispositioned; disposition is never measurement. Code-level and deployed production readiness remain separate.
+Checkbox census at this revision: **156 closed, 39 open, 195 total**. Applying the [closure definition](../.scratch/code-release-10-10-v2/CLOSURE-DEFINITION.md) gives **155/159 CODE criteria closed (97.5%), 4 CODE criteria open** — C006, C149, C156 and C158. The header stood stale at 146/145/91.2% until 2026-09-06, and then at 155/40/5-open through 2026-09-07; it is recomputed here from the live checkboxes rather than carried forward. **C104 moved twice and is now closed**: it was corrected from checked to unchecked on 2026-09-06 because its own status text read "OPEN — named blocker" against a red `check:test-suppressions` (76 runtime-selected suppressions against a ratchet of 29), then re-closed on 2026-09-07 by `b54c52bf5` when that suppression class was retired rather than repriced — 76 down to 20 with the ratchet lowered, not raised. The previous revision's note that "the count therefore went DOWN by one" described the 09-06 state and no longer holds. These four include roll-ups; they are not four independent implementation defects — C006 and C156 both close when C149 does, so the open set is really C149's mobile INP plus C158's replay-ledger and one-commit requirements. PRD-C188 retention/legal-hold is closed with its linked drill evidence. A checked criterion is either measured or explicitly labelled owner-dispositioned; disposition is never measurement. Code-level and deployed production readiness remain separate.
 
 Measurement prerequisites, **superseded 2026-09-06**: the co-located stack in `D:\localstack` now provides PostgreSQL 18.6 (`scratch_local`) on 127.0.0.1:5432, Redis on 6379 and an Upstash REST shim on 8079, so the 2026-09-05 note that no database or cache was discoverable no longer describes this machine. Web Vitals and latency acceptance still require a quiet host: the driver now MEASURES host CPU from `os.cpus()` tick deltas rather than reading `os.loadavg()`, which is unimplemented on Windows and returned a constant 0, and both the producer and the budget gate now refuse a contended OR an unmeasured host. Two further traps are recorded because each cost a whole capture: `next start` keeps serving a stale `.next` until the server is restarted after a build, and the frontend must be started with `API_INTERNAL_URL=http://127.0.0.1:1500` or every authenticated route redirects to `/org-setup` behind an IPv6 loopback stall.
 
@@ -227,7 +227,7 @@ These decisions are final for this release and remove implementation alternative
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] **[PRD-C051]** Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
-- [x] **[PRD-C052]** Verify soft-delete/archive policy and every active readâ€™s deleted/archived predicate; use partial indexes where the access pattern requires them.
+- [x] **[PRD-C052]** Verify soft-delete/archive policy and every active read's deleted/archived predicate; use partial indexes where the access pattern requires them.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] **[PRD-C053]** Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and current-catalog parity. Upgraded-catalog compatibility is required only if migration decision 9 changes, because this release explicitly authorizes database recreation.
       **CLOSED 2026-09-04 — Lane F measurement.** Evidence: [TENANT-FK-CANONICALIZATION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/TENANT-FK-CANONICALIZATION-2026-09-04.md). 152 redundant pairs measured at HEAD 685 on scratch_boot_a: all 152 are CRM (54) or Inventory (98), both explicitly excluded from release scope. 0 in-scope pairs remain — migration 1006 (sealed in chain) addressed all in-scope pairs prior to this session. Dependency proof: no code in src/ references the dropped single-column FK names. Catalog parity A-vs-B: 0 differences across 9 sections (1026 tables, 14026 constraints, 4767 indexes). Behavior tests: 6/6 PASS. No new migration authored.
@@ -802,7 +802,18 @@ These decisions are final for this release and remove implementation alternative
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C158]** Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
       **OPEN - builds, typechecks, cycles and focused tests pass at one commit; four gates now return real
-      verdicts and two remain honestly red.** At root `1fa2a3aeb` / backend `980b81013`, both trees clean:
+      verdicts and two remain honestly red.**
+      **Blocker status 2026-09-07, after reconciling this criterion against the artifacts rather than
+      against its own previous revision.** Cleared: the **BOLA live cross-tenant sweep** is green at
+      `85f758048` (exit 0, 10/10, 843 scored, 127 s, 0 SERVER-ERROR, 0 existence oracles) with both
+      formerly-unpinned defects fixed and the `getTicket` 500 not reproducing; and
+      **`check:test-suppressions`** is green after the suppression class was retired rather than repriced
+      (76 → 20 with the ratchet **lowered** 29 → 20, `b54c52bf5`), which is what closed PRD-C104.
+      Still open, and each is a real reason this stays unchecked: **`check:replay-ledger`** exits 2 for want
+      of a blank database, and the **"at ONE commit"** requirement is further from met than when it was
+      written — the frontend typecheck is mid-sweep at a moving, uncommitted number after the contract work
+      described below, so there is no clean commit pair to measure. This criterion closes on those two, not
+      on the BOLA half. At root `1fa2a3aeb` / backend `980b81013`, both trees clean:
       backend `nest build` **0**, backend `typecheck` **0 errors**, backend `typecheck:test` **0 errors**,
       frontend `tsc --noEmit` **0 errors**, `madge --circular` **0 cycles** in both repos (6,012 and 5,537
       files). Frontend focused tests 159/159 across 24 suites.
@@ -840,8 +851,10 @@ These decisions are final for this release and remove implementation alternative
       One failure was a spec defect and is fixed: `calendar-recurrence-dst` filtered the range response on
       `isRecurring`, which that projection does not return, so it matched 0 items; it now filters to the
       events the test itself created, with the existing `toBeGreaterThan(0)` still guarding vacuity.
-      The other is a **product defect, NOT fixed**: `build-ticket-scope-and-isolation` expects a
-      cross-tenant ticket read to answer 404 and receives **500**.
+      The other was recorded as a **product defect, NOT fixed**: `build-ticket-scope-and-isolation` expects a
+      cross-tenant ticket read to answer 404 and received **500**. **It does not reproduce and that spec now
+      passes 5/5 — see the 2026-09-07 reconciliation at the end of this criterion, which also shows the
+      root cause recorded below cannot be the one.**
       `projects-tickets-detail.service.ts:102` runs a Drizzle relational `findFirst` whose `assignee` /
       `assignees` relations join `organization_members`, whose RLS policy
       (`0383_rls_org_members_identity_read.sql`) calls `app.current_org_id_or_null()`; the query raises
@@ -854,13 +867,16 @@ These decisions are final for this release and remove implementation alternative
       would swallow an RLS failure: a `42501` means the tenant GUC was not set for that statement, so the
       catch would hide a tenant-context bug behind a clean-looking 404. This needs the missing GUC context
       diagnosed first; it must not be closed by a `catch`. Owner: the Build module owner.
-      **The BOLA live cross-tenant sweep is NOT passing, and a "PASSED" claim recorded on 2026-09-06 was
-      retracted after checking it against its own artifact.** That claim reported 854 routes probed, 520
+      **The BOLA live cross-tenant sweep is NOW PASSING at `85f758048` (exit 0, 10/10, 843 scored, 127 s) —
+      but only after a "PASSED" claim recorded on 2026-09-06 was retracted, and the history below is kept
+      because the retraction is why the pass is believable.** The 2026-09-06 claim was wrong when made. That claim reported 854 routes probed, 520
       PASS and zero disclosures, derived from checkpoint data rather than an observed jest summary. The
       artifact it named holds **276 outcomes** (185 PASS / 85 UNPROBEABLE / 6 NO-404), so **scored = 191,
       below the spec's own `scored >= 200` floor** — that run does not clear the suite's first assertion,
       and it never reached the two endpoints below.
-      Two **unpinned** defects reproduce on the fuller runs (1,927 and 1,523 outcomes):
+      Two **unpinned** defects reproduced on the fuller runs (1,927 and 1,523 outcomes). **Both are now
+      FIXED and re-measured — see the 2026-09-07 reconciliation at the end of this criterion.** They are
+      kept below because a repair is only legible beside what was measured broken.
       **(1) LEAK — `POST /crm/consent/contacts/:contactId`.** Control 200, cross-tenant probe **200**, body
       `{"success":true}`: the prober records consent against another organization's contact. A cross-tenant
       **write**. `KNOWN_LEAKS` holds only the two `billing/marketplace/:appId/install` entries, so this is
@@ -881,14 +897,69 @@ These decisions are final for this release and remove implementation alternative
       per-test limit. **A gate that cannot finish cannot pass**, recorded as a harness defect rather than
       repaired by quietly raising the limit.
       Its nine assertion tests did run and reported no disclosures, but they ran over what a timed-out run
-      had scored, and that is **absence of evidence, not a clean result**: the newest artifact holds 479
-      scored outcomes and neither `POST /crm/consent/contacts/:contactId` nor `POST /build/:projectId/epics`
-      appears in it. Only their GET siblings were reached. The two defective routes are write verbs the run
-      never got to, so the LEAK and SERVER-ERROR above are not retracted by it.
+      had scored, and a timed-out gate cannot be read as passing. **That blocker is now cleared — by making
+      the sweep finish, not by widening the limit; see the reconciliation below.**
       The harness additionally printed `2 pinned LEAK routes did not reproduce — remove them from
       live/known-no-404.json`. Not acted on: a run that stopped before scoring those routes is not evidence
-      they are fixed, and unpinning on that basis deletes a recorded defect instead of repairing it.
-      be read as passing.**
+      they are fixed, and unpinning on that basis deletes a recorded defect instead of repairing it. **That
+      call is now confirmed correct** — both reproduce in the newest full sweep, so the pins are still earned.
+
+      **RECONCILED 2026-09-07 — the two unpinned defects are FIXED, and the claim that the newest artifact
+      never reached them was wrong.** The artifact ledger was read directly rather than carried forward.
+      Newest full sweep is `.artifacts/bola-live-cross-tenant-2026-09-07-final.json` (written 09:37,
+      `commit 565e45832`, **1,937 outcomes**), and **both write verbs are present in it and PASS**:
+      `POST /crm/consent/contacts/:contactId` control 200 / probe **404**, and
+      `POST /build/:projectId/epics` control 201 / probe **404**. Its distribution is 825 PASS,
+      1,094 UNPROBEABLE, 16 NO-404, 2 LEAK — so **scored = 843**, not 479, and the two routes are not
+      "write verbs the run never got to". The second full run of that day
+      (`…2026-09-07.json`, 09:15, same commit, 1,937 outcomes) agrees, and a targeted 4-route recheck
+      (`.artifacts/bola-recheck-2026-09-07.json`, 09:10) agrees a third time.
+      **The repair is named, not inferred.** Commit `2f9fd242c` (2026-09-06 09:56 — one hour after the
+      08:22 artifact that recorded the leak) "answer 404 for a foreign project on epic creation, a foreign
+      contact on consent recording, and a foreign lead on status change". `CrmConsentService.record` now
+      opens with an org-scoped, soft-delete-aware contact lookup that throws `NotFoundException`
+      (`crm-consent.service.ts:226-231`), and `EpicsService.createEpic` calls `assertProjectInOrg` before
+      allocating a ticket number (`epics.service.ts:39`). `2f9fd242c` is an ancestor of backend HEAD, so
+      this is shipped code, not a branch. The only remaining LEAKs in the newest sweep are the two pinned
+      `billing/marketplace/:appId/install` entries this criterion already verified as harness false
+      positives, and `serverErrors` in the pin file is still `[]` and still correct.
+      `test/security/bola/live/known-no-404.json` carried a note on the consent GET saying the write verb
+      "is a measured leak; see leaks below" against a leaks list that never contained it; that note now
+      records the repair and its evidence instead.
+      **The 4 h timeout was a THROUGHPUT defect, and the limit was not raised.** `85f758048` (2026-09-07
+      09:40, an ancestor of backend HEAD) took the sweep from 4.08 h to **127 s** by issuing the control and
+      probe requests of a non-mutating attempt concurrently — every read attempt had been paying the
+      server's database latency twice. The route loop stays sequential, so the borrow pool still hands each
+      id out once and outcomes are still recorded in plan order; the mutating branch is untouched, because
+      a DELETE must probe before its control consumes the object. **Full sweep at that commit: exit 0,
+      10/10 tests, 1,937 attempted, 843 scored against the floor of 200, 825 PASS, 16 NO-404 and 2 LEAK all
+      pinned with reasons, 0 SERVER-ERROR, 0 existence oracles.**
+      The same commit fixed two things the finish exposed. A **credential refusal was being scored as a
+      disclosure**: a sweep this long mutates the tenants it probes, so a token minted 40 s earlier can
+      describe a membership the server has stopped honouring — that refusal is a **403, not a 401**, so
+      `sendAs` never re-minted, and 403-on-a-real-id beside 404-on-an-absent-id is exactly the shape of an
+      existence oracle. `POST /hr/enterprise/ops/emergency/events/:eventId/respond` was reported as leaking
+      existence with body `ORG_MEMBERSHIP_INACTIVE` and PASSES re-probed alone. This suppresses nothing: an
+      object-level 403 carries a different body, and a genuinely revoked membership answers 403 again on the
+      fresh credential and scores as before. And a **real product defect**:
+      `POST /leads/:leadId/activities` inserted with a caller-supplied `leadId` it never checked belonged to
+      the caller's org, so a cross-tenant id reached the foreign key and surfaced as 500 where 404 is the
+      contract; it now loads the lead in the caller's org first. Its `date` was `z.string()`, so a malformed
+      date raised `RangeError: Invalid time value` and returned 500 instead of 400 — now
+      `z.string().datetime()`. That route consequently scores UNPROBEABLE rather than PASS, because the
+      harness's contract-derived body no longer satisfies the stricter schema; one route of 1,937, recorded
+      rather than hidden.
+      **The `getTicket` 500 does not reproduce, and its recorded root cause is impossible as written.**
+      `GET /build/:projectId/tickets/:ticketId` answers **404, verdict PASS**, in the 2026-09-06 sweep and
+      both 2026-09-07 sweeps, and `build-ticket-scope-and-isolation` passes **5/5** at `85f758048`. The
+      diagnosis above attributed the 500 to a `42501` raised by the `organization_members` policy from
+      `0383_rls_org_members_identity_read.sql`, but that migration's own header states both USING arms
+      deliberately use the **non-raising** accessors (`app.current_org_id_or_null()` /
+      `app.current_user_id_or_null()`) precisely so an arm cannot abort a scan: "with neither GUC set both
+      arms are NULL, no row qualifies… only the failure MODE changes, from a raised 42501 to an empty
+      result". That policy cannot produce the 500 attributed to it. **The "catch the 42501 and return 404"
+      trap warning still stands** — it was never applied, and the defect it guarded against no longer has a
+      symptom to tempt anyone.
       **The frontend typecheck number recorded above is STALE as of 2026-09-07, and this is not a
       regression in behaviour.** That line reads `frontend tsc --noEmit` **0 errors** at root `1fa2a3aeb`.
       It was true, and it was true because the frontend was not typechecking its API responses:
@@ -988,7 +1059,7 @@ These are intentionally postponed until infrastructure, provider access and appr
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
 - [ ] **[PRD-C174]** Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
-- [ ] **[PRD-C175]** Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
+- [ ] **[PRD-C175]** Capture passing RB-01-RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
 - [ ] **[PRD-C176]** Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
       Owner-dispositioned, not measured: [signed record](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md).
