@@ -57,7 +57,7 @@ export function EssDisciplinarySection() {
     );
   }
 
-  const rows = data ?? [];
+  const rows = data?.data ?? [];
   if (rows.length === 0) {
     return (
       <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col">

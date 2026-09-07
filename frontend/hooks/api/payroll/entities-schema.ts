@@ -50,7 +50,7 @@ export const entityContextResponseContract = z.object({
   entity: payrollEntityContract,
   countryPack: countryPackDescriptorContract.nullable(),
   readiness: z.array(entityReadinessItemContract),
-  readinessScore: z.number(),
+  readinessScore: z.object({ done: z.number(), total: z.number(), percent: z.number() }),
   isolation: z.object({ note: z.string() }),
   honestyNote: z.string(),
 });

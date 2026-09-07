@@ -63,7 +63,7 @@ interface ProductForEdit {
   productType?: "STOCKABLE" | "CONSUMABLE" | "SERVICE" | null;
   trackingMethod?: "NONE" | "LOT" | "SERIAL" | null;
   costingMethod?: "STANDARD" | "WEIGHTED_AVERAGE" | "FIFO" | null;
-  reorderEnabled?: boolean;
+  reorderEnabled?: boolean | null;
   barcode?: string | null;
 }
 

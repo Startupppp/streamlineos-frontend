@@ -23,7 +23,7 @@ export const payrollPeriodLockedContract = payrollPeriodContract.extend({
   contract: z.string(),
 });
 
-const payrollSnapshotItemContract = z.object({
+export const payrollSnapshotItemContract = z.object({
   id: z.number(),
   userId: z.string(),
   section: z.string(),
@@ -38,7 +38,7 @@ const payrollSnapshotItemContract = z.object({
 
 export const payrollSnapshotListContract = cursorPageContract(payrollSnapshotItemContract);
 
-const payrollAdjustmentListItemContract = z.object({
+export const payrollAdjustmentListItemContract = z.object({
   id: z.number(),
   userId: z.string(),
   adjustmentType: z.string(),
@@ -80,4 +80,6 @@ export const payrollAdjustmentContract = z.object({
 });
 
 export type PayrollPeriod = z.infer<typeof payrollPeriodContract>;
+export type PayrollSnapshotItem = z.infer<typeof payrollSnapshotItemContract>;
+export type PayrollAdjustmentListItem = z.infer<typeof payrollAdjustmentListItemContract>;
 export type PayrollAdjustment = z.infer<typeof payrollAdjustmentContract>;

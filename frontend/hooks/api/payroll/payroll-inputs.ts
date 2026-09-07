@@ -1,7 +1,4 @@
 "use client";
-import type { z } from "zod";
-import type { payrollAdjustmentContract } from "@/hooks/api/payroll/payroll-inputs-schema";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -10,6 +7,12 @@ import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  PayrollSnapshotItem,
+  PayrollAdjustmentListItem as SchemaAdjustmentListItem,
+  PayrollAdjustment as SchemaAdjustmentMutation,
+  PayrollPeriod as SchemaPeriod,
+} from "@/hooks/api/payroll/payroll-inputs-schema";
 
 const payrollPeriodListC = lazyContract(() =>
   import("@/hooks/api/payroll/payroll-inputs-schema").then(
@@ -52,34 +55,10 @@ export type HrPayrollInputSection =
 export type HrPayrollAdjustmentType = "arrears" | "recovery" | "correction";
 export type HrPayrollAdjustmentStatus = "pending" | "approved" | "applied";
 
-export interface PayrollInputPeriod {
-  id: number;
-  orgId: string;
-  periodKey: string;
-  status: HrPayrollInputStatus;
-  cutoffDate: string | null;
-  builtAt: string | null;
-  lockedAt: string | null;
-  lockedBy: string | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PayrollInputSnapshot {
-  id: number;
-  userId: string;
-  section: HrPayrollInputSection;
-  payload: Record<string, unknown>;
-  sourceRefs: Array<{ table: string; id: number | string }> | null;
-  createdAt: string;
-  userName: string | null;
-  userFirstName: string | null;
-  userLastName: string | null;
-  userEmail: string;
-}
-
-export type PayrollAdjustment = z.infer<typeof payrollAdjustmentContract>;
+export type PayrollInputPeriod = SchemaPeriod;
+export type PayrollInputSnapshot = PayrollSnapshotItem;
+export type PayrollAdjustment = SchemaAdjustmentMutation;
+export type PayrollAdjustmentListItem = SchemaAdjustmentListItem;
 
 interface Pagination {
   limit: number;
@@ -88,17 +67,17 @@ interface Pagination {
 }
 
 interface PaginatedPeriods {
-  data: PayrollInputPeriod[];
+  data: SchemaPeriod[];
   pagination: Pagination;
 }
 
 interface PaginatedSnapshots {
-  data: PayrollInputSnapshot[];
+  data: PayrollSnapshotItem[];
   pagination: Pagination;
 }
 
 interface PaginatedAdjustments {
-  data: PayrollAdjustment[];
+  data: SchemaAdjustmentListItem[];
   pagination: Pagination;
 }
 

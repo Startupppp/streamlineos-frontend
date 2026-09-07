@@ -117,7 +117,7 @@ export function BonusesTab() {
 
   const filtered = useMemo(
     () =>
-      (data ?? []).filter((b) => {
+      (data?.data ?? []).filter((b) => {
         const monthMatch = getBonusMonth(b) === month;
         const typeMatch = type === "all" || b.type === type;
         const statusMatch = status === "all" || b.status === status;

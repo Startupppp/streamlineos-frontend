@@ -101,7 +101,7 @@ function RecallsPageInner() {
       header: "Lots",
       headerClassName: "w-[70px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (r) => r.lines.length,
+      cell: (r) => r.lines?.length ?? 0,
     },
     {
       key: "createdAt",

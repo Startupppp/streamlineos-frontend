@@ -6,10 +6,12 @@ const exceptionCountsContract = z.object({
   INFO: z.number(),
 });
 
+const payrollRunStatusEnum = z.enum(["PREPARING","DRAFT","PREVIEW_READY","EXCEPTIONS_FOUND","PENDING_APPROVAL","APPROVED","LOCKED","PAID","PAYSLIPS_PUBLISHED","CLOSED","REOPENED"]);
+
 const commandCenterHeaderContract = z.object({
   runId: z.number().nullable(),
   month: z.string(),
-  status: z.string().nullable(),
+  status: payrollRunStatusEnum.nullable(),
   grossTotal: z.string(),
   deductionTotal: z.string(),
   netTotal: z.string(),
@@ -60,7 +62,7 @@ const packComplianceChecklistItemContract = z.object({
 });
 
 const commandCenterPanelsContract = z.object({
-  runStatus: z.string().nullable(),
+  runStatus: payrollRunStatusEnum.nullable(),
   topExceptions: z.array(topExceptionContract),
   varianceSummary: varianceSummaryContract.nullable(),
   pendingApprovals: z.array(pendingApprovalContract),

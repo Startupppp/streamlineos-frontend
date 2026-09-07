@@ -12,6 +12,8 @@ const listInsightsContract = lazyContract(() =>
 const explainInsightContract = lazyContract(() =>
   import("@/hooks/api/inventory/ai-schema").then((m) => m.explainInsightContract),
 );
+import type { ReorderProposalResponse } from "@/hooks/api/inv-ai-explain";
+
 const reorderProposalContract = lazyContract(() =>
   import("@/hooks/api/inventory/ai-schema").then((m) => m.reorderProposalContract),
 );
@@ -110,19 +112,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         label: "Reorder proposal",
         description: "Draft PO based on deterministic reorder evidence",
         run: async (signal?: AbortSignal) => {
-          const response = await apiClient.post<{
-            evidence: {
-              currentOnHand: number;
-              forecasted: number;
-              suggestedQty: number;
-              leadTimeDays: number;
-              expectedDate: string | null;
-              reason: string;
-              variantSku: string;
-            };
-            explanation: NarrationInput;
-            proposal: { proposalId: number; token: string; expiresAt: string };
-          }>(
+          const response = await apiClient.post<ReorderProposalResponse>(
             "/inventory/ai/reorder-proposal",
             { variantId: String(firstVariant.id) },
             { signal },
@@ -133,11 +123,11 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
           const evidenceText = [
             `Evidence (Deterministic):`,
             `• Current On-Hand: ${ev.currentOnHand}`,
-            `• Forecasted Stock: ${ev.forecasted}`,
-            `• Suggested Reorder Qty: ${ev.suggestedQty}`,
+            `• Forecasted Stock: ${ev.forecastedQty}`,
+            `• Suggested Reorder Qty: ${ev.suggestedOrderQty}`,
             `• Lead Time: ${ev.leadTimeDays} days`,
-            `• Expected Arrival: ${ev.expectedDate ?? "—"}`,
-            `• Reason: ${ev.reason}`,
+            `• Expected Arrival: ${ev.expectedDeliveryDate}`,
+            `• Reason: ${ev.reorderReason}`,
           ].join("\n");
 
           const narration = narrationToText(response.explanation);

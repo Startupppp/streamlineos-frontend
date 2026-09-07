@@ -57,4 +57,6 @@ export const incentiveListContract = z.object({
 export const successContract = z.object({ success: z.boolean() });
 
 export type Bonus = z.infer<typeof bonusContract>;
+export type BonusCreated = z.infer<typeof bonusCreatedContract>;
+export type IncentiveItem = z.infer<typeof incentiveItemContract>;
 export type IncentiveList = z.infer<typeof incentiveListContract>;

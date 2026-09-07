@@ -6,12 +6,12 @@ import { type DataTableColumn } from "@/components/ui/data-table";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
   type PayrollInputSnapshot,
-  type PayrollAdjustment,
+  type PayrollAdjustmentListItem,
 } from "@/hooks/api/payroll/payroll-inputs";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
-export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment): string {
+export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustmentListItem): string {
   return getUserDisplayName({
     name: row.userName,
     firstName: row.userFirstName,
@@ -215,8 +215,8 @@ export const ADJ_STATUS_STYLES: Record<string, string> = {
 export function buildAdjustmentColumns(
   isLocked: boolean,
   approve: { isPending: boolean; mutate: (id: number) => void },
-): DataTableColumn<PayrollAdjustment>[] {
-  const cols: DataTableColumn<PayrollAdjustment>[] = [
+): DataTableColumn<PayrollAdjustmentListItem>[] {
+  const cols: DataTableColumn<PayrollAdjustmentListItem>[] = [
     {
       key: "employee",
       header: "Employee",

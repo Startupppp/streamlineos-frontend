@@ -13,10 +13,10 @@ interface EvidenceGridProps {
 const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps) {
   const fields: Array<{ label: string; value: string }> = [
     { label: "Current On-Hand", value: String(evidence.currentOnHand) },
-    { label: "Forecasted Stock", value: String(evidence.forecasted) },
-    { label: "Suggested Reorder Qty", value: String(evidence.suggestedQty) },
+    { label: "Forecasted Stock", value: String(evidence.forecastedQty) },
+    { label: "Suggested Reorder Qty", value: String(evidence.suggestedOrderQty) },
     { label: "Lead Time", value: `${evidence.leadTimeDays} days` },
-    { label: "Expected Arrival", value: formatShortDate(evidence.expectedDate) || "—" },
+    { label: "Expected Arrival", value: formatShortDate(evidence.expectedDeliveryDate) || "—" },
     { label: "SKU", value: evidence.variantSku },
   ];
 
@@ -36,10 +36,10 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
           </div>
         ))}
       </div>
-      {evidence.reason && (
+      {evidence.reorderReason && (
         <p className="mt-2 text-dense text-muted-foreground">
           <span className="font-medium text-foreground">Reason: </span>
-          {evidence.reason}
+          {evidence.reorderReason}
         </p>
       )}
     </div>

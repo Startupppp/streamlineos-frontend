@@ -100,7 +100,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
                 idx > 0 && "border-t border-border",
               )}
             >
-              <TruncatedText text={emp.userName} className="text-foreground font-medium min-w-0 flex-1" />
+              <TruncatedText text={emp.userName ?? emp.userId ?? ""} className="text-foreground font-medium min-w-0 flex-1" />
               <span className="font-mono tabular-nums text-foreground">
                 {formatMoney(emp.net)}
               </span>

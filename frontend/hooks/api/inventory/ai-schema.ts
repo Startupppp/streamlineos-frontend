@@ -58,13 +58,19 @@ export const digestContract = z.object({
 
 export const reorderProposalContract = z.object({
   evidence: z.object({
-    currentOnHand: z.number(),
-    forecasted: z.number(),
-    suggestedQty: z.number(),
-    leadTimeDays: z.number(),
-    expectedDate: z.string().nullable(),
-    reason: z.string(),
+    productVariantId: z.number().int(),
     variantSku: z.string(),
+    variantName: z.string(),
+    productName: z.string(),
+    currentOnHand: z.number(),
+    forecastedQty: z.number(),
+    suggestedOrderQty: z.number(),
+    vendorId: z.number().int().nullable(),
+    leadTimeDays: z.number().int(),
+    expectedDeliveryDate: z.string(),
+    reorderReason: z.string(),
+    warehouseId: z.number().int().nullable(),
+    warehouseName: z.string().nullable(),
   }),
   explanation: z.object({
     explanation: z.string(),

@@ -38,12 +38,13 @@ export const taxWindowContract = z.object({
   closesAt: z.string(),
   proofDeadline: z.string().nullable(),
   lockDate: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "OPEN", "CLOSED", "LOCKED"]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
 export const taxWindowListContract = z.array(taxWindowContract);
+export type TaxWindowStatus = z.infer<typeof taxWindowContract>["status"];
 
 export type TaxDeclarationListItem = z.infer<typeof taxDeclarationListItemContract>;
 export type TaxWindow = z.infer<typeof taxWindowContract>;

@@ -168,7 +168,7 @@ export function ChannelPublicationsPanel({
 }: ChannelPublicationsPanelProps) {
   const [activeTab, setActiveTab] = useState<"all" | "failed">("all");
 
-  const channelType = channel?.type;
+  const channelType = channel?.channelType;
   const isExternal = channelType !== undefined && EXTERNAL_CHANNEL_TYPES.has(channelType);
 
   function handleTabChange(value: string): void {

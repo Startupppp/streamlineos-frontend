@@ -15,7 +15,7 @@ type Props = { params: Promise<{ orgId: string }> };
 
 interface RegisterResponse {
   referralToken: string;
-  name: string;
+  name: string | null;
   orgName: string;
 }
 

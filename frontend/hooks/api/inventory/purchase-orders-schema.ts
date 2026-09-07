@@ -64,7 +64,16 @@ export const listPosContract = z.object({
   totalPages: z.number().int(),
 });
 
-const poDetailContract = invPoContract.extend({ lines: z.array(poLineContract) });
+const poDetailContract = invPoContract.extend({
+  lines: z.array(poLineContract),
+  grns: z.array(z.object({
+    id: z.number().int(),
+    grnNumber: z.string(),
+    receivedDate: z.string(),
+    notes: z.string().nullable(),
+    creator: z.object({ id: z.string(), name: z.string().nullable() }).optional(),
+  })),
+});
 
 export const getPoContract = poDetailContract;
 

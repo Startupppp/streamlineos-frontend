@@ -76,7 +76,7 @@ function toChannelStatus(v: string | undefined): "ACTIVE" | "PAUSED" {
 function buildDefaultValues(channel?: Channel): ChannelFormValues {
   return {
     name: channel?.name ?? "",
-    channelType: toChannelType(channel?.type),
+    channelType: toChannelType(channel?.channelType),
     status: toChannelStatus(channel?.status),
     safetyBuffer: channel?.safetyBuffer ?? "",
     publishThreshold: channel?.publishThreshold ?? "",

@@ -48,6 +48,7 @@ export interface LocalPurchaseOrder {
   warehouse?: { id: number; name: string; code: string };
   creator?: { id: string; name: string | null };
   lines: PurchaseOrderLine[];
+  grns: { id: number; grnNumber: string; receivedDate: string; notes: string | null; creator?: { id: string; name: string | null } }[];
 }
 
 interface LocalGrn {

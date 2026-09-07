@@ -50,7 +50,7 @@ type GrnRow = {
   id: number;
   grnNumber: string;
   receivedDate: string | null;
-  creator?: { name: string } | null;
+  creator?: { name: string | null } | null;
   notes?: string | null;
 };
 

@@ -36,7 +36,6 @@ import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-draw
 import {
   formatPrice,
   StatusBadge,
-  StockBadge,
   TrackingBadge,
   ProductRowActions,
 } from "@/features/inventory/components/product-row-actions";
@@ -223,13 +222,6 @@ function ProductsPageInner() {
         headerClassName: "w-[120px] text-right",
         className: "text-right font-mono tabular-nums font-medium",
         cell: (p) => formatPrice(p.sellingPrice),
-      },
-      {
-        key: "stock",
-        header: "Stock",
-        headerClassName: "w-[90px] text-right",
-        className: "text-right",
-        cell: (p) => <StockBadge qty={p.totalStock ?? 0} />,
       },
       {
         key: "status",

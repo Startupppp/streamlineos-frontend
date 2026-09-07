@@ -18,7 +18,7 @@ import { ReorderEvidenceCard } from "./reorder-evidence-card";
 interface DraftProposalCardProps {
   proposal: ReorderProposalResponse["proposal"];
   productName: string;
-  onConfirm: (proposalId: string, token: string) => void;
+  onConfirm: (proposalId: number, token: string) => void;
   isPending: boolean;
 }
 
@@ -45,7 +45,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
         <div className="min-w-0">
           <p className="text-dense font-semibold text-foreground">Draft PO Ready</p>
           <p className="text-micro text-muted-foreground">
-            Expires {expiresAt} · Proposal {proposal.proposalId.slice(0, 8)}…
+            Expires {expiresAt} · Proposal {String(proposal.proposalId).slice(0, 8)}…
           </p>
         </div>
         <LoadingButton
@@ -103,7 +103,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
     );
   }
 
-  function handleConfirm(proposalId: string, token: string): void {
+  function handleConfirm(proposalId: number, token: string): void {
     confirmMutation.mutate(
       { proposalId, token },
       {

@@ -25,7 +25,7 @@ function derivedComponents(settlement: FnfSettlement): FnfStatementComponent[] {
 export function FnfStatementView({ settlement, statement }: FnfStatementViewProps) {
   const components =
     statement.components.length > 0 ? statement.components : derivedComponents(settlement);
-  const isPositive = statement.netPayable >= 0;
+  const isPositive = parseFloat(statement.netPayable) >= 0;
 
   return (
     <div className="flex flex-col gap-4">

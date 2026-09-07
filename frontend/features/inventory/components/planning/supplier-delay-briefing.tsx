@@ -73,7 +73,7 @@ const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCar
         <VendorMetric label="Avg Lead Time" value={`${p.avgLeadTimeDays}d`} />
         <VendorMetric label="Return Rate" value={formatPercent(p.returnRate)} />
         <VendorMetric label="Open POs" value={String(p.openPoCount)} />
-        <VendorMetric label="Total Spend" value={formatCurrency(p.totalSpend)} />
+        <VendorMetric label="Total Spend" value={formatCurrency(Number(p.totalSpend))} />
       </div>
     </div>
   );

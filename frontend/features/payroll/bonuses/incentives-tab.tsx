@@ -281,7 +281,7 @@ export function IncentivesTab() {
               mode: "server",
               page,
               pageSize: 20,
-              total: data?.total ?? 0,
+              total: data?.incentives.length ?? 0,
               onPageChange: setPage,
             }}
             emptyState={

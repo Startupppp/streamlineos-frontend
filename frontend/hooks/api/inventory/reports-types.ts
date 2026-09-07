@@ -120,7 +120,7 @@ export interface ReorderReportRow {
 
 export interface MovementReportRow {
   id: number;
-  type: string;
+  type: MovementType;
   productName: string;
   sku: string;
   warehouseId: number | null;

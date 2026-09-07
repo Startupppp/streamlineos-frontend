@@ -14,7 +14,7 @@ export const journalBatchSummaryContract = z.object({
   id: z.number(),
   periodKey: z.string(),
   version: z.number(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "POSTED", "EXPORTED", "REVERSED", "FAILED"]),
   reconciliationStatus: z.string(),
   reversalOfBatchId: z.number().nullable(),
   provisional: z.boolean(),
@@ -91,6 +91,7 @@ export const periodReconciliationReportContract = z.object({
 });
 
 export type JournalBatchSummary = z.infer<typeof journalBatchSummaryContract>;
+export type JournalBatchStatus = JournalBatchSummary["status"];
 export type JournalBatchDetail = z.infer<typeof journalBatchDetailContract>;
 export type JournalBatchList = z.infer<typeof journalBatchListContract>;
 export type PeriodReconciliationReport = z.infer<typeof periodReconciliationReportContract>;

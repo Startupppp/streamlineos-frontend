@@ -21,6 +21,7 @@ import type {
   StockSummaryRow,
   ReorderReportRow,
   MovementReportRow,
+  MovementType,
   ReorderUrgency,
   PaginatedResponse,
   MovementsParams,
@@ -45,6 +46,12 @@ export type {
   SlowMovingParams,
   ExpiryReportParams,
 } from "./reports-types";
+
+const VALID_MOVEMENT_TYPES = new Set<string>(["PURCHASE","SALE","ADJUSTMENT_IN","ADJUSTMENT_OUT","TRANSFER_IN","TRANSFER_OUT","RETURN_IN","RETURN_OUT","GRN"]);
+
+function isMovementType(value: string): value is MovementType {
+  return VALID_MOVEMENT_TYPES.has(value);
+}
 
 function toNumber(value: string | number | null | undefined): number {
   if (value == null) return 0;
@@ -105,7 +112,7 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
 function toMovementRow(row: RawFlatMovementItem): MovementReportRow {
   return {
     id: row.id,
-    type: row.transactionType,
+    type: isMovementType(row.transactionType) ? row.transactionType : "GRN",
     productName: row.variantName ?? "—",
     sku: row.variantSku ?? "—",
     warehouseId: null,

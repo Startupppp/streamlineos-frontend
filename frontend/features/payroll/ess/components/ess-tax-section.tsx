@@ -226,7 +226,8 @@ export function EssTaxSection({
     );
   }
 
-  const windowOpen = data?.windowStatus === "OPEN";
+  const openWindow = data?.windowStatus === "OPEN" ? data : null;
+  const windowOpen = openWindow !== null;
   const declaration = data?.declaration;
 
   return (
@@ -258,7 +259,7 @@ export function EssTaxSection({
           <div className="min-w-0 flex-1">
             <p className={cn("text-sm font-medium", windowOpen ? "text-status-success-ink" : "text-foreground")}>
               {windowOpen
-                ? `Declaration window open — FY ${data?.financialYear}`
+                ? `Declaration window open — FY ${openWindow?.financialYear}`
                 : "Declaration window closed — contact HR to make changes"}
             </p>
             {windowOpen && data?.closesAt && (
@@ -297,7 +298,7 @@ export function EssTaxSection({
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <p className="text-sm text-muted-foreground">No declaration submitted for FY {data?.financialYear}</p>
+            <p className="text-sm text-muted-foreground">No declaration submitted for FY {openWindow?.financialYear}</p>
             {windowOpen && (
               <Button size="sm" className="mt-3" onClick={handleOpen}>Submit Declaration</Button>
             )}
@@ -305,12 +306,12 @@ export function EssTaxSection({
         )}
       </motion.div>
 
-      {windowOpen && data?.financialYear && (
+      {openWindow && openWindow.financialYear && (
         <TaxDeclarationSheet
           open={sheetOpen}
           onClose={handleClose}
-          financialYear={data.financialYear}
-          currentRegime={declaration?.regime}
+          financialYear={openWindow.financialYear}
+          currentRegime={declaration?.regime === "OLD" || declaration?.regime === "NEW" ? declaration.regime : undefined}
           currentValues={declaration ? {
             hra: declaration.hra,
             lta: declaration.lta,

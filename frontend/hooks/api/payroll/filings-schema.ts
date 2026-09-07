@@ -37,7 +37,7 @@ const filingCapabilityContract = z.object({
   automaticRemittance: z.boolean(),
   providerDependent: z.boolean(),
   honestyLabel: z.string(),
-  supportedTypes: z.array(z.string()),
+  supportedTypes: z.array(z.enum(["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
   ruleBundleVersion: z.string(),
   artifactFormat: z.string(),
   form16Certificate: z.object({
@@ -54,7 +54,7 @@ export const filingCapabilitiesResponseContract = z.object({
   automaticRemittance: z.boolean(),
   providerDependent: z.boolean(),
   honestyLabel: z.string(),
-  supportedTypes: z.array(z.string()),
+  supportedTypes: z.array(z.enum(["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
   ruleBundleVersion: z.string(),
   artifactFormat: z.literal("csv"),
   form16Certificate: z.object({
@@ -104,3 +104,4 @@ export const listForm16EmployeesResponseContract = z.object({
 
 export type PayrollFiling = z.infer<typeof payrollFilingContract>;
 export type FilingExportJob = z.infer<typeof filingExportJobContract>;
+export type FilingType = z.infer<typeof filingCapabilitiesResponseContract>["supportedTypes"][number];

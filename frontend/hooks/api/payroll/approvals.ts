@@ -7,10 +7,10 @@ import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
-  PayrollApprovalRow,
+  ApprovalList,
   SubmitApprovalResult,
   ApproveStageResult,
-} from "@/types/payroll";
+} from "@/hooks/api/payroll/approvals-schema";
 
 const approvalListC = lazyContract(() =>
   import("@/hooks/api/payroll/approvals-schema").then((m) => m.approvalListContract),
@@ -33,9 +33,9 @@ const closeResponseC = lazyContract(() =>
 
 export function useRunApprovals(runId: number, options?: { enabled?: boolean }) {
   const canView = useCan("payroll:runs:view");
-  return useQuery<PayrollApprovalRow[]>({
+  return useQuery<ApprovalList>({
     queryKey: payrollQueryKeys.payroll.runApprovals(runId),
-    queryFn: ({ signal }) => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`, undefined, signal, approvalListC),
+    queryFn: ({ signal }) => apiClient.get<ApprovalList>(`/payroll/runs/${runId}/approvals`, undefined, signal, approvalListC),
     staleTime: 30_000,
     enabled: canView && runId > 0 && (options?.enabled ?? true),
   });
