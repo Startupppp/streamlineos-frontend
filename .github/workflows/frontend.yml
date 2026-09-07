@@ -706,6 +706,15 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:response-contracts:self-test && pnpm run check:response-contracts
 
+      # The request half of the same contract. check:response-contracts watches what a route
+      # returns; nothing watched what a caller sends, and a query key the backend schema does
+      # not declare is a hard 400 where that schema is .strict() and a silently dead filter
+      # where it is absent. It found 15 on the day it was written, including a pagination that
+      # returned page 1 forever and a GET /inventory/expiry that 400'd on every call.
+      - name: Request query parameters match the document
+        if: ${{ !cancelled() }}
+        run: pnpm run check:request-params:self-test && pnpm run check:request-params
+
       # `check:properties:self-test` existed in package.json and was named by no
       # workflow step — the gate itself has run here since it was written, but
       # its own bite-proof never did, invisibly to `check-gate-wiring.mjs`

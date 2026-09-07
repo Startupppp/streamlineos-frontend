@@ -119,11 +119,11 @@ const scenarioAssumptionsShapeContract = z.object({
   plannedSpend: z.array(plannedSpendItemContract),
 });
 
-const DEFAULT_SCENARIO_ASSUMPTIONS = {
+const DEFAULT_SCENARIO_ASSUMPTIONS: z.infer<typeof scenarioAssumptionsShapeContract> = {
   collectionRatePct: 90,
   payDelayDays: 0,
   revenueGrowthPct: 0,
-  plannedSpend: [] as { label: string; amount: number; startWeek: number; recurringWeekly: boolean }[],
+  plannedSpend: [],
 };
 
 // Wire type is `unknown | null`; parse against the create schema's shape and fall back to its defaults.
