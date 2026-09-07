@@ -1,30 +1,16 @@
 import "server-only";
 
+import type { z } from "zod";
+
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { serverGet } from "@/lib/server-fetch";
 import { hrDocumentListContract, hrAssetListContract } from "@/lib/prefetch/prefetch-schema";
-import type { Document, Asset } from "@/types/hr";
 
-interface HrDocumentListResponse {
-  data: Document[];
-  pageInfo: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+type HrDocumentListResponse = z.infer<typeof hrDocumentListContract>;
 
-interface HrAssetCounts {
-  total: number;
-  available: number;
-  assigned: number;
-  maintenance: number;
-  retired: number;
-}
-
-interface HrAssetListResponse {
-  data: Asset[];
-  counts: HrAssetCounts;
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}
+type HrAssetListResponse = z.infer<typeof hrAssetListContract>;
 
 export async function prefetchHrDocuments() {
   const queryClient = await createServerQueryClient();

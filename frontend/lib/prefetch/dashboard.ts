@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { z } from "zod";
+
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { serverGet } from "@/lib/server-fetch";
@@ -12,7 +14,7 @@ export async function prefetchDashboardStats() {
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
       queryKey: collaborationQueryKeys.dashboard.stats(),
-      queryFn: () => serverGet<DashboardStats>("/dashboard/stats", dashboardStatsContract),
+      queryFn: () => serverGet<z.infer<typeof dashboardStatsContract>>("/dashboard/stats", dashboardStatsContract),
       staleTime: 5 * 60_000,
     });
     return dehydrate(queryClient);
