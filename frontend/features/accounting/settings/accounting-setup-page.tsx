@@ -18,10 +18,12 @@ import {
   StepCompanyCurrency,
   StepTaxRegistration,
   StepChartOfAccounts,
+} from "@/features/accounting/settings/setup-wizard-steps";
+import {
   StepSystemAccounts,
   StepPeriods,
   StepOpeningBalances,
-} from "@/features/accounting/settings/setup-wizard-steps";
+} from "@/features/accounting/settings/setup-wizard-ledger-steps";
 
 const SETUP_PERMISSION = "accounting:settings:manage";
 const PAGE_TITLE = "Accounting Setup";

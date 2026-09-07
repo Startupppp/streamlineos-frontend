@@ -9,6 +9,14 @@
  * Lowered to 516 on 2026-09-03 by splitting five of those crossings by
  * responsibility (mail cache patching, three column sets, the salary-profile
  * presentation), leaving the number equal to the measured count with no slack.
+ * Lowered to 513 on 2026-09-07. The response-contract sweep pushed the count to
+ * 530 and the gate bit; fifteen files were split by seam, not by line count —
+ * pages that implemented instead of composing (the deal detail route, the
+ * knowledge settings page, the locations page), Zod schemas lifted out of
+ * components into sibling *-schema.ts, column builders and row components out of
+ * list pages, and form state machines into hooks. No export, contract or
+ * capability was removed to shrink a file. The number again equals the measured
+ * count with no slack.
  *
  * THE BASELINE MAY ONLY EVER MOVE DOWN, and only because files got shorter.
  * Raising it to absorb a new crossing is the failure mode this gate exists to
@@ -32,7 +40,7 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
-const BASELINE = 516;
+const BASELINE = 513;
 const MIN_FILES = 100;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));

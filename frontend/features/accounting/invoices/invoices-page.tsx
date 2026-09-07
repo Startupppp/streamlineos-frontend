@@ -2,14 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,147 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
 import { CollectionsTab } from "@/features/accounting/sales/collections-tab";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useInvoices, useInvoiceStats } from "@/hooks/api/invoice";
-import { useVoidInvoice } from "@/hooks/api/accounting/ar";
-import { useCan } from "@/hooks/api/access";
-import type { Invoice, InvoiceStatus } from "@/types/invoice";
-import type { FinanceStatus } from "@/features/accounting/shared";
+import type { Invoice } from "@/types/invoice";
 import type { PayableInvoice } from "@/features/accounting/sales/record-payment-dialog";
-import { formatShortDate } from "@/lib/date-utils";
-
-const SERVER_FILTERABLE: ReadonlyArray<string> = ["DRAFT", "ISSUED", "PAID", "FAILED", "VOIDED"];
-
-function isInvoiceStatus(v: string): v is InvoiceStatus {
-  return SERVER_FILTERABLE.includes(v);
-}
-
-type DisplayStatus = "DRAFT" | "ISSUED" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "FAILED" | "VOIDED";
-
-const ALL_DISPLAY_STATUSES: ReadonlyArray<string> = [
-  "DRAFT",
-  "ISSUED",
-  "SENT",
-  "PARTIALLY_PAID",
-  "PAID",
-  "OVERDUE",
-  "FAILED",
-  "VOIDED",
-];
-
-const FINANCE_STATUS_MAP: Record<string, FinanceStatus> = {
-  DRAFT: "DRAFT",
-  ISSUED: "SENT",
-  SENT: "SENT",
-  PARTIALLY_PAID: "PARTIALLY_PAID",
-  PAID: "PAID",
-  OVERDUE: "OVERDUE",
-  FAILED: "OVERDUE",
-  VOIDED: "VOID",
-};
-
-function toFinanceStatus(status: string): FinanceStatus {
-  return FINANCE_STATUS_MAP[status] ?? "DRAFT";
-}
-
-interface InvoiceRowActionsProps {
-  invoice: Invoice;
-  onRecordPayment: (invoice: Invoice) => void;
-}
-
-function InvoiceRowActions({ invoice, onRecordPayment }: InvoiceRowActionsProps) {
-  const router = useRouter();
-  const voidMutation = useVoidInvoice();
-  // The key `POST /invoices/{invoiceId}/void` declares and `useVoidInvoice` carries.
-  const canManage = useCan("accounting:manage");
-  const amountPaid = Number(invoice.amountPaid ?? "0");
-
-  function handleViewDetail(): void {
-    router.push(`/accounting/invoices/${invoice.id}`);
-  }
-
-  function handleRecordPayment(): void {
-    onRecordPayment(invoice);
-  }
-
-  function handleVoid(): void {
-    voidMutation.mutate(
-      { invoiceId: invoice.id },
-      {
-        onSuccess: () => toast.success("Invoice voided"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
-  return (
-    <AlertDialog>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Actions" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={handleViewDetail}>View Detail</DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleRecordPayment}>Record Payment</DropdownMenuItem>
-          {canManage && (
-            <>
-              <DropdownMenuSeparator />
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  onSelect={(e) => e.preventDefault()}
-                  disabled={amountPaid > 0}
-                  className="text-destructive focus:text-destructive"
-                >
-                  Void Invoice
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Void invoice?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will void invoice {invoice.invoiceNumber}. This cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleVoid}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Void
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
+import {
+  ALL_DISPLAY_STATUSES,
+  isInvoiceStatus,
+  type DisplayStatus,
+} from "./invoice-status-map";
+import { buildInvoiceColumns } from "./invoice-columns";
 
 export function AccountingInvoicesPage() {
   const [page, setPage] = useState(1);
@@ -217,78 +86,7 @@ export function AccountingInvoicesPage() {
     return true;
   });
 
-  const columns: DataTableColumn<Invoice>[] = [
-    {
-      key: "invoiceNumber",
-      header: "#",
-      cell: (row) => (
-        <span className="text-xs font-mono font-medium">{row.invoiceNumber}</span>
-      ),
-      sortable: true,
-      sortValue: (row) => row.invoiceNumber,
-    },
-    {
-      key: "client",
-      header: "Customer",
-      cell: (row) => (
-        <span className="text-xs">{row.client?.name ?? "—"}</span>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Date",
-      cell: (row) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {formatShortDate(row.createdAt) || "—"}
-        </span>
-      ),
-      sortable: true,
-      sortValue: (row) => new Date(row.createdAt).getTime(),
-    },
-    {
-      key: "dueDate",
-      header: "Due Date",
-      cell: (row) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {formatShortDate(row.dueDate) || "—"}
-        </span>
-      ),
-    },
-    {
-      key: "total",
-      header: "Total",
-      cell: (row) => <Money value={Number(row.total)} currency={row.currency} compact />,
-      sortable: true,
-      sortValue: (row) => Number(row.total),
-    },
-    {
-      key: "balanceDue",
-      header: "Balance Due",
-      cell: (row) => {
-        const amountPaid = Number(row.amountPaid ?? "0");
-        const balance = Math.max(0, Number(row.total) - amountPaid);
-        return <Money value={balance} currency={row.currency} compact />;
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <FinanceStatusBadge status={toFinanceStatus(row.status)} />
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) => (
-        <InvoiceRowActions
-          invoice={row}
-          onRecordPayment={handleSetPaymentInvoice}
-        />
-      ),
-      className: "w-10",
-    },
-  ];
+  const columns = buildInvoiceColumns(handleSetPaymentInvoice);
 
   function handleStatusFilterChange(value: string): void {
     const isDisplayStatusOrAll = (v: string): v is DisplayStatus | "ALL" =>

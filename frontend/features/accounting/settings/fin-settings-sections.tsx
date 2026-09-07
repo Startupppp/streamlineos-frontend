@@ -15,11 +15,9 @@ import type { ApprovalPolicy, ExchangeRate } from "@/types/accounting/taxes";
 import {
   SequenceEditDialog,
   SystemAccountMapDialog,
-  PolicyDialog,
-  RateDialog,
 } from "./fin-settings-dialogs";
+import { PolicyDialog, RateDialog } from "./fin-approval-dialogs";
 import { PURPOSE_LABELS, getPurposeLabel } from "./fin-settings-labels";
-export { PURPOSE_LABELS };
 
 export { PaymentTermsSection } from "./payment-terms-section";
 
