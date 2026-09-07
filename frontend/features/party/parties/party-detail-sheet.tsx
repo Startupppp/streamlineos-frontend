@@ -1,5 +1,6 @@
 "use client";
 
+import { asRecordValue } from "@/components/renderer";
 import {
   Sheet,
   SheetContent,
@@ -66,7 +67,7 @@ export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: Party
             <>
               <RecordDetail
                 layout={PARTY_LAYOUT}
-                record={party.data}
+                record={asRecordValue(party.data)}
               />
 
               <section className="flex flex-col gap-2">

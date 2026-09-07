@@ -29,6 +29,7 @@ const STATUS_BADGE_CLASS: Record<ExecutionStatus, string> = {
   failed: "bg-status-danger-surface text-status-danger-ink",
   cancelled: "bg-muted text-muted-foreground",
   timed_out: "bg-status-warning-surface text-status-warning-ink",
+  dead_lettered: "bg-status-danger-surface text-status-danger-ink",
 };
 
 const STATUS_TABS: Array<{ label: string; value: ExecutionStatus | "all" }> = [

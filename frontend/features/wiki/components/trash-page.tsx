@@ -30,10 +30,10 @@ import {
   KbRotateCcwIcon,
   KbTrash2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbPage } from "@/hooks/api/kb/page-types";
+import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
-function TrashRow({ page }: { page: KbPage }) {
+function TrashRow({ page }: { page: KbPageListItem }) {
   const restore = useRestoreKbPage();
   const hardDelete = useHardDeleteKbPage();
   const [confirmOpen, setConfirmOpen] = useState(false);

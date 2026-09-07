@@ -54,6 +54,7 @@ const EXEC_STATUS_CONFIG: Record<ExecutionStatus, { label: string; cls: string; 
   failed: { label: "Failed", cls: "bg-status-danger-surface text-status-danger-ink", icon: <XCircle className="h-3 w-3" /> },
   cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground", icon: <XCircle className="h-3 w-3" /> },
   timed_out: { label: "Timed Out", cls: "bg-status-warning-surface text-status-warning-ink", icon: <AlertCircle className="h-3 w-3" /> },
+  dead_lettered: { label: "Dead Lettered", cls: "bg-status-danger-surface text-status-danger-ink", icon: <AlertCircle className="h-3 w-3" /> },
 };
 
 function formatDuration(ms: number | null): string {

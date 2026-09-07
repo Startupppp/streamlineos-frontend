@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { asRecordValues } from "@/components/renderer";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -249,7 +250,7 @@ export function PartiesPage() {
     [canManageRow, canUpdate, canDelete, handleEditRow, handleDeleteRow],
   );
 
-  const rows = data?.data ?? [];
+  const rows = asRecordValues(data?.data ?? []);
   const [density, setDensity] = useDensity();
   const pagination = data?.pagination;
   const isFiltered =
