@@ -6,9 +6,10 @@ const groupSchema = z.object({
 });
 
 const layoutAdjustmentSchema = z.object({
-  order: z.array(z.string()).optional(),
-  hidden: z.array(z.string()).optional(),
-  groups: z.array(groupSchema).optional(),
+  layoutKey: z.string(),
+  order: z.array(z.string()),
+  hidden: z.array(z.string()),
+  groups: z.array(groupSchema),
   updatedAt: z.string(),
 }).nullable();
 
