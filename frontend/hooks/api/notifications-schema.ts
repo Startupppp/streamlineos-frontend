@@ -271,18 +271,3 @@ export const broadcastListContract = z.object({
 /** `broadcastSuccessSchema` */
 export const broadcastSuccessContract = z.object({ success: z.literal(true) });
 
-/** Unified inbox — loose discriminated union contract. */
-export const unifiedInboxContract = z.object({
-  items: z.array(
-    z.object({
-      type: z.string(),
-      id: z.string(),
-      subject: z.string().nullable().optional(),
-      from: z.unknown().optional(),
-      createdAt: z.string().optional(),
-      data: z.record(z.string(), z.unknown()).optional(),
-    }),
-  ),
-  total: z.number().int().optional(),
-  nextCursor: z.string().nullable().optional(),
-});

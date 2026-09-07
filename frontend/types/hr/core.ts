@@ -1,22 +1,3 @@
-export interface HrEmployment {
-  id: number;
-  orgId?: string;
-  personId?: number | string;
-  employeeNumber: string | null;
-  lifecycleStatus: string;
-  workerType: string;
-  departmentId: number | null;
-  designation: string | null;
-  joiningDate: string | null;
-  probationEndDate?: string | null;
-  confirmationDate?: string | null;
-  isPrimary?: boolean;
-  createdAt?: string;
-  personFirstName?: string | null;
-  personLastName?: string | null;
-  personWorkEmail?: string | null;
-}
-
 export interface HrTimelineEntry {
   id: string;
   type: "status_transition" | "effective_change" | "audit";
@@ -24,15 +5,6 @@ export interface HrTimelineEntry {
   entityType: string;
   createdAt: string;
   data: Record<string, unknown>;
-}
-
-export interface HrTimelineResponse {
-  data: HrTimelineEntry[];
-  pageInfo: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: string | null;
-  };
 }
 
 export interface HrSensitiveBankDetails {

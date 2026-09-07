@@ -2,14 +2,6 @@ import type { z } from "zod";
 import type { taxDeclarationResponseContract } from "@/hooks/api/payroll/ess-overview-schema";
 import type { essOverviewContract } from "@/hooks/api/payroll/ess-overview-schema";
 import type { totalRewardsStatementContract } from "@/hooks/api/payroll/ess-overview-schema";
-export interface EssToggles {
-  essShowSalaryStructure: boolean;
-  essAllowBankUpdate: boolean;
-  essAllowLoanRequests: boolean;
-  essAllowTaxDeclarations: boolean;
-  essAllowReimbursements: boolean;
-  emailPayslips: boolean;
-}
 
 /**
  * `EssPayslip` and `EssBankDetails` are `z.infer`red from the contracts that
@@ -20,26 +12,7 @@ export type {
   EssPayslip,
 } from "@/hooks/api/payroll/ess-schema";
 
-export interface EssCapabilities {
-  mode: "employee_self_service";
-  honestyNote: string;
-  canViewSalaryStructure: boolean;
-  canUpdateBank: boolean;
-  canRequestLoans: boolean;
-  canDeclareTax: boolean;
-  canClaimReimbursements: boolean;
-}
-
-export interface EssActionRequired {
-  key: string;
-  label: string;
-  severity: "info" | "warning";
-  href: string;
-}
-
 export type EssOverview = z.infer<typeof essOverviewContract>;
-
-
 
 export interface ManagerTeamMember {
   userId: string;
@@ -135,27 +108,9 @@ export interface TeamRewardsResult {
 
 export type TotalRewardsStatement = z.infer<typeof totalRewardsStatementContract>;
 
-
-
 export type ReimbursementStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
-export interface EssTaxDeclaration {
-  id: number;
-  financialYear: string;
-  regime: "OLD" | "NEW";
-  hra: string | null;
-  lta: string | null;
-  section80c: string | null;
-  section80d: string | null;
-  section80g: string | null;
-  homeLoanInterest: string | null;
-  status: string;
-  reviewNote: string | null;
-}
-
 export type EssTaxDeclarationResponse = z.infer<typeof taxDeclarationResponseContract>;
-
-
 
 export type LoanStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "CLOSED";
 

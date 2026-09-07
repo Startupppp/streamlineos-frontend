@@ -35,15 +35,6 @@ export type LeadSource =
 
 export type LeadPriority = "HOT" | "WARM" | "COLD";
 
-export type ActivityType =
-  | "call"
-  | "email"
-  | "whatsapp"
-  | "meeting"
-  | "site_visit"
-  | "note"
-  | "task";
-
 export interface LeadUser {
   id: string;
   name: string | null;

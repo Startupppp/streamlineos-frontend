@@ -199,22 +199,6 @@ export interface EmployeeSalaryProfile {
   userEmail: string | null;
 }
 
-export type EmployeeProfileDetail = z.infer<typeof profileDetailResponseContract>;
-
-
-
-export interface ProfileComponent {
-  id: number;
-  componentId: number;
-  code: string;
-  name: string;
-  type: SalaryComponentType;
-  calcMethod: string;
-  amount: string | null;
-  percent: string | null;
-  isOverride: boolean;
-}
-
 export interface VarianceSummary {
   previousMonth: string | null;
   currentNet: string;
@@ -226,35 +210,5 @@ export interface VarianceSummary {
   changedEmployees: number;
 }
 
-export interface CommandCenterHeader {
-  runId: number | null;
-  month: string;
-  status: PayrollRunStatus | null;
-  grossTotal: string;
-  deductionTotal: string;
-  netTotal: string;
-  employerCostTotal: string;
-  employeeCount: number;
-  exceptionCounts: { BLOCKER: number; WARNING: number; INFO: number };
-}
-
-export interface CommandCenterData {
-  header: CommandCenterHeader;
-  checklist: PayrollChecklistItem[];
-  panels: {
-    runStatus: PayrollRunStatus | null;
-    topExceptions: Pick<PayrollException, "id" | "code" | "severity" | "message" | "status" | "runEmployeeId">[];
-    varianceSummary: VarianceSummary | null;
-    pendingApprovals: { id: number; stage: number; status: string }[];
-    payoutReadiness: boolean;
-    statutoryReadiness: {
-      taxDeclarationsLocked: boolean;
-      packComplianceChecklist: { key: string; label: string; detail: string }[];
-    };
-  };
-  upcomingCalendarEvents: { id: number; date: string; eventType: string; label: string }[];
-}
-
 export type VarianceData = z.infer<typeof runVarianceResponseContract>;
-
 

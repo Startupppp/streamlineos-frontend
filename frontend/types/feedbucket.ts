@@ -85,15 +85,6 @@ export interface FeedbucketWidget {
   openCount?: number;
 }
 
-export interface FeedbucketSubmissionUser {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  image: string | null;
-}
-
 export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
 
 export interface CreateFeedbucketWidgetInput {

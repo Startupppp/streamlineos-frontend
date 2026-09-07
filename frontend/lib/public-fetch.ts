@@ -19,28 +19,6 @@ export interface PublicOrgInfo {
   name: string;
 }
 
-export interface PublicKbCategory {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon: string | null;
-  sortOrder: number;
-}
-
-export interface PublicKbArticleListItem {
-  id: number;
-  categoryId: number | null;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  views: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  tags: string[] | null;
-  publishedAt: string | null;
-}
-
 export type PublicKbListData = z.infer<typeof publicKbListContract>;
 
 export type PublicKbArticle = z.infer<typeof publicKbArticleContract>;
@@ -86,38 +64,8 @@ export async function publicGetNoStore<T>(
 
 export type PublicApplicationStatus = z.infer<typeof publicApplicationStatusContract>;
 
-export interface PublicOfferNegotiation {
-  direction: string;
-  proposedSalary: string | null;
-  message: string | null;
-  createdAt: string;
-}
-
 export type PublicOffer = z.infer<typeof publicOfferDetailContract>;
 
-export interface PublicReferrerPortalJob {
-  id: number;
-  title: string;
-  location: string | null;
-}
-
-export interface PublicReferrerPortalReferral {
-  id: number;
-  candidateName: string;
-  jobTitle: string | null;
-  status: string;
-  rewardAmount: string | null;
-  createdAt: string;
-}
-
 export type PublicReferrerPortal = z.infer<typeof publicReferrerPortalContract>;
-
-export interface PublicVendorSubmission {
-  id: number;
-  candidateName: string;
-  jobTitle: string | null;
-  placementStatus: string;
-  submittedAt: string;
-}
 
 export type PublicVendorPortal = z.infer<typeof publicVendorPortalContract>;

@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CrmMetadataRaw,
@@ -71,7 +71,7 @@ function normalizeRaw(raw: CrmMetadataRaw): CrmMetadataResponse {
 
 export function crmMetadataQueryOptions() {
   return queryOptions({
-    queryKey: queryKeys.crmMetadata.detail(),
+    queryKey: growthAndSignQueryKeys.crmMetadata.detail(),
     queryFn: async ({ signal }) => {
       const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata", undefined, signal, crmAggregateLazy);
       return normalizeRaw(raw);
@@ -137,7 +137,7 @@ export function useCreatePipeline() {
     mutationFn: (input: Omit<CrmPipelineWithStages, "id" | "stages">) =>
       apiClient.post<CrmPipeline>("/crm/pipelines", input, undefined, pipelineLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -149,7 +149,7 @@ export function useUpdatePipeline() {
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
       apiClient.patch<CrmPipeline>(`/crm/pipelines/${id}`, data, undefined, pipelineLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -164,7 +164,7 @@ export function useCreateStage() {
     }: { pipelineId: string } & Omit<CrmPipelineStage, "id" | "pipelineId">) =>
       apiClient.post<CrmPipelineStage>(`/crm/pipelines/${pipelineId}/stages`, data, undefined, pipelineStageLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -176,7 +176,7 @@ export function useUpdateStage() {
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineStage, "id">>) =>
       apiClient.patch<CrmPipelineStage>(`/crm/stages/${id}`, data, undefined, pipelineStageLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -188,7 +188,7 @@ export function useDeleteStage() {
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/stages/${id}`, undefined, undefined, deleteSuccessLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -211,7 +211,7 @@ export function useReorderStages() {
         reorderSuccessLazy,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -226,7 +226,7 @@ export function useCreateOption() {
     }: { type: CrmOptionType } & Omit<CrmOption, "id" | "type">) =>
       apiClient.post<CrmOption>(`/crm/options/${type}`, data, undefined, crmOptionLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -242,7 +242,7 @@ export function useUpdateOption() {
     }: { type: CrmOptionType; id: string } & Partial<Omit<CrmOption, "id" | "type">>) =>
       apiClient.patch<CrmOption>(`/crm/options/${type}/${id}`, data, undefined, crmOptionLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
@@ -254,14 +254,14 @@ export function useDeleteOption() {
     mutationFn: ({ type, id }: { type: CrmOptionType; id: string }) =>
       apiClient.delete<{ success: boolean }>(`/crm/options/${type}/${id}`, undefined, undefined, deleteSuccessLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useValidationRules(params?: Record<string, unknown>) {
   return useGatedQuery("crm:settings:view", {
-    queryKey: queryKeys.crmMetadata.validationRules(params),
+    queryKey: growthAndSignQueryKeys.crmMetadata.validationRules(params),
     queryFn: ({ signal }) =>
       apiClient.get<CrmValidationRule[]>("/crm/validation-rules", params, signal, validationRulesListLazy),
     staleTime: CRM_METADATA_STALE_TIME,
@@ -275,7 +275,7 @@ export function useCreateValidationRule() {
     mutationFn: (input: Omit<CrmValidationRule, "id">) =>
       apiClient.post<CrmValidationRule>("/crm/validation-rules", input, undefined, validationRuleLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.validationRules() });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
     },
   });
 }
@@ -287,7 +287,7 @@ export function useUpdateValidationRule() {
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmValidationRule, "id">>) =>
       apiClient.patch<CrmValidationRule>(`/crm/validation-rules/${id}`, data, undefined, validationRuleLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.validationRules() });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
     },
   });
 }
@@ -299,7 +299,7 @@ export function useDeleteValidationRule() {
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/validation-rules/${id}`, undefined, undefined, deleteSuccessLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.validationRules() });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
     },
   });
 }
@@ -319,7 +319,7 @@ export function useTestValidationRules() {
 
 export function useBlueprints(params?: Record<string, unknown>) {
   return useGatedQuery("crm:settings:view", {
-    queryKey: queryKeys.crmMetadata.blueprints(params),
+    queryKey: growthAndSignQueryKeys.crmMetadata.blueprints(params),
     queryFn: ({ signal }) => apiClient.get<CrmBlueprint[]>("/crm/blueprints", params, signal, blueprintsListLazy),
     staleTime: CRM_METADATA_STALE_TIME,
   });
@@ -332,7 +332,7 @@ export function useCreateBlueprint() {
     mutationFn: (input: Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">) =>
       apiClient.post<CrmBlueprint>("/crm/blueprints", input, undefined, blueprintLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprints() });
     },
   });
 }
@@ -347,7 +347,7 @@ export function useUpdateBlueprint() {
     }: { id: string } & Partial<Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">>) =>
       apiClient.patch<CrmBlueprint>(`/crm/blueprints/${id}`, data, undefined, blueprintLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprints() });
     },
   });
 }
@@ -364,7 +364,7 @@ export type UpdateTransitionInput = Partial<CreateTransitionInput>;
 
 export function useBlueprintTransitions(blueprintId: string | null) {
   return useGatedQuery("crm:settings:view", {
-    queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId),
+    queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId),
     queryFn: ({ signal }) =>
       apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`, undefined, signal, blueprintTransitionsListLazy),
     enabled: blueprintId !== null,
@@ -379,7 +379,7 @@ export function useCreateBlueprintTransition(blueprintId: string) {
     mutationFn: (input: CreateTransitionInput) =>
       apiClient.post<CrmBlueprintTransition>(`/crm/blueprints/${blueprintId}/transitions`, input, undefined, blueprintTransitionLazy),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }
@@ -396,7 +396,7 @@ export function useUpdateBlueprintTransition(blueprintId: string) {
         blueprintTransitionLazy,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }
@@ -413,7 +413,7 @@ export function useDeleteBlueprintTransition(blueprintId: string) {
         deleteSuccessLazy,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }

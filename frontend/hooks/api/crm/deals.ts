@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import type {
@@ -93,7 +94,7 @@ interface AgingResponse {
 
 export function useDeals(filters?: DealFilters) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
+    queryKey: customerWorkQueryKeys.deals.list(filters as Record<string, unknown>),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<Deal>>("/deals", filters as Record<string, unknown>, signal, dealListLazy)).items,
     staleTime: 2 * 60_000,
@@ -102,7 +103,7 @@ export function useDeals(filters?: DealFilters) {
 
 export function useDealStats() {
   return useGatedQuery<DealStats, Error>("crm:deals:read", {
-    queryKey: queryKeys.deals.stats(),
+    queryKey: customerWorkQueryKeys.deals.stats(),
     queryFn: ({ signal }) => apiClient.get<DealStats>("/deals/stats", undefined, signal, dealStatsLazy),
     staleTime: 2 * 60_000,
   });
@@ -110,7 +111,7 @@ export function useDealStats() {
 
 export function useDealDetail(id: number) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.detail(id),
+    queryKey: customerWorkQueryKeys.deals.detail(id),
     queryFn: ({ signal }) => apiClient.get<Deal>(`/deals/${id}`, undefined, signal, dealLazy),
     staleTime: 2 * 60_000,
     enabled: id > 0,
@@ -123,9 +124,9 @@ export function useCreateDeal() {
     mutationKey: ["deals", "create"] as const,
     mutationFn: (input: CreateDealInput) => apiClient.post<Deal>("/deals", input, undefined, dealLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecast() });
     },
   });
 }
@@ -137,11 +138,11 @@ export function useUpdateDeal() {
     mutationFn: ({ id, ...data }: UpdateDealInput) =>
       apiClient.patch<Deal>(`/deals/${id}`, data, undefined, dealLazy),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.winLoss() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.winLoss() });
     },
   });
 }
@@ -153,9 +154,9 @@ export function useUpdateDealStage() {
     mutationFn: ({ id, stage, lostReason, version }: UpdateDealStageInput) =>
       apiClient.patch<Deal | { approvalPending: true; approvalId: number }>(`/deals/${id}`, { stage, lostReason, version }, undefined, dealUpdateResultLazy),
     onMutate: async ({ id, stage }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.all });
-      const snapshots = qc.getQueriesData<Deal[]>({ queryKey: queryKeys.deals.all });
-      qc.setQueriesData<Deal[]>({ queryKey: queryKeys.deals.all }, (old) => {
+      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      const snapshots = qc.getQueriesData<Deal[]>({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.setQueriesData<Deal[]>({ queryKey: customerWorkQueryKeys.deals.all }, (old) => {
         if (!Array.isArray(old)) return old;
         return old.map((d) => (d.id === id ? { ...d, stage: stage as Deal["stage"] } : d));
       });
@@ -169,11 +170,11 @@ export function useUpdateDealStage() {
       }
     },
     onSettled: (_, _err, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.winLoss() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.winLoss() });
     },
   });
 }
@@ -185,9 +186,9 @@ export function useDeleteDeal() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${id}`, undefined, undefined, dealDeleteLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecast() });
     },
   });
 }
@@ -199,9 +200,9 @@ export function useCloneDeal() {
     mutationFn: (id: number) =>
       apiClient.post<Deal>(`/deals/${id}/clone`, {}, undefined, dealLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecast() });
     },
   });
 }
@@ -214,15 +215,15 @@ export function useLogDealActivity() {
     mutationFn: ({ dealId, ...data }: LogDealActivityInput) =>
       apiClient.post<DealActivity>(`/deals/${dealId}/activities`, data, undefined, dealActivityLazy),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.dealActivities.list(vars.dealId) });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.dealId) });
+      qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.dealActivities.list(vars.dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(vars.dealId) });
     },
   });
 }
 
 export function useDealMeetings(dealId: number) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.meetings(dealId),
+    queryKey: customerWorkQueryKeys.deals.meetings(dealId),
     queryFn: ({ signal }) => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`, undefined, signal, dealMeetingsListLazy),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
@@ -236,7 +237,7 @@ export function useCreateDealMeeting(dealId: number) {
     mutationFn: (input: CreateDealMeetingInput) =>
       apiClient.post<DealMeeting>(`/deals/${dealId}/meetings`, input, undefined, dealMeetingLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.meetings(dealId) });
     },
   });
 }
@@ -248,14 +249,14 @@ export function useDeleteDealMeeting(dealId: number) {
     mutationFn: (meetingId: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/meetings/${meetingId}`, undefined, undefined, dealDeleteLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.meetings(dealId) });
     },
   });
 }
 
 export function useWinLossAnalysis() {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.winLoss(),
+    queryKey: customerWorkQueryKeys.deals.winLoss(),
     queryFn: ({ signal }) => apiClient.get<WinLossAnalysis>("/deals/win-loss", undefined, signal, dealWinLossLazy),
     staleTime: 2 * 60_000,
   });
@@ -263,7 +264,7 @@ export function useWinLossAnalysis() {
 
 export function useDealApprovals(params?: { status?: string }) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
+    queryKey: customerWorkQueryKeys.deals.approvals(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>, signal, dealApprovalsListLazy),
     staleTime: 2 * 60_000,
   });
@@ -271,7 +272,7 @@ export function useDealApprovals(params?: { status?: string }) {
 
 export function useDealAging() {
   return useGatedQuery<AgingResponse>("crm:deals:read", {
-    queryKey: queryKeys.deals.aging(),
+    queryKey: customerWorkQueryKeys.deals.aging(),
     queryFn: ({ signal }) => apiClient.get<AgingResponse>("/deals/aging", undefined, signal, dealAgingLazy),
     staleTime: 305_000,
     refetchInterval: 300_000,
@@ -285,15 +286,15 @@ export function useResolveDealApproval() {
     mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
       apiClient.post("/deals/approvals", input, undefined, dealApprovalLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.approvals() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.approvals() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
     },
   });
 }
 
 export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
   return useGatedQuery("crm:deals:forecast", {
-    queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
+    queryKey: customerWorkQueryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>, signal, dealForecastSnapshotsLazy),
     staleTime: 2 * 60_000,
   });
@@ -306,14 +307,14 @@ export function useCaptureForecastSnapshot() {
     mutationFn: (input: CaptureForecastSnapshotInput) =>
       apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input, undefined, dealForecastSnapshotLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecastSnapshots() });
     },
   });
 }
 
 export function useDealCompetitors(dealId: number) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.competitors(dealId),
+    queryKey: customerWorkQueryKeys.deals.competitors(dealId),
     queryFn: ({ signal }) => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`, undefined, signal, dealCompetitorsListLazy),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
@@ -327,7 +328,7 @@ export function useAddDealCompetitor(dealId: number) {
     mutationFn: (input: CreateDealCompetitorInput) =>
       apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input, undefined, dealCompetitorLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.competitors(dealId) });
     },
   });
 }
@@ -339,14 +340,14 @@ export function useDeleteDealCompetitor(dealId: number) {
     mutationFn: (competitorId: string) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`, undefined, undefined, dealDeleteLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.competitors(dealId) });
     },
   });
 }
 
 export function useDealHealth(dealId: number) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.health(dealId),
+    queryKey: customerWorkQueryKeys.deals.health(dealId),
     queryFn: ({ signal }) => apiClient.get<DealHealth>(`/deals/${dealId}/health`, undefined, signal, dealHealthLazy),
     staleTime: 5 * 60_000,
     enabled: dealId > 0,
@@ -360,14 +361,14 @@ export function usePatchNextStep(dealId: number) {
     mutationFn: (input: PatchNextStepInput) =>
       apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }, undefined, dealLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(dealId) });
     },
   });
 }
 
 export function useStakeholders(dealId: number) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.stakeholders(dealId),
+    queryKey: customerWorkQueryKeys.deals.stakeholders(dealId),
     queryFn: ({ signal }) => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`, undefined, signal, dealStakeholdersListLazy),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
@@ -381,10 +382,10 @@ export function useCreateStakeholder(dealId: number) {
     mutationFn: (input: CreateStakeholderInput) =>
       apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input, undefined, dealStakeholderLazy),
     onMutate: async () => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
     },
   });
 }
@@ -396,20 +397,20 @@ export function useDeleteStakeholder(dealId: number) {
     mutationFn: (stakeholderId: string) =>
       apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`, undefined, undefined, stakeholderDeleteLazy),
     onMutate: async (stakeholderId) => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-      const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));
-      qc.setQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId), (old) =>
+      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
+      const snapshot = qc.getQueryData<DealStakeholder[]>(customerWorkQueryKeys.deals.stakeholders(dealId));
+      qc.setQueryData<DealStakeholder[]>(customerWorkQueryKeys.deals.stakeholders(dealId), (old) =>
         old ? old.filter((s) => s.id !== stakeholderId) : old,
       );
       return { snapshot };
     },
     onError: (_, _vars, context) => {
       if (context?.snapshot) {
-        qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
+        qc.setQueryData(customerWorkQueryKeys.deals.stakeholders(dealId), context.snapshot);
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
     },
   });
 }
@@ -421,7 +422,7 @@ export function useOverrideForecast() {
     mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
       apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data, undefined, dealForecastSnapshotLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecastSnapshots() });
     },
   });
 }
@@ -435,7 +436,7 @@ export function useOverrideForecast() {
  */
 export function useDealStageTransitions(dealId: number | null) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.crm.dealStageTransitions(dealId ?? 0),
+    queryKey: accessAndCrmQueryKeys.crm.dealStageTransitions(dealId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: DealStageTransition[] }>(`/deals/${dealId}/transitions`, undefined, signal, dealStageTransitionsLazy),
     staleTime: 60_000,

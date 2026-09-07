@@ -1,14 +1,5 @@
 export type AccountingBasis = "ACCRUAL" | "CASH";
 
-export type SequenceEntityType =
-  | "journal"
-  | "invoice"
-  | "credit_note"
-  | "bill"
-  | "vendor_credit"
-  | "payment"
-  | "asset";
-
 export interface PaymentTerm {
   key: string;
   label: string;

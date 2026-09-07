@@ -91,6 +91,46 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/kb/article-ai.ts:useKbArticleImprove", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/improve client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
   ["hooks/api/kb/article-ai.ts:useKbArticleSuggestRelated", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/suggest-related client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
 
+  /*
+   * Boundary types outside `hooks/api/`. DATA_LAYER_CONTRACT_RE answers the ones that live beside
+   * their contract; these two live in `types/leads.ts` and are the MEMBER shapes of contracts wired
+   * in `hooks/api/leads.ts` — derived with `z.infer`, so they cannot drift from the wire, and they
+   * sit in a file whose sibling aliases (LeadBoard, SlaAlertResponse, ConversionBySource…) are
+   * imported by name all over `features/crm/`. Deleting a derived member alias would be deleting
+   * the module's own idiom, not dead code. They go stale the day their parent contract is removed.
+   */
+  ["types/leads.ts:LeadBoardColumn", { verdict: "KEEP", reason: "z.infer<typeof leadBoardContract>[string] — the per-stage column shape of the live board contract fetched by useLeadBoard; the board is keyed by the org's own pipeline stages, so the column type is reached by indexing LeadBoard rather than by name" }],
+  ["types/leads.ts:SlaAlert", { verdict: "KEEP", reason: "z.infer<typeof leadsSlaAlertsContract>[\"leads\"][number] — the row shape of the live SLA-alerts contract whose envelope SlaAlertResponse is imported by features/crm/reports/components/sla-alert-card.tsx; consumers reach the row through the envelope, so the alias is never imported by name" }],
+
+  /*
+   * knip's `duplicates` group is NOT a dead-code finding: it reports two exports of one value, and
+   * says nothing about whether either is used. Every group below is the same deliberate shape — one
+   * row contract plus a per-ROUTE alias, each alias passed as the `contract` argument at exactly one
+   * seam call. The alias is the seam: when a create/update/activate response diverges from the row
+   * (an extra field, a narrower status), the divergence is expressed by changing one line in the
+   * schema file, with no call-site edit and no risk of silently re-pointing a sibling route at the
+   * same shape. Collapsing them to the base name would erase the per-route seam and make the
+   * route -> contract mapping check-response-contracts.mjs reads ambiguous. Verified 2026-09-07:
+   * for each group, the base is consumed in-file (list contract and/or z.infer row type) and every
+   * alias is consumed at a distinct apiClient call — none is unreferenced. A group goes stale the
+   * day one of its members stops being an alias or its route is deleted.
+   */
+  ["hooks/api/accounting/planning-schema.ts:scenarioContract|scenarioCreatedContract|scenarioUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: scenarioContract builds scenarioListContract and ScenarioList, scenarioCreatedContract parses POST /accounting/scenarios, scenarioUpdatedContract parses PATCH /accounting/scenarios/:id — three live seams, one shape today" }],
+  ["hooks/api/accounting/settings-schema.ts:approvalPolicyContract|approvalPolicyCreatedContract|approvalPolicyUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: approvalPolicyContract builds approvalPolicyListContract, approvalPolicyCreatedContract parses POST /accounting/approval-policies, approvalPolicyUpdatedContract parses PATCH /accounting/approval-policies/:id" }],
+  ["hooks/api/accounting/assets-schema.ts:assetDetailContract|assetActivateContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: assetDetailContract parses GET /accounting/assets/:id and types AssetDetail, assetActivateContract parses POST /accounting/assets/:id/activate" }],
+  ["hooks/api/accounting/taxes-schema.ts:taxCodeContract|taxCodeCreatedContract|taxCodeUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: taxCodeContract builds taxCodeListContract, taxCodeCreatedContract parses POST /accounting/tax-codes, taxCodeUpdatedContract parses PATCH /accounting/tax-codes/:id" }],
+  ["hooks/api/payments-schema.ts:webhookEventContract|webhookEventRowContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: webhookEventContract builds webhookEventListContract and types PaymentWebhookEvent, webhookEventRowContract parses POST /payments/providers/:key/webhooks/events/:id/retry" }],
+  ["hooks/api/blog-schema.ts:blogPostWithRelationsContract|blogAdminPostDetailContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: blogPostWithRelationsContract builds the two admin list contracts and types AdminBlogPost, blogAdminPostDetailContract parses GET /blog/admin/posts/:id" }],
+  ["hooks/api/support/support-channel-schema.ts:supportBusinessHoursRowContract|supportBusinessHoursContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: supportBusinessHoursRowContract builds supportBusinessHoursListContract, supportBusinessHoursContract parses POST and PATCH /support/business-hours" }],
+  ["hooks/api/party/party-schema.ts:partyRowContract|partyDetailContract|partyMutationContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: partyRowContract builds the list contract and types BusinessParty, partyDetailContract parses GET /party/parties/:id, partyMutationContract parses POST and PATCH /party/parties" }],
+  ["hooks/api/hr/engagement-schema.ts:pollContract|createPollContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: pollContract builds listPollsContract and types HrPoll, createPollContract parses the poll-create seam in hooks/api/hr/engagement.ts" }],
+  ["hooks/api/hr/engagement-schema.ts:communityBaseContract|createCommunityContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: communityBaseContract is extended with members[] inside listCommunitiesContract, createCommunityContract parses the community-create seam in hooks/api/hr/engagement.ts" }],
+  ["hooks/api/hr/engagement-schema.ts:campaignContract|createCampaignContract|updateCampaignContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: campaignContract builds listCampaignsContract and types HrCampaign, createCampaignContract and updateCampaignContract parse the two campaign mutation seams in hooks/api/hr/engagement.ts" }],
+  ["hooks/api/hr/leave-policies-schema.ts:leavePolicyRowContract|createLeavePolicyContract|updateLeavePolicyContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: leavePolicyRowContract builds leavePoliciesListContract, createLeavePolicyContract and updateLeavePolicyContract parse the two mutation seams in hooks/api/hr/leave-policies.ts" }],
+  ["hooks/api/hr/policies-schema.ts:hrPolicyRowContract|createHrPolicyContract|updateHrPolicyContract|createPolicyVersionContract|activatePolicyContract", { verdict: "KEEP", reason: "one row contract + four per-route aliases, each passed at a distinct seam in hooks/api/hr/policies.ts (create, update, create-version, activate); the row builds the list contract. Version and activation responses are the ones most likely to diverge from the row, which is why they hold their own names" }],
+  ["hooks/api/hr/letters-schema.ts:letterRenderRowSchema|saveLetterContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: letterRenderRowSchema builds lettersListContract, saveLetterContract parses the letter-save seam in hooks/api/hr/letters.ts" }],
+  ["hooks/api/hr/workforce-schema.ts:headcountPlanRowContract|updateHeadcountPlanContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: headcountPlanRowContract builds createHeadcountPlanContract (an array) and types HeadcountPlanRow, updateHeadcountPlanContract parses PATCH /hr/analytics-plus/workforce/plans/:id, which returns a single row" }],
+
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {

@@ -1,8 +1,5 @@
 import type { ExpenseStatus } from "@/features/accounting/shared";
 
-export type ReimbursementBatchStatus = "DRAFT" | "APPROVED" | "PAID";
-export type PolicyFlag = "OVER_LIMIT" | "RECEIPT_REQUIRED";
-
 export interface FinExpenseUser {
   id: string;
   name?: string | null;

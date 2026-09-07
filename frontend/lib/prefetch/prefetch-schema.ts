@@ -2,31 +2,6 @@ import { z } from "zod";
 import { notificationListContract } from "@/hooks/api/notifications-schema";
 
 const wireDate = () => z.string();
-const nullableWireDate = () => z.string().nullable();
-
-export const projectDetailContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  key: z.string(),
-  clientMembershipId: z.number().int().nullable(),
-  managerMembershipId: z.number().int().nullable(),
-  startDate: nullableWireDate(),
-  endDate: nullableWireDate(),
-  status: z.string(),
-  priority: z.string(),
-  dealId: z.number().int().nullable(),
-  managedProductId: z.number().int().nullable(),
-  pmWorkspaceId: z.number().int().nullable(),
-  budget: z.number().nullable(),
-  budgetMinor: z.number().int().nullable(),
-  budgetCurrency: z.string().nullable(),
-  settings: z.record(z.string(), z.unknown()).nullable(),
-  deletedAt: nullableWireDate(),
-  createdAt: wireDate(),
-  updatedAt: wireDate(),
-});
 
 export const dashboardStatsContract = z.object({
   orgName: z.string(),

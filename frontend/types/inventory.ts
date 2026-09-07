@@ -14,71 +14,6 @@ export interface InventoryCategory {
   children?: InventoryCategory[];
 }
 
-export interface InventoryUom {
-  id: number;
-  orgId: string;
-  name: string;
-  abbreviation: string;
-  isActive: boolean;
-  category?: string | null;
-  ratioToBase?: string | null;
-  roundingPrecision?: number | null;
-  isBase?: boolean;
-}
-
-export interface InventoryProductVariant {
-  id: number;
-  orgId: string;
-  productId: number;
-  name: string;
-  sku: string;
-  barcode: string | null;
-  costPrice: string;
-  sellingPrice: string;
-  attributeValues: Record<string, string> | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface InventoryProduct {
-  id: number;
-  orgId: string;
-  name: string;
-  sku: string;
-  barcode: string | null;
-  categoryId: number | null;
-  uomId: number | null;
-  description: string | null;
-  status: ProductStatus;
-  costPrice: string;
-  sellingPrice: string;
-  reorderPoint: string;
-  minStockLevel: string;
-  maxStockLevel: string;
-  hasVariants: boolean;
-  imageUrl: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  category?: InventoryCategory | null;
-  uom?: InventoryUom | null;
-  categoryName?: string | null;
-  uomName?: string | null;
-  isActive?: boolean;
-  variants?: InventoryProductVariant[];
-  totalStock?: number;
-  productType?: ProductType | null;
-  trackingMethod?: TrackingMethod | null;
-  costingMethod?: CostingMethod | null;
-  standardCost?: string | null;
-  purchaseUomId?: number | null;
-  salesUomId?: number | null;
-  defaultVendorId?: number | null;
-  reorderEnabled?: boolean;
-  isArchived?: boolean;
-}
-
 export interface CreateProductInput {
   name: string;
   sku?: string;
@@ -138,16 +73,6 @@ export interface InventoryVendor {
   updatedAt: string;
 }
 
-export interface ProductVariantFlat {
-  id: number;
-  productId: number;
-  productName: string;
-  name: string;
-  sku: string;
-  costPrice: string;
-  isActive: boolean;
-}
-
 export interface PurchaseOrderLine {
   id: number;
   poId: number;
@@ -164,60 +89,6 @@ export interface PurchaseOrderLine {
     sku: string;
     product?: { id: number; name: string; trackingMethod?: TrackingMethod | null };
   };
-}
-
-export interface GoodsReceiptLine {
-  id: number;
-  grnId: number;
-  poLineId: number;
-  quantityReceived: string;
-  qualityStatus: "ACCEPTED" | "REJECTED";
-  rejectionReason: string | null;
-  lotNumber: string | null;
-  expiryDate: string | null;
-  manufactureDate: string | null;
-  serialNumbers: string[] | null;
-  productVariant?: { id: number; name: string; sku: string };
-}
-
-export interface GoodsReceiptNote {
-  id: number;
-  orgId: string;
-  poId: number;
-  grnNumber: string;
-  receivedDate: string;
-  locationId: number | null;
-  notes: string | null;
-  createdBy: string;
-  createdAt: string;
-  creator?: { id: string; name: string };
-  lines: GoodsReceiptLine[];
-}
-
-export interface PurchaseOrder {
-  id: number;
-  orgId: string;
-  vendorId: number;
-  poNumber: string;
-  status: PurchaseOrderStatus;
-  orderDate: string;
-  expectedDeliveryDate: string | null;
-  warehouseId: number | null;
-  subtotal: string;
-  taxAmount: string;
-  discount: string;
-  total: string;
-  currency: string;
-  notes: string | null;
-  sentAt: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  vendor?: { id: number; name: string; code: string };
-  warehouse?: { id: number; name: string; code?: string } | null;
-  creator?: { id: string; name: string };
-  lines: PurchaseOrderLine[];
-  grns: GoodsReceiptNote[];
 }
 
 export interface PurchaseOrderSummary {
@@ -276,37 +147,6 @@ export interface ReceiveGoodsLineInput {
   expiryDate?: string;
   manufactureDate?: string;
   serialNumbers?: string[];
-}
-
-export interface VendorPerformance {
-  vendorId: number;
-  onTimeRate: number;
-  fillRate: number;
-  returnRate: number;
-  avgLeadTimeDays: number;
-  openPoCount: number;
-  totalSpend: string;
-}
-
-export interface WarehouseStockRow {
-  locationId: number;
-  locationCode: string;
-  locationName: string;
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productId: number;
-  productName: string;
-  onHand: number;
-  committed: number;
-  onOrder: number;
-}
-
-export interface WarehouseStockResult {
-  items: WarehouseStockRow[];
-  total: number;
-  page: number;
-  totalPages: number;
 }
 
 export interface AdjustmentDetailLine {
@@ -370,23 +210,3 @@ export interface StockAvailability {
   warehouseBreakdown: StockAvailabilityByWarehouse[];
 }
 
-export interface StockReservation {
-  id: number;
-  orgId: string;
-  sourceType: string;
-  sourceId: string;
-  sourceLineId: string | null;
-  productVariantId: number;
-  warehouseId: number | null;
-  locationId: number | null;
-  lotId: number | null;
-  serialId: number | null;
-  reservedQty: string;
-  status: StockReservationStatus;
-  expiresAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  productVariant: { id: number; sku: string; name: string | null } | null;
-  location: { id: number; name: string; code: string } | null;
-  warehouse: { id: number; name: string } | null;
-}

@@ -85,11 +85,7 @@ export interface CreateAccountingMappingInput {
 
 export type UpdateAccountingMappingInput = Partial<CreateAccountingMappingInput>;
 
-export type CalendarEventStatus = "upcoming" | "due" | "overdue";
-
 export type PayrollCalendarEvent = z.infer<typeof calendarEventContract>;
-
-
 
 export interface CreateCalendarEventInput {
   type: string;
@@ -104,8 +100,6 @@ export type TaxWindowStatus = "DRAFT" | "OPEN" | "CLOSED" | "LOCKED";
 
 export type TaxWindow = z.infer<typeof taxWindowContract>;
 
-
-
 export interface CreateTaxWindowInput {
   financialYear: string;
   opensAt: string;
@@ -117,28 +111,6 @@ export interface CreateTaxWindowInput {
 export type UpdateTaxWindowInput = Partial<CreateTaxWindowInput> & { status?: TaxWindowStatus };
 
 export type TaxDeclarationStatus = "DRAFT" | "SUBMITTED" | "VERIFIED";
-export type TaxRegime = "NEW" | "OLD";
-
-export interface TaxDeclarationAdmin {
-  id: number;
-  orgId: string;
-  userId: string;
-  financialYear: string;
-  regime: TaxRegime;
-  hra: number;
-  lta: number;
-  section80c: number;
-  section80d: number;
-  section80g: number;
-  homeLoanInterest: number;
-  status: TaxDeclarationStatus;
-  verifiedBy: string | null;
-  verifiedAt: string | null;
-  reviewNote: string | null;
-  createdAt: string;
-  userName: string;
-  userEmail: string;
-}
 
 export type FnfStatus = "PENDING" | "HR_REVIEW" | "FINANCE_REVIEW" | "APPROVED" | "PAID";
 
@@ -164,15 +136,7 @@ export interface FnfSettlement {
   userEmail: string;
 }
 
-export interface FnfStatementComponent {
-  label: string;
-  amount: number;
-  type: string | null;
-}
-
 export type FnfStatement = z.infer<typeof fnfStatementContract>;
-
-
 
 export type LoanAdjustmentType = "SKIP_EMI" | "EXTRA_RECOVERY" | "FORECLOSURE" | "MANUAL_ADJUST";
 

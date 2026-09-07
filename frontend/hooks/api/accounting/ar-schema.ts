@@ -121,8 +121,6 @@ export const recurringInvoiceTemplateListContract = cursorPageContract(recurring
 
 export const recurringInvoiceRunNowContract = z.object({ invoiceId: z.number() });
 
-export const recurringInvoiceDeleteContract = z.object({ success: z.literal(true) });
-
 export const recurringTemplateDeleteContract = z.object({ id: z.number(), deleted: z.boolean() });
 
 export const voidInvoiceContract = z.object({ id: z.number(), status: z.string() });
