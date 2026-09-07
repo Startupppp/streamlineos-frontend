@@ -19,7 +19,7 @@
 - [ ] **PRD-C172** — Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md).
 - [ ] **PRD-C173** — Configure production logs, traces and release metadata with redaction.
 - [ ] **PRD-C174** — Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
-- [ ] **PRD-C175** — Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
+- [ ] **PRD-C175** — Capture passing RB-01-RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
 - [ ] **PRD-C176** — Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
 - [ ] **PRD-C177** — Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling.
 - [ ] **PRD-C178** — Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures.
