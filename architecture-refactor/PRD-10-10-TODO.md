@@ -1,10 +1,23 @@
 # StreamlineOS final 10/10 completion PRD
 
-Status: active — single authoritative backlog  
+Status: **superseded as the authoritative checklist 2026-09-07** — retained as cross-program history  
 Last reconciled: 2026-09-01  
 Scope: all platform domains except CRM and Inventory
 
-This file is the only architecture/refactor TODO list. Do not create session tickets, parallel status reports, duplicate PRDs, or a new architecture scorecard. Update checkboxes here from fresh source and reproducible evidence. Git history is the archive.
+**Authority: [PRD-10-10-CODE-RELEASE-TODO.md](PRD-10-10-CODE-RELEASE-TODO.md) is the single code-release
+checklist.** It is the only one of these documents a gate enforces — `check:prd-traceability` reads it by
+path with `MIN_CRITERIA = 195` — and its `PRD-C001`–`PRD-C195` ids are the vocabulary every ticket file and
+evidence record already uses. [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) stands beside it in a different role, as
+the approved target specification rather than a backlog, and does not compete.
+
+This file's former claim to be "the only architecture/refactor TODO list", and its instruction not to
+create session tickets, is withdrawn: the release program is *built* on 36 per-ticket files under
+`.scratch/code-release-10-10-v2/issues/`, which the traceability gate requires and pins at exactly 36. The
+instruction and the program contradicted each other, and the program is the one with a gate.
+
+Nothing here is deleted. Its "Verified complete — preserve these results" block is recorded nowhere else
+and must be consolidated into the authoritative checklist before this file is retired. Read its counts as
+of 2026-09-01, not as current: it records 585 migrations against a head that is now 697.
 
 ## Reality and release standard
 

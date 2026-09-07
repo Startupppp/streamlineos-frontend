@@ -871,13 +871,13 @@ These decisions are final for this release and remove implementation alternative
 ## Immediate code-level final gate
 
 - [ ] **[PRD-C156]** Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
-      **OPEN - two named blockers now, not one.** PRD-C149 remains unchecked, and **PRD-C104 rejoined the
-      unchecked set on 2026-09-06** when its checkbox was corrected to match its own text ("OPEN - named
-      blocker", "cannot be closed by writing specs", "not waived", no CLOSED marker, no owner disposition).
-      Both sit under **Immediate code-level release candidate**, so both are dependencies of this criterion.
-      C104's blocker and C158's remaining gate blocker are the same one: `check:test-suppressions` at 76
-      against a ratchet of 29, which moves only when the `db-gates.yml` database-gated step is green and
-      promoted. This criterion is not waived and closes with them, not before. Owner: the repository owner.
+      **OPEN - one named blocker, not two.** PRD-C149 remains unchecked. **PRD-C104 is closed** and the
+      text that described it as a second blocker was stale: it claimed `check:test-suppressions` sat at 76
+      against a ratchet of 29 awaiting a `db-gates.yml` promotion. Re-measured 2026-09-07, the gate reports
+      `conditional 20 (ratchet 20) · quarantine 6 (ratchet 6) — OK`, because the suppression class was
+      retired rather than repriced (`b54c52bf5`). Nothing was waived to get there.
+      PRD-C149 sits under **Immediate code-level release candidate** and is therefore a dependency of this
+      criterion, which closes with it and not before. Owner: the repository owner.
 
 - [ ] **[PRD-C157]** CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -885,9 +885,23 @@ These decisions are final for this release and remove implementation alternative
       **OPEN - builds, typechecks, cycles and focused tests pass at one commit; four gates now return real
       verdicts and two remain honestly red.**
       **Blocker status 2026-09-07, after reconciling this criterion against the artifacts rather than
-      against its own previous revision.** Cleared: the **BOLA live cross-tenant sweep** is green at
-      `85f758048` (exit 0, 10/10, 843 scored, 127 s, 0 SERVER-ERROR, 0 existence oracles) with both
-      formerly-unpinned defects fixed and the `getTicket` 500 not reproducing; and
+      against its own previous revision.** ⚠️ **The BOLA "green at `85f758048`" claim was withdrawn
+      2026-09-07 — it cited a commit that has no artifact.** Every BOLA artifact in `backend/.artifacts/`
+      carries commit `565e45832` (2026-09-06) or older, and `565e45832` is an *ancestor* of `85f758048`, so
+      no sweep has been run at the commit the claim named. The quoted "843 scored" is the count from
+      `bola-live-cross-tenant-2026-09-07-final.json`, which is at `565e45832` and whose verdicts are
+      `PASS 825 · UNPROBEABLE 1094 · NO-404 16 · LEAK 2` — the two LEAKs were never adjudicated in this
+      document, so "both formerly-unpinned defects fixed" was asserted, not measured. This is the second
+      time a BOLA PASS claim has outrun its artifact.
+      **Both LEAKs adjudicated 2026-09-07 as prober false positives, with reasons.** Both are
+      `POST`/`DELETE /billing/marketplace/:appId/install`. `marketplace_apps`
+      (`src/db/schema/billing/billing.ts:57`) has **no `orgId` column** — it is a global catalog, so
+      `:appId` is not a tenant-owned id. Both handlers take only `appId` from the path and the org from
+      `@CurrentUser()` under `PermissionGuard` + `billing:marketplace:install`, and each probe body returns
+      `orgId` = the **prober's own** org with its own `installedBy`. Installing a catalog app into your own
+      org is the intended behaviour; the prober flags it because it models every `:id` path param as
+      tenant-owned. The 16 NO-404s remain **unadjudicated**. A re-run at the current head is still owed.
+      Cleared, and this one is measured:
       **`check:test-suppressions`** is green after the suppression class was retired rather than repriced
       (76 → 20 with the ratchet **lowered** 29 → 20, `b54c52bf5`), which is what closed PRD-C104.
       Still open, and each is a real reason this stays unchecked: **`check:replay-ledger`** exits 2 for want
