@@ -10,6 +10,7 @@ export type ChangeRequestStatus =
 
 export interface ChangeRequest {
   id: number;
+  orgId: string;
   projectId: number;
   crNumber: number;
   title: string;
@@ -18,11 +19,12 @@ export interface ChangeRequest {
   estimateMinutes: number | null;
   budgetImpactCents: number | null;
   timelineImpactDays: number | null;
-  status: ChangeRequestStatus;
+  status: string;
   requestedById: string | null;
   approvalOwnerId: string | null;
   decisionComment: string | null;
   decidedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

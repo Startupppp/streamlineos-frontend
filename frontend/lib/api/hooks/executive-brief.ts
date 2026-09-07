@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { executiveBriefGetLatestContract } from "@/lib/api/hooks/executive-brief-schema";
 
 import { queryOptions, useQueryClient } from "@tanstack/react-query";
 import { lazyContract } from "@/lib/api-envelope";
@@ -20,11 +22,7 @@ export interface ExecutiveBriefSnapshot {
   aiUsage?: AiUsageMeta | null;
 }
 
-export interface LatestBriefResponse {
-  snapshot: ExecutiveBriefSnapshot | null;
-  isStale: boolean;
-  staleSinceMinutes?: number;
-}
+export type LatestBriefResponse = z.infer<typeof executiveBriefGetLatestContract>;
 
 const executiveBriefContract = lazyContract(() =>
   import("@/lib/api/hooks/executive-brief-schema").then((m) => m.executiveBriefGetLatestContract),

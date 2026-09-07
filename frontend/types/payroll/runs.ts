@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { runVarianceResponseContract } from "@/hooks/api/payroll/run-employees-schema";
+import type { profileDetailResponseContract } from "@/hooks/api/payroll/employees-schema";
 export type PayrollRunStatus =
   | "PREPARING"
   | "DRAFT"
@@ -197,11 +200,9 @@ export interface EmployeeSalaryProfile {
   userEmail: string | null;
 }
 
-export interface EmployeeProfileDetail {
-  active: EmployeeSalaryProfile | null;
-  history: EmployeeSalaryProfile[];
-  components: ProfileComponent[];
-}
+export type EmployeeProfileDetail = z.infer<typeof profileDetailResponseContract>;
+
+
 
 export interface ProfileComponent {
   id: number;
@@ -255,8 +256,6 @@ export interface CommandCenterData {
   upcomingCalendarEvents: { id: number; date: string; eventType: string; label: string }[];
 }
 
-export interface VarianceData {
-  currentRun: { id: number; month: string; grossTotal: string | null; netTotal: string | null };
-  previousRun: { id: number; month: string; grossTotal: string | null; netTotal: string | null } | null;
-  topMovers: { userId: string; net: string | null; userName: string }[];
-}
+export type VarianceData = z.infer<typeof runVarianceResponseContract>;
+
+

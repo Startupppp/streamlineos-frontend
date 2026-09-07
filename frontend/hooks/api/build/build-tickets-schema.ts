@@ -132,12 +132,32 @@ export const ticketActivityPageContract = z.object({
   pagination: paginationContract,
 });
 
+const ticketRelationRelatedTicketSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  ticketNumber: z.number().int().nullable(),
+  status: z.string().nullable(),
+  priority: z.string().nullable(),
+  type: z.string().nullable(),
+  points: z.number().nullable(),
+  assigneeId: z.string().nullable(),
+  projectId: z.number().int().nullable(),
+  assignee: z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string().nullable(),
+    image: z.string().nullable(),
+  }).nullable(),
+  project: z.object({ key: z.string().nullable() }).nullable(),
+}).nullable();
+
 const ticketRelationSchema = z.object({
   id: z.number().int(),
-  orgId: z.string(),
-  workItemId: z.number().int(),
-  relatedWorkItemId: z.number().int(),
-  createdAt: z.string(),
+  relationType: z.string(),
+  relatedTicket: ticketRelationRelatedTicketSchema,
+  direction: z.enum(["outgoing", "incoming"]),
 });
 
 export const ticketRelationListContract = z.array(ticketRelationSchema);
@@ -161,11 +181,12 @@ const checklistItemSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
   checklistId: z.number().int(),
-  title: z.string(),
+  text: z.string(),
   isCompleted: z.boolean(),
-  position: z.number().int(),
+  order: z.number().int(),
+  assigneeId: z.string().nullable(),
+  dueDate: z.string().nullable(),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const checklistItemContract = checklistItemSchema;
@@ -173,10 +194,8 @@ export const checklistItemContract = checklistItemSchema;
 const checklistRowSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  projectId: z.number().int(),
   ticketId: z.number().int(),
   title: z.string(),
-  position: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
   items: z.array(checklistItemSchema).optional(),
@@ -257,19 +276,42 @@ const ticketLabelSchema = z.object({
 
 export const ticketLabelListContract = z.array(ticketLabelSchema);
 
+const allWorkAssigneeSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  image: z.string().nullable(),
+}).nullable();
+
 const allWorkItemSchema = z.object({
   id: z.number().int(),
-  orgId: z.string(),
   title: z.string(),
-  type: z.string(),
   status: z.string(),
-  priority: z.string(),
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
+  priority: z.string().nullable(),
+  type: z.string(),
   dueDate: z.string().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
+  startDate: z.string().nullable(),
+  ticketNumber: z.number().int(),
+  points: z.number().nullable(),
+  estimate: z.number().nullable(),
+  rank: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  assigneeId: z.string().nullable(),
+  sprintId: z.number().int().nullable(),
+  cycleId: z.number().int().nullable(),
+  epicId: z.number().int().nullable(),
+  projectId: z.number().int().nullable(),
+  projectKey: z.string().nullable(),
+  projectName: z.string().nullable(),
+  assignee: allWorkAssigneeSchema,
+  labels: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    color: z.string().nullable(),
+  })),
 });
 
 export const allWorkPageContract = z.object({

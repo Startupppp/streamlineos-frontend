@@ -26,8 +26,10 @@ export interface Project {
   name: string;
   description: string | null;
   key: string;
-  clientId: string | null;
-  managerId: string | null;
+  clientId?: string | null;
+  clientMembershipId?: number | null;
+  managerId?: string | null;
+  managerMembershipId?: number | null;
   managedProductId: number | null;
   pmWorkspaceId: string | null;
   startDate: string | Date | null;

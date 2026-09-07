@@ -75,7 +75,7 @@ export function useRevokeApiToken() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["revoke", "api", "token"],
-    mutationFn: (tokenId: string) =>
+    mutationFn: (tokenId: number) =>
       apiClient.patch<{ success: boolean }>(`/api-tokens/${tokenId}/revoke`, undefined, undefined, revokeApiTokenContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.apiTokens.all });

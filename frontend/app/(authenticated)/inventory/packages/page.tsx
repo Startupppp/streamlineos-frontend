@@ -129,7 +129,7 @@ function PackagesPageInner() {
       key: "lines",
       header: "Lines",
       cell: (pkg) => (
-        <span className="tabular-nums">{pkg.lines?.length ?? 0}</span>
+        <span className="tabular-nums">{pkg.items?.length ?? 0}</span>
       ),
     },
     {

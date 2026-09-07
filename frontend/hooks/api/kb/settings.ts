@@ -8,7 +8,15 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbSettings = {
-  trashRetentionDays: number;
+  id: number;
+  orgId: string;
+  defaultVisibility: string;
+  aiEnabled: boolean;
+  publicPortalEnabled: boolean;
+  customDomain: string | null;
+  branding: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 const kbSettingsContract = lazyContract(() =>

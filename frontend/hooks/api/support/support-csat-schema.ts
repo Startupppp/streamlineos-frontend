@@ -7,6 +7,12 @@ const csatSourceStatsContract = z.object({
   averageScore: z.number().nullable(),
 });
 
+const crmCampaignsCsatContract = z.object({
+  totalSurveys: z.number().int(),
+  totalResponses: z.number().int(),
+  averageScore: z.number().nullable(),
+});
+
 export const csatReportContract = z.object({
   totalRequests: z.number().int(),
   totalResponses: z.number().int(),
@@ -14,7 +20,7 @@ export const csatReportContract = z.object({
   averageScore: z.number().nullable(),
   sources: z.object({
     ticket: csatSourceStatsContract,
-    crmCampaigns: csatSourceStatsContract.nullable(),
+    crmCampaigns: crmCampaignsCsatContract.nullable(),
     generalSurveys: z.union([
       csatSourceStatsContract,
       z.object({ excluded: z.literal(true), reason: z.string() }),

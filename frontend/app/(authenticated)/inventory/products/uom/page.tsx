@@ -24,9 +24,9 @@ import { UomCreateForm } from "@/features/inventory/components/uom-create-form";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useUom } from "@/hooks/api/inventory";
-import type { InventoryUom } from "@/types/inventory";
+import type { InvUomShape } from "@/hooks/api/inventory/products-schema";
 
-const uomColumns: DataTableColumn<InventoryUom>[] = [
+const uomColumns: DataTableColumn<InvUomShape>[] = [
   {
     key: "name",
     header: "Name",

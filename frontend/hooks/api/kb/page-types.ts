@@ -1,34 +1,40 @@
-/**
- * The KB page wire contract: the shapes `/kb/pages/*` returns and the bodies it
- * accepts.
- *
- * They are read by twenty-odd wiki components that never call a hook — a tree
- * item, a breadcrumb, a history row — so keeping them beside the twenty-three
- * TanStack hooks in `pages.ts` made every one of those components import a
- * module that pulls in the query client. The contract is also the half that has
- * to be checked against the backend Zod schema; the hooks are the half that
- * changes when caching does.
- */
-
 export type KbPage = {
   id: number;
   orgId: string;
   spaceId: number | null;
   parentPageId: number | null;
+  sortOrder: number | null;
+  projectId: number | null;
   title: string;
   icon: string | null;
   coverImage: string | null;
-  content: Record<string, unknown> | Record<string, unknown>[] | null;
+  status: "draft" | "in_review" | "published" | "archived";
+  contentType: string;
+  trustState: "unverified" | "verified" | "verification_expired";
+  visibility: "private" | "org" | "public";
+  publicToken: string | null;
+  publicSlug: string | null;
+  content: Record<string, unknown> | null;
   contentText: string | null;
-  contentRevision: number;
-  sortOrder: number | null;
   isLocked: boolean;
-  createdById: string | null;
-  lastEditedById: string | null;
-  deletedAt: string | null;
-  deletedById: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+  createdByMembershipId: number | null;
+  lastEditedByMembershipId: number | null;
+  deletedByMembershipId: number | null;
+  ownerMembershipId: number | null;
+  verifiedByMembershipId: number | null;
+  createdById: string | null;
+  lastEditedById: string | null;
+  deletedById: string | null;
+  ownerUserId: string | null;
+  verifiedById: string | null;
+  verifiedUntil: string | null;
+  nextReviewAt: string | null;
+  aclRevision: number;
+  contentRevision: number;
+  sourceArticleId: number | null;
 };
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
@@ -36,16 +42,6 @@ export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
-  visibility: "private" | "org" | "public";
-  publicToken: string | null;
-  status: "draft" | "in_review" | "published" | "archived";
-  contentType: string;
-  trustState: "unverified" | "verified" | "verification_expired";
-  ownerUserId: string | null;
-  verifiedById: string | null;
-  verifiedUntil: string | null;
-  nextReviewAt: string | null;
-  publicSlug: string | null;
 };
 
 export type KbPageTreeNode = {
@@ -81,10 +77,11 @@ export type KbPageVersion = {
   pageId: number;
   versionNumber: number;
   title: string;
-  content: Record<string, unknown> | Record<string, unknown>[] | null;
+  content: Record<string, unknown> | null;
   contentText: string | null;
   changeSummary: string | null;
   authorId: string | null;
+  authorMembershipId: number | null;
   authorName: string | null;
   createdAt: string;
 };
@@ -116,14 +113,6 @@ export type MoveKbPageInput = {
   index: number;
 };
 
-
-/**
- * `/kb/pages/search` is a bounded top-N, not a page: paging a `ts_rank` ordering means
- * re-ranking on every page, and a quick switcher that pages is a worse answer than one
- * that tells you to type more. It used to return a bare array behind an undeclared
- * `.limit(20)`, so a query matching 500 pages was indistinguishable from one matching 20;
- * `hasMore` is what makes the cut visible to the caller.
- */
 export interface KbPageSearchPage {
   items: KbPageSearchResult[];
   hasMore: boolean;

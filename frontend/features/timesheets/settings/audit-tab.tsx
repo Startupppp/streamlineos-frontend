@@ -79,7 +79,7 @@ const COLUMNS: DataTableColumn<AuditEvent>[] = [
     header: "Actor",
     cell: (row) => (
       <span className="text-xs">
-        {row.actorName ?? row.actorUserId ?? "System"}
+        {row.actorName ?? "System"}
       </span>
     ),
   },

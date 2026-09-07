@@ -89,12 +89,12 @@ export interface Ticket {
   description?: string | null;
   type: string;
   status: string;
-  priority: TicketPriority | null;
+  priority: string | null;
   projectId: number | null;
   ticketNumber: number;
   sprintId: number | null;
   epicId: number | null;
-  assigneeId: string | null;
+  assigneeId?: string | null;
   reporterId: string | null;
   points: number | null;
   storyPoints: number | null;
@@ -105,7 +105,7 @@ export interface Ticket {
   timeSpent: string | null;
   startDate: string | null;
   dueDate: string | null;
-  stateId: number | null;
+  stateId?: number | null;
   moduleId: number | null;
   cycleId: number | null;
   sequenceId: string | null;
@@ -245,27 +245,23 @@ export interface AllWorkTicketLabel {
 
 export interface AllWorkTicket {
   id: number;
-  orgId: string;
   title: string;
-  description: string | null;
   type: string;
   status: string;
   priority: string | null;
-  projectId: number;
-  projectKey: string;
-  projectName: string;
+  projectId: number | null;
+  projectKey: string | null;
+  projectName: string | null;
   ticketNumber: number;
   sprintId: number | null;
   epicId: number | null;
   assigneeId: string | null;
-  reporterId: string | null;
   points: number | null;
-  storyPoints: number | null;
+  estimate: number | null;
   rank: string | null;
   startDate: string | null;
   dueDate: string | null;
   cycleId: number | null;
-  sequenceId: string | null;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   assignee: TicketUser | null;
@@ -288,7 +284,7 @@ export interface Checklist {
   ticketId: number;
   orgId: string;
   title: string;
-  items: ChecklistItem[];
+  items?: ChecklistItem[];
   createdAt: string;
   updatedAt: string;
 }

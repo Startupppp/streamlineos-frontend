@@ -1,3 +1,7 @@
+import type { z } from "zod";
+import type { taxDeclarationResponseContract } from "@/hooks/api/payroll/ess-overview-schema";
+import type { essOverviewContract } from "@/hooks/api/payroll/ess-overview-schema";
+import type { totalRewardsStatementContract } from "@/hooks/api/payroll/ess-overview-schema";
 export interface EssToggles {
   essShowSalaryStructure: boolean;
   essAllowBankUpdate: boolean;
@@ -33,23 +37,9 @@ export interface EssActionRequired {
   href: string;
 }
 
-export interface EssOverview {
-  toggles: EssToggles;
-  capabilities?: EssCapabilities;
-  latestPayslip: {
-    publicationId: number;
-    month: string;
-    net: string | null;
-    downloadHref: string;
-  } | null;
-  nextPayDate: { date: string; label: string } | null;
-  ytd: { gross: string; net: string };
-  activeLoanBalance: string;
-  pendingReimbursementsCount: number;
-  taxWindow: { status: string; financialYear: string; closesAt: string | null } | null;
-  declarationStatus: string | null;
-  actionRequired?: EssActionRequired[];
-}
+export type EssOverview = z.infer<typeof essOverviewContract>;
+
+
 
 export interface ManagerTeamMember {
   userId: string;
@@ -143,51 +133,9 @@ export interface TeamRewardsResult {
   payCompression: PayCompressionStats;
 }
 
-export interface TotalRewardsStatement {
-  mode: "illustrative_statement";
-  honestyNote: string;
-  asOf: string;
-  financialYear: string;
-  cash: {
-    annualCtc: string | null;
-    ytdGross: string;
-    ytdNet: string;
-    activeLoanBalance: string;
-  };
-  benefits: {
-    lines: {
-      planName: string;
-      category: string;
-      status: string;
-      estimatedEmployerMonthly: string | null;
-      note: string;
-    }[];
-    estimatedEmployerAnnual: string | null;
-  };
-  equity: {
-    lines: {
-      grantType: string;
-      units: number;
-      status: string;
-      grantDate: string;
-      strikePrice: string | null;
-      note: string;
-    }[];
-    totalUnits: number;
-    valued: false;
-  };
-  leave: {
-    lines: { leaveType: string; balanceDays: string }[];
-    note: string;
-  };
-  summary: {
-    cashAnnualCtc: string | null;
-    benefitsEmployerAnnualEstimate: string | null;
-    equityUnits: number;
-    completeness: "partial" | "rich";
-    missing: string[];
-  };
-}
+export type TotalRewardsStatement = z.infer<typeof totalRewardsStatementContract>;
+
+
 
 export type ReimbursementStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
@@ -205,12 +153,9 @@ export interface EssTaxDeclaration {
   reviewNote: string | null;
 }
 
-export interface EssTaxDeclarationResponse {
-  windowStatus: "OPEN" | null;
-  financialYear: string | null;
-  closesAt: string | null;
-  declaration: EssTaxDeclaration | null;
-}
+export type EssTaxDeclarationResponse = z.infer<typeof taxDeclarationResponseContract>;
+
+
 
 export type LoanStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "CLOSED";
 

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type {
   KnowledgeGap,
+  DraftedKnowledgeGap,
   ListKnowledgeGapsResponse,
   DetectGapsResponse,
   DraftGapResponse,
@@ -72,10 +73,10 @@ export function useDraftGap() {
 
 export function useDismissGap() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<KnowledgeGap, Error, { gapId: number }>("support:knowledge-gaps:manage", {
+  return useAuthorizedMutation<DraftedKnowledgeGap, Error, { gapId: number }>("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "dismiss"],
     mutationFn: ({ gapId }) =>
-      apiClient.patch<KnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
+      apiClient.patch<DraftedKnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
         action: "dismiss",
       }, undefined, dismissGapResponseC),
     onMutate: async ({ gapId }) => {

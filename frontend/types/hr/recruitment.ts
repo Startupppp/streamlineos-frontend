@@ -333,7 +333,7 @@ export interface CandidateReferral {
   jobPostingId: number | null;
   relationship: string | null;
   notes: string | null;
-  status: string;
+  status: ReferralStatus;
   bonusEligible: boolean;
   bonusAmount: string | null;
   bonusPaidAt: string | null;

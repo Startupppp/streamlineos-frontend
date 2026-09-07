@@ -98,7 +98,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
       rate
         ? {
             projectId: rate.projectId != null ? String(rate.projectId) : SELECT_NONE,
-            userId: rate.userId ?? SELECT_NONE,
+            userId: SELECT_NONE,
             billingType: rate.billingType,
             billRate: rate.billRate,
             costRate: rate.costRate ?? "",

@@ -73,8 +73,9 @@ interface CreateOrderResponse {
   amount: number;
   currency: string;
   keyId: string | null;
-  plan: SubscriptionPlan;
-  billingCycle: BillingCycle;
+  plan: string;
+  billingCycle: string;
+  discountAmount: number;
 }
 
 interface VerifySubscriptionInput {
@@ -86,7 +87,7 @@ interface VerifySubscriptionInput {
 
 interface VerifySubscriptionResponse {
   success: boolean;
-  plan: SubscriptionPlan;
+  plan: string;
   status: "ACTIVE";
 }
 

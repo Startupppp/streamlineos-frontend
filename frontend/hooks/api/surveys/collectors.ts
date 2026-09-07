@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { surveyCollectorRowContract } from "./survey-collectors-schema";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -28,21 +30,7 @@ export type CollectorType =
 
 export type CollectorStatus = "active" | "paused" | "closed" | "expired";
 
-export interface SurveyCollector {
-  id: number;
-  collectorType: CollectorType;
-  name: string;
-  token: string;
-  status: CollectorStatus;
-  source: string | null;
-  utm: Record<string, unknown>;
-  settings: Record<string, unknown>;
-  opens: number;
-  starts: number;
-  completions: number;
-  expiresAt: string | null;
-  createdAt: string;
-}
+export type SurveyCollector = z.infer<typeof surveyCollectorRowContract>;
 
 export interface CreateCollectorInput {
   collectorType: CollectorType;

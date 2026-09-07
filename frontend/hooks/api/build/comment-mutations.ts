@@ -1,5 +1,5 @@
-﻿"use client";
-
+"use client";
+﻿
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -26,10 +26,10 @@ interface DeleteCommentInput {
 
 export function useUpdateComment() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; content: string; updatedAt: string }, Error, UpdateCommentInput>("build:tickets:update", {
+  return useAuthorizedMutation<{ updated: true }, Error, UpdateCommentInput>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "comments", "update"],
     mutationFn: ({ commentId, ticketId, projectId, content }) =>
-      apiClient.patch<{ id: number; content: string; updatedAt: string }>(
+      apiClient.patch<{ updated: true }>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
         { content },
         undefined,

@@ -39,14 +39,14 @@ export interface AddCommentInput {
 }
 
 export function useAddComment(
-  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, AddCommentInput>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }, Error, AddCommentInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; createdAt: string }, Error, AddCommentInput>({
+  return useMutation<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }, Error, AddCommentInput>({
     ...options,
     mutationKey: ["projects", "tickets", "comments", "add"],
     mutationFn: ({ ticketId, projectId = 0, content, parentCommentId }) =>
-      apiClient.post<{ id: number; content: string; createdAt: string }>(
+      apiClient.post<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }>(
         `/build/${projectId}/tickets/${ticketId}/comments`,
         { content, parentCommentId },
         undefined,

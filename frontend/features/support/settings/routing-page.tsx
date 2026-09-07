@@ -116,7 +116,7 @@ export function RoutingPage() {
               rule={rule}
               index={index}
               total={orderedRules.length}
-              assigneeName={assigneeNameOf(rule.assigneeId)}
+              assigneeName={assigneeNameOf(null)}
               onToggle={handleToggle}
               onMove={handleMove}
               onEdit={setEditTarget}

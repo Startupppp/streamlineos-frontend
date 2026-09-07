@@ -12,10 +12,10 @@ export interface ProjectTeam {
 }
 
 export interface ProjectTeamMember {
-  id: number;
+  id?: number;
   userId: string;
   role: string;
-  joinedAt: string;
+  joinedAt?: string;
   firstName: string | null;
   lastName: string | null;
   email: string;

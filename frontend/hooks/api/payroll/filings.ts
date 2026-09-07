@@ -1,4 +1,7 @@
 "use client";
+import type { z } from "zod";
+import type { filingExportJobContract } from "@/hooks/api/payroll/filings-schema";
+import type { filingCapabilitiesResponseContract } from "@/hooks/api/payroll/filings-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -72,33 +75,10 @@ export const FILING_EXPORT_TERMINAL: FilingExportJobStatus[] = [
 ];
 
 /** Durable handle for an asynchronously prepared statutory export. */
-export interface FilingExportJob {
-  jobId: number;
-  status: FilingExportJobStatus;
-  progress: number;
-  filingId: number | null;
-  correlationId: string | null;
-  errorMessage: string | null;
-  createdAt: string;
-  finishedAt: string | null;
-  statusLabel: string;
-  capability?: FilingCapability;
-}
+export type FilingExportJob = z.infer<typeof filingExportJobContract>;
 
 /** Backend honesty contract — filings are export-only until a provider is connected. */
-export interface FilingCapability {
-  mode: "export_only";
-  automaticFiling: boolean;
-  automaticRemittance: boolean;
-  providerDependent: boolean;
-  honestyLabel: string;
-  supportedTypes: FilingType[];
-  note: string;
-  ruleBundleVersion?: string;
-  ruleEffectiveFrom?: string;
-  artifactFormat?: "csv";
-  formLabels?: { quarterlyReturn: string; annualCertificate: string };
-}
+export type FilingCapability = z.infer<typeof filingCapabilitiesResponseContract>;
 
 export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");

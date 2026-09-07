@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { customerPageContract } from "@/hooks/api/build/reports-schema";
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
 export type OrgTimelineEventType = "contact_created" | "deal_created" | "lead_linked" | "note_added";
 
@@ -129,10 +131,9 @@ export interface PaginatedCrmOrganizations {
   totalCount?: number;
 }
 
-export interface BuildCustomersPage {
-  data: CrmOrganization[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
+export type BuildCustomersPage = z.infer<typeof customerPageContract>;
+
+
 
 export interface CrmOrganizationFilters {
   search?: string;

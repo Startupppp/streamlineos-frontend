@@ -17,7 +17,7 @@ export interface CreateBulkSendJobInput {
 
 export interface BulkSendJobResult {
   job: SignBulkSendJob;
-  preview?: { rowNumber: number; name?: string; email?: string; error?: string }[];
+  preview?: unknown;
   dryRun: boolean;
 }
 

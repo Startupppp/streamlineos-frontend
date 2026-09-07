@@ -127,8 +127,8 @@ function ShipmentsPageInner() {
       key: "carrier",
       header: "Carrier",
       cell: (s) =>
-        s.carrierName ? (
-          <span className="text-sm">{s.carrierName}</span>
+        s.carrier?.name ? (
+          <span className="text-sm">{s.carrier.name}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),

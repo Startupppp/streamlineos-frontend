@@ -17,10 +17,10 @@ const reorderProposalContract = lazyContract(() =>
 );
 import type { InsightNarration } from "@/hooks/api/inv-ai-explain";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
-import type { InventoryProduct } from "@/types/inventory";
+import type { InvProductShape } from "@/hooks/api/inventory/products-schema";
 
 interface ProductAiActionsProps {
-  product: InventoryProduct;
+  product: InvProductShape;
 }
 
 interface NarrationInput {

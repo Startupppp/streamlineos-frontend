@@ -128,7 +128,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
               </div>
               <div>
                 <p className="text-muted-foreground mb-0.5">Actor</p>
-                <p>{event.actorName ?? event.actorUserId ?? "System"}</p>
+                <p>{event.actorName ?? "System"}</p>
               </div>
               <div>
                 <p className="text-muted-foreground mb-0.5">Action</p>

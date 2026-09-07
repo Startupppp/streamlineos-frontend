@@ -1,5 +1,7 @@
-﻿"use client";
-
+"use client";
+import type { z } from "zod";
+import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
+﻿
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -20,7 +22,6 @@ const applyTemplateResultContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.applyTemplateResultContract),
 );
 
-
 interface ProjectTemplateTicket {
   id: number;
   templateId: number;
@@ -33,16 +34,7 @@ interface ProjectTemplateTicket {
   phase: string | null;
 }
 
-export interface ProjectTemplate {
-  id: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  category: string;
-  createdBy: string | null;
-  createdAt: string | null;
-  tickets: ProjectTemplateTicket[];
-}
+export type ProjectTemplate = z.infer<typeof templateRowContractDef>;
 
 interface CreateProjectTemplateInput {
   name: string;
@@ -68,7 +60,6 @@ interface ApplyProjectTemplateInput {
 }
 
 const TEMPLATES_KEY = buildWorkQueryKeys.projects.templates();
-
 
 export function useProjectTemplates() {
   const canView = useCan("build:view");

@@ -11,12 +11,12 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface KbSource {
   id: number;
-  kind: "file" | "note";
+  kind: string;
   title: string;
   mimeType: string | null;
   fileSize: number | null;
   fileUrl: string | null;
-  status: "processing" | "ready" | "failed";
+  status: string;
   chunkCount: number;
   errorMessage: string | null;
   spaceId: number | null;
@@ -28,11 +28,6 @@ const POLL_MAX_MS = 60_000;
 const POLL_DEADLINE_MS = 10 * 60_000;
 const POLL_STEP_MS = 30_000;
 
-/**
- * Bounded poll for indexing sources: 3s, doubling every 30s to a 60s ceiling, stopping after
- * 10 minutes. Elapsed time comes from the row's own createdAt so it survives remount, unlike
- * a ref or React Query's dataUpdatedAt (which is the last fetch and never grows).
- */
 export function kbSourcePollInterval(
   sources: readonly KbSource[] | undefined,
   now: number = Date.now(),
@@ -71,16 +66,6 @@ const kbSourceSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourceSuccessContract),
 );
 
-/**
- * `GET /kb/sources` was a hard cap of 100 with no cursor: a tenant past 100 sources could
- * never reach the rest, and the response was shaped exactly like a complete list, so
- * nothing surfaced the loss. It is a keyset page now, and this is an infinite query so the
- * cap is a page size rather than a ceiling.
- *
- * The poll still reads the flattened rows across every page, not just the first: a source
- * still ingesting on page two has to keep the poll alive, or the list a user has scrolled
- * into stops updating precisely where they are looking.
- */
 export function useKbSources() {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -99,12 +84,6 @@ export function useKbSources() {
   });
 }
 
-/**
- * The key is minted per FILE, not per attempt, and released only on success: POST /kb/sources
- * is @Idempotent, each POST inserts a new kb_sources row, and a retry after the client's 30s
- * timeout would otherwise create a second row and pay for a second full embed batch. A File
- * does not survive JSON.stringify, so the operation signature names it explicitly.
- */
 export function useUploadKbSource() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();

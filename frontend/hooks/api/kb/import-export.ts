@@ -28,7 +28,7 @@ export type ImportResult = {
 export type KbImportJob = {
   id: number;
   orgId: string;
-  sourceType: "markdown" | "html" | "zip";
+  sourceType: string;
   fileKey: string | null;
   status: "pending" | "processing" | "completed" | "failed";
   totalItems: number;
@@ -45,7 +45,7 @@ export type KbImportJob = {
 export type KbExportJob = {
   id: number;
   orgId: string;
-  scopeType: "page" | "all";
+  scopeType: string;
   scopeId: number | null;
   format: "markdown" | "html";
   status: "pending" | "processing" | "completed" | "failed";

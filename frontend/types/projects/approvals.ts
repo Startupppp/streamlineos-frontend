@@ -19,31 +19,34 @@ export type ApprovalStatus =
 
 export interface Approval {
   id: number;
-  projectId: number;
-  entityType: ApprovalEntityType;
+  orgId: string;
+  projectId: number | null;
+  entityType: string;
   entityId: number;
   title: string;
   reason: string | null;
   requestedById: string | null;
-  approverId: string | null;
-  status: ApprovalStatus;
+  approverMembershipId: number | null;
+  status: string;
   level: number;
   dueAt: string | null;
   decisionComment: string | null;
   decidedAt: string | null;
+  createdBy: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ApprovalInboxItem {
   id: number;
-  projectId: number;
-  projectName: string;
-  projectKey: string;
-  entityType: ApprovalEntityType;
+  projectId: number | null;
+  projectName: string | null;
+  projectKey: string | null;
+  entityType: string;
   entityId: number;
   title: string;
-  status: ApprovalStatus;
+  status: string;
   level: number;
   dueAt: string | null;
   requestedById: string | null;

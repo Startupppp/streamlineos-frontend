@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { journalBatchSummaryContract } from "@/hooks/api/payroll/journal-batches-schema";
 export type JournalBatchStatus = "DRAFT" | "POSTED" | "EXPORTED" | "REVERSED" | "FAILED";
 export type JournalReconStatus = "UNRECONCILED" | "RECONCILED" | "DISPUTED";
 
@@ -10,28 +12,9 @@ export interface JournalBatchLine {
   costCenter: string | null;
 }
 
-export interface JournalBatch {
-  id: number;
-  periodKey: string;
-  version: number;
-  status: JournalBatchStatus;
-  reconciliationStatus: JournalReconStatus;
-  reversalOfBatchId: number | null;
-  provisional: boolean;
-  totalDebits: string;
-  totalCredits: string;
-  lineCount: number;
-  unmappedCodes: string[];
-  runId: number | null;
-  note: string | null;
-  reversalReason: string | null;
-  reconciliationNote: string | null;
-  postedAt: string | null;
-  exportedAt: string | null;
-  reversedAt: string | null;
-  reconciledAt: string | null;
-  createdAt: string;
-}
+export type JournalBatch = z.infer<typeof journalBatchSummaryContract>;
+
+
 
 export interface JournalBatchDetail extends JournalBatch {
   lines: JournalBatchLine[];

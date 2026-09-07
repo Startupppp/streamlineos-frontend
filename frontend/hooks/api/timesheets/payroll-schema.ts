@@ -111,10 +111,11 @@ export const payrollAckExportResponseContract = z.object({
 
 export const payrollRunExportResponseContract = z.object({
   export: timesheetExportDtoContract,
+  rows: z.array(payrollExportRowContract),
 });
 
 export const payrollSettingsResponseContract = z.object({
-  payPeriod: z.string(),
+  payPeriod: z.enum(["WEEKLY", "BIWEEKLY", "SEMIMONTHLY", "MONTHLY"]),
   overtimeDailyHours: z.number(),
   overtimeWeeklyHours: z.number(),
   includeNonBillable: z.boolean(),

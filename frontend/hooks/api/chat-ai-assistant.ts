@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { aiConversationContract as aiConversationContractDef } from "@/hooks/api/chat-extra-schema";
 
 import { useCallback } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -39,12 +41,7 @@ export interface AskAiHistoryPage {
   nextCursor: number | null;
 }
 
-export interface AiConversation {
-  id: number;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AiConversation = z.infer<typeof aiConversationContractDef>;
 
 export interface AiConversationListPage {
   conversations: AiConversation[];

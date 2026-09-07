@@ -1,5 +1,5 @@
-﻿"use client";
-
+"use client";
+﻿
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -12,9 +12,15 @@ const relatedLinkCreateLazy = lazyContract(() =>
 
 export interface TicketRelatedLink {
   id: number;
+  orgId: string;
+  projectId: number;
+  ticketId: number;
   url: string;
-  label: string | null;
+  title: string | null;
+  description: string | null;
+  createdBy: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 const relatedLinksKey = (projectId: number, ticketId: number) =>

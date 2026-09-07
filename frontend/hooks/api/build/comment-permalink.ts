@@ -31,7 +31,7 @@ export interface TicketPermalinkData {
   status: string;
   priority: string;
   ticketNumber: number;
-  projectId: number;
+  projectId: number | null;
   projectKey?: string;
 }
 

@@ -33,7 +33,6 @@ export interface PortalTicket {
   id: number;
   title: string;
   category: string | null;
-  description: string | null;
   status: SupportTicketStatus;
   priority: SupportTicketPriority;
   createdAt: string;
@@ -45,14 +44,15 @@ export interface PortalTicket {
 export interface PortalMessage {
   id: number;
   body: string;
-  isInternal: false;
+  isInternal: boolean;
   attachments: SupportMessageAttachment[];
   sourceChannel: string;
   createdAt: string;
-  authorId: string;
+  authorId: string | null;
 }
 
 export interface PortalTicketDetail extends PortalTicket {
+  description: string | null;
   messages: PortalMessage[];
 }
 

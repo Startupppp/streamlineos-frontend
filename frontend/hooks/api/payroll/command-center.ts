@@ -5,11 +5,13 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
-import type { CommandCenterData } from "@/types/payroll/runs";
+import type { CommandCenterData } from "@/hooks/api/payroll/command-center-schema";
 
 const commandCenterResponseC = lazyContract(() =>
   import("@/hooks/api/payroll/command-center-schema").then((m) => m.commandCenterResponseContract),
 );
+
+export type { CommandCenterData };
 
 export function useCommandCenter(month: string) {
   const canView = useCan("payroll:runs:view");

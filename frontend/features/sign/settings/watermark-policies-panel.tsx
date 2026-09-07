@@ -51,7 +51,7 @@ export function WatermarkPoliciesPanel() {
               <div className="min-w-0 flex-1">
                 <TruncatedText text={policy.text ?? "Untitled watermark"} className="text-sm font-medium" />
                 <TruncatedText
-                  text={`Applies to: ${policy.appliesStates.join(", ") || "none"} ${policy.showOnFinalPdf ? "· on final PDF" : "· preview only"}`}
+                  text={`Scope: ${policy.scopeType} ${policy.showOnFinalPdf ? "· on final PDF" : "· preview only"}`}
                   className="text-xs text-muted-foreground"
                 />
               </div>

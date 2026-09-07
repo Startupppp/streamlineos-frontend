@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { testRunRowContract } from "@/hooks/api/build/qa-schema";
+import type { testCaseRowContract } from "@/hooks/api/build/qa-schema";
 export type TestCasePriority = "low" | "medium" | "high";
 export type TestCaseAutomationStatus = "manual" | "automated" | "planned";
 export type TestRunStatus = "not_started" | "in_progress" | "completed" | "aborted";
@@ -19,22 +22,9 @@ export interface TestSuite {
   updatedAt: string;
 }
 
-export interface TestCase {
-  id: number;
-  projectId: number;
-  suiteId: number | null;
-  caseNumber: number;
-  title: string;
-  preconditions: string | null;
-  steps: TestStep[];
-  expectedResult: string | null;
-  priority: TestCasePriority;
-  component: string | null;
-  linkedTicketId: number | null;
-  automationStatus: TestCaseAutomationStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+export type TestCase = z.infer<typeof testCaseRowContract>;
+
+
 
 export interface TestRunCounts {
   total: number;
@@ -45,23 +35,9 @@ export interface TestRunCounts {
   notRun: number;
 }
 
-export interface TestRun {
-  id: number;
-  projectId: number;
-  runNumber: number;
-  name: string;
-  sprintId: number | null;
-  releaseId: number | null;
-  environment: string | null;
-  browserDevice: string | null;
-  testerId: string | null;
-  status: TestRunStatus;
-  startedAt: string | null;
-  completedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  counts?: TestRunCounts;
-}
+export type TestRun = z.infer<typeof testRunRowContract>;
+
+
 
 export interface TestRunResult {
   id: number;

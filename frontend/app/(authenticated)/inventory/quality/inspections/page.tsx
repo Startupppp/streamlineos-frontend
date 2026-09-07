@@ -119,17 +119,17 @@ function InspectionsPageInner() {
       ),
     },
     {
-      key: "source",
+      key: "sourceType",
       header: "Source",
       className: "text-muted-foreground",
-      cell: (r) => r.source ?? "—",
+      cell: (r) => r.sourceType ?? "—",
     },
     {
       key: "lines",
       header: "Lines",
       headerClassName: "w-[60px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (r) => r.lines.length,
+      cell: (r) => r.lines?.length ?? 0,
     },
     {
       key: "createdAt",

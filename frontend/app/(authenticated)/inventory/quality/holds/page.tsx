@@ -33,9 +33,9 @@ const PAGE_LIMIT = 20;
 const HOLD_STATUSES: QualityHoldStatus[] = ["ACTIVE", "RELEASED", "EXPIRED"];
 
 function resolveVariantLabel(hold: QualityHold): string {
-  if (hold.productName && hold.variantSku) return `${hold.productName} — ${hold.variantSku}`;
-  if (hold.productName && hold.variantName) return `${hold.productName} — ${hold.variantName}`;
-  if (hold.variantSku) return hold.variantSku;
+  if (hold.productVariant?.name && hold.productVariant.sku) return `${hold.productVariant.name} — ${hold.productVariant.sku}`;
+  if (hold.productVariant?.name) return hold.productVariant.name;
+  if (hold.productVariant?.sku) return hold.productVariant.sku;
   return `Variant #${hold.productVariantId}`;
 }
 

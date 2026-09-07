@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { bonusCreatedContract } from "@/hooks/api/payroll/bonuses-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -32,22 +34,7 @@ export type BonusType =
   | "ADJUSTMENT";
 export type IncentiveStatus = "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
 
-export interface Bonus {
-  id: number;
-  orgId: string;
-  userId: string;
-  type: BonusType;
-  amount: string;
-  reason: string | null;
-  month: string | null;
-  taxable: boolean;
-  status: string;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  createdAt: string;
-  userName: string | null;
-  userEmail: string | null;
-}
+export type Bonus = z.infer<typeof bonusCreatedContract>;
 
 export interface Incentive {
   id: number;

@@ -1,4 +1,7 @@
 "use client";
+import type { z } from "zod";
+import type { reorderProposalInvContract as reorderProposalInvContractDef } from "@/hooks/api/inv-ai-explain-schema";
+import type { explainInsightInvContract as explainInsightInvContractDef } from "@/hooks/api/inv-ai-explain-schema";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -22,12 +25,7 @@ export interface ExplainFactor {
   isFactual: boolean;
 }
 
-export interface InsightNarration {
-  explanation: string;
-  factors: ExplainFactor[];
-  suggestedActions: string[];
-  evidenceSnapshot: Record<string, unknown>;
-}
+export type InsightNarration = z.infer<typeof explainInsightInvContractDef>;
 
 export function useExplainInsight() {
   return useAuthorizedMutation<InsightNarration, Error, number>("inventory:reports:read", {
@@ -51,15 +49,7 @@ export interface ReorderEvidence {
   reason: string;
 }
 
-export interface ReorderProposalResponse {
-  evidence: ReorderEvidence;
-  explanation: InsightNarration;
-  proposal: {
-    proposalId: string;
-    token: string;
-    expiresAt: string;
-  };
-}
+export type ReorderProposalResponse = z.infer<typeof reorderProposalInvContractDef>;
 
 export interface VendorPerformance {
   onTimeRate: number;

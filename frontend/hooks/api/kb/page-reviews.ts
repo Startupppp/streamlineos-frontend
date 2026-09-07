@@ -8,23 +8,24 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbReviewType = "approval" | "freshness";
-export type KbReviewStatus = "pending" | "approved" | "rejected";
+export type KbReviewStatus = "pending" | "approved" | "rejected" | "expired";
 
 export type KbPageReview = {
   id: number;
   orgId: string;
   pageId: number;
-  pageTitle: string;
+  pageTitle: string | null;
   type: KbReviewType;
   status: KbReviewStatus;
-  requestedById: string;
-  requestedByName: string | null;
+  requestedById: string | null;
+  requestedByMembershipId: number | null;
   reviewerId: string | null;
+  reviewerMembershipId: number | null;
+  requestedByName: string | null;
   reviewerName: string | null;
   dueAt: string | null;
-  note: string | null;
-  resolvedNote: string | null;
-  resolvedAt: string | null;
+  decidedAt: string | null;
+  decisionNote: string | null;
   createdAt: string;
   updatedAt: string;
 };

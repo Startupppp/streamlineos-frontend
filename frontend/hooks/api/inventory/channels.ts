@@ -30,7 +30,7 @@ export interface Channel {
   id: number;
   orgId: string;
   name: string;
-  type?: string;
+  channelType?: string;
   status?: string;
   safetyBuffer: string | null;
   publishThreshold: string | null;

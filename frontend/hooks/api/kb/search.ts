@@ -6,7 +6,23 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "./spaces";
-import type { KbSearchParams, KbSearchResponse } from "@/types/kb";
+import type { KbSearchParams } from "@/types/kb";
+
+export interface KbSearchResult {
+  id: number;
+  type: string;
+  title: string;
+  snippet: string | null;
+  icon: string | null;
+  spaceId: number | null;
+  score: number | null;
+}
+
+export interface KbSearchApiResponse {
+  results: KbSearchResult[];
+  total: number;
+  hasMore: boolean;
+}
 
 const kbSearchResponseContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-search-schema").then((m) => m.kbSearchResponseContract),
@@ -27,7 +43,7 @@ export function useKbSearch(params: KbSearchParams, options?: { enabled?: boolea
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.search(cacheParams),
     queryFn: ({ signal }) =>
-      apiClient.get<KbSearchResponse>("/kb/search", apiParams, signal, kbSearchResponseContract),
+      apiClient.get<KbSearchApiResponse>("/kb/search", apiParams, signal, kbSearchResponseContract),
     staleTime: 0,
     enabled:
       canViewArticles &&

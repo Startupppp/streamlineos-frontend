@@ -13,13 +13,14 @@ export type BugStatus =
 
 export interface Bug {
   id: number;
+  orgId: string;
   projectId: number;
   bugNumber: number;
   title: string;
   description: string | null;
-  severity: BugSeverity;
-  priority: BugPriority;
-  status: BugStatus;
+  severity: string;
+  priority: string;
+  status: string;
   stepsToReproduce: string | null;
   expectedResult: string | null;
   actualResult: string | null;
@@ -27,12 +28,15 @@ export interface Bug {
   browserDevice: string | null;
   affectedReleaseId: number | null;
   fixedReleaseId: number | null;
-  assigneeId: string | null;
+  assigneeMembershipId: number | null;
   reporterId: string | null;
   qaOwnerId: string | null;
+  qaOwnerMembershipId: number | null;
   reopenCount: number;
   linkedTicketId: number | null;
   linkedTestCaseId: number | null;
+  createdBy: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

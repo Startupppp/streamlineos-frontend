@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { payrollAdjustmentContract } from "@/hooks/api/payroll/payroll-inputs-schema";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -77,21 +79,7 @@ export interface PayrollInputSnapshot {
   userEmail: string;
 }
 
-export interface PayrollAdjustment {
-  id: number;
-  userId: string;
-  adjustmentType: HrPayrollAdjustmentType;
-  section: HrPayrollInputSection;
-  amountCents: number | null;
-  days: string | null;
-  reason: string;
-  status: HrPayrollAdjustmentStatus;
-  createdAt: string;
-  userName: string | null;
-  userFirstName: string | null;
-  userLastName: string | null;
-  userEmail: string;
-}
+export type PayrollAdjustment = z.infer<typeof payrollAdjustmentContract>;
 
 interface Pagination {
   limit: number;

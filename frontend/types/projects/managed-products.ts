@@ -7,8 +7,16 @@ export interface ManagedProduct {
   name: string;
   key: string;
   description: string | null;
-  status: ManagedProductStatus;
+  status: string;
   ownerId: string | null;
+  vision: string | null;
+  missionStatement: string | null;
+  targetCustomer: string | null;
+  differentiators: string | null;
+  currentPhase: string | null;
+  targetLaunchDate: string | null;
+  successMetrics: unknown;
+  ownerMembershipId: number | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;

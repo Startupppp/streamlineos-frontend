@@ -113,7 +113,7 @@ export default function SupportCsatReportPage() {
             )}
           </div>
 
-          {data?.sources.generalSurveys && (
+          {data?.sources.generalSurveys && "excluded" in data.sources.generalSurveys && (
             <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <p>{data.sources.generalSurveys.reason}</p>

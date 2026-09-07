@@ -1,4 +1,7 @@
 import type { z } from "zod";
+import type { taxWindowContract } from "@/hooks/api/payroll/tax-schema";
+import type { fnfStatementContract } from "@/hooks/api/payroll/fnf-schema";
+import type { calendarEventContract } from "@/hooks/api/payroll/calendar-schema";
 import type {
   summaryReportContract,
   registerReportContract,
@@ -84,14 +87,9 @@ export type UpdateAccountingMappingInput = Partial<CreateAccountingMappingInput>
 
 export type CalendarEventStatus = "upcoming" | "due" | "overdue";
 
-export interface PayrollCalendarEvent {
-  id: number;
-  type: string;
-  date: string;
-  title: string;
-  month: string | null;
-  status: CalendarEventStatus;
-}
+export type PayrollCalendarEvent = z.infer<typeof calendarEventContract>;
+
+
 
 export interface CreateCalendarEventInput {
   type: string;
@@ -104,15 +102,9 @@ export type UpdateCalendarEventInput = Partial<CreateCalendarEventInput>;
 
 export type TaxWindowStatus = "DRAFT" | "OPEN" | "CLOSED" | "LOCKED";
 
-export interface TaxWindow {
-  id: number;
-  financialYear: string;
-  opensAt: string;
-  closesAt: string;
-  proofDeadline: string | null;
-  lockDate: string | null;
-  status: TaxWindowStatus;
-}
+export type TaxWindow = z.infer<typeof taxWindowContract>;
+
+
 
 export interface CreateTaxWindowInput {
   financialYear: string;
@@ -178,13 +170,9 @@ export interface FnfStatementComponent {
   type: string | null;
 }
 
-export interface FnfStatement {
-  settlementId: number;
-  employee: { id: string; name: string; email: string };
-  components: FnfStatementComponent[];
-  netPayable: number;
-  status: FnfStatus;
-}
+export type FnfStatement = z.infer<typeof fnfStatementContract>;
+
+
 
 export type LoanAdjustmentType = "SKIP_EMI" | "EXTRA_RECOVERY" | "FORECLOSURE" | "MANUAL_ADJUST";
 

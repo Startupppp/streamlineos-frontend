@@ -1,4 +1,8 @@
 "use client";
+import type { z } from "zod";
+import type { surveyQuestionRowContract } from "./survey-builder-schema";
+import type { surveySectionRowContract } from "./survey-builder-schema";
+import type { surveyBuilderSnapshotContract } from "./survey-builder-schema";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -31,29 +35,9 @@ export interface SurveyBuilderChoice {
   isCorrect: boolean;
 }
 
-export interface SurveyBuilderQuestion {
-  id: number;
-  questionKey: string;
-  variableName: string | null;
-  type: SurveyQuestionType;
-  title: string;
-  description: string | null;
-  required: boolean;
-  settings: Record<string, unknown>;
-  validation: Record<string, unknown>;
-  scoring: Record<string, unknown>;
-  sortOrder: number;
-  choices: SurveyBuilderChoice[];
-}
+export type SurveyBuilderQuestion = z.infer<typeof surveyQuestionRowContract>;
 
-export interface SurveyBuilderSection {
-  id: number;
-  title: string;
-  description: string | null;
-  sortOrder: number;
-  settings: Record<string, unknown>;
-  questions: SurveyBuilderQuestion[];
-}
+export type SurveyBuilderSection = z.infer<typeof surveySectionRowContract>;
 
 export interface SurveyBuilderLogicRule {
   id: number;
@@ -64,10 +48,7 @@ export interface SurveyBuilderLogicRule {
   sortOrder: number;
 }
 
-export interface SurveyBuilderData {
-  sections: SurveyBuilderSection[];
-  logicRules: SurveyBuilderLogicRule[];
-}
+export type SurveyBuilderData = z.infer<typeof surveyBuilderSnapshotContract>;
 
 export interface ChoiceInput {
   choiceKey: string;

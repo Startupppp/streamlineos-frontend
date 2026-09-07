@@ -131,7 +131,7 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
 export function useVerifyAiCreditPurchase() {
   const qc = useQueryClient();
   return useAuthorizedMutation<
-    PurchaseAiPackResult,
+    PurchaseAiPackOrder | PurchaseAiPackResult,
     Error,
     { packId: number; orderId: string; paymentId: string; signature: string }
   >("billing:ai-credits:purchase", {
@@ -139,9 +139,11 @@ export function useVerifyAiCreditPurchase() {
     mutationFn: (data) =>
       apiClient.post("/billing/ai-credits/purchase", data, undefined, purchaseAiCreditsContract),
     onSuccess: (result) => {
-      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
-      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.all });
-      toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+      if ("balance" in result) {
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.all });
+        toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+      }
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

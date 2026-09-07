@@ -28,7 +28,7 @@ export function KnowledgeGapCard({
 }: KnowledgeGapCardProps) {
   const canManage = useCan("support:knowledge-gaps:manage");
 
-  const topSearchQueries = (gap.evidence.searchQueries ?? []).slice(0, 3);
+  const topSearchQueries = (gap.evidence?.searchQueries ?? []).slice(0, 3);
   const canDraft =
     canManage && (gap.status === "OPEN" || gap.status === "DRAFTED");
   const canDismiss = canManage && gap.status === "OPEN";

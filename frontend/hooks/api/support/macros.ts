@@ -73,12 +73,12 @@ export interface SupportMacro {
   title: string;
   body: string;
   category: string | null;
-  visibility: MacroVisibility;
-  actions: MacroActions;
+  visibility: string;
+  actions: Record<string, unknown>;
   usageCount: number;
-  createdBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdByMembershipId: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MacroUsage {
@@ -93,8 +93,8 @@ export interface SupportRoutingRule {
   id: number;
   orgId: string;
   name: string;
-  conditions: RoutingCondition[];
-  assigneeId: string | null;
+  conditions: unknown[];
+  assigneeMembershipId: number | null;
   setPriority: TicketPriority | null;
   assignmentMode: AssignmentMode;
   candidateAgentIds: string[];
@@ -102,31 +102,33 @@ export interface SupportRoutingRule {
   isEnabled: boolean;
   sortOrder: number;
   createdBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SupportAgentSkill {
   id: number;
   orgId: string;
-  userId: string;
+  userId: string | null;
+  userMembershipId: number;
   skill: string;
-  createdAt: string | null;
+  createdAt: string;
 }
 
 export interface SupportAgentAvailability {
   id: number;
   orgId: string;
-  userId: string;
+  userId: string | null;
+  userMembershipId: number;
   isAvailable: boolean;
-  updatedAt: string | null;
+  updatedAt: string;
 }
 
 export interface SupportVipClient {
   id: number;
   orgId: string;
   clientId: number;
-  createdAt: string | null;
+  createdAt: string;
 }
 
 interface MacrosParams {

@@ -6,11 +6,16 @@ const supportKnowledgeGapRowContract = z.object({
   representativeQuestion: z.string(),
   ticketCount: z.number(),
   sampleTicketIds: z.array(z.number()),
-  status: z.string(),
+  status: z.enum(["OPEN", "DRAFTED", "ROUTED", "PUBLISHED", "DISMISSED"]),
   proposedArticleId: z.number().nullable(),
   draftedBy: z.string().nullable(),
   reviewedBy: z.string().nullable(),
-  evidence: z.unknown().nullable(),
+  evidence: z
+    .object({
+      searchQueries: z.array(z.object({ query: z.string(), count: z.number() })).optional(),
+      relatedTicketIds: z.array(z.number()).optional(),
+    })
+    .nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

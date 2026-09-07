@@ -19,7 +19,7 @@ export interface UtilizationReportSummary {
 }
 
 export interface UtilizationReportUser {
-  userId: string;
+  userId: string | null;
   name: string | null;
   email: string | null;
   totalHours: number;
@@ -36,7 +36,7 @@ export interface UtilizationReport {
 }
 
 export interface ClientProfitabilityClient {
-  clientId: string | null;
+  clientId: number | null;
   clientName: string;
   hours: number;
   missingRateHours: number;
@@ -80,7 +80,7 @@ export interface ApprovalSlaApprover {
   name: string | null;
   email: string | null;
   pendingCount: number;
-  avgDecisionHours: number | null;
+  avgHoursToDecision: number | null;
 }
 
 export interface ApprovalSlaReport {

@@ -36,7 +36,7 @@ export interface TicketRef {
 export interface TimesheetEntry {
   id: number;
   orgId: string;
-  userId: string;
+  userMembershipId: number | null;
   ticketId: number | null;
   projectId: number | null;
   timesheetPeriodId: number | null;
@@ -67,7 +67,7 @@ export interface TimesheetEntry {
 export interface TimesheetPeriod {
   id: number;
   orgId: string;
-  userId: string;
+  userMembershipId: number | null;
   periodStart: string;
   periodEnd: string;
   status: PeriodStatus;
@@ -78,21 +78,47 @@ export interface TimesheetPeriod {
   approvedAt: string | null;
   rejectedAt: string | null;
   lockedAt: string | null;
-  currentApproverId: string | null;
+  currentApproverMembershipId: number | null;
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
-  user?: { id: string; name: string | null; email: string };
+  user?: { membershipId: number | null; name: string | null; email: string | null };
+}
+
+export interface PeriodEntry {
+  id: number;
+  orgId: string;
+  userMembershipId: number | null;
+  ticketId: number | null;
+  projectId: number | null;
+  date: string;
+  hours: string;
+  description: string | null;
+  isBillable: boolean;
+  billingType: BillingType;
+  status: EntryStatus;
+  submittedAt: string | null;
+  approvedAt: string | null;
+  approvedByMembershipId: number | null;
+  rejectionReason: string | null;
+  voidedAt: string | null;
+  invoicingStatus: InvoicingStatus;
+  billRate: string | null;
+  currency: string | null;
+  timesheetPeriodId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  project: ProjectRef | null;
 }
 
 export interface PeriodDetail {
   period: TimesheetPeriod;
-  entries: TimesheetEntry[];
+  entries: PeriodEntry[];
 }
 
 export interface TimerSession {
   id: number;
-  userId: string;
+  userMembershipId: number | null;
   projectId: number | null;
   ticketId: number | null;
   description: string | null;
@@ -103,7 +129,7 @@ export interface TimerSession {
   status: TimerStatus;
   elapsedSeconds: number;
   project: ProjectRef | null;
-  ticket: { id: number; title: string; ticketNumber: number | null } | null;
+  ticket: { id: number; title: string } | null;
 }
 
 export interface TimesheetSettings {
@@ -120,11 +146,16 @@ export interface TimesheetSettings {
   clientApprovalEnabled: boolean;
   lockAfterApproval: boolean;
   lockAfterInvoice: boolean;
-  reminderRules: Record<string, unknown> | null;
+  reminderRules: unknown;
+  payPeriod: string;
   allowFutureEntries: boolean;
   expectedDailyHours: string | null;
   expectedWeeklyHours: string | null;
   submissionGraceDays: number | null;
+  overtimeDailyHours: string;
+  overtimeWeeklyHours: string;
+  includeNonBillable: boolean;
+  payrollMapping: unknown;
   createdAt: string;
   updatedAt: string;
 }
@@ -153,7 +184,7 @@ export interface TimesheetRate {
   orgId: string;
   rateCardId: number | null;
   projectId: number | null;
-  userId: string | null;
+  userMembershipId: number | null;
   clientId: number | null;
   taskId: number | null;
   billingType: BillingType;
@@ -228,7 +259,7 @@ export interface CreateBudgetInput {
 }
 
 export interface BillingGroup {
-  projectId: number | null;
+  projectId: number;
   projectName: string;
   totalHours: number;
   billableAmount: number;
@@ -283,7 +314,7 @@ export interface ReportOverview {
 
 export interface AuditEvent {
   id: number;
-  actorUserId: string | null;
+  actorMembershipId: number | null;
   actorName: string | null;
   entityType: string;
   entityId: string;
@@ -421,25 +452,25 @@ export type ExceptionRule =
 export interface TimesheetExceptionRecord {
   id: number;
   orgId: string;
-  userId: string;
+  userMembershipId: number | null;
   periodId: number | null;
   entryId: number | null;
   rule: ExceptionRule;
   severity: ExceptionSeverity;
   status: ExceptionStatus;
   message: string;
-  details: Record<string, unknown> | null;
-  ownerUserId: string | null;
+  details: unknown;
+  ownerMembershipId: number | null;
   dueDate: string | null;
   resolutionReason: string | null;
-  resolvedBy: string | null;
+  resolvedByMembershipId: number | null;
   resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TimesheetException extends TimesheetExceptionRecord {
-  user: { id: string; name: string | null; email: string | null };
+  user: { membershipId: number | null; name: string | null; email: string | null };
 }
 
 export interface ExceptionsSummary {

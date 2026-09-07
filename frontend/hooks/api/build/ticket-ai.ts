@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { suggestDraftFieldsContract as suggestDraftFieldsContractDef } from "@/hooks/api/build/ai-schema";
 
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -6,7 +8,6 @@ import type { TicketHandoffResult } from "@/types/projects/ai";
 import type { TicketPriority } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
-
 
 const summarizeTicketContract = lazyContract(() =>
   import("@/hooks/api/build/ai-schema").then((m) => m.summarizeTicketContract),
@@ -78,13 +79,7 @@ export interface TicketSuggestTitleResult {
   title: string;
 }
 
-export interface TicketSuggestFieldsResult {
-  priority: TicketPriority;
-  points: number | null;
-  labelIds: number[];
-  labelNames: string[];
-  rationale: string;
-}
+export type TicketSuggestFieldsResult = z.infer<typeof suggestDraftFieldsContractDef>;
 
 export function useTicketAiSummarize(projectId: number, ticketId: number) {
   return useAuthorizedMutation<TicketSummaryResult, Error, AiAbortInput | void>(

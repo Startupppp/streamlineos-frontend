@@ -3,12 +3,15 @@ export type PortfolioHealth = "on_track" | "at_risk" | "off_track";
 
 export interface Portfolio {
   id: number;
+  orgId: string;
   name: string;
   description: string | null;
   ownerId: string | null;
-  status: PortfolioStatus;
-  health: PortfolioHealth | null;
+  status: string;
+  health: string | null;
   strategicGoal: string | null;
+  createdBy: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   projectCount?: number;
@@ -55,8 +58,8 @@ export interface Program {
   name: string;
   description: string | null;
   ownerId: string | null;
-  status: PortfolioStatus;
-  health: PortfolioHealth | null;
+  status: string;
+  health: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;

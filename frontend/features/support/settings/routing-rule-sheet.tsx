@@ -36,7 +36,7 @@ import {
 } from "@/hooks/api/support/macros";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { ruleSchema, type RuleForm } from "./routing-rule-form.schema";
+import { conditionSchema, ruleSchema, type RuleForm } from "./routing-rule-form.schema";
 import {
   ASSIGNMENT_MODES,
   NO_ASSIGNEE,
@@ -61,6 +61,13 @@ interface RuleSheetProps {
   onClose: () => void;
 }
 
+const DEFAULT_CONDITION: RuleForm["conditions"][number] = { field: "title", op: "contains", value: "" };
+
+function parseConditions(raw: unknown[]): RuleForm["conditions"] {
+  const parsed = conditionSchema.array().safeParse(raw);
+  return parsed.success && parsed.data.length > 0 ? parsed.data : [DEFAULT_CONDITION];
+}
+
 export function RoutingRuleSheet({ rule, members, onClose }: RuleSheetProps) {
   const isEdit = Boolean(rule);
   const create = useCreateRoutingRule();
@@ -70,11 +77,8 @@ export function RoutingRuleSheet({ rule, members, onClose }: RuleSheetProps) {
     resolver: zodResolver(ruleSchema),
     defaultValues: {
       name: rule?.name ?? "",
-      conditions:
-        rule?.conditions && rule.conditions.length > 0
-          ? rule.conditions
-          : [{ field: "title", op: "contains", value: "" }],
-      assigneeId: rule?.assigneeId ?? NO_ASSIGNEE,
+      conditions: parseConditions(rule?.conditions ?? []),
+      assigneeId: NO_ASSIGNEE,
       setPriority: rule?.setPriority ?? NO_PRIORITY,
       assignmentMode: rule?.assignmentMode ?? "static",
       candidateAgentIds: rule?.candidateAgentIds ?? [],

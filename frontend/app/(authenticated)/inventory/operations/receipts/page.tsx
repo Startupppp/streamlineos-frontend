@@ -25,14 +25,9 @@ const columns: DataTableColumn<GrnSummary>[] = [
     sortValue: (g) => g.grnNumber,
   },
   {
-    key: "poNumber",
+    key: "po",
     header: "PO #",
-    cell: (g) => <span className="font-mono text-dense text-muted-foreground">{g.poNumber ?? "—"}</span>,
-  },
-  {
-    key: "vendorName",
-    header: "Vendor",
-    cell: (g) => g.vendorName ?? "—",
+    cell: (g) => <span className="font-mono text-dense text-muted-foreground">{g.po?.poNumber ?? "—"}</span>,
   },
   {
     key: "receivedDate",

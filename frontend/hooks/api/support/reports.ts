@@ -44,7 +44,7 @@ export interface SupportOverviewReport {
 }
 
 export interface AgentPerformanceRow {
-  agentId: string;
+  agentId: string | null;
   ticketsHandled: number;
   ticketsResolved: number;
   avgFirstResponseMinutes: number | null;
@@ -67,7 +67,7 @@ export interface ChannelPerformanceRow {
 }
 
 export interface AutomationPerformanceRow {
-  ruleId: number;
+  ruleId: number | null;
   ruleName: string;
   total: number;
   succeeded: number;

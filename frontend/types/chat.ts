@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { chatSearchMessagesContract } from "@/hooks/api/chat-schema";
 
 /**
  * Resolved for the reader at read time. A null card means the record is gone,
@@ -320,10 +322,9 @@ export interface HuddleSignalInput {
   payload: unknown;
 }
 
-export interface SearchMessagesResult {
-  results: (Message & { channel?: { id: number; name: string | null; type: string } | null })[];
-  nextCursor?: number;
-}
+export type SearchMessagesResult = z.infer<typeof chatSearchMessagesContract>;
+
+
 
 export interface SavedMessage {
   id: number;

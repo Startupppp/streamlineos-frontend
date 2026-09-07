@@ -40,7 +40,7 @@ import {
   TrackingBadge,
   ProductRowActions,
 } from "@/features/inventory/components/product-row-actions";
-import type { InventoryProduct } from "@/types/inventory";
+import type { InvProductListShape } from "@/hooks/api/inventory/products-schema";
 
 const PAGE_LIMIT = 20;
 
@@ -159,7 +159,7 @@ function ProductsPageInner() {
     total === 0 &&
     !hasFilters;
 
-  const columns = useMemo<DataTableColumn<InventoryProduct>[]>(
+  const columns = useMemo<DataTableColumn<InvProductListShape["items"][number]>[]>(
     () => [
       {
         key: "name",

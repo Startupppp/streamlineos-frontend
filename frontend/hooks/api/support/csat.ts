@@ -39,7 +39,7 @@ export interface CsatReport extends CsatSourceReport {
   sources: {
     ticket: CsatSourceReport;
     crmCampaigns: CrmCampaignCsat | null;
-    generalSurveys: GeneralSurveysCsatNote;
+    generalSurveys: CsatSourceReport | GeneralSurveysCsatNote;
   };
 }
 

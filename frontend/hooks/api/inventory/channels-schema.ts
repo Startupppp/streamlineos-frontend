@@ -4,7 +4,7 @@ const invChannelContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
-  type: z.string().optional(),
+  channelType: z.string().optional(),
   status: z.string().optional(),
   safetyBuffer: z.string().nullable(),
   publishThreshold: z.string().nullable(),

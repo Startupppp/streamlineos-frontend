@@ -124,7 +124,7 @@ export default function ReturnsPage() {
       sortable: true,
       sortValue: (r) => r.returnNumber,
     },
-    { key: "vendorName", header: "Vendor", cell: (r) => r.vendorName ?? "—" },
+    { key: "vendorId", header: "Vendor ID", cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.vendorId}</span> },
     {
       key: "poId",
       header: "PO ID",
@@ -198,7 +198,7 @@ export default function ReturnsPage() {
       sortable: true,
       sortValue: (r) => r.returnNumber,
     },
-    { key: "customerName", header: "Customer", cell: (r) => r.customerName ?? "—" },
+    { key: "clientId", header: "Client ID", cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.clientId ?? "—"}</span> },
     {
       key: "soId",
       header: "SO ID",

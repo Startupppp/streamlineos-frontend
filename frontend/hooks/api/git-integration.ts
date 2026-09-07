@@ -1,4 +1,7 @@
 "use client";
+import type { z } from "zod";
+import type { gitConnectionUpdateContract as gitConnectionUpdateContractDef } from "@/hooks/api/git-integration-schema";
+import type { gitConnectionCreateContract as gitConnectionCreateContractDef } from "@/hooks/api/git-integration-schema";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -23,34 +26,11 @@ const ticketGitLinksContract = lazyContract(() =>
   import("@/hooks/api/git-integration-schema").then((m) => m.ticketGitLinksContract),
 );
 
-
 export type GitProvider = "github" | "gitlab" | "bitbucket";
 
-export interface GitConnection {
-  id: number;
-  provider: GitProvider;
-  projectId: number | null;
-  repoUrl: string;
-  repoName: string | null;
-  isActive: boolean;
-  maskedSecret: string;
-  webhookUrl: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
+export type GitConnection = z.infer<typeof gitConnectionUpdateContractDef>;
 
-export interface CreatedGitConnection {
-  id: number;
-  provider: GitProvider;
-  projectId: number | null;
-  repoUrl: string;
-  repoName: string | null;
-  isActive: boolean;
-  webhookUrl: string;
-  webhookSecret: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
+export type CreatedGitConnection = z.infer<typeof gitConnectionCreateContractDef>;
 
 interface CreateGitConnectionInput {
   provider: GitProvider;

@@ -36,6 +36,7 @@ export function AgentPerformancePage() {
   }
 
   function resolveAgentName(row: AgentPerformanceRow): string {
+    if (row.agentId == null) return "Unknown";
     return nameByAgentId.get(row.agentId) ?? row.agentId;
   }
 
@@ -45,7 +46,7 @@ export function AgentPerformancePage() {
       header: "Agent",
       cell: (row) => (
         <Link
-          href={`/support/inbox?assigneeId=${encodeURIComponent(row.agentId)}`}
+          href={`/support/inbox?assigneeId=${encodeURIComponent(row.agentId ?? "")}`}
           className="font-medium text-primary hover:underline"
         >
           {resolveAgentName(row)}
@@ -115,7 +116,7 @@ export function AgentPerformancePage() {
           className="flex-1 min-h-0"
           data={rows}
           columns={columns}
-          getRowKey={(row) => row.agentId}
+          getRowKey={(row) => row.agentId ?? row.ticketsHandled}
           isLoading={isLoading}
           emptyState={emptyState}
           pagination={{ pageSize: 100 }}

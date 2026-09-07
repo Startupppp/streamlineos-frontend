@@ -21,6 +21,14 @@ export const portalMessageContract = z.object({
   authorId: z.string().nullable(),
   body: z.string(),
   isInternal: z.boolean(),
+  attachments: z.array(
+    z.object({
+      fileName: z.string(),
+      fileUrl: z.string(),
+      fileSize: z.number(),
+      mimeType: z.string(),
+    }),
+  ),
   sourceChannel: z.string(),
   sourceMessageId: z.string().nullable(),
   sourceContactEmail: z.string().nullable(),

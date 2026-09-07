@@ -1,4 +1,7 @@
 "use client";
+import type { z } from "zod";
+import type { bankDetailsContract as bankDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
+import type { personalDetailsContract as personalDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazyContract } from "@/lib/api-envelope";
@@ -26,19 +29,7 @@ export interface PersonalDetailsPayload {
   addressCountry?: string;
 }
 
-export interface PersonalDetails {
-  phone: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER" | null;
-  dateOfBirth: string | null;
-  addressLine1: string | null;
-  addressCity: string | null;
-  addressState: string | null;
-  addressPostalCode: string | null;
-  addressCountry: string | null;
-  emergencyName: string | null;
-  emergencyRelation: string | null;
-  emergencyPhone: string | null;
-}
+export type PersonalDetails = z.infer<typeof personalDetailsContractDef>;
 
 export function usePersonalDetailsQuery() {
   return useQuery({
@@ -64,16 +55,7 @@ export function usePersonalInfoMutation() {
   });
 }
 
-export interface BankDetailsPayload {
-  countryCode: string;
-  accountHolder: string;
-  bankName: string;
-  accountNumber: string;
-  routingCode: string;
-  iban: string;
-  swift: string;
-  statutory: Record<string, string>;
-}
+export type BankDetailsPayload = z.infer<typeof bankDetailsContractDef>;
 
 export type BankDetails = BankDetailsPayload;
 

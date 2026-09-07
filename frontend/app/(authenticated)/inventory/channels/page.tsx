@@ -15,7 +15,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
 import {
   useChannels,
   useSyncChannelStock,
@@ -46,7 +45,12 @@ const CHANNEL_TYPE_LABEL: Record<ChannelType, string> = {
   THREE_PL: "3PL",
 };
 
+const CHANNEL_TYPES_LIST: ReadonlyArray<ChannelType> = ["INTERNAL", "SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"];
 const EXTERNAL_TYPES = new Set<ChannelType>(["SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"]);
+
+function resolveChannelType(raw: string | undefined): ChannelType | undefined {
+  return CHANNEL_TYPES_LIST.find((t) => t === raw);
+}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "Never";
@@ -85,7 +89,8 @@ interface ChannelCardProps {
 const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) {
   const { fadeUp } = useMotionVariants();
   const syncMutation = useSyncChannelStock();
-  const isExternal = EXTERNAL_TYPES.has(channel.channelType);
+  const channelType = resolveChannelType(channel.channelType);
+  const isExternal = channelType !== undefined && EXTERNAL_TYPES.has(channelType);
 
   function handleSync(): void {
     syncMutation.mutate(channel.id, {
@@ -122,19 +127,12 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            <Badge
-              variant="outline"
-              className={cn("text-dense", CHANNEL_TYPE_BADGE[channel.channelType])}
-            >
-              {CHANNEL_TYPE_LABEL[channel.channelType]}
-            </Badge>
-
-            {channel.lastSyncStatus && (
+            {channelType && (
               <Badge
                 variant="outline"
-                className={cn("text-dense", SYNC_STATUS_BADGE[channel.lastSyncStatus])}
+                className={cn("text-dense", CHANNEL_TYPE_BADGE[channelType])}
               >
-                {SYNC_STATUS_LABEL[channel.lastSyncStatus]}
+                {CHANNEL_TYPE_LABEL[channelType]}
               </Badge>
             )}
           </div>
@@ -147,9 +145,6 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           )}
 
           <div className="space-y-0.5">
-            <p className="text-dense text-muted-foreground">
-              Last sync: {formatDate(channel.lastSyncAt)}
-            </p>
             {channel.safetyBuffer != null && (
               <p className="text-dense text-muted-foreground">
                 Safety buffer: {channel.safetyBuffer}%

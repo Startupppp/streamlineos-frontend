@@ -9,12 +9,13 @@ export type IncidentStatus =
 
 export interface Incident {
   id: number;
+  orgId: string;
   projectId: number;
   incidentNumber: number;
   title: string;
   description: string | null;
-  severity: IncidentSeverity;
-  status: IncidentStatus;
+  severity: string;
+  status: string;
   impact: string | null;
   ownerId: string | null;
   rootCause: string | null;
@@ -25,19 +26,19 @@ export interface Incident {
   responseDueAt: string | null;
   resolutionDueAt: string | null;
   linkedTicketId: number | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface IncidentUpdate {
   id: number;
+  orgId: string;
   incidentId: number;
   message: string;
-  newStatus: IncidentStatus | null;
+  newStatus: string | null;
   createdBy: string | null;
   createdAt: string;
-  createdByName: string | null;
-  createdByEmail: string | null;
 }
 
 export interface IncidentDetail extends Incident {

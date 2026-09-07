@@ -125,7 +125,7 @@ export function AutomationPerformancePage() {
           className="flex-1 min-h-0"
           data={rows}
           columns={columns}
-          getRowKey={(row) => row.ruleId}
+          getRowKey={(row) => row.ruleId ?? row.total}
           isLoading={isLoading}
           emptyState={emptyState}
           pagination={{ pageSize: 100 }}

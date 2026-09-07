@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
-import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets/types";
+import type { TimesheetPeriod, PeriodEntry } from "@/features/timesheets/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +28,8 @@ interface MemberDetailSheetProps {
   memberName: string;
 }
 
-function groupByDate(entries: TimesheetEntry[]): Map<string, TimesheetEntry[]> {
-  const map = new Map<string, TimesheetEntry[]>();
+function groupByDate(entries: PeriodEntry[]): Map<string, PeriodEntry[]> {
+  const map = new Map<string, PeriodEntry[]>();
   for (const entry of entries) {
     const list = map.get(entry.date) ?? [];
     list.push(entry);
@@ -55,7 +55,7 @@ export function MemberDetailSheet({
 
   const grouped = detail
     ? groupByDate(detail.entries)
-    : new Map<string, TimesheetEntry[]>();
+    : new Map<string, PeriodEntry[]>();
   const sortedDates = [...grouped.keys()].sort();
 
   return (

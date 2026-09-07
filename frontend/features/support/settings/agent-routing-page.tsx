@@ -74,6 +74,7 @@ export function SupportAgentRoutingPage() {
   const skillsByUser = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const row of agentSkills ?? []) {
+      if (row.userId == null) continue;
       const current = map.get(row.userId) ?? [];
       current.push(row.skill);
       map.set(row.userId, current);
@@ -81,10 +82,13 @@ export function SupportAgentRoutingPage() {
     return map;
   }, [agentSkills]);
 
-  const availabilityByUser = useMemo(
-    () => new Map((availability ?? []).map((a) => [a.userId, a.isAvailable])),
-    [availability],
-  );
+  const availabilityByUser = useMemo(() => {
+    const entries: [string, boolean][] = [];
+    for (const a of availability ?? []) {
+      if (a.userId != null) entries.push([a.userId, a.isAvailable]);
+    }
+    return new Map(entries);
+  }, [availability]);
 
   const handleEdit = useCallback((userId: string, label: string, skills: string[]) => {
     setEditTarget({ userId, label, skills });

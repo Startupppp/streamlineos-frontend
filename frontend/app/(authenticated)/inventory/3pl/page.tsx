@@ -15,7 +15,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
+import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL, type SyncStatus } from "@/features/inventory/lib";
 import {
   useThreePlConnections,
   useSyncThreePlConnection,
@@ -24,6 +24,13 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ThreePlConnectionSheet } from "@/features/inventory/components/channels/three-pl-connection-sheet";
+
+const SYNC_STATUS_VALUES: ReadonlyArray<SyncStatus> = ["IDLE", "SYNCING", "SUCCESS", "ERROR", "PAUSED"];
+
+function resolveSyncStatus(raw: string | null): SyncStatus | undefined {
+  if (!raw) return undefined;
+  return SYNC_STATUS_VALUES.find((s) => s === raw);
+}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -107,26 +114,28 @@ function ThreePlContent() {
         sortValue: (row) => row.name,
       },
       {
-        key: "providerKey",
+        key: "provider",
         header: "Provider",
         cell: (row) => (
-          <span className="font-mono text-dense text-muted-foreground">{row.providerKey}</span>
+          <span className="font-mono text-dense text-muted-foreground">{row.provider}</span>
         ),
       },
       {
-        key: "isActive",
-        header: "Active",
+        key: "status",
+        header: "Status",
         cell: (row) => (
           <Badge
             variant="outline"
             className={cn(
               "text-dense",
-              row.isActive
+              row.status === "CONNECTED"
                 ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
-                : "bg-muted text-muted-foreground border-border",
+                : row.status === "ERROR"
+                  ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
+                  : "bg-muted text-muted-foreground border-border",
             )}
           >
-            {row.isActive ? "Active" : "Inactive"}
+            {row.status === "CONNECTED" ? "Connected" : row.status === "ERROR" ? "Error" : "Disconnected"}
           </Badge>
         ),
       },
@@ -135,8 +144,8 @@ function ThreePlContent() {
         header: "Sync Status",
         cell: (row) => {
           const isNotConnected =
-            row.lastSyncError !== null &&
-            row.lastSyncError.toLowerCase().includes("not connected");
+            row.lastSyncStatus !== null &&
+            row.lastSyncStatus.toLowerCase().includes("not connected");
 
           if (isNotConnected) {
             return (
@@ -147,16 +156,15 @@ function ThreePlContent() {
             );
           }
 
-          if (!row.lastSyncStatus) {
-            return <span className="text-xs text-muted-foreground">—</span>;
-          }
+          const syncStatus = resolveSyncStatus(row.lastSyncStatus);
+          if (!syncStatus) return <span className="text-xs text-muted-foreground">—</span>;
 
           return (
             <Badge
               variant="outline"
-              className={cn("text-dense", SYNC_STATUS_BADGE[row.lastSyncStatus])}
+              className={cn("text-dense", SYNC_STATUS_BADGE[syncStatus])}
             >
-              {SYNC_STATUS_LABEL[row.lastSyncStatus]}
+              {SYNC_STATUS_LABEL[syncStatus]}
             </Badge>
           );
         },
@@ -173,19 +181,22 @@ function ThreePlContent() {
         header: "Error",
         cell: (row) => {
           const isNotConnected =
-            row.lastSyncError !== null &&
-            row.lastSyncError.toLowerCase().includes("not connected");
+            row.lastSyncStatus !== null &&
+            row.lastSyncStatus.toLowerCase().includes("not connected");
 
           if (isNotConnected) {
             return <span className="text-xs text-muted-foreground">—</span>;
           }
 
-          return row.lastSyncError ? (
+          const syncStatus = resolveSyncStatus(row.lastSyncStatus);
+          const rawError = !syncStatus ? row.lastSyncStatus : null;
+
+          return rawError ? (
             <span
               className="text-xs text-status-danger-ink truncate max-w-[180px] block"
-              title={row.lastSyncError}
+              title={rawError}
             >
-              {row.lastSyncError}
+              {rawError}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>

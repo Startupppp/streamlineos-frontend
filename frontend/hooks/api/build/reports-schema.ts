@@ -57,20 +57,19 @@ export const velocityContract = z.object({
   avgVelocity: z.number().optional(),
 }).passthrough();
 
-export const cycleTimeContract = z.object({
-  statuses: z.array(z.string()).optional(),
-  avgDays: z.array(z.number()).optional(),
-  medianDays: z.array(z.number()).optional(),
-}).passthrough();
+export const cycleTimeContract = z.array(z.object({
+  week: z.string(),
+  avgDays: z.number(),
+  count: z.number().int(),
+}));
 
-export const leadTimeContract = z.object({
-  avgLeadDays: z.number().optional(),
-  medianLeadDays: z.number().optional(),
-  tickets: z.array(z.object({
-    id: z.number().int(),
-    leadDays: z.number(),
-  })).optional(),
-}).passthrough();
+export const leadTimeContract = z.array(z.object({
+  week: z.string(),
+  avgDays: z.number(),
+  p50Days: z.number(),
+  p90Days: z.number(),
+  count: z.number().int(),
+}));
 
 export const snapshotResultContract = z.object({
   captured: z.number().int(),

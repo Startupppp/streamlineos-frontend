@@ -362,7 +362,7 @@ export function useSetKbPageVisibility() {
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "visibility"],
     mutationFn: ({ pageId, visibility }: { pageId: number; visibility: "private" | "org" | "public" }) =>
-      apiClient.patch<KbPageDetail>(`/kb/pages/${pageId}/visibility`, { visibility }, undefined, kbPageContract),
+      apiClient.patch<KbPage>(`/kb/pages/${pageId}/visibility`, { visibility }, undefined, kbPageContract),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
@@ -387,7 +387,7 @@ export function usePublishKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "publish"],
-    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/publish`, {}, undefined, kbPageContract),
+    mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/publish`, {}, undefined, kbPageContract),
     onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
@@ -399,7 +399,7 @@ export function useArchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "archive"],
-    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/archive`, {}, undefined, kbPageContract),
+    mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/archive`, {}, undefined, kbPageContract),
     onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
@@ -411,7 +411,7 @@ export function useUnarchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "unarchive"],
-    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/unarchive`, {}, undefined, kbPageContract),
+    mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/unarchive`, {}, undefined, kbPageContract),
     onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
@@ -424,7 +424,7 @@ export function useVerifyKbPage() {
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["kb", "pages", "verify"],
     mutationFn: ({ pageId, intervalDays }: { pageId: number; intervalDays?: number }) =>
-      apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/verify`, { intervalDays }, undefined, kbPageContract),
+      apiClient.post<KbPage>(`/kb/pages/${pageId}/verify`, { intervalDays }, undefined, kbPageContract),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
@@ -436,7 +436,7 @@ export function useMarkStaleKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["kb", "pages", "markStale"],
-    mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/mark-stale`, {}, undefined, kbPageContract),
+    mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/mark-stale`, {}, undefined, kbPageContract),
     onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });

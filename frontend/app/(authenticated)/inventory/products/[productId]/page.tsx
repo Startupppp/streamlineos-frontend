@@ -316,11 +316,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                   <InfoRow
                     label="Category"
-                    value={product.categoryName ?? "—"}
+                    value={product.category?.name ?? "—"}
                   />
                   <InfoRow
                     label="Unit of Measure"
-                    value={product.uomName ?? "—"}
+                    value={product.uom?.name ?? "—"}
                   />
                   <InfoRow
                     label="Cost Price"
@@ -348,12 +348,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                   <InfoRow
                     label="Status"
-                    value={
-                      <ProductStatusBadge
-                        status={product.status}
-                        isActive={product.isActive}
-                      />
-                    }
+                    value={<ProductStatusBadge status={product.status} />}
                   />
                   <InfoRow label="Product Type" value={
                     product.productType === "STOCKABLE" ? "Stockable"

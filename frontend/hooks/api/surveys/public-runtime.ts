@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { surveyPublicSurveyContract } from "./survey-public-schema";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -53,18 +55,7 @@ export interface PublicSurveyLogicRule {
   sortOrder: number;
 }
 
-export interface PublicSurveyResponse {
-  survey: {
-    id: number;
-    title: string;
-    description: string | null;
-    mode: string;
-    defaultLanguage: string;
-    branding: Record<string, unknown>;
-    settings: Record<string, unknown>;
-  };
-  schema: { sections: PublicSurveySection[]; logicRules: PublicSurveyLogicRule[] } | null;
-}
+export type PublicSurveyResponse = z.infer<typeof surveyPublicSurveyContract>;
 
 export interface StartSessionResponse {
   id: number;

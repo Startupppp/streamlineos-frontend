@@ -105,7 +105,7 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
   const restConfig = useMemo(
     () =>
       channel
-        ? Object.fromEntries(Object.entries(channel.config).filter(([key]) => key !== "ownerUserId"))
+        ? Object.fromEntries(Object.entries(channel.config ?? {}).filter(([key]) => key !== "ownerUserId"))
         : {},
     [channel],
   );
@@ -116,7 +116,7 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
       type: (channel?.type as SupportChannelType) ?? "email",
       name: channel?.name ?? "",
       ownerUserId,
-      configJson: stringifyConfig(channel ? (channel.type === "email" ? restConfig : channel.config) : {}),
+      configJson: stringifyConfig(channel ? (channel.type === "email" ? restConfig : (channel.config ?? {})) : {}),
       isActive: channel?.isActive ?? true,
     },
   });
@@ -299,7 +299,7 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete, canManage }: Channel
                 {channelTypeLabel(channel.type)}
               </Badge>
             </div>
-            {channel.type === "email" && typeof channel.config.ownerUserId === "string" && (
+            {channel.type === "email" && channel.config != null && typeof channel.config.ownerUserId === "string" && (
               <p className="text-xs text-muted-foreground mt-1 truncate">
                 Owner: {channel.config.ownerUserId}
               </p>

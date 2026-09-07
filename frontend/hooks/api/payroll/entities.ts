@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { entityContextResponseContract } from "@/hooks/api/payroll/entities-schema";
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -49,14 +51,7 @@ export interface EntityReadinessItem {
   detail: string;
 }
 
-export interface EntityContext {
-  entity: PayrollEntity;
-  countryPack: CountryPackDescriptor | null;
-  readiness: EntityReadinessItem[];
-  readinessScore: { done: number; total: number; percent: number };
-  isolation: { note: string };
-  honestyNote: string;
-}
+export type EntityContext = z.infer<typeof entityContextResponseContract>;
 
 export function usePayrollEntities() {
   const canView = useCan("payroll:policies:view");

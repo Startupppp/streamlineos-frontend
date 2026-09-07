@@ -38,11 +38,12 @@ export function BrandingSettingsForm() {
 
   useEffect(() => {
     if (settings?.brandingJson) {
+      const b = settings.brandingJson;
       form.reset({
-        emailSenderName: settings.brandingJson.emailSenderName ?? "",
-        signingPageSupportText: settings.brandingJson.signingPageSupportText ?? "",
-        completionMessage: settings.brandingJson.completionMessage ?? "",
-        disclosureText: settings.brandingJson.disclosureText ?? "",
+        emailSenderName: typeof b.emailSenderName === "string" ? b.emailSenderName : "",
+        signingPageSupportText: typeof b.signingPageSupportText === "string" ? b.signingPageSupportText : "",
+        completionMessage: typeof b.completionMessage === "string" ? b.completionMessage : "",
+        disclosureText: typeof b.disclosureText === "string" ? b.disclosureText : "",
       });
     }
   }, [settings, form]);

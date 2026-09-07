@@ -32,7 +32,6 @@ import {
   useDeleteProduct,
 } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
-import type { TrackingMethod } from "@/types/inventory";
 
 export function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -99,7 +98,7 @@ export function StockBadge({ qty }: { qty: number }) {
 export function TrackingBadge({
   method,
 }: {
-  method: TrackingMethod | null | undefined;
+  method: string | null | undefined;
 }) {
   if (!method || method === "NONE") {
     return <span className="text-muted-foreground text-micro">—</span>;

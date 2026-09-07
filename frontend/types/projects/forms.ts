@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { formRowContract } from "@/hooks/api/build/forms-schema";
 export type FormType =
   | "task_request"
   | "bug_report"
@@ -36,21 +38,9 @@ export interface FormAction {
   config?: Record<string, unknown>;
 }
 
-export interface ProjectForm {
-  id: number;
-  projectId: number;
-  formNumber: number;
-  name: string;
-  description: string | null;
-  type: FormType;
-  fields: FormField[];
-  actions: FormAction[];
-  isActive: boolean;
-  isPublic: boolean;
-  publicToken: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ProjectForm = z.infer<typeof formRowContract>;
+
+
 
 export interface FormSubmission {
   id: number;

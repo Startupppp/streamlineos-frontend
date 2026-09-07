@@ -40,13 +40,8 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
     createMutate(
       { ticketId, spaceId: Number(selectedSpaceId) },
       {
-        onSuccess: (article) => {
-          toast.success("Draft article created");
-          window.open(
-            `/knowledge/spaces/${article.spaceId}/articles/${article.id}`,
-            "_blank",
-            "noopener,noreferrer",
-          );
+        onSuccess: () => {
+          toast.success("Draft article created — check the KB for your new draft");
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
@@ -55,7 +50,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
     );
   }, [selectedSpaceId, ticketId, createMutate]);
 
-  const articles = searchData?.items ?? [];
+  const articles = searchData?.results ?? [];
 
   return (
     <div className="px-4 py-2 border-t border-border/40 shrink-0">
@@ -83,7 +78,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
               </div>
             ) : articles.length > 0 ? (
               <ul className="space-y-1">
-                {articles.map((article) => (
+                {articles.filter((a) => a.spaceId != null).map((article) => (
                   <li key={article.id}>
                     <a
                       href={`/knowledge/spaces/${article.spaceId}/articles/${article.id}`}

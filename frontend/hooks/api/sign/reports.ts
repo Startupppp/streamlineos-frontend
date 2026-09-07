@@ -3,8 +3,19 @@
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
-import type { SignAuditEvent } from "@/types/sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+interface SignDashboardActivityItem {
+  id: number;
+  envelopeId: number | null;
+  recipientId: number | null;
+  actorType: string;
+  actorName: string | null;
+  actorEmail: string | null;
+  eventType: string;
+  eventMessage: string | null;
+  createdAt: string;
+}
 
 export interface SignDashboardStats {
   awaitingMe: number;
@@ -12,7 +23,7 @@ export interface SignDashboardStats {
   completedThisMonth: number;
   expiringSoon: number;
   failedOrBounced: number;
-  recentActivity: SignAuditEvent[];
+  recentActivity: SignDashboardActivityItem[];
 }
 
 export interface SignSummaryStats {

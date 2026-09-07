@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { integrationsFinalizeContract as integrationsFinalizeContractDef } from "@/hooks/api/integrations-schema";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -27,15 +29,7 @@ const integrationsSetPrimaryContract = lazyContract(() =>
 export type IntegrationToolkit = "googlecalendar" | "outlook" | "gmail";
 export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled";
 
-export interface IntegrationConnection {
-  id: number;
-  toolkit: IntegrationToolkit;
-  accountEmail: string | null;
-  accountLabel: string | null;
-  status: IntegrationConnectionStatus;
-  isPrimary: boolean;
-  createdAt: string;
-}
+export type IntegrationConnection = z.infer<typeof integrationsFinalizeContractDef>;
 
 export function useIntegrationConnections(options?: { enabled?: boolean }) {
   return useGatedQuery("integrations:connections:view", {

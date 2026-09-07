@@ -19,7 +19,10 @@ export type SupportActivityAction =
   | "resolved"
   | "reopened"
   | "merged"
-  | "linked";
+  | "linked"
+  | "split"
+  | "snoozed"
+  | "unsnoozed";
 
 export interface SupportActivityEntry {
   id: number;
@@ -37,7 +40,7 @@ export function useSupportActivity(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
     queryKey: accountingAndSupportQueryKeys.supportActivity.list(ticketId),
     queryFn: ({ signal }) =>
-      apiClient.get(`/support/${ticketId}/activity`, undefined, signal, supportTicketActivityListContract),
+      apiClient.get<SupportActivityEntry[]>(`/support/${ticketId}/activity`, undefined, signal, supportTicketActivityListContract),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

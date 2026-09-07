@@ -217,7 +217,7 @@ export function useImproveReply(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "improve-reply", ticketId],
     mutationFn: ({ signal, ...input }: ImproveReplyInput & AiAbortInput) =>
-      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }, { signal }, supportAiImproveReplyC),
+      apiClient.post<ImproveReplyResult | null>(`/support/ai/improve-reply`, { ticketId, ...input }, { signal }, supportAiImproveReplyC),
   });
 }
 
@@ -225,7 +225,7 @@ export function useTranslateDraft(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "translate-draft", ticketId],
     mutationFn: ({ signal, ...input }: TranslateDraftInput & AiAbortInput) =>
-      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }, { signal }, supportAiTranslationC),
+      apiClient.post<TranslateDraftResult | null>(`/support/ai/translate-draft`, { ticketId, ...input }, { signal }, supportAiTranslationC),
   });
 }
 

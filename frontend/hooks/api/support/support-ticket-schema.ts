@@ -137,6 +137,9 @@ export const supportTicketActivityListContract = z.array(
     fromValue: z.string().nullable(),
     toValue: z.string().nullable(),
     createdAt: z.string(),
+    label: z.string(),
+    userName: z.string().nullable(),
+    userImage: z.string().nullable(),
   }),
 );
 
