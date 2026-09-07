@@ -22,7 +22,6 @@ import type {
   PatchReceiptInput,
   CreatePolicyInput,
   UpdatePolicyInput,
-  ExpensePageDataRow,
 } from "@/types/accounting/expenses";
 import type { ExpenseStats, ExpenseCategoryRecord } from "@/types/hr/expenses";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -39,6 +38,7 @@ import {
   reimbursementApproveContract,
   reimbursementPayContract,
   hrExpensePageDataResponseContract,
+  type ExpensePageDataRow,
   expenseApproveContract,
   expenseRejectContract,
 } from "@/hooks/api/accounting/expenses-schema";

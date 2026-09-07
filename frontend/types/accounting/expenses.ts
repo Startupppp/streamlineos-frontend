@@ -152,35 +152,3 @@ export interface CreatePolicyInput {
 
 export type UpdatePolicyInput = Partial<CreatePolicyInput>;
 
-export interface ExpensePageDataRow {
-  id: number;
-  orgId: string;
-  userId: string;
-  categoryId: number | null;
-  category: string;
-  amount: string;
-  currency: string;
-  description: string | null;
-  receiptUrl: string | null;
-  receiptFileName: string | null;
-  merchant: string | null;
-  receiptNumber: string | null;
-  receiptHash: string | null;
-  taxAmount: string | null;
-  paymentMethod: string | null;
-  projectId: number | null;
-  status: string;
-  userMembershipId: number | null;
-  approverId: string | null;
-  approverMembershipId: number | null;
-  approvedAt: string | null;
-  rejectionReason: string | null;
-  paidAt: string | null;
-  transactionRef: string | null;
-  reimbursementBatchId: number | null;
-  postedJournalEntryId: number | null;
-  policyFlag: string | null;
-  expenseDate: string;
-  createdAt: string;
-  updatedAt: string;
-}

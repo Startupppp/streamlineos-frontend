@@ -189,6 +189,23 @@ const pageDataExpenseRowContract = z.object({
   updatedAt: z.string(),
 });
 
+const expensePersonRefContract = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+
+const pageDataExpenseWithPeopleContract = pageDataExpenseRowContract.extend({
+  user: expensePersonRefContract.nullable(),
+  approver: expensePersonRefContract.nullable(),
+  expenseCategory: expenseCategoryContract.nullable(),
+});
+
+export type ExpensePageDataRow = z.infer<typeof pageDataExpenseWithPeopleContract>;
+
 const expenseStatsContract = z.object({
   totalAmount: z.number(),
   pendingAmount: z.number(),
@@ -204,8 +221,8 @@ const expenseStatsContract = z.object({
 });
 
 export const hrExpensePageDataResponseContract = z.object({
-  expenses: z.array(pageDataExpenseRowContract),
-  pendingExpenses: z.array(pageDataExpenseRowContract),
+  expenses: z.array(pageDataExpenseWithPeopleContract),
+  pendingExpenses: z.array(pageDataExpenseWithPeopleContract),
   stats: expenseStatsContract,
   categories: z.array(expenseCategoryContract),
   pagination: z.object({
