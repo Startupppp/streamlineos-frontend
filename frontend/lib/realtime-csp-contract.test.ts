@@ -13,16 +13,13 @@
  * `features/support/inbox/support-ably-provider.tsx` was blocked. `autoConnect:
  * false` in `lib/ably.ts` defers that connection; it does not exempt it.
  *
- * The two policies are asserted together because only one of them is real: the
- * middleware sets `Content-Security-Policy` on every response it matches, so
- * next.config.ts's `headers()` policy never reaches a document. Captured at head
- * from a running server, `GET /signin` returns exactly one CSP header and it is
- * `buildCsp`'s. next.config.ts is held to the same contract so the pair cannot
- * drift into disagreeing about what the app is allowed to talk to.
+ * `buildCsp` in proxy.ts is the only policy under test: it sets `Content-Security-
+ * Policy` on every response its matcher covers, and next.config.ts no longer
+ * declares a competing one — a second, independently-maintained copy is exactly
+ * what let this directive drift out of sync in the first place.
  */
 jest.mock("next-auth/jwt", () => ({ getToken: jest.fn() }));
 
-import { buildContentSecurityPolicy } from "@/next.config";
 import { buildCsp } from "@/proxy";
 
 const PAGE_ORIGIN = process.env.NEXTAUTH_URL ?? "http://localhost:1000";
@@ -106,7 +103,6 @@ function withoutAblySources(csp: string): string {
 
 const POLICIES: ReadonlyArray<readonly [string, string]> = [
   ["proxy.ts", buildCsp("test-nonce", process.env.NEXT_PUBLIC_API_URL)],
-  ["next.config.ts", buildContentSecurityPolicy()],
 ];
 
 describe("the connect-src checker actually discriminates", () => {
@@ -140,7 +136,7 @@ describe("the connect-src checker actually discriminates", () => {
     ).toBe(true);
   });
 
-  it("finds a connect-src directive in both live policies", () => {
+  it("finds a connect-src directive in the live policy", () => {
     for (const [name, csp] of POLICIES)
       expect([name, directiveSources(csp, "connect-src").length > 0]).toEqual([name, true]);
   });

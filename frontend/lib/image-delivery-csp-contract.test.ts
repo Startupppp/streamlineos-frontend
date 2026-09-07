@@ -3,7 +3,6 @@
  */
 jest.mock("next-auth/jwt", () => ({ getToken: jest.fn() }));
 
-import { buildContentSecurityPolicy } from "@/next.config";
 import { buildCsp } from "@/proxy";
 import { resolveImageUrl, storageObjectUrl } from "@/lib/utils";
 
@@ -52,7 +51,6 @@ function imgSrcPermits(csp: string, emitted: string, pageOrigin: string): boolea
 }
 
 const POLICIES: ReadonlyArray<readonly [string, string]> = [
-  ["next.config.ts", buildContentSecurityPolicy()],
   ["proxy.ts", buildCsp("test-nonce", process.env.NEXT_PUBLIC_API_URL)],
 ];
 
@@ -79,7 +77,7 @@ describe("the img-src checker actually discriminates", () => {
     expect(imgSrcPermits(permissive, "https://r2.dev/a.png", PAGE_ORIGIN)).toBe(false);
   });
 
-  it("finds an img-src directive in both live policies", () => {
+  it("finds an img-src directive in the live policy", () => {
     for (const [name, csp] of POLICIES)
       expect([name, directiveSources(csp, "img-src").length > 0]).toEqual([name, true]);
   });
@@ -95,14 +93,6 @@ describe("every URL resolveImageUrl emits is loadable under the configured img-s
   it.each(POLICIES)("%s permits every emitted image URL", (_name, csp) => {
     for (const url of emitted)
       expect([url, imgSrcPermits(csp, url, PAGE_ORIGIN)]).toEqual([url, true]);
-  });
-
-  it("emits the same origin the two policies agree on", () => {
-    for (const url of emitted) {
-      const first = imgSrcPermits(POLICIES[0]?.[1] ?? "", url, PAGE_ORIGIN);
-      const second = imgSrcPermits(POLICIES[1]?.[1] ?? "", url, PAGE_ORIGIN);
-      expect([url, first]).toEqual([url, second]);
-    }
   });
 
   it("routes an object key through the app's own origin, not the API's", () => {

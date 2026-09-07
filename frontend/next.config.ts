@@ -26,64 +26,6 @@ function shouldSendStrictTransportSecurity(): boolean {
   return true;
 }
 
-function apiConnectOrigin(): string {
-  const raw = process.env.NEXT_PUBLIC_API_URL;
-  if (!raw) return "";
-  try {
-    const parsed = new URL(raw);
-    return `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return "";
-  }
-}
-
-export function buildContentSecurityPolicy(): string {
-  const isDev = process.env.NODE_ENV === "development";
-  const scriptSrc = [
-    "'self'",
-    ...(isDev ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    "https://accounts.google.com",
-    "https://checkout.razorpay.com",
-  ].join(" ");
-  const apiOrigin = apiConnectOrigin();
-  const connectSrc = [
-    "'self'",
-    "https://accounts.google.com",
-    "https://*.upstash.io",
-    "https://*.r2.dev",
-    "https://*.r2.cloudflarestorage.com",
-    /**
-     * Ably, kept in step with proxy.ts's `buildCsp` — see the reasoning there.
-     * `wss://` used to stand here, which is not a source expression at all
-     * (`scheme-source` is `wss:`, `host-source` needs a host after `://`), so a
-     * browser dropped it and this policy allowed no WebSocket either.
-     */
-    "https://*.realtime.ably.net",
-    "wss://*.realtime.ably.net",
-    "https://*.fallback.ably-realtime.com",
-    "wss://*.fallback.ably-realtime.com",
-    "https://internet-up.ably-realtime.com",
-    "wss://ws-up.ably-realtime.com",
-    "https://api.razorpay.com",
-    "https://checkout.razorpay.com",
-    ...(apiOrigin ? [apiOrigin] : []),
-  ].join(" ");
-
-  return [
-    "default-src 'self'",
-    `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://images.unsplash.com https://lh3.googleusercontent.com https://streamlineos.app",
-    `connect-src ${connectSrc}`,
-    "worker-src 'self' blob:",
-    "frame-src 'self' https://accounts.google.com https://checkout.razorpay.com https://api.razorpay.com",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join("; ");
-}
-
 const optimizePackageImports =
   process.env.NODE_ENV === "production"
     ? [
@@ -108,15 +50,22 @@ const optimizePackageImports =
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
+  poweredByHeader: false,
   experimental: {
     optimizePackageImports,
     serverActions: {
       allowedOrigins: [
-        ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),
+        ...(process.env.NODE_ENV === "development"
+          ? ["*.devtunnels.ms", "*.vscode.dev"]
+          : []),
         ...(() => {
           const urls = [process.env.NEXTAUTH_URL].filter(Boolean);
           const hosts = urls.flatMap((u) => {
-            try { return [new URL(u!).host]; } catch { return []; }
+            try {
+              return [new URL(u!).host];
+            } catch {
+              return [];
+            }
           });
           return hosts;
         })(),
@@ -166,7 +115,8 @@ const nextConfig: NextConfig = {
   },
   headers: async () => [
     {
-      source: "/:asset(logo.svg|logo-email.svg|bimi-logo.svg|feedbucket-widget.js)",
+      source:
+        "/:asset(logo.svg|logo-email.svg|bimi-logo.svg|feedbucket-widget.js)",
       headers: [
         {
           key: "Cache-Control",
@@ -218,10 +168,6 @@ const nextConfig: NextConfig = {
           value: "same-origin-allow-popups",
         },
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
-        {
-          key: "Content-Security-Policy",
-          value: buildContentSecurityPolicy(),
-        },
       ],
     },
   ],
