@@ -271,3 +271,6 @@ export const hrCalendarEventListContract = z.array(
 
 /** Array of attendance log rows for monthly attendance calls */
 export const attendanceLogListContract = z.array(attendanceLogContract);
+
+/** sync-retry response */
+export const calendarSyncRetryContract = z.object({ requeued: z.number().int() });

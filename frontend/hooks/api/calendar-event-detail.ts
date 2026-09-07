@@ -10,6 +10,9 @@ const calendarEventDetailContract = lazyContract(() =>
 const calendarSyncStatusContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncStatusContract),
 );
+const calendarSyncRetryContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncRetryContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type { CalendarEventDetail, EventSyncStatusResponse } from "./calendar-types";
@@ -93,7 +96,7 @@ export function useRetryEventSync() {
   return useMutation({
     mutationKey: ["calendar", "events", "sync-retry"],
     mutationFn: ({ eventId }: { eventId: number }) =>
-      apiClient.post<{ requeued: number }>(`/calendar/events/${eventId}/sync-retry`, {}),
+      apiClient.post<{ requeued: number }>(`/calendar/events/${eventId}/sync-retry`, {}, undefined, calendarSyncRetryContract),
     onSuccess: (_, { eventId }) => {
       void qc.invalidateQueries({ queryKey: calendarSyncStatusKey(eventId) });
     },

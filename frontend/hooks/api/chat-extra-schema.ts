@@ -92,3 +92,6 @@ export const aiConversationMessagesContract = z.object({
 
 /** `deleteConversationResponseSchema` */
 export const aiDeleteConversationContract = z.object({ success: z.literal(true) });
+
+/** chat attachment URL response */
+export const chatAttachmentUrlContract = z.object({ url: z.string() });

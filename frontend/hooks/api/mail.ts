@@ -27,6 +27,12 @@ const mailAiThreadSummaryContract = lazyContract(() =>
 const mailAiDraftContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailAiDraftContract),
 );
+const mailSendResultContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailSendResultContract),
+);
+const mailActionSuccessContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailActionSuccessContract),
+);
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -115,7 +121,7 @@ export function useSendMail() {
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "send"],
     mutationFn: (body: SendMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/send", body, operation.configFor(body)),
+      apiClient.post<{ messageId: string }>("/mail/send", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
@@ -130,7 +136,7 @@ export function useReplyMail() {
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "reply"],
     mutationFn: (body: ReplyMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/reply", body, operation.configFor(body)),
+      apiClient.post<{ messageId: string }>("/mail/reply", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
@@ -199,7 +205,7 @@ export function useMailAction() {
   return useAuthorizedMutation("mail:messages:manage", {
     mutationKey: ["mail", "action"],
     mutationFn: ({ messageId, body }: { messageId: string; body: MailActionBody }) =>
-      apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body),
+      apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body, undefined, mailActionSuccessContract),
     onMutate: ({ messageId, body }) => applyMailActionToCaches(qc, messageId, body),
     onError: (_, _variables, context) => {
       if (!context) return;

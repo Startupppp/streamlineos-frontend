@@ -1,27 +1,44 @@
 import { z } from "zod";
 
 export const kbResearchBriefEnqueueContract = z.object({
-  jobId: z.string(),
-  status: z.string(),
+  briefId: z.number().int(),
+  jobId: z.number().int(),
 });
 
-const kbResearchBriefListItemContract = z.object({
-  id: z.string(),
+const kbResearchBriefBaseContract = {
+  id: z.number().int(),
   orgId: z.string(),
+  userId: z.string().nullable(),
   topic: z.string(),
+  spaceId: z.number().int().nullable(),
   status: z.string(),
+  jobId: z.number().int().nullable(),
+  sourceCount: z.number().int(),
+  errorMessage: z.string().nullable(),
+  rating: z.enum(["helpful", "not_helpful"]).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  completedAt: z.string().nullable(),
+};
+
+const kbResearchBriefListItemContract = z.object(kbResearchBriefBaseContract);
+
+export const kbResearchBriefListContract = z.object({
+  items: z.array(kbResearchBriefListItemContract),
+  nextCursor: z.number().int().nullable(),
 });
 
-export const kbResearchBriefListContract = z.array(kbResearchBriefListItemContract);
-
-export const kbResearchBriefDetailContract = kbResearchBriefListItemContract.extend({
-  outline: z.record(z.string(), z.unknown()).nullable(),
-  content: z.string().nullable(),
-  sources: z.array(z.record(z.string(), z.unknown())).nullable(),
-  aiUsage: z.record(z.string(), z.unknown()).nullable(),
+export const kbResearchBriefDetailContract = z.object({
+  ...kbResearchBriefBaseContract,
+  report: z.string().nullable(),
+  citations: z.array(
+    z.object({
+      kind: z.string(),
+      id: z.number().int(),
+      title: z.string(),
+      href: z.string().nullable(),
+      updatedAt: z.string().nullable(),
+    }),
+  ).nullable(),
 });
 
 export const kbResearchBriefRateContract = z.object({ success: z.boolean() });

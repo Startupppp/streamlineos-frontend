@@ -5,6 +5,14 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { lazyContract } from "@/lib/api-envelope";
+
+const goalListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/goals-schema").then((m) => m.goalListContract),
+);
+const goalLazy = lazyContract(() =>
+  import("@/hooks/api/hr/goals-schema").then((m) => m.goalContract),
+);
 
 export interface HrGoal {
   id: number;
@@ -31,6 +39,7 @@ export function useHrGoals(params?: { userId?: string }) {
       apiClient.get<HrGoal[]>(
         "/hr/performance/goals",
         params as Record<string, unknown> | undefined, signal,
+        goalListLazy,
       ),
     staleTime: 60_000,
   });

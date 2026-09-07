@@ -164,7 +164,7 @@ export function useCreateJournalEntry() {
 interface PostJournalEntryResult {
   id: number;
   entryNumber: string;
-  status: "DRAFT" | "POSTED" | "VOID";
+  status: string;
 }
 
 export function usePostJournalEntry(entryId: number) {
@@ -350,7 +350,7 @@ export interface CreatePurchaseBillInput {
 interface PurchaseBillCreateResult {
   id: number;
   billNumber: string;
-  status: PurchaseBillStatus;
+  status: string;
 }
 
 export function useCreatePurchaseBill() {
@@ -366,7 +366,7 @@ export function useCreatePurchaseBill() {
 
 export function usePostPurchaseBill(billId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ id: number; status: PurchaseBillStatus }, Error, void>("accounting:journal:manage", {
+  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:journal:manage", {
     mutationKey: ["post", "purchase", "bill"],
     mutationFn: () =>
       apiClient.patch(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }, undefined, billStatusUpdateContract),

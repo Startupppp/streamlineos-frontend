@@ -12,6 +12,9 @@ const departmentListLazy = lazyContract(() =>
 const departmentItemLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-departments-schema").then((m) => m.departmentItemContract),
 );
+const legacyDepartmentListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/employee-departments-schema").then((m) => m.legacyDepartmentListContract),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type { Department, CreateDepartmentInput } from "@/types/hr";
 
@@ -42,6 +45,7 @@ export function useLegacyHrDepartments() {
         "/hr/departments/legacy",
         undefined,
         signal,
+        legacyDepartmentListLazy,
       ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,

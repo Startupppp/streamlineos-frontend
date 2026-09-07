@@ -6,6 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const chatAttachmentUrlContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.chatAttachmentUrlContract),
+);
 import { useAttachmentUrl } from "@/hooks/api/chat-shared";
 import { getFileColor, getFileExt, isImageMime } from "./chat-helpers";
 import { formatFileSize } from "@/lib/format-utils";
@@ -98,6 +103,9 @@ function AttachmentFile({
       try {
         const res = await apiClient.get<{ url: string }>(
           `/chat/channels/${channelId}/attachments/${attachmentId}`,
+          undefined,
+          undefined,
+          chatAttachmentUrlContract,
         );
         url = res.url;
       } catch {

@@ -64,7 +64,7 @@ export async function fetchAllAssetsForExport(
       ...(params.status ? { status: params.status } : {}),
       page,
       limit: EXPORT_PAGE_LIMIT,
-    });
+    }, undefined, assetListPageC);
     all.push(...res.data);
     totalPages = Math.max(1, res.pagination.totalPages);
     if (res.data.length === 0) break;

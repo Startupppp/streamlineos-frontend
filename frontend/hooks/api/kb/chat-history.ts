@@ -6,34 +6,31 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { KbAskCitation } from "@/types/kb";
 
 export interface KbChatHistoryMessage {
-  id: string;
-  conversationId: string;
+  id: number;
   role: "user" | "assistant";
   content: string;
-  sources: Record<string, unknown>[] | null;
+  citations: KbAskCitation[] | null;
   createdAt: string;
 }
 
 export interface KbChatHistoryPage {
-  data: KbChatHistoryMessage[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+  messages: KbChatHistoryMessage[];
+  nextCursor: number | null;
 }
 
 export interface KbConversation {
-  id: string;
-  orgId: string;
-  userId: string | null;
+  id: number;
   title: string | null;
   createdAt: string;
   updatedAt: string;
-  messageCount: number;
 }
 
 export interface KbConversationListPage {
-  data: KbConversation[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+  conversations: KbConversation[];
+  nextCursor: number | null;
 }
 
 const HISTORY_PAGE_SIZE = 30;
@@ -63,8 +60,8 @@ export function useKbConversations(enabled: boolean) {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal, kbConversationListPageContract);
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
     staleTime: 30_000,
   });
@@ -74,7 +71,7 @@ export function useRenameKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "rename"],
-    mutationFn: ({ id, title }: { id: string; title: string }) =>
+    mutationFn: ({ id, title }: { id: number; title: string }) =>
       apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }, undefined, kbConversationResponseContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
@@ -86,7 +83,7 @@ export function useDeleteKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "delete"],
-    mutationFn: (id: string) =>
+    mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`, undefined, undefined, kbChatSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
@@ -94,10 +91,10 @@ export function useDeleteKbConversation() {
   });
 }
 
-export function useKbConversationMessages(conversationId: string | null, enabled: boolean) {
+export function useKbConversationMessages(conversationId: number | null, enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(conversationId ?? ""),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -108,8 +105,8 @@ export function useKbConversationMessages(conversationId: string | null, enabled
         kbChatHistoryPageContract,
       );
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,
   });

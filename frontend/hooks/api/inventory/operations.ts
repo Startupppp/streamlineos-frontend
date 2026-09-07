@@ -9,27 +9,27 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface GrnLine {
   id: number;
+  grnId: number;
   poLineId: number;
   quantityReceived: string;
-  qualityStatus: "ACCEPTED" | "REJECTED";
+  uomId: number | null;
+  quantityEntered: string | null;
+  status: string;
   rejectionReason: string | null;
-  lotNumber: string | null;
-  expiryDate: string | null;
-  serialNumbers: string[] | null;
 }
 
 export interface GrnSummary {
   id: number;
+  orgId: string;
   grnNumber: string;
   poId: number;
-  poNumber: string | null;
-  vendorId: number;
-  vendorName: string | null;
   receivedDate: string;
   locationId: number | null;
+  status: string;
   notes: string | null;
   createdBy: string;
   createdAt: string;
+  po?: { id: number; poNumber: string };
 }
 
 interface GrnDetail extends GrnSummary {
@@ -139,7 +139,6 @@ export interface VendorReturnSummary {
   id: number;
   returnNumber: string;
   vendorId: number;
-  vendorName: string | null;
   poId: number | null;
   status: VendorReturnStatus;
   createdAt: string;
@@ -245,7 +244,6 @@ export interface CustomerReturnSummary {
   returnNumber: string;
   soId: number | null;
   clientId: number | null;
-  customerName: string | null;
   status: CustomerReturnStatus;
   createdAt: string;
   notes: string | null;

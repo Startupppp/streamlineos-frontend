@@ -48,6 +48,32 @@ interface CreateAdjustmentInput {
   notes?: string;
 }
 
+interface AdjDetailApiLine {
+  id: number;
+  adjustmentId: number;
+  productVariantId: number;
+  locationId: number;
+  quantityChange: string;
+  uomId: number | null;
+  quantityEntered: string | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
+  location?: { id: number; name: string; code: string };
+}
+
+interface AdjDetailApi {
+  id: number;
+  referenceNumber: string;
+  reason: AdjustmentReason;
+  status: AdjustmentStatus;
+  notes: string | null;
+  createdAt: string;
+  approvedAt: string | null;
+  postedAt: string | null;
+  creator?: { id: string; name: string | null };
+  lines?: AdjDetailApiLine[];
+}
+
 interface RawAdjustment {
   id: number;
   referenceNumber: string;
@@ -64,6 +90,30 @@ interface RawAdjustmentsResponse {
   total: number;
   page: number;
   totalPages: number;
+}
+
+function toAdjustmentDetail(raw: AdjDetailApi): AdjustmentDetail {
+  return {
+    id: raw.id,
+    referenceNumber: raw.referenceNumber,
+    reason: raw.reason,
+    status: raw.status,
+    notes: raw.notes,
+    createdAt: raw.createdAt,
+    approvedAt: raw.approvedAt,
+    postedAt: raw.postedAt,
+    createdByName: raw.creator?.name ?? null,
+    lines: (raw.lines ?? []).map((l) => ({
+      id: l.id,
+      productVariantId: l.productVariantId,
+      locationId: l.locationId,
+      quantityChange: Number(l.quantityChange),
+      variantName: l.productVariant?.name ?? null,
+      variantSku: l.productVariant?.sku ?? null,
+      locationName: l.location?.name ?? null,
+      notes: l.notes,
+    })),
+  };
 }
 
 function toAdjustmentListItem(r: RawAdjustment): AdjustmentListItem {
@@ -117,7 +167,10 @@ export function useAdjustmentDetail(adjustmentId: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentDetail, Error>({
     queryKey: [...queryKeys.inventory.adjustments(), adjustmentId] as const,
-    queryFn: ({ signal }) => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal, getAdjustmentContract),
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal, getAdjustmentContract);
+      return toAdjustmentDetail(raw);
+    },
     enabled: canView && adjustmentId > 0,
     staleTime: 60_000,
   });
@@ -127,8 +180,8 @@ export function useCreateAdjustment() {
   const qc = useQueryClient();
   return useAuthorizedMutation<AdjustmentDetail, Error, CreateAdjustmentInput>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "create"],
-    mutationFn: (data) =>
-      apiClient.post<AdjustmentDetail>("/inventory/stock/adjustments", {
+    mutationFn: async (data) => {
+      const raw = await apiClient.post<AdjDetailApi>("/inventory/stock/adjustments", {
         reason: data.reason,
         notes: data.notes,
         lines: [
@@ -139,7 +192,9 @@ export function useCreateAdjustment() {
             notes: data.notes,
           },
         ],
-      }, undefined, getAdjustmentContract),
+      }, undefined, getAdjustmentContract);
+      return toAdjustmentDetail(raw);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -152,8 +207,10 @@ export function useApproveAdjustment() {
   const qc = useQueryClient();
   return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:approve", {
     mutationKey: ["inventory", "adjustment", "approve"],
-    mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}, undefined, getAdjustmentContract),
+    mutationFn: async (adjustmentId) => {
+      const raw = await apiClient.post<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}, undefined, getAdjustmentContract);
+      return toAdjustmentDetail(raw);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

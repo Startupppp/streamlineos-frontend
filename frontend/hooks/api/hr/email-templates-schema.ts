@@ -19,3 +19,7 @@ export const emailTemplateAiContract = z.object({
   subject: z.string(),
   body: z.string(),
 });
+
+export const deleteEmailTemplateResponseContract = z.object({
+  success: z.boolean(),
+});

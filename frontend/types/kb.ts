@@ -219,7 +219,12 @@ export interface KbResearchBrief {
   updatedAt: string;
 }
 
-export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;
+export type KbResearchBriefListItem = Omit<KbResearchBrief, "report" | "citations">;
+
+export interface KbResearchBriefListPage {
+  items: KbResearchBriefListItem[];
+  nextCursor: number | null;
+}
 
 export interface CreateResearchBriefInput {
   topic: string;

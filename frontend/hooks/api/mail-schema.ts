@@ -125,3 +125,9 @@ export const mailAiDraftContract = z.object({
     .object({ inputTokens: z.number().int(), outputTokens: z.number().int() })
     .optional(),
 });
+
+/** `mailSendResultSchema` */
+export const mailSendResultContract = z.object({ messageId: z.string() });
+
+/** `mailActionSuccessSchema` */
+export const mailActionSuccessContract = z.object({ success: z.literal(true) });

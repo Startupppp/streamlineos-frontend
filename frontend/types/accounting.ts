@@ -58,7 +58,7 @@ export interface TrialBalanceRow {
   accountId: number;
   code: string;
   name: string;
-  accountType: AccountType;
+  accountType: string;
   debit: string;
   credit: string;
   balance: string;
@@ -68,7 +68,7 @@ export interface ProfitLossRow {
   accountId: number;
   code: string;
   name: string;
-  accountType: "INCOME" | "EXPENSE";
+  accountType: string;
   amount: string;
 }
 
@@ -98,7 +98,7 @@ export interface CustomerLedgerLine {
 
 export interface CustomerLedgerSummary {
   clientId: number;
-  clientName: string;
+  clientName: string | null;
   state: string | null;
   gstin: string | null;
   totalInvoiced: string;
@@ -113,7 +113,7 @@ export interface CustomerLedger {
 
 export interface CustomerOutstanding {
   clientId: number;
-  clientName: string;
+  clientName: string | null;
   state: string | null;
   gstin: string | null;
   invoiceCount: number;
@@ -165,7 +165,7 @@ export interface BalanceSheetRow {
   accountId: number;
   code: string;
   name: string;
-  accountType: AccountType;
+  accountType: string;
   balance: string;
 }
 
@@ -228,7 +228,7 @@ export interface PurchaseBillSummary {
   vendorBillNumber: string | null;
   billDate: string;
   dueDate: string | null;
-  status: PurchaseBillStatus;
+  status: string;
   subtotal: string;
   taxAmount: string;
   cgstAmount: string;
@@ -245,8 +245,8 @@ export interface PurchaseBillSummary {
   notes: string | null;
   expenseAccountCode: string | null;
   createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PurchaseBillPayment {
@@ -348,7 +348,7 @@ export interface VendorLedger {
 
 export interface VendorOutstanding {
   vendorId: number;
-  vendorName: string;
+  vendorName: string | null;
   state: string | null;
   gstin: string | null;
   billCount: number;

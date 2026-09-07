@@ -44,8 +44,6 @@ const projectRowSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
-  clientId: z.string().nullable(),
-  managerId: z.string().nullable(),
   clientMembershipId: z.number().nullable(),
   managerMembershipId: z.number().nullable(),
   startDate: z.string().nullable(),
@@ -78,11 +76,21 @@ const projectStatusRowSchema = z.object({
 
 const projectDetailMemberSchema = z.object({
   id: z.number(),
+  orgId: z.string(),
   projectId: z.number(),
-  userId: z.string(),
-  role: z.string().nullable(),
-  joinedAt: z.string().nullable(),
-  user: z.object({ id: z.string(), name: z.string().nullable(), firstName: z.string().nullable(), lastName: z.string().nullable(), email: z.string().nullable(), image: z.string().nullable() }).optional(),
+  membershipId: z.number(),
+  role: z.string(),
+  user: z.object({
+    id: z.number(),
+    user: z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    }),
+  }),
 });
 
 const projectDetailSchema = projectRowSchema.extend({

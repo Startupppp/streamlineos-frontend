@@ -1,42 +1,55 @@
 import { z } from "zod";
 
+const kbAskCitationContract = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("article"),
+    articleId: z.number().int(),
+    slug: z.string(),
+    title: z.string(),
+    spaceId: z.number().int().nullable(),
+    updatedAt: z.string(),
+  }),
+  z.object({
+    kind: z.literal("page"),
+    pageId: z.number().int(),
+    title: z.string(),
+    spaceId: z.number().int().nullable(),
+    updatedAt: z.string(),
+  }),
+  z.object({
+    kind: z.literal("source"),
+    sourceId: z.number().int(),
+    title: z.string(),
+    spaceId: z.number().int().nullable(),
+    updatedAt: z.string(),
+  }),
+]);
+
 const kbConversationContract = z.object({
-  id: z.string(),
-  orgId: z.string(),
-  userId: z.string().nullable(),
+  id: z.number().int(),
   title: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  messageCount: z.number().int(),
 });
 
 export const kbConversationListPageContract = z.object({
-  data: z.array(kbConversationContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
+  conversations: z.array(kbConversationContract),
+  nextCursor: z.number().int().nullable(),
 });
 
 export const kbConversationResponseContract = kbConversationContract;
 
 const kbChatMessageContract = z.object({
-  id: z.string(),
-  conversationId: z.string(),
+  id: z.number().int(),
   role: z.enum(["user", "assistant"]),
   content: z.string(),
-  sources: z.array(z.record(z.string(), z.unknown())).nullable(),
+  citations: z.array(kbAskCitationContract).nullable(),
   createdAt: z.string(),
 });
 
 export const kbChatHistoryPageContract = z.object({
-  data: z.array(kbChatMessageContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
+  messages: z.array(kbChatMessageContract),
+  nextCursor: z.number().int().nullable(),
 });
 
 export const kbChatSuccessContract = z.object({ success: z.boolean() });

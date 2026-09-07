@@ -22,6 +22,9 @@ const emailTemplateListLazy = lazyContract(() =>
 const emailTemplateAiLazy = lazyContract(() =>
   import("@/hooks/api/hr/email-templates-schema").then((m) => m.emailTemplateAiContract),
 );
+const deleteEmailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/hr/email-templates-schema").then((m) => m.deleteEmailTemplateResponseContract),
+);
 
 export interface EmailTemplate {
   id: number;
@@ -114,7 +117,7 @@ export function useDeleteEmailTemplate(
   return useMutation({
     mutationKey: ["hr", "email-templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
+      apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`, undefined, undefined, deleteEmailTemplateLazy),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
