@@ -46,6 +46,53 @@ export const feedbucketWidgetWithProjectContract = feedbucketWidgetRowContract.a
   z.object({ project: projectMinimalContract.nullable() }),
 );
 
+const feedbucketMetadataContract = z.object({
+  browser: z.string().optional(),
+  browserVersion: z.string().optional(),
+  os: z.string().optional(),
+  device: z.string().optional(),
+  screenW: z.number().optional(),
+  screenH: z.number().optional(),
+  viewportW: z.number().optional(),
+  viewportH: z.number().optional(),
+  userAgent: z.string().optional(),
+  language: z.string().optional(),
+  referrer: z.string().optional(),
+});
+
+const feedbucketConsoleEntryContract = z.object({
+  level: z.string(),
+  message: z.string(),
+  ts: z.number().optional(),
+});
+
+const feedbucketNetworkEntryContract = z.object({
+  method: z.string(),
+  url: z.string(),
+  status: z.number(),
+  statusText: z.string(),
+  durationMs: z.number(),
+  startedAt: z.string(),
+  type: z.enum(["xhr", "fetch"]),
+  ok: z.boolean(),
+  error: z.string().optional(),
+});
+
+const feedbucketAiAnalysisContract = z.object({
+  type: z.enum(["bug", "feature", "improvement", "question", "praise", "other"]),
+  confidence: z.number(),
+  suggestedTicketType: z.enum(["EPIC", "BUG", "STORY", "TASK"]),
+  title: z.string(),
+  summary: z.string(),
+  description: z.string(),
+  reproductionSteps: z.array(z.string()),
+  suggestions: z.array(z.string()),
+  acceptanceCriteria: z.array(z.string()),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  model: z.string(),
+  processedAt: z.string(),
+});
+
 export const feedbucketRotateKeyContract = z.object({ publicKey: z.string() });
 
 const feedbucketSubmissionRowContract = z.object({
@@ -59,9 +106,9 @@ const feedbucketSubmissionRowContract = z.object({
   pageUrl: z.string().nullable(),
   screenshotUrl: z.string().nullable(),
   screenshotKey: z.string().nullable(),
-  metadata: z.unknown().nullable(),
-  consoleLogs: z.unknown().nullable().optional(),
-  networkLogs: z.unknown().nullable().optional(),
+  metadata: feedbucketMetadataContract.nullable(),
+  consoleLogs: z.array(feedbucketConsoleEntryContract).nullable().optional(),
+  networkLogs: z.array(feedbucketNetworkEntryContract).nullable().optional(),
   reporterName: z.string().nullable(),
   reporterEmail: z.string().nullable(),
   crmContactId: z.number().nullable(),
@@ -71,7 +118,7 @@ const feedbucketSubmissionRowContract = z.object({
   linkedTicketId: z.number().nullable(),
   aiType: z.string().nullable(),
   aiConfidence: z.number().nullable(),
-  aiAnalysis: z.unknown().nullable(),
+  aiAnalysis: feedbucketAiAnalysisContract.nullable(),
   aiModel: z.string().nullable(),
   aiProcessedAt: z.string().nullable(),
   createdAt: z.string(),
@@ -135,9 +182,9 @@ export const feedbucketFeedbackAnalysisContract = z.object({
 
 export const feedbucketCreateTicketFromAnalysisContract = z.object({
   ticketId: z.number(),
-  ticketType: z.string(),
+  ticketType: z.enum(["EPIC", "BUG", "STORY", "TASK"]),
 });
 
-export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract.and(
-  z.object({ widget: feedbucketWidgetRowContract.nullable() }),
-);
+export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract;
+
+export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;

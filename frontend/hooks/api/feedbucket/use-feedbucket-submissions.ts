@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { FeedbucketSubmissionRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type {
@@ -59,7 +60,7 @@ export function useUpdateFeedbucketSubmission() {
       submissionId: number;
       input: UpdateFeedbucketSubmissionInput;
     }) =>
-      apiClient.patch<FeedbucketSubmission>(
+      apiClient.patch<FeedbucketSubmissionRow>(
         `/feedbucket/submissions/${submissionId}`,
         input, undefined, feedbucketUpdateSubmissionC,
       ),

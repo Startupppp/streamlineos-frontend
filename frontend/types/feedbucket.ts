@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
@@ -132,10 +133,4 @@ export interface UpdateFeedbucketSubmissionInput {
   assigneeId?: string | null;
 }
 
-export interface PaginatedFeedbucketSubmissions {
-  data: FeedbucketSubmission[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;
