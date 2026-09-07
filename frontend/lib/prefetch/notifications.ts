@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { z } from "zod";
+
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -11,7 +13,7 @@ import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 const INBOX_STALE_TIME = 30_000;
 const INBOX_LIMIT = 30;
 
-function lowestNotificationId(page: Notification[]): number | undefined {
+function lowestNotificationId(page: readonly { id: number }[]): number | undefined {
   let lowest: number | undefined;
   for (const item of page) {
     if (lowest === undefined || item.id < lowest) lowest = item.id;
@@ -32,7 +34,7 @@ export async function prefetchNotificationsInbox() {
         infinite: true,
       }),
       queryFn: async () => {
-        const page = await serverGet<IdCursorPage<Notification>>(
+        const page = await serverGet<z.infer<typeof notificationCursorPageContract>>(
           `/notifications?section=ALL&limit=${INBOX_LIMIT}`,
           notificationCursorPageContract,
         );
@@ -40,7 +42,7 @@ export async function prefetchNotificationsInbox() {
       },
       initialPageParam: FIRST_PAGE,
       pages: 1,
-      getNextPageParam: (lastPage: Notification[]) =>
+      getNextPageParam: (lastPage: z.infer<typeof notificationCursorPageContract>["data"]) =>
         lastPage.length < INBOX_LIMIT ? undefined : lowestNotificationId(lastPage),
       staleTime: INBOX_STALE_TIME,
     }),
