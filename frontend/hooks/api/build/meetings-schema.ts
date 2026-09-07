@@ -59,7 +59,7 @@ const meetingAttendeeContract = z.object({
   createdAt: z.string(),
 });
 
-const standupEntryContract = z.object({
+export const standupEntryContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   meetingId: z.number().int(),

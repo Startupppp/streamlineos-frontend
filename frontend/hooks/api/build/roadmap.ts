@@ -39,6 +39,15 @@ const changelogEntryContract = lazyContract(() =>
 const roadmapSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
 );
+const publicRoadmapBoardContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicRoadmapBoardContract),
+);
+const publicVoteResultContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicVoteResultContract),
+);
+const publicFeedbackResultContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicFeedbackResultContract),
+);
 
 export type {
   ChangelogType,
@@ -131,7 +140,7 @@ interface UpdateChangelogEntryInput {
 }
 
 interface PublicRoadmapBoard {
-  orgName: string;
+  orgName: string | null;
   roadmap: {
     planned: PublicRoadmapItem[];
     in_progress: PublicRoadmapItem[];
@@ -149,7 +158,7 @@ interface PublicVoteInput {
 
 interface PublicVoteResult {
   id: number;
-  type: "roadmap" | "feedback";
+  type: string;
   votes: number;
   voted: boolean;
 }
@@ -198,7 +207,7 @@ export function useDeleteRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`, roadmapSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`, undefined, undefined, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -240,7 +249,7 @@ export function useDeleteFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`, roadmapSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`, undefined, undefined, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -282,7 +291,7 @@ export function useDeleteChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`, roadmapSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`, undefined, undefined, roadmapSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -290,7 +299,7 @@ export function useDeleteChangelogEntry() {
 export function usePublicRoadmap(orgId: string) {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
-    queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal),
+    queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal, publicRoadmapBoardContract),
     enabled: Boolean(orgId),
     staleTime: 60_000,
     retry: false,
@@ -302,7 +311,7 @@ export function usePublicVote(orgId: string) {
   return useMutation({
     mutationKey: ["projects", "roadmap", "vote"],
     mutationFn: (input: PublicVoteInput) =>
-      apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input),
+      apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input, undefined, publicVoteResultContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
   });
 }
@@ -315,6 +324,8 @@ export function useSubmitPublicFeedback(orgId: string) {
       apiClient.post<{ id: number; message: string }>(
         `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,
         input,
+        undefined,
+        publicFeedbackResultContract,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
   });

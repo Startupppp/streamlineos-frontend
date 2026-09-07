@@ -104,6 +104,8 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
     mutationFn: (checklistId: number) =>
       apiClient.delete(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}`,
+        undefined,
+        undefined,
         successLazy,
       ),
     onSuccess: () =>
@@ -195,6 +197,8 @@ export function useDeleteChecklistItem(projectId: number, ticketId: number) {
     }) =>
       apiClient.delete(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items/${itemId}`,
+        undefined,
+        undefined,
         successLazy,
       ),
     onSuccess: () =>

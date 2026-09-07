@@ -181,7 +181,7 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
     ...options,
     mutationKey: ["projects", "views", "delete"],
     mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/views/${id}`, successContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/views/${id}`, undefined, undefined, successContract),
     onSuccess: (_: unknown, variables: { id: number; projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
@@ -239,7 +239,7 @@ export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[
     ...options,
     mutationKey: ["projects", "workspace-views", "delete"],
     mutationFn: ({ id }: { id: number }) =>
-      apiClient.delete<{ success: boolean }>(`/build/views/${id}`, successContract),
+      apiClient.delete<{ success: boolean }>(`/build/views/${id}`, undefined, undefined, successContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.workspaceViews(),

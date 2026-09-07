@@ -88,7 +88,7 @@ export function useDeletePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`, portfoliosSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`, undefined, undefined, portfoliosSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
     },
@@ -112,7 +112,7 @@ export function useUnlinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`, portfoliosSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`, undefined, undefined, portfoliosSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
     },

@@ -84,6 +84,27 @@ export const reserveSoContract = z.object({
   })).optional(),
 });
 
+export const soSuccessContract = z.object({ success: z.literal(true) });
+
+export const shipSoContract = z.object({
+  shipmentId: z.number().int(),
+  shipmentNumber: z.string(),
+  status: z.string(),
+  isPartial: z.boolean(),
+});
+
+export const pickSoContract = z.object({
+  pickListId: z.number().int(),
+  pickNumber: z.string(),
+  allPicked: z.boolean(),
+});
+
+export const packSoContract = z.object({
+  soId: z.number().int(),
+  status: z.literal("PACKED"),
+  packageId: z.number().int(),
+});
+
 export const rawAtpArrayContract = z.array(z.object({
   productVariantId: z.number().int(),
   onHand: z.number(),

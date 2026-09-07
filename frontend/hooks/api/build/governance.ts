@@ -79,7 +79,7 @@ export function useDeleteRisk(projectId: number) {
   return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/risks/${id}`, governanceSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/risks/${id}`, undefined, undefined, governanceSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
     },
@@ -132,7 +132,7 @@ export function useDeleteDecision(projectId: number) {
   return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/decisions/${id}`, governanceSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/decisions/${id}`, undefined, undefined, governanceSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
     },

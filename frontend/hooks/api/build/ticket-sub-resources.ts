@@ -97,6 +97,8 @@ export function useRemoveLabelFromTicket(
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`,
+        undefined,
+        undefined,
         successLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
@@ -207,7 +209,7 @@ export function useAddTicketRelation(ticketId: number, projectId: number) {
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "relations", "add"],
     mutationFn: (data: { relatedTicketId: number; relationType: WorkItemRelationType }) =>
-      apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/relations`, data),
+      apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/relations`, data, undefined, attachmentCreateResultLazy),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
@@ -223,6 +225,8 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
     mutationFn: (relatedId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`,
+        undefined,
+        undefined,
         successLazy,
       ),
     onSuccess: () => {

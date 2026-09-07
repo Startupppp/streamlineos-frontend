@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { ResponseContract } from "@/lib/api-envelope";
 
+export const noContentContract = z.void();
+
 /**
  * The keyset page the backend's shared `buildCursorPage` helper emits. It is
  * `{ limit, hasMore, nextCursor }` — never `{ page, total, totalPages }`, and

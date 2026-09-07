@@ -107,7 +107,7 @@ const BASELINE = {
   // template preview beside it. Lowered to the measured value rather than banked as headroom.
   // 2594 -> 223 on 2026-09-07. The contract sweep parsed 2,371 of these seams; at 2594 the
   // ratchet could not bite, because every new unparsed call still fit inside the slack.
-  unvalidatedCalls: 223,
+  unvalidatedCalls: 182,
   minScannedCalls: 2400,
 };
 

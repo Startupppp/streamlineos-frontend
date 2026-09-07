@@ -122,3 +122,54 @@ export const applyTemplateResultContract = z.object({
 });
 
 export const roadmapSuccessContract = z.object({ success: z.literal(true) });
+
+const publicRoadmapItemSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  description: z.string().nullable(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  category: z.string().nullable(),
+  targetQuarter: z.string().nullable(),
+  votes: z.number().int(),
+});
+
+const publicFeedbackPostSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  description: z.string().nullable(),
+  category: z.string().nullable(),
+  votes: z.number().int(),
+  createdAt: z.string(),
+});
+
+const publicChangelogEntrySchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  content: z.string(),
+  version: z.string().nullable(),
+  type: z.enum(["feature", "improvement", "fix"]),
+  publishedAt: z.string().nullable(),
+});
+
+export const publicRoadmapBoardContract = z.object({
+  orgName: z.string().nullable(),
+  roadmap: z.object({
+    planned: z.array(publicRoadmapItemSchema),
+    in_progress: z.array(publicRoadmapItemSchema),
+    completed: z.array(publicRoadmapItemSchema),
+  }),
+  feedback: z.array(publicFeedbackPostSchema),
+  changelog: z.array(publicChangelogEntrySchema),
+});
+
+export const publicVoteResultContract = z.object({
+  id: z.number().int(),
+  type: z.string(),
+  votes: z.number().int(),
+  voted: z.boolean(),
+});
+
+export const publicFeedbackResultContract = z.object({
+  id: z.number().int(),
+  message: z.string(),
+});

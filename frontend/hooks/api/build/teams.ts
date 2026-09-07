@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -25,6 +26,15 @@ const teamDetailContract = lazyContract(() =>
 );
 const teamProjectItemListContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamProjectItemListContract),
+);
+const teamMemberRowContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamMemberRowContract),
+);
+const teamProjectRowContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamProjectRowContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 export interface TeamProject {
@@ -90,7 +100,7 @@ export function useDeleteProjectTeam() {
   return useAuthorizedMutation("build:teams:delete", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/teams/${id}`),
+      apiClient.delete<void>(`/build/teams/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
     },
@@ -102,7 +112,7 @@ export function useAddProjectTeamMember(teamId: number) {
   return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.members(teamId), "add"],
     mutationFn: (data: AddTeamMemberInput) =>
-      apiClient.post<void>(`/build/teams/${teamId}/members`, data),
+      apiClient.post<z.infer<typeof teamMemberRowContract>>(`/build/teams/${teamId}/members`, data, undefined, teamMemberRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.members(teamId) });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(teamId) });
@@ -116,7 +126,7 @@ export function useRemoveProjectTeamMember(teamId: number) {
   return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.members(teamId), "remove"],
     mutationFn: (memberId: string) =>
-      apiClient.delete<void>(`/build/teams/${teamId}/members/${memberId}`),
+      apiClient.delete<void>(`/build/teams/${teamId}/members/${memberId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.members(teamId) });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(teamId) });
@@ -130,7 +140,7 @@ export function useUpdateProjectTeamMemberRole(teamId: number) {
   return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.members(teamId), "updateRole"],
     mutationFn: ({ memberUserId, role }: { memberUserId: string; role: "member" | "lead" }) =>
-      apiClient.patch<void>(`/build/teams/${teamId}/members/${memberUserId}`, { role }),
+      apiClient.patch<z.infer<typeof teamMemberRowContract>>(`/build/teams/${teamId}/members/${memberUserId}`, { role }, undefined, teamMemberRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.members(teamId) });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(teamId) });
@@ -160,7 +170,7 @@ export function useAddTeamProject(teamId: number) {
   return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.teamProjects(teamId), "add"],
     mutationFn: (projectId: number) =>
-      apiClient.post<void>(`/build/teams/${teamId}/projects`, { projectId }),
+      apiClient.post<z.infer<typeof teamProjectRowContract>>(`/build/teams/${teamId}/projects`, { projectId }, undefined, teamProjectRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.teamProjects(teamId) });
     },
@@ -172,7 +182,7 @@ export function useRemoveTeamProject(teamId: number) {
   return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.teamProjects(teamId), "remove"],
     mutationFn: (projectId: number) =>
-      apiClient.delete<void>(`/build/teams/${teamId}/projects/${projectId}`),
+      apiClient.delete<void>(`/build/teams/${teamId}/projects/${projectId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.teamProjects(teamId) });
     },

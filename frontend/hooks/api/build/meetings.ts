@@ -42,6 +42,9 @@ const convertToTaskResultContract = lazyContract(() =>
 const meetingsSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingsSuccessContract),
 );
+const standupEntryContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.standupEntryContract),
+);
 
 interface MeetingFilters {
   status?: string;
@@ -113,7 +116,7 @@ export function useDeleteMeeting(projectId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`, meetingsSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`, undefined, undefined, meetingsSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
@@ -137,7 +140,7 @@ export function useRemoveAttendee(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`, meetingsSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`, undefined, undefined, meetingsSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
@@ -149,7 +152,7 @@ export function useUpsertStandup(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "standup"],
     mutationFn: (data: UpsertStandupInput) =>
-      apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data),
+      apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data, undefined, standupEntryContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
@@ -185,7 +188,7 @@ export function useDeleteActionItem(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "delete"],
     mutationFn: (itemId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`, meetingsSuccessContract),
+      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`, undefined, undefined, meetingsSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
