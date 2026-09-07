@@ -734,11 +734,39 @@ These decisions are final for this release and remove implementation alternative
       `/chat` and 572 ms on `/parties`**, so the handler is cheap and the re-render it forces is not.
       **`flushSync` is refuted as the cause, by measurement rather than argument:** removing it from
       both FAB handlers left processing unchanged or worse (`/build/inbox` 237 -> 414, `/parties` 572
-      -> 577) and it was reverted. That is the fifth candidate fix this measurement has refused. The
-      next attempt must stop the FAB's open state from re-rendering page content, and it now has a
-      metric that will show whether it worked. Run-to-run variance is large - mobile INP p75 at 6
+      -> 577) and it was reverted. That is the fifth candidate fix this measurement has refused.
+      Run-to-run variance is large - mobile INP p75 at 6
       repeats moved 25-50% between two captures of the SAME code - so no single capture closes or
       reopens this on its own. Evidence: [SUPPRESSIONS-BOLA-INP-2026-09-07.md](final-refactor/evidence/42-production-ops/release-authority/SUPPRESSIONS-BOLA-INP-2026-09-07.md).
+
+      **The stated next step was "stop the FAB's open state from re-rendering page content". Reading the
+      source refutes its premise, so a sixth attempt should not start there.** `fabOpen` is a `useState`
+      local to `MobileShellFab` (`components/layout/mobile/mobile-shell-fab.tsx:49`), read only inside that
+      component's own JSX. It is never lifted, never put on a context, and never passed upward; the shell
+      renders `<MobileShellFab>` as a **sibling** of `<ShellVariantProvider>{children}</ShellVariantProvider>`
+      (`dashboard-shell.tsx:283-286` vs `:325`). A state update in a leaf cannot re-render its parent's
+      other child, so page content is not re-rendering because of the FAB, and no amount of memoizing it
+      can help. That is consistent with all five refused fixes - four of them were memoization or callback
+      identity, aimed at a re-render that was not happening.
+      **A better candidate, matching the shape of the evidence: the FAB forces a synchronous layout on
+      every tap.** `handlePointerDown` calls `el.getBoundingClientRect()` unconditionally
+      (`use-mobile-shell-fab-position.ts:204`), which flushes pending style and layout for the **whole
+      document**, inside the event handler and therefore inside the measured processing phase. Its cost
+      scales with the page's DOM and CSS rather than with the component - which is exactly the observed
+      signature, the same control costing **0.7 ms of processing on `/chat` and 572 ms on `/parties`**, and
+      exactly what a memoization fix cannot touch. The rect is used only to seed a drag session, and a drag
+      does not begin until the pointer travels `DRAG_THRESHOLD_PX`: `handlePointerMove` returns early below
+      the threshold and `endDrag` clamps only `if (wasDrag)`. So for a tap - which is what the probe does -
+      the read is pure cost. Deferring it into the `if (!drag.active)` branch of `handlePointerMove` would
+      remove a forced layout from every tap while leaving drag behaviour identical.
+      **This is NOT shipped, deliberately.** It is a hypothesis with a mechanism, not a measured fix, and
+      this criterion has already refused five changes that looked equally reasonable - two of which moved
+      `/settings` and `/build/my-work` from passing to breaching and left them there. Shipping it unmeasured
+      would also break the invariant that the published capture describes the shipped code. It needs a quiet
+      host and a clean frontend tree, and at the time of writing the tree carries in-flight contract work,
+      so neither holds. Take the variance band first, from repeated captures of one build, then this change,
+      then a capture: the phase metric will show whether processing moved. Owner: the frontend performance
+      owner.
 - [x] **[PRD-C150]** Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] **[PRD-C151]** Record route-level JavaScript, CSS, server payload, image/font and third-party budgets; lazy-load module editors, charts, calendars, chat media and AI interfaces not required for first render.
