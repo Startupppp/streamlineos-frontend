@@ -136,11 +136,7 @@ export function useInterviews(
   params?: InterviewsParams,
   options?: { enabled?: boolean },
 ) {
-  const pageSize = params?.pageSize ?? params?.limit ?? 100;
-  const page =
-    params?.page ??
-    (params?.offset != null ? Math.floor(params.offset / pageSize) + 1 : 1);
-  const queryParams: Record<string, unknown> = { page, pageSize };
+  const queryParams: Record<string, unknown> = { limit: params?.limit ?? 100 };
   if (params?.candidateId) queryParams.candidateId = params.candidateId;
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";

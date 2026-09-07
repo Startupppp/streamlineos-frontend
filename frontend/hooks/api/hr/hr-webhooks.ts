@@ -21,7 +21,7 @@ export const hrWebhookKeys = {
   all: BASE,
   list: (params?: Record<string, unknown>) => [...BASE, "list", params] as const,
   detail: (id: number) => [...BASE, "detail", id] as const,
-  deliveries: (subscriptionId: number, page?: number) => [...BASE, "deliveries", subscriptionId, page] as const,
+  deliveries: (subscriptionId: number) => [...BASE, "deliveries", subscriptionId] as const,
   events: () => [...BASE, "events"] as const,
 };
 
@@ -46,13 +46,12 @@ export function useHrWebhookEvents() {
   });
 }
 
-export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit = 50) {
+export function useHrWebhookDeliveries(subscriptionId: number, limit = 50) {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
-    queryKey: hrWebhookKeys.deliveries(subscriptionId, page),
+    queryKey: hrWebhookKeys.deliveries(subscriptionId),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<HrWebhookDelivery>>(`/hr/webhooks/${subscriptionId}/deliveries`, {
-        page: String(page),
         limit: String(limit),
       }, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookDeliveryListContract)))).items,
     enabled: canManage && subscriptionId > 0,
