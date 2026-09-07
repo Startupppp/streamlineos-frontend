@@ -20,7 +20,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
 

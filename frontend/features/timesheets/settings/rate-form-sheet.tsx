@@ -26,7 +26,8 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
 import { useProjects } from "@/hooks/api/build";
-import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets/types";
+import type { TimesheetRate, CreateRateInput } from "@/features/timesheets/rate-types";
+import type { BillingType } from "@/features/timesheets/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
 
 const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "FIXED"];

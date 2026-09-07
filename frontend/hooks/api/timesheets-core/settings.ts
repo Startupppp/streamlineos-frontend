@@ -14,7 +14,7 @@ import { useCan } from "../access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const timesheetSettingsC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timesheetSettingsContract),
+  import("@/hooks/api/timesheets-core/timesheets-settings-schema").then((m) => m.timesheetSettingsContract),
 );
 
 export function useTimesheetSettings(enabled = true) {

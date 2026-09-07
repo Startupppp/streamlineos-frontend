@@ -17,10 +17,10 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const entriesListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entriesListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entriesListResponseContract),
 );
 const entryC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entryContract),
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryContract),
 );
 
 function toParams(query: EntriesQuery): Record<string, unknown> {

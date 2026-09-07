@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useApprovals } from "./approvals";
 import { useAuditEvents } from "./audit";
-import type { CursorPage, TimesheetPeriod, AuditEvent } from "@/features/timesheets/types";
+import type { CursorPage, TimesheetPeriod } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets/audit-types";
 
 const mockGet = jest.fn();
 

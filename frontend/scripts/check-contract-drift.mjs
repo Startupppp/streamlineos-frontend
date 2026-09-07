@@ -24,7 +24,7 @@ const MIN_RESOLVED_FRACTION = 0.40;
 /**
  * A scan that finds nothing must fail, not pass. `walkTs` swallows a missing
  * directory, so renaming or moving the timesheets hook folders would otherwise
- * yield zero calls, zero violations and a green tick. 53 calls are found today;
+ * yield zero calls, zero violations and a green tick. 48 calls are found today;
  * this floor is well under that so ordinary hook removal does not trip it, and
  * well over zero so a broken extractor cannot report success.
  */

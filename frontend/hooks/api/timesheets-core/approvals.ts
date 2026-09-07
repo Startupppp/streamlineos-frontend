@@ -16,16 +16,16 @@ import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/times
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const approvalsListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.approvalsListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.approvalsListResponseContract),
 );
 const timesheetPeriodC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timesheetPeriodContract),
+  import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.timesheetPeriodContract),
 );
 const bulkApproveC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.bulkApproveResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.bulkApproveResponseContract),
 );
 const bulkRejectC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.bulkRejectResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.bulkRejectResponseContract),
 );
 
 interface ApprovalsQuery {

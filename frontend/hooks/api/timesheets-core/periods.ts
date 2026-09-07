@@ -10,10 +10,10 @@ import { useCan } from "@/hooks/api/access";
 import type { PeriodDetail, TimesheetPeriod } from "@/features/timesheets/types";
 
 const periodDetailC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.periodDetailResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.periodDetailResponseContract),
 );
 const timesheetPeriodC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timesheetPeriodContract),
+  import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.timesheetPeriodContract),
 );
 
 export function useCurrentPeriod() {

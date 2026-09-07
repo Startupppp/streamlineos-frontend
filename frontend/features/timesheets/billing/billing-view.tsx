@@ -33,7 +33,7 @@ import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 const now = new Date();
 const DEFAULT_START = format(startOfMonth(now), "yyyy-MM-dd");

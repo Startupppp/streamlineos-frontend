@@ -8,6 +8,7 @@ import {
   runChecks,
 } from "./rules.mjs";
 import { applyBaseline, printBaseline } from "./known-drift.mjs";
+import { extractCallsFromSource } from "./frontend-calls.mjs";
 
 const CONTRACT = {
   paths: {
@@ -161,6 +162,66 @@ export function runSelfTest() {
   try { printBaseline([]); } catch { r11threw = true; }
   assert("printBaseline runs without throwing even with an empty baseline", !r11threw);
 
+  const extractorMap = new Map([["CreateEntryInput", new Set(["date", "hours"])]]);
+  const extract = (src) => extractCallsFromSource(src, extractorMap, "<self-test>").calls;
+
+  // The body is argument 1 and the response contract comes after it. Anchoring
+  // on the closing paren silently unresolved every inline-object body the day
+  // that argument was added.
+  const inlineAfterContract = extract(
+    "    mutationFn: ({ periodId, reason }: { periodId: number; reason: string }) =>\n" +
+      "      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }, undefined, timesheetPeriodC),\n",
+  );
+  assert(
+    "inline object body resolves when a config and contract argument follow it",
+    inlineAfterContract.length === 1 && inlineAfterContract[0].bodyFields?.has("reason") === true,
+  );
+
+  const namedAfterContract = extract(
+    "    mutationFn: (data: CreateEntryInput) =>\n" +
+      '      apiClient.post<TimesheetEntry>(\n        "/timesheets/entries",\n        data,\n        undefined,\n        entryC,\n      ),\n',
+  );
+  assert(
+    "named body type resolves across a trailing-comma argument list",
+    namedAfterContract.length === 1 &&
+      namedAfterContract[0].bodyTypeName === "CreateEntryInput" &&
+      namedAfterContract[0].bodyFields?.has("hours") === true,
+  );
+
+  const nestedGeneric = extract(
+    '      return apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal, entriesListC);\n',
+  );
+  assert(
+    "a nested generic type argument does not hide the call from the scan",
+    nestedGeneric.length === 1 && nestedGeneric[0].path === "/timesheets/entries",
+  );
+
+  const undefinedBody = extract(
+    "    mutationFn: (data: CreateEntryInput) =>\n" +
+      "      apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`, undefined, undefined, timesheetPeriodC),\n",
+  );
+  assert(
+    "an explicit undefined body is not counted as resolved",
+    undefinedBody.length === 1 && undefinedBody[0].bodyFields === null,
+  );
+
+  const getParams = extract(
+    "    const params: CreateEntryInput = filters;\n" +
+      '    queryFn: ({ signal }) => apiClient.get<ReportOverview>("/timesheets/reports/overview", params, signal, reportsOverviewC),\n',
+  );
+  assert(
+    "GET query params are not counted as a request body",
+    getParams.length === 1 && getParams[0].bodyFields === null,
+  );
+
+  const spreadBody = extract(
+    '      apiClient.post<TimesheetEntry>("/timesheets/entries", { ...draft, hours }, undefined, entryC),\n',
+  );
+  assert(
+    "a spread body stays unresolved rather than reporting a partial field set",
+    spreadBody.length === 1 && spreadBody[0].bodyFields === null,
+  );
+
   console.log(`\n  ${passed} passed, ${failed} failed`);
 
   if (failed > 0) {
@@ -168,6 +229,6 @@ export function runSelfTest() {
     process.exit(1);
   }
 
-  console.log("\n✔  self-test passed — all eighteen cases wired and fire");
+  console.log("\n✔  self-test passed — all twenty-four cases wired and fire");
   process.exit(0);
 }

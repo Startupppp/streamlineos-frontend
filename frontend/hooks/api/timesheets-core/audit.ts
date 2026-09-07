@@ -5,10 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
-import type { AuditEvent, CursorPage } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets/audit-types";
+import type { CursorPage } from "@/features/timesheets/types";
 
 const auditListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.auditListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-audit-schema").then((m) => m.auditListResponseContract),
 );
 
 interface AuditQuery {

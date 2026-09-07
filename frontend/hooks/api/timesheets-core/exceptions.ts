@@ -8,27 +8,27 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
+import type { CursorPage } from "@/features/timesheets/types";
 import type {
-  CursorPage,
   ExceptionsQueryInput,
   ExceptionsSummary,
   RunDetectionResult,
   TimesheetException,
   TimesheetExceptionRecord,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const exceptionsListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionsListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionsListResponseContract),
 );
 const exceptionsSummaryC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionsSummaryResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionsSummaryResponseContract),
 );
 const exceptionResolutionC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.exceptionResolutionResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionResolutionResponseContract),
 );
 const detectorC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.detectorResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.detectorResponseContract),
 );
 
 const exceptionsListPrefix = usersAndCommerceQueryKeys.timesheets

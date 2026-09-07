@@ -11,17 +11,17 @@ import type {
   BillingExportInput,
   BillingUninvoiced,
   InvoiceDraftInput,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/billing-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const billingUninvoicedC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.billingUninvoicedResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingUninvoicedResponseContract),
 );
 const billingExportC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.billingExportResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingExportResponseContract),
 );
 const billingInvoiceDraftC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.billingInvoiceDraftResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingInvoiceDraftResponseContract),
 );
 
 interface UninvoicedQuery {

@@ -16,13 +16,13 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const timerNullableC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timerNullableResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerNullableResponseContract),
 );
 const timerC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.timerContract),
+  import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerContract),
 );
 const entryC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.entryContract),
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryContract),
 );
 
 export function useActiveTimer() {

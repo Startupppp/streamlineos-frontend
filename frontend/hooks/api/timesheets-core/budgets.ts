@@ -7,14 +7,14 @@ import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets/types";
+import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets/budget-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const budgetListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.budgetListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-budget-schema").then((m) => m.budgetListResponseContract),
 );
 const budgetItemC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.budgetItemContract),
+  import("@/hooks/api/timesheets-core/timesheets-budget-schema").then((m) => m.budgetItemContract),
 );
 
 export function useBudgets(enabled = true) {

@@ -8,7 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 
 const teamSummaryC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.teamSummaryResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-team-schema").then((m) => m.teamSummaryResponseContract),
 );
 
 export interface TeamMemberWeekSummary {

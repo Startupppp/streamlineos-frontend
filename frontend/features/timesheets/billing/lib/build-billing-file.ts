@@ -1,5 +1,5 @@
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 function escapeCsvCell(value: string | number): string {
   let str = String(value);

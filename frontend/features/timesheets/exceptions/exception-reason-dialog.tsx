@@ -25,7 +25,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import {
   EXCEPTION_RULE_LABEL,
   type TimesheetException,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 import {
   exceptionReasonSchema,
   type ExceptionReasonValues,

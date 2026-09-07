@@ -14,7 +14,7 @@ const ByProjectChart = dynamic(
   () => import("./report-charts").then((m) => ({ default: m.ByProjectChart })),
   { ssr: false, loading: () => <Skeleton className="h-[280px]" /> }
 );
-import type { ReportOverview } from "@/features/timesheets/types";
+import type { ReportOverview } from "@/features/timesheets/report-types";
 
 interface OverviewReportProps {
   overview: ReportOverview | undefined;

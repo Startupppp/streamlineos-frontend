@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { useAuditEvents } from "@/hooks/api/timesheets-core/audit";
 import { useCan } from "@/hooks/api/access";
-import type { AuditEvent } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets/audit-types";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {

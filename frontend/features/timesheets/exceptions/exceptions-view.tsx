@@ -49,7 +49,7 @@ import {
   type ExceptionSeverity,
   type ExceptionStatus,
   type TimesheetException,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 import { cn } from "@/lib/utils";
 import {
   ExceptionReasonDialog,

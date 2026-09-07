@@ -7,14 +7,14 @@ import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets/types";
+import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets/rate-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const ratesListC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.ratesListResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-rate-schema").then((m) => m.ratesListResponseContract),
 );
 const rateC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.rateContract),
+  import("@/hooks/api/timesheets-core/timesheets-rate-schema").then((m) => m.rateContract),
 );
 
 export function useRates(enabled = true) {

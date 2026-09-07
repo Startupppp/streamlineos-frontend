@@ -16,7 +16,7 @@ import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
 import { generateBillingNarrative } from "@/hooks/api/timesheets-core/ai";
 import { useCan } from "@/hooks/api/access";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 interface InvoiceDraftDialogProps {
   open: boolean;

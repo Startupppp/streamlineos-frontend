@@ -7,7 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 
-import type { ReportOverview } from "@/features/timesheets/types";
+import type { ReportOverview } from "@/features/timesheets/report-types";
 import type {
   ApprovalSlaReport,
   BillingLeakageReport,
@@ -18,22 +18,22 @@ import type {
 } from "@/features/timesheets/reports/reports-types";
 
 const reportsOverviewC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.reportsOverviewResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.reportsOverviewResponseContract),
 );
 const reportsUtilizationC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.reportsUtilizationResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.reportsUtilizationResponseContract),
 );
 const clientProfitabilityC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.clientProfitabilityResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.clientProfitabilityResponseContract),
 );
 const complianceC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.complianceResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.complianceResponseContract),
 );
 const approvalSlaC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.approvalSlaResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.approvalSlaResponseContract),
 );
 const billingLeakageC = lazyContract(() =>
-  import("@/hooks/api/timesheets-core/timesheets-schema").then((m) => m.billingLeakageResponseContract),
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.billingLeakageResponseContract),
 );
 
 interface OverviewQuery {
