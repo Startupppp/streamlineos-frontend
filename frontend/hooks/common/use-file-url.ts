@@ -2,8 +2,13 @@
 
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isStorageObjectKey, storageKeyFromUrl } from "@/lib/utils";
+
+const signedUrlC = lazyContract(() =>
+  import("@/hooks/common/file-url-schema").then((m) => m.signedUrlContract),
+);
 
 /**
  * The `/uploads/` test used to live here and it read a TENANT OBJECT KEY as a
@@ -42,12 +47,14 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   const data = await apiClient.get<{ url: string }>(
     "/storage/download",
     storageReferenceParams(reference),
+    undefined,
+    signedUrlC,
   );
   return data.url;
 }
 
 export async function getProtectedFileUrl(endpoint: string): Promise<string> {
-  const data = await apiClient.get<{ url: string }>(endpoint);
+  const data = await apiClient.get<{ url: string }>(endpoint, undefined, undefined, signedUrlC);
   return data.url;
 }
 

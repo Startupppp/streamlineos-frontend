@@ -2,7 +2,6 @@ export {
   FinanceStatusBadge,
   type FinanceStatus,
   type ExpenseStatus,
-  type PeriodStatus,
 } from "./finance-status";
 
 export { Money } from "./money";
