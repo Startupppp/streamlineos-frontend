@@ -1,3 +1,15 @@
+import type { z } from "zod";
+import type {
+  summaryReportContract,
+  registerReportContract,
+  deptCostReportContract,
+  costCenterReportContract,
+  componentPivotReportContract,
+  bankPayoutReportContract,
+  varianceReportContract,
+  journalReportContract,
+} from "@/hooks/api/payroll/reports-schema";
+
 export type PayrollReportType =
   | "summary"
   | "register"
@@ -12,119 +24,35 @@ export type PayrollReportType =
   | "journal"
   | "pay-compression";
 
-export interface PayrollSummaryReport {
-  run: {
-    month: string;
-    status: string;
-    employeeCount: number;
-    grossTotal: number;
-    deductionTotal: number;
-    netTotal: number;
-    employerCostTotal: number;
-    exceptionCount: number;
-  } | null;
-  provisional: boolean;
-}
+export type PayrollSummaryReport = z.infer<typeof summaryReportContract>;
 
-export interface EmployeeRegisterRow {
-  employeeId: string;
-  name: string;
-  department: string;
-  workerType: string;
-  paidDays: number;
-  gross: number;
-  totalDeductions: number;
-  net: number;
-  components: Record<string, string>;
-}
+export type EmployeeRegisterRow = z.infer<typeof registerReportContract>["rows"][number];
 
-export interface PayrollRegisterReport {
-  provisional: boolean;
-  columns: string[];
-  rows: EmployeeRegisterRow[];
-}
+export type PayrollRegisterReport = z.infer<typeof registerReportContract>;
 
-export interface DeptCostRow {
-  department: string;
-  employeeCount: number;
-  grossTotal: number;
-  netTotal: number;
-  employerCostTotal: number;
-}
+export type DeptCostRow = z.infer<typeof deptCostReportContract>["rows"][number];
 
-export interface PayrollDeptCostReport {
-  rows: DeptCostRow[];
-}
+export type PayrollDeptCostReport = z.infer<typeof deptCostReportContract>;
 
-export interface CostCenterRow {
-  costCenter: string;
-  employeeCount: number;
-  grossTotal: number;
-  netTotal: number;
-}
+export type CostCenterRow = z.infer<typeof costCenterReportContract>["rows"][number];
 
-export interface PayrollCostCenterReport {
-  rows: CostCenterRow[];
-}
+export type PayrollCostCenterReport = z.infer<typeof costCenterReportContract>;
 
-export interface ComponentPivotRow {
-  employeeId: string;
-  name: string;
-  department: string;
-  workerType: string;
-  components: Record<string, string>;
-}
+export type ComponentPivotRow = z.infer<typeof componentPivotReportContract>["rows"][number];
 
-export interface ComponentPivotReport {
-  provisional: boolean;
-  columns: string[];
-  rows: ComponentPivotRow[];
-}
+export type ComponentPivotReport = z.infer<typeof componentPivotReportContract>;
 
-export interface BankPayoutItem {
-  userName: string;
-  accountMasked: string;
-  ifsc: string;
-  amount: number;
-  status: string;
-}
+export type BankPayoutItem = z.infer<typeof bankPayoutReportContract>["batches"][number]["items"][number];
 
-export interface BankPayoutBatch {
-  batchNumber: string;
-  format: string;
-  totalAmount: number;
-  itemCount: number;
-  status: string;
-  generatedAt: string | null;
-  items: BankPayoutItem[];
-}
+export type BankPayoutBatch = z.infer<typeof bankPayoutReportContract>["batches"][number];
 
-export interface BankPayoutReport {
-  batches: BankPayoutBatch[];
-}
+export type BankPayoutReport = z.infer<typeof bankPayoutReportContract>;
 
-export interface VarianceEmployeeRow {
-  userId: string;
-  name: string;
-  prevGross: number;
-  currGross: number;
-  grossDelta: number;
-  prevNet: number;
-  currNet: number;
-  netDelta: number;
-}
+export type VarianceEmployeeRow = z.infer<typeof varianceReportContract>["perEmployee"][number];
 
-export interface VarianceReport {
-  perEmployee: VarianceEmployeeRow[];
-}
+export type VarianceReport = z.infer<typeof varianceReportContract>;
 
-export interface JournalLine {
-  account: string;
-  description: string;
-  debit: number;
-  credit: number;
-  costCenter: string | null;
-}
+export type JournalLine = z.infer<typeof journalReportContract>["lines"][number];
 
 /**
  * Mirrors `JournalResult` in `payroll/insights/journal.service.ts`. The three
@@ -133,14 +61,7 @@ export interface JournalLine {
  * itself — over a line set the server had already filtered. The totals are the
  * server's, computed in integer paise; do not recompute them here.
  */
-export interface JournalReport {
-  provisional: boolean;
-  month: string;
-  lines: JournalLine[];
-  unmappedCodes: string[];
-  totalDebits: number;
-  totalCredits: number;
-}
+export type JournalReport = z.infer<typeof journalReportContract>;
 
 export interface AccountingMapping {
   id: number;

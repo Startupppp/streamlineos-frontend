@@ -133,7 +133,8 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
 
 export function SalaryStructuresPageContent() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: templates, isLoading, isError, refetch } = useSalaryStructureTemplates();
+  const { data: page, isLoading, isError, refetch } = useSalaryStructureTemplates();
+  const templates = page?.data;
   const createMutation = useCreateSalaryTemplate();
   const updateMutation = useUpdateSalaryTemplate();
   const deleteMutation = useDeleteSalaryTemplate();

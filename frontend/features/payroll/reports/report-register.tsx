@@ -113,9 +113,9 @@ export function ReportRegister({
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
     return {
-      gross: data.rows.reduce((s, r) => s + r.gross, 0),
-      deductions: data.rows.reduce((s, r) => s + r.totalDeductions, 0),
-      net: data.rows.reduce((s, r) => s + r.net, 0),
+      gross: data.rows.reduce((s, r) => s + Number(r.gross), 0),
+      deductions: data.rows.reduce((s, r) => s + Number(r.totalDeductions), 0),
+      net: data.rows.reduce((s, r) => s + Number(r.net), 0),
     };
   }, [data]);
 

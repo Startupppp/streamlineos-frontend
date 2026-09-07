@@ -73,9 +73,9 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
     return {
-      gross: data.rows.reduce((s, r) => s + r.grossTotal, 0),
-      net: data.rows.reduce((s, r) => s + r.netTotal, 0),
-      employer: data.rows.reduce((s, r) => s + r.employerCostTotal, 0),
+      gross: data.rows.reduce((s, r) => s + Number(r.grossTotal), 0),
+      net: data.rows.reduce((s, r) => s + Number(r.netTotal), 0),
+      employer: data.rows.reduce((s, r) => s + Number(r.employerCostTotal), 0),
     };
   }, [data]);
 
@@ -104,7 +104,7 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
       className="flex-1 min-h-0"
       data={data?.rows ?? []}
       columns={COLUMNS}
-      getRowKey={(row) => row.department}
+      getRowKey={(row) => row.department ?? "unassigned"}
       isLoading={isLoading}
       footer={footerNode}
       emptyState={

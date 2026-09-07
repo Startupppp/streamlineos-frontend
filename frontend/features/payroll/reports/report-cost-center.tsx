@@ -65,8 +65,8 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
     return {
-      gross: data.rows.reduce((s, r) => s + r.grossTotal, 0),
-      net: data.rows.reduce((s, r) => s + r.netTotal, 0),
+      gross: data.rows.reduce((s, r) => s + Number(r.grossTotal), 0),
+      net: data.rows.reduce((s, r) => s + Number(r.netTotal), 0),
     };
   }, [data]);
 
@@ -94,7 +94,7 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
       className="flex-1 min-h-0"
       data={data?.rows ?? []}
       columns={COLUMNS}
-      getRowKey={(row) => row.costCenter}
+      getRowKey={(row) => row.costCenter ?? "unassigned"}
       isLoading={isLoading}
       footer={footerNode}
       emptyState={

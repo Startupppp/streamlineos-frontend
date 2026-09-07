@@ -97,8 +97,8 @@ export function ReportVariance({ month }: ReportVarianceProps) {
   const totals = useMemo(() => {
     if (!data?.perEmployee.length) return null;
     return {
-      grossDelta: data.perEmployee.reduce((s, r) => s + r.grossDelta, 0),
-      netDelta: data.perEmployee.reduce((s, r) => s + r.netDelta, 0),
+      grossDelta: data.perEmployee.reduce((s, r) => s + Number(r.grossDelta), 0),
+      netDelta: data.perEmployee.reduce((s, r) => s + Number(r.netDelta), 0),
     };
   }, [data]);
 
