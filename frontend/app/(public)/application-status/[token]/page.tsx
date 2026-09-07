@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
+import { publicApplicationStatusContract } from "@/lib/public-schema";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicApplicationStatus } from "@/lib/public-fetch";
-import { publicApplicationStatusContract } from "@/lib/public-schema";
+
 
 type Props = { params: Promise<{ token: string }> };
 

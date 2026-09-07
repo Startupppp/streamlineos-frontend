@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
+import { publicVendorPortalContract } from "@/lib/public-schema";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
 import { publicGetNoStore, type PublicVendorPortal } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
-import { publicVendorPortalContract } from "@/lib/public-schema";
+
 
 type Props = { params: Promise<{ token: string }> };
 

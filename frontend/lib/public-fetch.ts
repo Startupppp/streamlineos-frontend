@@ -1,3 +1,12 @@
+import type { z } from "zod";
+import type {
+  publicKbListContract,
+  publicKbArticleContract,
+  publicApplicationStatusContract,
+  publicOfferDetailContract,
+  publicReferrerPortalContract,
+  publicVendorPortalContract,
+} from "@/lib/public-schema";
 import "server-only";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { parseApiResponse, type ResponseContract } from "@/lib/api-envelope";
@@ -32,29 +41,9 @@ export interface PublicKbArticleListItem {
   publishedAt: string | null;
 }
 
-export interface PublicKbListData {
-  categories: PublicKbCategory[];
-  articles: PublicKbArticleListItem[];
-}
+export type PublicKbListData = z.infer<typeof publicKbListContract>;
 
-export interface PublicKbArticle {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  content: string;
-  categoryId: number | null;
-  categoryName: string | null;
-  categorySlug: string | null;
-  views: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  tags: string[] | null;
-  seoTitle: string | null;
-  seoDescription: string | null;
-  publishedAt: string | null;
-  updatedAt: string | null;
-}
+export type PublicKbArticle = z.infer<typeof publicKbArticleContract>;
 
 export async function publicGet<T>(
   path: string,
@@ -95,13 +84,7 @@ export async function publicGetNoStore<T>(
   return parseApiResponse<T>(res, contract, path);
 }
 
-export interface PublicApplicationStatus {
-  status: string;
-  appliedAt: string;
-  updatedAt: string;
-  job: { title: string; location: string | null; type: string } | null;
-  candidate: { firstName: string; lastName: string; email: string } | null;
-}
+export type PublicApplicationStatus = z.infer<typeof publicApplicationStatusContract>;
 
 export interface PublicOfferNegotiation {
   direction: string;
@@ -110,18 +93,7 @@ export interface PublicOfferNegotiation {
   createdAt: string;
 }
 
-export interface PublicOffer {
-  id: number;
-  offerStatus: string;
-  offeredSalary: string | null;
-  offeredDesignation: string | null;
-  joiningDate: string | null;
-  validUntil: string | null;
-  notes: string | null;
-  acceptanceTokenExpiresAt: string | null;
-  currency: string;
-  negotiations: PublicOfferNegotiation[];
-}
+export type PublicOffer = z.infer<typeof publicOfferDetailContract>;
 
 export interface PublicReferrerPortalJob {
   id: number;
@@ -138,13 +110,7 @@ export interface PublicReferrerPortalReferral {
   createdAt: string;
 }
 
-export interface PublicReferrerPortal {
-  referrerName: string;
-  orgName: string;
-  currency: string;
-  openJobs: PublicReferrerPortalJob[];
-  referrals: PublicReferrerPortalReferral[];
-}
+export type PublicReferrerPortal = z.infer<typeof publicReferrerPortalContract>;
 
 export interface PublicVendorSubmission {
   id: number;
@@ -154,7 +120,4 @@ export interface PublicVendorSubmission {
   submittedAt: string;
 }
 
-export interface PublicVendorPortal {
-  vendorName: string;
-  submissions: PublicVendorSubmission[];
-}
+export type PublicVendorPortal = z.infer<typeof publicVendorPortalContract>;

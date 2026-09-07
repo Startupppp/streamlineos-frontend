@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
+import { publicOfferDetailContract } from "@/lib/public-schema";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicOffer } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
-import { publicOfferDetailContract } from "@/lib/public-schema";
+
 import { OfferActionIsland } from "@/features/careers/components/offer-action-island";
 
 type Props = { params: Promise<{ token: string }> };

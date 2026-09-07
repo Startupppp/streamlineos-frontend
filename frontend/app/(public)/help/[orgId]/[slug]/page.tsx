@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { publicGet, type PublicKbArticle } from "@/lib/public-fetch";
 import { publicKbArticleContract } from "@/lib/public-schema";
+
 import { PublicArticleContent } from "@/features/help-centre/components/public-article-content";
 
 export const revalidate = 60;

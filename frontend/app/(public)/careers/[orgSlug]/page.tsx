@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
+import { publicJobListContract } from "@/lib/public-schema";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import { publicGet } from "@/lib/public-fetch";
-import { publicJobListContract } from "@/lib/public-schema";
 
 type Props = { params: Promise<{ orgSlug: string }> };
 
