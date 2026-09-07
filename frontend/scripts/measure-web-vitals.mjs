@@ -146,6 +146,28 @@ export function buildProfileSummary(samples) {
 }
 
 /**
+ * An INP number alone cannot be acted on: 800 ms spent waiting for the main
+ * thread, 800 ms spent in the handler and 800 ms spent painting are three
+ * different defects with three different fixes. PerformanceEventTiming carries
+ * the split, so the capture records it rather than making the reader guess.
+ */
+export function summariseInpPhases(samples) {
+  const phases = samples.map((s) => s.inpPhases).filter((entry) => entry !== null && typeof entry === "object");
+  if (!phases.length) return null;
+  const p75 = (key) => {
+    const value = summarise(phases.map((entry) => entry[key]))?.p75;
+    return value === undefined || value === null ? null : Number(value.toFixed(1));
+  };
+  return {
+    samples: phases.length,
+    targets: [...new Set(phases.map((entry) => entry.target).filter((t) => typeof t === "string"))],
+    inputDelay_p75_ms: p75("inputDelayMs"),
+    processing_p75_ms: p75("processingMs"),
+    presentation_p75_ms: p75("presentationMs"),
+  };
+}
+
+/**
  * A dev server compiles on demand and serves a different build id than the one
  * `next build` left on disk. Comparing the two is the only claim about server
  * mode this driver is entitled to make.
@@ -587,7 +609,7 @@ async function cdpSession(wsUrl) {
 
 const VITALS_SCRIPT = `(() => {
   if (window.__slVitals) return;
-  const state = { lcp: null, cls: 0, inp: null, longTaskMs: 0, shifts: [], lastMutationMs: performance.now(), mutationObserverAttached: false };
+  const state = { lcp: null, cls: 0, inp: null, inpPhases: null, longTaskMs: 0, shifts: [], lastMutationMs: performance.now(), mutationObserverAttached: false };
   const describe = (node) => {
     if (!node || node.nodeType !== 1) return 'unknown';
     const id = node.id ? '#' + node.id : '';
@@ -620,8 +642,18 @@ const VITALS_SCRIPT = `(() => {
       }
     }).observe({ type: 'layout-shift', buffered: true });
     new PerformanceObserver((l) => {
-      for (const e of l.getEntries())
-        if (e.interactionId && (state.inp === null || e.duration > state.inp)) state.inp = e.duration;
+      for (const e of l.getEntries()) {
+        if (!e.interactionId) continue;
+        if (state.inp !== null && e.duration <= state.inp) continue;
+        state.inp = e.duration;
+        state.inpPhases = {
+          name: e.name,
+          target: describe(e.target),
+          inputDelayMs: Number((e.processingStart - e.startTime).toFixed(1)),
+          processingMs: Number((e.processingEnd - e.processingStart).toFixed(1)),
+          presentationMs: Number((e.startTime + e.duration - e.processingEnd).toFixed(1)),
+        };
+      }
     }).observe({ type: 'event', buffered: true, durationThreshold: 16 });
     new PerformanceObserver((l) => {
       for (const e of l.getEntries()) state.longTaskMs += e.duration;
@@ -831,6 +863,7 @@ async function collectSample(cdp) {
     fcpMs: fcp ? fcp.startTime : null,
     lcpMs: Number.isFinite(vitals.lcp) ? vitals.lcp : null,
     inpMs: Number.isFinite(vitals.inp) ? vitals.inp : null,
+    inpPhases: vitals.inpPhases ?? null,
     cls: Number.isFinite(vitals.cls) ? vitals.cls : null,
     longTaskMs: Number.isFinite(vitals.longTaskMs) ? vitals.longTaskMs : null,
     shifts: Array.isArray(vitals.shifts) ? vitals.shifts : [],
@@ -1113,6 +1146,7 @@ async function run() {
                * different controls, and a reader cannot tell that from the number.
                */
               selectors: [...new Set(routeSamples.map((sample) => sample.interaction?.selector).filter((sel) => typeof sel === "string"))],
+              inpPhases: summariseInpPhases(routeSamples),
             },
           };
           byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;
@@ -1541,6 +1575,18 @@ async function selfTest() {
   ]);
   check("a profile summary carries every gated metric plus the supplementary ones", Object.keys(summary).sort(), ["cls", "fcp", "inp", "lcp", "longTasks", "ttfb", "usedJsHeap"]);
   check("an all-null metric summarises to null rather than 0", buildProfileSummary([{ lcpMs: null, inpMs: null, cls: null, fcpMs: null, ttfbMs: null, longTaskMs: null }]).lcp.p75_ms, null);
+
+  const phaseFixture = [
+    { inpPhases: { target: "button#fab", inputDelayMs: 40, processingMs: 500, presentationMs: 60 } },
+    { inpPhases: { target: "button#fab", inputDelayMs: 60, processingMs: 700, presentationMs: 80 } },
+    { inpPhases: null },
+  ];
+  const phases = summariseInpPhases(phaseFixture);
+  check("an INP number is split into the three phases the spec defines", Object.keys(phases).sort(), ["inputDelay_p75_ms", "presentation_p75_ms", "processing_p75_ms", "samples", "targets"]);
+  check("a sample that recorded no interaction is dropped rather than counted as zero", phases.samples, 2);
+  check("the phase split names the element that was clicked", phases.targets, ["button#fab"]);
+  check("the dominant phase is visible in the split", phases.processing_p75_ms, 650);
+  check("a route where nothing was ever clicked reports no split at all", summariseInpPhases([{ inpPhases: null }]), null);
 
   check(
     "the shell's own access-failure card is refused, not recorded as a good page",
