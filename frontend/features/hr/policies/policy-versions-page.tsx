@@ -55,6 +55,13 @@ export function PolicyVersionsPage() {
 
   const activate = useActivatePolicy();
 
+  function handleEntityChange(v: string) {
+    const next = VERSION_ENTITIES.find((candidate) => candidate === v);
+    if (!next) return;
+    setEntity(next);
+    setQueriedId(null);
+  }
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -103,12 +110,7 @@ export function PolicyVersionsPage() {
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={entity}
-            onValueChange={(v) => {
-              const next = VERSION_ENTITIES.find((candidate) => candidate === v);
-              if (!next) return;
-              setEntity(next);
-              setQueriedId(null);
-            }}
+            onValueChange={handleEntityChange}
           >
             <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue />

@@ -41,7 +41,7 @@ import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import {
   CandidateCard,
   CandidateCardSkeleton,
@@ -59,7 +59,7 @@ export function CandidatesPage() {
   );
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  const pageFromUrl = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+  const pager = useCursorPager(`${statusFilter ?? ""}|${debouncedSearch.trim()}`);
 
   const {
     data: candidatesPage,
@@ -69,10 +69,10 @@ export function CandidatesPage() {
   } = useCandidatesPage({
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-    page: pageFromUrl,
-    pageSize: 24,
+    ...(pager.cursor ? { cursor: pager.cursor } : {}),
+    limit: 24,
   });
-  const candidates = candidatesPage?.items;
+  const candidates = candidatesPage?.data;
   const updateCandidateStage = useUpdateCandidateStage();
   const deleteCandidate = useDeleteCandidate();
   const bulkReject = useBulkRejectCandidates();
@@ -95,18 +95,14 @@ export function CandidatesPage() {
       const params = new URLSearchParams(searchParams.toString());
       if (value && value !== "ALL") params.set(key, value);
       else params.delete(key);
-      if (key !== "page") params.delete("page");
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setFilter("page", page <= 1 ? null : String(page));
-    },
-    [setFilter],
-  );
+  const handleNextPage = useCallback(() => {
+    pager.goNext(candidatesPage?.pagination.nextCursor);
+  }, [pager, candidatesPage?.pagination.nextCursor]);
 
   const debouncedSearchRef = useRef(debouncedSearch);
   useEffect(() => {
@@ -393,10 +389,12 @@ export function CandidatesPage() {
               ))}
             </div>
             <TablePagination
-              page={candidatesPage?.page ?? 1}
-              pageSize={candidatesPage?.pageSize ?? 24}
-              total={candidatesPage?.total ?? 0}
-              onPageChange={handlePageChange}
+              mode="cursor"
+              rowCount={filteredCandidates.length}
+              hasMore={candidatesPage?.pagination.hasMore ?? false}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNextPage}
+              onPrevious={pager.goPrevious}
             />
           </>
         )}

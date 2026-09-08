@@ -28,7 +28,6 @@ interface CandidateDetailTabsProps {
   candidateStatus: CandidateStatus | null;
   currentRole: string | null;
   resumeUrl: string | null;
-  resumeText: string | null;
   bgvStatus: BgvStatus | null;
   bgvAgency: string | null;
   bgvNotes: string | null;
@@ -50,7 +49,6 @@ export function CandidateDetailTabs({
   candidateStatus,
   currentRole,
   resumeUrl,
-  resumeText,
   bgvStatus,
   bgvAgency,
   bgvNotes,
@@ -122,7 +120,7 @@ export function CandidateDetailTabs({
         </TabsContent>
 
         <TabsContent value="resume">
-          <ResumeTab resumeUrl={resumeUrl} resumeText={resumeText} />
+          <ResumeTab resumeUrl={resumeUrl} />
         </TabsContent>
 
         <TabsContent value="interviews">

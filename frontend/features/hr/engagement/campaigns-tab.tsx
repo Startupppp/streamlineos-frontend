@@ -130,6 +130,11 @@ export function CampaignsTab() {
   const handleStartsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartsAt(e.target.value), []);
   const handleEndsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndsAt(e.target.value), []);
 
+  function handleCampaignStatusChange(v: string) {
+    const next = CAMPAIGN_STATUSES.find((candidate) => candidate === v);
+    if (next) setStatus(next);
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -259,10 +264,7 @@ export function CampaignsTab() {
             <Label className="text-xs font-medium">Status</Label>
             <Select
               value={status}
-              onValueChange={(v) => {
-                const next = CAMPAIGN_STATUSES.find((candidate) => candidate === v);
-                if (next) setStatus(next);
-              }}
+              onValueChange={handleCampaignStatusChange}
             >
               <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>

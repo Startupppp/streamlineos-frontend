@@ -20,6 +20,7 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,7 +79,6 @@ export function HrPoliciesPage() {
   const { data: orgConflicts } = useOrgPolicyConflicts();
   const conflictCount = orgConflicts?.conflicts.length ?? 0;
 
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [typeFilter, setTypeFilter] = useState<HrPolicyType | "all">("all");
@@ -90,17 +90,25 @@ export function HrPoliciesPage() {
 
   const seed = useSeedDefaultPolicies();
 
+  const pager = useCursorPager(
+    `${debouncedSearch.trim()}|${typeFilter}|${statusFilter}`,
+  );
+
   const { data, isLoading, isError, error, refetch } = useHrPolicies({
-    page,
+    cursor: pager.cursor,
     limit: 20,
     search: debouncedSearch.trim() || undefined,
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
+  const nextCursor = data?.pagination.nextCursor ?? null;
+  const handleNextPage = useCallback(() => {
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
   }, []);
 
   const filtersActive =
@@ -110,7 +118,6 @@ export function HrPoliciesPage() {
     setSearch("");
     setTypeFilter("all");
     setStatusFilter("all");
-    setPage(1);
   }, []);
 
   const handleOpenCreate = useCallback(() => {
@@ -144,12 +151,10 @@ export function HrPoliciesPage() {
 
   function handleTypeFilterChange(v: string) {
     setTypeFilter(v as HrPolicyType | "all");
-    setPage(1);
   }
 
   function handleStatusFilterChange(v: string) {
     setStatusFilter(v as HrPolicyStatus | "all");
-    setPage(1);
   }
 
   function handleRetry() { void refetch(); }
@@ -334,11 +339,12 @@ export function HrPoliciesPage() {
             columns={columns}
             getRowKey={(row) => String(row.id)}
             pagination={{
-              mode: "server",
-              page,
+              mode: "cursor",
               pageSize: 20,
-              total: data?.total ?? 0,
-              onPageChange: setPage,
+              hasMore: data?.pagination.hasMore ?? false,
+              hasPrevious: pager.hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: pager.goPrevious,
             }}
           />
         )}

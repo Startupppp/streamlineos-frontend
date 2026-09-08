@@ -65,6 +65,11 @@ export function MessagesTab({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
+  function handleChannelChange(v: string) {
+    const next = MESSAGE_CHANNELS.find((candidate) => candidate === v);
+    if (next) setChannel(next);
+  }
+
   const handleSend = useCallback(() => {
     if (!body.trim()) return;
     send.mutate(
@@ -100,10 +105,7 @@ export function MessagesTab({
             <Label className="text-xs text-muted-foreground">Channel</Label>
             <Select
               value={channel}
-              onValueChange={(v) => {
-                const next = MESSAGE_CHANNELS.find((candidate) => candidate === v);
-                if (next) setChannel(next);
-              }}
+              onValueChange={handleChannelChange}
             >
               <SelectTrigger>
                 <SelectValue />

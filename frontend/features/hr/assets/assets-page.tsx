@@ -5,6 +5,7 @@ import { Package, CheckCircle2, Laptop, Wrench, Plus, Download } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -42,7 +43,6 @@ export function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
   const [assignmentFilter, setAssignmentFilter] = useState<string | undefined>();
-  const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [deleteAssetId, setDeleteAssetId] = useState<number | null>(null);
@@ -55,8 +55,9 @@ export function AssetsPage() {
   const updateAsset = useUpdateAsset();
   const assignAsset = useAssignAsset();
   const canManageAssets = useCan("hr:assets:manage");
+  const pager = useCursorPager();
   const { data, isLoading, isError, refetch } = useHrAssetList({
-    page,
+    cursor: pager.cursor,
     limit: PAGE_SIZE,
     status: statusFilter,
   });
@@ -79,7 +80,8 @@ export function AssetsPage() {
     return result;
   }, [items, categoryFilter, assignmentFilter]);
 
-  const total = data?.pagination.total ?? 0;
+  const hasMore = data?.pagination.hasMore ?? false;
+  const nextCursor = data?.pagination.nextCursor ?? null;
   const counts = data?.counts ?? { total: 0, available: 0, assigned: 0, maintenance: 0, retired: 0 };
 
   const handleOpenAdd = useCallback(() => {
@@ -254,8 +256,12 @@ export function AssetsPage() {
 
   const handleStatusFilterChange = useCallback((v: string) => {
     setStatusFilter(v === "all" ? undefined : v);
-    setPage(1);
-  }, []);
+    pager.reset();
+  }, [pager]);
+
+  const handleNextPage = useCallback(() => {
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const handleCategoryFilterChange = useCallback((v: string) => {
     setCategoryFilter(v === "all" ? undefined : v);
@@ -319,10 +325,11 @@ export function AssetsPage() {
           columns={columns}
           isLoading={isLoading}
           isError={isError}
-          page={page}
-          total={total}
+          hasMore={hasMore}
+          hasPrevious={pager.hasPrevious}
           statusFilter={statusFilter}
-          onPageChange={setPage}
+          onNextPage={handleNextPage}
+          onPreviousPage={pager.goPrevious}
           onRetry={handleRetry}
           onOpenAdd={handleOpenAdd}
         />

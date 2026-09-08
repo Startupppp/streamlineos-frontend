@@ -52,6 +52,11 @@ export function PositionsTable() {
     setPage(1);
   }
 
+  function handleStatusFilterSelect(v: string) {
+    const next = STATUS_FILTERS.find((candidate) => candidate === v);
+    if (next) handleStatusChange(next);
+  }
+
   function handleClearFilters() {
     setStatusFilter(SENTINEL);
     setPage(1);
@@ -159,10 +164,7 @@ export function PositionsTable() {
       <div className="flex items-center justify-between mb-4">
         <Select
           value={statusFilter}
-          onValueChange={(v) => {
-            const next = STATUS_FILTERS.find((candidate) => candidate === v);
-            if (next) handleStatusChange(next);
-          }}
+          onValueChange={handleStatusFilterSelect}
         >
           <SelectTrigger className="w-40">
             <SelectValue />

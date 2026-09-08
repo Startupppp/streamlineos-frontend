@@ -139,6 +139,16 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
 
   const isPending = createPlan.isPending || updatePlan.isPending;
 
+  function handleCategoryChange(v: string) {
+    const next = PLAN_CATEGORIES.find((candidate) => candidate === v);
+    if (next) form.setValue("category", next);
+  }
+
+  function handlePlanStatusChange(v: string) {
+    const next = PLAN_STATUSES.find((candidate) => candidate === v);
+    if (next) form.setValue("status", next);
+  }
+
   return (
     <HrSheet
       open={open}
@@ -162,10 +172,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
           <Label>Category <span className="text-destructive">*</span></Label>
           <Select
             defaultValue={form.getValues("category")}
-            onValueChange={(v) => {
-              const next = PLAN_CATEGORIES.find((candidate) => candidate === v);
-              if (next) form.setValue("category", next);
-            }}
+            onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select category" />
@@ -182,10 +189,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
           <Label>Status</Label>
           <Select
             defaultValue={form.getValues("status") ?? "draft"}
-            onValueChange={(v) => {
-              const next = PLAN_STATUSES.find((candidate) => candidate === v);
-              if (next) form.setValue("status", next);
-            }}
+            onValueChange={handlePlanStatusChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select status" />

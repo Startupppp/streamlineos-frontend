@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { DocumentTypeList } from "@/features/hr/document-types/document-type-list";
 import {
@@ -41,11 +42,11 @@ export function DocumentTypesPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const page = Number(searchParams.get("page")) || 1;
   const limitParam = Number(searchParams.get("limit"));
   const limit: LimitOption = isValidLimit(limitParam) ? limitParam : 20;
 
-  const { data, isLoading, isError, refetch } = useHrDocumentTypesPage(page, limit);
+  const pager = useCursorPager(String(limit));
+  const { data, isLoading, isError, refetch } = useHrDocumentTypesPage(pager.cursor, limit);
   const createMutation = useCreateHrDocumentType();
   const updateMutation = useUpdateHrDocumentType();
   const deactivateMutation = useDeactivateHrDocumentType();
@@ -69,13 +70,8 @@ export function DocumentTypesPage() {
     [searchParams, router, pathname],
   );
 
-  const handlePageChange = useCallback(
-    (p: number) => pushParams({ page: p <= 1 ? null : String(p) }),
-    [pushParams],
-  );
-
   const handleLimitChange = useCallback(
-    (l: number) => pushParams({ limit: l === 20 ? null : String(l), page: null }),
+    (l: number) => pushParams({ limit: l === 20 ? null : String(l) }),
     [pushParams],
   );
 
@@ -166,8 +162,12 @@ export function DocumentTypesPage() {
   }, [refetch]);
 
   const list = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  const hasMore = data?.pagination.hasMore ?? false;
+  const nextCursor = data?.pagination.nextCursor ?? null;
+
+  const handleNextPage = useCallback(() => {
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const editDefaults = editTarget
     ? {
@@ -228,16 +228,16 @@ export function DocumentTypesPage() {
           onReactivate={setReactivateTarget}
           onCreateClick={openCreate}
         />
-        {total > 0 && (
-          <DataTablePagination
-            page={page}
-            totalPages={totalPages}
-            total={total}
-            limit={limit}
-            onPageChange={handlePageChange}
-            onLimitChange={handleLimitChange}
-          />
-        )}
+        <DataTablePagination
+          mode="cursor"
+          limit={limit}
+          rowCount={list.length}
+          hasMore={hasMore}
+          hasPrevious={pager.hasPrevious}
+          onNext={handleNextPage}
+          onPrevious={pager.goPrevious}
+          onLimitChange={handleLimitChange}
+        />
       </div>
 
       <DocumentTypeFormDialog

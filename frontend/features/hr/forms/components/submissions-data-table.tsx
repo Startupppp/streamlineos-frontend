@@ -43,6 +43,13 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
     }
   }
 
+  function makeHandleStatusSelect(rowId: number) {
+    return (v: string) => {
+      const next = SUBMISSION_STATUSES.find((candidate) => candidate === v);
+      if (next) handleStatusChange(rowId, next);
+    };
+  }
+
   function handleViewClick(sub: HrFormSubmission) {
     setViewSub(sub);
   }
@@ -75,10 +82,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
         canManage ? (
           <Select
             value={row.status}
-            onValueChange={(v) => {
-              const next = SUBMISSION_STATUSES.find((candidate) => candidate === v);
-              if (next) handleStatusChange(row.id, next);
-            }}
+            onValueChange={makeHandleStatusSelect(row.id)}
           >
             <SelectTrigger className="w-32">
               <SelectValue />

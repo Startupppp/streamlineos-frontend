@@ -17,13 +17,15 @@ type ActiveTab = (typeof ACTIVE_TABS)[number];
 export function RetentionPageContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("policies");
 
+  function handleActiveTabChange(v: string) {
+    const tab = ACTIVE_TABS.find((candidate) => candidate === v);
+    if (tab) setActiveTab(tab);
+  }
+
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(v) => {
-        const tab = ACTIVE_TABS.find((candidate) => candidate === v);
-        if (tab) setActiveTab(tab);
-      }}
+      onValueChange={handleActiveTabChange}
       className="flex flex-1 min-h-0 flex-col gap-4"
     >
       <TabsList className="shrink-0">

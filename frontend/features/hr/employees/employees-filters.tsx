@@ -49,6 +49,11 @@ export function EmployeesFilters({
   onRoleChange,
   showRole = false,
 }: EmployeesFiltersProps) {
+  function handleStatusSelect(v: string) {
+    const next = EMPLOYEE_STATUS_FILTERS.find((candidate) => candidate === v);
+    if (next) onStatusChange(next);
+  }
+
   return (
     <>
       <SearchInput
@@ -85,10 +90,7 @@ export function EmployeesFilters({
 
         <Select
           value={status}
-          onValueChange={(v) => {
-            const next = EMPLOYEE_STATUS_FILTERS.find((candidate) => candidate === v);
-            if (next) onStatusChange(next);
-          }}
+          onValueChange={handleStatusSelect}
         >
           <SelectTrigger
             size="sm"

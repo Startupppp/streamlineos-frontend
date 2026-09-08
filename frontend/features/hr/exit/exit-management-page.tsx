@@ -14,7 +14,7 @@ const exitLetterContract = lazyContract(() =>
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -29,8 +29,8 @@ const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
   const { data: session } = useSession();
-  const [page, setPage] = useState(1);
-  const { data: resignationData, isLoading, isError, refetch } = useResignations({ page, limit: 20 });
+  const pager = useCursorPager();
+  const { data: resignationData, isLoading, isError, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
   const pagination = resignationData?.pagination;
   const handleRetry = useCallback(() => {
@@ -81,8 +81,8 @@ export function ExitManagementPage() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+  function handleNextPage() {
+    pager.goNext(pagination?.nextCursor);
   }
 
   if (isLoading) {
@@ -169,12 +169,14 @@ export function ExitManagementPage() {
               onViewLetter={handleViewLetter}
             />
           ))}
-          {pagination && pagination.totalPages > 1 && (
+          {pagination && (pagination.hasMore || pager.hasPrevious) && (
             <TablePagination
-              page={page}
-              pageSize={pagination.limit}
-              total={pagination.total}
-              onPageChange={handlePageChange}
+              mode="cursor"
+              rowCount={resignations.length}
+              hasMore={pagination.hasMore}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNextPage}
+              onPrevious={pager.goPrevious}
             />
           )}
         </div>

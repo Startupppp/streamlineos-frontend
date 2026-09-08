@@ -43,6 +43,11 @@ export function PayrollSimulator() {
     defaultValues: { employeeId: "", effectiveDate: "" },
   });
 
+  function handleNewTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const next = COMPONENT_TYPES.find((candidate) => candidate === e.target.value);
+    if (next) setNewType(next);
+  }
+
   function addComponent() {
     if (!newName.trim() || !newAmount) return;
     setComponents((c) => [...c, { name: newName.trim(), amount: parseFloat(newAmount), type: newType }]);
@@ -99,10 +104,7 @@ export function PayrollSimulator() {
                   aria-label="Component type"
                   className="rounded-md border border-border bg-background px-2 text-sm"
                   value={newType}
-                  onChange={(e) => {
-                    const next = COMPONENT_TYPES.find((candidate) => candidate === e.target.value);
-                    if (next) setNewType(next);
-                  }}
+                  onChange={handleNewTypeChange}
                 >
                   <option value="earning">Earning</option>
                   <option value="deduction">Deduction</option>

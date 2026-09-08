@@ -187,6 +187,11 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
     });
   }
 
+  function handleTabChange(v: string) {
+    const tab = CASE_DETAIL_TABS.find((candidate) => candidate === v);
+    if (tab) setActiveTab(tab);
+  }
+
   if (!open) return null;
 
   return (
@@ -246,10 +251,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
         {hrCase && (
           <Tabs
             value={activeTab}
-            onValueChange={(v) => {
-              const tab = CASE_DETAIL_TABS.find((candidate) => candidate === v);
-              if (tab) setActiveTab(tab);
-            }}
+            onValueChange={handleTabChange}
             className="flex flex-1 min-h-0 flex-col"
           >
             <TabsList className="mx-5 mt-3">

@@ -88,6 +88,11 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
     defaultValues: { subjectUserId: "", reason: "", restrictedExport: true },
   });
 
+  function handleItemTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const next = HOLD_ITEM_TYPES.find((candidate) => candidate === e.target.value);
+    if (next) setItemType(next);
+  }
+
   function handleCreate(values: PlaceHoldForm) {
     createHold.mutate(values, {
       onSuccess: () => { form.reset(); onClose(); },
@@ -149,10 +154,7 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                     <select
                       aria-label="Item type"
                       value={itemType}
-                      onChange={(e) => {
-                        const next = HOLD_ITEM_TYPES.find((candidate) => candidate === e.target.value);
-                        if (next) setItemType(next);
-                      }}
+                      onChange={handleItemTypeChange}
                       className="text-sm border rounded px-2 py-1 bg-background"
                     >
                       <option value="employee_profile">Employee Profile</option>

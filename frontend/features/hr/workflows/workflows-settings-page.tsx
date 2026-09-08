@@ -77,6 +77,16 @@ export function WorkflowsSettingsPage() {
     void refetch();
   }
 
+  function handleObjectTypeFilterChange(v: string) {
+    const next = v === "all" ? "all" : HR_WORKFLOW_OBJECT_TYPES.find((candidate) => candidate === v);
+    if (next) setFilterObjectType(next);
+  }
+
+  function handleStatusFilterChange(v: string) {
+    const next = v === "all" ? "all" : HR_WORKFLOW_STATUSES.find((candidate) => candidate === v);
+    if (next) setFilterStatus(next);
+  }
+
   function handleOpenCreate() {
     setEditId(null);
     setSheetOpen(true);
@@ -133,10 +143,7 @@ export function WorkflowsSettingsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Select
             value={filterObjectType}
-            onValueChange={(v) => {
-              const next = v === "all" ? "all" : HR_WORKFLOW_OBJECT_TYPES.find((candidate) => candidate === v);
-              if (next) setFilterObjectType(next);
-            }}
+            onValueChange={handleObjectTypeFilterChange}
           >
             <SelectTrigger className={cn("w-48", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All types" />
@@ -150,10 +157,7 @@ export function WorkflowsSettingsPage() {
           </Select>
           <Select
             value={filterStatus}
-            onValueChange={(v) => {
-              const next = v === "all" ? "all" : HR_WORKFLOW_STATUSES.find((candidate) => candidate === v);
-              if (next) setFilterStatus(next);
-            }}
+            onValueChange={handleStatusFilterChange}
           >
             <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All statuses" />

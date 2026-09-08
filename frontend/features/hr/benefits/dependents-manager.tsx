@@ -133,6 +133,11 @@ export function DependentsManager() {
     [deleteDependent],
   );
 
+  function handleRelationshipChange(v: string) {
+    const next = DEPENDENT_RELATIONSHIPS.find((candidate) => candidate === v);
+    if (next) form.setValue("relationship", next);
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -196,10 +201,7 @@ export function DependentsManager() {
           <Label>Relationship <span className="text-destructive">*</span></Label>
           <Select
             defaultValue="spouse"
-            onValueChange={(v) => {
-              const next = DEPENDENT_RELATIONSHIPS.find((candidate) => candidate === v);
-              if (next) form.setValue("relationship", next);
-            }}
+            onValueChange={handleRelationshipChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue />

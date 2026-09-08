@@ -283,7 +283,6 @@ export function CandidateDetailPage() {
           candidateStatus={candidate.status}
           currentRole={candidate.currentRole ?? null}
           resumeUrl={candidate.resumeUrl}
-          resumeText={candidate.resumeText}
           bgvStatus={candidate.bgvStatus ?? null}
           bgvAgency={candidate.bgvAgency ?? null}
           bgvNotes={candidate.bgvNotes ?? null}

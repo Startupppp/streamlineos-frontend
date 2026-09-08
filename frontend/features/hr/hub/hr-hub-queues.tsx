@@ -43,7 +43,7 @@ export function HrHubQueues({
   ).length;
   const pendingLeaves = metrics?.pendingLeaveRequests ?? 0;
   const wfhCount = (wfh ?? []).length;
-  const resignationCount = resignations?.pagination.total ?? 0;
+  const resignationCount = resignations?.count ?? 0;
   const docsExpiring = docStats?.expiringIn30Days ?? 0;
   const onboardingInProgress = onboarding?.inProgress ?? 0;
 

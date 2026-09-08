@@ -74,6 +74,11 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
     defaultValues: { name: "", triggeredBy: "joiner" },
   });
 
+  function handleNewActionChange(v: string) {
+    const next = SYSTEM_ACTIONS.find((candidate) => candidate === v);
+    if (next) setNewAction(next);
+  }
+
   function addSystem() {
     const trimmed = newSystem.trim();
     if (!trimmed) return;
@@ -162,10 +167,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                 />
                 <Select
                   value={newAction}
-                  onValueChange={(v) => {
-                    const next = SYSTEM_ACTIONS.find((candidate) => candidate === v);
-                    if (next) setNewAction(next);
-                  }}
+                  onValueChange={handleNewActionChange}
                 >
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
                   <SelectContent>
