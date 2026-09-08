@@ -208,20 +208,25 @@ export function TimelineEntryRow({
 
         {entry.kind === "call" ? (
           <div className="mt-1 flex flex-col gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-fit px-2 text-muted-foreground"
-              aria-expanded={analysisOpen}
-              onClick={() => setAnalysisOpen((open) => !open)}
-            >
-              {analysisOpen ? (
-                <ChevronDown className="mr-1 h-3.5 w-3.5" />
-              ) : (
-                <ChevronRight className="mr-1 h-3.5 w-3.5" />
-              )}
-              Call analysis
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-fit px-2 text-muted-foreground"
+                aria-expanded={analysisOpen}
+                onClick={() => setAnalysisOpen((open) => !open)}
+              >
+                {analysisOpen ? (
+                  <ChevronDown className="mr-1 h-3.5 w-3.5" />
+                ) : (
+                  <ChevronRight className="mr-1 h-3.5 w-3.5" />
+                )}
+                Call analysis
+              </Button>
+              <Button size="sm" variant="ghost" className="w-fit px-2 text-muted-foreground" asChild>
+                <Link href={`/crm/intelligence/${entry.activityId}`}>Open</Link>
+              </Button>
+            </div>
             {analysisOpen ? <CallAnalysisPanel activityId={entry.activityId} /> : null}
           </div>
         ) : null}
