@@ -6,6 +6,18 @@ export const DECISION_KINDS = [
   "party.created",
   "activity.logged",
   "quote.sent",
+  /**
+   * The last three lagged the backend, and the switches panel is where it cost
+   * something: `GET /crm/autonomy/switches` resolves `effective` over every kind
+   * the backend enumerates, so it was already returning eight while this listed
+   * five. The panel renders `KIND_LABELS[kind]`, so the three newest — and most
+   * consequential — action types drew a switch with no name on it, and a tenant
+   * had no way to turn off outbound, cold outreach or unattended repair from the
+   * UI at all.
+   */
+  "outbound.sent",
+  "cold_outbound.sent",
+  "field.repaired",
 ] as const;
 export type DecisionKind = (typeof DECISION_KINDS)[number];
 
@@ -87,6 +99,9 @@ export const KIND_LABELS: Record<DecisionKind, string> = {
   "party.created": "Added a contact",
   "activity.logged": "Filed a message",
   "quote.sent": "Sent a quote",
+  "outbound.sent": "Sent a follow-up",
+  "cold_outbound.sent": "Sent cold outreach",
+  "field.repaired": "Repaired a field",
 };
 
 export const OUTCOME_LABELS: Record<DecisionOutcome, string> = {
