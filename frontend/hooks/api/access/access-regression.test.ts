@@ -86,6 +86,7 @@ describe("RBAC administration query gates", () => {
       "/audit-log",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9", limit: "25" }),
       undefined,
+      expect.any(Function),
     );
   });
 

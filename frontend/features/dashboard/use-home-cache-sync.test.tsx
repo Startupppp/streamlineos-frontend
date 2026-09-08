@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useHomeCacheSync } from "./use-home-cache-sync";
 import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { backendPath } from "@/test-utils/backend-repo";
 
 const mockUseAccess = jest.fn();
@@ -95,6 +96,7 @@ describe("the Home cache key dimensions match the backend key", () => {
       "utf8",
     );
     expect(source).toContain("data?.version");
-    expect(source).toContain("queryKeys.dashboard.all");
+    expect(source).toContain("collaborationQueryKeys.dashboard.all");
+    expect(collaborationQueryKeys.dashboard.all).toEqual(queryKeys.dashboard.all);
   });
 });

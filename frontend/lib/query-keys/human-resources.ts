@@ -92,8 +92,6 @@ export const humanResourcesQueryKeys = {
     candidateVault: (candidateId: number) =>
       [...base, "hr", "candidateVault", candidateId] as const,
     reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
-    reviewCycle: (reviewCycleId: number) =>
-      [...base, "hr", "reviewCycle", reviewCycleId] as const,
     oneOnOnes: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "oneOnOnes"] as const)
@@ -319,8 +317,6 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", "benefits", "plans"] as const)
         : ([...base, "hr", "benefits", "plans", params] as const),
-    benefitPlan: (benefitPlanId: number) =>
-      [...base, "hr", "benefits", "plans", benefitPlanId] as const,
     benefitWindows: [...base, "hr", "benefits", "windows"] as const,
     benefitMy: [...base, "hr", "benefits", "my"] as const,
     benefitDependents: [...base, "hr", "benefits", "dependents"] as const,
@@ -338,52 +334,13 @@ export const humanResourcesQueryKeys = {
     hrPolicyDetail: (hrPolicyId: number) =>
       [...base, "hr", "policies", "detail", hrPolicyId] as const,
     hrFormsAll: [...base, "hr", "forms"] as const,
-    hrForms: (params?: QueryKeyParams) =>
-      params ? ([...base, "hr", "forms", params] as const) : ([...base, "hr", "forms"] as const),
-    hrForm: (formId: number) => [...base, "hr", "forms", formId] as const,
     hrCasesAll: [...base, "hr", "cases"] as const,
     hrAccessRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "access-requests"] as const)
         : ([...base, "hr", "access-requests", params] as const),
-    hrDelegations: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "delegations"] as const)
-        : ([...base, "hr", "governance", "delegations", params] as const),
-    hrLaborMemberships: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "labor", "memberships"] as const)
-        : ([...base, "hr", "governance", "labor", "memberships", params] as const),
-    hrLaborAgreements: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "labor", "agreements"] as const)
-        : ([...base, "hr", "governance", "labor", "agreements", params] as const),
     hrLaborAgreementsExpiring: (days: number) =>
       [...base, "hr", "governance", "labor", "agreements", "expiring", days] as const,
-    hrLaborCases: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "labor", "cases"] as const)
-        : ([...base, "hr", "governance", "labor", "cases", params] as const),
-    hrPositions: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "positions"] as const)
-        : ([...base, "hr", "governance", "positions", params] as const),
-    hrScenarios: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "scenarios"] as const)
-        : ([...base, "hr", "governance", "scenarios", params] as const),
-    hrRetentionPolicies: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "retention", "policies"] as const)
-        : ([...base, "hr", "governance", "retention", "policies", params] as const),
-    hrRetentionRequests: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "governance", "retention", "requests"] as const)
-        : ([...base, "hr", "governance", "retention", "requests", params] as const),
-    hrIdentity: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "hr", "identity"] as const)
-        : ([...base, "hr", "identity", params] as const),
     hrDelegationsAll: [...base, "hr", "governance", "delegations"] as const,
     hrLaborMembershipsAll: [...base, "hr", "governance", "labor", "memberships"] as const,
     hrLaborAgreementsAll: [...base, "hr", "governance", "labor", "agreements"] as const,
@@ -411,7 +368,6 @@ export const humanResourcesQueryKeys = {
     hrEnterpriseEquityGrantsAll: [...base, "hr", "enterprise", "comp", "equityGrants"] as const,
     hrEnterpriseCostingAll: [...base, "hr", "enterprise", "comp", "costing"] as const,
     hrIdentityAll: [...base, "hr-identity"] as const,
-    hrPublicForm: (token: string) => [...base, "hr", "public-form", token] as const,
     emailTemplatesList: () => [...base, "hr", "email-templates", "list"] as const,
     fnfList: () => [...base, "hr", "fnf", "list"] as const,
     assetReturnsList: () => [...base, "hr", "asset-returns", "list"] as const,

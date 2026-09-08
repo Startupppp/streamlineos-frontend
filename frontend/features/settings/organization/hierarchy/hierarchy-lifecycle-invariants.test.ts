@@ -15,6 +15,20 @@ const LIFECYCLE_PAGES = [
   "cost-centers-page.tsx",
 ];
 
+/**
+ * A page may hand its row actions to a sibling `*-columns.tsx` — locations
+ * does. Reading the page alone let that extraction carry the `canManage` gate
+ * out of the assertion's reach while the gate was still there, so the surface
+ * under test is the page plus every column builder it imports.
+ */
+function lifecycleSurface(fileName: string): string {
+  const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
+  const columnSources = [
+    ...source.matchAll(/from "\.\/([a-z0-9-]+-columns)"/g),
+  ].map((match) => readFileSync(join(HIERARCHY_DIR, `${match[1]}.tsx`), "utf8"));
+  return [source, ...columnSources].join("\n");
+}
+
 describe("organization hierarchy lifecycle UI", () => {
   it.each(LIFECYCLE_PAGES)(
     "%s uses shared bounded cursor pagination",
@@ -53,7 +67,7 @@ describe("organization hierarchy lifecycle UI", () => {
   it.each(LIFECYCLE_PAGES)(
     "%s exposes hierarchy mutations only to organization managers",
     (fileName) => {
-      const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
+      const source = lifecycleSurface(fileName);
 
       expect(source).toContain(
         'const canManage = useCan("settings:organization:manage");',

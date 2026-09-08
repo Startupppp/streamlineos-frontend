@@ -32,7 +32,7 @@ const idleMutation = { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: fal
 jest.mock("@/hooks/api/accounting/planning", () => ({
   useForecast: () => ({ data: undefined, isLoading: false, error: null, refetch: jest.fn() }),
   useForecastCompare: () => ({ data: undefined, isLoading: false, error: null }),
-  useScenarios: () => ({ data: { items: [{ id: 7, name: "Base case" }] }, isLoading: false, error: null }),
+  useScenarios: () => ({ data: [{ id: 7, name: "Base case" }], isLoading: false, error: null }),
   useSeedDefaultScenarios: () => idleMutation,
 }));
 

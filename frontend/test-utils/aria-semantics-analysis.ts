@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
-import { relative } from "node:path";
+
 import {
   FE_ROOT,
   baseTag,
   collectSourceFiles,
   openingTags,
+  posixRelative,
 } from "./keyboard-reachability-analysis";
 import {
   IMPLICIT_ROLE,
@@ -251,7 +252,7 @@ export function analyzeAriaSemantics(): AriaSemantics {
 
   for (const file of files) {
     const source = readFileSync(file, "utf8");
-    const result = analyzeSource(source, relative(FE_ROOT, file));
+    const result = analyzeSource(source, posixRelative(FE_ROOT, file));
     total.elements += result.elements;
     total.ariaAttributes += result.ariaAttributes;
     total.roleAttributes += result.roleAttributes;

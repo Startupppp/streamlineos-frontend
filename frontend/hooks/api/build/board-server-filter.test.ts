@@ -58,6 +58,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/42/tickets",
       expect.objectContaining({ status: "OPEN,IN_PROGRESS" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -72,6 +73,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/7/tickets",
       expect.objectContaining({ search: "login bug" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -86,6 +88,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/7/tickets",
       expect.objectContaining({ assigneeId: "user-1,user-2" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -100,6 +103,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/5/tickets",
       expect.objectContaining({ sprintIds: "3,4" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -114,6 +118,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/5/tickets",
       expect.objectContaining({ moduleIds: "10,11" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -141,6 +146,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       "/build/1/tickets",
       expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 });

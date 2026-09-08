@@ -1,4 +1,6 @@
+import { createElement, type ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { usePushSubscription } from "./use-push-subscription";
 
@@ -7,6 +9,21 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 const api = jest.mocked(apiClient);
+
+/**
+ * The rotation path posts through `useMutation`, so the hook needs a client.
+ * One stable client per test — a wrapper that mints a new one on every render
+ * would tear the in-flight mutation down mid-flight.
+ */
+let queryClient: QueryClient;
+
+function Wrapper({ children }: { children: ReactNode }) {
+  return createElement(QueryClientProvider, { client: queryClient }, children);
+}
+
+function renderPushHook(userId: string | undefined) {
+  return renderHook(() => usePushSubscription(userId), { wrapper: Wrapper });
+}
 
 interface FakeNotification {
   permission: NotificationPermission;
@@ -85,6 +102,9 @@ beforeAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   window.localStorage.clear();
   serviceWorker = new FakeServiceWorkerContainer();
   define(navigator, "serviceWorker", serviceWorker);
@@ -105,22 +125,27 @@ describe("usePushSubscription", () => {
   it("re-registers the subscription the browser already holds", async () => {
     pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
 
-    renderHook(() => usePushSubscription("user-1"));
+    renderPushHook("user-1");
 
     await waitFor(() =>
-      expect(api.post).toHaveBeenCalledWith("/push/subscribe", {
-        endpoint: "https://push.example/kept",
-        p256dh: "https://push.example/kept-p256dh",
-        auth: "https://push.example/kept-auth",
-        userAgent: navigator.userAgent.slice(0, 255),
-      }),
+      expect(api.post).toHaveBeenCalledWith(
+        "/push/subscribe",
+        {
+          endpoint: "https://push.example/kept",
+          p256dh: "https://push.example/kept-p256dh",
+          auth: "https://push.example/kept-auth",
+          userAgent: navigator.userAgent.slice(0, 255),
+        },
+        undefined,
+        expect.any(Function),
+      ),
     );
     expect(pushManager.subscribe).not.toHaveBeenCalled();
     expect(api.get).not.toHaveBeenCalled();
   });
 
   it("creates and posts a subscription when the browser holds none", async () => {
-    renderHook(() => usePushSubscription("user-1"));
+    renderPushHook("user-1");
 
     await waitFor(() => expect(pushManager.subscribe).toHaveBeenCalledTimes(1));
     expect(pushManager.subscribe.mock.calls[0]?.[0]).toMatchObject({ userVisibleOnly: true });
@@ -128,12 +153,14 @@ describe("usePushSubscription", () => {
       expect(api.post).toHaveBeenCalledWith(
         "/push/subscribe",
         expect.objectContaining({ endpoint: "https://push.example/new" }),
+        undefined,
+        expect.any(Function),
       ),
     );
   });
 
   it("reports a permission revoked from browser site settings while the tab is open", async () => {
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
 
     await waitFor(() => expect(result.current.permission).toBe("granted"));
     expect(permissions.query).toHaveBeenCalledWith({ name: "notifications" });
@@ -150,7 +177,7 @@ describe("usePushSubscription", () => {
   it("re-reads permission on tab focus where the permissions API cannot answer", async () => {
     permissions.query.mockRejectedValue(new TypeError("notifications is not a valid permission"));
 
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
 
     await waitFor(() => expect(result.current.permission).toBe("granted"));
 
@@ -165,7 +192,7 @@ describe("usePushSubscription", () => {
   it("registers once permission is granted from browser settings, with no re-prompt", async () => {
     notification.permission = "default";
 
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
 
     await waitFor(() => expect(result.current.permission).toBe("default"));
     expect(serviceWorker.register).not.toHaveBeenCalled();
@@ -183,7 +210,7 @@ describe("usePushSubscription", () => {
   it("touches neither the service worker nor the API while permission is denied", async () => {
     notification.permission = "denied";
 
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
 
     await waitFor(() => expect(result.current.permission).toBe("denied"));
     expect(serviceWorker.register).not.toHaveBeenCalled();
@@ -191,7 +218,7 @@ describe("usePushSubscription", () => {
   });
 
   it("drops its permission listener on unmount", async () => {
-    const { unmount } = renderHook(() => usePushSubscription("user-1"));
+    const { unmount } = renderPushHook("user-1");
 
     await whenPermissionListenerIsLive();
     unmount();
@@ -200,7 +227,7 @@ describe("usePushSubscription", () => {
   });
 
   it("does nothing at all without a signed-in user", async () => {
-    renderHook(() => usePushSubscription(undefined));
+    renderPushHook(undefined);
 
     await waitFor(() => expect(permissions.query).toHaveBeenCalled());
     expect(serviceWorker.register).not.toHaveBeenCalled();
@@ -217,7 +244,7 @@ describe("usePushSubscription", () => {
     const sub = subscriptionJson("https://push.example/kept");
     pushManager.getSubscription.mockResolvedValue(sub);
 
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
     await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
 
     await act(async () => {
@@ -227,6 +254,9 @@ describe("usePushSubscription", () => {
     expect(sub.unsubscribe).toHaveBeenCalledTimes(1);
     expect(api.delete).toHaveBeenCalledWith(
       "/push/subscribe?endpoint=https%3A%2F%2Fpush.example%2Fkept",
+      undefined,
+      undefined,
+      expect.any(Function),
     );
     expect(result.current.optedOut).toBe(true);
   });
@@ -234,7 +264,7 @@ describe("usePushSubscription", () => {
   it("does not silently re-subscribe a browser that was turned off", async () => {
     pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
 
-    const first = renderHook(() => usePushSubscription("user-1"));
+    const first = renderPushHook("user-1");
     await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
     await act(async () => {
       await first.result.current.disable();
@@ -243,7 +273,7 @@ describe("usePushSubscription", () => {
 
     api.post.mockClear();
     pushManager.getSubscription.mockResolvedValue(null);
-    const { result } = renderHook(() => usePushSubscription("user-1"));
+    const { result } = renderPushHook("user-1");
 
     await waitFor(() => expect(result.current.optedOut).toBe(true));
     expect(api.post).not.toHaveBeenCalled();
@@ -253,7 +283,7 @@ describe("usePushSubscription", () => {
   it("persists the subscription the service worker rotated", async () => {
     pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
 
-    renderHook(() => usePushSubscription("user-1"));
+    renderPushHook("user-1");
     await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
     api.post.mockClear();
 
@@ -271,19 +301,24 @@ describe("usePushSubscription", () => {
     });
 
     await waitFor(() =>
-      expect(api.post).toHaveBeenCalledWith("/push/subscribe", {
-        endpoint: "https://push.example/rotated",
-        p256dh: "rotated-p256dh",
-        auth: "rotated-auth",
-        userAgent: navigator.userAgent.slice(0, 255),
-      }),
+      expect(api.post).toHaveBeenCalledWith(
+        "/push/subscribe",
+        {
+          endpoint: "https://push.example/rotated",
+          p256dh: "rotated-p256dh",
+          auth: "rotated-auth",
+          userAgent: navigator.userAgent.slice(0, 255),
+        },
+        undefined,
+        expect.any(Function),
+      ),
     );
   });
 
   it("ignores a worker message that is not a subscription rotation", async () => {
     pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
 
-    renderHook(() => usePushSubscription("user-1"));
+    renderPushHook("user-1");
     await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
     api.post.mockClear();
 

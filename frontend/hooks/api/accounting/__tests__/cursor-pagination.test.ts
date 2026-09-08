@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { useVendorCredits } from "../ap-vendors";
+import { vendorCreditListContract } from "../ap-vendors-schema";
 import { useBudgets } from "../planning";
+import { budgetListContract } from "../planning-schema";
 import { useBankAccounts } from "../banking";
 import { useGeneralLedger } from "../core-gl";
 
@@ -81,6 +83,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       "/accounting/vendor-credits",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      vendorCreditListContract,
     );
   });
 
@@ -98,6 +101,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       "/accounting/vendor-credits",
       expect.objectContaining({ cursor: "eyJpZCI6MTB9" }),
       forwardedSignal,
+      vendorCreditListContract,
     );
   });
 
@@ -115,6 +119,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       "/accounting/vendor-credits",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      vendorCreditListContract,
     );
   });
 
@@ -132,6 +137,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       "/accounting/vendor-credits",
       expect.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      vendorCreditListContract,
     );
   });
 });
@@ -156,6 +162,7 @@ describe("useBudgets — cursor pagination contract", () => {
       "/accounting/budgets",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      budgetListContract,
     );
   });
 
@@ -173,6 +180,7 @@ describe("useBudgets — cursor pagination contract", () => {
       "/accounting/budgets",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       forwardedSignal,
+      budgetListContract,
     );
   });
 
@@ -190,6 +198,7 @@ describe("useBudgets — cursor pagination contract", () => {
       "/accounting/budgets",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      budgetListContract,
     );
   });
 });

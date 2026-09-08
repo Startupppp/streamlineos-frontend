@@ -99,6 +99,7 @@ describe.each([
       route,
       { cursor: "cursor-1" },
       expect.any(AbortSignal),
+      expect.any(Function),
     );
 
     const rows = (hook().data?.pages ?? []).flatMap((p) => p.data);
@@ -114,6 +115,11 @@ describe.each([
     await waitFor(() =>
       expect((result.current as { data?: unknown }).data).toBeDefined(),
     );
-    expect(apiClient.get).toHaveBeenCalledWith(route, undefined, expect.any(AbortSignal));
+    expect(apiClient.get).toHaveBeenCalledWith(
+      route,
+      undefined,
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
   });
 });

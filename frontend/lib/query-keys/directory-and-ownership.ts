@@ -130,8 +130,6 @@ export const directoryAndOwnershipQueryKeys = {
     all: [...base, "hr-safety"] as const,
     incidents: (params: QueryKeyParams) =>
       [...base, "hr-safety", "incidents", params] as const,
-    incident: (incidentId: number) =>
-      [...base, "hr-safety", "incident", incidentId] as const,
     wellnessAll: [...base, "hr-safety", "wellness"] as const,
     wellnessPulse: [...base, "hr-safety", "wellness", "pulse"] as const,
     myCheckins: (fromDate?: string, toDate?: string) =>

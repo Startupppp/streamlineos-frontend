@@ -60,6 +60,7 @@ describe("useQuotes — cursor pagination contract", () => {
       "/quotes",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -78,6 +79,7 @@ describe("useQuotes — cursor pagination contract", () => {
       "/quotes",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -96,6 +98,7 @@ describe("useQuotes — cursor pagination contract", () => {
       "/quotes",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -114,6 +117,7 @@ describe("useQuotes — cursor pagination contract", () => {
       "/quotes",
       expect.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 });

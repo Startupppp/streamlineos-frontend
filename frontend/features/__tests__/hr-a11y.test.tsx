@@ -192,7 +192,7 @@ function sheetClassNames(): { file: string; line: number; className: string }[] 
       const attrs = match[1] ?? "";
       const className = /className=(?:"([^"]*)"|\{`([^`]*)`\})/.exec(attrs);
       found.push({
-        file: path.relative(HR_FEATURES, file),
+        file: path.relative(HR_FEATURES, file).split(path.sep).join("/"),
         line: src.slice(0, match.index).split("\n").length,
         className: (className?.[1] ?? className?.[2] ?? "").replace(/\s+/g, " "),
       });

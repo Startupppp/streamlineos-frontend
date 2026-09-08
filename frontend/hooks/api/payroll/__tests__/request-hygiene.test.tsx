@@ -65,7 +65,12 @@ describe("payroll request hygiene", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockedGet).toHaveBeenCalledTimes(1);
-    expect(mockedGet).toHaveBeenCalledWith("/payroll/runs/12/employees/7", undefined, expect.any(AbortSignal));
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/payroll/runs/12/employees/7",
+      undefined,
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
   });
 
   it("useRunApprovals does not fetch when the panel is not visible", () => {
@@ -92,7 +97,12 @@ describe("payroll request hygiene", () => {
     await waitFor(() => expect(result.current.earnings.isSuccess).toBe(true));
     expect(result.current.deductions.fetchStatus).toBe("idle");
     expect(mockedGet).toHaveBeenCalledTimes(1);
-    expect(mockedGet).toHaveBeenCalledWith("/payroll/reports/earnings", params, expect.any(AbortSignal));
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/payroll/reports/earnings",
+      params,
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
   });
 
   it("useSetEmployeeHold invalidates only run-scoped and command-center keys", async () => {

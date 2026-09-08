@@ -40,9 +40,12 @@ describe("organization mutations", () => {
       await result.current.mutateAsync({ confirmation: "Acme" });
     });
 
-    expect(mockedDelete).toHaveBeenCalledWith("/organization", {
-      confirmation: "Acme",
-    });
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/organization",
+      { confirmation: "Acme" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("sends bulk lead deletion input as the top-level request body", async () => {
@@ -53,6 +56,11 @@ describe("organization mutations", () => {
       await result.current.mutateAsync(input);
     });
 
-    expect(mockedDelete).toHaveBeenCalledWith("/leads/bulk", input);
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/leads/bulk",
+      input,
+      undefined,
+      expect.any(Function),
+    );
   });
 });

@@ -32,23 +32,36 @@ describe("getSignedFileUrl — a tenant object key is always exchanged, never re
     const key = `${ORG}/uploads/1-report.pdf`;
 
     await expect(getSignedFileUrl(key)).resolves.toBe("https://signed.example/obj?sig=1");
-    expect(mockGet).toHaveBeenCalledWith("/storage/download", { key });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/storage/download",
+      { key },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("exchanges a region-prefixed key rather than treating it as a local path", async () => {
     const key = `eu/${ORG}/uploads/1-report.pdf`;
 
     await expect(getSignedFileUrl(key)).resolves.toBe("https://signed.example/obj?sig=1");
-    expect(mockGet).toHaveBeenCalledWith("/storage/download", { key });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/storage/download",
+      { key },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("exchanges a legacy folder key that names no organisation", async () => {
     await expect(getSignedFileUrl("uploads/1-report.pdf")).resolves.toBe(
       "https://signed.example/obj?sig=1",
     );
-    expect(mockGet).toHaveBeenCalledWith("/storage/download", {
-      key: "uploads/1-report.pdf",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/storage/download",
+      { key: "uploads/1-report.pdf" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("still returns a genuinely local, same-origin asset without a round trip (control)", async () => {

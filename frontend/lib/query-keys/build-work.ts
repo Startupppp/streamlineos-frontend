@@ -69,8 +69,6 @@ export const buildWorkQueryKeys = {
         params === undefined
           ? ([...base, "projects", projectId, "qa", "cases"] as const)
           : ([...base, "projects", projectId, "qa", "cases", params] as const),
-      case: (projectId: number, testCaseId: number) =>
-        [...base, "projects", projectId, "qa", "cases", testCaseId] as const,
       runs: (projectId: number, status?: string) =>
         status === undefined
           ? ([...base, "projects", projectId, "qa", "runs"] as const)

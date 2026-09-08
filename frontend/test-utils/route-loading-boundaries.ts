@@ -1,5 +1,9 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
+
+function posixRelative(from: string, to: string): string {
+  return relative(from, to).split(sep).join("/");
+}
 
 /**
  * Which authenticated routes paint a skeleton the moment a navigation starts.
@@ -72,12 +76,12 @@ export function analyzeRouteLoadingBoundaries(
     .filter(
       (route) => findNearestBoundary(dirname(route), root, hasBoundary) === null,
     )
-    .map((route) => relative(root, route));
+    .map((route) => posixRelative(root, route));
 
   return {
     root,
-    routes: routes.map((route) => relative(root, route)).sort(),
-    boundaries: boundaries.map((file) => relative(root, file)).sort(),
+    routes: routes.map((route) => posixRelative(root, route)).sort(),
+    boundaries: boundaries.map((file) => posixRelative(root, file)).sort(),
     uncovered: uncovered.sort(),
   };
 }

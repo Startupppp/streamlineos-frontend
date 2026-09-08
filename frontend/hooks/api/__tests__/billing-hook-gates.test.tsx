@@ -151,7 +151,12 @@ describe("billing hook gates — fire when permission granted", () => {
     const { usePaymentCatalog } = await import("@/hooks/api/payments");
     const client = freshClient();
     renderHook(() => usePaymentCatalog(), { wrapper: makeWrapper(client) });
-    expect(mockedGet).toHaveBeenCalledWith("/payments/providers/catalog", undefined, expect.anything());
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/payments/providers/catalog",
+      undefined,
+      expect.any(AbortSignal),
+      expect.anything(),
+    );
   });
 
   it("usePaymentProviders — calls providers URL when payments:providers:view granted", async () => {
@@ -159,7 +164,12 @@ describe("billing hook gates — fire when permission granted", () => {
     const { usePaymentProviders } = await import("@/hooks/api/payments");
     const client = freshClient();
     renderHook(() => usePaymentProviders(), { wrapper: makeWrapper(client) });
-    expect(mockedGet).toHaveBeenCalledWith("/payments/providers", undefined, expect.anything());
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/payments/providers",
+      undefined,
+      expect.any(AbortSignal),
+      expect.anything(),
+    );
   });
 
   it("useTestTransactions — calls test-transactions URL when payments:providers:view granted", async () => {
@@ -170,6 +180,7 @@ describe("billing hook gates — fire when permission granted", () => {
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/providers/razorpay/test-transactions",
       undefined,
+      expect.any(AbortSignal),
       expect.anything(),
     );
   });
@@ -182,6 +193,7 @@ describe("billing hook gates — fire when permission granted", () => {
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/providers/razorpay/webhooks/events",
       undefined,
+      expect.any(AbortSignal),
       expect.anything(),
     );
   });
@@ -194,6 +206,7 @@ describe("billing hook gates — fire when permission granted", () => {
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/providers/razorpay/readiness",
       undefined,
+      expect.any(AbortSignal),
       expect.anything(),
     );
   });
@@ -206,6 +219,7 @@ describe("billing hook gates — fire when permission granted", () => {
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/providers/razorpay/audit",
       undefined,
+      expect.any(AbortSignal),
       expect.anything(),
     );
   });
@@ -218,6 +232,7 @@ describe("billing hook gates — fire when permission granted", () => {
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/manual-methods",
       undefined,
+      expect.any(AbortSignal),
       expect.anything(),
     );
   });

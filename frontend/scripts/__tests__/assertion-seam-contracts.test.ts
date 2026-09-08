@@ -28,10 +28,10 @@ jest.mock("jose", () => ({
 }));
 
 import { createElement, type ReactNode } from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, type UseQueryResult } from "@tanstack/react-query";
 import { unwrapBackend } from "@/lib/auth-session";
-import { useSignPublicSession } from "@/hooks/api/sign/public";
+import { useRequestSignOtp, useSignPublicSession } from "@/hooks/api/sign/public";
 import type { SignPublicSession } from "@/types/sign";
 
 describe("instrumentation.ts — patching the setTimeout overload set", () => {
@@ -42,8 +42,15 @@ describe("instrumentation.ts — patching the setTimeout overload set", () => {
     jest.resetModules();
   });
 
-  function setNodeEnv(value: string): void {
-    Object.defineProperty(process.env, "NODE_ENV", { value, configurable: true });
+  /**
+   * Assignment, not `Object.defineProperty`. Node's `process.env` define trap
+   * silently drops a descriptor it does not consider fully writable, so the
+   * previous form left NODE_ENV on "test": `register()` returned early, the two
+   * patching assertions failed, and "(negative) does not patch outside
+   * development" passed while proving nothing.
+   */
+  function setNodeEnv(value: typeof process.env.NODE_ENV): void {
+    process.env.NODE_ENV = value;
   }
 
   it("clamps a negative delay to zero instead of handing it to the platform", async () => {
@@ -64,7 +71,7 @@ describe("instrumentation.ts — patching the setTimeout overload set", () => {
 
     expect(seen).toEqual([0]);
     expect(fired).toHaveBeenCalled();
-    setNodeEnv(String(previous));
+    setNodeEnv(previous);
   });
 
   it("keeps the original function's statics reachable through the prototype chain", async () => {
@@ -79,7 +86,7 @@ describe("instrumentation.ts — patching the setTimeout overload set", () => {
 
     expect(globalThis.setTimeout).not.toBe(original);
     expect(Object.getPrototypeOf(globalThis.setTimeout)).toBe(original);
-    setNodeEnv(String(previous));
+    setNodeEnv(previous);
   });
 
   it("(negative) does not patch the global outside development", async () => {
@@ -92,7 +99,7 @@ describe("instrumentation.ts — patching the setTimeout overload set", () => {
     await register();
 
     expect(globalThis.setTimeout).toBe(original);
-    setNodeEnv(String(previous));
+    setNodeEnv(previous);
   });
 });
 
@@ -321,34 +328,59 @@ describe("hooks/api/sign/public — unwrap() on a body that is not the envelope"
     Object.defineProperty(globalThis, "fetch", { value: realFetch, configurable: true, writable: true });
   });
 
-  async function readSession(body: unknown, status = 200): Promise<UseQueryResult<SignPublicSession>> {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    function Wrapper({ children }: { children: ReactNode }) {
+  function makeWrapper() {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
       return createElement(QueryClientProvider, { client }, children);
-    }
+    };
+  }
+
+  async function readSession(body: unknown, status = 200): Promise<UseQueryResult<SignPublicSession>> {
     stubFetch(body, status);
-    const { result } = renderHook(() => useSignPublicSession("tok"), { wrapper: Wrapper });
+    const { result } = renderHook(() => useSignPublicSession("tok"), { wrapper: makeWrapper() });
     await waitFor(() => {
       expect(result.current.isPending).toBe(false);
     });
     return result.current;
   }
 
+  /**
+   * The read path moved: `publicGet` now parses a 2xx through `parseApiResponse`
+   * and its Zod contract, so `unwrap()` — the function these two casts live in —
+   * is no longer on it. `publicPost` still is, which is why the envelope shapes
+   * are driven through a mutation. Asserting them on the query would only be
+   * asserting that a contract rejects a body that does not match it.
+   */
+  async function requestOtp(body: unknown, status = 200): Promise<ReturnType<typeof useRequestSignOtp>> {
+    stubFetch(body, status);
+    const { result } = renderHook(() => useRequestSignOtp("tok"), { wrapper: makeWrapper() });
+    act(() => {
+      result.current.mutate();
+    });
+    await waitFor(() => {
+      expect(result.current.isIdle).toBe(false);
+      expect(result.current.isPending).toBe(false);
+    });
+    return result.current;
+  }
+
   it("unwraps a success envelope to its data", async () => {
-    const session = await readSession({ success: true, data: { sessionId: 11 } });
-    expect(session.data).toEqual({ sessionId: 11 });
+    const sent = await requestOtp({ success: true, data: { sent: true } });
+    expect(sent.data).toEqual({ sent: true });
   });
 
   it("(negative) returns the whole body when success is not literally true, instead of an undefined data", async () => {
-    const body = { success: "true", data: { sessionId: 11 } };
-    const session = await readSession(body);
-    expect(session.data).toEqual(body);
+    const body = { success: "true", data: { sent: true } };
+    const sent = await requestOtp(body);
+    expect(sent.data).toEqual(body);
   });
 
   it("(negative) does not invent a data key that is absent", async () => {
-    const body = { success: true, sessionId: 11 };
-    const session = await readSession(body);
-    expect(session.data).toEqual(body);
+    const body = { success: true, sent: true };
+    const sent = await requestOtp(body);
+    expect(sent.data).toEqual(body);
   });
 
   it("(negative) keeps the backend message on a failure body, and the fallback when it is not a string", async () => {

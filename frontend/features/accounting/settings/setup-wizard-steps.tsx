@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useAccountingSettings,
@@ -247,6 +248,13 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
             Couldn&apos;t load chart-of-accounts templates: {getErrorMessage(templatesQuery.error)}
           </p>
         )}
+        {!templatesQuery.isLoading && !templatesQuery.isError && templates.length === 0 ? (
+          <EmptyState
+            compact
+            title="No chart-of-accounts templates"
+            description="Nothing to apply here — skip this step and add accounts manually."
+          />
+        ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {templates.map((t: CoaTemplate) => (
             <button

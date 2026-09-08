@@ -113,10 +113,12 @@ describe("usePublishWorkflow — version conflict", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.post).toHaveBeenCalledWith("/workflows/w1/publish", {
-      definitionJson: { nodes: [] },
-      expectedVersion: 2,
-    });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/workflows/w1/publish",
+      { definitionJson: { nodes: [] }, expectedVersion: 2 },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("invalidates queryKeys.workflows.all on successful publish so active list queries re-fetch", async () => {
@@ -196,7 +198,12 @@ describe("mutation permission gates — workflow definitions", () => {
     await act(async () => { result.current.mutate({ name: "New" }); });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.post).toHaveBeenCalledWith("/workflows", { name: "New" });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/workflows",
+      { name: "New" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("useUpdateWorkflow refuses when workflows:workflows:update is absent", async () => {
@@ -227,7 +234,12 @@ describe("mutation permission gates — workflow definitions", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.patch).toHaveBeenCalledWith("/workflows/w1", { name: "Renamed" });
+    expect(apiClient.patch).toHaveBeenCalledWith(
+      "/workflows/w1",
+      { name: "Renamed" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("useDeleteWorkflow refuses when workflows:workflows:delete is absent", async () => {
@@ -254,7 +266,12 @@ describe("mutation permission gates — workflow definitions", () => {
     await act(async () => { result.current.mutate("w1"); });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.delete).toHaveBeenCalledWith("/workflows/w1");
+    expect(apiClient.delete).toHaveBeenCalledWith(
+      "/workflows/w1",
+      undefined,
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("usePublishWorkflow refuses when workflows:workflows:publish is absent", async () => {
@@ -295,7 +312,12 @@ describe("mutation permission gates — workflow definitions", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.post).toHaveBeenCalledWith("/workflows/w1/publish", { definitionJson: {} });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/workflows/w1/publish",
+      { definitionJson: {} },
+      undefined,
+      expect.any(Function),
+    );
   });
 });
 
@@ -342,7 +364,12 @@ describe("mutation permission gates — executions", () => {
     await act(async () => { result.current.mutate({ id: "w1" }); });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.post).toHaveBeenCalledWith("/workflows/w1/trigger", undefined);
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/workflows/w1/trigger",
+      undefined,
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("useCancelExecution refuses when workflows:executions:manage is absent", async () => {
@@ -391,6 +418,9 @@ describe("mutation permission gates — executions", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(apiClient.post).toHaveBeenCalledWith(
       "/workflows/w1/executions/e1/cancel",
+      undefined,
+      undefined,
+      expect.any(Function),
     );
   });
 });

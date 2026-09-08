@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -214,12 +215,19 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
                 <AiCitationChips citations={citations} />
               </div>
             )}
-            {answer.hasContext && (
+            {answer.hasContext ? (
               feedbackGiven ? (
                 <p className="text-micro text-muted-foreground pt-1 border-t">Thanks for the feedback</p>
               ) : (
                 <AnswerFeedback question={question} onGiven={handleFeedbackGiven} />
               )
+            ) : (
+              <EmptyState
+                compact
+                className="pt-1 border-t"
+                title="No knowledge-base sources matched"
+                description="Nothing in your articles or attachments covers this yet, so the answer above is not grounded in your knowledge base."
+              />
             )}
           </div>
         )}

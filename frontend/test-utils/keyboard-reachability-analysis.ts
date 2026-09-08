@@ -1,5 +1,14 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
+
+/**
+ * Findings are pinned BY PATH by the contract suites, so the separator has to
+ * be the same one CI records. `relative` emits `\` on Windows, which turned
+ * every pinned path into a mismatch that read as a lost accessible name.
+ */
+export function posixRelative(from: string, to: string): string {
+  return relative(from, to).split(sep).join("/");
+}
 
 const FE_ROOT = resolve(__dirname, "..");
 
@@ -164,7 +173,7 @@ export function analyzeKeyboardReachability(): KeyboardReachability {
     const source = readFileSync(file, "utf8");
     if (!CLICK_PROP.test(source) && !SHARED_ACTIVATION.test(source)) continue;
     clickSites += countClickSites(source);
-    const relativePath = relative(FE_ROOT, file);
+    const relativePath = posixRelative(FE_ROOT, file);
     for (const finding of findUnreachableClickTargets(source))
       unreachable.push({ ...finding, file: relativePath });
   }

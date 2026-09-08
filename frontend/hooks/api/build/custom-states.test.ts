@@ -89,6 +89,8 @@ describe("useReorderCustomStates — bulk PUT endpoint", () => {
           expect.objectContaining({ stateId: 2, order: 1 }),
         ]),
       }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -205,6 +207,7 @@ describe("useCustomStates — signal propagation", () => {
       "/build/42/custom-states",
       undefined,
       expect.any(AbortSignal),
+      expect.any(Function),
     );
   });
 });

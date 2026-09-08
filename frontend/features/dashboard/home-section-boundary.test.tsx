@@ -81,13 +81,11 @@ describe("every Home widget is individually contained", () => {
     "BusinessPulseWidget",
     "MyAttendanceWidget",
     "PayrollWidget",
-    "ExpensesWidget",
     "LeavesTodayWidget",
     "TeamAttendanceWidget",
     "PendingApprovalsWidget",
     "BirthdaysWidget",
     "UpcomingHolidaysWidget",
-    "PublicDocumentsCard",
     "MyIssuesCard",
     "SprintCard",
     "RecentProjectsCard",
@@ -95,26 +93,65 @@ describe("every Home widget is individually contained", () => {
     "TeamCard",
   ];
 
+  /**
+   * Two Home widgets are owned by the HR feature and reach Home as slots the
+   * route fills, because `features/dashboard` may not import `features/hr`
+   * (root §9). The containment invariant is unchanged — the slot's mount point
+   * is what has to sit inside a boundary — and the route wiring is pinned below
+   * so the indirection cannot be where a widget goes missing.
+   */
+  const SLOT_WIDGETS = [
+    { component: "ExpensesWidget", slot: "expensesSlot" },
+    { component: "PublicDocumentsCard", slot: "publicDocumentsSlot" },
+  ];
+
+  /**
+   * A slot is matched where it is RENDERED — on its own line as a JSX child —
+   * not where it is forwarded as `expensesSlot={expensesSlot}`, which is a
+   * prop hand-off and carries no boundary of its own.
+   */
+  const MOUNT_POINTS = [
+    ...WIDGETS.map((widget) => ({
+      label: widget,
+      pattern: new RegExp(`<${widget}\\b`),
+    })),
+    ...SLOT_WIDGETS.map((widget) => ({
+      label: widget.component,
+      pattern: new RegExp(`^[ \\t]*\\{${widget.slot}\\}[ \\t]*$`, "m"),
+    })),
+  ];
+
   it("reads the Home composition files", () => {
     expect(source).toContain("HomeSectionBoundary");
   });
 
   it("finds every widget it claims to check, so a moved widget cannot go unchecked", () => {
-    const missing = WIDGETS.filter(
-      (widget) => source.indexOf(`<${widget}`) < 0,
-    );
+    const missing = MOUNT_POINTS.filter(
+      (mount) => source.search(mount.pattern) < 0,
+    ).map((mount) => mount.label);
     expect(missing).toEqual([]);
   });
 
   it("wraps each rendered widget in its own boundary", () => {
-    const unwrapped = WIDGETS.filter((widget) => {
-      const index = source.indexOf(`<${widget}`);
+    const unwrapped = MOUNT_POINTS.filter((mount) => {
+      const index = source.search(mount.pattern);
       if (index < 0) return true;
       return !source
         .slice(Math.max(0, index - 400), index)
         .includes("HomeSectionBoundary");
-    });
+    }).map((mount) => mount.label);
     expect(unwrapped).toEqual([]);
+  });
+
+  it("the route fills those slots with the real HR widgets", () => {
+    const routeSource = readFileSync(
+      resolve(process.cwd(), "app", "(authenticated)", "dashboard", "page.tsx"),
+      "utf8",
+    );
+    for (const widget of SLOT_WIDGETS) {
+      expect(routeSource).toContain(`import { ${widget.component} } from "@/features/hr/`);
+      expect(routeSource).toContain(`${widget.slot}={<${widget.component} />}`);
+    }
   });
 
   it("does not mount RecruitmentWidget on Home (module destination, not universal work)", () => {

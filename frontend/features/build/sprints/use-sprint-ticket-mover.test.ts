@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
 import { apiClient } from "@/lib/api-client";
+import { bulkUpdateResultContract } from "@/hooks/api/build/build-tickets-schema";
 import { useSprintTicketMover } from "./use-sprint-ticket-mover";
 
 jest.mock("@/lib/api-client", () => ({
@@ -16,6 +17,19 @@ jest.mock("@/hooks/api/access", () => ({
 
 const post = apiClient.post as jest.Mock;
 const PROJECT_ID = 42;
+
+/**
+ * The fourth argument is the response contract. Asserting it resolves to the
+ * real schema proves the bulk move is parsed, not cast — a bare arity match
+ * would pass with the wrong contract wired.
+ */
+async function expectBulkContract(call: unknown[]): Promise<void> {
+  expect(call).toHaveLength(4);
+  const contract = call[3];
+  expect(typeof contract).toBe("function");
+  if (typeof contract !== "function") return;
+  await expect(contract()).resolves.toBe(bulkUpdateResultContract);
+}
 
 function wrapper(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -45,10 +59,13 @@ describe("useSprintTicketMover", () => {
     });
 
     expect(post).toHaveBeenCalledTimes(1);
-    expect(post).toHaveBeenCalledWith(`/build/${PROJECT_ID}/tickets/bulk`, {
-      ticketIds,
-      sprintId: 7,
-    });
+    expect(post).toHaveBeenCalledWith(
+      `/build/${PROJECT_ID}/tickets/bulk`,
+      { ticketIds, sprintId: 7 },
+      undefined,
+      expect.any(Function),
+    );
+    await expectBulkContract(post.mock.calls[0]);
   });
 
   it("sends sprintId null so a removal actually clears the sprint", async () => {
@@ -58,10 +75,13 @@ describe("useSprintTicketMover", () => {
       await result.current.moveTickets([1, 2], null);
     });
 
-    expect(post).toHaveBeenCalledWith(`/build/${PROJECT_ID}/tickets/bulk`, {
-      ticketIds: [1, 2],
-      sprintId: null,
-    });
+    expect(post).toHaveBeenCalledWith(
+      `/build/${PROJECT_ID}/tickets/bulk`,
+      { ticketIds: [1, 2], sprintId: null },
+      undefined,
+      expect.any(Function),
+    );
+    await expectBulkContract(post.mock.calls[0]);
   });
 
   it("splits a batch larger than the backend cap of 100 into bounded requests", async () => {

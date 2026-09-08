@@ -7,6 +7,18 @@ import { publicGet } from "@/lib/public-fetch";
 const mockFetch = jest.fn();
 const mockAbortSignalTimeout = jest.fn();
 
+function headerPairs(options: RequestInit | undefined): Record<string, string> {
+  const pairs: Record<string, string> = {};
+  new Headers(options?.headers).forEach((value, name) => {
+    pairs[name.toLowerCase()] = value;
+  });
+  return pairs;
+}
+
+function headerNames(options: RequestInit | undefined): string[] {
+  return Object.keys(headerPairs(options)).sort();
+}
+
 function makeOkResponse(data: unknown) {
   return {
     ok: true as const,
@@ -67,8 +79,10 @@ describe("publicGet", () => {
       await publicGet("/public/test");
 
       const [, options] = mockFetch.mock.calls[0] as [string, RequestInit | undefined];
-      const headers = options?.headers;
-      expect(headers).toBeUndefined();
+      // `withTraceContext` now stamps a correlation id, so the seam does carry
+      // headers. Pinning the whole name set rather than absence of one name:
+      // any credential added later fails here, whatever it is called.
+      expect(headerNames(options)).toEqual(["traceparent"]);
     });
 
     it("fetches the exact backend URL with no token in any form", async () => {
@@ -78,8 +92,12 @@ describe("publicGet", () => {
 
       const [calledUrl, options] = mockFetch.mock.calls[0] as [string, RequestInit | undefined];
       expect(calledUrl).toBe("http://api.test/public/kb/article");
-      expect(JSON.stringify(options ?? {})).not.toContain("Bearer");
-      expect(JSON.stringify(options ?? {})).not.toContain("Authorization");
+      // A `Headers` instance JSON-stringifies to `{}`, so serialising the
+      // options alone can no longer see a token. The pairs are read out first.
+      const serialised = JSON.stringify({ ...options, headers: headerPairs(options) });
+      expect(serialised).not.toContain("Bearer");
+      expect(serialised.toLowerCase()).not.toContain("authorization");
+      expect(serialised.toLowerCase()).not.toContain("cookie");
     });
   });
 

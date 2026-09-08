@@ -62,6 +62,8 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     expect(patchMock).toHaveBeenCalledWith(
       "/kb/pages/1",
       expect.objectContaining({ expectedContentRevision: 3 }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -123,6 +125,8 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     expect(patchMock).toHaveBeenCalledWith(
       "/kb/pages/2",
       expect.not.objectContaining({ expectedContentRevision: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 });

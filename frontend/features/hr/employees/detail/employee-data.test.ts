@@ -64,6 +64,8 @@ describe("employee base response contract", () => {
       "utf8",
     );
 
-    expect(routeSource).toContain("employeeDataSchema.parse(response)");
+    expect(routeSource).toMatch(
+      /serverGet<EmployeeData>\(\s*`\/hr\/employees\/\$\{employeeId\}`,\s*employeeDataSchema,\s*\)/,
+    );
   });
 });

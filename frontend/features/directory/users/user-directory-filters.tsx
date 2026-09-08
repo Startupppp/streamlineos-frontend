@@ -42,7 +42,7 @@ export function UserDirectoryFilters({
   return (
     <>
       <Select value={status} onValueChange={onStatusChange}>
-        <SelectTrigger className={selectTriggerClass}>
+        <SelectTrigger aria-label="Filter users by status" className={selectTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -53,7 +53,7 @@ export function UserDirectoryFilters({
         </SelectContent>
       </Select>
       <Select value={role} onValueChange={onRoleChange}>
-        <SelectTrigger className={selectTriggerClass}>
+        <SelectTrigger aria-label="Filter users by role" className={selectTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -66,7 +66,7 @@ export function UserDirectoryFilters({
         </SelectContent>
       </Select>
       <Select value={departmentId} onValueChange={onDepartmentChange}>
-        <SelectTrigger className={selectTriggerClass}>
+        <SelectTrigger aria-label="Filter users by department" className={selectTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -79,7 +79,7 @@ export function UserDirectoryFilters({
         </SelectContent>
       </Select>
       <Select value={branchId} onValueChange={onBranchChange}>
-        <SelectTrigger className={selectTriggerClass}>
+        <SelectTrigger aria-label="Filter users by branch" className={selectTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

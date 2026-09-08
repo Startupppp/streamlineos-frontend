@@ -77,6 +77,7 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
       "/hr/global/work-authorizations",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -91,6 +92,7 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
       "/hr/global/work-authorizations",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -105,6 +107,7 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
       "/hr/global/work-authorizations",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -119,6 +122,7 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
       "/hr/global/work-authorizations",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       undefined,
+      expect.any(Function),
     );
   });
 });
@@ -135,6 +139,7 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
       "/hr/global/compliance/requirements",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -149,6 +154,7 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
       "/hr/global/compliance/requirements",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -163,6 +169,7 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
       "/hr/global/compliance/requirements",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -177,6 +184,7 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
       "/hr/global/compliance/requirements",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       undefined,
+      expect.any(Function),
     );
   });
 });
@@ -193,6 +201,7 @@ describe("useComplianceEvents — cursor pagination contract", () => {
       "/hr/global/compliance/events",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -207,6 +216,7 @@ describe("useComplianceEvents — cursor pagination contract", () => {
       "/hr/global/compliance/events",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -221,6 +231,7 @@ describe("useComplianceEvents — cursor pagination contract", () => {
       "/hr/global/compliance/events",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -235,6 +246,7 @@ describe("useComplianceEvents — cursor pagination contract", () => {
       "/hr/global/compliance/events",
       expect.objectContaining({ cursor: "eyJpZCI6MTB9" }),
       undefined,
+      expect.any(Function),
     );
   });
 });
@@ -251,6 +263,7 @@ describe("useContracts — cursor pagination contract", () => {
       "/hr/global/contracts",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -265,6 +278,7 @@ describe("useContracts — cursor pagination contract", () => {
       "/hr/global/contracts",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -279,6 +293,7 @@ describe("useContracts — cursor pagination contract", () => {
       "/hr/global/contracts",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -293,6 +308,7 @@ describe("useContracts — cursor pagination contract", () => {
       "/hr/global/contracts",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       undefined,
+      expect.any(Function),
     );
   });
 });

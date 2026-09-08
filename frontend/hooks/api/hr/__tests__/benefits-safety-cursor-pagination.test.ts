@@ -87,11 +87,13 @@ describe.each([
       endpoint,
       expect.objectContaining({ cursor }),
       forwardedSignal,
+      expect.any(Function),
     );
     expect(apiClient.get).toHaveBeenCalledWith(
       endpoint,
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 });

@@ -57,6 +57,7 @@ describe("useKbConversations — signal forwarded to apiClient.get", () => {
       "/kb/ask/conversations",
       expect.any(Object),
       signal,
+      expect.any(Function),
     );
   });
 });
@@ -72,6 +73,7 @@ describe("useKbConversationMessages — signal forwarded to apiClient.get", () =
       `/kb/ask/conversations/1/messages`,
       expect.any(Object),
       signal,
+      expect.any(Function),
     );
   });
 });
@@ -87,6 +89,7 @@ describe("useKbResearchBriefs — signal forwarded to apiClient.get", () => {
       "/kb/research-briefs",
       expect.any(Object),
       signal,
+      expect.any(Function),
     );
   });
 });

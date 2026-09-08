@@ -60,6 +60,7 @@ describe("useKbPageVersions — signal forwarded to apiClient.get", () => {
       "/kb/pages/42/versions",
       expect.any(Object),
       signal,
+      expect.any(Function),
     );
     const callArgs = mockGet.mock.calls[0];
     expect(callArgs[1]).not.toHaveProperty("signal");

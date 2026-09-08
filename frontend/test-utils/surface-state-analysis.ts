@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
-import { join, dirname, relative, resolve } from "node:path";
+import { basename, join, dirname, relative, resolve, sep } from "node:path";
 
 const FE_ROOT = resolve(__dirname, "..");
 const AUTHENTICATED_ROOT = join(FE_ROOT, "app", "(authenticated)");
@@ -56,8 +56,12 @@ function resolveImport(specifier: string, fromFile: string): string | null {
   return null;
 }
 
+function posixRelative(from: string, to: string): string {
+  return relative(from, to).split(sep).join("/");
+}
+
 function isPrimitive(file: string): boolean {
-  const rel = relative(FE_ROOT, file);
+  const rel = posixRelative(FE_ROOT, file);
   return PRIMITIVE_PREFIXES.some((prefix) => rel.startsWith(prefix));
 }
 
@@ -157,6 +161,7 @@ const PERMISSION_SIGNALS = [
   /requirePermission\(/,
   /enforceRouteAccess\(/,
   /requireModulePermission\(/,
+  /requireSession\(/,
   /access=\{/,
 ];
 const PAGE_SPINNER_SIGNAL = /animate-spin/;
@@ -171,8 +176,8 @@ function routeOf(pageModule: string): string {
 }
 
 function analyzeAuthenticatedSurfaces(): SurfaceStates[] {
-  const pages = walkFiles(AUTHENTICATED_ROOT).filter((file) =>
-    file.endsWith(`${"/"}page.tsx`),
+  const pages = walkFiles(AUTHENTICATED_ROOT).filter(
+    (file) => basename(file) === "page.tsx",
   );
 
   return pages.map((pageModule) => {
@@ -181,7 +186,7 @@ function analyzeAuthenticatedSurfaces(): SurfaceStates[] {
     const gateText = [text, ...ancestorLayouts(pageModule).map(readSource)].join("\n");
     return {
       route: routeOf(pageModule),
-      pageModule: relative(FE_ROOT, pageModule),
+      pageModule: posixRelative(FE_ROOT, pageModule),
       moduleCount: modules.length,
       readsServerState: matches(text, SERVER_STATE_SIGNALS),
       loading: matches(text, LOADING_SIGNALS),
@@ -228,7 +233,7 @@ function analyzeFilterEmptyConflation(): string[] {
       if (/filtersActive/.test(source)) return false;
       return filterSignals.some((pattern) => pattern.test(source));
     })
-    .map((file) => relative(FE_ROOT, file));
+    .map((file) => posixRelative(FE_ROOT, file));
 }
 
 interface SourceClassification {

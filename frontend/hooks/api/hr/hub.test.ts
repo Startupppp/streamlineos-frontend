@@ -63,8 +63,11 @@ describe("useHrHubSnapshot", () => {
 
     await expect(queryOptions.queryFn({})).resolves.toBe(response);
     expect(apiGetMock).toHaveBeenCalledTimes(1);
-    expect(apiGetMock).toHaveBeenCalledWith("/hr/hub", {
-      today: "2026-08-18",
-    }, undefined);
+    expect(apiGetMock).toHaveBeenCalledWith(
+      "/hr/hub",
+      { today: "2026-08-18" },
+      undefined,
+      expect.any(Function),
+    );
   });
 });

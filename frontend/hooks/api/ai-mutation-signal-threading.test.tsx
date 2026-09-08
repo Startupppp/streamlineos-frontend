@@ -237,6 +237,15 @@ describe("the AI mutations threaded in this pass reach the request with their si
   });
 });
 
+const LEAD_SCORE_RESPONSE = {
+  score: 71,
+  confidence: "high",
+  reasoning: "Engaged on pricing twice this week.",
+  strengths: ["Budget confirmed"],
+  weaknesses: ["No executive sponsor"],
+  suggestedActions: ["Book a technical review"],
+};
+
 describe("the union variables keeps every existing bare-scalar call site legal", () => {
   beforeEach(() => {
     fetchMock.mockImplementation((input: unknown, init?: RequestInit) => {
@@ -247,7 +256,7 @@ describe("the union variables keeps every existing bare-scalar call site legal",
         ok: true,
         status: 200,
         statusText: "OK",
-        json: () => Promise.resolve({ success: true, data: { score: 71 } }),
+        json: () => Promise.resolve({ success: true, data: LEAD_SCORE_RESPONSE }),
       });
     });
   });
@@ -260,7 +269,7 @@ describe("the union variables keeps every existing bare-scalar call site legal",
     });
 
     expect(requestBody).toBe(JSON.stringify({ leadId: 5 }));
-    await waitFor(() => expect(result.current.data).toEqual({ score: 71 }));
+    await waitFor(() => expect(result.current.data).toEqual(LEAD_SCORE_RESPONSE));
   });
 
   it("useKbPageAsk still accepts mutate(question) and sends the same body", async () => {

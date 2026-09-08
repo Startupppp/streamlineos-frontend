@@ -9,6 +9,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { documentListContract } from "@/hooks/api/hr/documents-schema";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: null }),
@@ -33,7 +34,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: <T,>(value: T) => value,
 }));
 
-jest.mock("@/features/sign", () => ({
+jest.mock("@/components/sign/create-envelope-dialog", () => ({
   CreateEnvelopeDialog: () => null,
 }));
 
@@ -142,6 +143,17 @@ function Wrapper({
   );
 }
 
+/**
+ * The list read carries a response contract as its fourth argument, so an
+ * arity-blind matcher would pass over a call that no longer parses. Filtering
+ * by URL keeps the negative assertion biting too.
+ */
+function documentListCalls(): unknown[][] {
+  return (apiClient.get as jest.Mock).mock.calls.filter(
+    (call) => call[0] === "/hr/documents",
+  );
+}
+
 describe("DocumentsPage server-prefetch seam", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -161,14 +173,10 @@ describe("DocumentsPage server-prefetch seam", () => {
     );
 
     expect(screen.getByText("Employment Contract.pdf")).toBeInTheDocument();
-    expect(apiClient.get).not.toHaveBeenCalledWith(
-      "/hr/documents",
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(documentListCalls()).toEqual([]);
   });
 
-  it("fetches from the API when HydrationBoundary carries no cache", () => {
+  it("fetches from the API when HydrationBoundary carries no cache", async () => {
     const client = new QueryClient();
 
     render(
@@ -179,8 +187,14 @@ describe("DocumentsPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/documents",
+      { limit: 20 },
       expect.anything(),
-      expect.anything(),
+      expect.any(Function),
+    );
+    const [call] = documentListCalls();
+    expect(call).toBeDefined();
+    await expect((call?.[3] as () => Promise<unknown>)()).resolves.toBe(
+      documentListContract,
     );
   });
 });

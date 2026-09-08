@@ -70,6 +70,7 @@ describe("usePortfolios — cursor pagination contract", () => {
       "/build/portfolios",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -84,6 +85,7 @@ describe("usePortfolios — cursor pagination contract", () => {
       "/build/portfolios",
       expect.objectContaining({ cursor: "eyJpZCI6NDJ9" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -98,6 +100,7 @@ describe("usePortfolios — cursor pagination contract", () => {
       "/build/portfolios",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 });
@@ -119,6 +122,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
       "/build/managed-products",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -133,6 +137,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
       "/build/managed-products",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -147,6 +152,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
       "/build/managed-products",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.any(Function),
     );
   });
 });

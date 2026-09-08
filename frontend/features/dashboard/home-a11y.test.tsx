@@ -21,7 +21,7 @@
  */
 
 import * as React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import { atViewport, VIEWPORTS, type ViewportName } from "@/test-utils/viewport";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -104,7 +104,6 @@ jest.mock("@/hooks/api/hr", () => ({
   useHrMyLeaveRequests: () => q.myLeaveRequests,
   useHrAttendanceStatus: () => q.attendanceStatus,
   useExpensePageData: () => q.expenses,
-  useInterviews: () => q.interviews,
 }));
 
 jest.mock("@/hooks/api/notifications", () => ({
@@ -120,6 +119,7 @@ jest.mock("@/hooks/api/payroll/command-center", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useAccess: () => q.access,
+  useModuleEnabled: () => true,
 }));
 
 jest.mock("@/features/hr/expenses/components/create-expense-dialog", () => ({
@@ -163,6 +163,7 @@ jest.mock("./use-dashboard-access", () => ({
 }));
 
 import { HomeWidgetGrid } from "./home-widget-grid";
+import { ExpensesWidget } from "@/features/hr/expenses/expenses-widget";
 
 const ACCESS_GRANTED = {
   isOrgOwner: true,
@@ -194,8 +195,7 @@ const LOADED = {
     logs: [],
     dailyStats: { workHours: "7.5", breakHours: "0.5" },
   }),
-  expenses: answered({ expenses: [], stats: null, total: 0 }),
-  interviews: answered([]),
+  expenses: answered({ expenses: [], stats: null, total: 0, isAdmin: false }),
   notifications: answered([]),
   ess: answered({ latestPayslip: null }),
   commandCenter: answered({ runs: [] }),
@@ -212,8 +212,7 @@ const EMPTY = {
   announcements: answered([]),
   myLeaveRequests: answered({ requests: [] }),
   attendanceStatus: answered(null),
-  expenses: answered({ expenses: [], stats: null, total: 0 }),
-  interviews: answered([]),
+  expenses: answered({ expenses: [], stats: null, total: 0, isAdmin: false }),
   notifications: answered([]),
   ess: answered(null),
   commandCenter: answered(null),
@@ -222,9 +221,12 @@ const EMPTY = {
 const HOOK_NAMES = Object.keys(LOADED);
 
 /**
- * The eleven headings `home-widget-grid.tsx` mounts. Asserted so a future
- * regression that turns a widget back into a placeholder — or drops one from
- * the grid — shrinks the corpus loudly instead of silently.
+ * The ten headings Home mounts — nine from `home-widget-grid.tsx` plus the
+ * expenses slot the route fills. Asserted so a future regression that turns a
+ * widget back into a placeholder — or drops one from the grid — shrinks the
+ * corpus loudly instead of silently. Recruitment is deliberately absent: root
+ * §8 keeps the hiring pipeline out of Home, and
+ * `home-section-boundary.test.tsx` fails if it comes back.
  */
 const HOME_WIDGET_TITLES = [
   "My Tasks",
@@ -237,7 +239,6 @@ const HOME_WIDGET_TITLES = [
   "My Attendance",
   "My Payroll",
   "My Expenses",
-  "Recruitment",
 ] as const;
 
 /**
@@ -251,7 +252,6 @@ const FAILURE_MESSAGES: Record<string, string> = {
   announcements: "announcements section is down",
   attendanceStatus: "attendance section is down",
   expenses: "expenses section is down",
-  interviews: "recruitment section is down",
   notifications: "alerts section is down",
   ess: "payroll section is down",
 };
@@ -277,6 +277,7 @@ async function renderGrid() {
         hrEnabled
         canViewExecutive
         canSelfAttendance
+        expensesSlot={<ExpensesWidget />}
       />
     </TooltipProvider>,
   );
@@ -306,7 +307,7 @@ describe("PRD-C115 — the Home widget grid is accessible in every state, at eve
     }
   }
 
-  it("MEASURED: the grid really mounts the eleven Home widgets — this corpus is not a stub", async () => {
+  it("MEASURED: the grid really mounts the ten Home widgets — this corpus is not a stub", async () => {
     useState("loaded");
     await renderGrid();
 
@@ -320,11 +321,19 @@ describe("PRD-C115 — a failed Home widget is ANNOUNCED, not merely coloured re
     useState("error");
     await renderGrid();
 
-    const announced = await screen.findAllByRole("alert");
-    const spoken = announced.map((node) => node.textContent ?? "").join(" | ");
-
-    for (const message of Object.values(FAILURE_MESSAGES))
-      expect(spoken).toContain(message);
+    /**
+     * The grid defers its second batch behind a timeout, so the first `alert`
+     * to appear is not the last: resolving on it read as four silent widgets.
+     * The claim is over the whole set, so the wait has to be too.
+     */
+    await waitFor(() => {
+      const spoken = screen
+        .getAllByRole("alert")
+        .map((node) => node.textContent ?? "")
+        .join(" | ");
+      for (const message of Object.values(FAILURE_MESSAGES))
+        expect(spoken).toContain(message);
+    });
   });
 
   it("MEASURED: no failing section leaves its message outside a live region", async () => {
@@ -346,9 +355,11 @@ describe("PRD-C115 — a failed Home widget is ANNOUNCED, not merely coloured re
     useState("error");
     await renderGrid();
 
-    const retries = await screen.findAllByRole("button", { name: /retry/i });
-    expect(retries.length).toBeGreaterThanOrEqual(
-      Object.keys(FAILURE_MESSAGES).length - 2,
-    );
+    await waitFor(() => {
+      const retries = screen.getAllByRole("button", { name: /retry/i });
+      expect(retries.length).toBeGreaterThanOrEqual(
+        Object.keys(FAILURE_MESSAGES).length - 2,
+      );
+    });
   });
 });

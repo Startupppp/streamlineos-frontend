@@ -67,6 +67,7 @@ describe("useHrCases — cursor pagination contract", () => {
       "/hr/cases",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -81,6 +82,7 @@ describe("useHrCases — cursor pagination contract", () => {
       "/hr/cases",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -95,6 +97,7 @@ describe("useHrCases — cursor pagination contract", () => {
       "/hr/cases",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -109,6 +112,7 @@ describe("useHrCases — cursor pagination contract", () => {
       "/hr/cases",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 });
@@ -130,6 +134,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
       "/hr/cases/disciplinary",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -144,6 +149,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
       "/hr/cases/disciplinary",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -158,6 +164,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
       "/hr/cases/disciplinary",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -172,6 +179,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
       "/hr/cases/disciplinary",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
       forwardedSignal,
+      expect.any(Function),
     );
   });
 });

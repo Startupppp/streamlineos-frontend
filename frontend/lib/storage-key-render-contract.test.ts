@@ -4,6 +4,16 @@ import path from "node:path";
 const ROOT = path.resolve(__dirname, "..");
 
 /**
+ * Paths are compared against the POSIX keys of `NOT_A_STORAGE_KEY` and reported
+ * as findings, so the separator has to be the one the allowlist is written in.
+ * `path.join` emits `\` on Windows, which matched no exception and printed every
+ * finding in a form no allowlist entry could ever name.
+ */
+function posixJoin(...segments: string[]): string {
+  return path.join(...segments).split(path.sep).join("/");
+}
+
+/**
  * `fs.globSync` exists on the Node 22 this runs under but is not declared by the
  * repo's `@types/node@20`, so it compiled only because no program ever
  * typechecked this file. `readdirSync(..., { recursive: true })` is in both.
@@ -15,7 +25,7 @@ function filesUnder(
   const found: string[] = [];
   for (const directory of directories)
     for (const entry of readdirSync(path.join(ROOT, directory), { recursive: true })) {
-      const relative = path.join(directory, String(entry));
+      const relative = posixJoin(directory, String(entry));
       if (extensions.some((extension) => relative.endsWith(extension)))
         found.push(relative);
     }
@@ -83,7 +93,12 @@ describe("a storage object key never reaches an image src un-resolved", () => {
   });
 
   it("keeps every allowlisted exception pointing at a file that still exists", () => {
-    const present = new Set(sourceFiles());
+    const files = sourceFiles();
+    expect(files.length).toBeGreaterThan(500);
+    // The allowlist is keyed by POSIX path. A `\` here means the walk and the
+    // allowlist can never meet, which is the shape this suite failed in before.
+    expect(files.filter((file) => file.includes("\\"))).toEqual([]);
+    const present = new Set(files);
     for (const file of Object.keys(NOT_A_STORAGE_KEY)) expect(present.has(file)).toBe(true);
   });
 });

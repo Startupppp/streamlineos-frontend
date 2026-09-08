@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
+import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
+import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
@@ -246,6 +250,17 @@ describe("DashboardShell shell variant", () => {
   });
 });
 
+/**
+ * The shell does not import the chat nav any more — it renders whatever
+ * `chatMobileNavSlot` supplies, and `app/(authenticated)/layout-client.tsx`
+ * supplies it. Mirroring that composition here keeps the render assertions on
+ * the shell's own decision, and the source assertion below keeps the wiring
+ * itself covered instead of assumed.
+ */
+function renderChatMobileNav(onOpenMobileMenu: () => void) {
+  return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
+}
+
 describe("DashboardShell /chat mobile bottom nav", () => {
   beforeEach(() => {
     currentPathname = "/chat";
@@ -263,6 +278,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
         userId="user-1"
         defaultCollapsed={false}
         shellVariant="mobile"
+        chatMobileNavSlot={renderChatMobileNav}
       >
         <div>Content</div>
       </DashboardShell>,
@@ -274,17 +290,64 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     expect(buttons.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("desktop variant on /chat does not render the synchronous ChatMobileBottomNav", () => {
+  /**
+   * `shellVariant` is a UA hint, and `lib/shell-variant.ts` documents that a
+   * desktop browser resized narrow still gets the desktop shell — "CSS
+   * breakpoints remain the safety net". So mobile chrome stays mounted in the
+   * desktop variant, exactly like `MobileModuleBottomNav` and `MobileShellFab`,
+   * and `sm:hidden` is what takes it off a wide screen. The previous assertion
+   * here claimed the opposite and only held because the slot was never passed.
+   */
+  it("desktop variant on /chat still mounts the slot — the sm: breakpoint hides it, not the variant", () => {
     render(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
         shellVariant="desktop"
+        chatMobileNavSlot={renderChatMobileNav}
       >
         <div>Content</div>
       </DashboardShell>,
     );
 
-    expect(screen.queryByRole("navigation", { name: "Chat navigation" })).toBeNull();
+    expect(screen.queryByTestId("chat-mobile-nav")).not.toBeNull();
+    expect(getChatMobileBottomNavClassName()).toContain("sm:hidden");
+  });
+
+  it("off /chat the slot is never called, in either variant", () => {
+    currentPathname = "/build";
+    const chatSlot = jest.fn(renderChatMobileNav);
+
+    for (const shellVariant of ["mobile", "desktop"] as const) {
+      const { unmount } = render(
+        <DashboardShell
+          userId="user-1"
+          defaultCollapsed={false}
+          shellVariant={shellVariant}
+          chatMobileNavSlot={chatSlot}
+        >
+          <div>Content</div>
+        </DashboardShell>,
+      );
+      unmount();
+    }
+
+    expect(chatSlot).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("chat-mobile-nav")).toBeNull();
+  });
+
+  it("the authenticated layout hands the shell that slot, so the mount is not test-only", () => {
+    const layoutClient = readFileSync(
+      join(process.cwd(), "app", "(authenticated)", "layout-client.tsx"),
+      "utf8",
+    );
+
+    expect(layoutClient).toContain(
+      'import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";',
+    );
+    expect(layoutClient).toContain("chatMobileNavSlot={renderChatMobileNav}");
+    expect(layoutClient).toMatch(
+      /function renderChatMobileNav\([\s\S]*?<ChatMobileBottomNav onOpenMobileMenu=\{onOpenMobileMenu\} \/>/,
+    );
   });
 });

@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
-import { relative } from "node:path";
+
 import {
   FE_ROOT,
   baseTag,
   collectSourceFiles,
   openingTags,
+  posixRelative,
 } from "./keyboard-reachability-analysis";
 
 /**
@@ -156,7 +157,7 @@ export function analyzeControlNames(): ControlNameCensus {
       if (source.includes(`<${control}`)) touched = true;
     if (!touched) continue;
 
-    const relativePath = relative(FE_ROOT, file);
+    const relativePath = posixRelative(FE_ROOT, file);
     for (const site of openingTags(source)) {
       const control = baseTag(site.tag);
       const bucket = byControl[control];

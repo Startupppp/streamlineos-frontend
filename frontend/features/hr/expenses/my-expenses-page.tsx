@@ -102,6 +102,12 @@ export function MyExpensesPage() {
     setPage(1);
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("ALL");
+    setPage(1);
+  }, []);
+
   const filters = (
     <>
       <SearchInput
@@ -174,15 +180,13 @@ export function MyExpensesPage() {
           illustration={<EmptyExpensesIllustration className="h-full w-full" />}
           title="No expenses found"
           description={
-            status !== "ALL" || activeFilterCount > 0
-              ? "Try adjusting your filters"
+            activeFilterCount > 0
+              ? "No claim matches the current search and status."
               : "Submit your first expense claim to get started"
           }
-          action={
-            status !== "ALL"
-              ? { label: "Show All Claims", onClick: handleShowAll }
-              : { label: "Submit New Claim", onClick: handleOpenCreate }
-          }
+          filtersActive={activeFilterCount > 0}
+          onClearFilters={handleClearFilters}
+          action={{ label: "Submit New Claim", onClick: handleOpenCreate }}
           className={PAGE_BODY_EMPTY_CLASS}
         />
       ) : null}

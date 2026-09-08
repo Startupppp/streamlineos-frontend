@@ -75,6 +75,11 @@ describe("HRMS core query request suppression", () => {
     renderHook(() => useOrgJobRoles(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
-    expect(get).toHaveBeenCalledWith("/hr/org/roles", undefined, expect.anything());
+    expect(get).toHaveBeenCalledWith(
+      "/hr/org/roles",
+      undefined,
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
   });
 });

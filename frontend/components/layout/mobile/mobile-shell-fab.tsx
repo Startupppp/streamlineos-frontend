@@ -123,8 +123,10 @@ export function MobileShellFab({
         />
       </div>
 
-      <div
-        aria-hidden="true"
+      <button
+        type="button"
+        aria-label="Close quick actions"
+        inert={fabOpen ? undefined : true}
         onClick={handleClose}
         className={cn(
           "fixed inset-0 z-[65] bg-black/50 md:hidden",

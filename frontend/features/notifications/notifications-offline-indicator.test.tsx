@@ -1,6 +1,17 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
-import NotificationsPage from "@/app/(authenticated)/notifications/page";
+import { NotificationsInboxPage } from "@/features/notifications/inbox/notifications-inbox-page";
+
+/**
+ * The route module is an async Server Component that server-prefetches through
+ * `lib/prefetch/notifications`, so importing it here drags next-auth's ESM into
+ * Jest and RTL cannot render it anyway. The body it hands to the client is this
+ * component; the route's composition is asserted from source below so the
+ * substitution stays honest.
+ */
+const NotificationsPage = NotificationsInboxPage;
 
 let mockIsOnline = true;
 let mockNotificationItems: Array<{ id: number; title: string }> = [];
@@ -111,6 +122,17 @@ jest.mock("@/components/ui/content-fill-panel", () => ({
 }));
 
 describe("Notifications page offline indicator", () => {
+  it("the /notifications route renders exactly this component", () => {
+    const routeSource = readFileSync(
+      join(process.cwd(), "app", "(authenticated)", "notifications", "page.tsx"),
+      "utf8",
+    );
+    expect(routeSource).toContain(
+      'import { NotificationsInboxPage } from "@/features/notifications/inbox/notifications-inbox-page";',
+    );
+    expect(routeSource).toContain("<NotificationsInboxPage />");
+  });
+
   afterEach(() => {
     mockIsOnline = true;
     mockNotificationItems = [];

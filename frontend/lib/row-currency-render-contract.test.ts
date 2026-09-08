@@ -23,7 +23,7 @@ function sourceFiles(): string[] {
     for (const entry of readdirSync(path.join(ROOT, directory), {
       recursive: true,
     })) {
-      const relative = path.join(directory, String(entry));
+      const relative = path.join(directory, String(entry)).split(path.sep).join("/");
       if (!SOURCE_EXTENSIONS.some((extension) => relative.endsWith(extension)))
         continue;
       if (relative.includes(".test.") || relative.includes("__tests__"))
@@ -63,7 +63,7 @@ describe("a row that stores its own currency is never rendered as rupees", () =>
     const rowSites = [
       "features/hr/expenses/expense-list.tsx",
       "features/hr/expenses/expense-item.tsx",
-      "features/dashboard/expenses-widget.tsx",
+      "features/hr/expenses/expenses-widget.tsx",
     ];
     for (const file of rowSites) {
       const source = readFileSync(path.join(ROOT, file), "utf8");
