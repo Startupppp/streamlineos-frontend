@@ -10,7 +10,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 /**
  * B9 — the returns data layer, moved out of `operations.ts`.

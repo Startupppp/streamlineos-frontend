@@ -259,19 +259,6 @@ export function isPortalChromelessPath(pathname: string): boolean {
   return /^\/portal\/[^/]+/.test(pathname);
 }
 
-/**
- * The handheld RF surface, which is a scanner screen rather than a page.
- *
- * An operator holds the device in one hand at a rack and works the scan box with
- * a thumb. Anything the shell floats over that — the onboarding checklist, the
- * welcome toast — lands on the header and covers the task number and the back
- * control. Measured at 375px, "Getting Started" occupies y 52-272 while the RF
- * heading sits at y 68-88.
- */
-export function isHandheldDevicePath(pathname: string): boolean {
-  return pathname === "/inventory/rf" || pathname.startsWith("/inventory/rf/");
-}
-
 export function isKnowledgeWikiPath(pathname: string): boolean {
   return (
     pathname === "/knowledge/wiki" || pathname.startsWith("/knowledge/wiki/")

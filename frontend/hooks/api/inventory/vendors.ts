@@ -17,7 +17,7 @@ import type {
   VendorScorecard,
   VendorDeliveriesResponse,
 } from "@/types/inventory";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 type VendorFilters = {
   search?: string;

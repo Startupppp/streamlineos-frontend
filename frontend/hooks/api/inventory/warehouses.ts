@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WarehouseStockResult } from "@/types/inventory";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export type LocationType =
   | "ZONE"

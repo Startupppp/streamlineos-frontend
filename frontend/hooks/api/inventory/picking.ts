@@ -11,7 +11,7 @@ import type {
   PickExceptionResolution,
   PickExceptionStatus,
 } from "@/features/inventory/lib/inventory-status";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PickWaveAssignment = "ANY" | "MINE" | "UNCLAIMED";

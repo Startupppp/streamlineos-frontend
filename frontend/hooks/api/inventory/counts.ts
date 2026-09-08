@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 /**
  * The exact keys the counts controllers carry.

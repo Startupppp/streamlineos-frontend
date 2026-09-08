@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
-import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
