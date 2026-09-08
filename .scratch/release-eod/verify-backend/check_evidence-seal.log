@@ -1,9 +1,0 @@
-OK      evidence/42-production-ops/RB-10-privacy-compliance/artifact-hashes.json — 3/3 files match
-OK      evidence/42-production-ops/RB-10-privacy-compliance/probes/artifact-hashes.json — 1/1 files match
-OK      evidence/42-production-ops/RB-10-privacy-compliance/runs/artifact-hashes.json — 23/23 files match
-OK      evidence/42-production-ops/data-catalogue-c183/artifact-hashes.json — 5/5 files match
-OK      evidence/artifact-hashes.json — 13/13 files match, 3 declared-unsealed
-OK      evidence/bootstrap-head-637/artifact-hashes.json — 28/28 files match
-
-6 seal(s) verified · 73/73 sealed files match · 0 broken
-OK — every evidence seal holds.

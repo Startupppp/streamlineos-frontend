@@ -1,2 +1,0 @@
-check-test-typecheck --self-test PASS: the gate caught the planted arity error.
-  .check-test-typecheck-selftest/planted.spec.ts(2,25): error TS2554: Expected 2 arguments, but got 1.

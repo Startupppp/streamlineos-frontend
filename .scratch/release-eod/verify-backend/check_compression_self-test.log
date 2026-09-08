@@ -1,8 +1,0 @@
-Running self-test...
-  [pass] compression-call-detected — app.use(compression()) pattern is detected
-  [pass] compression-import-detected — @nestjs/compression import is detected
-  [pass] no-compression-not-detected — unrelated source correctly returns false
-  [pass] binary-producer-detected — image/png @ApiProduces is detected
-  [pass] non-binary-not-flagged — application/json is not a binary producer
-
-SELF-TEST PASSED

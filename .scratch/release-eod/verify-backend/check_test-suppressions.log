@@ -1,4 +1,0 @@
-Spec files 2202  ·  suppression sites 20  ·  conditional aliases 65
-  conditional 66  ·  placeholder 13  ·  quarantine 6
-
-FAIL — 66 runtime-selected suppressions, above the ratchet of 29. This class is honest but it is also the easiest place to launder a hand-written skip, so it is capped.

@@ -1,8 +1,0 @@
-Scanning 2137 spec files...
-Resolved 282+ classes from 459 candidates
-
-────────────────────────────────────────────────────────────────────────
-OK — no phantom mock methods found
-Doubles scanned   : 4258
-Classes resolved  : 282
-Genuine defects   : 0

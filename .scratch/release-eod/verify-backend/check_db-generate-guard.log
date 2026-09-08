@@ -1,1 +1,0 @@
-check:db-generate-guard: 685 journal entries, latest snapshot 0464, real drift 220 — db:generate is BLOCKED without ALLOW_DB_GENERATE=1.

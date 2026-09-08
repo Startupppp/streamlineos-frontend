@@ -1,8 +1,0 @@
-Corpus: 3687 files · 896 tables · 611 relation blocks · 1728 db.query find* call sites · 568 relation entries walked.
-Unprojected relation hydrations: 186 (ratchet 186).
-  onto global users: 0 (allowed 0)
-  onto a table carrying a credential column: 0 (allowed 0)
-Unresolved relation names 0 · unresolved relation configs 0 · colliding const names not resolved 83.
-Base-table credential CANDIDATES (reported, not enforced): 71.
-
-No credential or global-users relation hydration, and the population did not grow. 186 unprojected relation(s) remain against a ratchet of 186 — this is a ratchet, not a clean repository.

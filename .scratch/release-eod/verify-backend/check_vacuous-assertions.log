@@ -1,3 +1,0 @@
-Spec files 2067  ·  test callbacks 15776  ·  expect() calls 59858
-  no_assertion 1  ·  tautology 2  ·  cond_assert 0  ·  early_return 5  ·  floating_assert 0  ·  focused 0  (registered 7)
-OK — every test that runs can fail, except 7 registered site(s), each within its ratchet.
