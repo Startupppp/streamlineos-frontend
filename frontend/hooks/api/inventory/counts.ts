@@ -106,7 +106,10 @@ interface CreatePhysicalAuditInput {
 }
 
 interface CountsParams {
-  status?: string;
+  // Not `string`. A bare string is what let the RF queue ask for IN_PROGRESS —
+  // an InspectionStatus, not a cycle-count one — and type-check all the way to a
+  // 400 in a warehouse.
+  status?: CycleCountStatus;
   warehouseId?: number;
   page?: number;
 }

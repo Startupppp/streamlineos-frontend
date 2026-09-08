@@ -37,6 +37,7 @@ import {
   CYCLE_COUNT_STATUS_BADGE,
   CYCLE_COUNT_STATUS_LABEL,
   type CycleCountStatus,
+  isCycleCountStatus,
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -135,7 +136,7 @@ function NewAuditSheet({
 }
 
 export function PhysicalAuditsClient() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<CycleCountStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { iconRef: plusRef, hoverHandlers: plusHandlers } = useAnimatedIcon();
@@ -151,7 +152,7 @@ export function PhysicalAuditsClient() {
   const total = data?.total ?? 0;
 
   function handleStatusChange(value: string): void {
-    setStatusFilter(value);
+    setStatusFilter(value === "all" || isCycleCountStatus(value) ? value : "all");
     setPage(1);
   }
 

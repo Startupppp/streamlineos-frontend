@@ -62,7 +62,11 @@ export function useRfQueue(): RfQueue {
   // links to a screen that needs COUNT_KEY. Ungated, a picker with read but not
   // reconcile was offered work that lands on Access Denied -- the one thing the
   // route rules say never to render.
-  const counts = useCycleCounts({ status: "IN_PROGRESS" }, { enabled: canCount });
+  // COUNTING is the cycle-count status. IN_PROGRESS belongs to InspectionStatus,
+  // a different entity, and the API answers 400 for it — which took the whole
+  // queue down, because one failing source is enough to show "Could not load
+  // your tasks" over the picks and putaways that had loaded fine.
+  const counts = useCycleCounts({ status: "COUNTING" }, { enabled: canCount });
 
   const tasks = useMemo<RfTask[]>(() => {
     const out: RfTask[] = [];

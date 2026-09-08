@@ -26,7 +26,7 @@ import {
   getMobileModuleContentPaddingClassName,
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
-import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
+import { isHandheldDevicePath, isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import { cn } from "@/lib/utils";
 
 const SuccessChecklist = dynamic(
@@ -67,6 +67,7 @@ export function DashboardShell({
   const pathname = usePathname();
   const route = pathname ?? "";
   const isPortalRoute = isPortalChromelessPath(route);
+  const isHandheldDevice = isHandheldDevicePath(route);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
@@ -230,8 +231,12 @@ export function DashboardShell({
                   <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
                     {children}
                   </div>
-                  <WelcomeToast />
-                  <SuccessChecklist />
+                  {!isHandheldDevice && (
+                    <>
+                      <WelcomeToast />
+                      <SuccessChecklist />
+                    </>
+                  )}
                 </div>
               </main>
             </div>

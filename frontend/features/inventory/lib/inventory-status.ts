@@ -7,6 +7,25 @@ export type GrnQuality = "ACCEPTED" | "REJECTED";
 export type GrnStatus = "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED";
 export type GrnDiscrepancyReason = "SHORT" | "OVER" | "DAMAGED" | "WRONG_ITEM";
 export type CycleCountStatus = "PLANNED" | "COUNTING" | "REVIEW" | "POSTED" | "CANCELLED";
+
+/**
+ * Narrows a select value to a cycle-count status.
+ *
+ * The filter states that feed `useCycleCounts` were typed `string`, and that is
+ * how the RF queue came to ask the API for `IN_PROGRESS` — an InspectionStatus,
+ * not a cycle-count one. It type-checked, and the API answered 400.
+ */
+export function isCycleCountStatus(value: string): value is CycleCountStatus {
+  return CYCLE_COUNT_STATUSES.some((status) => status === value);
+}
+
+export const CYCLE_COUNT_STATUSES: readonly CycleCountStatus[] = [
+  "PLANNED",
+  "COUNTING",
+  "REVIEW",
+  "POSTED",
+  "CANCELLED",
+];
 export type InspectionStatus = "PENDING" | "IN_PROGRESS" | "PASSED" | "FAILED" | "DISPOSITION_REQUIRED" | "COMPLETED" | "CANCELLED";
 export type ShipmentStatus = "DRAFT" | "PACKED" | "LABEL_CREATED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 export type LoadStatus = "DRAFT" | "DISPATCHED" | "ARRIVED" | "CLOSED" | "CANCELLED";
