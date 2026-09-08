@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { backendPath } from "@/lib/test-support/backend-path";
 import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
 import { collectAppRoutes } from "../app-routes";
 import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extensions";
@@ -10,10 +11,7 @@ import {
 } from "../universal-routes";
 import { resolveRouteAccess } from "../route-access";
 
-const BACKEND_PERMS_DIR = path.resolve(
-  __dirname,
-  "../../../../../backend/src/modules/rbac/permissions",
-);
+const BACKEND_PERMS_DIR = backendPath("src/modules/rbac/permissions");
 
 const EXCLUDED_BACKEND_FILES = new Set([
   "index.ts",
@@ -22,10 +20,7 @@ const EXCLUDED_BACKEND_FILES = new Set([
   "types.ts",
 ]);
 
-const BACKEND_MODULE_REGISTRY = path.resolve(
-  __dirname,
-  "../../../../../backend/src/common/rbac/module-registry.ts",
-);
+const BACKEND_MODULE_REGISTRY = backendPath("src/common/rbac/module-registry.ts");
 
 function readDelegableModuleIds(): string[] {
   const source = fs.readFileSync(BACKEND_MODULE_REGISTRY, "utf8");
@@ -36,10 +31,7 @@ function readDelegableModuleIds(): string[] {
   return ids;
 }
 
-const BACKEND_ROLE_DEFAULTS = path.resolve(
-  __dirname,
-  "../../../../../backend/src/modules/rbac/permissions/role-defaults.ts",
-);
+const BACKEND_ROLE_DEFAULTS = backendPath("src/modules/rbac/permissions/role-defaults.ts");
 
 function memberDefaultPermissions(): Set<string> {
   const source = fs.readFileSync(BACKEND_ROLE_DEFAULTS, "utf8");

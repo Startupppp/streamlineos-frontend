@@ -1,11 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { OWNER_ONLY_OPERATIONS } from "../owner-only-operations";
+import { backendPath } from "@/lib/test-support/backend-path";
 
-const BACKEND_FILE = path.resolve(
-  __dirname,
-  "../../../../backend/src/common/rbac/owner-only-operations.ts",
-);
+/**
+ * Resolved by looking, not by counting `..` segments — the same defect
+ * `catalog-sync.test.ts` documents having had twice, in the same shape.
+ *
+ * The hardcoded path pointed at `streamlineos-frontend/backend/...`, which does
+ * not exist in this checkout, so every assertion below returned on the
+ * `existsSync` guard and this drift check ran against nothing.
+ */
+const BACKEND_FILE = backendPath("src/common/rbac/owner-only-operations.ts");
 
 function extractBackendEntries(source: string): Map<string, string> {
   const result = new Map<string, string>();

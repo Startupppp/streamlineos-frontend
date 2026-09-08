@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
+import { backendPath } from "@/lib/test-support/backend-path";
 
 /**
  * `backend/` and `frontend/` are siblings inside one checkout, so this walks up
@@ -31,17 +32,7 @@ import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
  * first test still fails loudly if none of them is, because a fourth layout is
  * likelier than this list being complete.
  */
-const BACKEND_PERMS_CANDIDATES = [
-  // frontend/ and backend/ inside one repository.
-  "../../../../../backend/src/modules/rbac/permissions",
-  // streamlineos-frontend/ and streamlineos-backend/ as sibling repositories.
-  "../../../../../../streamlineos-backend/src/modules/rbac/permissions",
-] as const;
-
-const BACKEND_PERMS_DIR =
-  BACKEND_PERMS_CANDIDATES.map((candidate) => path.resolve(__dirname, candidate)).find((dir) =>
-    fs.existsSync(dir),
-  ) ?? path.resolve(__dirname, BACKEND_PERMS_CANDIDATES[0]);
+const BACKEND_PERMS_DIR = backendPath("src/modules/rbac/permissions");
 
 const EXCLUDED_BACKEND_FILES = new Set([
   "index.ts",
