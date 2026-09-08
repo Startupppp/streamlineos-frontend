@@ -17,6 +17,7 @@ import type {
   TimesheetExceptionRecord,
 } from "@/features/timesheets/exception-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const exceptionsListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionsListResponseContract),
@@ -70,7 +71,7 @@ export function useTimesheetExceptions(
         params, signal, exceptionsListC,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: enabled && canView,

@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const customerWorkQueryKeys = {
   leads: {
@@ -28,7 +28,7 @@ export const customerWorkQueryKeys = {
 
   deals: {
     all: [...base, "deals"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "deals", "list"] as const)
         : ([...base, "deals", "list", params] as const),
@@ -39,14 +39,14 @@ export const customerWorkQueryKeys = {
     winLoss: () => [...base, "deals", "winLoss"] as const,
     meetings: (dealId: number) =>
       [...base, "deals", "meetings", dealId] as const,
-    approvals: (params?: Record<string, unknown>) =>
+    approvals: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "deals", "approvals"] as const)
         : ([...base, "deals", "approvals", params] as const),
     competitors: (dealId: number) =>
       [...base, "deals", "competitors", dealId] as const,
     health: (dealId: number) => [...base, "deals", "health", dealId] as const,
-    forecastSnapshots: (params?: Record<string, unknown>) =>
+    forecastSnapshots: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "deals", "forecastSnapshots"] as const)
         : ([...base, "deals", "forecastSnapshots", params] as const),
@@ -70,7 +70,7 @@ export const customerWorkQueryKeys = {
 
   clients: {
     all: [...base, "clients"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "clients", "list"] as const)
         : ([...base, "clients", "list", params] as const),

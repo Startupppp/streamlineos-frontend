@@ -13,8 +13,14 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
+const partyListContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyListContract),
+);
 const partyDetailContract = lazyContract(() =>
   import("@/hooks/api/party/party-schema").then((m) => m.partyDetailContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const partyMutationContract = lazyContract(() =>
   import("@/hooks/api/party/party-schema").then((m) => m.partyMutationContract),
@@ -47,7 +53,7 @@ export function useParties(params: UsePartiesParams = {}) {
       if (partyType) searchParams.set("partyType", partyType);
       if (role) searchParams.set("role", role);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`, undefined, signal);
+      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`, undefined, signal, partyListContract);
     },
     staleTime: 60_000,
     enabled: canView,
@@ -97,7 +103,7 @@ export function useDeleteParty() {
   return useAuthorizedMutation("party:parties:delete", {
     mutationKey: ["party", "parties", "delete"],
     mutationFn: (partyId: string) =>
-      apiClient.delete(`/party/parties/${partyId}`),
+      apiClient.delete<void>(`/party/parties/${partyId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties() });
     },

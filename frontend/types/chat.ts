@@ -1,5 +1,8 @@
 import type { z } from "zod";
-import type { chatSearchMessagesContract } from "@/hooks/api/chat-schema";
+import type {
+  chatSavedMessagesContract,
+  chatSearchMessagesContract,
+} from "@/hooks/api/chat-schema";
 
 /**
  * Resolved for the reader at read time. A null card means the record is gone,
@@ -325,18 +328,8 @@ export type SearchMessagesResult = z.infer<typeof chatSearchMessagesContract>;
 
 
 
-export interface SavedMessage {
-  id: number;
-  userId: string;
-  messageId: number;
-  savedAt: string | Date;
-  message: Message & { channel?: { id: number; name: string | null; type: string } | null };
-}
-
-export interface SavedMessagesPage {
-  items: SavedMessage[];
-  nextCursor?: number;
-}
+export type SavedMessagesPage = z.infer<typeof chatSavedMessagesContract>;
+export type SavedMessage = SavedMessagesPage["items"][number];
 
 export interface SearchChannelResult {
   id: number;

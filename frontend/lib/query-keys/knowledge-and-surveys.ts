@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const knowledgeAndSurveysQueryKeys = {
   kb: {
@@ -24,22 +24,22 @@ export const knowledgeAndSurveysQueryKeys = {
     pageTemplates: () => [...base, "kb", "page-templates"] as const,
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
-    search: (params?: Record<string, unknown>) =>
+    search: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "search"] as const)
         : ([...base, "kb", "search", params] as const),
     chatConversations: () => [...base, "kb", "chatConversations"] as const,
     chatConversationMessages: (conversationId: number) =>
       [...base, "kb", "chatConversations", conversationId, "messages"] as const,
-    analyticsOverview: (range?: Record<string, unknown>) =>
+    analyticsOverview: (range?: QueryKeyParams) =>
       range === undefined
         ? ([...base, "kb", "analyticsOverview"] as const)
         : ([...base, "kb", "analyticsOverview", range] as const),
-    noResults: (range?: Record<string, unknown>) =>
+    noResults: (range?: QueryKeyParams) =>
       range === undefined
         ? ([...base, "kb", "noResults"] as const)
         : ([...base, "kb", "noResults", range] as const),
-    pageReviews: (params?: Record<string, unknown>) =>
+    pageReviews: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "pageReviews"] as const)
         : ([...base, "kb", "pageReviews", params] as const),
@@ -51,11 +51,11 @@ export const knowledgeAndSurveysQueryKeys = {
     articleMigrationPreview: () =>
       [...base, "kb", "article-migration", "preview"] as const,
     pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
-    knowledgeGaps: (range?: Record<string, unknown>) =>
+    knowledgeGaps: (range?: QueryKeyParams) =>
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
-    contentGaps: (params?: Record<string, unknown>) =>
+    contentGaps: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "content-gaps"] as const)
         : ([...base, "kb", "content-gaps", params] as const),
@@ -71,17 +71,17 @@ export const knowledgeAndSurveysQueryKeys = {
 
   roadmap: {
     all: [...base, "roadmap"] as const,
-    items: (params?: Record<string, unknown>) =>
+    items: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "roadmap", "items"] as const)
         : ([...base, "roadmap", "items", params] as const),
     item: (roadmapItemId: number) =>
       [...base, "roadmap", "item", roadmapItemId] as const,
-    feedback: (params?: Record<string, unknown>) =>
+    feedback: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "roadmap", "feedback"] as const)
         : ([...base, "roadmap", "feedback", params] as const),
-    changelog: (params?: Record<string, unknown>) =>
+    changelog: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "roadmap", "changelog"] as const)
         : ([...base, "roadmap", "changelog", params] as const),
@@ -91,7 +91,7 @@ export const knowledgeAndSurveysQueryKeys = {
 
   automations: {
     all: [...base, "automations"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "automations", "list"] as const)
         : ([...base, "automations", "list", params] as const),
@@ -107,7 +107,7 @@ export const knowledgeAndSurveysQueryKeys = {
 
   surveys: {
     all: [...base, "surveys"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "surveys", "list"] as const)
         : ([...base, "surveys", "list", params] as const),
@@ -118,13 +118,13 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "surveys", "builder", surveyId] as const,
     collectors: (surveyId: number) =>
       [...base, "surveys", "collectors", surveyId] as const,
-    participants: (surveyId: number, params?: Record<string, unknown>) =>
+    participants: (surveyId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "surveys", "participants", surveyId] as const)
         : ([...base, "surveys", "participants", surveyId, params] as const),
     publicSurvey: (token: string) =>
       [...base, "surveys", "publicSurvey", token] as const,
-    assessmentAttempts: (surveyId: number, params?: Record<string, unknown>) =>
+    assessmentAttempts: (surveyId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "surveys", "assessmentAttempts", surveyId] as const)
         : ([...base, "surveys", "assessmentAttempts", surveyId, params] as const),
@@ -138,7 +138,7 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "surveys", "analyticsOverview", surveyId] as const,
     analyticsQuestions: (surveyId: number) =>
       [...base, "surveys", "analyticsQuestions", surveyId] as const,
-    responses: (surveyId: number, params?: Record<string, unknown>) =>
+    responses: (surveyId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "surveys", "responses", surveyId] as const)
         : ([...base, "surveys", "responses", surveyId, params] as const),

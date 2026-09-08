@@ -11,7 +11,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2 } from "lucide-react";
 import { CopyIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useGenerateVendorPortalLink, type RecruitmentVendor } from "@/hooks/api";
+import {
+  useGenerateVendorPortalLink,
+  type RecruitmentVendor,
+  type VendorContractType,
+} from "@/hooks/api";
 
 interface VendorCardProps {
   vendor: RecruitmentVendor;
@@ -21,7 +25,7 @@ interface VendorCardProps {
   onDelete: (id: number) => void;
 }
 
-const CONTRACT_TYPE_LABEL: Record<RecruitmentVendor["contractType"], string> = {
+const CONTRACT_TYPE_LABEL: Record<VendorContractType, string> = {
   CONTINGENCY: "Contingency",
   CONTRACT_STAFFING: "Contract Staffing",
   BOTH: "Contingency + Contract",
@@ -79,7 +83,12 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
         <div className="text-xs text-muted-foreground space-y-0.5">
           {vendor.contactEmail && <p>{vendor.contactEmail}</p>}
           {vendor.feePercent && <p>Fee: {parseFloat(vendor.feePercent)}%</p>}
-          <p>{CONTRACT_TYPE_LABEL[vendor.contractType]}{vendor.slaDays ? ` · SLA ${vendor.slaDays}d` : ""}</p>
+          {vendor.contractType && (
+            <p>
+              {CONTRACT_TYPE_LABEL[vendor.contractType]}
+              {vendor.slaDays ? ` · SLA ${vendor.slaDays}d` : ""}
+            </p>
+          )}
         </div>
 
         {portalLink && (

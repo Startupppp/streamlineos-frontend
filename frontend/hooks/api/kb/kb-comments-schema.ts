@@ -15,4 +15,3 @@ const kbPageCommentWithAuthorContract = z.object({
 
 export const kbPageCommentListContract = z.array(kbPageCommentWithAuthorContract);
 export const kbPageCommentContract = kbPageCommentWithAuthorContract;
-export const kbPageCommentSuccessContract = z.object({ success: z.boolean() });

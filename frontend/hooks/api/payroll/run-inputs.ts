@@ -30,7 +30,7 @@ interface PatchInputBody {
 export function useRunInputs(runId: number, params?: { userId?: string }) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.runInputs(runId, params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.runInputs(runId, params),
     queryFn: ({ signal }) =>
       apiClient.get(`/payroll/runs/${runId}/inputs`, params, signal, inputsListC),
     staleTime: 30_000,

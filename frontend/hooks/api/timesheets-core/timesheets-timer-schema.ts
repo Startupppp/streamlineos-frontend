@@ -19,3 +19,5 @@ export const timerContract = z.object({
 export const timerNullableResponseContract = timerContract.nullable();
 
 export type TimesheetTimer = z.infer<typeof timerContract>;
+
+export const timerDiscardResultContract = z.object({ success: z.literal(true) });

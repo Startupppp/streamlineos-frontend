@@ -170,8 +170,24 @@ const orgHolidayRowSchema = z.object({
 
 export const holidaysListContract = z.array(orgHolidayRowSchema);
 
+const hrHolidayRowSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  name: z.string(),
+  date: z.string(),
+  message: z.string().nullable(),
+  isPublic: z.boolean(),
+  notificationSent: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const hrHolidaysListContract = z.array(hrHolidayRowSchema);
+
+export type HrHolidayRow = z.infer<typeof hrHolidayRowSchema>;
+
 export const addHolidayContract = successContract;
-export const deleteHolidayContract = successContract;
+export const deleteHolidayContract = z.void();
 export const updateHolidayContract = successContract;
 
 export const leaveAnalyticsContract = z.object({

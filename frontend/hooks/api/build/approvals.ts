@@ -23,8 +23,8 @@ const approvalListContract = lazyContract(() =>
 const approvalRowContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
 );
-const approvalSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 interface ApprovalFilters {
@@ -107,7 +107,7 @@ export function useDeleteApproval(projectId: number) {
   return useAuthorizedMutation("build:approvals:manage", {
     mutationKey: ["projects", projectId, "approvals", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/approvals/${id}`, approvalSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/approvals/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });

@@ -73,7 +73,12 @@ export function useDraftGap() {
 
 export function useDismissGap() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<DraftedKnowledgeGap, Error, { gapId: number }>("support:knowledge-gaps:manage", {
+  return useAuthorizedMutation<
+    DraftedKnowledgeGap,
+    Error,
+    { gapId: number },
+    { snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> }
+  >("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "dismiss"],
     mutationFn: ({ gapId }) =>
       apiClient.patch<DraftedKnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
@@ -81,14 +86,14 @@ export function useDismissGap() {
       }, undefined, dismissGapResponseC),
     onMutate: async ({ gapId }) => {
       await queryClient.cancelQueries({ queryKey: knowledgeGapsKeys.all });
-      const snapshots = new Map<string, ListKnowledgeGapsResponse>();
+      const snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> = [];
       queryClient
         .getQueriesData<ListKnowledgeGapsResponse>({
           queryKey: knowledgeGapsKeys.all,
         })
         .forEach(([key, data]) => {
           if (!data) return;
-          snapshots.set(JSON.stringify(key), data);
+          snapshots.push([key, data]);
           queryClient.setQueryData<ListKnowledgeGapsResponse>(key, {
             ...data,
             gaps: data.gaps.map((g) =>
@@ -99,12 +104,8 @@ export function useDismissGap() {
       return { snapshots };
     },
     onError: (_, _vars, context) => {
-      const ctx = context as
-        | { snapshots: Map<string, ListKnowledgeGapsResponse> }
-        | undefined;
-      ctx?.snapshots.forEach((data, keyStr) => {
-        queryClient.setQueryData(JSON.parse(keyStr) as string[], data);
-      });
+      for (const [key, data] of context?.snapshots ?? [])
+        queryClient.setQueryData(key, data);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: knowledgeGapsKeys.all });

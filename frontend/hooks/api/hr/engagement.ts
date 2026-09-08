@@ -7,8 +7,13 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface MoodCheckin {
   id: number;
@@ -124,10 +129,6 @@ const _createCampaignContract = lazyContract(() =>
 const _updateCampaignContract = lazyContract(() =>
   import("@/hooks/api/hr/engagement-schema").then((m) => m.updateCampaignContract),
 );
-const _deleteCampaignContract = lazyContract(() =>
-  import("@/hooks/api/hr/engagement-schema").then((m) => m.deleteCampaignContract),
-);
-
 export function useEngagementOverview() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -271,7 +272,7 @@ export function useEngagementCommunities() {
   const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
     queryKey: hrEngagementQueryKeys.hrEngagementHub.communities(),
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
       if (pageParam !== null) params.set("cursor", pageParam);
@@ -358,7 +359,7 @@ export function useDeleteCampaign() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete(`/hr/engagement/campaigns/${id}`, undefined, undefined, _deleteCampaignContract),
+      apiClient.delete<void>(`/hr/engagement/campaigns/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }

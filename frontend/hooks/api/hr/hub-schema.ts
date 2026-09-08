@@ -14,7 +14,7 @@ import type {
   HrOnboardingStatus,
 } from "./dashboard";
 import type { HrDocumentStats } from "./documents";
-import type { PaginatedResignations } from "./exit";
+import type { Resignation } from "./exit";
 import type { ProbationListResponse } from "./probation";
 import type { JobRequisition } from "./requisitions";
 import type { ServiceDeliveryOpsInbox } from "./service-delivery";
@@ -69,7 +69,7 @@ const hrHubSectionsContract = z.object({
   leaveCalendar: section<HrLeaveCalendarEntry[]>(),
   pendingWfh: section<WfhRequest[]>(),
   probation: section<ProbationListResponse>(),
-  resignations: section<PaginatedResignations>(),
+  resignations: section<{ data: Resignation[]; count: number }>(),
   documentStats: section<HrDocumentStats>(),
   holidays: section<Holiday[]>(),
   attendanceStatus: section<TeamAttendanceStatusResponse>(),

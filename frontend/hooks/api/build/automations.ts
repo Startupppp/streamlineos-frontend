@@ -12,6 +12,9 @@ const projectAutomationListContract = lazyContract(() =>
 const projectAutomationRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectAutomationRowContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 export type { ProjectAutomation } from "@/types/projects";
 
 export const TRIGGER_EVENTS = [
@@ -69,7 +72,8 @@ export function useDeleteAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/build/${projectId}/automations/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/build/${projectId}/automations/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: automationKeys(projectId) }),
   });
 }

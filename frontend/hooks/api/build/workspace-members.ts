@@ -15,8 +15,8 @@ const workspaceMemberPageContract = lazyContract(() =>
 const workspaceMemberRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.workspaceMemberRowContract),
 );
-const workspaceMemberSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export interface ProjectWorkspaceMember {
   id: string;
@@ -51,7 +51,7 @@ export function useProjectWorkspaceMembers(
   const enabled = canView && (callerEnabled ?? true);
 
   return useQuery<WorkspaceMembersResponse, Error>({
-    queryKey: buildWorkQueryKeys.projects.workspaceMembers.list(params as Record<string, unknown> | undefined),
+    queryKey: buildWorkQueryKeys.projects.workspaceMembers.list(params),
     queryFn: ({ signal }) =>
       apiClient.get<WorkspaceMembersResponse>("/build/members", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
@@ -82,7 +82,7 @@ export function useRemoveProjectWorkspaceMember() {
   return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...buildWorkQueryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<unknown>(`/build/members/${userId}`, workspaceMemberSuccessContract),
+      apiClient.delete<void>(`/build/members/${userId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workspaceMembers.all });
     },

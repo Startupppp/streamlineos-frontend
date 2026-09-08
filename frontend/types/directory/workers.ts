@@ -58,8 +58,13 @@ export interface WorkerEngagement {
   noticePeriodDays: number | null;
   terminationReason: string | null;
   terminationNotes: string | null;
-  createdBy: string | null;
+  stateReason: string | null;
+  lastStateEventId: number | null;
   rowVersion: number;
+  createdByMembershipId: number | null;
+  updatedByMembershipId: number | null;
+  archivedAt: string | null;
+  archivedByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
 }

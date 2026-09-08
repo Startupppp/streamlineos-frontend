@@ -45,12 +45,35 @@ export interface Pagination {
 }
 
 export interface PaginatedEmployees {
-  data: Employee[];
+  data: EmployeeListItem[];
   pagination: Pagination;
 }
 
+/**
+ * `GET /hr/employees` projects thirteen columns. It does not select `email` as
+ * non-null, nor `departmentId`, `bio`, `phone` or any of the four social URLs,
+ * so a list row cannot be typed as a whole `Employee`.
+ */
+export type EmployeeListItem = Pick<
+  Employee,
+  | "id"
+  | "name"
+  | "firstName"
+  | "lastName"
+  | "role"
+  | "designation"
+  | "employeeId"
+  | "image"
+  | "isActive"
+  | "joiningDate"
+  | "reportingTo"
+> & {
+  email: string;
+  department: { id: string; name: string } | null;
+};
+
 export interface EmployeeCursorPage {
-  data: Employee[];
+  data: EmployeeListItem[];
   pageInfo: {
     limit: number;
     hasMore: boolean;

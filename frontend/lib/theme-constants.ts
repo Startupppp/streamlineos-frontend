@@ -71,6 +71,6 @@ export const projectStatusDisplayLabels: Record<string, string> = {
   ARCHIVED: "ARCHIVED",
 };
 
-export function getColorSafe<K extends string>(map: Record<K, string>, key: string): string {
-  return (map as Record<string, string>)[key] ?? FALLBACK_COLOR;
+export function getColorSafe(map: Readonly<Record<string, string>>, key: string): string {
+  return map[key] ?? FALLBACK_COLOR;
 }

@@ -34,9 +34,9 @@ import {
   scenarioListContract,
   scenarioCreatedContract,
   scenarioUpdatedContract,
-  scenarioDeleteContract,
   replaceLinesSuccessContract,
 } from "@/hooks/api/accounting/planning-schema";
+import { noContentContract } from "@/hooks/api/cursor-page-schema";
 
 export interface ListBudgetsParams {
   cursor?: string;
@@ -239,9 +239,10 @@ export function useUpdateScenario(id: number) {
 
 export function useDeleteScenario(id: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, void>("accounting:forecast:manage", {
+  return useAuthorizedMutation<void, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "delete"],
-    mutationFn: () => apiClient.delete(`/accounting/scenarios/${id}`, undefined, undefined, scenarioDeleteContract),
+    mutationFn: () =>
+      apiClient.delete<void>(`/accounting/scenarios/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planningKeys.scenarios() });
     },

@@ -17,6 +17,9 @@ const ticketDetailLazy = lazyContract(() =>
 const columnCountsLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
 );
+const ticketRowListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowListContract),
+);
 import type {
   Ticket,
   TicketLabel,
@@ -24,6 +27,7 @@ import type {
   TicketFilters,
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const BOARD_PAGE_SIZE = 100;
 const BOARD_AUTOLOAD_LIMIT = 500;
@@ -71,14 +75,14 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     filters?.module
   );
 
-  const query = useInfiniteQuery<CursorPageResponse<Ticket>>({
+  const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
         orderBy: "rank",
         orderDir: "asc",
-        ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       };
       if (filters?.q) params.search = filters.q;
       if (filters?.status) params.status = filters.status;
@@ -91,7 +95,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.module) params.moduleIds = filters.module;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
@@ -172,7 +176,13 @@ export function useSubtasks(
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
     queryKey: buildWorkQueryKeys.projects.subtasks(ticketId),
-    queryFn: ({ signal }) => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`, undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<Ticket[]>(
+        `/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`,
+        undefined,
+        signal,
+        ticketRowListLazy,
+      ),
     enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,
     ...options,

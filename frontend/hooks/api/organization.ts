@@ -18,6 +18,9 @@ import type { OrgMembersPage as MembersResponse } from "@/hooks/api/organization
  * keyset paginated and the client once declared `{ page, total, totalPages }`,
  * a shape the server has never sent.
  */
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const membersPageContract = lazyContract(() =>
   import("@/hooks/api/organization-schema").then(
     (m) => m.orgMembersPageContract,
@@ -130,7 +133,8 @@ export const useRemoveOrgMember = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<void, Error, string>("settings:organization:manage", {
     mutationKey: ["organization", "remove-member"],
-    mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
+    mutationFn: (userId) =>
+      apiClient.delete<void>(`/organization/members/${userId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.organization.members(),

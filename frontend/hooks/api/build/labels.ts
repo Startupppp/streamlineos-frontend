@@ -13,6 +13,9 @@ const ticketLabelListContract = lazyContract(() =>
 const ticketLabelContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface TicketLabel {
   id: number;
@@ -57,7 +60,8 @@ export function useDeleteLabel() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/build/labels/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/build/labels/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),
   });
 }

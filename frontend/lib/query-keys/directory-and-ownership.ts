@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const directoryAndOwnershipQueryKeys = {
   platform: {
@@ -8,7 +8,7 @@ export const directoryAndOwnershipQueryKeys = {
   mail: {
     all: [...base, "mail"] as const,
     accounts: () => [...base, "mail", "accounts"] as const,
-    messages: (params?: Record<string, unknown>) =>
+    messages: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "mail", "messages"] as const)
         : ([...base, "mail", "messages", params] as const),
@@ -23,14 +23,14 @@ export const directoryAndOwnershipQueryKeys = {
     employment: (userIds: readonly string[]) =>
       [...base, "directory", "employment", [...userIds].sort().join(",")] as const,
     peopleAll: [...base, "directory", "people"] as const,
-    people: (params?: Record<string, unknown>) =>
+    people: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "directory", "people"] as const)
         : ([...base, "directory", "people", params] as const),
     person: (organizationPersonId: string) =>
       [...base, "directory", "people", organizationPersonId] as const,
     workersAll: [...base, "directory", "workers"] as const,
-    workers: (params?: Record<string, unknown>) =>
+    workers: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "directory", "workers"] as const)
         : ([...base, "directory", "workers", params] as const),
@@ -42,7 +42,7 @@ export const directoryAndOwnershipQueryKeys = {
 
   party: {
     all: [...base, "party"] as const,
-    parties: (params?: Record<string, unknown>) =>
+    parties: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "party", "parties"] as const)
         : ([...base, "party", "parties", params] as const),
@@ -50,7 +50,7 @@ export const directoryAndOwnershipQueryKeys = {
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
     subjectTypes: [...base, "party", "subject-types"] as const,
-    subjects: (params?: Record<string, unknown>) =>
+    subjects: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "party", "subjects"] as const)
         : ([...base, "party", "subjects", params] as const),
@@ -61,13 +61,13 @@ export const directoryAndOwnershipQueryKeys = {
 
   portalAccess: {
     all: [...base, "portalAccess"] as const,
-    memberships: (params?: Record<string, unknown>) =>
+    memberships: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "portalAccess", "memberships"] as const)
         : ([...base, "portalAccess", "memberships", params] as const),
     membership: (portalMembershipId: string) =>
       [...base, "portalAccess", "memberships", portalMembershipId] as const,
-    grants: (params?: Record<string, unknown>) =>
+    grants: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "portalAccess", "grants"] as const)
         : ([...base, "portalAccess", "grants", params] as const),
@@ -120,15 +120,15 @@ export const directoryAndOwnershipQueryKeys = {
 
   hrSimulations: {
     all: [...base, "hr-simulations"] as const,
-    history: (params: Record<string, unknown>) =>
+    history: (params: QueryKeyParams) =>
       [...base, "hr-simulations", "history", params] as const,
-    compare: (params: Record<string, unknown> | null) =>
+    compare: (params: QueryKeyParams | null) =>
       [...base, "hr-simulations", "compare", params] as const,
   },
 
   hrSafety: {
     all: [...base, "hr-safety"] as const,
-    incidents: (params: Record<string, unknown>) =>
+    incidents: (params: QueryKeyParams) =>
       [...base, "hr-safety", "incidents", params] as const,
     incident: (incidentId: number) =>
       [...base, "hr-safety", "incident", incidentId] as const,

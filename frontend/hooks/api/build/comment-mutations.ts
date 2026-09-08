@@ -10,6 +10,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const commentEditResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentEditResultContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface UpdateCommentInput {
   commentId: number;
@@ -52,7 +55,10 @@ export function useDeleteComment() {
     mutationKey: ["projects", "tickets", "comments", "delete"],
     mutationFn: ({ commentId, ticketId, projectId }) =>
       apiClient.delete<void>(
-        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`
+        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

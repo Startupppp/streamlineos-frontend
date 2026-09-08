@@ -27,9 +27,9 @@ export function usePayrollRuns(params?: {
 }) {
   const canView = useCan("payroll:runs:view");
   return useQuery<RunsPage, Error>({
-    queryKey: payrollQueryKeys.payroll.runs(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.runs(params),
     queryFn: ({ signal }) =>
-      apiClient.get("/payroll/runs", params as Record<string, string | number> | undefined, signal, payrollRunsPageContract),
+      apiClient.get("/payroll/runs", params, signal, payrollRunsPageContract),
     staleTime: 60_000,
     enabled: canView,
   });

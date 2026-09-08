@@ -4,6 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
@@ -13,11 +17,6 @@ const documentTemplateLazy = lazyContract(() =>
 const documentTemplateListLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-templates-schema").then((m) => m.documentTemplateListContract),
 );
-const successBoolLazy = lazyContract(() =>
-  import("@/hooks/api/hr/document-templates-schema").then((m) => m.successBoolContract),
-);
-
-
 export interface DocumentTemplate {
   id: number;
   orgId: string;
@@ -53,11 +52,11 @@ export function useDocumentTemplates(type?: string) {
   const hrEnabled = useModuleEnabled("hr");
   const params = type ? { type } : undefined;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
+    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params),
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
-        params as Record<string, unknown> | undefined,
+        params,
         signal,
         documentTemplateListLazy,
       ),
@@ -106,7 +105,7 @@ export function useDeleteDocumentTemplate() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`, undefined, undefined, successBoolLazy),
+      apiClient.delete<void>(`/hr/documents/templates/${templateId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }

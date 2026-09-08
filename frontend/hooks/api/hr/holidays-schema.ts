@@ -6,7 +6,7 @@ export const holidayRowContract = z.object({
   name: z.string(),
   date: z.string(),
   recurring: z.boolean(),
-  createdBy: z.string(),
+  createdBy: z.string().nullable(),
   createdAt: z.string(),
 });
 

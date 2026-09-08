@@ -28,6 +28,9 @@ const portfolioDetailContract = lazyContract(() =>
 const portfoliosSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then((m) => m.portfoliosSuccessContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface ListFilters {
   cursor?: string;
@@ -88,7 +91,7 @@ export function useDeletePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`, undefined, undefined, portfoliosSuccessContract),
+      apiClient.delete<void>(`/build/portfolios/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
     },
@@ -112,7 +115,7 @@ export function useUnlinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`, undefined, undefined, portfoliosSuccessContract),
+      apiClient.delete<void>(`/build/portfolios/${portfolioId}/projects/${projectId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
     },

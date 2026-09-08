@@ -64,9 +64,7 @@ export interface HrPolicy {
 
 export interface PoliciesListResponse {
   data: HrPolicy[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export interface PolicyEvaluationTrace {

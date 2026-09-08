@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import type { HrProbationReviewRow } from "@/hooks/api/hr/probation-schema";
 
 const probationListC = lazyContract(() =>
   import("@/hooks/api/hr/probation-schema").then((m) => m.probationListContract),
@@ -83,10 +84,10 @@ export function useExtendProbation() {
       extendedUntil: string;
       reason?: string;
     }) =>
-      apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/extend`, {
+      apiClient.post<HrProbationReviewRow>(`/hr/probation/${reviewId}/extend`, {
         extendedUntil,
         reason,
-      }),
+      }, undefined, extendProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },
@@ -106,10 +107,10 @@ export function useConfirmProbation() {
       confirmedAt?: string;
       notes?: string;
     }) =>
-      apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/confirm`, {
+      apiClient.post<HrProbationReviewRow>(`/hr/probation/${reviewId}/confirm`, {
         confirmedAt,
         notes,
-      }),
+      }, undefined, confirmProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },

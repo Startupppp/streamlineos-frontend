@@ -14,4 +14,3 @@ const kbPageTemplateContract = z.object({
 
 export const kbPageTemplateListContract = z.array(kbPageTemplateContract);
 export const kbPageTemplateSingleContract = kbPageTemplateContract;
-export const kbPageTemplateSuccessContract = z.object({ success: z.boolean() });

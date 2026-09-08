@@ -15,6 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 /** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
 const roleGroupPageContract = lazyContract(() =>
@@ -47,7 +48,7 @@ export function useModuleRoleGroups(moduleKey: string) {
         roleGroupPageContract,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 2 * 60_000,

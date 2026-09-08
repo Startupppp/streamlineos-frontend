@@ -49,11 +49,11 @@ export function useEmployeeProfiles(params?: {
 }) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.employees(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.employees(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/payroll/employees",
-        params as Record<string, string | number> | undefined, signal, profileListC,
+        params, signal, profileListC,
       ),
     staleTime: 60_000,
     enabled: canView,

@@ -56,4 +56,3 @@ export interface CreateUserApiTokenInput {
   expiresAt: string;
 }
 
-export const revokeUserApiTokenContract = z.object({ success: z.literal(true) });

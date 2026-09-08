@@ -13,9 +13,14 @@ const taskSuccessContract = lazyContract(() =>
 const taskAnalyticsContract = lazyContract(() =>
   import("@/hooks/api/tasks-schema").then((m) => m.taskAnalyticsContract),
 );
+const tasksListContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.tasksListContract),
+);
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { z } from "zod";
+import type { tasksListContract as tasksListContractDef } from "@/hooks/api/tasks-schema";
 
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
@@ -46,12 +51,7 @@ export interface TaskWithBucket extends Task {
   bucket: TaskBucket;
 }
 
-interface TasksListResponse {
-  tasks: Task[];
-  total: number;
-  page: number;
-  limit: number;
-}
+type TasksListResponse = z.infer<typeof tasksListContractDef>;
 
 export interface CreateTaskInput {
   title: string;
@@ -89,9 +89,9 @@ export interface TasksFilters {
 
 export function useTasks(filters?: TasksFilters) {
   return useGatedQuery("tasks:read", {
-    queryKey: accessAndCrmQueryKeys.tasks.list(filters as Record<string, unknown>),
+    queryKey: accessAndCrmQueryKeys.tasks.list(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>, signal),
+      apiClient.get<TasksListResponse>("/tasks", filters, signal, tasksListContract),
     staleTime: 2 * 60_000,
   });
 }

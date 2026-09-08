@@ -11,6 +11,9 @@ const programListContract = lazyContract(() =>
 const programRowContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then((m) => m.programRowContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { useCan } from "@/hooks/api/access";
 import type {
   Program,
@@ -70,7 +73,8 @@ export function useDeleteProgram() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "delete"],
-    mutationFn: (id: number) => apiClient.delete<void>(`/build/programs/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/build/programs/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
     },

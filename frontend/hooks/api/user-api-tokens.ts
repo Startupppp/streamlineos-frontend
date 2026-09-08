@@ -11,9 +11,9 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { permissionCatalogContract } from "@/hooks/api/access-schema";
 import {
   createUserApiTokenResponseContract,
-  revokeUserApiTokenContract,
   userApiTokenPageContract,
 } from "@/hooks/api/user-api-tokens-schema";
+import { noContentContract } from "@/hooks/api/cursor-page-schema";
 import type { CreateUserApiTokenInput } from "@/hooks/api/user-api-tokens-schema";
 
 export type {
@@ -76,7 +76,7 @@ export function useRevokeUserApiToken() {
   return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["revoke", "user", "api", "token"],
     mutationFn: (tokenId: string) =>
-      apiClient.delete(`/me/api-tokens/${tokenId}`, undefined, undefined, revokeUserApiTokenContract),
+      apiClient.delete<void>(`/me/api-tokens/${tokenId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.userApiTokens.all });
     },

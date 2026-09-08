@@ -18,8 +18,8 @@ const bulkReorderStatesResultContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.bulkReorderStatesResultContract),
 );
 
-const customStateSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export interface CustomState {
   id: number;
@@ -174,7 +174,7 @@ export function useDeleteCustomState(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-states", "delete"],
     mutationFn: (stateId: number) =>
-      apiClient.delete(`/build/${projectId}/custom-states/${stateId}`),
+      apiClient.delete<void>(`/build/${projectId}/custom-states/${stateId}`, undefined, undefined, noContentContract),
     onMutate: async (stateId): Promise<UpdateContext> => {
       await qc.cancelQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
       const previous = qc.getQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId));

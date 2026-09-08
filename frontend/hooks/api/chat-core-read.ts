@@ -19,6 +19,7 @@ import type {
   OrgUser,
   PublicChannel,
 } from "@/types/chat";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 interface ChannelPage<TChannel> {
   channels: TChannel[];
@@ -187,7 +188,7 @@ export function useChatMessages(channelId: number) {
         messagesPageContract,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0,
   });
 }

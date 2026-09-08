@@ -84,7 +84,7 @@ const _approveAccommodationContract = lazyContract(() =>
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get(BASE, params as Record<string, unknown>, signal, _listAccommodationsContract),
+    queryFn: ({ signal }) => apiClient.get(BASE, params, signal, _listAccommodationsContract),
     staleTime: 30_000,
   });
 }

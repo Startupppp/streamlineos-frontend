@@ -16,8 +16,8 @@ export function parseJobToFormValues(job: JobPosting): Partial<CreateJobFormValu
 
   values.title = job.title ?? "";
 
-  if (job.departmentId != null) {
-    values.departmentId = String(job.departmentId);
+  if (job.orgDepartmentId != null) {
+    values.departmentId = job.orgDepartmentId;
   }
 
   if (job.location) {

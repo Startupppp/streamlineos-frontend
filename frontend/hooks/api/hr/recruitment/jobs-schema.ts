@@ -1,13 +1,22 @@
 import { z } from "zod";
 
+/**
+ * The stored jsonb, not the backend's `@ResponseSchema`, which names only four
+ * of the seven keys `screeningQuestionSchema` (`dto/jobs.schemas.ts`) writes.
+ * A `z.object` STRIPS what it does not list, so omitting `id` here would erase
+ * the key the edit form maps its question rows by.
+ */
 const screeningQuestionSchema = z.object({
+  id: z.string(),
   question: z.string(),
-  type: z.string(),
+  type: z.enum(["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"]),
   required: z.boolean(),
   knockout: z.boolean(),
+  knockoutAnswer: z.string().optional(),
+  options: z.array(z.string()).optional(),
 });
 
-const jobPostingRowSchema = z.object({
+export const jobPostingRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
@@ -29,13 +38,13 @@ const jobPostingRowSchema = z.object({
   externalPostingIds: z.record(z.string(), z.string()).nullable(),
   isInternal: z.boolean(),
   screeningQuestions: z.array(screeningQuestionSchema).nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
 export const jobPostingsPageContract = z.object({
-  items: z.array(jobPostingRowSchema),
+  items: z.array(jobPostingRowContract),
   total: z.number().int(),
   pagination: z.object({
     limit: z.number().int(),
@@ -44,13 +53,11 @@ export const jobPostingsPageContract = z.object({
   }),
 });
 
-export const jobPostingDetailContract = jobPostingRowSchema;
+export const jobPostingDetailContract = jobPostingRowContract;
 
-export const createJobPostingContract = jobPostingRowSchema;
+export const createJobPostingContract = jobPostingRowContract;
 
 export const updateJobPostingContract = z.object({ success: z.literal(true) });
-
-export const deleteJobPostingContract = z.object({ success: z.literal(true) });
 
 export const publishJobContract = z.object({
   results: z.array(z.object({
@@ -61,7 +68,7 @@ export const publishJobContract = z.object({
   externalIds: z.record(z.string(), z.string()),
 });
 
-export const duplicateJobPostingContract = jobPostingRowSchema;
+export const duplicateJobPostingContract = jobPostingRowContract;
 
 const sourcePortalRowSchema = z.object({
   id: z.number().int(),

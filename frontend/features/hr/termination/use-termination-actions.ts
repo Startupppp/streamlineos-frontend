@@ -11,13 +11,13 @@ import {
   useSendTerminationEmail,
   type Termination,
 } from "@/hooks/api/hr";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
 interface UseTerminationActionsOptions {
   terminations: Termination[];
-  employees: Employee[];
+  employees: EmployeeListItem[];
   employeeUserIdParam: string | null;
 }
 

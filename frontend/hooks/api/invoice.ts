@@ -88,7 +88,7 @@ export const useInvoices = (
   >
 ) => {
   return useGatedQuery<InvoicesResponse, Error>("accounting:read", {
-    queryKey: platformCoreQueryKeys.invoice.list(filters as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.invoice.list(filters),
     queryFn: ({ signal }) =>
       apiClient.get("/invoices", {
         ...(filters?.status ? { status: filters.status } : {}),

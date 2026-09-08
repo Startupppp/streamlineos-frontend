@@ -1,4 +1,5 @@
 import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
+import { isRecord } from "@/lib/is-record";
 import {
   ApiError,
   parseApiResponse,
@@ -86,8 +87,9 @@ async function redirectForOrganizationAccessError(res: Response): Promise<void> 
     return;
 
   try {
-    const body = (await res.clone().json()) as { code?: unknown };
+    const body: unknown = await res.clone().json();
     if (
+      !isRecord(body) ||
       typeof body.code !== "string" ||
       !ORGANIZATION_ACCESS_ERROR_CODES.has(body.code)
     )
@@ -113,8 +115,9 @@ function readTokenExpiry(token: string): number | null {
   if (!payload) return null;
   try {
     const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    const claims = JSON.parse(json) as { exp?: unknown };
-    return typeof claims.exp === "number" ? claims.exp * 1000 : null;
+    const claims: unknown = JSON.parse(json);
+    if (!isRecord(claims) || typeof claims.exp !== "number") return null;
+    return claims.exp * 1000;
   } catch {
     return null;
   }
@@ -137,11 +140,13 @@ async function getBackendToken(): Promise<string | null> {
     try {
       const res = await fetch("/api/auth/session", { credentials: "include" });
       if (!res.ok) return null;
-      const data = (await res.json()) as { backendJwt?: string };
-      if (!data.backendJwt) return null;
-      const expiresAt = readTokenExpiry(data.backendJwt);
-      cachedToken = expiresAt === null ? null : { value: data.backendJwt, expiresAt };
-      return data.backendJwt;
+      const data: unknown = await res.json();
+      if (!isRecord(data) || typeof data.backendJwt !== "string" || !data.backendJwt)
+        return null;
+      const backendJwt = data.backendJwt;
+      const expiresAt = readTokenExpiry(backendJwt);
+      cachedToken = expiresAt === null ? null : { value: backendJwt, expiresAt };
+      return backendJwt;
     } catch {
       return null;
     } finally {

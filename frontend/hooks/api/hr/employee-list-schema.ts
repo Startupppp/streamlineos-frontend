@@ -5,7 +5,7 @@ export const employeeListItemContract = z.object({
   name: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  email: z.string().nullable(),
+  email: z.string(),
   role: z.string(),
   designation: z.string().nullable(),
   employeeId: z.string().nullable(),

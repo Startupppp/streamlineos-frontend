@@ -11,6 +11,7 @@ import type {
   CreateResearchBriefInput,
 } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
@@ -39,7 +40,7 @@ export function useKbResearchBriefs() {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbResearchBriefListPage>("/kb/research-briefs", params, signal, kbResearchBriefListContract);
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
     staleTime: 30_000,

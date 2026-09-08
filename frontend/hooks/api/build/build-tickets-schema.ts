@@ -141,11 +141,28 @@ export const ticketListPageContract = z.object({
   pagination: paginationContract,
 });
 
+export const ticketActivityActionContract = z.enum([
+  "created",
+  "status_changed",
+  "priority_changed",
+  "assignee_changed",
+  "title_changed",
+  "sprint_changed",
+  "due_date_changed",
+  "comment_added",
+  "comment_updated",
+  "comment_deleted",
+  "label_changed",
+  "estimate_changed",
+  "cycle_changed",
+  "type_changed",
+]);
+
 export const ticketActivityPageContract = z.object({
   data: z.array(
     z.object({
       id: z.number().int(),
-      action: z.string(),
+      action: ticketActivityActionContract,
       label: z.string(),
       fromValue: z.string().nullable(),
       toValue: z.string().nullable(),
@@ -291,6 +308,51 @@ export const ticketUpdateResultContract = z.object({
 });
 
 export const columnCountsContract = z.record(z.string(), z.number().int());
+
+export const ticketRowListContract = z.array(ticketRowContract);
+
+/**
+ * `GET /build/:projectId/tickets/:ticketId/comments/:commentId` answers a joined
+ * permalink projection — comment, author identity and the parent ticket — not
+ * the comment row its `@ResponseSchema(commentRowSchema)` declares.
+ */
+export const commentPermalinkContract = z.object({
+  id: z.number().int(),
+  content: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  parentCommentId: z.number().int().nullable(),
+  author: z.object({
+    id: z.string().nullable(),
+    name: z.string().nullable(),
+    image: z.string().nullable(),
+  }),
+  ticket: z.object({
+    id: z.number().int(),
+    ticketNumber: z.number().int(),
+    title: z.string(),
+    projectKey: z.string().nullable(),
+    projectId: z.number().int(),
+  }),
+});
+
+/**
+ * `GET /build/search/tickets` projects eight columns over an inner join, not a
+ * ticket row — the backend's `@ResponseSchema(z.array(ticketRowSchema))` on that
+ * handler over-declares what `orgTicketSearchQuery` selects.
+ */
+export const ticketSearchResultListContract = z.array(
+  z.object({
+    id: z.number().int(),
+    title: z.string(),
+    status: z.string(),
+    priority: z.string(),
+    ticketNumber: z.number().int(),
+    projectId: z.number().int(),
+    projectKey: z.string(),
+    projectName: z.string(),
+  }),
+);
 
 export const successContract = z.object({
   success: z.literal(true),

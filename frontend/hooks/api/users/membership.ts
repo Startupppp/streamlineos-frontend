@@ -32,7 +32,7 @@ export const useUserLoginHistory = (
   return useQuery<LoginHistoryResponse, Error>({
     queryKey: usersAndCommerceQueryKeys.users.loginHistory(
       userId,
-      params as Record<string, unknown> | undefined,
+      params,
     ),
     queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryResponse>(`/users/${userId}/login-history`, {

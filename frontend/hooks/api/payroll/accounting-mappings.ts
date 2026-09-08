@@ -15,6 +15,9 @@ import type {
 const accountingMappingListC = lazyContract(() =>
   import("@/hooks/api/payroll/accounting-schema").then((m) => m.accountingMappingListContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const accountingMappingC = lazyContract(() =>
   import("@/hooks/api/payroll/accounting-schema").then((m) => m.accountingMappingContract),
 );
@@ -58,7 +61,7 @@ export function useDeleteAccountingMapping() {
   return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "delete"],
     mutationFn: ({ id }: { id: number }) =>
-      apiClient.delete<void>(`/payroll/accounting-mappings/${id}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/payroll/accounting-mappings/${id}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.accountingMappings() });
     },

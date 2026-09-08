@@ -13,6 +13,9 @@ const sprintListContract = lazyContract(() =>
 const sprintRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.sprintRowContract),
 );
+const sprintUpdateResultContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.sprintUpdateResultContract),
+);
 import type {
   Sprint,
   CreateSprintInput,
@@ -59,9 +62,11 @@ export function useUpdateSprint(
     ...options,
     mutationKey: ["projects", "sprints", "update"],
     mutationFn: ({ sprintId, ...data }: UpdateSprintInput) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<{ success: true }>(
         `/build/${projectId}/sprints/${sprintId}`,
-        data
+        data,
+        undefined,
+        sprintUpdateResultContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

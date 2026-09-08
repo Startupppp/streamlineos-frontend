@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const humanResourcesQueryKeys = {
   hr: {
@@ -6,16 +6,16 @@ export const humanResourcesQueryKeys = {
     hub: (today: string) => [...base, "hr", "hub", today] as const,
     departments: () => [...base, "hr", "departments"] as const,
     legacyDepartments: () => [...base, "hr", "departments", "legacy"] as const,
-    employees: (params?: Record<string, unknown>) =>
+    employees: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employees"] as const)
         : ([...base, "hr", "employees", params] as const),
     employee: (employeeUserId: string) =>
       [...base, "hr", "employees", employeeUserId] as const,
     attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
-    attendanceHistory: (params: { page: number; limit: number }) =>
+    attendanceHistory: (params: { cursor?: string; limit: number }) =>
       [...base, "hr", "attendanceHistory", params] as const,
-    leaves: (orgId: string | null | undefined = "", userId: string | null | undefined = "", accessVersion: number | null | undefined = 0, params?: Record<string, unknown>) =>
+    leaves: (orgId: string | null | undefined = "", userId: string | null | undefined = "", accessVersion: number | null | undefined = 0, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", orgId, userId, accessVersion, "leaves"] as const)
         : ([...base, "hr", orgId, userId, accessVersion, "leaves", params] as const),
@@ -23,20 +23,20 @@ export const humanResourcesQueryKeys = {
       userId === undefined
         ? ([...base, "hr", "leaveBalance"] as const)
         : ([...base, "hr", "leaveBalance", userId] as const),
-    expenses: (params?: Record<string, unknown>) =>
+    expenses: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "expenses"] as const)
         : ([...base, "hr", "expenses", params] as const),
-    assets: (params?: Record<string, unknown>) =>
+    assets: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "assets"] as const)
         : ([...base, "hr", "assets", params] as const),
-    documents: (params?: Record<string, unknown>) =>
+    documents: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "documents"] as const)
         : ([...base, "hr", "documents", params] as const),
     documentsAll: [...base, "hr", "documents"] as const,
-    performanceReviews: (params?: Record<string, unknown>) =>
+    performanceReviews: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "performanceReviews"] as const)
         : ([...base, "hr", "performanceReviews", params] as const),
@@ -45,7 +45,7 @@ export const humanResourcesQueryKeys = {
       userId === undefined
         ? ([...base, "hr", "goals"] as const)
         : ([...base, "hr", "goals", userId] as const),
-    workLogs: (params?: Record<string, unknown>) =>
+    workLogs: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "workLogs"] as const)
         : ([...base, "hr", "workLogs", params] as const),
@@ -65,19 +65,19 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "employeeStats", userId] as const,
 
     recruitmentStats: () => [...base, "hr", "recruitmentStats"] as const,
-    jobPostings: (params?: Record<string, unknown>) =>
+    jobPostings: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "jobPostings"] as const)
         : ([...base, "hr", "jobPostings", params] as const),
     jobPosting: (jobPostingId: number) =>
       [...base, "hr", "jobPosting", jobPostingId] as const,
-    candidates: (params?: Record<string, unknown>) =>
+    candidates: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "candidates"] as const)
         : ([...base, "hr", "candidates", params] as const),
     candidate: (candidateId: number) =>
       [...base, "hr", "candidate", candidateId] as const,
-    interviews: (params?: Record<string, unknown>) =>
+    interviews: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hr", "interviews", params] as const)
         : ([...base, "hr", "interviews"] as const),
@@ -94,7 +94,7 @@ export const humanResourcesQueryKeys = {
     reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
     reviewCycle: (reviewCycleId: number) =>
       [...base, "hr", "reviewCycle", reviewCycleId] as const,
-    oneOnOnes: (params?: Record<string, unknown>) =>
+    oneOnOnes: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "oneOnOnes"] as const)
         : ([...base, "hr", "oneOnOnes", params] as const),
@@ -102,11 +102,11 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "termination", terminationId] as const,
     documentTypes: () => [...base, "hr", "documentTypes"] as const,
     onboardingDocsAll: [...base, "hr", "onboardingDocs"] as const,
-    onboardingDocs: (params?: Record<string, unknown>) =>
+    onboardingDocs: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "onboardingDocs"] as const)
         : ([...base, "hr", "onboardingDocs", params] as const),
-    onboardingDocsSummary: (params?: Record<string, unknown>) =>
+    onboardingDocsSummary: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "onboardingDocs", "summary"] as const)
         : ([...base, "hr", "onboardingDocs", "summary", params] as const),
@@ -121,7 +121,7 @@ export const humanResourcesQueryKeys = {
         : ([...base, "hr", "teams", teamId] as const),
     diversityReport: () => [...base, "hr", "diversityReport"] as const,
     bookingLinks: () => [...base, "hr", "bookingLinks"] as const,
-    documentTemplates: (params?: Record<string, unknown>) =>
+    documentTemplates: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "documentTemplates"] as const)
         : ([...base, "hr", "documentTemplates", params] as const),
@@ -184,11 +184,11 @@ export const humanResourcesQueryKeys = {
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,
     offerTemplates: () => [...base, "hr", "offerTemplates"] as const,
-    scorecardAnalytics: (params?: Record<string, unknown>) =>
+    scorecardAnalytics: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "scorecardAnalytics"] as const)
         : ([...base, "hr", "scorecardAnalytics", params] as const),
-    headcountRequests: (params?: Record<string, unknown>) =>
+    headcountRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "headcountRequests"] as const)
         : ([...base, "hr", "headcountRequests", params] as const),
@@ -203,12 +203,12 @@ export const humanResourcesQueryKeys = {
         : ([...base, "hr", "candidateMessages", candidateId] as const),
     messageThreads: () => [...base, "hr", "messageThreads"] as const,
     recruiters: () => [...base, "hr", "recruiters"] as const,
-    recruiterActivity: (params?: Record<string, unknown>) =>
+    recruiterActivity: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "recruiterActivity"] as const)
         : ([...base, "hr", "recruiterActivity", params] as const),
     scheduledReports: () => [...base, "hr", "scheduledReports"] as const,
-    kpis: (params?: Record<string, unknown>) =>
+    kpis: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "kpis"] as const)
         : ([...base, "hr", "kpis", params] as const),
@@ -220,7 +220,7 @@ export const humanResourcesQueryKeys = {
     myPendingReviews: () => [...base, "hr", "myPendingReviews"] as const,
     feedbackResults: (subjectId: string) =>
       [...base, "hr", "feedbackResults", subjectId] as const,
-    hrTemplates: (params?: Record<string, unknown>) =>
+    hrTemplates: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "templates"] as const)
         : ([...base, "hr", "templates", params] as const),
@@ -231,7 +231,7 @@ export const humanResourcesQueryKeys = {
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
     employeeEmployment: (userId: string) =>
       [...base, "hr", "employeeEmployment", userId] as const,
-    employeeTimeline: (employmentId: number, params?: Record<string, unknown>) =>
+    employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employeeTimeline", employmentId] as const)
         : ([...base, "hr", "employeeTimeline", employmentId, params] as const),
@@ -241,13 +241,13 @@ export const humanResourcesQueryKeys = {
     orgLevels: () => [...base, "hr", "org", "levels"] as const,
     orgHeadcount: (groupBy: string) =>
       [...base, "hr", "org", "headcount", groupBy] as const,
-    workAuthorizations: (params?: Record<string, unknown>) =>
+    workAuthorizations: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "workAuthorizations"] as const)
         : ([...base, "hr", "global", "workAuthorizations", params] as const),
     workAuthorization: (workAuthorizationId: number) =>
       [...base, "hr", "global", "workAuthorization", workAuthorizationId] as const,
-    complianceRequirements: (params?: Record<string, unknown>) =>
+    complianceRequirements: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "complianceRequirements"] as const)
         : ([...base, "hr", "global", "complianceRequirements", params] as const),
@@ -259,11 +259,11 @@ export const humanResourcesQueryKeys = {
         "complianceRequirement",
         complianceRequirementId,
       ] as const,
-    complianceEvents: (params?: Record<string, unknown>) =>
+    complianceEvents: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "complianceEvents"] as const)
         : ([...base, "hr", "global", "complianceEvents", params] as const),
-    contracts: (params?: Record<string, unknown>) =>
+    contracts: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "contracts"] as const)
         : ([...base, "hr", "global", "contracts", params] as const),
@@ -285,7 +285,7 @@ export const humanResourcesQueryKeys = {
         : ([...base, "hr", "requisitions", status] as const),
     salaryStructureTemplates: () =>
       [...base, "hr", "salary-structure-templates"] as const,
-    settingsHubRules: (params: Record<string, unknown> | null) =>
+    settingsHubRules: (params: QueryKeyParams | null) =>
       [...base, "hr", "settings-hub", "effective-rules", params] as const,
     settingsHubVersionsAll: [...base, "hr", "settings-hub", "versions"] as const,
     settingsHubVersions: (entity: string, entityId: number | null) =>
@@ -315,7 +315,7 @@ export const humanResourcesQueryKeys = {
     expenseExportJob: (jobId: string) =>
       [...base, "hr", "expenses", "export", "jobs", jobId] as const,
     benefitsAll: [...base, "hr", "benefits"] as const,
-    benefitPlans: (params?: Record<string, unknown>) =>
+    benefitPlans: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "benefits", "plans"] as const)
         : ([...base, "hr", "benefits", "plans", params] as const),
@@ -324,63 +324,63 @@ export const humanResourcesQueryKeys = {
     benefitWindows: [...base, "hr", "benefits", "windows"] as const,
     benefitMy: [...base, "hr", "benefits", "my"] as const,
     benefitDependents: [...base, "hr", "benefits", "dependents"] as const,
-    benefitClaims: (params?: Record<string, unknown>) =>
+    benefitClaims: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "benefits", "claims"] as const)
         : ([...base, "hr", "benefits", "claims", params] as const),
     internshipCertificate: (contractId: number) =>
       [...base, "hr", "global", "contracts", contractId, "certificate"] as const,
     hrPoliciesAll: [...base, "hr", "policies"] as const,
-    hrPoliciesList: (params?: Record<string, unknown>) =>
+    hrPoliciesList: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "policies", "list"] as const)
         : ([...base, "hr", "policies", "list", params] as const),
     hrPolicyDetail: (hrPolicyId: number) =>
       [...base, "hr", "policies", "detail", hrPolicyId] as const,
     hrFormsAll: [...base, "hr", "forms"] as const,
-    hrForms: (params?: Record<string, unknown>) =>
+    hrForms: (params?: QueryKeyParams) =>
       params ? ([...base, "hr", "forms", params] as const) : ([...base, "hr", "forms"] as const),
     hrForm: (formId: number) => [...base, "hr", "forms", formId] as const,
     hrCasesAll: [...base, "hr", "cases"] as const,
-    hrAccessRequests: (params?: Record<string, unknown>) =>
+    hrAccessRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "access-requests"] as const)
         : ([...base, "hr", "access-requests", params] as const),
-    hrDelegations: (params?: Record<string, unknown>) =>
+    hrDelegations: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "delegations"] as const)
         : ([...base, "hr", "governance", "delegations", params] as const),
-    hrLaborMemberships: (params?: Record<string, unknown>) =>
+    hrLaborMemberships: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "labor", "memberships"] as const)
         : ([...base, "hr", "governance", "labor", "memberships", params] as const),
-    hrLaborAgreements: (params?: Record<string, unknown>) =>
+    hrLaborAgreements: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "labor", "agreements"] as const)
         : ([...base, "hr", "governance", "labor", "agreements", params] as const),
     hrLaborAgreementsExpiring: (days: number) =>
       [...base, "hr", "governance", "labor", "agreements", "expiring", days] as const,
-    hrLaborCases: (params?: Record<string, unknown>) =>
+    hrLaborCases: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "labor", "cases"] as const)
         : ([...base, "hr", "governance", "labor", "cases", params] as const),
-    hrPositions: (params?: Record<string, unknown>) =>
+    hrPositions: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "positions"] as const)
         : ([...base, "hr", "governance", "positions", params] as const),
-    hrScenarios: (params?: Record<string, unknown>) =>
+    hrScenarios: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "scenarios"] as const)
         : ([...base, "hr", "governance", "scenarios", params] as const),
-    hrRetentionPolicies: (params?: Record<string, unknown>) =>
+    hrRetentionPolicies: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "retention", "policies"] as const)
         : ([...base, "hr", "governance", "retention", "policies", params] as const),
-    hrRetentionRequests: (params?: Record<string, unknown>) =>
+    hrRetentionRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "governance", "retention", "requests"] as const)
         : ([...base, "hr", "governance", "retention", "requests", params] as const),
-    hrIdentity: (params?: Record<string, unknown>) =>
+    hrIdentity: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "identity"] as const)
         : ([...base, "hr", "identity", params] as const),

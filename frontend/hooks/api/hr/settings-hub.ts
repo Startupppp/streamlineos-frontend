@@ -19,9 +19,10 @@ export function useEffectiveRules(params: { employeeId: string; date: string } |
   return useGatedQuery("hr:policies:view", {
     queryKey: humanResourcesQueryKeys.hr.settingsHubRules(params),
     queryFn: ({ signal }) => {
+      if (!params) throw new Error("useEffectiveRules ran without an employee and date");
       const qs = new URLSearchParams({
-        employeeId: params!.employeeId,
-        date: params!.date,
+        employeeId: params.employeeId,
+        date: params.date,
       });
       return apiClient.get(`/hr/settings-hub/effective-rules?${qs}`, undefined, signal, effectiveRulesContract);
     },

@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const accessAndCrmQueryKeys = {
   roles: {
@@ -189,7 +189,7 @@ export const accessAndCrmQueryKeys = {
 
   auditLog: {
     all: [...base, "auditLog"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "auditLog", "list"] as const)
         : ([...base, "auditLog", "list", params] as const),
@@ -204,7 +204,7 @@ export const accessAndCrmQueryKeys = {
 
   tasks: {
     all: [...base, "tasks"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "tasks", "list"] as const)
         : ([...base, "tasks", "list", params] as const),
@@ -232,7 +232,7 @@ export const accessAndCrmQueryKeys = {
 
   blogAdmin: {
     all: [...base, "blogAdmin"] as const,
-    posts: (params?: Record<string, unknown>) =>
+    posts: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "blogAdmin", "posts"] as const)
         : ([...base, "blogAdmin", "posts", params] as const),

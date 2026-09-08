@@ -35,7 +35,7 @@ import {
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
@@ -56,8 +56,8 @@ const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 const GRID_RENDER_PAGE_SIZE = 24;
 
 function buildEmployeeListColumns(
-  getDept: (emp: Employee) => string | null,
-): DataTableColumn<Employee>[] {
+  getDept: (emp: EmployeeListItem) => string | null,
+): DataTableColumn<EmployeeListItem>[] {
   return [
     {
       key: "employee",
@@ -275,7 +275,7 @@ export function EmployeesListPage() {
     });
   }, [updateParams, updateSearch]);
 
-  const getDept = (emp: Employee) => emp.department?.name ?? null;
+  const getDept = (emp: EmployeeListItem) => emp.department?.name ?? null;
 
   if (isLoading) {
     return (
@@ -395,7 +395,7 @@ export function EmployeesListPage() {
                 padded={false}
                 className="flex min-h-0 flex-col overflow-hidden md:h-full md:flex-1"
               >
-                <DataTable<Employee>
+                <DataTable<EmployeeListItem>
                   data={employees}
                   columns={buildEmployeeListColumns(getDept)}
                   getRowKey={(emp) => emp.id}

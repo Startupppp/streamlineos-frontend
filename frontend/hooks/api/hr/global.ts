@@ -167,8 +167,8 @@ export function useWorkAuthorizations(params?: WorkAuthorizationsParams) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<WorkAuthorization>>({
-    queryKey: humanResourcesQueryKeys.hr.workAuthorizations(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>, signal, _listWorkAuthsContract),
+    queryKey: humanResourcesQueryKeys.hr.workAuthorizations(params),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/work-authorizations", params, signal, _listWorkAuthsContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -218,8 +218,8 @@ export function useComplianceRequirements(params?: ComplianceRequirementsParams)
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceRequirement>>({
-    queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>, signal, _listComplianceRequirementsContract),
+    queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params, signal, _listComplianceRequirementsContract),
     staleTime: 120_000,
     enabled: canManage && hrEnabled,
   });
@@ -269,8 +269,8 @@ export function useComplianceEvents(params?: ComplianceEventsParams) {
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceEvent>>({
-    queryKey: humanResourcesQueryKeys.hr.complianceEvents(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>, signal, _listComplianceEventsContract),
+    queryKey: humanResourcesQueryKeys.hr.complianceEvents(params),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/events", params, signal, _listComplianceEventsContract),
     staleTime: 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -334,8 +334,8 @@ export function useContracts(params?: ContractsParams) {
   const canView = useCan("hr:contracts:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
-    queryKey: humanResourcesQueryKeys.hr.contracts(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params as Record<string, unknown>, signal, _listContractsContract),
+    queryKey: humanResourcesQueryKeys.hr.contracts(params),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params, signal, _listContractsContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });

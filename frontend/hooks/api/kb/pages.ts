@@ -19,6 +19,7 @@ import type {
   MoveKbPageInput,
   UpdateKbPageInput,
 } from "./page-types";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 function deriveAclVersion(ids: number[]): string {
   return [...ids].sort((a, b) => a - b).join(",");
@@ -179,7 +180,7 @@ export function useKbPageVersions(pageId: number) {
         kbPageVersionListContract,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,

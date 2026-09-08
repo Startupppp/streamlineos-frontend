@@ -39,5 +39,3 @@ export const approvalRowContract = z.object({
 });
 
 export const approvalListContract = z.array(approvalRowContract);
-
-export const approvalSuccessContract = z.object({ success: z.literal(true) });

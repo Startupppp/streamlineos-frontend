@@ -3,6 +3,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -63,7 +67,7 @@ export function useReviewCycles() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.reviewCycles(),
-    queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -74,7 +78,7 @@ export function useCreateReviewCycle() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "review-cycles", "create"],
     mutationFn: (data: CreateReviewCycleInput) =>
-      apiClient.post<ReviewCycle>("/hr/performance/cycles", data),
+      apiClient.post<ReviewCycle>("/hr/performance/cycles", data, undefined, createCycleC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
   });
 }
@@ -94,7 +98,7 @@ export function useDeleteReviewCycle() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "review-cycles", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/performance/cycles/${id}`, undefined, undefined, deleteCycleC),
+      apiClient.delete<void>(`/hr/performance/cycles/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
   });
 }
@@ -104,7 +108,7 @@ export function useCreatePerformanceReview() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "reviews", "create"],
     mutationFn: (data: CreatePerformanceReviewInput) =>
-      apiClient.post<PerformanceReview>("/hr/performance/reviews", data),
+      apiClient.post<PerformanceReview>("/hr/performance/reviews", data, undefined, createReviewC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.performanceReviewsAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() });
@@ -127,7 +131,7 @@ export function useDeletePerformanceReview() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "reviews", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/performance/reviews/${id}`, undefined, undefined, deleteReviewC),
+      apiClient.delete<void>(`/hr/performance/reviews/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.performanceReviewsAll }),
   });
 }
@@ -147,7 +151,7 @@ export function useDeleteGoal() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "goals", "delete"],
     mutationFn: (goalId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/performance/goals/${goalId}`, undefined, undefined, deleteGoalC),
+      apiClient.delete<void>(`/hr/performance/goals/${goalId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.goals() }),
   });
 }
@@ -156,9 +160,9 @@ export function useOneOnOneMeetings(params?: { upcoming?: boolean }) {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.oneOnOnes(params as Record<string, unknown> | undefined),
+    queryKey: humanResourcesQueryKeys.hr.oneOnOnes(params),
     queryFn: ({ signal }) =>
-      apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params as Record<string, unknown> | undefined, signal),
+      apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params, signal, listOneOnOnesC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -169,7 +173,7 @@ export function useCreateOneOnOne() {
   return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "one-on-ones", "create"],
     mutationFn: (data: CreateOneOnOneInput) =>
-      apiClient.post<OneOnOneMeeting>("/hr/performance/one-on-ones", data),
+      apiClient.post<OneOnOneMeeting>("/hr/performance/one-on-ones", data, undefined, createOneOnOneC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.oneOnOnes() }),
   });
 }
@@ -189,7 +193,7 @@ export function useDeleteOneOnOne() {
   return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "one-on-ones", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/performance/one-on-ones/${id}`, undefined, undefined, deleteOneOnOneC),
+      apiClient.delete<void>(`/hr/performance/one-on-ones/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.oneOnOnes() }),
   });
 }

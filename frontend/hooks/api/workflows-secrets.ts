@@ -9,6 +9,9 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSecret, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const workflowSecretListContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowSecretListContract),
 );
@@ -72,7 +75,7 @@ export function useDeleteGlobalSecret() {
     mutationKey: ["delete", "global", "secret"],
     mutationFn: (secretId: string) => {
       assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(`/workflows/secrets/${secretId}`);
+      return apiClient.delete<void>(`/workflows/secrets/${secretId}`, undefined, undefined, noContentContract);
     },
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-secrets"] }),

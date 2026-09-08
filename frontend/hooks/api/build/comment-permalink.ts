@@ -1,29 +1,21 @@
 "use client";
 
+import type { z } from "zod";
 import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { commentPermalinkContract as commentPermalinkContractDef } from "@/hooks/api/build/build-tickets-schema";
 
 const ticketDetailLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
 );
 
-export interface CommentPermalinkData {
-  id: string;
-  content: string;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
-  parentCommentId: string | null;
-  author: { id: string; name: string | null; image: string | null };
-  ticket: {
-    id: string;
-    ticketNumber: number;
-    title: string;
-    projectKey: string | null;
-    projectId: number;
-  };
-}
+export const commentPermalinkLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentPermalinkContract),
+);
+
+export type CommentPermalinkData = z.infer<typeof commentPermalinkContractDef>;
 
 export interface TicketPermalinkData {
   id: number;

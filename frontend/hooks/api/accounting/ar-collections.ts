@@ -201,7 +201,7 @@ export function useUpdateInvoiceCollection() {
       });
       for (const [key, data] of snapshots) {
         if (!data) continue;
-        queryClient.setQueryData<ListResponse<Invoice>>(key as readonly unknown[], {
+        queryClient.setQueryData<ListResponse<Invoice>>(key, {
           ...data,
           items: data.items.map((inv) =>
             inv.id === variables.invoiceId
@@ -223,7 +223,7 @@ export function useUpdateInvoiceCollection() {
     onError: (_, _vars, context) => {
       if (!context) return;
       for (const [key, data] of context.snapshots) {
-        queryClient.setQueryData(key as readonly unknown[], data);
+        queryClient.setQueryData(key, data);
       }
     },
     onSettled: () => {

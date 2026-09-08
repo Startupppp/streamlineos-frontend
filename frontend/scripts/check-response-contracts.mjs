@@ -107,7 +107,12 @@ const BASELINE = {
   // template preview beside it. Lowered to the measured value rather than banked as headroom.
   // 2594 -> 223 on 2026-09-07. The contract sweep parsed 2,371 of these seams; at 2594 the
   // ratchet could not bite, because every new unparsed call still fit inside the slack.
-  unvalidatedCalls: 182,
+  // 182 -> 26 on 2026-09-08. The residue is now 25 CRM/Inventory calls, which were out of
+  // scope for that pass, plus the upload in `components/import-export/import-export-grid.tsx`,
+  // whose endpoint is a caller-supplied parameter that no `ImportEntity` in the repo sets —
+  // there is no backend handler to derive a contract from. Everything else in `hooks/`, `lib/`,
+  // `components/`, `app/` and `features/` now parses. Lowered to the measured value.
+  unvalidatedCalls: 26,
   minScannedCalls: 2400,
 };
 

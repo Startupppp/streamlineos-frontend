@@ -19,8 +19,8 @@ const changeRequestListContract = lazyContract(() =>
 const changeRequestRowContract = lazyContract(() =>
   import("@/hooks/api/build/client-portal-schema").then((m) => m.changeRequestRowContract),
 );
-const clientPortalSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/client-portal-schema").then((m) => m.clientPortalSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 interface CrFilters {
@@ -76,7 +76,7 @@ export function useDeleteChangeRequest(projectId: number) {
   return useAuthorizedMutation("build:changerequests:manage", {
     mutationKey: ["projects", projectId, "change-requests", "delete"],
     mutationFn: (crId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/change-requests/${crId}`, clientPortalSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/change-requests/${crId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
     },

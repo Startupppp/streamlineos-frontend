@@ -40,7 +40,7 @@ export function useHrGoals(params?: { userId?: string }) {
     queryFn: ({ signal }) =>
       apiClient.get<HrGoal[]>(
         "/hr/performance/goals",
-        params as Record<string, unknown> | undefined, signal,
+        params, signal,
         goalListLazy,
       ),
     staleTime: 60_000,

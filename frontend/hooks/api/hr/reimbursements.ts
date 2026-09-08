@@ -8,6 +8,9 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
+const reimbursementsListC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.reimbursementsListContract),
+);
 const createReimbursementC = lazyContract(() =>
   import("@/hooks/api/hr/reimbursements-schema").then((m) => m.createReimbursementContract),
 );
@@ -40,7 +43,7 @@ export function useReimbursements() {
   return useQuery({
     queryKey: reimbursementKeys.list(),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<Reimbursement>>("/hr/reimbursements", undefined, signal)).items,
+      (await apiClient.get<OffsetPage<Reimbursement>>("/hr/reimbursements", undefined, signal, reimbursementsListC)).items,
     staleTime: 2 * 60_000,
     enabled: canPayroll && payrollEnabled,
   });

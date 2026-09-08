@@ -14,6 +14,9 @@ import { lazyContract } from "@/lib/api-envelope";
 const successLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 const attachmentCreateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.attachmentCreateResultContract),
@@ -88,18 +91,18 @@ export function useAddLabelToTicket(
 }
 
 export function useRemoveLabelFromTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<void, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>({
+  return useMutation<void, Error, { ticketId: number; projectId?: number; labelId: number }>({
     ...options,
     mutationKey: ["projects", "tickets", "labels", "remove"],
     mutationFn: ({ ticketId, projectId = 0, labelId }) =>
-      apiClient.delete<{ success: boolean }>(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
@@ -223,11 +226,11 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "relations", "remove"],
     mutationFn: (relatedId: number) =>
-      apiClient.delete<{ success: boolean }>(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

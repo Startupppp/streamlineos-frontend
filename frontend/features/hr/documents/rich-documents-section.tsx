@@ -85,14 +85,16 @@ function RichDocumentRow({ doc, onDelete, isDeletePending, canManage }: RichDocu
 }
 
 export function RichDocumentsSection() {
-  const [page, setPage] = useState(1);
+  const [cursorTrail, setCursorTrail] = useState<string[]>([]);
   const canManage = useCan("hr:documents:manage");
-  const { data, isLoading } = useRichDocuments({ page, limit: 20 });
+  const cursor = cursorTrail[cursorTrail.length - 1];
+  const { data, isLoading } = useRichDocuments({ cursor, limit: 20 });
   const deleteMutation = useDeleteRichDocument();
 
   const richDocs = data?.data ?? [];
-  const total = data?.pagination.total ?? 0;
-  const totalPages = data?.pagination.totalPages ?? 1;
+  const page = cursorTrail.length + 1;
+  const nextCursor = data?.pagination.nextCursor ?? null;
+  const hasMore = data?.pagination.hasMore ?? false;
 
   const handleDelete = useCallback((documentId: number) => {
     deleteMutation.mutate(documentId, {
@@ -102,12 +104,12 @@ export function RichDocumentsSection() {
   }, [deleteMutation]);
 
   const handlePrevPage = useCallback(() => {
-    setPage((prev) => Math.max(1, prev - 1));
+    setCursorTrail((prev) => prev.slice(0, -1));
   }, []);
 
   const handleNextPage = useCallback(() => {
-    setPage((prev) => prev + 1);
-  }, []);
+    if (nextCursor) setCursorTrail((prev) => [...prev, nextCursor]);
+  }, [nextCursor]);
 
   if (isLoading) {
     return (
@@ -140,7 +142,7 @@ export function RichDocumentsSection() {
             <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
           </div>
           <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
-            {total}
+            {richDocs.length}
           </span>
         </div>
         <div className="space-y-1.5">
@@ -154,11 +156,9 @@ export function RichDocumentsSection() {
             />
           ))}
         </div>
-        {totalPages > 1 && (
+        {(hasMore || page > 1) && (
           <div className="flex items-center justify-between pt-3">
-            <span className="text-dense text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
+            <span className="text-dense text-muted-foreground">Page {page}</span>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -173,7 +173,7 @@ export function RichDocumentsSection() {
                 variant="outline"
                 size="sm"
                 className="text-xs"
-                disabled={page >= totalPages}
+                disabled={!hasMore}
                 onClick={handleNextPage}
               >
                 Next

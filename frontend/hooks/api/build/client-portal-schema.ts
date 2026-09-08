@@ -105,5 +105,3 @@ export const changeRequestRowContract = z.object({
 });
 
 export const changeRequestListContract = z.array(changeRequestRowContract);
-
-export const clientPortalSuccessContract = z.object({ success: z.literal(true) });

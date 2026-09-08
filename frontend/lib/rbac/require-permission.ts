@@ -26,7 +26,7 @@ async function getCurrentPath(): Promise<string | null> {
 }
 
 export async function requireSession(): Promise<Session> {
-  const session = (await getServerAuth()) as Session | null;
+  const session = await getServerAuth();
   if (!session?.user || session.user.isActive === false)
     redirect(signInPathForMissingSession());
   return session;
@@ -36,7 +36,7 @@ export async function requirePermission(
   permission: PermissionKey | PermissionKey[],
   options: { redirectTo?: string } = {},
 ): Promise<RequirePermissionResult> {
-  const session = (await getServerAuth()) as Session | null;
+  const session = await getServerAuth();
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
     redirect(signInPathForMissingSession());

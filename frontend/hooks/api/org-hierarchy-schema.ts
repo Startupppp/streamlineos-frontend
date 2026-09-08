@@ -130,7 +130,49 @@ export const hierarchyOverviewContract = z.object({
   costCenters: z.number(),
 });
 
-export const hierarchyTreeContract = z.array(z.unknown());
+/**
+ * `OrgHierarchyReadService.buildTree` — business_unit > branch > department >
+ * team, with any node orphaned from its parent returned at the root, so all
+ * four kinds are root candidates.
+ *
+ * The nodes are NOT the list rows. `buildTree` destructures the raw org-unit row
+ * rather than calling the `toOrg*` mappers, so: a business unit DROPS `parentId`
+ * (it is the root level), a branch ADDS `description` (which the branch list
+ * projection does not carry) and lifts its address block out of `metadata`, and
+ * a team is the only kind whose node comes from a mapper. Written from the
+ * service, not from the list contracts above.
+ */
+const teamNodeContract = teamItemContract.extend({
+  type: z.literal("team"),
+  children: z.array(z.never()),
+});
+
+const departmentNodeContract = departmentItemContract.extend({
+  type: z.literal("department"),
+  children: z.array(teamNodeContract),
+});
+
+const branchNodeContract = branchItemContract.extend({
+  description: z.string().nullable(),
+  type: z.literal("branch"),
+  children: z.array(departmentNodeContract),
+});
+
+const businessUnitNodeContract = businessUnitItemContract
+  .omit({ parentId: true })
+  .extend({
+    type: z.literal("business_unit"),
+    children: z.array(branchNodeContract),
+  });
+
+export const hierarchyTreeContract = z.array(
+  z.discriminatedUnion("type", [
+    businessUnitNodeContract,
+    branchNodeContract,
+    departmentNodeContract,
+    teamNodeContract,
+  ]),
+);
 
 export const dependencyPreviewContract = z.object({
   unitId: z.string(),
@@ -169,4 +211,3 @@ const holidayItemContract = z.object({
 
 export const holidayListContract = z.array(holidayItemContract);
 export const createHolidayContract = holidayItemContract;
-export const deleteHolidayContract = z.object({ message: z.string() });

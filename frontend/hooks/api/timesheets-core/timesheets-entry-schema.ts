@@ -42,3 +42,5 @@ export const entryContract = z.object({
 export const entriesListResponseContract = cursorPageContract(entryContract);
 
 export type TimesheetEntry = z.infer<typeof entryContract>;
+
+export const entryVoidResultContract = z.object({ success: z.literal(true) });

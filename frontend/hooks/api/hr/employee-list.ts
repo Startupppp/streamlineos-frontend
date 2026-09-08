@@ -10,8 +10,8 @@ const employeeListPageLazy = lazyContract(() =>
 );
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
-  Employee,
   EmployeeCursorPage,
+  EmployeeListItem,
   PaginatedEmployees,
 } from "@/types/hr";
 
@@ -26,7 +26,7 @@ export type HrEmployeesParams = {
 };
 
 export function normalizeEmployeesResponse(
-  res: Employee[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
+  res: EmployeeListItem[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
   fallbackLimit = 20,
 ): PaginatedEmployees {
   if (!res) {
@@ -70,13 +70,13 @@ export function normalizeEmployeesResponse(
 
 /** Safe list extract for pickers / legacy call sites. */
 export function unwrapEmployees(
-  res: Employee[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
-): Employee[] {
+  res: EmployeeListItem[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
+): EmployeeListItem[] {
   return normalizeEmployeesResponse(res).data;
 }
 
 export function normalizeEmployeeCursorResponse(
-  res: Employee[] | EmployeeCursorPage | null | undefined,
+  res: EmployeeListItem[] | EmployeeCursorPage | null | undefined,
   fallbackLimit = 20,
 ): EmployeeCursorPage {
   if (!res || Array.isArray(res)) {
@@ -106,10 +106,11 @@ export function useHrEmployees(
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employees(params),
     queryFn: async ({ signal }): Promise<EmployeeCursorPage> => {
-      const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
+      const res = await apiClient.get<EmployeeCursorPage>(
         "/hr/employees",
         params,
         signal,
+        employeeListPageLazy,
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
@@ -131,10 +132,11 @@ export function useInfiniteHrEmployees(
       "pages",
     ] as const,
     queryFn: async ({ pageParam, signal }: { pageParam: string | undefined; signal: AbortSignal }): Promise<EmployeeCursorPage> => {
-      const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
+      const res = await apiClient.get<EmployeeCursorPage>(
         "/hr/employees",
         { ...params, cursor: pageParam },
         signal,
+        employeeListPageLazy,
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },

@@ -33,8 +33,8 @@ const submissionCreateResultContract = lazyContract(() =>
 const submissionRowContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.submissionRowContract),
 );
-const formSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/forms-schema").then((m) => m.formSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 interface FormFilters {
@@ -99,7 +99,7 @@ export function useDeleteForm(projectId: number) {
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/forms/${id}`, formSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/forms/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },

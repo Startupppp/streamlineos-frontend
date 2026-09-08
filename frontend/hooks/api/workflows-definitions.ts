@@ -13,6 +13,9 @@ import type {
 } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const workflowListContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowListContract),
 );
@@ -53,9 +56,9 @@ function assertPermission(allowed: boolean): void {
 export function useWorkflows(params?: WorkflowListParams) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
-    queryKey: supportAndWorkflowsQueryKeys.workflows.list(params as Record<string, unknown>),
+    queryKey: supportAndWorkflowsQueryKeys.workflows.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>, signal, workflowListContract),
+      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params, signal, workflowListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -105,7 +108,7 @@ export function useDeleteWorkflow() {
     mutationKey: ["workflows", "delete"],
     mutationFn: (id: string) => {
       assertPermission(canDelete);
-      return apiClient.delete<{ success: boolean }>(`/workflows/${id}`);
+      return apiClient.delete<void>(`/workflows/${id}`, undefined, undefined, noContentContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });

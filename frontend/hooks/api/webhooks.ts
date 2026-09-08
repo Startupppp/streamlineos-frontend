@@ -16,6 +16,12 @@ const webhookListLogsContract = lazyContract(() =>
 const webhookCreateContract = lazyContract(() =>
   import("@/hooks/api/webhooks-schema").then((m) => m.webhookCreateContract),
 );
+const webhookUpdateContract = lazyContract(() =>
+  import("@/hooks/api/webhooks-schema").then((m) => m.webhookUpdateContract),
+);
+const webhookDeleteContract = lazyContract(() =>
+  import("@/hooks/api/webhooks-schema").then((m) => m.webhookDeleteContract),
+);
 const webhookRotateSecretContract = lazyContract(() =>
   import("@/hooks/api/webhooks-schema").then((m) => m.webhookRotateSecretContract),
 );
@@ -145,7 +151,7 @@ export function useToggleWebhook() {
   return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "toggle"] as const,
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-      apiClient.patch(`/webhooks/${id}`, { isActive }),
+      apiClient.patch(`/webhooks/${id}`, { isActive }, undefined, webhookUpdateContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }
@@ -154,7 +160,8 @@ export function useDeleteWebhook() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "delete"] as const,
-    mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete(`/webhooks/${id}`, undefined, undefined, webhookDeleteContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }

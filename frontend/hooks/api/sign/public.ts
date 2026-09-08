@@ -2,15 +2,26 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/api-client";
+import { isRecord } from "@/lib/is-record";
+import {
+  lazyContract,
+  parseApiResponse,
+  resolveContract,
+  type ContractSource,
+} from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignPublicSession } from "@/types/sign";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
+const signPublicSessionContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signPublicSessionContract),
+);
+const signPublicDocumentPreviewContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signPublicDocumentPreviewContract),
+);
+
 function unwrap<T>(body: unknown): T {
-  if (body !== null && typeof body === "object") {
-    const b = body as Record<string, unknown>;
-    if (b.success === true && "data" in b) return b.data as T;
-  }
+  if (isRecord(body) && body.success === true && "data" in body) return body.data as T;
   return body as T;
 }
 
@@ -18,20 +29,36 @@ async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
   if (!res.ok) {
     let message = fallback;
     try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message) message = data.message;
-      else if (Array.isArray(data?.message)) message = data.message.filter((m): m is string => typeof m === "string").join(", ");
+      const data: unknown = await res.json();
+      if (isRecord(data)) {
+        if (typeof data.message === "string" && data.message) message = data.message;
+        else if (Array.isArray(data.message)) {
+          const parts: unknown[] = data.message;
+          message = parts.filter((m): m is string => typeof m === "string").join(", ");
+        }
+      }
     } catch {
     }
     throw new Error(message);
   }
-  const body = (await res.json()) as unknown;
+  const body: unknown = await res.json();
   return unwrap<T>(body);
 }
 
-async function publicGet<T>(path: string, fallback: string): Promise<T> {
+/**
+ * `parseOrThrow` always throws on a failed response, so it keeps owning the
+ * error copy while the success path goes through the shared seam and its
+ * contract.
+ */
+async function publicGet<T>(
+  path: string,
+  fallback: string,
+  contract?: ContractSource<T>,
+): Promise<T> {
+  const pending = resolveContract(contract);
   const res = await fetch(buildUrl(path), { headers: withCorrelation(new Headers()) });
-  return parseOrThrow<T>(res, fallback);
+  if (!res.ok) return parseOrThrow<T>(res, fallback);
+  return parseApiResponse<T>(res, await pending, path);
 }
 
 async function publicPost<T>(path: string, body: unknown, fallback: string): Promise<T> {
@@ -46,7 +73,12 @@ async function publicPost<T>(path: string, body: unknown, fallback: string): Pro
 export function useSignPublicSession(token: string) {
   return useQuery({
     queryKey: growthAndSignQueryKeys.signPublic.session(token),
-    queryFn: () => publicGet<SignPublicSession>(`/public/sign/${token}/session`, "This signing link is invalid."),
+    queryFn: () =>
+      publicGet<SignPublicSession>(
+        `/public/sign/${token}/session`,
+        "This signing link is invalid.",
+        signPublicSessionContract,
+      ),
     staleTime: 5_000,
   });
 }
@@ -54,7 +86,12 @@ export function useSignPublicSession(token: string) {
 export function useSignPublicDocumentPreview(token: string, documentId: number | undefined) {
   return useQuery({
     queryKey: [...growthAndSignQueryKeys.signPublic.session(token), "document", documentId] as const,
-    queryFn: () => publicGet<{ url: string }>(`/public/sign/${token}/documents/${documentId}/preview`, "Unable to load document."),
+    queryFn: () =>
+      publicGet<{ url: string }>(
+        `/public/sign/${token}/documents/${documentId}/preview`,
+        "Unable to load document.",
+        signPublicDocumentPreviewContract,
+      ),
     enabled: documentId !== undefined,
     staleTime: 60_000,
   });

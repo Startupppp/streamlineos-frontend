@@ -14,6 +14,9 @@ const personalDetailsContract = lazyContract(() =>
 const bankDetailsContract = lazyContract(() =>
   import("@/lib/api/hooks/onboarding-schema").then((m) => m.bankDetailsContract),
 );
+const onboardingSuccessContract = lazyContract(() =>
+  import("@/lib/api/hooks/onboarding-schema").then((m) => m.onboardingSuccessContract),
+);
 
 export interface PersonalDetailsPayload {
   phone: string;
@@ -46,7 +49,12 @@ export function usePersonalInfoMutation() {
   return useMutation({
     mutationKey: ["onboarding", "personal-details"],
     mutationFn: (payload: PersonalDetailsPayload) =>
-      apiClient.patch<void>("/onboarding/personal-details", payload),
+      apiClient.patch<{ success: true }>(
+        "/onboarding/personal-details",
+        payload,
+        undefined,
+        onboardingSuccessContract,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
@@ -73,7 +81,12 @@ export function useBankDetailsMutation() {
   return useMutation({
     mutationKey: ["onboarding", "bank-details"],
     mutationFn: (payload: BankDetailsPayload) =>
-      apiClient.patch<void>("/onboarding/bank-details", payload),
+      apiClient.patch<{ success: true }>(
+        "/onboarding/bank-details",
+        payload,
+        undefined,
+        onboardingSuccessContract,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
@@ -85,6 +98,12 @@ export function useBankDetailsMutation() {
 export function useSubmitOnboardingMutation() {
   return useMutation({
     mutationKey: ["onboarding", "submit"],
-    mutationFn: () => apiClient.post<void>("/onboarding/submit"),
+    mutationFn: () =>
+      apiClient.post<{ success: true }>(
+        "/onboarding/submit",
+        undefined,
+        undefined,
+        onboardingSuccessContract,
+      ),
   });
 }

@@ -42,11 +42,11 @@ function assertPermission(allowed: boolean): void {
 export function useWorkflowExecutions(workflowId: string, params?: ExecutionListParams) {
   const canView = useCan("workflows:executions:view");
   return useQuery({
-    queryKey: supportAndWorkflowsQueryKeys.workflows.executions(workflowId, params as Record<string, unknown>),
+    queryKey: supportAndWorkflowsQueryKeys.workflows.executions(workflowId, params),
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         `/workflows/${workflowId}/executions`,
-        params as Record<string, unknown>, signal, workflowExecutionListContract,
+        params, signal, workflowExecutionListContract,
       ),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
@@ -60,7 +60,7 @@ export function useAllExecutions(params?: ExecutionListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         "/workflows/executions",
-        params as Record<string, unknown>, signal, workflowExecutionListContract,
+        params, signal, workflowExecutionListContract,
       ),
     staleTime: 15_000,
     refetchInterval: (query) => {

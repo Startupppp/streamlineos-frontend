@@ -14,14 +14,24 @@ const goalOwnerContract = z.object({
   image: z.string().nullable(),
 });
 
-const goalRowContract = z.object({
+const goalLevelContract = z.enum(["company", "team", "individual"]);
+const goalStatusContract = z.enum([
+  "not_started",
+  "on_track",
+  "at_risk",
+  "off_track",
+  "completed",
+]);
+
+/** `okr_goals` row. `POST /goals`, `PATCH /goals/:id` and check-in all answer this. */
+export const goalRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   ownerMembershipId: z.number().int().nullable(),
-  level: z.string(),
-  status: z.string(),
+  level: goalLevelContract,
+  status: goalStatusContract,
   progress: z.number().int(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
@@ -56,7 +66,11 @@ export const goalStatsContract = z.object({
   completed: z.number().int(),
 });
 
-/** `goalDetailSchema` — full goal with keyResults, updates, links. */
+/**
+ * `goalDetailSchema` — full goal with keyResults, updates, links. Only
+ * `GET /goals/:goalId` answers this; `PATCH` and check-in declare it but return
+ * the bare row, so they take `goalRowContract`.
+ */
 export const goalDetailContract = goalRowContract.extend({
   owner: goalOwnerContract.nullable(),
   project: z
@@ -68,12 +82,12 @@ export const goalDetailContract = goalRowContract.extend({
       orgId: z.string(),
       goalId: z.number().int(),
       title: z.string(),
-      metricType: z.string(),
+      metricType: z.enum(["number", "percentage", "currency", "boolean"]),
       startValue: z.string(),
       targetValue: z.string(),
       currentValue: z.string(),
       unit: z.string().nullable(),
-      status: z.string(),
+      status: goalStatusContract,
       createdAt: z.string(),
       updatedAt: z.string(),
     }),

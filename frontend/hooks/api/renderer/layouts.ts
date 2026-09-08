@@ -18,6 +18,9 @@ const layoutAdjustmentSaveContract = lazyContract(() =>
 const layoutUsageContract = lazyContract(() =>
   import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutUsageContract),
 );
+const layoutResetContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutResetContract),
+);
 
 /**
  * Where a tenant's arrangement of a record type lives.
@@ -137,7 +140,12 @@ export function useResetLayoutAdjustment(layoutKey: string) {
   return useAuthorizedMutation("settings:record-layouts:manage", {
     mutationKey: ["recordLayouts", "reset", layoutKey] as const,
     mutationFn: () =>
-      apiClient.delete<null>(`/renderer/layouts/${encodeURIComponent(layoutKey)}`),
+      apiClient.delete<null>(
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
+        undefined,
+        undefined,
+        layoutResetContract,
+      ),
     onSuccess: () => {
       queryClient.setQueryData(
         platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),

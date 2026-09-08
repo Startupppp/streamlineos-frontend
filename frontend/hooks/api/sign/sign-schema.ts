@@ -352,3 +352,63 @@ export const signDocumentUrlContract = z.object({
   url: z.string(),
   expiresInSeconds: z.number().int(),
 });
+
+/**
+ * `getSessionResponseSchema` — a discriminated union on `state`. The non-active
+ * branch is declared `z.string().refine(s => s !== "active")`; the ten members
+ * below are `SessionState` in `sign-public.service.ts`, which `deriveState` is
+ * the only producer of. `authMethod` is the `sign_auth_method` pgEnum.
+ */
+export const signPublicSessionContract = z.discriminatedUnion("state", [
+  z.object({
+    state: z.literal("active"),
+    envelope: z.object({
+      id: z.number().int(),
+      title: z.string(),
+      subject: z.string().nullable(),
+      message: z.string().nullable(),
+      expiresAt: z.string().nullable(),
+    }),
+    sender: z.object({ name: z.string() }),
+    recipient: z.object({
+      id: z.number().int(),
+      name: z.string(),
+      email: z.string().nullable(),
+      authMethod: z.enum([
+        "email_link",
+        "access_code",
+        "otp_email",
+        "otp_sms",
+        "sso",
+        "passkey",
+        "kba",
+        "id_verification",
+      ]),
+      authenticated: z.boolean(),
+      consentAccepted: z.boolean(),
+    }),
+    documents: z.array(
+      z.object({
+        id: z.number().int(),
+        fileName: z.string(),
+        pageCount: z.number().int().nullable(),
+      }),
+    ),
+    fields: z.array(signFieldRowContract),
+  }),
+  z.object({
+    state: z.enum([
+      "not_your_turn",
+      "expired",
+      "revoked",
+      "recipient_completed",
+      "recipient_declined",
+      "envelope_voided",
+      "envelope_expired",
+      "envelope_declined",
+      "envelope_completed",
+    ]),
+    envelopeTitle: z.string(),
+    recipientName: z.string(),
+  }),
+]);

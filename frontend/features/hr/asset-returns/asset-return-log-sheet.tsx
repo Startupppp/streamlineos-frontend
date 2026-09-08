@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { getUserDisplayName } from "@/lib/person-display";
 import { CONDITIONS } from "./asset-return-constants";
-import type { Asset, Employee } from "@/types/hr";
+import type { Asset, EmployeeListItem } from "@/types/hr";
 
 interface AssetReturnLogSheetProps {
   open: boolean;
@@ -24,7 +24,7 @@ interface AssetReturnLogSheetProps {
   allAssignedAssets: Asset[];
   selectedAssetId: string;
   resolvedUserId: string;
-  resolvedEmployee: Employee | null;
+  resolvedEmployee: EmployeeListItem | null;
   overrideUserId: string | null;
   condition: string;
   notes: string;

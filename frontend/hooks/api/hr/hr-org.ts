@@ -4,6 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
@@ -48,7 +52,7 @@ export function useDeleteJobRole() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "role", "delete"],
     mutationFn: (jobRoleId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/org/roles/${jobRoleId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.successResponseContract))),
+      apiClient.delete<void>(`/hr/org/roles/${jobRoleId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgRoles() }),
   });
 }
@@ -88,7 +92,7 @@ export function useDeleteJobLevel() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "org", "level", "delete"],
     mutationFn: (jobLevelId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/org/levels/${jobLevelId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.successResponseContract))),
+      apiClient.delete<void>(`/hr/org/levels/${jobLevelId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgLevels() }),
   });
 }

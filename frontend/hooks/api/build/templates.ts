@@ -15,8 +15,8 @@ const templateListContract = lazyContract(() =>
 const templateRowContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateRowContract),
 );
-const roadmapSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const applyTemplateResultContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.applyTemplateResultContract),
@@ -86,7 +86,7 @@ export function useDeleteProjectTemplate() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/templates/${id}`, roadmapSuccessContract),
+      apiClient.delete<void>(`/build/templates/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
   });
 }

@@ -66,9 +66,9 @@ export interface ParticipantImportRow {
 
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
   return useGatedQuery("surveys:participants:view", {
-    queryKey: knowledgeAndSurveysQueryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.participants(surveyId, params),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal, surveyParticipantListC)).items,
+      (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params, signal, surveyParticipantListC)).items,
     staleTime: 15_000,
   });
 }

@@ -78,6 +78,9 @@ export const useRemoveSuppression = () => {
     mutationFn: (suppressionId) =>
       apiClient.delete<{ success: boolean }>(
         `/notification-preferences/suppressions/${suppressionId}`,
+        undefined,
+        undefined,
+        notificationSuccessContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.suppressions() });

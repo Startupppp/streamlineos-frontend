@@ -40,9 +40,9 @@ export interface SurveyCertificate {
 
 export function useAssessmentAttempts(surveyId: number, params?: { status?: AssessmentAttemptStatus; page?: number; pageSize?: number }) {
   return useGatedQuery("surveys:assessments:manage", {
-    queryKey: knowledgeAndSurveysQueryKeys.surveys.assessmentAttempts(surveyId, params as Record<string, unknown>),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.assessmentAttempts(surveyId, params),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<SurveyAssessmentAttempt>>(`/surveys/${surveyId}/assessment/attempts`, params as Record<string, unknown>, signal, surveyAttemptListC)).items,
+      (await apiClient.get<OffsetPage<SurveyAssessmentAttempt>>(`/surveys/${surveyId}/assessment/attempts`, params, signal, surveyAttemptListC)).items,
     staleTime: 15_000,
   });
 }

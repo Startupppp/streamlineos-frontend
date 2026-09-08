@@ -53,7 +53,7 @@ export function useOvertimeRequests(params?: { cursor?: string; pageSize?: numbe
     queryFn: ({ signal }) =>
       apiClient.get<OvertimeRequestsResponse>(
         "/hr/overtime",
-        params as Record<string, unknown> | undefined, signal, overtimeListC,
+        params, signal, overtimeListC,
       ),
     staleTime: 30_000,
     placeholderData: (prev) => prev,

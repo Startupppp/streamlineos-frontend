@@ -35,6 +35,7 @@ import {
   restoreInboxSnapshot,
   useNotificationRowPatch,
 } from "./notifications-inbox-optimistic";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const notificationListLazy = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationListContract));
 const notificationCountLazy = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract));
@@ -48,11 +49,11 @@ export const useNotifications = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<Notification[], Error>({
-    queryKey: platformCoreQueryKeys.notifications.list(params as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.notifications.list(params),
     queryFn: async ({ signal }) =>
       (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
-        params ? toStringParams(params as Record<string, unknown>) : undefined,
+        params ? toStringParams(params) : undefined,
         signal,
         notificationListLazy,
       )).data,
@@ -91,15 +92,15 @@ export const useInfiniteNotifications = (
   // body would say the same thing.
   return useInfiniteQuery<Notification[], Error>({
     queryKey: platformCoreQueryKeys.notifications.list({
-      ...(params as Record<string, unknown>),
+      ...(params),
       infinite: true,
     }),
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     queryFn: async ({ pageParam, signal }) =>
       (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
         toStringParams({
-          ...(params as Record<string, unknown>),
+          ...(params),
           limit,
           cursor: pageParam,
         }),
@@ -125,7 +126,7 @@ export const useUnreadNotifications = (
     queryFn: async ({ signal }) =>
       (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
-        toStringParams(SHARED_UNREAD_PARAMS as Record<string, unknown>),
+        toStringParams(SHARED_UNREAD_PARAMS),
         signal,
         notificationListLazy,
       )).data,

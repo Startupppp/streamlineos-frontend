@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
+import { jobPostingRowContract } from "@/hooks/api/hr/recruitment/jobs-schema";
 
 export const candidateSchema = z.object({
   id: z.number().int(),
@@ -8,7 +10,6 @@ export const candidateSchema = z.object({
   email: z.string(),
   phone: z.string().nullable(),
   resumeUrl: z.string().nullable(),
-  resumeText: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   portfolioUrl: z.string().nullable(),
   currentCompany: z.string().nullable(),
@@ -38,17 +39,30 @@ export const candidateSchema = z.object({
 });
 
 export const candidateListResponseSchema = z.object({
-  items: z.array(candidateSchema),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
+  data: z.array(candidateSchema),
+  pagination: cursorPaginationContract,
   statusCounts: z.record(z.string(), z.number()),
 });
 
+/**
+ * Duplicate detection projects eight columns, not the whole candidate row
+ * (`recruitment-candidates.service.ts` `findDuplicates`), so this deliberately
+ * does not reuse `candidateSchema`.
+ */
 export const candidateDuplicateGroupSchema = z.object({
   key: z.string(),
-  candidates: z.array(candidateSchema),
+  candidates: z.array(
+    z.object({
+      id: z.number().int(),
+      firstName: z.string(),
+      lastName: z.string(),
+      email: z.string(),
+      phone: z.string().nullable(),
+      status: z.enum(["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]),
+      createdAt: z.string(),
+      duplicateOfId: z.number().int().nullable(),
+    }),
+  ),
 });
 
 export const candidateDuplicateGroupListSchema = z.array(candidateDuplicateGroupSchema);
@@ -88,41 +102,7 @@ export const candidateDetailSchema = candidateSchema.extend({
   applications: z
     .array(
       jobApplicationSchema.extend({
-        jobPosting: z.object({
-          id: z.number().int(),
-          orgId: z.string(),
-          title: z.string(),
-          orgDepartmentId: z.string().nullable(),
-          hiringFlowId: z.number().int().nullable(),
-          location: z.string().nullable(),
-          type: z.string(),
-          experience: z.string().nullable(),
-          salaryMin: z.string().nullable(),
-          salaryMax: z.string().nullable(),
-          description: z.string().nullable(),
-          requirements: z.string().nullable(),
-          benefits: z.string().nullable(),
-          openings: z.number().int(),
-          applicationDeadline: z.string().nullable(),
-          closingDate: z.string().nullable(),
-          postedBy: z.string().nullable(),
-          postedByMembershipId: z.number().int().nullable(),
-          externalPostingIds: z.record(z.string(), z.string()).nullable(),
-          isInternal: z.boolean(),
-          screeningQuestions: z
-            .array(
-              z.object({
-                question: z.string(),
-                type: z.string(),
-                required: z.boolean(),
-                knockout: z.boolean(),
-              }),
-            )
-            .nullable(),
-          status: z.string(),
-          createdAt: z.string(),
-          updatedAt: z.string(),
-        }).nullable(),
+        jobPosting: jobPostingRowContract.nullable(),
       }),
     )
     .optional(),
@@ -169,7 +149,7 @@ export const candidateDetailSchema = candidateSchema.extend({
               interviewerMembershipId: z.number().int().nullable(),
               templateId: z.number().int().nullable(),
               ratings: z.record(z.string(), z.number()),
-              recommendation: z.string(),
+              recommendation: z.enum(["HIRE", "NO_HIRE", "MAYBE"]),
               notes: z.string().nullable(),
               isBlindMode: z.boolean(),
               submittedAt: z.string().nullable(),

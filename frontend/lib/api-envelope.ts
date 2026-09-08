@@ -1,4 +1,5 @@
 import type { ZodType } from "zod";
+import { isRecord } from "@/lib/is-record";
 import { reportError } from "@/lib/observability/error-reporter";
 
 export class ApiError extends Error {
@@ -141,10 +142,6 @@ export interface ApiResponseLike {
   readonly status: number;
   readonly statusText: string;
   json(): Promise<unknown>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function unwrapEnvelope(body: unknown): unknown {

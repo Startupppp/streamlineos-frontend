@@ -4,6 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const jobBoardPostingsListC = lazyContract(() =>
@@ -15,10 +19,6 @@ const createJobBoardPostingC = lazyContract(() =>
 const updateJobBoardPostingC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.updateJobBoardPostingContract),
 );
-const deleteJobBoardPostingC = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.deleteJobBoardPostingContract),
-);
-
 export type JobBoardPostingStatus = "DRAFT" | "POSTED" | "EXPIRED" | "CLOSED";
 
 export interface JobBoardPosting {
@@ -98,7 +98,7 @@ export function useDeleteJobBoardPosting(jobId: number) {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "delete", jobId],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, undefined, undefined, deleteJobBoardPostingC),
+      apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }

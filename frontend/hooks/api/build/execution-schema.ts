@@ -128,3 +128,4 @@ export const cycleRowContract = cycleRowSchema;
 export const moduleListContract = z.array(moduleListItemSchema);
 export const moduleRowContract = moduleRowSchema;
 export const epicListContract = z.array(epicRowSchema);
+export const sprintUpdateResultContract = z.object({ success: z.literal(true) });

@@ -28,6 +28,12 @@ export const webhookCreateContract = webhookEndpointSafeSchema.extend({
   secretHint: z.string(),
 });
 
+/** `WebhooksService.update` returns the row with `secret` stripped. */
+export const webhookUpdateContract = webhookEndpointSafeSchema;
+
+/** `WebhooksService.remove` answers 200 with `{ success: true }`, never 204. */
+export const webhookDeleteContract = z.object({ success: z.literal(true) });
+
 export const webhookRotateSecretContract = z.object({
   id: z.number().int(),
   secret: z.string(),

@@ -11,12 +11,25 @@ import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
+import { isRecord } from "@/lib/is-record";
 
-interface NotificationPayload {
-  id?: number;
-  senderId?: string;
-  senderName?: string | null;
-  content?: string | null;
+/**
+ * An Ably message body is `any`, so asserting it into a payload interface
+ * checked nothing. Read the four fields the handler uses and verify each.
+ */
+function readChatNotification(data: unknown): {
+  id: number;
+  senderId: unknown;
+  senderName: string | null;
+  content: string | null;
+} | null {
+  if (!isRecord(data) || typeof data.id !== "number" || !data.id) return null;
+  return {
+    id: data.id,
+    senderId: data.senderId,
+    senderName: typeof data.senderName === "string" ? data.senderName : null,
+    content: typeof data.content === "string" ? data.content : null,
+  };
 }
 
 export function useChatGlobalNotifications(
@@ -65,8 +78,8 @@ export function useChatGlobalNotifications(
         const channelDisplayName = channel.name;
 
         const handler = (msg: InboundMessage) => {
-          const payload = msg.data as NotificationPayload;
-          if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
+          const payload = readChatNotification(msg.data);
+          if (!payload || payload.senderId === currentUserIdRef.current) return;
 
           queryClient.invalidateQueries({
             queryKey: collaborationQueryKeys.chat.myChannels(),

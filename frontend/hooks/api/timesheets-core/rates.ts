@@ -13,6 +13,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const ratesListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-rate-schema").then((m) => m.ratesListResponseContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const rateC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-rate-schema").then((m) => m.rateContract),
 );
@@ -59,7 +62,7 @@ export function useDeleteRate() {
   return useAuthorizedMutation("timesheets:rates:manage", {
     mutationKey: ["timesheets", "rates", "delete"],
     mutationFn: (rateId: number) =>
-      apiClient.delete<{ success: boolean }>(`/timesheets/rates/${rateId}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/timesheets/rates/${rateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.rates() });
       toast.success("Rate removed");

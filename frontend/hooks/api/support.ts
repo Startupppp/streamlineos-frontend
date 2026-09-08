@@ -90,7 +90,7 @@ export const useSupportTickets = (
   >
 ) => {
   return useGatedQuery("support:tickets:view", {
-    queryKey: platformCoreQueryKeys.support.list(filters as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.support.list(filters),
     queryFn: ({ signal }) =>
       apiClient.get<SupportTicketsResponse>("/support", {
         ...(filters?.status ? { status: filters.status } : {}),

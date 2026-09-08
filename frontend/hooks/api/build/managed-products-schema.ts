@@ -30,5 +30,3 @@ export const managedProductPageContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
-
-export const managedProductSuccessContract = z.object({ success: z.literal(true) });

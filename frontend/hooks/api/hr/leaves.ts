@@ -12,6 +12,7 @@ import {
   leaveRequestsPageC,
   leaveTypesListC,
   leavesThisWeekC,
+  hrHolidaysListC,
 } from "@/hooks/api/hr/leaves-contracts";
 import {
   LEAVE_TYPES_KEY,
@@ -30,7 +31,8 @@ import type {
   LeavePolicyResponse,
   LeaveRequestsPage,
 } from "@/hooks/api/hr/leaves-types";
-import type { Holiday } from "@/types/hr";
+import type { HrHolidayRow } from "@/hooks/api/hr/leaves-schema";
+import { NULL_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export * from "@/hooks/api/hr/leave-request-mutations";
 export * from "@/hooks/api/hr/leave-type-mutations";
@@ -119,7 +121,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
         limit: 50,
         ...(pageParam !== null ? { cursor: pageParam } : {}),
       }, signal, leaveRequestsPageC),
-    initialPageParam: null as number | null,
+    initialPageParam: NULL_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
@@ -132,10 +134,7 @@ export function useHrHolidaysForYear(year: number) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.holidaysYear(year),
     queryFn: ({ signal }) =>
-      apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<
-        string,
-        unknown
-      >, signal),
+      apiClient.get<HrHolidayRow[]>("/hr/holidays", { year }, signal, hrHolidaysListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
   });
@@ -150,9 +149,9 @@ export function useHrHolidaysForCalendar(params: {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.holidaysCalendar(params),
     queryFn: ({ signal }) =>
-      apiClient.get<Holiday[]>(
+      apiClient.get<HrHolidayRow[]>(
         "/hr/holidays/calendar",
-        params as Record<string, unknown>, signal,
+        params, signal, hrHolidaysListC,
       ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,

@@ -8,16 +8,16 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
 const delegationsPageContract = lazyContract(() =>
   import("@/hooks/api/delegations-schema").then((m) => m.delegationsPageContract),
 );
 const delegationRowContract = lazyContract(() =>
   import("@/hooks/api/delegations-schema").then((m) => m.delegationRowContract),
 );
-const delegationMutationContract = lazyContract(() =>
-  import("@/hooks/api/delegations-schema").then((m) => m.delegationMutationContract),
-);
-
 export interface Delegation {
   id: string;
   orgId: string;
@@ -104,7 +104,7 @@ export function useRevokeDelegation(
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, string>("settings:rbac:manage", {
     mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
-    mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`, undefined, undefined, delegationMutationContract),
+    mutationFn: (id: string) => apiClient.delete<void>(`/access/delegations/${id}`, undefined, undefined, noContentC),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({

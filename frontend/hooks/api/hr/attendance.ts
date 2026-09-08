@@ -9,7 +9,7 @@ import {
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -80,12 +80,7 @@ export interface CreateRegularizationInput {
 
 export interface AttendanceHistoryResponse {
   data: AttendanceLog[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export function useHrAttendanceStatus(
@@ -113,33 +108,27 @@ export function useHrAttendanceStatus(
   });
 }
 
-export function useHrAttendanceHistory(page: number, limit: number) {
+export function useHrAttendanceHistory(cursor: string | undefined, limit: number) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("self:attendance");
-  const params = { page, limit };
+  const params = cursor ? { cursor, limit } : { limit };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceHistory(params),
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<AttendanceHistoryResponse> => {
       try {
         return await apiClient.get<AttendanceHistoryResponse>(
           "/me/attendance/history",
           params, signal, attendanceHistoryC,
         );
       } catch (error) {
-        if ((error as { status?: number }).status !== 404) throw error;
+        if (!isApiError(error) || error.status !== 404) throw error;
         const legacyData = await apiClient.get<AttendanceLog[]>(
           "/me/attendance/logs", undefined, signal, attendanceRowListC,
         );
-        const offset = (page - 1) * limit;
         return {
-          data: legacyData.slice(offset, offset + limit),
-          pagination: {
-            page,
-            limit,
-            total: legacyData.length,
-            totalPages: Math.ceil(legacyData.length / limit),
-          },
+          data: legacyData.slice(0, limit),
+          pagination: { limit, hasMore: false, nextCursor: null },
         };
       }
     },
@@ -389,7 +378,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
     queryFn: ({ signal }) =>
       apiClient.get<TeamAttendanceStatusResponse>(
         "/hr/attendance/team-status",
-        params as Record<string, unknown> | undefined, signal, teamAttendanceStatusC,
+        params, signal, teamAttendanceStatusC,
       ),
     staleTime: 65_000,
     refetchInterval: 60_000,

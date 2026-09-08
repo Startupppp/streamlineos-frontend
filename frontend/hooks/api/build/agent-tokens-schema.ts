@@ -23,7 +23,5 @@ const agentTokenListItemContract = z.object({
 
 export const agentTokenListContract = z.array(agentTokenListItemContract);
 
-export const agentTokenSuccessContract = z.object({ success: z.literal(true) });
-
 export type AgentToken = z.infer<typeof agentTokenListItemContract>;
 export type CreateAgentTokenResponse = z.infer<typeof agentTokenCreateContract>;

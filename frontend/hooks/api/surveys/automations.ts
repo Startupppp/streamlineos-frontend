@@ -13,6 +13,9 @@ const surveyAutomationRuleListC = lazyContract(() =>
 const surveyAutomationRuleC = lazyContract(() =>
   import("./survey-automation-schema").then((m) => m.surveyAutomationRuleContract),
 );
+const surveyAutoSuccessC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutoSuccessContract),
+);
 
 export type AutomationEventType =
   | "survey.published"
@@ -70,7 +73,13 @@ export function useDeleteAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
   return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "delete", surveyId] as const,
-    mutationFn: (automationId: string) => apiClient.delete(`/surveys/${surveyId}/automations/${automationId}`),
+    mutationFn: (automationId: string) =>
+      apiClient.delete(
+        `/surveys/${surveyId}/automations/${automationId}`,
+        undefined,
+        undefined,
+        surveyAutoSuccessC,
+      ),
     onSuccess: invalidate,
   });
 }

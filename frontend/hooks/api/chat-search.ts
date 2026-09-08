@@ -42,6 +42,7 @@ import type {
   SearchChannelResult,
   SearchUserResult,
 } from "@/types/chat";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useChatPins(channelId: number) {
   const canRead = useCan("chat:messages:read");
@@ -111,7 +112,7 @@ export function useThreadReplies(channelId: number, messageId: number) {
         chatThreadPageContract,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0 && messageId > 0,
   });
 }

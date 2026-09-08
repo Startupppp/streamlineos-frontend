@@ -15,8 +15,8 @@ const agentTokenListContract = lazyContract(() =>
 const agentTokenCreateContract = lazyContract(() =>
   import("@/hooks/api/build/agent-tokens-schema").then((m) => m.agentTokenCreateContract),
 );
-const agentTokenSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/agent-tokens-schema").then((m) => m.agentTokenSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 export type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
@@ -48,7 +48,7 @@ export function useRevokeAgentToken() {
   return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "revoke"],
     mutationFn: (tokenId: number) =>
-      apiClient.delete<{ success: boolean }>(`/agent-tokens/${tokenId}`, agentTokenSuccessContract),
+      apiClient.delete<void>(`/agent-tokens/${tokenId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentTokens() });
     },

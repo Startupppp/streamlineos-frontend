@@ -201,10 +201,6 @@
       "as": 0,
       "nonNull": 1
     },
-    "components/ui/data-table.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "components/ui/form.tsx": {
       "as": 2,
       "nonNull": 0

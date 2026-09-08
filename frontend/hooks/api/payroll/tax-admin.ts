@@ -26,7 +26,7 @@ export function useTaxDeclarationsAdmin(params: {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.taxDeclarations(
-      params as Record<string, unknown> | undefined,
+      params,
     ),
     queryFn: ({ signal }) =>
       apiClient.get(

@@ -84,7 +84,8 @@ function makeMessage(index: number): Message {
 function makeSaved(count: number): SavedMessage[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i + 1,
-    userId: "user-1",
+    orgId: "org-1",
+    membershipId: 1,
     messageId: i + 1,
     savedAt: "2026-01-01T00:00:00.000Z",
     message: { ...makeMessage(i + 1), content: `saved-${i + 1}`, channel: null },

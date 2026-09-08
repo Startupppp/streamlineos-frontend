@@ -13,6 +13,10 @@ import type {
   UpdateHrWebhookInput,
 } from "@/types/hr/webhooks";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
@@ -30,7 +34,7 @@ export function useHrWebhooks(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: hrWebhookKeys.list(params),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params as Record<string, unknown>, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)))).items,
+      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)))).items,
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -110,7 +114,7 @@ export function useDeleteHrWebhook() {
   return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/webhooks/${id}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.successResponseContract))),
+      apiClient.delete<void>(`/hr/webhooks/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrWebhookKeys.all }),
   });
 }

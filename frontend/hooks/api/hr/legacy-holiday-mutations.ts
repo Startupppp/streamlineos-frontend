@@ -39,7 +39,7 @@ export function useDeleteLegacyHoliday() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
-      apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`, undefined, undefined, deleteHolidayC),
+      apiClient.delete<void>(`/hr/holidays/${holidayId}`, undefined, undefined, deleteHolidayC),
     onSuccess: () => {
       invalidateHolidaySurfaces(qc);
     },

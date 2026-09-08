@@ -12,7 +12,7 @@ import type {
   HrOnboardingStatus,
 } from "./dashboard";
 import type { HrDocumentStats } from "./documents";
-import type { PaginatedResignations } from "./exit";
+import type { Resignation } from "./exit";
 import type { ProbationListResponse } from "./probation";
 import type { JobRequisition } from "./requisitions";
 import type { ServiceDeliveryOpsInbox } from "./service-delivery";
@@ -92,7 +92,7 @@ export interface HrHubSections {
   leaveCalendar: HrHubSection<HrLeaveCalendarEntry[]> | null;
   pendingWfh: HrHubSection<WfhRequest[]> | null;
   probation: HrHubSection<ProbationListResponse> | null;
-  resignations: HrHubSection<PaginatedResignations> | null;
+  resignations: HrHubSection<{ data: Resignation[]; count: number }> | null;
   documentStats: HrHubSection<HrDocumentStats> | null;
   holidays: HrHubSection<Holiday[]> | null;
   attendanceStatus: HrHubSection<TeamAttendanceStatusResponse> | null;

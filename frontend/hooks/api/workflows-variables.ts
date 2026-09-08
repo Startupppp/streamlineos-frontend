@@ -8,6 +8,9 @@ import { useCan } from "@/hooks/api/access";
 import type { WorkflowVariable } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const workflowVariableListContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowVariableListContract),
 );
@@ -34,7 +37,7 @@ export function useDeleteGlobalVariable() {
     mutationKey: ["delete", "global", "variable"],
     mutationFn: (variableId: string) => {
       assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(`/workflows/variables/${variableId}`);
+      return apiClient.delete<void>(`/workflows/variables/${variableId}`, undefined, undefined, noContentContract);
     },
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-variables"] }),

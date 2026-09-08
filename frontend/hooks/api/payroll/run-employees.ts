@@ -39,11 +39,11 @@ export function useRunEmployees(
 ) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.runEmployeesList(runId, params),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/payroll/runs/${runId}/employees`,
-        params as Record<string, string | number> | undefined, signal, runListEmployeesC,
+        params, signal, runListEmployeesC,
       ),
     staleTime: 30_000,
     enabled: canView && runId > 0,

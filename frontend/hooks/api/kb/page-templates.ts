@@ -3,6 +3,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -33,10 +37,6 @@ const kbPageTemplateSingleContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-templates-schema").then((m) => m.kbPageTemplateSingleContract),
 );
 
-const kbPageTemplateSuccessContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-templates-schema").then((m) => m.kbPageTemplateSuccessContract),
-);
-
 export function useKbPageTemplates() {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
@@ -64,7 +64,7 @@ export function useDeleteKbPageTemplate() {
   return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/page-templates/${templateId}`, undefined, undefined, kbPageTemplateSuccessContract),
+      apiClient.delete<void>(`/kb/page-templates/${templateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },

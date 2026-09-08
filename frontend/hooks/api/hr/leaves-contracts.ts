@@ -51,6 +51,9 @@ export const deleteHolidayC = lazyContract(() =>
 export const updateHolidayC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.updateHolidayContract),
 );
+export const hrHolidaysListC = lazyContract(() =>
+  import("@/hooks/api/hr/leaves-schema").then((m) => m.hrHolidaysListContract),
+);
 export const leaveAnalyticsC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveAnalyticsContract),
 );

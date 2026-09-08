@@ -128,3 +128,9 @@ export const kbReindexAllContract = z.object({
   totalChunks: z.number().int(),
   failures: z.array(z.object({ articleId: z.number().int(), error: z.string() })),
 });
+
+/** `kbFeedbackResponseSchema` — `recorded` is false when the visitor already voted. */
+export const kbPublicFeedbackContract = z.object({
+  success: z.boolean(),
+  recorded: z.boolean(),
+});

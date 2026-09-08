@@ -30,6 +30,9 @@ const ticketUpdateResultLazy = lazyContract(() =>
 const successLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 const rankTicketResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.rankTicketResultContract),
@@ -253,18 +256,18 @@ export function useUpdateTicket(
 
 export function useDeleteTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<void, Error, { ticketId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, { ticketId: number }>("build:tickets:delete", {
+  return useAuthorizedMutation<void, Error, { ticketId: number }>("build:tickets:delete", {
     ...options,
     mutationKey: ["projects", "tickets", "delete"],
     mutationFn: ({ ticketId }) =>
-      apiClient.delete<{ success: boolean }>(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({

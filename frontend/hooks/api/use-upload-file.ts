@@ -2,6 +2,11 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 
 interface UploadResult {
   key: string;
@@ -29,7 +34,11 @@ async function uploadFileRequest({
    * transcoded), so returning the declared pair stores a size and a MIME type
    * that describe a different object from the one in the bucket.
    */
-  const data = await apiClient.upload<UploadResult>("/storage/upload", formData);
+  const data = await apiClient.upload<UploadResult>(
+    "/storage/upload",
+    formData,
+    storageUploadContract,
+  );
   return {
     key: data.key,
     size: data.size,

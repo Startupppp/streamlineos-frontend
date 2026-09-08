@@ -88,7 +88,7 @@ export const useInvitations = (
 ) => {
   const canView = useCan("settings:organization:manage");
   return useQuery<InvitationsResponse, Error>({
-    queryKey: usersAndCommerceQueryKeys.users.invitations(params as Record<string, unknown> | undefined),
+    queryKey: usersAndCommerceQueryKeys.users.invitations(params),
     queryFn: ({ signal }) =>
       apiClient.get<InvitationsResponse>("/users/invitations", {
         ...(params?.page ? { page: String(params.page) } : {}),

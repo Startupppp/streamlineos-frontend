@@ -24,7 +24,7 @@ import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus } from "@/features/timesheets/types";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";
 import { MemberDetailSheet } from "./member-detail-sheet";
@@ -67,7 +67,7 @@ export function TeamView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo<Employee[]>(
+  const employees = useMemo<EmployeeListItem[]>(
     () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );

@@ -1,7 +1,9 @@
 ﻿"use client";
 
+import type { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
+import type { projectStatusContract as projectStatusContractDef } from "@/hooks/api/build/workflow-schema";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -20,6 +22,14 @@ const workflowTransitionListContract = lazyContract(() =>
 const workflowTransitionContract = lazyContract(() =>
   import("@/hooks/api/build/workflow-schema").then((m) => m.workflowTransitionContract),
 );
+const projectStatusContract = lazyContract(() =>
+  import("@/hooks/api/build/workflow-schema").then((m) => m.projectStatusContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+type ProjectStatus = z.infer<typeof projectStatusContractDef>;
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage project workflows.");
@@ -82,7 +92,12 @@ export function useDeleteTransition(projectId: number) {
     mutationKey: ["projects", projectId, "workflow", "transitions", "delete"],
     mutationFn: (id: number) => {
       assertPermission(canManage);
-      return apiClient.delete(`/build/${projectId}/workflow/transitions/${id}`);
+      return apiClient.delete<void>(
+        `/build/${projectId}/workflow/transitions/${id}`,
+        undefined,
+        undefined,
+        noContentContract,
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId) });
@@ -97,7 +112,12 @@ export function useUpdateStatusWip(projectId: number) {
     mutationKey: ["projects", projectId, "workflow", "wip", "update"],
     mutationFn: ({ statusId, ...data }: UpdateWipInput & { statusId: number }) => {
       assertPermission(canManage);
-      return apiClient.patch(`/build/${projectId}/workflow/statuses/${statusId}/wip`, data);
+      return apiClient.patch<ProjectStatus>(
+        `/build/${projectId}/workflow/statuses/${statusId}/wip`,
+        data,
+        undefined,
+        projectStatusContract,
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: customStateKeys(projectId) });

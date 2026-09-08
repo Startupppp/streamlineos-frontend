@@ -35,6 +35,9 @@ const kbFeedbackListC = lazyContract(() =>
 const kbSuccessC = lazyContract(() =>
   import("./support-kb-schema").then((m) => m.kbSuccessContract),
 );
+const kbPublicFeedbackC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbPublicFeedbackContract),
+);
 
 export type KbArticleStatus = "draft" | "in_review" | "published" | "archived";
 export type KbArticleVisibility = "public" | "internal";
@@ -242,9 +245,11 @@ export function useSubmitSupportKbFeedback() {
   return useMutation({
     mutationKey: ["supportKb", "feedback", "submit"],
     mutationFn: ({ orgId, slug, ...body }: SubmitKbFeedbackInput) =>
-      apiClient.post<{ success: boolean }>(
+      apiClient.post<{ success: boolean; recorded: boolean }>(
         `/public/kb/${slug}/feedback?org=${encodeURIComponent(orgId)}`,
         body,
+        undefined,
+        kbPublicFeedbackC,
       ),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.publicArticle(variables.orgId, variables.slug) });

@@ -14,6 +14,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { SavedMessagesPage } from "@/types/chat";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useSavedMessages() {
   const canRead = useCan("chat:messages:read");
@@ -22,10 +23,12 @@ export function useSavedMessages() {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<SavedMessagesPage>(
         "/chat/saved",
-        pageParam !== undefined ? { cursor: pageParam } : undefined, signal,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        chatSavedMessagesContract,
       ),
     getNextPageParam: (last) => last.nextCursor,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     staleTime: 60_000,
     enabled: canRead,
   });

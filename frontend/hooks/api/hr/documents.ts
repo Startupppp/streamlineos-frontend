@@ -54,7 +54,7 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
   };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
-    queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal, documentListLazy),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canDocs,
@@ -102,7 +102,7 @@ export function useHrDocumentExpiry(
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documentsExpiry(days),
     queryFn: ({ signal }) =>
-      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal),
+      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal, documentExpiryLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });

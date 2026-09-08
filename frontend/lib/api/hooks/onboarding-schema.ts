@@ -24,3 +24,6 @@ export const bankDetailsContract = z.object({
   swift: z.string().nullable(),
   statutory: z.record(z.string(), z.string()),
 });
+
+/** `successSchema` — the three onboarding writes all answer `{ success: true }`. */
+export const onboardingSuccessContract = z.object({ success: z.literal(true) });

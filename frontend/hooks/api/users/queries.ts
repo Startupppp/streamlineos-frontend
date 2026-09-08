@@ -35,7 +35,7 @@ export const useUsers = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
-    queryKey: usersAndCommerceQueryKeys.users.list(params as Record<string, unknown> | undefined),
+    queryKey: usersAndCommerceQueryKeys.users.list(params),
     queryFn: ({ signal }) =>
       apiClient.get<UsersResponse>("/v2/users", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),

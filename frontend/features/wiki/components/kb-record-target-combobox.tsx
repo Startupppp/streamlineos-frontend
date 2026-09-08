@@ -11,7 +11,7 @@ import { useContacts, useContactDetail } from "@/hooks/api/crm/contacts";
 import { useHrEmployees } from "@/hooks/api/hr/employees";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 export type KbRecordTargetType =
   | "crm_lead"
@@ -31,7 +31,9 @@ interface KbRecordTargetComboboxProps {
   className?: string;
 }
 
-function normalizeEmployees(raw: Employee[] | { data: Employee[] } | undefined): Employee[] {
+function normalizeEmployees(
+  raw: EmployeeListItem[] | { data: EmployeeListItem[] } | undefined,
+): EmployeeListItem[] {
   if (!raw) return [];
   return Array.isArray(raw) ? raw : raw.data ?? [];
 }

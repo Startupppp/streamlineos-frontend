@@ -11,6 +11,9 @@ import type { PayslipTemplate, PayslipLayout, PayslipTemplateConfig } from "@/ty
 const payslipTemplateListC = lazyContract(() =>
   import("@/hooks/api/payroll/payslip-templates-schema").then((m) => m.payslipTemplateListContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const previewTemplateC = lazyContract(() =>
   import("@/hooks/api/payroll/payslip-templates-schema").then((m) => m.previewTemplateResponseContract),
 );
@@ -86,7 +89,7 @@ export function useDeletePayslipTemplate() {
   return useAuthorizedMutation<void, Error, { templateId: number }>("payroll:payslips:manage", {
     mutationKey: ["payroll", "delete-template"],
     mutationFn: ({ templateId }) =>
-      apiClient.delete<void>(`/payroll/payslip-templates/${templateId}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/payroll/payslip-templates/${templateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.payslipTemplates() });
     },

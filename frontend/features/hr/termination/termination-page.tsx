@@ -17,7 +17,7 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
@@ -45,12 +45,7 @@ export function TerminationPage() {
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
   const { data: employeesData } = useHrEmployees({ limit: 100 });
 
-  const employees = useMemo<Employee[]>(() => {
-    if (!employeesData) return [];
-    if (Array.isArray(employeesData)) return employeesData as Employee[];
-    const paged = employeesData as { items?: Employee[]; data?: Employee[] };
-    return paged.items ?? paged.data ?? [];
-  }, [employeesData]);
+  const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
 
   const actions = useTerminationActions({ terminations, employees, employeeUserIdParam });
 

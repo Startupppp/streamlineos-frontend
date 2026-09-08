@@ -33,7 +33,9 @@ export const useNotificationTemplates = (
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<NotificationTemplate>>(
         "/notification-templates",
-        params ? toStringParams(params) : undefined, signal,
+        params ? toStringParams(params) : undefined,
+        signal,
+        notificationTemplatesListContract,
       )).items,
     staleTime: 60_000,
     ...restOptions,

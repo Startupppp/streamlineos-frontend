@@ -4,6 +4,7 @@ import { decodeJwt, SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { isRecord } from "@/lib/is-record";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
@@ -95,7 +96,7 @@ export async function exchangeSessionForBackendJwt(
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
-    const body = (await res.json()) as unknown;
+    const body: unknown = await res.json();
     const data = unwrapBackend<{ token?: string }>(body);
     return typeof data?.token === "string" && data.token.length > 0 ? data.token : null;
   } catch {
@@ -137,7 +138,7 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
       });
       clearTimeout(timeout);
       if (!res.ok) continue;
-      const body = (await res.json()) as unknown;
+      const body: unknown = await res.json();
       return unwrapBackend<SessionData>(body);
     } catch {
       clearTimeout(timeout);
@@ -156,11 +157,12 @@ async function fetchSessionDataWithCache(
 export const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
 export function unwrapBackend<T>(body: unknown): T {
-  if (body !== null && typeof body === "object") {
-    const b = body as Record<string, unknown>;
-    if (b.success === true && "data" in b) return b.data as T;
-  }
+  if (isRecord(body) && body.success === true && "data" in body) return body.data as T;
   return body as T;
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
 export interface GoogleAuthResult {
@@ -195,15 +197,12 @@ export async function resolveGoogleUser(
       }),
     });
     if (!res.ok) return null;
-    const raw = (await res.json()) as {
-      success?: boolean;
-      data?: { userId: string; sessionId?: string };
-      userId?: string;
-      sessionId?: string;
-    };
-    const userId = raw?.data?.userId ?? raw?.userId ?? null;
+    const raw: unknown = await res.json();
+    if (!isRecord(raw)) return null;
+    const envelope = isRecord(raw.data) ? raw.data : undefined;
+    const userId = readString(envelope?.userId) ?? readString(raw.userId);
     if (!userId) return null;
-    const sessionId = raw?.data?.sessionId ?? raw?.sessionId ?? null;
+    const sessionId = readString(envelope?.sessionId) ?? readString(raw.sessionId) ?? null;
     return { userId, sessionId };
   } catch {
     return null;

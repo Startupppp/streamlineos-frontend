@@ -19,6 +19,7 @@ import type {
 } from "@/features/timesheets/payroll/types";
 import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const periodSummaryC = lazyContract(() =>
   import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollPeriodSummaryResponseContract),
@@ -123,7 +124,7 @@ export function useTimesheetPayrollExports(limit = 20) {
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params, signal, exportListC);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,

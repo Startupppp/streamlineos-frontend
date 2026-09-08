@@ -5,15 +5,12 @@ const kpiRowSchema = z.object({
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  category: z.string(),
   unit: z.string().nullable(),
   target: z.string().nullable(),
-  type: z.string(),
-  ownerId: z.string().nullable(),
-  ownerMembershipId: z.number().int().nullable(),
-  period: z.string().nullable(),
-  status: z.string(),
+  weight: z.string(),
+  isActive: z.boolean(),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 const competencyRowSchema = z.object({
@@ -22,9 +19,15 @@ const competencyRowSchema = z.object({
   frameworkId: z.number().int(),
   name: z.string(),
   description: z.string().nullable(),
-  level: z.string().nullable(),
+  category: z.string(),
+  weight: z.string(),
   createdAt: z.string(),
-  updatedAt: z.string(),
+});
+
+const frameworkLevelSchema = z.object({
+  level: z.number(),
+  label: z.string(),
+  description: z.string(),
 });
 
 const frameworkRowSchema = z.object({
@@ -32,15 +35,15 @@ const frameworkRowSchema = z.object({
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  ratingScale: z.number().int(),
+  levels: z.array(frameworkLevelSchema),
+  isActive: z.boolean(),
   createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 export const kpiListContract = z.array(kpiRowSchema);
 
 export const kpiArrayContract = z.array(kpiRowSchema);
-
-export const kpiDeleteContract = z.object({ success: z.literal(true) });
 
 export const frameworkListContract = z.array(
   frameworkRowSchema.extend({

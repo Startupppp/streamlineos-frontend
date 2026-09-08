@@ -25,4 +25,3 @@ export const createJobBoardPostingContract = jobBoardPostingRowSchema;
 
 export const updateJobBoardPostingContract = jobBoardPostingRowSchema;
 
-export const deleteJobBoardPostingContract = z.object({ success: z.literal(true) });

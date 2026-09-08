@@ -31,11 +31,11 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function useJournalBatches(params?: { periodKey?: string; page?: number; limit?: number }) {
   const canView = useCan("payroll:accounting:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.journalBatches(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/payroll/accounting/journal-batches",
-        params as Record<string, string | number> | undefined, signal, journalBatchListC,
+        params, signal, journalBatchListC,
       ),
     staleTime: 60_000,
     enabled: canView,

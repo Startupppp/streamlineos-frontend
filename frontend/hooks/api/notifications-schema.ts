@@ -187,6 +187,23 @@ export const suppressionRowContract = suppressionBase;
 /** `notificationSuccessSchema` */
 export const notificationSuccessContract = z.object({ success: z.literal(true) });
 
+/**
+ * `NotificationDispatchService.emitNow` -> `DispatchResult`
+ * (`notification-dispatch.service.ts`). Written from that interface, NOT from
+ * the module's `notificationEmitSchema`, which declares `{ chunkInput, dedupeKey }`
+ * — a copy of a neighbouring schema that passes vacuously (`z.unknown()` on an
+ * absent key) and describes nothing this handler returns.
+ */
+export const notificationEmitContract = z.object({
+  eventKey: z.string(),
+  notified: z.number().int(),
+  deliveriesQueued: z.number().int(),
+  suppressed: z.number().int(),
+  deduped: z.number().int(),
+  deferred: z.boolean(),
+  failedRecipients: z.number().int(),
+});
+
 /** `notificationTemplateRowSchema` */
 export const notificationTemplateContract = z.object({
   id: z.number().int(),
@@ -220,6 +237,7 @@ export const notificationTemplatesListContract = z.object({
   page: z.number().int(),
   pageSize: z.number().int(),
   total: z.number().int(),
+  totalPages: z.number().int(),
 });
 
 /** `templatePreviewSchema` */

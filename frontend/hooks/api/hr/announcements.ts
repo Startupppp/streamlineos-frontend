@@ -6,6 +6,10 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import type {
+  AnnouncementStatus,
+  AnnouncementTargetType,
+} from "@/hooks/api/hr/announcements-schema";
 
 const announcementListC = lazyContract(() =>
   import("@/hooks/api/hr/announcements-schema").then((m) => m.announcementListContract),
@@ -23,12 +27,12 @@ export interface HrAnnouncement {
   title: string;
   content: string;
   authorId: string;
-  targetType: string;
+  targetType: AnnouncementTargetType;
   targetIds: string[];
   isPinned: boolean;
   publishAt?: string | null;
   expiresAt?: string | null;
-  status: string;
+  status: AnnouncementStatus;
   readCount: number;
   attachmentUrls: string[];
   createdAt: string;

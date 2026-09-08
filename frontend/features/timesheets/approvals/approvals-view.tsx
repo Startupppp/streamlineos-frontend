@@ -21,7 +21,7 @@ import {
 } from "@/hooks/api/timesheets-core/approvals";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
@@ -60,7 +60,7 @@ export function ApprovalsView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: Employee[] = unwrapEmployees(employeesRaw);
+  const employees: EmployeeListItem[] = unwrapEmployees(employeesRaw);
 
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();

@@ -114,12 +114,8 @@ export function ComponentsPageContent() {
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
     deleteMutation.mutate(deleteTarget.id, {
-      onSuccess: (result) => {
-        toast[result.softDeleted ? "info" : "success"](
-          result.softDeleted
-            ? "Component deactivated (it has existing data)"
-            : "Component deleted",
-        );
+      onSuccess: () => {
+        toast.success("Component removed");
         setDeleteTarget(null);
       },
       onError: () => { toast.error("Failed to delete component"); setDeleteTarget(null); },

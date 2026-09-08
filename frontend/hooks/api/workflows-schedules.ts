@@ -9,6 +9,9 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSchedule, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const workflowScheduleListContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowScheduleListContract),
 );
@@ -84,8 +87,11 @@ export function useDeleteSchedule() {
     mutationKey: ["delete", "schedule"],
     mutationFn: ({ workflowId, scheduleId }: { workflowId: string; scheduleId: string }) => {
       assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(
+      return apiClient.delete<void>(
         `/workflows/${workflowId}/schedules/${scheduleId}`,
+        undefined,
+        undefined,
+        noContentContract,
       );
     },
     onSuccess: (_, variables) =>

@@ -10,14 +10,17 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 const richDocumentDetailC = lazyContract(() =>
   import("@/hooks/api/hr/rich-documents-schema").then((m) => m.richDocumentDetailContract),
 );
+const richDocumentsListC = lazyContract(() =>
+  import("@/hooks/api/hr/rich-documents-schema").then((m) => m.richDocumentsListContract),
+);
 const createRichDocumentC = lazyContract(() =>
   import("@/hooks/api/hr/rich-documents-schema").then((m) => m.createRichDocumentContract),
 );
 const updateRichDocumentC = lazyContract(() =>
   import("@/hooks/api/hr/rich-documents-schema").then((m) => m.updateRichDocumentContract),
 );
-const deleteRichDocumentC = lazyContract(() =>
-  import("@/hooks/api/hr/rich-documents-schema").then((m) => m.deleteRichDocumentContract),
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const publishRichDocumentC = lazyContract(() =>
   import("@/hooks/api/hr/rich-documents-schema").then((m) => m.publishRichDocumentContract),
@@ -39,13 +42,18 @@ export interface RichDocument {
 
 export type RichDocumentListItem = Omit<RichDocument, "contentJson">;
 
+/**
+ * `RichDocumentsService.list` is a keyset walk over `(updatedAt, id)` — it
+ * answers `{ limit, hasMore, nextCursor }` and never a `total` or a page count,
+ * so a numbered pager cannot be built over it.
+ */
 export interface RichDocumentListResponse {
   data: RichDocumentListItem[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export interface RichDocumentListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   isPublished?: boolean;
 }
@@ -62,13 +70,19 @@ export function useRichDocuments(params?: RichDocumentListParams) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   const queryParams: Record<string, unknown> = {
-    page: params?.page ?? 1,
     limit: params?.limit ?? 20,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
     ...(params?.isPublished !== undefined ? { isPublished: String(params.isPublished) } : {}),
   };
   return useQuery({
     queryKey: richDocKeys.list(queryParams),
-    queryFn: ({ signal }) => apiClient.get<RichDocumentListResponse>("/hr/rich-documents", queryParams, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<RichDocumentListResponse>(
+        "/hr/rich-documents",
+        queryParams,
+        signal,
+        richDocumentsListC,
+      ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
@@ -115,7 +129,7 @@ export function useDeleteRichDocument() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "rich-documents", "delete"],
     mutationFn: (documentId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${documentId}`, undefined, undefined, deleteRichDocumentC),
+      apiClient.delete<void>(`/hr/rich-documents/${documentId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
   });
 }

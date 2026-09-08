@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, authedFetch, buildUrl, getApiErrorCode } from "@/lib/api-client";
+import { isRecord } from "@/lib/is-record";
 
 /**
  * The client for every AI text-stream route the backend exposes.
@@ -65,13 +66,12 @@ export async function readAiStreamError(res: Response, path: string): Promise<Ap
   let message = `${res.status} ${res.statusText}`;
   let code: string | undefined;
   try {
-    const body = (await res.json()) as {
-      message?: string;
-      error?: string;
-      code?: string;
-    };
-    message = body.message ?? body.error ?? message;
-    code = body.code;
+    const body: unknown = await res.json();
+    if (isRecord(body)) {
+      if (typeof body.message === "string") message = body.message;
+      else if (typeof body.error === "string") message = body.error;
+      if (typeof body.code === "string") code = body.code;
+    }
   } catch {
     message = `${res.status} ${res.statusText}`;
   }

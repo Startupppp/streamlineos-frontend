@@ -17,8 +17,13 @@ import { createTicketInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
 import type { ProjectMemberRecord, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 
 const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
@@ -219,7 +224,11 @@ export function useCreateTicketForm({
               const formData = new FormData();
               formData.append("file", file);
               formData.append("folder", "tickets");
-              const result = await apiClient.upload<{ key: string }>("/storage/upload", formData);
+              const result = await apiClient.upload<{ key: string }>(
+                "/storage/upload",
+                formData,
+                storageUploadContract,
+              );
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
                 fileUrl: result.key,

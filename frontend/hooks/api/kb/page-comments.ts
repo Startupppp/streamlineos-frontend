@@ -3,6 +3,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -31,10 +35,6 @@ const kbPageCommentListContract = lazyContract(() =>
 
 const kbPageCommentContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-comments-schema").then((m) => m.kbPageCommentContract),
-);
-
-const kbPageCommentSuccessContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-comments-schema").then((m) => m.kbPageCommentSuccessContract),
 );
 
 export function useKbPageComments(pageId: number) {
@@ -76,7 +76,7 @@ export function useDeleteKbPageComment() {
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "delete"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
-      apiClient.delete<{ success: boolean }>(`/kb/page-comments/${commentId}`, undefined, undefined, kbPageCommentSuccessContract),
+      apiClient.delete<void>(`/kb/page-comments/${commentId}`, undefined, undefined, noContentC),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
     },

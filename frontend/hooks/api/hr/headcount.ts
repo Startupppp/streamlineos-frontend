@@ -11,6 +11,11 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import type { HeadcountListPage } from "@/hooks/api/hr/headcount-schema";
+
+const headcountListPageC = lazyContract(() =>
+  import("@/hooks/api/hr/headcount-schema").then((m) => m.headcountListPageContract),
+);
 
 export type HeadcountStatus =
   | "DRAFT"
@@ -67,8 +72,15 @@ export function useHeadcountRequests(
   const canView = useCan("hr:employees:view");
   return useQuery<HeadcountRequest[], Error>({
     queryKey: humanResourcesQueryKeys.hr.headcountRequests(),
-    queryFn: ({ signal }) =>
-      apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<HeadcountListPage>(
+        "/hr/recruitment/headcount",
+        undefined,
+        signal,
+        headcountListPageC,
+      );
+      return page.data;
+    },
     staleTime: 2 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

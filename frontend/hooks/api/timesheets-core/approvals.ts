@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const approvalsListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.approvalsListResponseContract),
@@ -73,7 +74,7 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params, signal, approvalsListC);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: enabled && canView,

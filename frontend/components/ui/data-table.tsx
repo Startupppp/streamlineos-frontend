@@ -14,7 +14,7 @@ import {
 import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { DataTableHeader } from "@/components/ui/data-table-header";
@@ -32,7 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { DataTableColumn, DataTableProps, ClientPagination, ServerPagination } from "./data-table.types";
+import type { DataTableColumn, DataTableProps } from "./data-table.types";
 
 export type { DataTableColumn, DataTableProps };
 
@@ -91,10 +91,12 @@ export function DataTable<T>({
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
   const [internalPage, setInternalPage] = useState(0);
 
-  const isServerPagination =
-    pagination !== undefined && "mode" in pagination && pagination.mode === "server";
-  const serverPag = isServerPagination ? (pagination as ServerPagination) : null;
-  const clientPag = !isServerPagination ? (pagination as ClientPagination | undefined) : null;
+  const tagged = pagination !== undefined && "mode" in pagination ? pagination : undefined;
+  const mode = tagged?.mode ?? "client";
+  const serverPag = tagged?.mode === "server" ? tagged : null;
+  const cursorPag = tagged?.mode === "cursor" ? tagged : null;
+  const clientPag = tagged === undefined ? pagination : null;
+  const isServerPagination = serverPag !== null || cursorPag !== null;
   const clientPageSize = clientPag?.pageSize ?? 50;
 
   const isRowSelectable = selection?.isRowSelectable;
@@ -186,13 +188,17 @@ export function DataTable<T>({
       rowSelection,
       pagination: serverPag !== null
         ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
-        : { pageIndex: clientPage, pageSize: clientPageSize },
+        : cursorPag !== null
+          ? { pageIndex: 0, pageSize: cursorPag.pageSize }
+          : { pageIndex: clientPage, pageSize: clientPageSize },
     },
     manualSorting: sortState !== undefined,
     manualPagination: isServerPagination,
     pageCount: serverPag !== null
       ? Math.ceil(serverPag.total / serverPag.pageSize)
-      : undefined,
+      : cursorPag !== null
+        ? -1
+        : undefined,
     enableRowSelection: !selection
       ? false
       : isRowSelectable
@@ -218,6 +224,7 @@ export function DataTable<T>({
       }
     },
     onPaginationChange: (updater) => {
+      if (cursorPag) return;
       if (serverPag) {
         const prev = { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize };
         const next = typeof updater === "function" ? updater(prev) : updater;
@@ -264,14 +271,31 @@ export function DataTable<T>({
     if (!isRowPending) setPendingRowKey(null);
   }, [isRowPending]);
 
-  const currentPage = serverPag !== null ? serverPag.page - 1 : clientPage;
+  const currentPage = serverPag !== null ? serverPag.page - 1 : cursorPag !== null ? 0 : clientPage;
   const totalPages = serverPag !== null
     ? Math.ceil(serverPag.total / serverPag.pageSize)
-    : table.getPageCount();
+    : cursorPag !== null
+      ? 1
+      : table.getPageCount();
   const totalItems = serverPag !== null ? serverPag.total : data.length;
-  const pSize = serverPag !== null ? serverPag.pageSize : clientPageSize;
-  const hasPageSizeControl = !!(serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange);
-  const showPagination = totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
+  const pSize = serverPag !== null
+    ? serverPag.pageSize
+    : cursorPag !== null
+      ? cursorPag.pageSize
+      : clientPageSize;
+  const hasPageSizeControl = !!(
+    serverPag?.onPageSizeChange ?? cursorPag?.onPageSizeChange ?? clientPag?.onPageSizeChange
+  );
+  /**
+   * A keyset page cannot say how many rows exist, so `aria-rowcount` is -1 —
+   * the ARIA value for "total unknown" — and the footer shows only what this
+   * page holds. Reporting `data.length` as the total would tell a screen
+   * reader the table ends here.
+   */
+  const showPagination = cursorPag !== null
+    ? data.length > 0 && (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
+    : totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
+  const ariaRowCount = cursorPag !== null ? -1 : totalItems + 1;
   const firstRowNumber = currentPage * pSize + 1;
 
   function handleSearchChange(value: string) {
@@ -387,7 +411,7 @@ export function DataTable<T>({
           >
             <Table
               containerClassName="overflow-visible"
-              aria-rowcount={totalItems + 1}
+              aria-rowcount={ariaRowCount}
             >
               <DataTableHeader table={table} announceSort rowIndex={1} />
               <TableBody>
@@ -444,17 +468,17 @@ export function DataTable<T>({
       )}
 
       {showPagination && (
-        <div className="shrink-0 border-t px-2">
-          <DataTablePagination
-            page={currentPage + 1}
-            totalPages={totalPages}
-            total={totalItems}
-            limit={pSize}
-            onPageChange={handlePageChange}
-            onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
-            pageSizeOptions={serverPag?.pageSizeOptions}
-          />
-        </div>
+        <DataTableFooter
+          cursor={cursorPag}
+          page={currentPage + 1}
+          totalPages={totalPages}
+          total={totalItems}
+          limit={pSize}
+          rowCount={data.length}
+          onPageChange={handlePageChange}
+          onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
+          pageSizeOptions={serverPag?.pageSizeOptions}
+        />
       )}
     </div>
   );

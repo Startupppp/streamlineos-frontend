@@ -14,6 +14,10 @@ import type {
   UpdateHrAutomationInput,
 } from "@/types/hr/automations";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 const BASE = [...queryKeyBase, "hr", "automations"] as const;
@@ -61,10 +65,10 @@ export function useHrAutomationEvents() {
 
 export interface PaginatedHrAutomationRuns {
   data: HrAutomationRun[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; limit?: number }) {
+export function useHrAutomationRuns(ruleId?: number, params?: { cursor?: string; limit?: number }) {
   const canView = useCan("hr:automations:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
@@ -72,7 +76,7 @@ export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; l
     queryFn: ({ signal }) => {
       const path = ruleId ? `/hr/automations/${ruleId}/runs` : "/hr/automations/runs";
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
       return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRunListContract)));
@@ -136,7 +140,7 @@ export function useDeleteHrAutomation() {
   return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/automations/${id}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.successResponseContract))),
+      apiClient.delete<void>(`/hr/automations/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrAutomationKeys.all }),
   });
 }

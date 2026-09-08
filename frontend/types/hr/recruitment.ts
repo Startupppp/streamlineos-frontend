@@ -84,29 +84,36 @@ export interface ScreeningQuestion {
   options?: string[];
 }
 
+/**
+ * The `job_postings` row as the API sends it. The department column is
+ * `orgDepartmentId` on both sides — the old `departmentId` spelling never
+ * arrived, so every read of it resolved to `undefined`.
+ */
 export interface JobPosting {
   id: number;
   orgId: string;
   title: string;
-  departmentId: string | null;
+  orgDepartmentId: string | null;
+  hiringFlowId: number | null;
   location: string | null;
-  type: string | null;
+  type: string;
   experience: string | null;
   salaryMin: string | null;
   salaryMax: string | null;
   description: string | null;
   requirements: string | null;
   benefits: string | null;
-  status: JobPostingStatus | null;
-  openings: number | null;
+  status: JobPostingStatus;
+  openings: number;
   applicationDeadline: string | null;
   closingDate: string | null;
   postedBy: string | null;
+  postedByMembershipId: number | null;
   externalPostingIds: Record<string, string> | null;
-  isInternal: boolean | null;
+  isInternal: boolean;
   screeningQuestions: ScreeningQuestion[] | null;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
+  createdAt: string;
+  updatedAt: string;
   _count?: { applications?: number };
 }
 
@@ -118,7 +125,6 @@ export interface Candidate {
   email: string;
   phone: string | null;
   resumeUrl: string | null;
-  resumeText: string | null;
   linkedinUrl: string | null;
   portfolioUrl: string | null;
   currentCompany: string | null;
@@ -156,7 +162,7 @@ export interface CandidateApplication {
   coverLetter: string | null;
   notes: string | null;
   candidate?: Candidate;
-  jobPosting?: JobPosting;
+  jobPosting?: JobPosting | null;
 }
 
 export interface AtsPipelineCandidate {
@@ -213,7 +219,13 @@ export interface Interview {
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   candidate?: Candidate;
-  interviewer?: { id: string; name: string | null; image: string | null };
+  interviewer?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
 }
 
 export interface RecruitmentStats {

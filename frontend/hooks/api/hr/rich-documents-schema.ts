@@ -34,6 +34,4 @@ export const createRichDocumentContract = richDocumentSchema;
 
 export const updateRichDocumentContract = successContract;
 
-export const deleteRichDocumentContract = successContract;
-
 export const publishRichDocumentContract = successContract;

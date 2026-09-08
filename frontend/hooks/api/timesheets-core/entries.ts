@@ -20,6 +20,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const entriesListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entriesListResponseContract),
 );
+const entryVoidC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryVoidResultContract),
+);
 const entryC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryContract),
 );
@@ -132,7 +135,7 @@ export function useVoidTimesheetEntry() {
   return useAuthorizedMutation("timesheets:entries:void", {
     mutationKey: ["timesheets", "entries", "void"],
     mutationFn: ({ entryId, reason }: { entryId: number; reason: string }) =>
-      apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }, undefined, undefined),
+      apiClient.post<{ success: true }>(`/timesheets/entries/${entryId}/void`, { reason }, undefined, entryVoidC),
     onMutate: async ({ entryId }) => {
       await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({

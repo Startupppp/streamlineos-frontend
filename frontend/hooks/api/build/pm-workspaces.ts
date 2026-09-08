@@ -32,8 +32,9 @@ const pmWorkspaceMemberRowContract = lazyContract(() =>
 const pmWorkspacesSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/pm-workspaces-schema").then((m) => m.pmWorkspacesSuccessContract),
 );
-
-const BASE = "/build/workspaces";
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface ListPmWorkspacesParams {
   cursor?: string;
@@ -52,7 +53,7 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
     queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<PmWorkspacesPage>(BASE, queryParams, signal, pmWorkspacePageContract),
+    queryFn: ({ signal }) => apiClient.get<PmWorkspacesPage>("/build/workspaces", queryParams, signal, pmWorkspacePageContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -63,7 +64,7 @@ export function useCreatePmWorkspace() {
   return useAuthorizedMutation("build:workspaces:create", {
     mutationKey: ["projects", "pm-workspaces", "create"],
     mutationFn: (data: CreatePmWorkspaceInput) =>
-      apiClient.post<PmWorkspace>(BASE, data, undefined, pmWorkspaceRowContract),
+      apiClient.post<PmWorkspace>("/build/workspaces", data, undefined, pmWorkspaceRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
     },
@@ -78,7 +79,7 @@ export function useUpdatePmWorkspace() {
       pmWorkspaceId,
       ...data
     }: UpdatePmWorkspaceInput & { pmWorkspaceId: string }) =>
-      apiClient.patch<PmWorkspace>(`${BASE}/${pmWorkspaceId}`, data, undefined, pmWorkspaceRowContract),
+      apiClient.patch<PmWorkspace>(`/build/workspaces/${pmWorkspaceId}`, data, undefined, pmWorkspaceRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
       qc.invalidateQueries({
@@ -93,7 +94,7 @@ export function useDeletePmWorkspace() {
   return useAuthorizedMutation("build:workspaces:delete", {
     mutationKey: ["projects", "pm-workspaces", "delete"],
     mutationFn: (pmWorkspaceId: string) =>
-      apiClient.delete<void>(`${BASE}/${pmWorkspaceId}`),
+      apiClient.delete<void>(`/build/workspaces/${pmWorkspaceId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
     },
@@ -120,7 +121,7 @@ export function usePmWorkspaceMembers(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<PmWorkspaceMembersPage>(`${BASE}/${pmWorkspaceId}/members`, queryParams, signal, pmWorkspaceMemberPageContract),
+      apiClient.get<PmWorkspaceMembersPage>(`/build/workspaces/${pmWorkspaceId}/members`, queryParams, signal, pmWorkspaceMemberPageContract),
     enabled: canView && !!pmWorkspaceId,
     staleTime: 60_000,
   });
@@ -131,7 +132,7 @@ export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
   return useAuthorizedMutation("build:workspaces:members:manage", {
     mutationKey: ["projects", "pm-workspaces", "members", "add"],
     mutationFn: (data: AddPmWorkspaceMemberInput) =>
-      apiClient.post<PmWorkspaceMember>(`${BASE}/${pmWorkspaceId}/members`, data, undefined, pmWorkspaceMemberRowContract),
+      apiClient.post<PmWorkspaceMember>(`/build/workspaces/${pmWorkspaceId}/members`, data, undefined, pmWorkspaceMemberRowContract),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
@@ -145,7 +146,12 @@ export function useRemovePmWorkspaceMember(pmWorkspaceId: string) {
   return useAuthorizedMutation("build:workspaces:members:manage", {
     mutationKey: ["projects", "pm-workspaces", "members", "remove"],
     mutationFn: (pmWorkspaceMembershipId: string) =>
-      apiClient.delete<{ success: true }>(`${BASE}/${pmWorkspaceId}/members/${pmWorkspaceMembershipId}`, pmWorkspacesSuccessContract),
+      apiClient.delete<{ success: true }>(
+        `/build/workspaces/${pmWorkspaceId}/members/${pmWorkspaceMembershipId}`,
+        undefined,
+        undefined,
+        pmWorkspacesSuccessContract,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.pmWorkspaces.members(pmWorkspaceId),

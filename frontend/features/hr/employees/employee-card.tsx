@@ -6,19 +6,19 @@ import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 interface EmployeeCardProps {
-  employee: Employee;
+  employee: EmployeeListItem;
   department: string | null;
 }
 
-function employeeDisplayName(emp: Employee): string {
+function employeeDisplayName(emp: EmployeeListItem): string {
   if (emp.firstName && emp.lastName) return `${emp.firstName} ${emp.lastName}`;
   return emp.name?.trim() || "—";
 }
 
-function employeeInitials(emp: Employee): string {
+function employeeInitials(emp: EmployeeListItem): string {
   const first = emp.firstName?.trim()?.[0];
   const last = emp.lastName?.trim()?.[0];
   if (first && last) return `${first}${last}`.toUpperCase();

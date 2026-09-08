@@ -10,7 +10,7 @@ const reviewCycleRowSchema = z.object({
   periodStart: z.string(),
   periodEnd: z.string(),
   deadline: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"]),
   description: z.string().nullable(),
   templateId: z.number().int().nullable(),
   templateVersion: z.number().int().nullable(),
@@ -29,7 +29,7 @@ const reviewRowSchema = z.object({
   cycleId: z.number().int().nullable(),
   periodStart: z.string(),
   periodEnd: z.string(),
-  status: z.string(),
+  status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]),
   ratings: z
     .array(z.object({ category: z.string(), score: z.number(), comment: z.string().optional() }))
     .nullable(),
@@ -58,7 +58,7 @@ const oneOnOneMeetingBaseSchema = z.object({
   employeeId: z.string(),
   employeeMembershipId: z.number().int().nullable(),
   duration: z.number().int(),
-  status: z.string(),
+  status: z.enum(["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
   notes: z.string().nullable(),
   actionItems: z.array(z.object({ text: z.string(), done: z.boolean() })).nullable(),
   agenda: z.string().nullable(),

@@ -3,6 +3,10 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -12,9 +16,6 @@ const componentListC = lazyContract(() =>
 );
 const salaryComponentC = lazyContract(() =>
   import("@/hooks/api/payroll/components-schema").then((m) => m.salaryComponentContract),
-);
-const deleteComponentC = lazyContract(() =>
-  import("@/hooks/api/payroll/components-schema").then((m) => m.deleteComponentResponseContract),
 );
 import type {
   SalaryComponent,
@@ -55,11 +56,11 @@ type UpdateComponentInput = {
 export function usePayrollComponents(params?: ComponentListParams) {
   const canView = useCan("payroll:components:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.components(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.components(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/payroll/components",
-        params as Record<string, unknown> | undefined, signal, componentListC,
+        params, signal, componentListC,
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -94,8 +95,8 @@ export function useDeletePayrollComponent() {
   return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean; softDeleted: boolean }>(
-        `/payroll/components/${id}`, undefined, undefined, deleteComponentC,
+      apiClient.delete<void>(
+        `/payroll/components/${id}`, undefined, undefined, noContentC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),

@@ -15,7 +15,7 @@ import { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EmployeeCard } from "./employee-card";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -36,7 +36,7 @@ jest.mock("@/components/ui/avatar", () => ({
   AvatarImage: () => null,
 }));
 
-const employees: Employee[] = Array.from(
+const employees: EmployeeListItem[] = Array.from(
   { length: LOADED_EMPLOYEES },
   (_, i) =>
     ({

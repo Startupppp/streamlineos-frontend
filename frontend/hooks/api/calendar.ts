@@ -16,6 +16,9 @@ const calendarSourcePreferenceContract = lazyContract(() =>
 const calendarExternalEventsContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarExternalEventsContract),
 );
+const calendarOrgMembersContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarOrgMembersContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -81,6 +84,7 @@ export function useCalendarMemberLookup({
         "/org/members",
         isSearch ? { search: term, limit: limit ?? 25 } : undefined,
         signal,
+        calendarOrgMembersContract,
       ),
     staleTime: isSearch ? 30 * 1000 : 5 * 60 * 1000,
     enabled: canView && enabled,

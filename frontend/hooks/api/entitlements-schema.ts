@@ -23,28 +23,27 @@ export const entitlementLimitContract = z.object({
   used: z.number(),
 });
 
-const LIMIT_KEYS = [
-  "members",
-  "projects",
-  "kbPages",
-  "chatChannels",
-  "crmLeads",
-  "crmContacts",
-  "crmDeals",
-  "supportTickets",
-  "automations",
-  "signEnvelopes",
-  "surveys",
-  "acctInvoices",
-  "hrCandidates",
-  "hrJobPostings",
-] as const;
-
-export const entitlementLimitsContract = z.object(
-  Object.fromEntries(
-    LIMIT_KEYS.map((key) => [key, entitlementLimitContract]),
-  ) as Record<(typeof LIMIT_KEYS)[number], typeof entitlementLimitContract>,
-);
+/**
+ * Written out rather than built from a key list: `Object.fromEntries` returns a
+ * string-indexed bag, so the shape had to be asserted back into a keyed record,
+ * and that assertion is what let the list and the parsed type disagree.
+ */
+export const entitlementLimitsContract = z.object({
+  members: entitlementLimitContract,
+  projects: entitlementLimitContract,
+  kbPages: entitlementLimitContract,
+  chatChannels: entitlementLimitContract,
+  crmLeads: entitlementLimitContract,
+  crmContacts: entitlementLimitContract,
+  crmDeals: entitlementLimitContract,
+  supportTickets: entitlementLimitContract,
+  automations: entitlementLimitContract,
+  signEnvelopes: entitlementLimitContract,
+  surveys: entitlementLimitContract,
+  acctInvoices: entitlementLimitContract,
+  hrCandidates: entitlementLimitContract,
+  hrJobPostings: entitlementLimitContract,
+});
 
 export const entitlementsContract = z.object({
   tier: entitlementTierContract,

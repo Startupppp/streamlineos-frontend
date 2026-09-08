@@ -254,3 +254,6 @@ export const importUsersContract = z.object({
   failed: z.number(),
   total: z.number(),
 });
+
+/** `GET /users/export` answers a CSV body, so the parsed payload is a bare string. */
+export const usersCsvExportContract = z.string();

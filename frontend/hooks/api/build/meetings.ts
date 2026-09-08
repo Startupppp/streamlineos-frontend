@@ -42,6 +42,9 @@ const convertToTaskResultContract = lazyContract(() =>
 const meetingsSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingsSuccessContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const standupEntryContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.standupEntryContract),
 );
@@ -116,7 +119,7 @@ export function useDeleteMeeting(projectId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`, undefined, undefined, meetingsSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
@@ -140,7 +143,7 @@ export function useRemoveAttendee(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`, undefined, undefined, meetingsSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
@@ -188,7 +191,7 @@ export function useDeleteActionItem(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "delete"],
     mutationFn: (itemId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`, undefined, undefined, meetingsSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },

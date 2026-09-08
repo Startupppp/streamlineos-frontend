@@ -13,8 +13,8 @@ const projectReleaseListContract = lazyContract(() =>
 const projectReleaseRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectReleaseRowContract),
 );
-const projectReleaseSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
 export type { Release } from "@/types/projects";
@@ -58,7 +58,7 @@ export function useDeleteRelease(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
-      apiClient.delete(`/build/${projectId}/releases/${releaseId}`),
+      apiClient.delete<void>(`/build/${projectId}/releases/${releaseId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
   });
 }

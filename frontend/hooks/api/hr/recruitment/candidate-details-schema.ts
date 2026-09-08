@@ -156,5 +156,3 @@ export const referenceCheckSchema = z.object({
 });
 
 export const referenceCheckListSchema = z.array(referenceCheckSchema);
-
-export const referenceCheckSuccessSchema = z.object({ success: z.literal(true) });

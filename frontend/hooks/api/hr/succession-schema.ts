@@ -21,7 +21,5 @@ export const successionPlanListContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const successionDeleteContract = z.object({ success: z.literal(true) });
-
 export type SuccessionPlanResponse = z.infer<typeof successionPlanContract>;
 export type SuccessionPlanListResponse = z.infer<typeof successionPlanListContract>;

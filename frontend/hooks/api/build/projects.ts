@@ -35,6 +35,7 @@ import type {
   CreateProjectInput,
   UpdateProjectInput,
 } from "@/types/projects";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export {
   useAddProjectMember,
@@ -51,8 +52,8 @@ const projectRowLazy = lazyContract(() =>
 const projectDetailLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectDetailContract),
 );
-const projectDeleteSuccessLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+const projectDeleteNoContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const labelListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
@@ -110,7 +111,7 @@ export function useInfiniteProjects(
         signal,
         projectListPageLazy,
       ),
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage: ProjectListResponse) =>
       lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
@@ -221,16 +222,16 @@ export function useUpdateProject(
 
 export function useDeleteProject(
   options?: Omit<
-    UseMutationOptions<{ success: boolean }, Error, { projectId: number }>,
+    UseMutationOptions<void, Error, { projectId: number }>,
     "mutationFn"
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { projectId: number }>({
+  return useMutation<void, Error, { projectId: number }>({
     ...options,
     mutationKey: ["projects", "delete"],
     mutationFn: ({ projectId }) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}`, projectDeleteSuccessLazy),
+      apiClient.delete<void>(`/build/${projectId}`, undefined, undefined, projectDeleteNoContentLazy),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
@@ -240,7 +241,7 @@ export function useDeleteProject(
 export function useArchiveProject(
   options?: Omit<
     UseMutationOptions<
-      { success: boolean },
+      ProjectWithDetails,
       Error,
       { projectId: number; restore?: boolean }
     >,
@@ -249,16 +250,16 @@ export function useArchiveProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: boolean },
+    ProjectWithDetails,
     Error,
     { projectId: number; restore?: boolean }
   >({
     ...options,
     mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>
-      apiClient.patch<{ success: boolean }>(`/build/${projectId}`, {
+      apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, {
         status: restore ? "ACTIVE" : "ARCHIVED",
-      }, undefined, projectDeleteSuccessLazy),
+      }, undefined, projectDetailLazy),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),

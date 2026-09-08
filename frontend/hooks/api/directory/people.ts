@@ -15,6 +15,11 @@ import type {
   CreatePersonInput,
   UpdatePersonInput,
 } from "@/types/directory/people";
+import { lazyContract } from "@/lib/api-envelope";
+
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface UsePeopleParams {
   cursor?: string;
@@ -141,7 +146,12 @@ export function useDeletePerson() {
   return useAuthorizedMutation("directory:people:delete", {
     mutationKey: ["directory", "people", "delete"],
     mutationFn: (organizationPersonId: string) =>
-      apiClient.delete(`/directory/people/${organizationPersonId}`),
+      apiClient.delete<void>(
+        `/directory/people/${organizationPersonId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
     onSuccess: (_, organizationPersonId) => {
       qc.setQueriesData(
         { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },

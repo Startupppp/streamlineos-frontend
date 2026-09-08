@@ -55,3 +55,15 @@ export const taskAnalyticsContract = z.object({
 
 /** `taskSuccessSchema` */
 export const taskSuccessContract = z.object({ success: z.literal(true) });
+
+/**
+ * `tasksListResponseSchema` — a keyset page. `total` is present only on the
+ * first page (the service skips the count once a cursor is supplied), and there
+ * is no `page`/`limit`.
+ */
+export const tasksListContract = z.object({
+  tasks: z.array(taskRowContract),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+  total: z.number().int().optional(),
+});

@@ -48,6 +48,31 @@ export function redact(value: unknown): unknown {
   return walk(value, 0, new WeakSet());
 }
 
+/**
+ * The record-shaped entry point. `redact` returns `unknown` because it accepts
+ * anything, so a caller holding a bag and needing a bag back had to assert the
+ * result — a claim about a shape the compiler had already discarded. This one
+ * carries the shape through instead.
+ */
+export function redactRecord(value: Record<string, unknown>): Record<string, unknown> {
+  const seen = new WeakSet<object>();
+  seen.add(value);
+  return redactEntries(value, 0, seen);
+}
+
+function redactEntries(
+  value: object,
+  depth: number,
+  seen: WeakSet<object>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const entries: Array<[string, unknown]> = Object.entries(value);
+  for (const [key, entry] of entries.slice(0, MAX_KEYS))
+    out[key] = isSensitive(key) ? REDACTED : walk(entry, depth + 1, seen);
+  if (entries.length > MAX_KEYS) out["…"] = `${entries.length - MAX_KEYS} more keys`;
+  return out;
+}
+
 function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
   if (value === null || value === undefined) return value;
   if (typeof value === "string") return truncate(value);
@@ -74,13 +99,7 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
       return kept;
     }
 
-    const out: Record<string, unknown> = {};
-    const entries = Object.entries(value as Record<string, unknown>);
-    for (const [key, entry] of entries.slice(0, MAX_KEYS)) {
-      out[key] = isSensitive(key) ? REDACTED : walk(entry, depth + 1, seen);
-    }
-    if (entries.length > MAX_KEYS) out["…"] = `${entries.length - MAX_KEYS} more keys`;
-    return out;
+    return redactEntries(value, depth, seen);
   } finally {
     seen.delete(value);
   }

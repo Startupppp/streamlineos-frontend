@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 export const documentTypeContract = z.object({
   id: z.number().int(),
@@ -17,8 +18,5 @@ export const documentTypeContract = z.object({
 
 export const documentTypeListPageContract = z.object({
   data: z.array(documentTypeContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  limit: z.number().int(),
-  totalPages: z.number().int(),
+  pagination: cursorPaginationContract,
 });

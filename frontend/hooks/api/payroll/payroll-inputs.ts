@@ -94,12 +94,12 @@ export function usePayrollInputPeriods(params?: {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: payrollQueryKeys.hrPayrollInputs.periods(
-      params as Record<string, unknown> | undefined,
+      params,
     ),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedPeriods>(
         "/hr/payroll-inputs/periods",
-        params as Record<string, string | number> | undefined,
+        params,
         signal,
         payrollPeriodListC,
       ),
@@ -221,7 +221,7 @@ function makeSectionHook(section: string) {
       queryFn: ({ signal }) =>
         apiClient.get<PaginatedSnapshots>(
           `/hr/payroll-inputs/periods/${periodId}/${section}`,
-          queryParams as Record<string, string | number>,
+          queryParams,
           signal,
           payrollSnapshotListC,
         ),
@@ -244,12 +244,12 @@ export function usePayrollAdjustments(
   return useQuery({
     queryKey: payrollQueryKeys.hrPayrollInputs.adjustments(
       periodId,
-      params as Record<string, unknown> | undefined,
+      params,
     ),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedAdjustments>(
         `/hr/payroll-inputs/periods/${periodId}/adjustments`,
-        params as Record<string, string | number> | undefined,
+        params,
         signal,
         payrollAdjustmentListC,
       ),

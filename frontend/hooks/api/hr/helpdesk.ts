@@ -134,7 +134,7 @@ export function useHelpdeskTickets(params?: HelpdeskListParams) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: keys.list(params),
-    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params as Record<string, unknown>, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketListContract))),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketListContract))),
     staleTime: 60_000,
     enabled: canHelpdesk,
   });

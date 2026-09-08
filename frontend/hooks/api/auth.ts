@@ -61,7 +61,7 @@ export function useUpdateMyProfile() {
 
 export function useLoginHistory(params?: { page?: number; limit?: number; success?: boolean }) {
   return useQuery({
-    queryKey: supportAndWorkflowsQueryKeys.auth.loginHistory(params as Record<string, unknown>),
+    queryKey: supportAndWorkflowsQueryKeys.auth.loginHistory(params),
     queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryPage>("/me/login-history", {
         page: params?.page ?? 1,

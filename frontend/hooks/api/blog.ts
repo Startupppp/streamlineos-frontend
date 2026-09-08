@@ -8,6 +8,7 @@ import type {
   BlogPostWithRelations,
   FeedResponse,
 } from "@/types/blog";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const blogFeedContract = lazyContract(() =>
   import("@/hooks/api/blog-schema").then((m) => m.blogFeedContract),
@@ -35,7 +36,7 @@ export function useInfiniteBlogFeed(
       if (params.limit) query.limit = params.limit;
       return apiClient.get<FeedResponse>("/blog/feed", query, signal, blogFeedContract);
     },
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     getNextPageParam: (last) => (last.hasMore ? last.nextCursor : undefined),
     initialData: initial
       ? {

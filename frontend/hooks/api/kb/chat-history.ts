@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { KbAskCitation } from "@/types/kb";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface KbChatHistoryMessage {
   id: number;
@@ -60,7 +61,7 @@ export function useKbConversations(enabled: boolean) {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal, kbConversationListPageContract);
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
     staleTime: 30_000,
@@ -105,7 +106,7 @@ export function useKbConversationMessages(conversationId: number | null, enabled
         kbChatHistoryPageContract,
       );
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,

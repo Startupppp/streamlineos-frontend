@@ -15,6 +15,7 @@ const allWorkPageContract = lazyContract(() =>
 );
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export const COMMAND_CENTER_MY_ISSUES_PAGE_SIZE = 15;
 
@@ -65,7 +66,7 @@ export function useInfiniteAllWork(
         ...filters,
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       }, signal, allWorkPageContract),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     ...restOptions,

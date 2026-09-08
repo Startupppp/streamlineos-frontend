@@ -26,11 +26,13 @@ const hrProbationReviewSchema = z.object({
   extensionCount: z.number().int(),
   extendedUntil: z.string().nullable(),
   reviewTemplateId: z.number().int().nullable(),
-  reviewNotes: z.string().nullable(),
+  reviewNotes: z.record(z.string(), z.unknown()).nullable(),
   confirmedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+export type HrProbationReviewRow = z.infer<typeof hrProbationReviewSchema>;
 
 export const probationListContract = z.object({
   data: z.array(probationReviewItemSchema),

@@ -14,6 +14,9 @@ const bugListContract = lazyContract(() =>
 const bugRowContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.bugRowContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 type BugFilters = {
   status?: string;
@@ -73,7 +76,7 @@ export function useDeleteBug() {
   return useAuthorizedMutation("build:bugs:delete", {
     mutationKey: ["projects", "bugs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<unknown>(`/build/${projectId}/bugs/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/bugs/${id}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },

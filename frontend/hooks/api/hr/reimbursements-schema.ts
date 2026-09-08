@@ -31,6 +31,7 @@ export const reimbursementsListContract = z.object({
   items: z.array(reimbursementRowSchema),
   total: z.number().int(),
   page: z.number().int(),
+  pageSize: z.number().int(),
   totalPages: z.number().int(),
 });
 

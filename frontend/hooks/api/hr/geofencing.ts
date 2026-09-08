@@ -13,6 +13,9 @@ const geofenceListLazy = lazyContract(() =>
 const geofenceRowLazy = lazyContract(() =>
   import("@/hooks/api/hr/geofencing-schema").then((m) => m.geofenceRowContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface Geofence {
   id: number;
@@ -58,7 +61,8 @@ export function useDeleteGeofence() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/geofencing/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/hr/geofencing/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }

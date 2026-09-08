@@ -1,13 +1,13 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const platformCoreQueryKeys = {
   reports: {
     all: [...base, "reports"] as const,
-    attendance: (params?: Record<string, unknown>) =>
+    attendance: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "reports", "attendance"] as const)
         : ([...base, "reports", "attendance", params] as const),
-    project: (params?: Record<string, unknown>) =>
+    project: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "reports", "project"] as const)
         : ([...base, "reports", "project", params] as const),
@@ -16,20 +16,20 @@ export const platformCoreQueryKeys = {
   notifications: {
     all: [...base, "notifications"] as const,
     lists: () => [...base, "notifications", "list"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "notifications", "list"] as const)
         : ([...base, "notifications", "list", params] as const),
     unreadList: () => [...base, "notifications", "list", "unread"] as const,
     unreadCount: () => [...base, "notifications", "unreadCount"] as const,
     preferences: () => [...base, "notifications", "preferences"] as const,
-    templates: (params?: Record<string, unknown>) =>
+    templates: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "notifications", "templates"] as const)
         : ([...base, "notifications", "templates", params] as const),
     template: (templateId: number) =>
       [...base, "notifications", "template", templateId] as const,
-    broadcasts: (params?: Record<string, unknown>) =>
+    broadcasts: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "notifications", "broadcasts"] as const)
         : ([...base, "notifications", "broadcasts", params] as const),
@@ -43,7 +43,7 @@ export const platformCoreQueryKeys = {
 
   invoice: {
     all: [...base, "invoice"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "invoice", "list"] as const)
         : ([...base, "invoice", "list", params] as const),
@@ -54,7 +54,7 @@ export const platformCoreQueryKeys = {
 
   support: {
     all: [...base, "support"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "support", "list"] as const)
         : ([...base, "support", "list", params] as const),
@@ -132,12 +132,12 @@ export const platformCoreQueryKeys = {
 
   inbox: {
     all: [...base, "inbox"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "inbox", "list"] as const)
         : ([...base, "inbox", "list", params] as const),
     count: () => [...base, "inbox", "count"] as const,
-    unified: (params?: Record<string, unknown>) =>
+    unified: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "inbox", "unified"] as const)
         : ([...base, "inbox", "unified", params] as const),

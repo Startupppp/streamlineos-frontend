@@ -49,10 +49,5 @@ export const componentListResponseContract = z.object({
   pagination: componentListPaginationContract,
 });
 
-export const deleteComponentResponseContract = z.object({
-  success: z.boolean(),
-  softDeleted: z.boolean(),
-});
-
 export type SalaryComponent = z.infer<typeof salaryComponentContract>;
 export type ComponentListResponse = z.infer<typeof componentListResponseContract>;

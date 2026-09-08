@@ -29,11 +29,11 @@ export interface ResignationProgress {
 
 export interface PaginatedResignations {
   data: Resignation[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 interface ResignationListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
@@ -65,7 +65,7 @@ export function useResignations(params?: ResignationListParams) {
     queryKey: exitKeys.list(params),
     queryFn: ({ signal }) => {
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       if (params?.status) search.set("status", params.status);
       const qs = search.toString();
@@ -90,7 +90,7 @@ export function useCreateResignation() {
       companyFeedback?: string;
       resignationLetterUrl?: string;
     }) => apiClient.post("/hr/exit", data, undefined, _resignationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
@@ -100,7 +100,7 @@ export function useHrReviewResignation() {
     mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch(`/hr/exit/${id}/hr-review`, { decision: action, remarks }, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
@@ -110,7 +110,7 @@ export function useFinalReviewResignation() {
     mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch(`/hr/exit/${id}/final-review`, { decision: action, remarks }, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
@@ -120,7 +120,7 @@ export function useWithdrawResignation() {
     mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.patch(`/hr/exit/${id}/withdraw`, {}, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 

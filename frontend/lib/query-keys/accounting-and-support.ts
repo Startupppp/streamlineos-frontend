@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const accountingAndSupportQueryKeys = {
   accounting: {
@@ -53,7 +53,7 @@ export const accountingAndSupportQueryKeys = {
       [...base, "accounting", "cashFlow", params] as const,
     coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
     apAll: [...base, "accounting", "ap"] as const,
-    arReminderPolicies: (params?: Record<string, unknown>) =>
+    arReminderPolicies: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "accounting", "reminder-policies"] as const)
         : ([...base, "accounting", "reminder-policies", params] as const),
@@ -61,7 +61,7 @@ export const accountingAndSupportQueryKeys = {
 
   recurringInvoices: {
     all: [...base, "recurringInvoices"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "recurringInvoices", "list"] as const)
         : ([...base, "recurringInvoices", "list", params] as const),
@@ -70,7 +70,7 @@ export const accountingAndSupportQueryKeys = {
 
   goals: {
     all: [...base, "goals"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "goals", "list"] as const)
         : ([...base, "goals", "list", params] as const),
@@ -86,7 +86,7 @@ export const accountingAndSupportQueryKeys = {
       sprintId === undefined
         ? ([...base, "projectReports", "burnup", projectId] as const)
         : ([...base, "projectReports", "burnup", projectId, sprintId] as const),
-    cfd: (projectId: number, params?: Record<string, unknown>) =>
+    cfd: (projectId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projectReports", "cfd", projectId] as const)
         : ([...base, "projectReports", "cfd", projectId, params] as const),
@@ -140,7 +140,7 @@ export const accountingAndSupportQueryKeys = {
 
   playbook: {
     all: [...base, "playbook"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "playbook", "list"] as const)
         : ([...base, "playbook", "list", params] as const),
@@ -149,7 +149,7 @@ export const accountingAndSupportQueryKeys = {
   supportKb: {
     all: [...base, "supportKb"] as const,
     categories: () => [...base, "supportKb", "categories"] as const,
-    articles: (params?: Record<string, unknown>) =>
+    articles: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "supportKb", "articles"] as const)
         : ([...base, "supportKb", "articles", params] as const),

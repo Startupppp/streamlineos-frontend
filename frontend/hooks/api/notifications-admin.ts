@@ -12,6 +12,7 @@ import {
   notificationPoliciesListContract,
   notificationPolicyRowContract,
   notificationSuccessContract,
+  notificationEmitContract,
 } from "@/hooks/api/notifications-schema";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
@@ -130,7 +131,8 @@ export const useEmitNotificationEvent = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
   return useAuthorizedMutation<DispatchResult, Error, EmitTestEventInput>("notifications:events:manage", {
     mutationKey: ["notifications", "events", "emit"],
-    mutationFn: (dto) => apiClient.post<DispatchResult>("/notifications/admin/events/emit", dto),
+    mutationFn: (dto) =>
+      apiClient.post<DispatchResult>("/notifications/admin/events/emit", dto, undefined, notificationEmitContract),
     onSuccess: invalidateInbox,
   });
 };

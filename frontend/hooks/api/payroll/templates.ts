@@ -16,6 +16,9 @@ import { templatePreviewContract } from "@/hooks/api/payroll/setup-preview-schem
 const templateListC = lazyContract(() =>
   import("@/hooks/api/payroll/templates-schema").then((m) => m.templateListResponseContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const payrollTemplateC = lazyContract(() =>
   import("@/hooks/api/payroll/templates-schema").then((m) => m.payrollTemplateContract),
 );
@@ -44,11 +47,11 @@ type PreviewInput = {
 export function usePayrollTemplates(params?: TemplateListParams) {
   const canView = useCan("payroll:templates:view");
   return useQuery({
-    queryKey: payrollQueryKeys.payroll.templates(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.templates(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/payroll/templates",
-        params as Record<string, unknown> | undefined, signal, templateListC,
+        params, signal, templateListC,
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
@@ -74,7 +77,7 @@ export function useDeleteTemplate() {
   return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<void>(`/payroll/templates/${templateId}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/payroll/templates/${templateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "template"] });

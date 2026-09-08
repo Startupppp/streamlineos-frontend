@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 const HR_POLICY_TYPE_ENUM = [
   "leave",
@@ -62,9 +63,7 @@ export const hrPolicyRowContract = z.object({
 
 export const hrPolicyListContract = z.object({
   data: z.array(hrPolicyRowContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  limit: z.number().int(),
+  pagination: cursorPaginationContract,
 });
 
 export const createHrPolicyContract = hrPolicyRowContract;

@@ -22,6 +22,9 @@ const whiteboardSharesContract = lazyContract(() =>
 const successContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export type WhiteboardVisibility = "project" | "private" | "public";
 export type WhiteboardShareRole = "viewer" | "editor";
@@ -142,7 +145,7 @@ export function useDeleteWhiteboard(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`, undefined, undefined, successContract),
+      apiClient.delete<void>(`/build/${projectId}/whiteboards/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }
@@ -204,11 +207,11 @@ export function useRemoveWhiteboardShare(projectId: number) {
   return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "remove-share"],
     mutationFn: ({ id, userId }: { id: number; userId: string }) =>
-      apiClient.delete<{ success: boolean }>(
+      apiClient.delete<void>(
         `/build/${projectId}/whiteboards/${id}/shares/${userId}`,
         undefined,
         undefined,
-        successContract,
+        noContentLazy,
       ),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });

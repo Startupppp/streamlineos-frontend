@@ -14,6 +14,9 @@ const reactionLazy = lazyContract(() =>
 const successLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export function useAddReaction(projectId: number, ticketId: number) {
   const qc = useQueryClient();
@@ -36,11 +39,11 @@ export function useRemoveReaction(projectId: number, ticketId: number) {
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "reactions", "remove"],
     mutationFn: ({ commentId, emoji }: { commentId: number; emoji: string }) =>
-      apiClient.delete<{ success: boolean }>(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}/reactions/${encodeURIComponent(emoji)}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) }),

@@ -44,6 +44,9 @@ const testRunResultRowContract = lazyContract(() =>
 const bugRowContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.bugRowContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 type TestCaseFilters = {
   q?: string;
@@ -116,7 +119,7 @@ export function useDeleteTestCase() {
   return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "cases", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<unknown>(`/build/${projectId}/test-cases/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/test-cases/${id}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
@@ -180,7 +183,7 @@ export function useDeleteTestRun() {
   return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "runs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<unknown>(`/build/${projectId}/test-runs/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/test-runs/${id}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },

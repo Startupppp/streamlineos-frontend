@@ -129,7 +129,7 @@ export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>, signal, hrCaseListLazy),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params, signal, hrCaseListLazy),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
@@ -251,7 +251,7 @@ export function useCaseDocuments(caseId: number) {
 export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
   return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.disciplinaryList(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>, signal, hrDisciplinaryListLazy),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params, signal, hrDisciplinaryListLazy),
     staleTime: 30_000,
   });
 }

@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 /** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
 const memberPageContract = lazyContract(() =>
@@ -49,7 +50,7 @@ export function useModuleMembersInfinite(
         memberPageContract,
       );
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,

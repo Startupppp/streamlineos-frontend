@@ -64,7 +64,7 @@ export const useAuditLogs = (
 ) => {
   const canView = useCan("audit-log:read");
   return useQuery<AuditLogListResponse, Error>({
-    queryKey: accessAndCrmQueryKeys.auditLog.list(filters as Record<string, unknown>),
+    queryKey: accessAndCrmQueryKeys.auditLog.list(filters),
     queryFn: ({ signal }) =>
       apiClient.get<AuditLogListResponse>("/audit-log", {
         ...(filters?.cursor ? { cursor: filters.cursor } : {}),

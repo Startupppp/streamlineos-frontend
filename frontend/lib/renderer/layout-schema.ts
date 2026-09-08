@@ -81,7 +81,7 @@ function checkField(field: FieldSpec, raw: string, ctx: z.RefinementCtx): void {
       case "boolean":
         // A control that hands back anything but these two is a control that is
         // not a switch, and the API would receive a string where a flag belongs.
-        if (!BOOLEAN_VALUES.includes(value as (typeof BOOLEAN_VALUES)[number]))
+        if (!BOOLEAN_VALUES.some((allowed) => allowed === value))
           reject(`${field.label} must be yes or no`);
         break;
       case "select":

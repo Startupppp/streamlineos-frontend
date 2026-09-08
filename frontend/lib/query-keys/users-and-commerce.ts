@@ -1,9 +1,9 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const usersAndCommerceQueryKeys = {
   apiTokens: {
     all: [...base, "apiTokens"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "apiTokens", "list"] as const)
         : ([...base, "apiTokens", "list", params] as const),
@@ -11,7 +11,7 @@ export const usersAndCommerceQueryKeys = {
 
   userApiTokens: {
     all: [...base, "userApiTokens"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "userApiTokens", "list"] as const)
         : ([...base, "userApiTokens", "list", params] as const),
@@ -20,7 +20,7 @@ export const usersAndCommerceQueryKeys = {
 
   users: {
     all: [...base, "users"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "users", "list"] as const)
         : ([...base, "users", "list", params] as const),
@@ -30,11 +30,11 @@ export const usersAndCommerceQueryKeys = {
     preferences: (userId: string) =>
       [...base, "users", "preferences", userId] as const,
     stats: () => [...base, "users", "stats"] as const,
-    invitations: (params?: Record<string, unknown>) =>
+    invitations: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "users", "invitations"] as const)
         : ([...base, "users", "invitations", params] as const),
-    loginHistory: (userId: string, params?: Record<string, unknown>) =>
+    loginHistory: (userId: string, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "users", "loginHistory", userId] as const)
         : ([...base, "users", "loginHistory", userId, params] as const),
@@ -44,7 +44,7 @@ export const usersAndCommerceQueryKeys = {
 
   crmProducts: {
     all: [...base, "crmProducts"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmProducts", "list"] as const)
         : ([...base, "crmProducts", "list", params] as const),
@@ -54,7 +54,7 @@ export const usersAndCommerceQueryKeys = {
 
   crmQuotes: {
     all: [...base, "crmQuotes"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmQuotes", "list"] as const)
         : ([...base, "crmQuotes", "list", params] as const),
@@ -66,7 +66,7 @@ export const usersAndCommerceQueryKeys = {
 
   crmPricebooks: {
     all: [...base, "crmPricebooks"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmPricebooks", "list"] as const)
         : ([...base, "crmPricebooks", "list", params] as const),
@@ -80,7 +80,7 @@ export const usersAndCommerceQueryKeys = {
   },
   crmQuoteTemplates: {
     all: [...base, "crmQuoteTemplates"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmQuoteTemplates", "list"] as const)
         : ([...base, "crmQuoteTemplates", "list", params] as const),
@@ -90,7 +90,7 @@ export const usersAndCommerceQueryKeys = {
     all: [...base, "timesheets"] as const,
     payroll: {
       all: [...base, "timesheets", "payroll"] as const,
-      summary: (params: Record<string, unknown>) =>
+      summary: (params: QueryKeyParams) =>
         [...base, "timesheets", "payroll", "summary", params] as const,
       exports: (limit?: number) =>
         limit === undefined
@@ -107,37 +107,37 @@ export const usersAndCommerceQueryKeys = {
         ] as const,
       settings: () => [...base, "timesheets", "payroll", "settings"] as const,
     },
-    entries: (params?: Record<string, unknown>) =>
+    entries: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "entries"] as const)
         : ([...base, "timesheets", "entries", params] as const),
     timerActive: () => [...base, "timesheets", "timer", "active"] as const,
-    periods: (params?: Record<string, unknown>) =>
+    periods: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "periods", "list"] as const)
         : ([...base, "timesheets", "periods", "list", params] as const),
     periodCurrent: () => [...base, "timesheets", "periods", "current"] as const,
     period: (periodId: number) =>
       [...base, "timesheets", "periods", "detail", periodId] as const,
-    approvals: (params?: Record<string, unknown>) =>
+    approvals: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "approvals"] as const)
         : ([...base, "timesheets", "approvals", params] as const),
-    billingUninvoiced: (params?: Record<string, unknown>) =>
+    billingUninvoiced: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "billing", "uninvoiced"] as const)
         : ([...base, "timesheets", "billing", "uninvoiced", params] as const),
-    reportsOverview: (params?: Record<string, unknown>) =>
+    reportsOverview: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "reports", "overview"] as const)
         : ([...base, "timesheets", "reports", "overview", params] as const),
-    teamWeekSummary: (params: Record<string, unknown>) =>
+    teamWeekSummary: (params: QueryKeyParams) =>
       [...base, "timesheets", "team", "week-summary", params] as const,
-    report: (tab: string, params?: Record<string, unknown>) =>
+    report: (tab: string, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "reports", tab] as const)
         : ([...base, "timesheets", "reports", tab, params] as const),
-    exceptions: (params?: Record<string, unknown>) =>
+    exceptions: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "exceptions", "list"] as const)
         : ([...base, "timesheets", "exceptions", "list", params] as const),
@@ -146,7 +146,7 @@ export const usersAndCommerceQueryKeys = {
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,
-    audit: (params?: Record<string, unknown>) =>
+    audit: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "audit"] as const)
         : ([...base, "timesheets", "audit", params] as const),

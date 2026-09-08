@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 const assetRowContract = z.object({
   id: z.number(),
@@ -31,10 +32,5 @@ const assetCountsContract = z.object({
 export const assetListPageContract = z.object({
   data: z.array(assetRowContract),
   counts: assetCountsContract,
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }),
+  pagination: cursorPaginationContract,
 });

@@ -60,5 +60,3 @@ export const submissionCreateResultContract = z.object({
   executedActionTypes: z.array(z.string()),
   skippedActionTypes: z.array(z.string()),
 });
-
-export const formSuccessContract = z.object({ success: z.literal(true) });

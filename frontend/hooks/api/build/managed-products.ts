@@ -20,8 +20,8 @@ const managedProductPageContract = lazyContract(() =>
 const managedProductRowContract = lazyContract(() =>
   import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
 );
-const managedProductSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductSuccessContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 interface ListManagedProductsParams {
@@ -82,6 +82,8 @@ export function useUpdateManagedProduct() {
       apiClient.patch<ManagedProduct>(
         `/build/managed-products/${managedProductId}`,
         data,
+        undefined,
+        managedProductRowContract,
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
@@ -97,7 +99,7 @@ export function useDeleteManagedProduct() {
   return useAuthorizedMutation("build:managed-products:delete", {
     mutationKey: ["projects", "managed-products", "delete"],
     mutationFn: (managedProductId: number) =>
-      apiClient.delete<void>(`/build/managed-products/${managedProductId}`),
+      apiClient.delete<void>(`/build/managed-products/${managedProductId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
     },

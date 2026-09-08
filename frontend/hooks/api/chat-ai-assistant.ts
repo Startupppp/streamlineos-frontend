@@ -23,6 +23,7 @@ import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface AskAIMessage {
   role: "user" | "assistant";
@@ -59,7 +60,7 @@ export function useAiConversations(enabled: boolean) {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<AiConversationListPage>("/chat/conversations", params, signal, aiConversationListContract);
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canAi && enabled,
     staleTime: 30_000,
@@ -116,7 +117,7 @@ export function useAiConversationMessages(conversationId: number | null, enabled
         aiConversationMessagesContract,
       );
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canAi && enabled && conversationId !== null,
     staleTime: 30_000,

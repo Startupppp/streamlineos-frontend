@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const growthAndSignQueryKeys = {
   feedbucket: {
@@ -6,7 +6,7 @@ export const growthAndSignQueryKeys = {
     widgets: () => [...base, "feedbucket", "widgets"] as const,
     widget: (widgetId: number) =>
       [...base, "feedbucket", "widgets", widgetId] as const,
-    submissions: (params?: Record<string, unknown>) =>
+    submissions: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "feedbucket", "submissions"] as const)
         : ([...base, "feedbucket", "submissions", params] as const),
@@ -19,11 +19,11 @@ export const growthAndSignQueryKeys = {
     detail: () => [...base, "crmMetadata", "detail"] as const,
     options: (type: string) =>
       [...base, "crmMetadata", "options", type] as const,
-    validationRules: (params?: Record<string, unknown>) =>
+    validationRules: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmMetadata", "validationRules"] as const)
         : ([...base, "crmMetadata", "validationRules", params] as const),
-    blueprints: (params?: Record<string, unknown>) =>
+    blueprints: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmMetadata", "blueprints"] as const)
         : ([...base, "crmMetadata", "blueprints", params] as const),
@@ -33,7 +33,7 @@ export const growthAndSignQueryKeys = {
 
   crmCampaigns: {
     all: [...base, "crmCampaigns"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmCampaigns", "list"] as const)
         : ([...base, "crmCampaigns", "list", params] as const),
@@ -41,7 +41,7 @@ export const growthAndSignQueryKeys = {
       [...base, "crmCampaigns", "detail", campaignId] as const,
     roi: (campaignId: number) =>
       [...base, "crmCampaigns", "roi", campaignId] as const,
-    leads: (campaignId: number, params?: Record<string, unknown>) =>
+    leads: (campaignId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "crmCampaigns", "leads", campaignId] as const)
         : ([...base, "crmCampaigns", "leads", campaignId, params] as const),
@@ -75,7 +75,7 @@ export const growthAndSignQueryKeys = {
 
   signEnvelopes: {
     all: [...base, "signEnvelopes"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "signEnvelopes", "list"] as const)
         : ([...base, "signEnvelopes", "list", params] as const),
@@ -121,7 +121,7 @@ export const growthAndSignQueryKeys = {
   billing: {
     all: [...base, "billing"] as const,
     aiCredits: () => [...base, "billing", "ai-credits"] as const,
-    aiCreditTransactions: (params: Record<string, unknown>) =>
+    aiCreditTransactions: (params: QueryKeyParams) =>
       [...base, "billing", "ai-credits", "transactions", params] as const,
     aiCreditsUsage: (days: number) =>
       [...base, "billing", "ai-credits", "usage", { days }] as const,

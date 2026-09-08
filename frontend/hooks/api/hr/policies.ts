@@ -52,7 +52,7 @@ const seedPoliciesC = lazyContract(() =>
 );
 
 export function useHrPolicies(params?: {
-  page?: number;
+  cursor?: string;
   limit?: number;
   type?: HrPolicyType;
   status?: HrPolicyStatus;
@@ -61,7 +61,7 @@ export function useHrPolicies(params?: {
   const canView = useCan("hr:policies:view");
   const hrEnabled = useModuleEnabled("hr");
   const query = new URLSearchParams();
-  if (params?.page) query.set("page", String(params.page));
+  if (params?.cursor) query.set("cursor", params.cursor);
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.type) query.set("type", params.type);
   if (params?.status) query.set("status", params.status);
@@ -213,9 +213,10 @@ export function usePolicyPreview(
       params,
     ] as const,
     queryFn: ({ signal }) => {
+      if (!params) throw new Error("usePolicyPreview ran without an employee and date");
       const qs = new URLSearchParams({
-        employeeId: params!.employeeId,
-        date: params!.date,
+        employeeId: params.employeeId,
+        date: params.date,
       });
       return apiClient.get<PolicyPreviewResult | null>(
         `/hr/policies/${policyId}/preview?${qs}`,

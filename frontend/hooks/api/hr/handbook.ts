@@ -7,6 +7,10 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { lazyContract } from "@/lib/api-envelope";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
 const handbookListLazy = lazyContract(() =>
   import("@/hooks/api/hr/handbook-schema").then((m) => m.handbookListContract),
 );
@@ -82,7 +86,7 @@ export function useDeleteHandbookVersion() {
   return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/handbook/${id}`, undefined, undefined, handbookSuccessLazy),
+      apiClient.delete<void>(`/hr/handbook/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }

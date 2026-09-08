@@ -18,6 +18,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const timerNullableC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerNullableResponseContract),
 );
+const timerDiscardC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerDiscardResultContract),
+);
 const timerC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerContract),
 );
@@ -84,7 +87,7 @@ export function useDiscardTimer() {
   return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "discard"],
     mutationFn: (timerId: number) =>
-      apiClient.post<{ success: boolean }>(`/timesheets/timer/${timerId}/discard`, undefined, undefined, undefined),
+      apiClient.post<{ success: true }>(`/timesheets/timer/${timerId}/discard`, undefined, undefined, timerDiscardC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
       toast.success("Timer discarded");

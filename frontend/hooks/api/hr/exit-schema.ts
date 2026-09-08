@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 const resignationUserContract = z.object({
   id: z.string(),
@@ -55,12 +56,7 @@ export const resignationContract = z.object({
 
 export const resignationListContract = z.object({
   data: z.array(resignationContract),
-  pagination: z.object({
-    page: z.number().int(),
-    limit: z.number().int(),
-    total: z.number().int(),
-    totalPages: z.number().int(),
-  }),
+  pagination: cursorPaginationContract,
 });
 
 const resignationProgressStepContract = z.object({

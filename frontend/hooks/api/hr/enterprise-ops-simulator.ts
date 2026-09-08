@@ -49,8 +49,8 @@ const _compareSimulationContract = lazyContract(() =>
 
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useGatedQuery("hr:policies:manage", {
-    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/history`, params as Record<string, unknown>, signal, _listSimulationsContract),
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/history`, params, signal, _listSimulationsContract),
     staleTime: 30_000,
   });
 }
@@ -120,7 +120,7 @@ export function useComparePolicy(params: {
 } | null) {
   return useGatedQuery("hr:policies:manage", {
     queryKey: directoryAndOwnershipQueryKeys.hrSimulations.compare(params),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/compare`, params as Record<string, unknown>, signal, _compareSimulationContract),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/compare`, params ?? undefined, signal, _compareSimulationContract),
     enabled: !!params,
     staleTime: 60_000,
   });

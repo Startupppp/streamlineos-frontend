@@ -39,6 +39,9 @@ const changelogEntryContract = lazyContract(() =>
 const roadmapSuccessContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const publicRoadmapBoardContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.publicRoadmapBoardContract),
 );
@@ -207,7 +210,7 @@ export function useDeleteRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`, undefined, undefined, roadmapSuccessContract),
+      apiClient.delete<void>(`/build/roadmap/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -249,7 +252,7 @@ export function useDeleteFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`, undefined, undefined, roadmapSuccessContract),
+      apiClient.delete<void>(`/build/feedback/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -291,7 +294,7 @@ export function useDeleteChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`, undefined, undefined, roadmapSuccessContract),
+      apiClient.delete<void>(`/build/changelog/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }

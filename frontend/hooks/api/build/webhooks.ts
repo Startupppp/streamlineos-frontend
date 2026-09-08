@@ -20,8 +20,8 @@ const projectWebhookRowContract = lazyContract(() =>
 const webhookTestResultContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.webhookTestResultContract),
 );
-const webhookSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
@@ -60,7 +60,7 @@ export function useDeleteWebhook(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "delete"],
     mutationFn: (webhookId: number) =>
-      apiClient.delete(`/build/${projectId}/webhooks/${webhookId}`, webhookSuccessContract),
+      apiClient.delete<void>(`/build/${projectId}/webhooks/${webhookId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
   });
 }

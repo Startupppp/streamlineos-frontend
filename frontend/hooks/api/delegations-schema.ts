@@ -37,7 +37,5 @@ export const delegationsPageContract = cursorPageContract(delegationItemContract
 
 export const delegationRowContract = delegationItemContract;
 
-export const delegationMutationContract = z.object({ success: z.literal(true) });
-
 export type DelegationItem = z.infer<typeof delegationItemContract>;
 export type DelegationsPage = z.infer<typeof delegationsPageContract>;

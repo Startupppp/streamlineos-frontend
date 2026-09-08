@@ -15,8 +15,8 @@ const milestoneListContract = lazyContract(() =>
 const milestoneRowContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneRowContract),
 );
-const successContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const projectBudgetContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.projectBudgetContract),
@@ -79,7 +79,7 @@ export function useDeleteMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`, successContract),
+      apiClient.delete<void>(`/build/${projectId}/milestones/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }

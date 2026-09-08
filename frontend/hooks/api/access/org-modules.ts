@@ -9,8 +9,12 @@ import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary"
 import type { AccessResponse } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
 
 /** Deferred so the sidebar, which imports this module, does not carry Zod. */
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const orgModulesContract = lazyContract(() =>
   import("@/hooks/api/access/module-status-schema").then(
     (m) => m.orgModuleStatusesContract,
@@ -26,14 +30,13 @@ export interface OrgModule {
 const EMPTY_MODULES: string[] = [];
 
 function isOrgModule(value: unknown): value is OrgModule {
-  if (value === null || typeof value !== "object") return false;
+  if (!isRecord(value)) return false;
 
-  const moduleRecord = value as Record<string, unknown>;
   return (
-    typeof moduleRecord.moduleKey === "string" &&
-    moduleRecord.moduleKey.trim().length > 0 &&
-    typeof moduleRecord.enabled === "boolean" &&
-    (moduleRecord.core === undefined || typeof moduleRecord.core === "boolean")
+    typeof value.moduleKey === "string" &&
+    value.moduleKey.trim().length > 0 &&
+    typeof value.enabled === "boolean" &&
+    (value.core === undefined || typeof value.core === "boolean")
   );
 }
 
@@ -51,15 +54,14 @@ export function normalizeOrgModulesResponse(response: unknown): OrgModule[] {
       break;
     }
 
-    if (candidate === null || typeof candidate !== "object") break;
+    if (!isRecord(candidate)) break;
 
-    const envelope = candidate as Record<string, unknown>;
-    if ("data" in envelope) {
-      candidate = envelope.data;
+    if ("data" in candidate) {
+      candidate = candidate.data;
       continue;
     }
-    if ("modules" in envelope) {
-      candidate = envelope.modules;
+    if ("modules" in candidate) {
+      candidate = candidate.modules;
       continue;
     }
     break;
@@ -110,7 +112,7 @@ export function useToggleOrgModule() {
   >("settings:manage", {
     mutationKey: ["toggle", "org", "module"],
     mutationFn: ({ moduleKey, enabled }) =>
-      apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }),
+      apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }, undefined, noContentContract),
     onMutate: async ({ moduleKey, enabled }) => {
       await Promise.all([
         qc.cancelQueries({ queryKey: platformCoreQueryKeys.access.orgModules() }),

@@ -39,6 +39,8 @@ export const headcountListPageContract = z.object({
 
 export const headcountRowSingleContract = headcountRowContract;
 
+export type HeadcountListPage = z.infer<typeof headcountListPageContract>;
+
 export const createJobFromHeadcountContract = z.object({
   jobId: z.number().int(),
 });

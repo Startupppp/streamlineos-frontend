@@ -20,6 +20,9 @@ const checklistItemLazy = lazyContract(() =>
 const successLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 function checklistKeys(projectId: number, ticketId: number) {
   return ["projects", projectId, "tickets", ticketId, "checklists"] as const;
@@ -102,11 +105,11 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
       "delete",
     ],
     mutationFn: (checklistId: number) =>
-      apiClient.delete(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -195,11 +198,11 @@ export function useDeleteChecklistItem(projectId: number, ticketId: number) {
       checklistId: number;
       itemId: number;
     }) =>
-      apiClient.delete(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items/${itemId}`,
         undefined,
         undefined,
-        successLazy,
+        noContentLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),

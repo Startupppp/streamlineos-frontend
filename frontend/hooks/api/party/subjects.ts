@@ -16,6 +16,35 @@ import type {
   UpdateSubjectInput,
 } from "@/types/party/subjects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const subjectTypeListContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectTypeListContract),
+);
+const subjectTypeMutationContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectTypeMutationContract),
+);
+const subjectTypeDeleteContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectTypeDeleteContract),
+);
+const subjectListContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectListContract),
+);
+const subjectDetailContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectDetailContract),
+);
+const subjectMutationContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectMutationContract),
+);
+const subjectLinkContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectLinkContract),
+);
+const subjectUnlinkContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.subjectUnlinkContract),
+);
+const partySubjectsContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partySubjectsContract),
+);
 
 export interface UseSubjectsParams {
   subjectTypeId?: string;
@@ -34,6 +63,7 @@ export function useSubjectTypes(options?: { enabled?: boolean }) {
         "/party/subject-types",
         undefined,
         signal,
+        subjectTypeListContract,
       ),
     // A declaration changes when an administrator edits it, which is rare.
     staleTime: 30 * 60_000,
@@ -61,6 +91,7 @@ export function useSubjects(params: UseSubjectsParams = {}) {
         `/party/subjects?${searchParams.toString()}`,
         undefined,
         signal,
+        subjectListContract,
       );
     },
     staleTime: 60_000,
@@ -78,6 +109,7 @@ export function useSubject(subjectId: string | null) {
         `/party/subjects/${subjectId}`,
         undefined,
         signal,
+        subjectDetailContract,
       ),
     staleTime: 60_000,
     enabled: canView && !!subjectId,
@@ -95,6 +127,7 @@ export function usePartySubjects(partyId: string | null) {
         `/party/parties/${partyId}/subjects`,
         undefined,
         signal,
+        partySubjectsContract,
       ),
     staleTime: 60_000,
     enabled: canView && !!partyId,
@@ -106,7 +139,7 @@ export function useCreateSubjectType() {
   return useAuthorizedMutation("party:subject-types:manage", {
     mutationKey: ["party", "subject-types", "create"],
     mutationFn: (input: CreateSubjectTypeInput) =>
-      apiClient.post<SubjectType>("/party/subject-types", input),
+      apiClient.post<SubjectType>("/party/subject-types", input, undefined, subjectTypeMutationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
     },
@@ -124,6 +157,8 @@ export function useUpdateSubjectType() {
       apiClient.patch<SubjectType>(
         `/party/subject-types/${subjectTypeId}`,
         input,
+        undefined,
+        subjectTypeMutationContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
@@ -139,7 +174,12 @@ export function useDeleteSubjectType() {
   return useAuthorizedMutation("party:subject-types:manage", {
     mutationKey: ["party", "subject-types", "delete"],
     mutationFn: (subjectTypeId: string) =>
-      apiClient.delete(`/party/subject-types/${subjectTypeId}`),
+      apiClient.delete<{ deleted: true }>(
+        `/party/subject-types/${subjectTypeId}`,
+        undefined,
+        undefined,
+        subjectTypeDeleteContract,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
     },
@@ -151,7 +191,7 @@ export function useCreateSubject() {
   return useAuthorizedMutation("party:subjects:manage", {
     mutationKey: ["party", "subjects", "create"],
     mutationFn: (input: CreateSubjectInput) =>
-      apiClient.post<Subject>("/party/subjects", input),
+      apiClient.post<Subject>("/party/subjects", input, undefined, subjectMutationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjects() });
     },
@@ -166,7 +206,7 @@ export function useUpdateSubject() {
       subjectId,
       ...input
     }: UpdateSubjectInput & { subjectId: string }) =>
-      apiClient.patch<Subject>(`/party/subjects/${subjectId}`, input),
+      apiClient.patch<Subject>(`/party/subjects/${subjectId}`, input, undefined, subjectMutationContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),
@@ -184,7 +224,12 @@ export function useLinkParty() {
       subjectId,
       ...input
     }: LinkPartyInput & { subjectId: string }) =>
-      apiClient.post(`/party/subjects/${subjectId}/parties`, input),
+      apiClient.post(
+        `/party/subjects/${subjectId}/parties`,
+        input,
+        undefined,
+        subjectLinkContract,
+      ),
     onSuccess: (_, variables) => {
       // Both ends of the link are cached separately, so both are invalidated.
       void qc.invalidateQueries({
@@ -206,7 +251,13 @@ export function useUnlinkParty() {
     }: {
       subjectPartyLinkId: string;
       subjectId: string;
-    }) => apiClient.delete(`/party/subject-links/${subjectPartyLinkId}`),
+    }) =>
+      apiClient.delete<{ unlinked: true }>(
+        `/party/subject-links/${subjectPartyLinkId}`,
+        undefined,
+        undefined,
+        subjectUnlinkContract,
+      ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),

@@ -19,6 +19,10 @@ import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
 const WORKFLOWS_KEY = [...queryKeyBase, "hr", "workflows"] as const;
 const INSTANCES_KEY = [...queryKeyBase, "hr", "workflow-instances"] as const;
 const DELEGATIONS_KEY = [...queryKeyBase, "hr", "workflow-delegations"] as const;
@@ -148,7 +152,8 @@ export function useDeleteWorkflow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/workflows/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/hr/workflows/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -242,7 +247,8 @@ export function useDeleteDelegation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:view", {
     mutationKey: ["hr", "workflow-delegations", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/workflows/delegations/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/hr/workflows/delegations/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: DELEGATIONS_KEY }),
   });
 }

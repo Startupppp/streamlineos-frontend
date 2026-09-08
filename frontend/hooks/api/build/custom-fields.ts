@@ -18,7 +18,7 @@ const cfLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.buildCustomFieldContract),
 );
 const cfDeleteLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.successContract),
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const tfvListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketFieldValueListContract),
@@ -72,7 +72,7 @@ export function useDeleteProjectCustomField(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-fields", "delete"],
     mutationFn: (fieldId: number) =>
-      apiClient.delete<{success:true}>(`/build/${projectId}/custom-fields/${fieldId}`, cfDeleteLazy),
+      apiClient.delete<void>(`/build/${projectId}/custom-fields/${fieldId}`, undefined, undefined, cfDeleteLazy),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
   });

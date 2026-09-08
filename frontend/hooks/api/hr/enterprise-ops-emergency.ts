@@ -74,8 +74,8 @@ const _respondToEventContract = lazyContract(() =>
 
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useGatedQuery("hr:emergency:manage", {
-    queryKey: emergencyKeys.list(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params as Record<string, unknown>, signal, _listEmergencyEventsContract),
+    queryKey: emergencyKeys.list(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params, signal, _listEmergencyEventsContract),
     staleTime: 30_000,
   });
 }

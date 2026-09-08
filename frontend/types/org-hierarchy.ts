@@ -128,7 +128,13 @@ export interface OrgTreeBranch extends OrgBranch {
   children: OrgTreeDepartment[];
 }
 
-export interface OrgTreeBusinessUnit extends OrgBusinessUnit {
+/**
+ * A business unit is the tree's root level, and `buildTree` destructures
+ * `parentId` away when it builds the node — so the tree's business unit is
+ * `OrgBusinessUnit` MINUS that column, not a superset of it. Declaring a field
+ * the read does not return is how one becomes silently `undefined` at runtime.
+ */
+export interface OrgTreeBusinessUnit extends Omit<OrgBusinessUnit, "parentId"> {
   type: "business_unit";
   children: OrgTreeBranch[];
 }

@@ -22,16 +22,27 @@ export const chatPinItemContract = z.object({
 export const chatPinsContract = z.array(chatPinItemContract);
 
 /**
- * `chatSavedListResponseSchema` — backend uses `membershipId`, not `userId`.
- * The client maps this after fetch.
+ * `chatSavedListResponseSchema`. The saved row carries `membershipId`, never a
+ * `userId`, and the joined message carries the `channel` the panel jumps to — a
+ * `z.object` strips what it does not list, so both are named here.
  */
 export const chatSavedMessagesContract = z.object({
   items: z.array(
     z.object({
       id: z.number().int(),
+      orgId: z.string(),
       membershipId: z.number().int(),
+      messageId: z.number().int(),
       savedAt: z.string(),
-      message: chatMessageContract,
+      message: chatMessageContract.extend({
+        channel: z
+          .object({
+            id: z.number().int(),
+            name: z.string().nullable(),
+            type: z.string(),
+          })
+          .nullable(),
+      }),
     }),
   ),
   nextCursor: z.number().optional(),

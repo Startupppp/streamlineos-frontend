@@ -29,6 +29,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Channel, ChatNotificationPreference } from "@/types/chat";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useArchiveChannel() {
   const queryClient = useQueryClient();
@@ -250,7 +251,7 @@ export function useChannelFiles(channelId: number) {
         chatChannelFilesContract,
       ),
     getNextPageParam: (last) => last.nextCursor,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0,
   });
 }

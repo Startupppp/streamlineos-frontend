@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 import type {
   HrAutomationEvent,
   HrAutomationCondition,
@@ -64,12 +65,7 @@ const automationRunContract = z.object({
 
 export const automationRunListContract = z.object({
   data: z.array(automationRunContract),
-  pagination: z.object({
-    page: z.number().int(),
-    limit: z.number().int(),
-    total: z.number().int(),
-    totalPages: z.number().int(),
-  }),
+  pagination: cursorPaginationContract,
 });
 
 export const automationTestResultContract = z.object({

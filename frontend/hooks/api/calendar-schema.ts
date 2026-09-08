@@ -274,3 +274,35 @@ export const attendanceLogListContract = z.array(attendanceLogContract);
 
 /** sync-retry response */
 export const calendarSyncRetryContract = z.object({ requeued: z.number().int() });
+
+/**
+ * `GET /org/members`. NOT `orgMemberListResponseSchema`, which declares
+ * `{ userId?, membershipId?, status? }` — `OrgMembersService.listMembers`
+ * selects the seven columns below, so the declared shape would strip every one
+ * the member picker renders.
+ */
+export const calendarOrgMembersContract = z.array(
+  z.object({
+    id: z.string(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    name: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+    role: z.string(),
+  }),
+);
+
+/** `calendarAttendeeListResponseSchema` — `listAttendees` projects id/status/user. */
+export const calendarEventAttendeesContract = z.array(
+  z.object({
+    id: z.number().int(),
+    status: z.string(),
+    user: z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    }),
+  }),
+);

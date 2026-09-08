@@ -13,3 +13,16 @@
  * hooks already writes narrows it to `string` on its own.
  */
 export const NO_CURSOR_YET: string | undefined = undefined;
+
+/** The same seed for a numeric-cursor (id or offset) `useInfiniteQuery`. */
+export const NO_ID_CURSOR_YET: number | undefined = undefined;
+
+/**
+ * The same seed for the hooks whose "no cursor" sentinel is `null` rather than
+ * `undefined` — the two are not interchangeable here, because `getNextPageParam`
+ * returning `undefined` is how TanStack marks the end of the list.
+ */
+export const NULL_CURSOR_YET: string | null = null;
+
+/** The numeric half of `NULL_CURSOR_YET`. */
+export const NULL_ID_CURSOR_YET: number | null = null;

@@ -21,6 +21,9 @@ const mailThreadContract = lazyContract(() =>
 const mailMessageContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailMessageContract),
 );
+const mailAiInboxSummaryContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailAiInboxSummaryContract),
+);
 const mailAiThreadSummaryContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailAiThreadSummaryContract),
 );
@@ -50,6 +53,7 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { applyMailActionToCaches, restoreMailCaches } from "@/hooks/api/mail-action-cache";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
@@ -80,7 +84,7 @@ export function useMailMessages(params: MailMessagesParams) {
       if (pageParam !== undefined) searchParams.set("cursor", String(pageParam));
       return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal, mailListResponseContract);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -173,7 +177,12 @@ export function useMailInboxSummary() {
   return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "inbox-summary"],
     mutationFn: ({ signal, ...params }: { accountId?: number | "all" } & AiAbortInput) =>
-      apiClient.post<MailInboxSummaryResult>("/mail/ai/inbox-summary", params, { signal }),
+      apiClient.post<MailInboxSummaryResult>(
+        "/mail/ai/inbox-summary",
+        params,
+        { signal },
+        mailAiInboxSummaryContract,
+      ),
   });
 }
 

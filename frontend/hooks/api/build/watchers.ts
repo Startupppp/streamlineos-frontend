@@ -13,6 +13,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const successLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 const watchersContract = lazyContract(() =>
   import("@/hooks/api/watchers-schema").then((m) => m.buildTicketWatchersContract),
@@ -43,22 +46,23 @@ export function useToggleWatch(projectId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "toggle"],
-    mutationFn: ({
+    mutationFn: async ({
       ticketId,
       watching,
     }: {
       ticketId: number;
       watching: boolean;
-    }) => {
+    }): Promise<void> => {
       if (watching) {
-        return apiClient.delete<{ success: boolean }>(
+        await apiClient.delete<void>(
           `/build/${projectId}/tickets/${ticketId}/watchers`,
           undefined,
           undefined,
-          successLazy,
+          noContentLazy,
         );
+        return;
       }
-      return apiClient.post<{ success: boolean }>(
+      await apiClient.post<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
         {},
         undefined,

@@ -7,16 +7,17 @@ import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
 const successionListContract = lazyContract(() =>
   import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanListContract),
 );
 const successionRowContract = lazyContract(() =>
   import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanContract),
 );
-const successionDeleteContract = lazyContract(() =>
-  import("@/hooks/api/hr/succession-schema").then((m) => m.successionDeleteContract),
-);
-
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
 
 export interface SuccessionPlan {
@@ -45,7 +46,7 @@ export function useSuccessionPlans() {
   const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
     queryKey: hrEngagementQueryKeys.hrSuccession.list(),
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
       if (pageParam !== null) params.set("cursor", pageParam);
@@ -85,7 +86,7 @@ export function useDeleteSuccessionPlan() {
   return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete(`/hr/succession/${id}`, undefined, undefined, successionDeleteContract),
+      apiClient.delete<void>(`/hr/succession/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }

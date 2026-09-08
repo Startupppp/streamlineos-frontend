@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import { cn } from "@/lib/utils";
 import { ChevronsUpDown, Check } from "lucide-react";
-import type { PerformanceReviewListItem, ReviewCycle, Employee } from "@/types/hr";
+import type { PerformanceReviewListItem, ReviewCycle, EmployeeListItem } from "@/types/hr";
 
 interface DateBounds {
   fromDate?: Date;
@@ -31,7 +31,7 @@ interface DateBounds {
 
 interface ReviewFormFieldsProps {
   editReview: PerformanceReviewListItem | null;
-  employees: Employee[];
+  employees: EmployeeListItem[];
   cycles: ReviewCycle[];
   employeeId: string;
   onEmployeeChange: (id: string) => void;

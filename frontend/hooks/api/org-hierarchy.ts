@@ -27,6 +27,12 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { lazyContract } from "@/lib/api-envelope";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const hierarchyTreeContract = lazyContract(() =>
+  import("@/hooks/api/org-hierarchy-schema").then((m) => m.hierarchyTreeContract),
+);
 const hierarchyParentListContract = lazyContract(() =>
   import("@/hooks/api/org-hierarchy-schema").then((m) => m.hierarchyParentListContract),
 );
@@ -165,7 +171,8 @@ export function useOrgTree() {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: platformHierarchyQueryKeys.hierarchy.tree(),
-    queryFn: ({ signal }) => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -469,7 +476,8 @@ export function useDeleteOrgHoliday(
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, string>("settings:manage", {
     mutationKey: ["org", "holidays", "delete"],
-    mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
+    mutationFn: (id: string) =>
+      apiClient.delete<void>(`/organization/holidays/${id}`, undefined, undefined, noContentContract),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });

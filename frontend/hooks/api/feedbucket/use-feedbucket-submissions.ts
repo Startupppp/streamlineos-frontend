@@ -29,11 +29,11 @@ const feedbucketConvertTicketC = lazyContract(() =>
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
   return useGatedQuery("feedbucket:submissions:view", {
-    queryKey: growthAndSignQueryKeys.feedbucket.submissions(params as Record<string, unknown>),
+    queryKey: growthAndSignQueryKeys.feedbucket.submissions(params),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedFeedbucketSubmissions>(
         "/feedbucket/submissions",
-        params as Record<string, unknown>, signal, feedbucketSubmissionListC,
+        params, signal, feedbucketSubmissionListC,
       ),
     staleTime: 30_000,
   });

@@ -13,6 +13,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const budgetListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-budget-schema").then((m) => m.budgetListResponseContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const budgetItemC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-budget-schema").then((m) => m.budgetItemContract),
 );
@@ -60,7 +63,7 @@ export function useDeleteBudget() {
   return useAuthorizedMutation("timesheets:budgets:manage", {
     mutationKey: ["timesheets", "budgets", "delete"],
     mutationFn: (budgetId: number) =>
-      apiClient.delete<{ success: boolean }>(`/timesheets/budgets/${budgetId}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/timesheets/budgets/${budgetId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.budgets() });
       toast.success("Budget removed");

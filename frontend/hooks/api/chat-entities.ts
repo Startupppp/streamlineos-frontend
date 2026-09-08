@@ -34,10 +34,14 @@ interface LinkMeta {
 
 export function useLinkPreview(url: string | null) {
   const canRead = useCan("chat:messages:read");
+  const httpUrl = url !== null && url.startsWith("http") ? url : null;
   return useQuery({
     queryKey: [...collaborationQueryKeys.chat.all, "linkPreview", url] as const,
-    queryFn: ({ signal }) => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }, signal, chatLinkPreviewContract),
-    enabled: canRead && Boolean(url) && url!.startsWith("http"),
+    queryFn: ({ signal }) => {
+      if (httpUrl === null) throw new Error("useLinkPreview ran without an http url");
+      return apiClient.get<LinkMeta>("/chat/link-preview", { url: httpUrl }, signal, chatLinkPreviewContract);
+    },
+    enabled: canRead && httpUrl !== null,
     staleTime: 10 * 60_000,
     retry: false,
   });

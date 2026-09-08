@@ -65,7 +65,7 @@ const _hrEventsExportContract = lazyContract(() =>
 export function useHrEvents(params: ListEventsParams = {}) {
   return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params as Record<string, unknown>, signal, _listHrEventsContract),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params, signal, _listHrEventsContract),
     staleTime: 30_000,
   });
 }

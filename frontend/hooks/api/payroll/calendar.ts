@@ -15,6 +15,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const calendarEventListC = lazyContract(() =>
   import("@/hooks/api/payroll/calendar-schema").then((m) => m.calendarEventListContract),
 );
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const generateCalendarResponseC = lazyContract(() =>
   import("@/hooks/api/payroll/calendar-schema").then((m) => m.generateCalendarResponseContract),
 );
@@ -73,7 +76,7 @@ export function useDeleteCalendarEvent() {
   return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "delete"],
     mutationFn: ({ eventId }: { eventId: number }) =>
-      apiClient.delete<void>(`/payroll/calendar/${eventId}`, undefined, undefined, undefined),
+      apiClient.delete<void>(`/payroll/calendar/${eventId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.calendarAll });
     },

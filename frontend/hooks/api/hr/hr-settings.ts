@@ -3,6 +3,10 @@
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -85,7 +89,7 @@ export function useDeleteDocument() {
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "delete"],
     mutationFn: (documentId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
+      apiClient.delete<void>(`/hr/documents/${documentId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });

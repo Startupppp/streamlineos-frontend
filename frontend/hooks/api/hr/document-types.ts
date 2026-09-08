@@ -27,24 +27,19 @@ export interface HrDocumentType {
   isMandatory: boolean | null;
   isActive: boolean | null;
   sortOrder: number | null;
-  applicableRoles: string[] | null;
+  applicableRoles?: string[] | null;
   createdAt?: string | null;
 }
 
 export interface PaginatedHrDocumentTypes {
   data: HrDocumentType[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 function unwrapDocumentTypes(
-  res: PaginatedHrDocumentTypes | HrDocumentType[] | null | undefined,
+  res: PaginatedHrDocumentTypes | null | undefined,
 ): HrDocumentType[] {
-  if (Array.isArray(res)) return res;
-  if (res && typeof res === "object" && Array.isArray(res.data)) return res.data;
-  return [];
+  return Array.isArray(res?.data) ? res.data : [];
 }
 
 export function useHrDocumentTypes(options?: { enabled?: boolean }) {
@@ -57,24 +52,25 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
       (options?.enabled ?? true),
     queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), "all"] as const,
     queryFn: async ({ signal }) => {
-      const res = await apiClient.get<
-        PaginatedHrDocumentTypes | HrDocumentType[]
-      >("/hr/document-types", { page: 1, limit: 100 }, signal);
+      const res = await apiClient.get<PaginatedHrDocumentTypes>(
+        "/hr/document-types",
+        { limit: 100 },
+        signal,
+        documentTypeListPageLazy,
+      );
       return unwrapDocumentTypes(res);
     },
     staleTime: 5 * 60_000,
   });
 }
 
-export function useHrDocumentTypesPage(page: number, limit: number) {
+export function useHrDocumentTypesPage(cursor: string | undefined, limit: number) {
   const canManageDocuments = useCan("hr:documents:manage");
+  const params = cursor ? { cursor, limit } : { limit };
   return useQuery<PaginatedHrDocumentTypes>({
-    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), { page, limit }] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), params] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", {
-        page,
-        limit,
-      }, signal),
+      apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", params, signal, documentTypeListPageLazy),
     enabled: canManageDocuments,
     staleTime: 30_000,
     placeholderData: keepPreviousData,

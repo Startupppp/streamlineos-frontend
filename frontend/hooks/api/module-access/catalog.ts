@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 /**
  * Deferred: `components/members/member-picker.tsx` reaches this module through
@@ -77,7 +78,7 @@ export function useModuleAuditLog(
         auditLogPageContract,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,

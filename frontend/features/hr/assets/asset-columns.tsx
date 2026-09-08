@@ -10,10 +10,10 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { fmtCost, STATUS_META } from "./asset-constants";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import type { Asset, Employee } from "@/types/hr";
+import type { Asset, EmployeeListItem } from "@/types/hr";
 
 export function buildAssetColumns(
-  employees: Employee[],
+  employees: EmployeeListItem[],
   onAssign: (asset: Asset) => void,
   onEdit: (asset: Asset) => void,
   onRetire: (id: number) => void,

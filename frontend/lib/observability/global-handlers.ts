@@ -35,8 +35,8 @@ export function installGlobalErrorHandlers(): () => void {
     });
   };
 
-  const onRejection = (event: Event): void => {
-    const reason = (event as Event & { reason?: unknown }).reason;
+  const onRejection = (event: PromiseRejectionEvent): void => {
+    const reason: unknown = event.reason;
     reportError(reason, { source: "unhandledrejection" });
   };
 

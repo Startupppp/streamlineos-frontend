@@ -85,8 +85,8 @@ export function useAccessProvisioning(params: {
   status?: ProvisioningStatus;
 } = {}) {
   return useGatedQuery("hr:identity:view", {
-    queryKey: identityKeys.provisioning(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/provisioning`, params as Record<string, unknown>, signal, _listProvisioningContract),
+    queryKey: identityKeys.provisioning(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/provisioning`, params, signal, _listProvisioningContract),
     staleTime: 30_000,
   });
 }

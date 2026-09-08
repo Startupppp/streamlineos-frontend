@@ -227,7 +227,7 @@ export function JobsPage() {
             <>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {jobs.map((job) => {
-                  const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
+                  const deptName = departments?.find((d) => String(d.id) === job.orgDepartmentId)?.name;
                   return (
                     <JobCard
                       key={job.id}

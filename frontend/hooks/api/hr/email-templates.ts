@@ -10,6 +10,10 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
@@ -22,10 +26,6 @@ const emailTemplateListLazy = lazyContract(() =>
 const emailTemplateAiLazy = lazyContract(() =>
   import("@/hooks/api/hr/email-templates-schema").then((m) => m.emailTemplateAiContract),
 );
-const deleteEmailTemplateLazy = lazyContract(() =>
-  import("@/hooks/api/hr/email-templates-schema").then((m) => m.deleteEmailTemplateResponseContract),
-);
-
 export interface EmailTemplate {
   id: number;
   name: string;
@@ -111,13 +111,13 @@ export function useUpdateEmailTemplate(
 }
 
 export function useDeleteEmailTemplate(
-  options?: UseMutationOptions<{ success: boolean }, Error, number>,
+  options?: UseMutationOptions<void, Error, number>,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "email-templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`, undefined, undefined, deleteEmailTemplateLazy),
+      apiClient.delete<void>(`/hr/email-templates/${id}`, undefined, undefined, noContentC),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });

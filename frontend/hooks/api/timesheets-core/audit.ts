@@ -7,6 +7,7 @@ import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { AuditEvent } from "@/features/timesheets/audit-types";
 import type { CursorPage } from "@/features/timesheets/types";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const auditListC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-audit-schema").then((m) => m.auditListResponseContract),
@@ -47,7 +48,7 @@ export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params, signal, auditListC);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: enabled && canView,

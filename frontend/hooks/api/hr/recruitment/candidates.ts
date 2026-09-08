@@ -1,9 +1,14 @@
 "use client";
 
+import type { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -16,12 +21,10 @@ import type {
   Interview,
 } from "@/types/hr";
 import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
-import {
-  normalizeRecruitmentList,
-  unwrapRecruitmentItems,
-  type RecruitmentListResponse,
-} from "./list-response";
+import type { candidateDetailSchema } from "@/hooks/api/hr/recruitment/candidates-schema";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+
+export type CandidateDetail = z.infer<typeof candidateDetailSchema>;
 
 const candidateListContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/candidates-schema").then(
@@ -154,71 +157,62 @@ export type CandidatesParams = {
   jobId?: number;
   /** Server-side search (first/last name, email, company) */
   search?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 };
 
-export type CandidatesListResponse = RecruitmentListResponse<Candidate> & {
+export type CandidatesListResponse = {
+  data: Candidate[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
   statusCounts?: Record<string, number>;
 };
 
-/**
- * Backend returns `{ items, total, page, pageSize, totalPages, statusCounts? }`.
- * Hook normalizes to Candidate[] so existing list UIs keep working.
- */
-export function useCandidates(params?: CandidatesParams) {
-  const page = params?.page ?? 1;
-  const pageSize = params?.pageSize ?? 100;
-  const queryParams: Record<string, unknown> = {
-    page,
-    pageSize,
-  };
+function candidateQueryParams(params: CandidatesParams | undefined, limit: number) {
+  const queryParams: Record<string, unknown> = { limit };
+  if (params?.cursor) queryParams.cursor = params.cursor;
   if (params?.status) queryParams.status = params.status;
   if (params?.source) queryParams.source = params.source;
   if (params?.jobId) queryParams.jobId = params.jobId;
   if (params?.search?.trim()) queryParams.search = params.search.trim();
+  return queryParams;
+}
+
+/**
+ * The endpoint is keyset-paginated, so this reads the first page only. Every
+ * consumer here wants a bounded picker list, not a walk of the whole pipeline —
+ * `useCandidatesPage` is what pages.
+ */
+export function useCandidates(params?: CandidatesParams) {
+  const queryParams = candidateQueryParams(params, params?.limit ?? 100);
 
   return useGatedQuery("hr:employees:view", {
     queryKey: humanResourcesQueryKeys.hr.candidates(queryParams),
     queryFn: async ({ signal }): Promise<Candidate[]> => {
-      const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
+      const res = await apiClient.get<CandidatesListResponse>(
         "/hr/recruitment/candidates",
         queryParams,
         signal,
         candidateListContract,
       );
-      return unwrapRecruitmentItems(res);
+      return res.data;
     },
     staleTime: 2 * 60_000,
   });
 }
 
-/** Full paginated candidates payload (includes statusCounts for filter chips). */
+/** Full keyset page (includes statusCounts for filter chips). */
 export function useCandidatesPage(params?: CandidatesParams) {
-  const page = params?.page ?? 1;
-  const pageSize = params?.pageSize ?? 20;
-  const queryParams: Record<string, unknown> = { page, pageSize };
-  if (params?.status) queryParams.status = params.status;
-  if (params?.source) queryParams.source = params.source;
-  if (params?.jobId) queryParams.jobId = params.jobId;
-  if (params?.search?.trim()) queryParams.search = params.search.trim();
+  const queryParams = candidateQueryParams(params, params?.limit ?? 20);
 
   return useGatedQuery("hr:employees:view", {
     queryKey: [...humanResourcesQueryKeys.hr.candidates(queryParams), "page"] as const,
-    queryFn: async ({ signal }): Promise<CandidatesListResponse> => {
-      const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
+    queryFn: ({ signal }): Promise<CandidatesListResponse> =>
+      apiClient.get<CandidatesListResponse>(
         "/hr/recruitment/candidates",
         queryParams,
         signal,
         candidateListContract,
-      );
-      const base = normalizeRecruitmentList(res, pageSize);
-      const statusCounts =
-        res && typeof res === "object" && !Array.isArray(res) && "statusCounts" in res
-          ? (res as CandidatesListResponse).statusCounts
-          : undefined;
-      return { ...base, statusCounts };
-    },
+      ),
     staleTime: 2 * 60_000,
   });
 }
@@ -240,7 +234,13 @@ export interface DuplicateCandidateGroup {
 export function useCandidateDuplicates() {
   return useGatedQuery("hr:employees:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] as const,
-    queryFn: ({ signal }) => apiClient.get<DuplicateCandidateGroup[]>("/hr/recruitment/candidates/duplicates", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<DuplicateCandidateGroup[]>(
+        "/hr/recruitment/candidates/duplicates",
+        undefined,
+        signal,
+        candidateDuplicatesContract,
+      ),
     staleTime: 60_000,
   });
 }
@@ -277,13 +277,12 @@ export function useCandidate(id: number) {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.candidate(id),
     queryFn: ({ signal }) =>
-      apiClient.get<
-        Candidate & {
-          applications?: CandidateApplication[];
-          slaTracking?: CandidateSlaRecord[];
-          interviews?: (Interview & { scorecards?: InterviewScorecard[] })[];
-        }
-      >(`/hr/recruitment/candidates/${id}`, undefined, signal),
+      apiClient.get<CandidateDetail>(
+        `/hr/recruitment/candidates/${id}`,
+        undefined,
+        signal,
+        candidateDetailContract,
+      ),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -352,7 +351,7 @@ export function useDeleteCandidate() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, undefined, undefined, candidateSuccessContract),
+      apiClient.delete<void>(`/hr/recruitment/candidates/${id}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });

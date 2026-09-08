@@ -29,6 +29,24 @@ type ServerPagination = {
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
 };
+/**
+ * A keyset-paginated server list. There is no `total` and no `page` because a
+ * cursor list has neither — the footer is prev/next only, and the fields the
+ * other two modes carry are typed `never` so the three cannot be mixed.
+ */
+type CursorPagination = {
+  mode: "cursor";
+  pageSize: number;
+  hasMore: boolean;
+  hasPrevious: boolean;
+  onNext: () => void;
+  onPrevious: () => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
+  page?: never;
+  total?: never;
+  onPageChange?: never;
+};
 
 export interface DataTableProps<T> {
   data: T[];
@@ -48,7 +66,7 @@ export interface DataTableProps<T> {
      */
     getRowLabel?: (row: T, index: number) => string;
   };
-  pagination?: ClientPagination | ServerPagination;
+  pagination?: ClientPagination | ServerPagination | CursorPagination;
   isLoading?: boolean;
   emptyState?: ReactNode;
   footer?: ReactNode;
@@ -69,4 +87,4 @@ export interface DataTableProps<T> {
   mobileCard?: (row: T, index: number) => ReactNode;
 }
 
-export type { ClientPagination, ServerPagination };
+export type { ClientPagination, ServerPagination, CursorPagination };

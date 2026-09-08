@@ -91,7 +91,21 @@ export const mailDownloadContract = z.object({
   fileName: z.string(),
 });
 
-/** `mailAiInboxSummarySchema` */
+/**
+ * `mailAiInboxSummarySchema` declares `aiUsage: { inputTokens, outputTokens }`,
+ * which the gateway never emits: `MailAiService.inboxSummary` returns
+ * `result.aiUsage`, an `AiUsageMeta` (`ai-gateway.types.ts`). The declared shape
+ * would strip every field `AiUsageChip` reads.
+ */
+const aiUsageMetaContract = z.object({
+  model: z.string(),
+  promptTokens: z.number().int(),
+  completionTokens: z.number().int(),
+  totalTokens: z.number().int(),
+  credits: z.number(),
+  costUsd: z.number(),
+});
+
 export const mailAiInboxSummaryContract = z.object({
   summary: z.string(),
   highlights: z.array(
@@ -102,9 +116,7 @@ export const mailAiInboxSummaryContract = z.object({
     }),
   ),
   actionItems: z.array(z.string()),
-  aiUsage: z
-    .object({ inputTokens: z.number().int(), outputTokens: z.number().int() })
-    .optional(),
+  aiUsage: aiUsageMetaContract.optional(),
 });
 
 /** `mailAiThreadSummarySchema` */

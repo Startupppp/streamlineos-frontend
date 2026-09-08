@@ -1,3 +1,5 @@
+import { isRecord } from "@/lib/is-record";
+
 /**
  * Backend recruitment list endpoints return ListResponse:
  * { items, total, page, pageSize, totalPages } (+ optional extras).
@@ -15,11 +17,7 @@ export interface RecruitmentListResponse<T> {
 export function isRecruitmentListResponse<T>(
   res: unknown,
 ): res is RecruitmentListResponse<T> {
-  return (
-    !!res &&
-    typeof res === "object" &&
-    Array.isArray((res as RecruitmentListResponse<T>).items)
-  );
+  return isRecord(res) && Array.isArray(res.items);
 }
 
 export function normalizeRecruitmentList<T>(

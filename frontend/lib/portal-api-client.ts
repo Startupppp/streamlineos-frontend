@@ -1,4 +1,5 @@
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { isRecord } from "@/lib/is-record";
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -97,31 +98,27 @@ async function parsePortalResponse<T>(res: Response): Promise<T> {
     let code: string | undefined;
     let details: unknown;
     try {
-      const body = (await res.json()) as Record<string, unknown>;
-      if (typeof body?.message === "string" && body.message) {
-        message = body.message;
-      } else if (Array.isArray(body?.message) && body.message.length > 0) {
-        message = (body.message as unknown[])
-          .filter((m): m is string => typeof m === "string")
-          .join(", ");
-      } else if (typeof body?.error === "string" && body.error) {
-        message = body.error;
+      const body: unknown = await res.json();
+      if (isRecord(body)) {
+        if (typeof body.message === "string" && body.message) {
+          message = body.message;
+        } else if (Array.isArray(body.message) && body.message.length > 0) {
+          const parts: unknown[] = body.message;
+          message = parts
+            .filter((m): m is string => typeof m === "string")
+            .join(", ");
+        } else if (typeof body.error === "string" && body.error) {
+          message = body.error;
+        }
+        if (typeof body.code === "string") code = body.code;
+        if ("details" in body) details = body.details;
       }
-      if (typeof body?.code === "string") code = body.code;
-      if ("details" in body) details = body.details;
     } catch {}
     throw new PortalApiError(message, res.status, code, details);
   }
   if (res.status === 204) return undefined as T;
-  const body = (await res.json()) as Record<string, unknown>;
-  if (
-    body !== null &&
-    typeof body === "object" &&
-    body.success === true &&
-    "data" in body
-  ) {
-    return body.data as T;
-  }
+  const body: unknown = await res.json();
+  if (isRecord(body) && body.success === true && "data" in body) return body.data as T;
   return body as T;
 }
 

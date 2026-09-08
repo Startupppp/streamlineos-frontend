@@ -13,26 +13,25 @@ const calendarSyncStatusContract = lazyContract(() =>
 const calendarSyncRetryContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncRetryContract),
 );
+const calendarEventAttendeesContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarEventAttendeesContract),
+);
+const calendarRsvpContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarRsvpContract),
+);
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
+import type { z } from "zod";
+import type {
+  calendarEventAttendeesContract as calendarEventAttendeesContractDef,
+  calendarRsvpContract as calendarRsvpContractDef,
+} from "@/hooks/api/calendar-schema";
 import type { CalendarEventDetail, EventSyncStatusResponse } from "./calendar-types";
 
 type RsvpStatus = "accepted" | "declined" | "tentative";
 
-interface EventAttendee {
-  id: number;
-  eventId: number;
-  userId: string;
-  status: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  } | null;
-}
+type EventAttendee = z.infer<typeof calendarEventAttendeesContractDef>[number];
+type RsvpResult = z.infer<typeof calendarRsvpContractDef>;
 
 const calendarSyncStatusKey = (eventId: number) =>
   [...platformHierarchyQueryKeys.calendar.all, "sync-status", eventId] as const;
@@ -53,7 +52,12 @@ export function useEventAttendees(eventId: number | null) {
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.attendees(eventId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`, undefined, signal),
+      apiClient.get<EventAttendee[]>(
+        `/calendar/events/${eventId}/rsvp`,
+        undefined,
+        signal,
+        calendarEventAttendeesContract,
+      ),
     enabled: can && eventId !== null,
     staleTime: 60 * 1000,
   });
@@ -64,7 +68,12 @@ export function useRsvpCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "rsvp"],
     mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
-      apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
+      apiClient.post<RsvpResult>(
+        `/calendar/events/${eventId}/rsvp`,
+        { status },
+        undefined,
+        calendarRsvpContract,
+      ),
     onSuccess: (_, { eventId }) => {
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.attendees(eventId) });
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });

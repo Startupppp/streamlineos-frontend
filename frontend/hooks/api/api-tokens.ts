@@ -54,7 +54,7 @@ export function useApiTokens(params?: { page?: number; limit?: number }) {
   return useGatedQuery("crm:settings:manage", {
     queryKey: usersAndCommerceQueryKeys.apiTokens.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ApiTokenPage>("/api-tokens", params as Record<string, unknown>, signal, apiTokensPageContract),
+      apiClient.get<ApiTokenPage>("/api-tokens", params, signal, apiTokensPageContract),
     staleTime: 30_000,
   });
 }

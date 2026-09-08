@@ -5,13 +5,17 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
 export interface Holiday {
   id: string;
   orgId: string;
   name: string;
   date: string;
   recurring: boolean;
-  createdBy: string;
+  createdBy: string | null;
   createdAt: string;
 }
 
@@ -56,7 +60,7 @@ export function useDeleteHoliday() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (id: string) =>
-      apiClient.delete<void>(`/hr/attendance/holidays/${id}`),
+      apiClient.delete<void>(`/hr/attendance/holidays/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }

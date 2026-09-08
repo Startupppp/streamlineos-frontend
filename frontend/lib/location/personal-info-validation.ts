@@ -14,6 +14,15 @@ import {
 const MIN_AGE_YEARS = 14;
 const MAX_AGE_YEARS = 100;
 
+/**
+ * The `as` is what keeps `emergencyRelation` a bare `string`. Zod 4 accepts a
+ * readonly array, so dropping it types the field as the six literals — and that
+ * narrowing surfaces a REAL defect three files away:
+ * `features/employee-onboarding/components/step-personal.tsx` seeds
+ * `emergencyRelation` from an unvalidated `string | undefined` and hands the
+ * whole form to a `SubmitHandler` that no longer matches. That fix belongs to
+ * whoever owns `features/**`; widening here is what hides it.
+ */
 const RELATIONSHIP_VALUES = EMERGENCY_RELATIONSHIPS.map((r) => r.value) as [
   string,
   ...string[],

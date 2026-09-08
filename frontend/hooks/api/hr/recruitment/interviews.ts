@@ -3,6 +3,10 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -353,7 +357,7 @@ export function useDeleteInterviewQuestion(questionId: number) {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "delete", questionId],
     mutationFn: () =>
-      apiClient.delete<{ success: boolean }>(`/hr/interview-questions/${questionId}`, undefined, undefined, interviewSuccessContract),
+      apiClient.delete<void>(`/hr/interview-questions/${questionId}`, undefined, undefined, noContentC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "interviewQuestions"] }),
   });

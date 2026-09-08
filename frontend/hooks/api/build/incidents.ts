@@ -28,6 +28,9 @@ const incidentDetailContract = lazyContract(() =>
 const incidentUpdateRowContract = lazyContract(() =>
   import("@/hooks/api/build/incidents-schema").then((m) => m.incidentUpdateRowContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 type IncidentFilters = {
   status?: string;
@@ -95,7 +98,7 @@ export function useDeleteIncident() {
   return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<unknown>(`/build/${projectId}/incidents/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/incidents/${id}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },

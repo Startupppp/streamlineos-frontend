@@ -14,6 +14,9 @@ const automationListContract = lazyContract(() =>
 const automationContract = lazyContract(() =>
   import("@/hooks/api/automations-schema").then((m) => m.automationContract),
 );
+const automationDeleteContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationDeleteContract),
+);
 const automationRunsContract = lazyContract(() =>
   import("@/hooks/api/automations-schema").then((m) => m.automationRunsContract),
 );
@@ -194,7 +197,7 @@ export function useDeleteAutomation() {
     mutationKey: ["automations", "delete"],
     mutationFn: (id: number) => {
       assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`);
+      return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`, undefined, undefined, automationDeleteContract);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });

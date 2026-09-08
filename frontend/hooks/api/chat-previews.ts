@@ -4,10 +4,16 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { commentPermalinkLazy } from "@/hooks/api/build/comment-permalink";
 import type {
   CommentPermalinkData,
   TicketPermalinkData,
 } from "@/hooks/api/build/comment-permalink";
+import { lazyContract } from "@/lib/api-envelope";
+
+const ticketDetailLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+);
 
 export type { CommentPermalinkData, TicketPermalinkData };
 
@@ -27,6 +33,7 @@ export function useCommentPermalink(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
         undefined,
         signal,
+        commentPermalinkLazy,
       ),
     staleTime: 60_000,
     retry: false,
@@ -51,6 +58,7 @@ export function useTicketPermalink(
         `/build/${projectId}/tickets/${ticketId}`,
         undefined,
         signal,
+        ticketDetailLazy,
       ),
     staleTime: 60_000,
     retry: false,

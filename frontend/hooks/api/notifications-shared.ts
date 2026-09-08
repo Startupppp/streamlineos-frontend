@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { QueryParams } from "@/lib/api-client";
 import type { NotificationListParams } from "@/types/notifications";
 
 export const SHARED_UNREAD_PARAMS: NotificationListParams = {
@@ -31,9 +32,10 @@ export function useNotificationInboxInvalidation() {
   return { invalidateInbox, orgId, queryClient };
 }
 
-export function toStringParams(params: Record<string, unknown>): Record<string, string> {
+export function toStringParams(params: QueryParams): Record<string, string> {
+  const entries: Array<[string, unknown]> = Object.entries(params);
   return Object.fromEntries(
-    Object.entries(params)
+    entries
       .filter(([, v]) => v !== undefined && v !== null)
       .map(([k, v]) => [k, String(v)]),
   );

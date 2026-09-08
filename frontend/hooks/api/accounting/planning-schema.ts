@@ -150,7 +150,6 @@ export const scenarioCreatedContract = scenarioContract;
 
 export const scenarioUpdatedContract = scenarioContract;
 
-export const scenarioDeleteContract = z.object({ success: z.literal(true) });
 
 export const replaceLinesSuccessContract = z.object({ success: z.literal(true) });
 

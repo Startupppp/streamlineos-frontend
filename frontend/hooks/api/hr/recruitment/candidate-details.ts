@@ -8,6 +8,9 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const activityContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
     (m) => m.candidateActivityEventListSchema,
@@ -78,147 +81,33 @@ const referenceCheckContract = lazyContract(() =>
     (m) => m.referenceCheckSchema,
   ),
 );
-const referenceCheckSuccessContract = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
-    (m) => m.referenceCheckSuccessSchema,
-  ),
-);
 
-interface VaultDocument {
-  id: number;
-  candidateId: number;
-  orgId: string;
-  filename: string;
-  s3Key: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
-  documentType: string | null;
-  avResult: "PENDING" | "CLEAN" | "INFECTED" | null;
-  expiresAt: string | null;
-  uploadedBy: string;
-  createdAt: string | null;
-}
+import type {
+  BgvComplianceRow,
+  CalibrationSession,
+  CandidateActivityEvent,
+  CandidateDocumentRecord,
+  CandidateReferral,
+  CreateReferenceCheckInput,
+  ReferenceCheck,
+  RolloutDocumentRecord,
+  RolloutDocumentsInput,
+  RolloutDocumentsResult,
+  UpdateBgvInput,
+  VaultAccessLog,
+  VaultDocument,
+  VaultDocumentType,
+} from "@/hooks/api/hr/recruitment/candidate-details-types";
 
-export type BgvStatus = "NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED";
-export type VaultDocumentType = "AADHAR" | "PAN" | "PASSPORT" | "CERTIFICATE" | "OFFER_LETTER" | "OTHER";
-
-export interface RolloutDocumentRecord {
-  id: number;
-  templateId: number | null;
-  templateTitle: string | null;
-  title: string;
-  status: string;
-  sentAt: string | null;
-  viewedAt: string | null;
-  signedAt: string | null;
-  declinedAt: string | null;
-  createdAt: string | null;
-  createdBy: string;
-}
-
-export interface RolloutDocumentsInput {
-  templateIds: number[];
-  variables: Record<string, string>;
-  sendEmail: boolean;
-}
-
-interface RolloutDocumentsResult {
-  documents: RolloutDocumentRecord[];
-  count: number;
-}
-
-interface UpdateBgvInput {
-  bgvStatus: BgvStatus;
-  bgvAgency?: string;
-  bgvNotes?: string;
-}
-
-interface VaultAccessLog {
-  id: number;
-  action: string;
-  accessedAt: string | null;
-  fileName: string;
-  documentType: string | null;
-  accessorDisplayName: string;
-}
-
-export interface BgvComplianceRow {
-  jobPostingId: number;
-  jobTitle: string;
-  total: number;
-  cleared: number;
-  failed: number;
-  pending: number;
-  initiated: number;
-  notInitiated: number;
-  clearedPct: number;
-}
-
-interface CandidateReferral {
-  id: number;
-  orgId: string;
-  candidateId: number;
-  referredBy: string;
-  relationship: string | null;
-  notes: string | null;
-  bonusEligible: boolean;
-  bonusAmount: string | null;
-  bonusPaidAt: string | null;
-  createdAt: string;
-}
-
-interface CalibrationSession {
-  id: number;
-  orgId: string;
-  candidateId: number;
-  jobPostingId: number | null;
-  scheduledAt: string | null;
-  status: "pending" | "scheduled" | "completed" | "cancelled";
-  notes: string | null;
-  decision: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null;
-  participantIds: string[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ReferenceCheck {
-  id: number;
-  candidateId: number;
-  orgId: string;
-  referenceName: string;
-  referenceDesignation: string | null;
-  referenceCompany: string | null;
-  referenceEmail: string | null;
-  referencePhone: string | null;
-  relationship: string | null;
-  status: string;
-  outcome: string | null;
-  notes: string | null;
-  contactedAt: string | null;
-  createdBy: string | null;
-  createdAt: string | null;
-}
-
-interface CreateReferenceCheckInput {
-  referenceName: string;
-  referenceDesignation?: string;
-  referenceCompany?: string;
-  referenceEmail?: string;
-  referencePhone?: string;
-  relationship?: string;
-  notes?: string;
-}
-
-export interface CandidateActivityEvent {
-  type: "AUDIT" | "INTERVIEW" | "MESSAGE" | "DOCUMENT";
-  id: string;
-  label: string;
-  detail: Record<string, unknown> | null;
-  actor: string | null;
-  at: string;
-}
+export type {
+  BgvComplianceRow,
+  BgvStatus,
+  CandidateActivityEvent,
+  CandidateDocumentRecord,
+  RolloutDocumentRecord,
+  RolloutDocumentsInput,
+  VaultDocumentType,
+} from "@/hooks/api/hr/recruitment/candidate-details-types";
 
 export function useCandidateActivity(candidateId: number) {
   const canView = useCan("hr:employees:view");
@@ -264,8 +153,11 @@ export function useDeleteVaultDocument(candidateId: number) {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vault", "delete", candidateId],
     mutationFn: (documentId: number) =>
-      apiClient.delete<{ success: boolean }>(
-        `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`
+      apiClient.delete<void>(
+        `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId) }),
@@ -295,6 +187,8 @@ export function useGenerateAndRollout(candidateId: number) {
       apiClient.post<RolloutDocumentsResult>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`,
         data,
+        undefined,
+        generateRolloutContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId) });
@@ -308,7 +202,12 @@ export function useUpdateCandidateBgv(candidateId: number) {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bgv", candidateId],
     mutationFn: (data: UpdateBgvInput) =>
-      apiClient.patch<{ id: number; bgvStatus: BgvStatus }>(`/hr/recruitment/candidates/${candidateId}/bgv-status`, data),
+      apiClient.patch<{ success: true }>(
+        `/hr/recruitment/candidates/${candidateId}/bgv-status`,
+        data,
+        undefined,
+        bgvSuccessContract,
+      ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) }),
   });
@@ -464,11 +363,11 @@ export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
       notes?: string | null;
       contactedAt?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<ReferenceCheck>(
         `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`,
         data,
         undefined,
-        referenceCheckSuccessContract,
+        referenceCheckContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
@@ -480,8 +379,11 @@ export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "delete", candidateId, checkId],
     mutationFn: () =>
-      apiClient.delete<{ success: boolean }>(
-        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`
+      apiClient.delete<void>(
+        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
