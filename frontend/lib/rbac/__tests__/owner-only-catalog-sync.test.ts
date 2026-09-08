@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as path from "path";
 import { OWNER_ONLY_OPERATIONS } from "../owner-only-operations";
 import { backendPath } from "@/lib/test-support/backend-path";
 

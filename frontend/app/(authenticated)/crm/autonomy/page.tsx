@@ -6,6 +6,7 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { AutonomyReviewFeed } from "@/features/crm/autonomy/autonomy-review-feed";
 import { AutonomySwitchesPanel } from "@/features/crm/autonomy/autonomy-switches-panel";
+import { RepairPoliciesPanel } from "@/features/crm/autonomy/repair-policies-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
 
@@ -37,6 +38,8 @@ export default function AutonomyReviewPage() {
           <PendingSendsPanel />
           <AutonomyScoreboard />
           <AutonomySwitchesPanel />
+          {/* Under the switches, because the kill switch above vetoes all of it. */}
+          <RepairPoliciesPanel />
           <AutonomyReviewFeed />
         </div>
       )}

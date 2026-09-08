@@ -10,6 +10,8 @@ import type {
   DecisionFilters,
   DecisionPage,
   LiveHold,
+  RepairClass,
+  RepairPoliciesResponse,
   ReviewQueueItem,
   Scoreboard,
   SwitchesResponse,
@@ -109,6 +111,40 @@ export function useSetAutonomySwitch() {
       apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySwitches(), data);
+    },
+  });
+}
+
+/**
+ * Which deterministic repairs this tenant allows the system to make unattended.
+ *
+ * Read under the view key and written under `crm:autonomy:repair`, matching the
+ * two permissions the endpoints themselves carry.
+ */
+export function useRepairPolicies() {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairPolicies(),
+    queryFn: () => apiClient.get<RepairPoliciesResponse>("/crm/autonomy/repair-policies"),
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Grant one repair class, or take it back.
+ *
+ * Not optimistic, for the same reason the kill switch is not: this decides
+ * whether the product edits a customer's data without being asked, and showing
+ * it as off a moment before it is would be a lie in the one place it matters.
+ */
+export function useSetRepairPolicy() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["crm", "autonomy", "repair-policies", "set"],
+    mutationFn: (input: { repairClass: RepairClass; enabled: boolean; reason?: string }) =>
+      apiClient.patch<RepairPoliciesResponse>("/crm/autonomy/repair-policies", input),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.crm.autonomyRepairPolicies(), data);
     },
   });
 }

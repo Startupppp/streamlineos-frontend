@@ -230,3 +230,36 @@ export interface LiveHold {
   /** Server-computed at fetch time; the browser counts down from it. */
   secondsRemaining: number;
 }
+
+/** The deterministic field repairs a tenant may grant, and its answer to each. */
+export const REPAIR_CLASSES = [
+  "email.whitespace",
+  "email.domain-dot-edge",
+  "phone.non-ascii-characters",
+] as const;
+export type RepairClass = (typeof REPAIR_CLASSES)[number];
+
+export interface EffectiveRepairPolicy {
+  repairClass: RepairClass;
+  findingKind: string;
+  field: string;
+  /** Whether this class is on for a tenant that has never said anything. */
+  conservative: boolean;
+  reversibility: ReversibilityClass;
+  description: string;
+  enabled: boolean;
+  /** Whether the answer came from the tenant's own row or the platform default. */
+  source: "tenant" | "default";
+  reason: string | null;
+  /**
+   * `enabled` AND the wider kill switch. Reported separately from `enabled`
+   * because a tenant looking at a screen of granted classes while nothing is
+   * repaired needs to be told the switch is what stopped it.
+   */
+  effective: boolean;
+}
+
+export interface RepairPoliciesResponse {
+  autonomy: { allowed: boolean; decidedBy: string; reason: string | null };
+  classes: EffectiveRepairPolicy[];
+}
