@@ -44,7 +44,7 @@ const employees: EmployeeListItem[] = Array.from(
       firstName: "Ada",
       lastName: `Lovelace ${i}`,
       isActive: true,
-    }) as unknown as Employee,
+    }) as unknown as EmployeeListItem,
 );
 
 function Grid() {

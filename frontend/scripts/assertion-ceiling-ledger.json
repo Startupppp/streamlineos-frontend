@@ -737,10 +737,6 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/hr/termination/termination-page.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "features/hr/work-logs/work-logs-page.tsx": {
       "as": 2,
       "nonNull": 0

@@ -174,6 +174,11 @@ export function TeamHomePage({ teamId }: Props) {
   const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
   const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
 
+  function handleAddMemberRoleChange(value: string): void {
+    const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
+    if (role) setAddMemberRole(role);
+  }
+
   const { data, isLoading, isError, refetch } = useProjectTeam(teamId);
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
@@ -325,13 +330,7 @@ export function TeamHomePage({ teamId }: Props) {
                   placeholder="Add a member…"
                   className="h-8 min-w-[180px]"
                 />
-                <Select
-                  value={addMemberRole}
-                  onValueChange={(v) => {
-                    const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === v);
-                    if (role) setAddMemberRole(role);
-                  }}
-                >
+                <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
                   <SelectTrigger className="w-24 text-xs border-input bg-card">
                     <SelectValue />
                   </SelectTrigger>
