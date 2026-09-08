@@ -5,6 +5,7 @@ import type { reorderProposalContract as reorderProposalContractDef } from "@/ho
 import type { supplierDelayBriefingContract as supplierDelayBriefingContractDef } from "@/hooks/api/inventory/ai-schema";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { inventoryQueryKeys } from "@/lib/query-keys/inventory";
 import { lazyContract } from "@/lib/api-envelope";
@@ -18,6 +19,9 @@ const reorderProposalInvContract = lazyContract(() =>
 );
 const supplierDelayBriefingInvContract = lazyContract(() =>
   import("@/hooks/api/inventory/ai-schema").then((m) => m.supplierDelayBriefingContract),
+);
+const confirmReorderProposalContract = lazyContract(() =>
+  import("@/hooks/api/inventory/ai-schema").then((m) => m.confirmReorderProposalContract),
 );
 
 export interface ExplainFactor {
@@ -53,7 +57,7 @@ export function useConfirmReorderProposal() {
   return useAuthorizedMutation<unknown, Error, { proposalId: number; token: string }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
     mutationFn: (body) =>
-      apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),
+      apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body, undefined, confirmReorderProposalContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: inventoryQueryKeys.inventory.aiInsights() });
     },
@@ -61,6 +65,7 @@ export function useConfirmReorderProposal() {
 }
 
 export function useSupplierDelayBriefing(vendorId?: string) {
+  const canRead = useCan("inventory:reports:read");
   return useQuery<SupplierDelayBriefing, Error>({
     queryKey: inventoryQueryKeys.inventory.supplierDelayBriefing(vendorId),
     queryFn: ({ signal }) =>
@@ -69,5 +74,6 @@ export function useSupplierDelayBriefing(vendorId?: string) {
         vendorId ? { vendorId } : {}, signal, supplierDelayBriefingInvContract,
       ),
     staleTime: 5 * 60_000,
+    enabled: canRead,
   });
 }

@@ -215,32 +215,7 @@ const MIN_REASON_LENGTH = 60;
  * `useModuleEnabled` — a module toggle, which is org configuration and not a
  * permission. Both gaps are why it reported 0 while 48 of these existed.
  */
-const UNGATED_HELD_BACK = new Map([
-  [
-    "hooks/api/leads.ts",
-    {
-      count: 11,
-      reason:
-        "Every read here calls a crm:leads:view route with no permission in `enabled`. CRM is out of the 10/10 release scope, so the conversion is deferred rather than done blind — the leads screens have their own gating story under the CRM lane. One line each (useCan(\"crm:leads:view\") ANDed into `enabled`) the day CRM re-enters scope.",
-    },
-  ],
-  [
-    "hooks/api/inv-ai-explain.ts",
-    {
-      count: 1,
-      reason:
-        "useSupplierDelayBriefing reads GET /inventory/ai/supplier-delay, which declares inventory:reports:read, with no permission in `enabled`. Inventory is out of the 10/10 release scope.",
-    },
-  ],
-  [
-    "features/inventory/components/tools/export-tab.tsx",
-    {
-      count: 1,
-      reason:
-        "useExportJobsWithPolling reads GET /inventory/export/jobs, which declares inventory:export, with no permission in `enabled`. Inventory is out of the 10/10 release scope.",
-    },
-  ],
-]);
+const UNGATED_HELD_BACK = new Map();
 
 const DELIBERATE = new Map([
   [

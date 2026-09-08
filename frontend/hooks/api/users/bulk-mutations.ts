@@ -22,11 +22,11 @@ const updateUserRoleContract = lazyContract(() =>
   import("@/hooks/api/users/extended-users-schema").then((m) => m.updateUserRoleContract),
 );
 
-function useBulkLifecycleMutation(endpoint: string, mutationKey: string) {
+export function useBulkSuspend() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
-    mutationKey: ["bulk", mutationKey],
-    mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload, undefined, bulkActionResultContract),
+    mutationKey: ["bulk", "suspend"],
+    mutationFn: (payload) => apiClient.post<BulkActionResult>("/users/bulk-suspend", payload, undefined, bulkActionResultContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
@@ -35,14 +35,31 @@ function useBulkLifecycleMutation(endpoint: string, mutationKey: string) {
   });
 }
 
-export const useBulkSuspend = () =>
-  useBulkLifecycleMutation("/users/bulk-suspend", "suspend");
+export function useBulkArchive() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
+    mutationKey: ["bulk", "archive"],
+    mutationFn: (payload) => apiClient.post<BulkActionResult>("/users/bulk-archive", payload, undefined, bulkActionResultContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+    },
+  });
+}
 
-export const useBulkArchive = () =>
-  useBulkLifecycleMutation("/users/bulk-archive", "archive");
-
-export const useBulkRestore = () =>
-  useBulkLifecycleMutation("/users/bulk-restore", "restore");
+export function useBulkRestore() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
+    mutationKey: ["bulk", "restore"],
+    mutationFn: (payload) => apiClient.post<BulkActionResult>("/users/bulk-restore", payload, undefined, bulkActionResultContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+    },
+  });
+}
 
 export const useBulkUpdateUsers = () => {
   const queryClient = useQueryClient();

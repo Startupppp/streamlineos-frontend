@@ -94,6 +94,9 @@ const getPoContract = lazyContract(() =>
 const getGrnContract = lazyContract(() =>
   import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getGrnContract),
 );
+const invPoContract = lazyContract(() =>
+  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.invPoContract),
+);
 
 export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   const canView = useCan("inventory:purchase-orders:read");
@@ -216,13 +219,14 @@ export function useApprovePurchaseOrder(poId: number) {
 
 export function useClosePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, void>("inventory:purchase-orders:approve", {
+  return useAuthorizedMutation<unknown, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "close", poId],
     mutationFn: () =>
-      apiClient.post<void>(
+      apiClient.post<unknown>(
         `/inventory/purchase-orders/${poId}/close`,
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        invPoContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -233,13 +237,14 @@ export function useClosePurchaseOrder(poId: number) {
 
 export function useCancelPurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
+  return useAuthorizedMutation<unknown, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "cancel", poId],
     mutationFn: (vars) =>
-      apiClient.post<void>(
+      apiClient.post<unknown>(
         `/inventory/purchase-orders/${poId}/cancel`,
         vars ?? {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        invPoContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });

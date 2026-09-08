@@ -112,3 +112,5 @@ export const supplierDelayBriefingContract = z.object({
   narration: z.string(),
   generatedAt: z.string(),
 });
+
+export { invPoContract as confirmReorderProposalContract } from "@/hooks/api/inventory/purchase-orders-schema";

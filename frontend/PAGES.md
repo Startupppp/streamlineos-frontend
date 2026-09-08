@@ -11,7 +11,7 @@ Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtim
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.
 - **Never delete a row** — mark it `[x]` and append `[RETIRED path]` if a route is removed.
 
-**Generated:** 2026-08-30. **Total routes: 600.** Last updated: 2026-08-30 (PAGES2 lane).
+**Generated:** 2026-08-30. **Total routes: 606.** Last updated: 2026-09-08 (task5/6 additions).
 
 **PAGES2 count reconciliation (2026-08-30):**
 - Disk: 598 `page.tsx` files (confirmed via `find … | wc -l`).
@@ -19,6 +19,12 @@ Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtim
 - 4 blog routes were labelled with `(site)` in the path — corrected to their real URLs below.
 - 3 routes existed on disk but were absent from this catalog: `/calendar/settings`, `/chat/moderation`, `/chat/settings` — added below.
 - Module-index sum after those additions: 600. Disk: 598. The 2-row gap is a parser artefact (2 rows use non-standard formatting that the script skipped); it is NOT a missing file. The module index is authoritative.
+
+**Count reconciliation (2026-09-08):**
+- Disk: 601 `page.tsx` files (measured via Glob tool).
+- 6 routes existed on disk but were absent from this catalog: `/hr/dashboard`, `/inbox`, `/workflows/settings/access`, `/workflows/settings/secrets`, `/workflows/settings/variables`, `/blog/admin` — added below.
+- 3 catalog rows had no matching `page.tsx` on disk: `/workflows/secrets`, `/workflows/variables`, `/waitlist` — marked `[x] [RETIRED path]`.
+- Module-index sum after additions: 606. Disk: 601. Gap of 5 = 3 newly retired rows + the pre-existing 2-row parser artefact.
 
 **Route-module thinness (S11, 2026-09-02).** `pnpm check:route-thinness` now measures what the "thin route module" rule asks for, so it is a number rather than a judgement. It scans all 586 authenticated `page.tsx`/`layout.tsx` files for component state, data fetching, forms, direct `apiClient` calls and files over 300 lines, and ratchets the in-scope count at **118**; a further **67** are CRM/Inventory and are printed under OUT OF SCOPE rather than filtered away. Run it with `--list` for the per-file reasons. Owners of the 118: HR 42, Accounting 33, Support 14, Build 10, Workflows 7, Notifications 6, Surveys 2, Settings 2, Payroll 1, Chat 1. Client route modules remain **260 of 600** against the 304 ceiling.
 
@@ -56,13 +62,13 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 | Platform shell (root) | 4 |
 | Dashboard / Home | 1 |
 | Calendar | 2 |
-| Mail | 1 |
+| Mail | 2 |
 | Chat | 5 |
 | Notifications | 7 |
 | AI / Ask | 2 |
 | CRM | 56 |
 | Build | 77 |
-| HR | 124 |
+| HR | 125 |
 | Payroll | 23 |
 | Accounting | 74 |
 | Inventory | 61 |
@@ -70,13 +76,13 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 | Me (self-service) | 7 |
 | Support | 26 |
 | Surveys | 6 |
-| Workflows | 11 |
+| Workflows | 14 |
 | Sign (e-signature) | 8 |
 | Timesheets | 9 |
 | Directory | 6 |
 | Settings | 25 |
 | Billing (customer invoices) | 3 |
-| Blog | 1 |
+| Blog | 2 |
 | Parties / Subjects | 2 |
 | Portal (authenticated) | 2 |
 | Portal group (client) | 3 |
@@ -119,6 +125,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ## Mail
 
 - [ ] `/mail` · **Communications** · hooks: `→ feature/mail` · §8: L ? States ?
+- [ ] `/inbox` · **Communications** · hooks: `→ feature/inbox` · §8: L ? States ?
 
 ---
 
@@ -335,6 +342,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 
 ### Hub
 - [ ] `/hr` · **HR** · hooks: `→ features/hr/hub` · §8: States ✓ (hub surface)
+- [ ] `/hr/dashboard` · **HR** · hooks: `→ features/hr/dashboard` · §8: States ?
 
 ### Employees
 - [ ] `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")`, `→ features/hr/employees` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
@@ -828,10 +836,15 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 - [ ] `/workflows/approvals` · **Workflows** · hooks: `→ features/workflows` · §8: L ? Perm ? States ?
 - [ ] `/workflows/executions` · **Workflows** · hooks: `→ features/workflows` · §8: L ? F ? P ? States ?
 - [ ] `/workflows/scheduler` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/workflows/secrets` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? D ? Perm ? States ?
+- [x] `/workflows/secrets` · **Workflows** [RETIRED path: moved to `/workflows/settings/secrets`]
 - [ ] `/workflows/templates` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/workflows/variables` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
+- [x] `/workflows/variables` · **Workflows** [RETIRED path: moved to `/workflows/settings/variables`]
 - [ ] `/workflows/access` · **Workflows** · hooks: `→ features/workflows` · §8: Perm ? States ?
+
+### Settings (Workflows module)
+- [ ] `/workflows/settings/access` · **Workflows** · hooks: `→ features/workflows/settings` · §8: Perm ? States ?
+- [ ] `/workflows/settings/secrets` · **Workflows** · hooks: `→ features/workflows/settings` · §8: L ? C ? D ? Perm ? States ?
+- [ ] `/workflows/settings/variables` · **Workflows** · hooks: `→ features/workflows/settings` · §8: L ? C ? E ? D ? Perm ? States ?
 
 ---
 
@@ -914,6 +927,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ## Blog (authenticated admin)
 
 - [ ] `/blog/access` · **Blog** · hooks: `→ features/blog` · §8: Perm ? States ?
+- [ ] `/blog/admin` · **Blog** · hooks: `→ features/blog` · §8: L ? C ? E ? D ? Perm ? States ?
 
 ---
 
@@ -948,7 +962,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 - [ ] `/about` · **Marketing** · hooks: none
 - [ ] `/pricing` · **Marketing** · hooks: none
 - [ ] `/contact` · **Marketing** · hooks: none
-- [ ] `/waitlist` · **Marketing** · hooks: none
+- [x] `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
 - [ ] `/design-system` · **Dev** · hooks: none — dev-only gallery
 - [ ] `/legal/privacy` · **Marketing** · hooks: none
 - [ ] `/legal/security` · **Marketing** · hooks: none

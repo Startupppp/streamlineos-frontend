@@ -274,3 +274,7 @@ export const stockEngineResultContract = z.object({
     onHand: z.string(),
   })),
 });
+
+export const successContract = z.object({
+  success: z.literal(true),
+});

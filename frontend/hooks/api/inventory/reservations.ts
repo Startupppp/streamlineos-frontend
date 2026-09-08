@@ -64,6 +64,12 @@ const listReservationsContract = lazyContract(() =>
 const createReservationContract = lazyContract(() =>
   import("@/hooks/api/inventory/stock-schema").then((m) => m.createReservationContract),
 );
+const successContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.successContract),
+);
+const stockEngineResultContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.stockEngineResultContract),
+);
 
 export function useReservations(filters?: ReservationsFilters) {
   const canView = useCan("inventory:stock:read");
@@ -87,10 +93,10 @@ export function useReservations(filters?: ReservationsFilters) {
 
 export function useReleaseReservation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("inventory:stock:reserve", {
+  return useAuthorizedMutation<{ success: true }, Error, number>("inventory:stock:reserve", {
     mutationKey: ["inventory", "stock", "release-reservation"],
     mutationFn: (reservationId) =>
-      apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }),
+      apiClient.post<{ success: true }>("/inventory/stock/release-reservation", { reservationId }, undefined, successContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -105,7 +111,7 @@ export function useOpeningStock() {
     mutationFn: (data) =>
       apiClient.post<unknown>("/inventory/stock/opening", data, {
         headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      }, stockEngineResultContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

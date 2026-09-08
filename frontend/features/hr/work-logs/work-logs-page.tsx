@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/hooks/api/hr";
-import { useHrEmployees, useLegacyHrDepartments, unwrapEmployees } from "@/hooks/api/hr";
+import { useHrEmployees, useHrDepartments, unwrapEmployees } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -96,7 +96,7 @@ export function WorkLogsPage() {
   const canEditSavedWorkLogs = useCan("hr:attendance:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const { data: departments } = useLegacyHrDepartments();
+  const { data: departments } = useHrDepartments();
 
   const allEmployees = useMemo(
     () => (canManageEmployees ? unwrapEmployees(employeesRaw) : []),

@@ -19,10 +19,8 @@ export const channelDetailContract = invChannelContract;
 export const listChannelsContract = z.array(invChannelContract);
 
 export const syncStockContract = z.object({
-  channelId: z.number().int(),
-  syncedAt: z.string(),
-  itemsSynced: z.number().int(),
-  errors: z.array(z.string()),
+  synced: z.number().int(),
+  skipped: z.number().int(),
 });
 
 const publicationContract = z.object({
@@ -48,7 +46,6 @@ export const listPublicationsContract = z.object({
 
 export const retryPublicationsContract = z.object({
   retried: z.number().int(),
-  failed: z.number().int(),
 });
 
 const tplConnectionContract = z.object({
@@ -72,7 +69,6 @@ export const tplConnectionDetailContract = tplConnectionContract;
 
 export const syncTplConnectionContract = z.object({
   connectionId: z.number().int(),
-  syncedAt: z.string(),
-  itemsSynced: z.number().int(),
-  errors: z.array(z.string()),
+  status: z.string(),
+  message: z.string().optional(),
 });

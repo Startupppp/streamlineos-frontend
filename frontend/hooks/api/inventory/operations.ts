@@ -70,6 +70,9 @@ const listCustomerReturnsContract = lazyContract(() =>
 const getCustomerReturnContract = lazyContract(() =>
   import("@/hooks/api/inventory/operations-schema").then((m) => m.getCustomerReturnContract),
 );
+const reverseGrnResponseContract = lazyContract(() =>
+  import("@/hooks/api/inventory/operations-schema").then((m) => m.reverseGrnResponseContract),
+);
 
 export function useGoodsReceipts(filters?: GrnFilters) {
   const canView = useCan("inventory:purchase-orders:read");
@@ -106,13 +109,14 @@ interface ReverseGrnInput {
 
 export function useReverseGrn() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, ReverseGrnInput>("inventory:purchase-orders:receive", {
+  return useAuthorizedMutation<{ reversed: true; grnId: number; transactionCount: number }, Error, ReverseGrnInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "goodsReceipts", "reverse"],
     mutationFn: ({ grnId, reason }) =>
-      apiClient.post<void>(
+      apiClient.post<{ reversed: true; grnId: number; transactionCount: number }>(
         `/inventory/goods-receipts/${grnId}/reverse`,
         { reason },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        reverseGrnResponseContract,
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipts() });
@@ -193,13 +197,14 @@ interface PostVendorReturnInput {
 
 export function usePostVendorReturn() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, PostVendorReturnInput>("inventory:vendor-returns:manage", {
+  return useAuthorizedMutation<VendorReturnSummary, Error, PostVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "post"],
     mutationFn: ({ returnId, reason }) =>
-      apiClient.post<void>(
+      apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/post`,
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        getVendorReturnContract,
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
@@ -215,10 +220,10 @@ interface CancelVendorReturnInput {
 
 export function useCancelVendorReturn() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, CancelVendorReturnInput>("inventory:vendor-returns:manage", {
+  return useAuthorizedMutation<VendorReturnSummary, Error, CancelVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "cancel"],
     mutationFn: ({ returnId }) =>
-      apiClient.post<void>(`/inventory/vendor-returns/${returnId}/cancel`, {}),
+      apiClient.post<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}/cancel`, {}, undefined, getVendorReturnContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
@@ -297,13 +302,14 @@ interface PostCustomerReturnInput {
 
 export function usePostCustomerReturn() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, PostCustomerReturnInput>("inventory:customer-returns:manage", {
+  return useAuthorizedMutation<CustomerReturnSummary, Error, PostCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "post"],
     mutationFn: ({ returnId, reason }) =>
-      apiClient.post<void>(
+      apiClient.post<CustomerReturnSummary>(
         `/inventory/customer-returns/${returnId}/post`,
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        getCustomerReturnContract,
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
@@ -319,10 +325,10 @@ interface CancelCustomerReturnInput {
 
 export function useCancelCustomerReturn() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, CancelCustomerReturnInput>("inventory:customer-returns:manage", {
+  return useAuthorizedMutation<CustomerReturnSummary, Error, CancelCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "cancel"],
     mutationFn: ({ returnId }) =>
-      apiClient.post<void>(`/inventory/customer-returns/${returnId}/cancel`, {}),
+      apiClient.post<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}/cancel`, {}, undefined, getCustomerReturnContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });

@@ -309,15 +309,12 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   const isOtherUser = params.userId !== undefined;
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<AttendanceLog[]>(
-        isOtherUser ? "/hr/attendance/monthly" : "/me/attendance/monthly",
-        {
-          year: params.year,
-          month: params.month,
-          ...(params.userId ? { userId: params.userId } : {}),
-        }, signal, attendanceRowListC,
-      ),
+    queryFn: ({ signal }) => {
+      const qParams = { year: params.year, month: params.month, ...(params.userId ? { userId: params.userId } : {}) };
+      if (isOtherUser)
+        return apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", qParams, signal, attendanceRowListC);
+      return apiClient.get<AttendanceLog[]>("/me/attendance/monthly", qParams, signal, attendanceRowListC);
+    },
     staleTime: 2 * 60_000,
     enabled: isOtherUser ? hrEnabled && canManage : canSelf,
   });

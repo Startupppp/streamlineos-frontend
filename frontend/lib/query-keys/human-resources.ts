@@ -5,7 +5,6 @@ export const humanResourcesQueryKeys = {
     all: [...base, "hr"] as const,
     hub: (today: string) => [...base, "hr", "hub", today] as const,
     departments: () => [...base, "hr", "departments"] as const,
-    legacyDepartments: () => [...base, "hr", "departments", "legacy"] as const,
     employees: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employees"] as const)

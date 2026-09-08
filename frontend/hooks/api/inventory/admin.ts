@@ -35,6 +35,9 @@ const listImportJobsContract = lazyContract(() =>
 const createExportJobContract = lazyContract(() =>
   import("@/hooks/api/inventory/settings-schema").then((m) => m.createExportJobContract),
 );
+const expireReservationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/settings-schema").then((m) => m.expireReservationsContract),
+);
 
 export interface InventorySettings {
   allowNegativeStock: boolean;
@@ -183,13 +186,14 @@ export function useSettingsHealth() {
 
 export function useExpireStaleReservations() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, void>("inventory:settings:manage", {
+  return useAuthorizedMutation<{ expired: number }, Error, void>("inventory:settings:manage", {
     mutationKey: ["inventory", "settings", "expire-reservations"],
     mutationFn: () =>
-      apiClient.post<void>(
+      apiClient.post<{ expired: number }>(
         "/inventory/settings/maintenance/expire-reservations",
         undefined,
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        expireReservationsContract,
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });

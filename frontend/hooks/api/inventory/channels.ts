@@ -22,6 +22,15 @@ const listTplConnectionsContract = lazyContract(() =>
 const tplConnectionDetailContract = lazyContract(() =>
   import("@/hooks/api/inventory/channels-schema").then((m) => m.tplConnectionDetailContract),
 );
+const syncStockContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.syncStockContract),
+);
+const retryPublicationsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.retryPublicationsContract),
+);
+const syncTplConnectionContract = lazyContract(() =>
+  import("@/hooks/api/inventory/channels-schema").then((m) => m.syncTplConnectionContract),
+);
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
 export type PublicationStatus = "PENDING" | "PUBLISHED" | "FAILED" | "SKIPPED";
@@ -159,10 +168,10 @@ export function useUpdateChannel() {
 
 export function useSyncChannelStock() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
+  return useAuthorizedMutation<{ synced: number; skipped: number }, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "sync-stock"],
     mutationFn: (channelId) =>
-      apiClient.post<unknown>(`/inventory/channels/${channelId}/sync-stock`, {}),
+      apiClient.post<{ synced: number; skipped: number }>(`/inventory/channels/${channelId}/sync-stock`, {}, undefined, syncStockContract),
     onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
@@ -172,10 +181,10 @@ export function useSyncChannelStock() {
 
 export function useRetryChannelPublications() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
+  return useAuthorizedMutation<{ retried: number }, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "publications", "retry"],
     mutationFn: (channelId) =>
-      apiClient.post<unknown>(`/inventory/channels/${channelId}/publications/retry`, {}),
+      apiClient.post<{ retried: number }>(`/inventory/channels/${channelId}/publications/retry`, {}, undefined, retryPublicationsContract),
     onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
     },
@@ -218,10 +227,10 @@ export function useUpdateThreePlConnection() {
 
 export function useSyncThreePlConnection() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, number>("inventory:3pl:manage", {
+  return useAuthorizedMutation<{ connectionId: number; status: string; message?: string }, Error, number>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "sync"],
     mutationFn: (connectionId) =>
-      apiClient.post<unknown>(`/inventory/3pl/connections/${connectionId}/sync`, {}),
+      apiClient.post<{ connectionId: number; status: string; message?: string }>(`/inventory/3pl/connections/${connectionId}/sync`, {}, undefined, syncTplConnectionContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.threePlConnections() });
     },

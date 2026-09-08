@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
@@ -49,57 +50,66 @@ const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-
 
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.list(filters),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedLeads>("/leads", filters, signal, leadListLazy),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
 export function useLeadDetail(id: number) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.detail(id),
     queryFn: ({ signal }) => apiClient.get<LeadWithActivities>(`/leads/${id}`, undefined, signal, leadDetailLazy),
     staleTime: 2 * 60_000,
-    enabled: id > 0,
+    enabled: canView && id > 0,
   });
 }
 
 export function useLeadBoard() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.board(),
     queryFn: ({ signal }) => apiClient.get<LeadBoard>("/leads/board", undefined, signal, leadBoardLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.stats(filters),
     queryFn: ({ signal }) =>
       apiClient.get<LeadStats>("/leads/stats", filters, signal, leadStatsLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useLeadTimeline(leadId: number, limit?: number) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.timeline(leadId),
     queryFn: ({ signal }) =>
       apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined, signal, leadTimelineLazy),
     staleTime: 2 * 60_000,
-    enabled: leadId > 0,
+    enabled: canView && leadId > 0,
   });
 }
 
 export function useLeadSlaAlerts() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.slaAlerts(),
     queryFn: ({ signal }) => apiClient.get<SlaAlertResponse>("/leads/sla-alerts", undefined, signal, leadsSlaAlertsLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -107,11 +117,13 @@ export function useLeadAnalyticsSummary(filters?: {
   dateFrom?: string;
   dateTo?: string;
 }) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: customerWorkQueryKeys.leads.analyticsSummary(filters),
     queryFn: ({ signal }) =>
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters, signal, leadsAnalyticsLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -274,29 +286,34 @@ export function useAssignLead() {
 }
 
 export function useSalesLeaderboard() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: accessAndCrmQueryKeys.salesLeaderboard.list(),
     queryFn: ({ signal }) =>
       apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard", undefined, signal, leadsSalesLeaderboardLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useSalesTeamCapacity() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: accessAndCrmQueryKeys.salesTeamCapacity.list(),
     queryFn: ({ signal }) =>
       apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity", undefined, signal, leadsSalesTeamCapacityLazy),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useCheckLeadDuplicates(params: { email?: string; phone?: string }, options?: { enabled?: boolean }) {
+  const canView = useCan("crm:leads:view");
   const hasParams = !!(params.email || params.phone);
   return useQuery({
     queryKey: [...customerWorkQueryKeys.leads.all, "duplicateCheck", params] as const,
     queryFn: ({ signal }) => apiClient.get("/leads/check-duplicates", params, signal, leadsCheckDuplicatesLazy),
-    enabled: hasParams && (options?.enabled !== false),
+    enabled: canView && hasParams && (options?.enabled !== false),
     staleTime: 30_000,
   });
 }
@@ -308,10 +325,11 @@ interface ScoreExplanation {
 }
 
 export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: [...customerWorkQueryKeys.leads.all, "scoreExplanation", leadId] as const,
     queryFn: ({ signal }) => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`, undefined, signal, leadScoreExplanationLazy),
-    enabled,
+    enabled: canView && enabled,
     staleTime: 60_000,
   });
 }

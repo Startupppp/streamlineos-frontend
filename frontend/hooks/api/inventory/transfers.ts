@@ -199,6 +199,9 @@ const listTransfersContract = lazyContract(() =>
 const transferItemContract = lazyContract(() =>
   import("@/hooks/api/inventory/stock-schema").then((m) => m.transferItemContract),
 );
+const successContract = lazyContract(() =>
+  import("@/hooks/api/inventory/stock-schema").then((m) => m.successContract),
+);
 
 export function useTransfers(filters?: TransferFilters) {
   const canView = useCan("inventory:stock:read");
@@ -272,10 +275,10 @@ export function useCreateTransfer() {
 
 export function useCompleteTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, CompleteTransferInput>("inventory:stock:transfer", {
+  return useAuthorizedMutation<{ success: true }, Error, CompleteTransferInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "complete"],
     mutationFn: ({ transferId, lines }) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }),
+      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/complete`, { lines }, undefined, successContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -287,10 +290,10 @@ export function useCompleteTransfer() {
 
 export function useDispatchTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, { transferId: number }>("inventory:stock:transfer", {
+  return useAuthorizedMutation<{ success: true }, Error, { transferId: number }>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "dispatch"],
     mutationFn: ({ transferId }) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
+      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/dispatch`, {}, undefined, successContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -301,13 +304,14 @@ export function useDispatchTransfer() {
 
 export function useReserveTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("inventory:stock:transfer", {
+  return useAuthorizedMutation<unknown, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "reserve"],
     mutationFn: (transferId) =>
-      apiClient.post<void>(
+      apiClient.post<unknown>(
         `/inventory/stock/transfers/${transferId}/reserve`,
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        transferItemContract,
       ),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
@@ -318,10 +322,10 @@ export function useReserveTransfer() {
 
 export function useCancelTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("inventory:stock:transfer", {
+  return useAuthorizedMutation<{ success: true }, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "cancel"],
     mutationFn: (transferId) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}),
+      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/cancel`, {}, undefined, successContract),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });

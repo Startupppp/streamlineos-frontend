@@ -28,7 +28,7 @@ const poLineContract = z.object({
   productVariant: variantRefContract.optional(),
 });
 
-const invPoContract = z.object({
+export const invPoContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   poNumber: z.string(),

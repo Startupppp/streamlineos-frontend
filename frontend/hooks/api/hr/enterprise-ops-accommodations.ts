@@ -84,7 +84,7 @@ const _approveAccommodationContract = lazyContract(() =>
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get(BASE, params, signal, _listAccommodationsContract),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/ops/accommodations", params, signal, _listAccommodationsContract),
     staleTime: 30_000,
   });
 }
@@ -116,7 +116,7 @@ export function useCreateAccommodation() {
       type: AccommodationType;
       description: string;
       confidentialMedicalNote?: string;
-    }) => apiClient.post(BASE, body, undefined, _createAccommodationContract),
+    }) => apiClient.post("/hr/enterprise/ops/accommodations", body, undefined, _createAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.all });
       toast.success("Accommodation request created");

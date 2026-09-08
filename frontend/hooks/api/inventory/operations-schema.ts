@@ -124,3 +124,9 @@ export const listCustomerReturnsContract = z.object({
 });
 
 export const getCustomerReturnContract = customerReturnContract;
+
+export const reverseGrnResponseContract = z.object({
+  reversed: z.literal(true),
+  grnId: z.number().int(),
+  transactionCount: z.number().int(),
+});

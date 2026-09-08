@@ -131,18 +131,19 @@ export function useHierarchyParentOptions(
 
   return useInfiniteQuery({
     queryKey: platformHierarchyQueryKeys.hierarchy.parentOptions(parentKind, normalizedSearch),
-    queryFn: ({ pageParam, signal }) =>
-      apiClient.get<CursorResponse<HierarchyParentRecord>>(
-        HIERARCHY_PARENT_ENDPOINTS[parentKind],
-        {
-          ...(pageParam !== "" ? { cursor: pageParam } : {}),
-          limit: String(HIERARCHY_PARENT_PAGE_SIZE),
-          ...(normalizedSearch ? { search: normalizedSearch } : {}),
-          status: "ACTIVE",
-        },
-        signal,
-        hierarchyParentListContract,
-      ),
+    queryFn: ({ pageParam, signal }) => {
+      const qParams = {
+        ...(pageParam !== "" ? { cursor: pageParam } : {}),
+        limit: String(HIERARCHY_PARENT_PAGE_SIZE),
+        ...(normalizedSearch ? { search: normalizedSearch } : {}),
+        status: "ACTIVE",
+      };
+      if (parentKind === "BUSINESS_UNIT")
+        return apiClient.get<CursorResponse<HierarchyParentRecord>>("/org-hierarchy/business-units", qParams, signal, hierarchyParentListContract);
+      if (parentKind === "BRANCH")
+        return apiClient.get<CursorResponse<HierarchyParentRecord>>("/org-hierarchy/branches", qParams, signal, hierarchyParentListContract);
+      return apiClient.get<CursorResponse<HierarchyParentRecord>>("/org-hierarchy/departments", qParams, signal, hierarchyParentListContract);
+    },
     initialPageParam: "",
     getNextPageParam: (lastPage) =>
       lastPage.pageInfo.hasMore

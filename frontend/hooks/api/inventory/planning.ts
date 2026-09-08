@@ -298,10 +298,10 @@ export function useUpdateReplenishmentRule() {
 
 export function useDeactivateReplenishmentRule() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("inventory:replenishment:manage", {
+  return useAuthorizedMutation<unknown, Error, number>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "deactivate"],
     mutationFn: (ruleId) =>
-      apiClient.delete<void>(`/inventory/replenishment/rules/${ruleId}`),
+      apiClient.delete<unknown>(`/inventory/replenishment/rules/${ruleId}`, undefined, undefined, ruleDetailContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },

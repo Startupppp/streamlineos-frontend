@@ -96,6 +96,9 @@ const invCategoryContract = lazyContract(() =>
 const invUomContract = lazyContract(() =>
   import("@/hooks/api/inventory/products-schema").then((m) => m.invUomContract),
 );
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export type {
   InvUomShape,
@@ -198,7 +201,7 @@ export function useDeleteProduct() {
   return useAuthorizedMutation<void, Error, number>("inventory:products:delete", {
     mutationKey: ["inventory", "product", "delete"],
     mutationFn: (productId) =>
-      apiClient.delete<void>(`/inventory/products/${productId}`),
+      apiClient.delete<void>(`/inventory/products/${productId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },

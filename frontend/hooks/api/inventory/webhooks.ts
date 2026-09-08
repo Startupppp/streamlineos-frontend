@@ -19,6 +19,9 @@ const listWebhookEventsContract = lazyContract(() =>
 const retryEventContract = lazyContract(() =>
   import("@/hooks/api/inventory/webhooks-schema").then((m) => m.retryEventContract),
 );
+const deleteWebhookContract = lazyContract(() =>
+  import("@/hooks/api/inventory/webhooks-schema").then((m) => m.deleteWebhookContract),
+);
 
 export type WebhookEventType =
   | "inventory.product.created"
@@ -136,9 +139,9 @@ export function useUpdateWebhook() {
 
 export function useDeleteWebhook() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, number>("inventory:webhooks:manage", {
+  return useAuthorizedMutation<{ deleted: true }, Error, number>("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "delete"],
-    mutationFn: (webhookId) => apiClient.delete<void>(`/inventory/webhooks/${webhookId}`),
+    mutationFn: (webhookId) => apiClient.delete<{ deleted: true }>(`/inventory/webhooks/${webhookId}`, undefined, undefined, deleteWebhookContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhooks() });
     },

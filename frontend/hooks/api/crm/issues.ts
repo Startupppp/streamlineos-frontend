@@ -101,7 +101,7 @@ export function useCreateIssue() {
   return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "create"],
     mutationFn: (input: CreateIssueInput) =>
-      apiClient.post<IssueDetailResponse>(BASE, input, undefined, issueDetailLazy),
+      apiClient.post<IssueDetailResponse>("/crm/issues", input, undefined, issueDetailLazy),
     onSuccess: () => invalidate(),
   });
 }

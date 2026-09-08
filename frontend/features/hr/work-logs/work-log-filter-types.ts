@@ -19,7 +19,7 @@ export interface WorkLogFilterEmployee {
 }
 
 export interface WorkLogFilterDepartment {
-  id: number;
+  id: string;
   name: string;
 }
 

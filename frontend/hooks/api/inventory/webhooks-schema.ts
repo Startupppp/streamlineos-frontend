@@ -38,8 +38,7 @@ export const listWebhookEventsContract = z.object({
 export const retryEventContract = webhookEventContract;
 
 export const deleteWebhookContract = z.object({
-  deleted: z.boolean(),
-  id: z.number().int(),
+  deleted: z.literal(true),
 });
 
 export const listWebhooksContract = z.object({

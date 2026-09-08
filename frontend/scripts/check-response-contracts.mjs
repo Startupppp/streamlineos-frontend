@@ -118,7 +118,7 @@ const BASELINE = {
   // fired. HR imports through its own ImportWizardSheet. The dead path was removed rather than
   // contracted. The whole remaining 25 are CRM and Inventory, both outside release scope, so
   // the in-scope seam is 100% parsed.
-  unvalidatedCalls: 25,
+  unvalidatedCalls: 0,
   minScannedCalls: 2400,
 };
 
@@ -135,14 +135,7 @@ const BASELINE = {
  */
 const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/api/chat-core-read.ts", 1],
-  ["hooks/api/crm/issues.ts", 1],
-  ["hooks/api/hr/attendance.ts", 1],
-  ["hooks/api/hr/enterprise-ops-accommodations.ts", 2],
-  ["hooks/api/hr/expenses.ts", 1],
-  ["hooks/api/org-hierarchy.ts", 1],
-  ["hooks/api/users/bulk-mutations.ts", 1],
   ["hooks/common/use-file-url.ts", 1],
-  ["hooks/api/crm/bulk-import.ts", 1],
 ]);
 
 /**

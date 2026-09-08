@@ -26,6 +26,9 @@ const traceabilityChainContract = lazyContract(() =>
 const expiryItemsArrayContract = lazyContract(() =>
   import("@/hooks/api/inventory/traceability-schema").then((m) => m.expiryItemsArrayContract),
 );
+const updateLotStatusContract = lazyContract(() =>
+  import("@/hooks/api/inventory/traceability-schema").then((m) => m.updateLotStatusContract),
+);
 
 interface LotListItem {
   id: number;
@@ -190,10 +193,10 @@ export function useLot(id: number) {
 
 export function useUpdateLotStatus() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<void, Error, { lotId: number; status: "ACTIVE" | "BLOCKED" }>("inventory:stock:adjust", {
+  return useAuthorizedMutation<unknown, Error, { lotId: number; status: "ACTIVE" | "BLOCKED" }>("inventory:stock:adjust", {
     mutationKey: ["inventory", "lot", "update-status"],
     mutationFn: ({ lotId, status }) =>
-      apiClient.patch<void>(`/inventory/lots/${lotId}/status`, { status }),
+      apiClient.patch<unknown>(`/inventory/lots/${lotId}/status`, { status }, undefined, updateLotStatusContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.lot(vars.lotId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.lots() });

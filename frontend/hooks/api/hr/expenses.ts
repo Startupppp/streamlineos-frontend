@@ -72,13 +72,12 @@ export function useExpensePageData(
       options?.selfService ? "self" : "org",
       params,
     ] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get(
-        options?.selfService ? "/me/expenses" : "/hr/expenses/page-data",
-        Object.keys(params).length ? params : undefined,
-        signal,
-        _expensePageDataContract,
-      ),
+    queryFn: ({ signal }) => {
+      const qData = Object.keys(params).length ? params : undefined;
+      if (options?.selfService)
+        return apiClient.get("/me/expenses", qData, signal, _expensePageDataContract);
+      return apiClient.get("/hr/expenses/page-data", qData, signal, _expensePageDataContract);
+    },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
