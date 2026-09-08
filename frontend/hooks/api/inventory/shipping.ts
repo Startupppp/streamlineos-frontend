@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /**
  * B6. These are the column names the API actually returns and accepts.
@@ -152,13 +153,13 @@ export function usePackageDetail(packageId: number) {
 
 export function useCreatePackage() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Package,
     Error,
     { shipmentId?: number; soId?: number; cartonTypeId?: number; lines?: PackageWriteLine[] }
   >({
     mutationKey: ["inventory", "package", "create"],
-    mutationFn: (data) => apiClient.post<Package>("/inventory/packages", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Package>("/inventory/packages", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
       void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
@@ -251,13 +252,13 @@ export function useShipment(shipmentId: number) {
 
 export function useCreateShipment() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Shipment,
     Error,
     { soId?: number; warehouseId?: number; carrierId?: number; trackingNumber?: string; notes?: string }
   >({
     mutationKey: ["inventory", "shipment", "create"],
-    mutationFn: (data) => apiClient.post<Shipment>("/inventory/shipments", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Shipment>("/inventory/shipments", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -438,13 +439,13 @@ export function useLoad(loadId: number) {
 
 export function useCreateLoad() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Load,
     Error,
     { name?: string; members: { type: "SHIPMENT" | "TRANSFER"; referenceId: number }[] }
   >({
     mutationKey: ["inventory", "load", "create"],
-    mutationFn: (data) => apiClient.post<Load>("/inventory/loads", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Load>("/inventory/loads", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
@@ -502,13 +503,13 @@ export function useCarriers() {
 
 export function useCreateCarrier() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Carrier,
     Error,
     { name: string; code: string; trackingUrlTemplate?: string; isActive?: boolean }
   >({
     mutationKey: ["inventory", "carrier", "create"],
-    mutationFn: (data) => apiClient.post<Carrier>("/inventory/carriers", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Carrier>("/inventory/carriers", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.carriers() });
     },

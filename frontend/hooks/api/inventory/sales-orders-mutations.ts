@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
@@ -99,9 +100,9 @@ interface CancelSalesOrderInput {
 
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
+  return useIdempotentMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
         clientId: data.clientId,
         orderDate: data.orderDate ?? todayIso(),
@@ -117,7 +118,7 @@ export function useCreateSalesOrder() {
           taxRate: (line.taxRate ?? 0).toFixed(2),
           lineOrder: index,
         })),
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
@@ -161,10 +162,10 @@ export function useShipSalesOrder() {
 
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
+  return useIdempotentMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "invoice"],
-    mutationFn: ({ soId }) =>
-      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
+    mutationFn: ({ soId }, idempotencyKey) =>
+      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });

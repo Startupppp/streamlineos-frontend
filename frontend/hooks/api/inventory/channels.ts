@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { SyncStatus } from "@/features/inventory/lib";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
 type ChannelStatus = "ACTIVE" | "PAUSED";
@@ -109,9 +110,9 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
 
 export function useCreateChannel() {
   const qc = useQueryClient();
-  return useMutation<Channel, Error, CreateChannelInput>({
+  return useIdempotentMutation<Channel, Error, CreateChannelInput>({
     mutationKey: ["inventory", "channel", "create"],
-    mutationFn: (data) => apiClient.post<Channel>("/inventory/channels", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Channel>("/inventory/channels", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
     },
@@ -168,10 +169,10 @@ export function useThreePlConnections() {
 
 export function useCreateThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<ThreePlConnection, Error, CreateThreePlInput>({
+  return useIdempotentMutation<ThreePlConnection, Error, CreateThreePlInput>({
     mutationKey: ["inventory", "3pl", "connection", "create"],
-    mutationFn: (data) =>
-      apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.threePlConnections() });
     },

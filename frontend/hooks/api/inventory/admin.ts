@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { JobStatus } from "@/features/inventory/lib";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 type ReservationStrategy = "MANUAL" | "AUTO_ON_CONFIRM" | "FEFO" | "FIFO";
 type ExpiryPolicy = "BLOCK" | "WARN" | "ALLOW";
@@ -193,9 +194,9 @@ export function useImportPreview() {
 
 export function useCreateImportJob() {
   const qc = useQueryClient();
-  return useMutation<ImportJobDetail, Error, { importType: string; rows?: Record<string, unknown>[] }>({
+  return useIdempotentMutation<ImportJobDetail, Error, { importType: string; rows?: Record<string, unknown>[] }>({
     mutationKey: ["inventory", "import", "job", "create"],
-    mutationFn: (data) => apiClient.post<ImportJobDetail>("/inventory/import/jobs", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<ImportJobDetail>("/inventory/import/jobs", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.importJobs() });
     },
@@ -251,9 +252,9 @@ interface CreateExportJobInput {
 
 export function useCreateExportJob() {
   const qc = useQueryClient();
-  return useMutation<ExportJob, Error, CreateExportJobInput>({
+  return useIdempotentMutation<ExportJob, Error, CreateExportJobInput>({
     mutationKey: ["inventory", "export", "job", "create"],
-    mutationFn: (data) => apiClient.post<ExportJob>("/inventory/export/jobs", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<ExportJob>("/inventory/export/jobs", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.exportJobs() });
     },

@@ -10,6 +10,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /**
  * B9 — the returns data layer, moved out of `operations.ts`.
@@ -236,10 +237,10 @@ export function useVendorReturn(returnId: number | null) {
 
 export function useCreateVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({
+  return useIdempotentMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "create"],
-    mutationFn: (data) =>
-      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.returns.vendorList });
     },
@@ -315,10 +316,10 @@ export function useCustomerReturn(returnId: number | null) {
 
 export function useCreateCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>({
+  return useIdempotentMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>({
     mutationKey: ["inventory", "customerReturns", "create"],
-    mutationFn: (data) =>
-      apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.returns.customerList });
     },

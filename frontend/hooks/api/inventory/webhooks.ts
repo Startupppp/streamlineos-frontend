@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 export type WebhookEventType =
   | "inventory.product.created"
@@ -87,13 +88,13 @@ export function useWebhooks() {
 
 export function useCreateWebhook() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Webhook,
     Error,
     { url: string; events: WebhookEventType[]; isActive?: boolean }
   >({
     mutationKey: ["inventory", "webhook", "create"],
-    mutationFn: (data) => apiClient.post<Webhook>("/inventory/webhooks", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Webhook>("/inventory/webhooks", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhooks() });
     },

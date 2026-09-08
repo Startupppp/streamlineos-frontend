@@ -17,6 +17,7 @@ import type {
   CreateProductVariantInput,
   CreateUomInput,
 } from "@/types/inventory";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 interface ProductFilters {
   [key: string]: unknown;
@@ -120,10 +121,10 @@ export function useUom() {
 
 export function useCreateProduct() {
   const qc = useQueryClient();
-  return useMutation<InventoryProduct, Error, CreateProductInput>({
+  return useIdempotentMutation<InventoryProduct, Error, CreateProductInput>({
     mutationKey: ["inventory", "product", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data)),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data), { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
@@ -218,12 +219,13 @@ export function useProductVariants(filters?: ProductVariantFilters) {
 
 export function useCreateProductVariant(productId: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryProductVariant, Error, CreateProductVariantInput>({
+  return useIdempotentMutation<InventoryProductVariant, Error, CreateProductVariantInput>({
     mutationKey: ["inventory", "product", productId, "variant", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<InventoryProductVariant>(
         `/inventory/products/${productId}/variants`,
         serializeVariantWrite(data),
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -234,10 +236,10 @@ export function useCreateProductVariant(productId: number) {
 
 export function useCreateCategory() {
   const qc = useQueryClient();
-  return useMutation<InventoryCategory, Error, CreateCategoryInput>({
+  return useIdempotentMutation<InventoryCategory, Error, CreateCategoryInput>({
     mutationKey: ["inventory", "category", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InventoryCategory>("/inventory/products/categories", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryCategory>("/inventory/products/categories", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -246,10 +248,10 @@ export function useCreateCategory() {
 
 export function useCreateUom() {
   const qc = useQueryClient();
-  return useMutation<InventoryUom, Error, CreateUomInput>({
+  return useIdempotentMutation<InventoryUom, Error, CreateUomInput>({
     mutationKey: ["inventory", "uom", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InventoryUom>("/inventory/products/uom", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryUom>("/inventory/products/uom", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
     },

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /* ------------------------------------------------------------------ *
  * F3 — the anomaly queue
@@ -274,13 +275,16 @@ export interface SubmitInvAiFeedbackInput {
  */
 export function useSubmitInventoryAiFeedback() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     { id: number; verdict: InvAiVerdict; surface: string; createdAt: string },
     Error,
     SubmitInvAiFeedbackInput
   >({
     mutationKey: queryKeys.inventoryAiReview.feedback,
-    mutationFn: (body) => apiClient.post("/inventory/ai/feedback", body),
+    mutationFn: (body, idempotencyKey) =>
+      apiClient.post("/inventory/ai/feedback", body, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventoryAiReview.feedbackSummary(),

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /**
  * The exact keys the counts controllers carry.
@@ -146,10 +147,10 @@ export function useCycleCount(id: number) {
 
 export function useCreateCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, CreateCycleCountInput>({
+  return useIdempotentMutation<CycleCount, Error, CreateCycleCountInput>({
     mutationKey: ["inventory", "cycleCounts", "create"],
-    mutationFn: (data) =>
-      apiClient.post<CycleCount>("/inventory/cycle-counts", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<CycleCount>("/inventory/cycle-counts", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
@@ -245,10 +246,10 @@ export function usePhysicalAudit(id: number) {
 
 export function useCreatePhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>({
+  return useIdempotentMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>({
     mutationKey: ["inventory", "physicalAudits", "create"],
-    mutationFn: (data) =>
-      apiClient.post<PhysicalAudit>("/inventory/physical-audits", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<PhysicalAudit>("/inventory/physical-audits", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },

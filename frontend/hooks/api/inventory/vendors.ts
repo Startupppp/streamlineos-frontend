@@ -17,6 +17,7 @@ import type {
   VendorScorecard,
   VendorDeliveriesResponse,
 } from "@/types/inventory";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 type VendorFilters = {
   search?: string;
@@ -65,9 +66,9 @@ export function useVendor(vendorId: number) {
 
 export function useCreateVendor() {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, CreateVendorInput>({
+  return useIdempotentMutation<InventoryVendor, Error, CreateVendorInput>({
     mutationKey: ["inventory", "vendors", "create"],
-    mutationFn: (data) => apiClient.post<InventoryVendor>("/inventory/vendors", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<InventoryVendor>("/inventory/vendors", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
     },

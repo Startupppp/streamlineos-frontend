@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /**
  * NEO-2 / NEO-3 - platform purchase orders, ASNs and fill rate.
@@ -216,13 +217,16 @@ interface UploadPayoutInput {
 
 export function useUploadPayout() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     { payoutRef: string; submitted: number; stored: number; duplicatesIgnored: number; unmatched: number },
     Error,
     UploadPayoutInput
   >({
     mutationKey: ["inventory", "quick-commerce", "payout"],
-    mutationFn: (data) => apiClient.post("/inventory/quick-commerce/payouts", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post("/inventory/quick-commerce/payouts", data, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.platformFillRateAll });
     },

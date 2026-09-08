@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 export type PutawayTaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PutawayDisposition = "STORAGE" | "QUARANTINE";
@@ -176,10 +177,10 @@ export function usePutawayTask(taskId: number, options?: QueryOptions<PutawayTas
 
 export function useCreatePutawayTask() {
   const qc = useQueryClient();
-  return useMutation<CreatePutawayTaskResult, Error, { grnId: number }>({
+  return useIdempotentMutation<CreatePutawayTaskResult, Error, { grnId: number }>({
     mutationKey: ["inventory", "putaway", "createTask"],
-    mutationFn: (body) =>
-      apiClient.post<CreatePutawayTaskResult>("/inventory/putaway/tasks", body),
+    mutationFn: (body, idempotencyKey) =>
+      apiClient.post<CreatePutawayTaskResult>("/inventory/putaway/tasks", body, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.tasksList });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceiptsList });

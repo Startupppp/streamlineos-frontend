@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WarehouseStockResult } from "@/types/inventory";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 export type LocationType =
   | "ZONE"
@@ -134,9 +135,9 @@ export function useLocations(warehouseId: number) {
 
 export function useCreateWarehouse() {
   const qc = useQueryClient();
-  return useMutation<Warehouse, Error, CreateWarehouseInput>({
+  return useIdempotentMutation<Warehouse, Error, CreateWarehouseInput>({
     mutationKey: ["inventory", "warehouses", "create"],
-    mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Warehouse>("/inventory/warehouses", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
@@ -145,10 +146,10 @@ export function useCreateWarehouse() {
 
 export function useCreateLocation() {
   const qc = useQueryClient();
-  return useMutation<WarehouseLocation, Error, CreateLocationInput>({
+  return useIdempotentMutation<WarehouseLocation, Error, CreateLocationInput>({
     mutationKey: ["inventory", "locations", "create"],
-    mutationFn: ({ warehouseId, ...data }) =>
-      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data),
+    mutationFn: ({ warehouseId, ...data }, idempotencyKey) =>
+      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventory.locations(vars.warehouseId),

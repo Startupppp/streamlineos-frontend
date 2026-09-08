@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 /**
  * NEO-9, NEO-11 and NEO-12 - kits, consignment and the dock.
@@ -191,7 +192,7 @@ export function useDockAppointments(range: { from: string; to: string; warehouse
 
 export function useBookAppointment() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     DockAppointment,
     Error,
     {
@@ -206,7 +207,7 @@ export function useBookAppointment() {
     }
   >({
     mutationKey: ["inventory", "dock", "book"],
-    mutationFn: (data) => apiClient.post<DockAppointment>("/inventory/dock/appointments", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<DockAppointment>("/inventory/dock/appointments", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.dockAppointmentsAll });
     },

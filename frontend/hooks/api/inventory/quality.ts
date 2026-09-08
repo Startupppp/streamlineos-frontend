@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { InspectionStatus, QualityHoldStatus, RecallStatus } from "@/features/inventory/lib";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 interface InspectionFilters {
   [key: string]: unknown;
@@ -261,14 +262,14 @@ export function useQualityInspection(inspectionId: number) {
 
 export function useCreateInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Inspection,
     Error,
     { source?: string; lines: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
   >({
     mutationKey: ["inventory", "quality", "inspection", "create"],
-    mutationFn: (data) =>
-      apiClient.post<Inspection>("/inventory/quality/inspections", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<Inspection>("/inventory/quality/inspections", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
     },

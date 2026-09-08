@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 type StockoutRisk = "HIGH" | "MEDIUM" | "LOW";
 
@@ -91,10 +92,10 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
 
 export function useCreateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>({
+  return useIdempotentMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>({
     mutationKey: ["inventory", "replenishment", "rule", "create"],
-    mutationFn: (data) =>
-      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },

@@ -11,6 +11,7 @@ import type {
   PickExceptionResolution,
   PickExceptionStatus,
 } from "@/features/inventory/lib/inventory-status";
+import { useIdempotentMutation } from "@/hooks/api/use-idempotent-mutation";
 
 export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PickWaveAssignment = "ANY" | "MINE" | "UNCLAIMED";
@@ -219,10 +220,10 @@ export function usePickWave(
 
 export function useCreatePickWave() {
   const qc = useQueryClient();
-  return useMutation<CreatePickWaveResult, Error, CreatePickWaveInput>({
+  return useIdempotentMutation<CreatePickWaveResult, Error, CreatePickWaveInput>({
     mutationKey: ["inventory", "picking", "createWave"],
-    mutationFn: (data) =>
-      apiClient.post<CreatePickWaveResult>("/inventory/picking/waves", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<CreatePickWaveResult>("/inventory/picking/waves", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wavesList });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
