@@ -111,6 +111,7 @@ function featureDomain(path) {
 
 function scanViolations(rootDir) {
   const violations = [];
+  let classifiedFiles = 0;
   for (const filePath of walkTs(rootDir)) {
     const rel = relative(rootDir, filePath).replace(/\\/g, "/");
     if (rel.startsWith("scripts/")) continue;
@@ -118,6 +119,7 @@ function scanViolations(rootDir) {
     const kind = fileKind(rel);
     if (!kind) continue;
 
+    classifiedFiles++;
     const content = readFileSync(filePath, "utf8");
     for (const specifier of extractImports(content)) {
       const resolved = resolveAlias(specifier);
@@ -138,7 +140,7 @@ function scanViolations(rootDir) {
       }
     }
   }
-  return violations;
+  return { violations, classifiedFiles };
 }
 
 function runSelfTest() {
@@ -174,12 +176,18 @@ function runSelfTest() {
       'import { Widget } from "@/features/auth/widget";\nit("renders", () => {});\n',
     );
 
-    const violations = scanViolations(synthDir);
+    const { violations, classifiedFiles } = scanViolations(synthDir);
     const sharedVio = violations.filter((v) => v.rule === "shared-imports-feature");
     const crossVio = violations.filter((v) => v.rule === "cross-feature-import");
 
     if (violations.some((v) => v.file.includes(".test."))) {
       console.error("SELF-TEST FAIL: a *.test.tsx file was scanned; test files are outside both rules.");
+      process.exitCode = 1;
+      return;
+    }
+
+    if (classifiedFiles < 2) {
+      console.error(`SELF-TEST FAIL: classified ${classifiedFiles} files — expected at least 2 (the two non-test source files in the fixture).`);
       process.exitCode = 1;
       return;
     }
@@ -230,12 +238,24 @@ if (args.includes("--self-test")) {
   // This does not weaken the rule. A shared component importing two DIFFERENT feature
   // modules is still two violations; only repeated references to the SAME module
   // collapse, which is exactly the granularity the rule is about.
-  const violations = dedupeEdges(scanViolations(REAL_ROOT));
+  const MIN_CLASSIFIED_FILES = 3800;
+  const { violations: rawViolations, classifiedFiles } = scanViolations(REAL_ROOT);
+  if (classifiedFiles < MIN_CLASSIFIED_FILES) {
+    console.error(
+      `INCONCLUSIVE — check-import-direction: only ${classifiedFiles} classified files (floor ${MIN_CLASSIFIED_FILES}). ` +
+        `The walker is broken; a broken walker reports zero violations on any tree.`,
+    );
+    process.exit(1);
+  }
+
+  const violations = dedupeEdges(rawViolations);
   if (args.includes("--list")) {
     for (const v of violations) console.log(`${v.rule}	${v.file}	${v.specifier}`);
   }
   const sharedCount = violations.filter((v) => v.rule === "shared-imports-feature").length;
   const crossCount = violations.filter((v) => v.rule === "cross-feature-import").length;
+
+  console.log(`check-import-direction: ${classifiedFiles} classified files (features/ + components/ + app/ + lib/)`);
 
   let failed = false;
 

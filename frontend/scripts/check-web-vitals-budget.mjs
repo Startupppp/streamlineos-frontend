@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { corpusLine } from "./gate-corpus.mjs";
+import { captureProvenance } from "./capture-provenance.mjs";
 
 const FRONTEND_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST_PATH = join(FRONTEND_ROOT, "contracts", "route-bundle-manifest.json");
@@ -473,42 +474,9 @@ export function checkCaptureEvidence(results) {
  *
  * Exit policy is the project's: a definite mismatch is a FINDING (exit 1); an absent BUILD_ID means
  * the comparison could not be made at all, which is INCONCLUSIVE (exit 2), never a silent pass.
+ *
+ * The implementation lives in capture-provenance.mjs, shared with check-route-bundle-budget.mjs.
  */
-export function captureProvenance(results, { buildIdOnDisk }) {
-  const recorded = typeof results?.buildId === "string" && results.buildId.length > 0 ? results.buildId : null;
-  const onDisk = typeof buildIdOnDisk === "string" && buildIdOnDisk.length > 0 ? buildIdOnDisk : null;
-
-  if (recorded === null)
-    return {
-      status: "unrecorded",
-      recorded,
-      onDisk,
-      message:
-        "PROVENANCE — the capture records no buildId, so there is no way to tell which build it " +
-        "measured. Re-run measure:web-vitals, which stamps .next/BUILD_ID into the results file.",
-    };
-  if (onDisk === null)
-    return {
-      status: "no-build-on-disk",
-      recorded,
-      onDisk,
-      message:
-        `PROVENANCE — the capture measured build ${recorded}, but there is no .next/BUILD_ID to compare it ` +
-        "against, so its freshness could NOT be checked. Build the app before this gate, or treat this run " +
-        "as proving nothing about whether the numbers describe the checked-out code.",
-    };
-  if (recorded === onDisk) return { status: "current", recorded, onDisk, message: null };
-  return {
-    status: "stale",
-    recorded,
-    onDisk,
-    message:
-      `PROVENANCE — STALE CAPTURE. It measured build ${recorded}; .next/BUILD_ID on disk is ${onDisk}.\n` +
-      "      Every number below describes a build this checkout no longer holds, in both directions: a\n" +
-      "      breach may already be fixed, and a regression may not be reported at all.\n" +
-      "      Re-run measure:web-vitals against the current build.",
-  };
-}
 
 /**
  * Which commits landed since the capture. Narrative only — `captureProvenance` owns the verdict.

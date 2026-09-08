@@ -170,11 +170,6 @@ const DOUBLE_CAST_LEDGER = new Map([
 const RAW_JSON_LEDGER = new Map([
   ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", test: "features/build/forms/public-form-envelope.test.ts::fetchPublicForm keeps the backend message on a failure", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
   ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the generic message when the body's message is not a string or a string array", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
-  ["hooks/api/ai-text-stream.ts", { count: 1, seam: "external", test: "hooks/api/ai-text-stream.test.tsx::raises the HTTP status so credit exhaustion stays renderable as 402", invariant: "an error-body probe on an SSE endpoint whose success path is a byte stream, not JSON — there is no envelope on the failure side and no body to parse on the success side. Every field is optional and defaults to the status line." }],
-  ["hooks/api/sign/public.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) returns the whole body when success is not literally true, instead of an undefined data", invariant: "an unauthenticated e-sign surface that deliberately avoids apiClient so a signer's browser never touches the token cache. One site is the error-body probe; the other reads the success body as `unknown` and hands it to this file's own `unwrap()`, which checks `success === true && \"data\" in body` before returning `data`. The envelope IS handled; what is missing is a contract on the unwrapped value, which is `check:response-contracts` territory." }],
-  ["lib/api-client.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) does not suspend on a code outside the organization-access set", invariant: "neither site talks to the backend API. One reads a 403 body for an ORG_MEMBERSHIP_* code, guarding `typeof body.code !== \"string\"` before use; the other reads Next's own `/api/auth/session` route, which is NextAuth's shape and carries no StreamlineOS envelope. Every backend response in this file goes through parseApiResponse instead." }],
-  ["lib/auth-session.ts", { count: 3, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) does not unwrap when success is not literally true", invariant: "the server-side NextAuth bridge. Two sites read the body as `unknown` and pass it to this file's exported `unwrapBackend<T>()`, which checks `success === true && \"data\" in body` — the envelope is handled. The third reads the Google auth result with BOTH shapes declared optional (`data?.userId ?? userId`) precisely because it tolerates enveloped and bare bodies, and returns null when neither yields a userId." }],
-  ["lib/portal-api-client.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the status line when the error body's message is not a string", invariant: "the customer-portal client, a second fetch seam with its own token store. Both sites are inside `parsePortalResponse`, which is this file's local equivalent of parseApiResponse: it reads the error body for message/code/details, and on success checks `success === true && \"data\" in body` before returning `data`. The envelope is handled; the value is not contracted." }],
 ]);
 
 /**
@@ -554,9 +549,10 @@ function runSelfTest() {
   // than lowering the bar. `features/landing/contact-form.tsx` took exactly
   // that route while these tests were written.
   const seenTestTargets = new Map();
+  const narrowMeIsCleanDebt = (entry) => entry.test === undefined;
   const assertContractTest = (kind, file, entry) => {
     if (entry.seam !== "external") {
-      assert(entry.test === undefined,
+      assert(narrowMeIsCleanDebt(entry),
         `(ae) ${file}: a "narrow-me" ${kind} entry is declared debt, not a proven seam — it must NOT name a contract test`);
       return;
     }
@@ -579,6 +575,16 @@ function runSelfTest() {
   };
   for (const [file, entry] of DOUBLE_CAST_LEDGER) assertContractTest("double-cast", file, entry);
   for (const [file, entry] of RAW_JSON_LEDGER) assertContractTest("raw-JSON", file, entry);
+
+  assertContractTest("double-cast", "[self-test-fixture]", {
+    count: 1,
+    seam: "narrow-me",
+    invariant: "synthetic fixture — a narrow-me entry is declared debt, not a proven seam, and must carry no contract test",
+  });
+
+  assert(narrowMeIsCleanDebt({ seam: "narrow-me" })
+      && !narrowMeIsCleanDebt({ seam: "narrow-me", test: "a.test.ts::t" }),
+    "(ae2) (ae)'s predicate accepts a bare narrow-me entry and REJECTS one naming a contract test — the fixture above only walks the accepting half");
 
   const plainOf = (src) => countPlainAssertions("probe.ts", src);
 

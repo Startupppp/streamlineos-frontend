@@ -48,7 +48,7 @@ const require = createRequire(import.meta.url);
 const ts = require("typescript");
 
 const EXTENSIONS = new Set([".tsx", ".jsx"]);
-const MIN_FILES = 500;
+const MIN_FILES = 3300;
 const MAX_ROUTING_STATEMENTS = 2;
 
 /**

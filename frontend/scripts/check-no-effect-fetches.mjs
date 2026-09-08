@@ -13,7 +13,7 @@ const DIRECT_ASYNC_EFFECT = /useEffect\s*\(\s*async\s*\(\s*\)\s*=>/;
 const VOID_IN_EFFECT = /useEffect\s*\(\s*\(\)\s*=>\s*\{[^}]*void\s+(\w+)\s*\(/g;
 const USEEFFECT_OPEN = /useEffect\s*\(/g;
 const API_CLIENT_CALL = /\bapiClient\s*\./;
-const MIN_FILES = 500;
+const MIN_FILES = 5000;
 
 /**
  * The callback bodies of every `useEffect(` in a file, brace-matched.

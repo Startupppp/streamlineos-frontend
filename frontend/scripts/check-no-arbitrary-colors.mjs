@@ -8,7 +8,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 const HEX_ARBITRARY = /-\[#[0-9a-fA-F]/;
-const MIN_FILES = 500;
+const MIN_FILES = 5000;
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

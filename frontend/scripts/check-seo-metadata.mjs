@@ -105,7 +105,7 @@ function walkDir(dir) {
 
 // A run that reaches no route files prints the same "OK" as a compliant tree.
 // The floor is well under the real count (600+) but far above zero.
-const MIN_ROUTE_FILES = 100;
+const MIN_ROUTE_FILES = 1050;
 
 function runChecks(appDir) {
   const failures = [];

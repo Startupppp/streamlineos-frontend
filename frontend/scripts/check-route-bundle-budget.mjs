@@ -7,13 +7,20 @@
  * and never sees this manifest, so measured bundle bytes were recorded here
  * without anything comparing them to their ceiling.
  *
+ * PROVENANCE: the gate refuses a manifest that does not carry a buildId matching
+ * `.next/BUILD_ID` on disk. A manifest measured against a different build is not
+ * usable evidence — a breach may already be fixed, or a regression may not be
+ * visible. Modelled on the same guard in check-web-vitals-budget.mjs.
+ *
  * SELF-TEST (--self-test) feeds a known-bad fixture and requires a non-zero
- * finding, including the case where a measured value is absent entirely.
+ * finding, including the case where a measured value is absent entirely, and
+ * the case where the manifest carries no provenance or stale provenance.
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { captureProvenance } from "./capture-provenance.mjs";
 
 const argv = process.argv.slice(2);
 const SELF_TEST = argv.includes("--self-test");
@@ -21,6 +28,7 @@ const ALLOW_PENDING = argv.includes("--allow-pending");
 
 const FRONTEND_ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const MANIFEST_PATH = join(FRONTEND_ROOT, "contracts", "route-bundle-manifest.json");
+const BUILD_ID_PATH = join(FRONTEND_ROOT, ".next", "BUILD_ID");
 
 /**
  * `measuredFirstLoadJsBytes` is gzip(9) over the chunks Next lists in the
@@ -139,6 +147,27 @@ function selfTest() {
     fail("pending-detected", `expected 2 pending (/pending, /absent), got ${JSON.stringify(pending)}`);
   else pass("pending-detected — null and absent measurements both count as unmeasured");
 
+  const provCurrent = captureProvenance({ buildId: "abc" }, { buildIdOnDisk: "abc" });
+  const provStale = captureProvenance({ buildId: "old-build" }, { buildIdOnDisk: "new-build" });
+  const provNoDisk = captureProvenance({ buildId: "abc" }, { buildIdOnDisk: "" });
+  const provUnrecorded = captureProvenance({}, { buildIdOnDisk: "abc" });
+
+  if (provCurrent.status !== "current" || provCurrent.message !== null)
+    fail("provenance-current", `expected status=current message=null, got ${provCurrent.status}`);
+  else pass("provenance-current — matching build ids → current (no failure)");
+
+  if (provStale.status !== "stale" || !provStale.message.includes("old-build") || !provStale.message.includes("new-build"))
+    fail("provenance-stale", `expected status=stale with both build ids in message, got ${provStale.status}`);
+  else pass("provenance-stale — mismatched build ids → stale (gate bites with both ids named)");
+
+  if (provNoDisk.status !== "no-build-on-disk")
+    fail("provenance-no-disk", `expected status=no-build-on-disk, got ${provNoDisk.status}`);
+  else pass("provenance-no-disk — absent .next/BUILD_ID → INCONCLUSIVE (not a silent pass)");
+
+  if (provUnrecorded.status !== "unrecorded")
+    fail("provenance-unrecorded", `expected status=unrecorded, got ${provUnrecorded.status}`);
+  else pass("provenance-unrecorded — manifest carries no buildId → absent (not a silent pass)");
+
   if (failed) {
     process.stderr.write("\nSELF-TEST FAILED\n");
     process.exit(1);
@@ -160,6 +189,29 @@ function main() {
     process.stderr.write(`check-route-bundle-budget: manifest is not valid JSON: ${err.message}\n`);
     process.exit(2);
   }
+
+  const buildIdOnDisk = existsSync(BUILD_ID_PATH) ? readFileSync(BUILD_ID_PATH, "utf8").trim() : "";
+  const provenance = captureProvenance(manifest, { buildIdOnDisk });
+
+  if (provenance.status === "stale" || provenance.status === "unrecorded") {
+    process.stderr.write(
+      `\ncheck-route-bundle-budget: FAIL — manifest is not usable evidence (provenance: ${provenance.status}).\n` +
+        `  ${provenance.message}\n` +
+        `  No budget verdict is reported from it. Re-run the bundle measurement against the current build.\n`,
+    );
+    process.exit(1);
+  }
+
+  if (provenance.status === "no-build-on-disk") {
+    process.stderr.write(
+      `\ncheck-route-bundle-budget: INCONCLUSIVE — ${provenance.message}\n`,
+    );
+    process.exit(2);
+  }
+
+  process.stdout.write(
+    `Provenance: the manifest measured build ${provenance.recorded}, which matches the build on disk.\n`,
+  );
 
   const exceeded = findExceededBundles(manifest);
   const pending = findPendingBundles(manifest);

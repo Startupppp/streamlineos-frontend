@@ -64,7 +64,7 @@ const SCAN_FLOOR_FEATURES = 10;
  * `IMPORT_PATTERN` or `resolveSpecifier` breaks, which is the failure this floor
  * exists to catch. The floor is set an order of magnitude below the measurement.
  */
-const SCAN_FLOOR_RESOLVED_IMPORTS = 200;
+const SCAN_FLOOR_RESOLVED_IMPORTS = 3250;
 
 const IMPORT_PATTERN =
   /(?:import|export)\s[^;]*?from\s*["']([^"']+)["']|import\s*\(\s*["']([^"']+)["']\s*\)|require\(\s*["']([^"']+)["']\s*\)|jest\.mock\(\s*["']([^"']+)["']/g;

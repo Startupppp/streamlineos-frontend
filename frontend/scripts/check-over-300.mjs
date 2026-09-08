@@ -41,7 +41,7 @@ import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
 const BASELINE = 513;
-const MIN_FILES = 100;
+const MIN_FILES = 4900;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 

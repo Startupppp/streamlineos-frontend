@@ -6,8 +6,8 @@ import { isExcludedScanDir } from "./check-repo-paths.mjs";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const EXTENSIONS = new Set([".ts", ".tsx"]);
 
-// A key the backend schema does not declare is a 400 where that schema is .strict(), a dead filter where it is absent.
 const UNKNOWN_PARAM_CEILING = 0;
+const MIN_CALL_SITES = 400;
 
 function normRel(relPath) {
   return relPath.replace(/\\/g, "/");
@@ -270,6 +270,15 @@ function main() {
 
   for (const f of findings)
     console.log(`  ${f.file}:${f.line}  ${f.route}  sends "${f.key}"  (declared: ${f.allowed.join(",") || "none"})`);
+
+  const totalCallSites = compared + unresolved;
+  if (totalCallSites < MIN_CALL_SITES) {
+    console.log(
+      `\nINCONCLUSIVE: only ${totalCallSites} total call sites found (floor ${MIN_CALL_SITES}). ` +
+        `The regex is broken or the openapi document is missing; a broken scan reports zero violations on any tree.`,
+    );
+    process.exit(1);
+  }
 
   if (findings.length > UNKNOWN_PARAM_CEILING) {
     console.log(

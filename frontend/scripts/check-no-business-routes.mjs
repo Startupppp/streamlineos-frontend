@@ -6,7 +6,7 @@ import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const APP_DIR = join(ROOT, "app");
-const MIN_ROUTE_DIRS = 100;
+const MIN_ROUTE_DIRS = 560;
 
 /**
  * Root CLAUDE.md §5 permits exactly two kinds of frontend `route.ts`: NextAuth,

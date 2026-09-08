@@ -394,7 +394,7 @@ const violations5 = [];
 
 // Without a floor, a walk that reaches nothing prints the same green line as a
 // clean tree: the failure of the scan is indistinguishable from its success.
-const MIN_SCANNED_FILES = 500;
+const MIN_SCANNED_FILES = 5000;
 let scanned = 0;
 
 for (const file of walkFiles(ROOT)) {

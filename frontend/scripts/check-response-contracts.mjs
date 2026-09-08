@@ -123,10 +123,8 @@ const BASELINE = {
  * an allowlist nobody re-reads.
  */
 const UNRESOLVED_ROUTE_FILES = new Map([
-  ["hooks/api/build/pm-workspaces.ts", 2],
   ["hooks/api/chat-core-read.ts", 1],
   ["hooks/api/crm/issues.ts", 1],
-  ["hooks/api/directory/workers.ts", 1],
   ["hooks/api/hr/attendance.ts", 1],
   ["hooks/api/hr/enterprise-ops-accommodations.ts", 2],
   ["hooks/api/hr/expenses.ts", 1],
@@ -135,7 +133,6 @@ const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/common/use-file-url.ts", 1],
   ["hooks/api/crm/bulk-import.ts", 1],
   ["components/import-export/import-export-grid.tsx", 1],
-  ["lib/ably.ts", 1],
 ]);
 
 /**
@@ -280,6 +277,21 @@ export function seamOf(node, src) {
   return null;
 }
 
+/**
+ * A LITERAL `undefined` in the contract slot is not a contract.
+ *
+ * `apiClient.delete(path, undefined, undefined, undefined)` filled the slot, so
+ * an arity-only test counted it as validated while `applyContract` took the
+ * unchecked branch — six timesheets and payroll deletes read as parsed and
+ * validated nothing. `void 0` is the same value written differently.
+ */
+export function isContractArgument(node) {
+  if (node === undefined) return false;
+  if (ts.isIdentifier(node) && node.text === "undefined") return false;
+  if (ts.isVoidExpression(node)) return false;
+  return true;
+}
+
 export function scanSource(fileName, text, label = fileName) {
   const src = ts.createSourceFile(
     fileName,
@@ -299,7 +311,7 @@ export function scanSource(fileName, text, label = fileName) {
           line: line + 1,
           method: seam.method,
           route: routeOf(node.arguments[0]),
-          validated: node.arguments.length > seam.index,
+          validated: isContractArgument(node.arguments[seam.index]),
         });
       }
     }
@@ -412,6 +424,17 @@ function selfTest() {
       'drainChannelPages("/l", signal);',
     ]).map((c) => `${c.route}:${c.validated}`),
     ["/a:true", "/b:false", "/c:true", "/d:false", "/e:true", "/f:false", "/g:true", "/h:false", "/i:true", "/j:false", "/k:true", "/l:false"],
+  );
+
+  // (a2) a literal `undefined` fills the slot but is not a contract.
+  assert(
+    "a literal undefined in the contract slot is not a contract",
+    fixture("a2.ts", [
+      'apiClient.delete("/a", undefined, undefined, undefined);',
+      'apiClient.delete("/b", undefined, undefined, void 0);',
+      'apiClient.delete("/c", undefined, undefined, cContract);',
+    ]).map((c) => `${c.route}:${c.validated}`),
+    ["/a:false", "/b:false", "/c:true"],
   );
 
   // (b) a nested generic does not hide the call, and a template route normalises.
