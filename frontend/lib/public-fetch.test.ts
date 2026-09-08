@@ -79,9 +79,6 @@ describe("publicGet", () => {
       await publicGet("/public/test");
 
       const [, options] = mockFetch.mock.calls[0] as [string, RequestInit | undefined];
-      // `withTraceContext` now stamps a correlation id, so the seam does carry
-      // headers. Pinning the whole name set rather than absence of one name:
-      // any credential added later fails here, whatever it is called.
       expect(headerNames(options)).toEqual(["traceparent"]);
     });
 
@@ -92,8 +89,6 @@ describe("publicGet", () => {
 
       const [calledUrl, options] = mockFetch.mock.calls[0] as [string, RequestInit | undefined];
       expect(calledUrl).toBe("http://api.test/public/kb/article");
-      // A `Headers` instance JSON-stringifies to `{}`, so serialising the
-      // options alone can no longer see a token. The pairs are read out first.
       const serialised = JSON.stringify({ ...options, headers: headerPairs(options) });
       expect(serialised).not.toContain("Bearer");
       expect(serialised.toLowerCase()).not.toContain("authorization");

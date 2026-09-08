@@ -93,23 +93,11 @@ describe("every Home widget is individually contained", () => {
     "TeamCard",
   ];
 
-  /**
-   * Two Home widgets are owned by the HR feature and reach Home as slots the
-   * route fills, because `features/dashboard` may not import `features/hr`
-   * (root §9). The containment invariant is unchanged — the slot's mount point
-   * is what has to sit inside a boundary — and the route wiring is pinned below
-   * so the indirection cannot be where a widget goes missing.
-   */
   const SLOT_WIDGETS = [
     { component: "ExpensesWidget", slot: "expensesSlot" },
     { component: "PublicDocumentsCard", slot: "publicDocumentsSlot" },
   ];
 
-  /**
-   * A slot is matched where it is RENDERED — on its own line as a JSX child —
-   * not where it is forwarded as `expensesSlot={expensesSlot}`, which is a
-   * prop hand-off and carries no boundary of its own.
-   */
   const MOUNT_POINTS = [
     ...WIDGETS.map((widget) => ({
       label: widget,

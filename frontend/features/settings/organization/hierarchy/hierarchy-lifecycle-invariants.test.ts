@@ -15,12 +15,6 @@ const LIFECYCLE_PAGES = [
   "cost-centers-page.tsx",
 ];
 
-/**
- * A page may hand its row actions to a sibling `*-columns.tsx` — locations
- * does. Reading the page alone let that extraction carry the `canManage` gate
- * out of the assertion's reach while the gate was still there, so the surface
- * under test is the page plus every column builder it imports.
- */
 function lifecycleSurface(fileName: string): string {
   const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
   const columnSources = [

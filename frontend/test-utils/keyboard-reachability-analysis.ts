@@ -1,11 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 
-/**
- * Findings are pinned BY PATH by the contract suites, so the separator has to
- * be the same one CI records. `relative` emits `\` on Windows, which turned
- * every pinned path into a mismatch that read as a lost accessible name.
- */
 export function posixRelative(from: string, to: string): string {
   return relative(from, to).split(sep).join("/");
 }

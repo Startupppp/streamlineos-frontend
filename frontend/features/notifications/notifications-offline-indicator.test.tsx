@@ -4,13 +4,6 @@ import { render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { NotificationsInboxPage } from "@/features/notifications/inbox/notifications-inbox-page";
 
-/**
- * The route module is an async Server Component that server-prefetches through
- * `lib/prefetch/notifications`, so importing it here drags next-auth's ESM into
- * Jest and RTL cannot render it anyway. The body it hands to the client is this
- * component; the route's composition is asserted from source below so the
- * substitution stays honest.
- */
 const NotificationsPage = NotificationsInboxPage;
 
 let mockIsOnline = true;

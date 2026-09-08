@@ -10,11 +10,6 @@ jest.mock("@/lib/api-client", () => ({
 
 const api = jest.mocked(apiClient);
 
-/**
- * The rotation path posts through `useMutation`, so the hook needs a client.
- * One stable client per test — a wrapper that mints a new one on every render
- * would tear the in-flight mutation down mid-flight.
- */
 let queryClient: QueryClient;
 
 function Wrapper({ children }: { children: ReactNode }) {

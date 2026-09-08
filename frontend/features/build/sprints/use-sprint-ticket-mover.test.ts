@@ -18,11 +18,6 @@ jest.mock("@/hooks/api/access", () => ({
 const post = apiClient.post as jest.Mock;
 const PROJECT_ID = 42;
 
-/**
- * The fourth argument is the response contract. Asserting it resolves to the
- * real schema proves the bulk move is parsed, not cast — a bare arity match
- * would pass with the wrong contract wired.
- */
 async function expectBulkContract(call: unknown[]): Promise<void> {
   expect(call).toHaveLength(4);
   const contract = call[3];

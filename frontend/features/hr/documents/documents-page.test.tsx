@@ -143,11 +143,6 @@ function Wrapper({
   );
 }
 
-/**
- * The list read carries a response contract as its fourth argument, so an
- * arity-blind matcher would pass over a call that no longer parses. Filtering
- * by URL keeps the negative assertion biting too.
- */
 function documentListCalls(): unknown[][] {
   return (apiClient.get as jest.Mock).mock.calls.filter(
     (call) => call[0] === "/hr/documents",

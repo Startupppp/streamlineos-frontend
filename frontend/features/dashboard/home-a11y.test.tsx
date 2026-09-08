@@ -321,11 +321,6 @@ describe("PRD-C115 — a failed Home widget is ANNOUNCED, not merely coloured re
     useState("error");
     await renderGrid();
 
-    /**
-     * The grid defers its second batch behind a timeout, so the first `alert`
-     * to appear is not the last: resolving on it read as four silent widgets.
-     * The claim is over the whole set, so the wait has to be too.
-     */
     await waitFor(() => {
       const spoken = screen
         .getAllByRole("alert")

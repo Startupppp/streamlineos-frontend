@@ -250,13 +250,6 @@ describe("DashboardShell shell variant", () => {
   });
 });
 
-/**
- * The shell does not import the chat nav any more — it renders whatever
- * `chatMobileNavSlot` supplies, and `app/(authenticated)/layout-client.tsx`
- * supplies it. Mirroring that composition here keeps the render assertions on
- * the shell's own decision, and the source assertion below keeps the wiring
- * itself covered instead of assumed.
- */
 function renderChatMobileNav(onOpenMobileMenu: () => void) {
   return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
 }
@@ -290,14 +283,6 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     expect(buttons.length).toBeGreaterThanOrEqual(3);
   });
 
-  /**
-   * `shellVariant` is a UA hint, and `lib/shell-variant.ts` documents that a
-   * desktop browser resized narrow still gets the desktop shell — "CSS
-   * breakpoints remain the safety net". So mobile chrome stays mounted in the
-   * desktop variant, exactly like `MobileModuleBottomNav` and `MobileShellFab`,
-   * and `sm:hidden` is what takes it off a wide screen. The previous assertion
-   * here claimed the opposite and only held because the slot was never passed.
-   */
   it("desktop variant on /chat still mounts the slot — the sm: breakpoint hides it, not the variant", () => {
     render(
       <DashboardShell

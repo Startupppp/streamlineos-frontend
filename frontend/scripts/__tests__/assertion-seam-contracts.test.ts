@@ -42,13 +42,6 @@ describe("instrumentation.ts — patching the setTimeout overload set", () => {
     jest.resetModules();
   });
 
-  /**
-   * Assignment, not `Object.defineProperty`. Node's `process.env` define trap
-   * silently drops a descriptor it does not consider fully writable, so the
-   * previous form left NODE_ENV on "test": `register()` returned early, the two
-   * patching assertions failed, and "(negative) does not patch outside
-   * development" passed while proving nothing.
-   */
   function setNodeEnv(value: typeof process.env.NODE_ENV): void {
     process.env.NODE_ENV = value;
   }
@@ -346,13 +339,6 @@ describe("hooks/api/sign/public — unwrap() on a body that is not the envelope"
     return result.current;
   }
 
-  /**
-   * The read path moved: `publicGet` now parses a 2xx through `parseApiResponse`
-   * and its Zod contract, so `unwrap()` — the function these two casts live in —
-   * is no longer on it. `publicPost` still is, which is why the envelope shapes
-   * are driven through a mutation. Asserting them on the query would only be
-   * asserting that a contract rejects a body that does not match it.
-   */
   async function requestOtp(body: unknown, status = 200): Promise<ReturnType<typeof useRequestSignOtp>> {
     stubFetch(body, status);
     const { result } = renderHook(() => useRequestSignOtp("tok"), { wrapper: makeWrapper() });
