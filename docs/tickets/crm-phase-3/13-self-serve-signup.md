@@ -1,6 +1,6 @@
 # 13 — Self-serve signup provisions a working tenant
 
-**Status:** provisioning half done — the front door is deliberately a waitlist, and what exists is **admission** rather than self-serve: an operator admits one named person, and that person creates their workspace, verified end to end in a browser. The 25 August decision was not overridden. Two criteria remain open — no demo dataset, and provisioning takes over a minute; both are stated below rather than hidden.
+**Status:** provisioning done — the front door is deliberately a waitlist, and what exists is **admission** rather than self-serve: an operator admits one named person, and that person creates their workspace, verified end to end in a browser. The 25 August decision was not overridden. The demo-dataset criterion has since been met (`seedDemoDataset`, `src/modules/auth/auth.service.ts:200`); one criterion remains open — provisioning takes over a minute — and is stated below rather than hidden.
 **Track:** D — funnel
 **Blocked by:** 08, 09
 
@@ -10,9 +10,9 @@ The funnel's measure is not signups but **workspaces with real data in them**.
 
 ## Acceptance criteria
 
-- [x] Signup with an email address provisions a tenant, assigns its region and seeds a demo dataset. — *admission* rather than open signup; region assigned from the country asked for at claim; 41 roles and 19 modules provisioned. No demo dataset: see below.
+- [x] Signup with an email address provisions a tenant, assigns its region and seeds a demo dataset. — *admission* rather than open signup; region assigned from the country asked for at claim; 41 roles and 19 modules provisioned. The demo dataset now seeds too: `seedDemoDataset` at `src/modules/auth/auth.service.ts:200`, inside the same provisioning transaction.
 - [x] The new user lands in onboarding through the **existing wizard gate**, which remains the single authority on where they land. — the claim ends at `/signin`; nothing here makes a second redirect decision.
-- [ ] The workspace has something in it, so the product is judged rather than an empty grid. — **not done**, and see below.
+- [x] The workspace has something in it, so the product is judged rather than an empty grid. — done since this was written: `provisionWorkspace` calls `seedDemoDataset(tx, orgId, userId)` (`src/modules/auth/auth.service.ts:200`), in the same transaction as roles and modules, so a workspace is never opened half-seeded. The "No demo dataset" note below is superseded.
 - [x] Provisioning is idempotent under retry and leaves no half-created tenant.
 - [x] **No business route handler is added to the frontend** — the auth bridge remains the only one.
 
@@ -109,7 +109,12 @@ foreign key to `organization_members`, so the two must commit together.
 
 ### Two things left, both stated rather than hidden
 
-**No demo dataset.** The criterion asks the workspace to have something in it.
+**~~No demo dataset.~~** — *Superseded 2026-09-08. `seedDemoDataset` now runs in
+`provisionWorkspace` (`src/modules/auth/auth.service.ts:200`). The tension below
+is real and was decided in favour of seeding; if the activation number ever
+looks wrong on day one, this is the paragraph that says why.*
+
+The criterion asks the workspace to have something in it.
 Nothing seeds one, and inventing sample records cuts against ticket 14's whole
 definition — *activated* means the workspace holds **the tenant's own** data, and
 a demo dataset is exactly the "trial reflecting a sample rather than your

@@ -1,6 +1,6 @@
 # 14 — Onboarding reaches first value
 
-**Status:** done, surface deliberately unmounted — the endpoint and checklist exist and were verified live; the dashboard already carries a getting-started checklist and reconciling the two is a product decision, recorded below.
+**Status:** done, and now mounted — `ActivationChecklist` renders at `frontend/app/(authenticated)/crm/page.tsx:179`. The "deliberately unmounted" note below described this ticket at the time it was written and is **no longer true**; the product decision it was waiting on was taken by whoever mounted it. Kept rather than deleted because the reasoning is still the argument for why there is one checklist here and not two.
 **Track:** D — funnel
 **Blocked by:** 13
 
@@ -69,14 +69,19 @@ Not permission-gated beyond being signed in. Gating it would hide the checklist
 from exactly the person most likely to finish it — the colleague invited to come
 and do the setting up.
 
-### Verified, then deliberately unmounted
+### Verified, then unmounted — and since mounted
+
+> **Superseded 2026-09-08.** The checklist IS mounted, at
+> `frontend/app/(authenticated)/crm/page.tsx:179`. Everything below is the
+> argument that was open when this was written; read it as the reasoning behind
+> the decision, not as the current state.
 
 The checklist was confirmed rendering against the live endpoint on a real
 tenant: 0%, the server's own prompt (*"Import your customers, so the trial
 reflects your business rather than a sample."*), steps in the order worth doing
 them.
 
-It is **not** mounted. The dashboard already carries a "Getting Started"
+It was **not** mounted. The dashboard already carries a "Getting Started"
 checklist, and two checklists on one screen is worse than either. That one is
 not a naive click-tracker — it derives from real signals too — but it fires five
 separate queries per dashboard load and its thresholds are `> 0`, so one lead
