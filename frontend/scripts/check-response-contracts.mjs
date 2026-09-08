@@ -112,7 +112,13 @@ const BASELINE = {
   // whose endpoint is a caller-supplied parameter that no `ImportEntity` in the repo sets —
   // there is no backend handler to derive a contract from. Everything else in `hooks/`, `lib/`,
   // `components/`, `app/` and `features/` now parses. Lowered to the measured value.
-  unvalidatedCalls: 26,
+  // 26 -> 25 on 2026-09-08. That upload was not missing a contract, it was unreachable: no
+  // consumer anywhere set `importEndpoint`, and all three consuming pages (HR, Payroll, CRM
+  // settings) set `supported.import: false`, so the button never rendered and the call never
+  // fired. HR imports through its own ImportWizardSheet. The dead path was removed rather than
+  // contracted. The whole remaining 25 are CRM and Inventory, both outside release scope, so
+  // the in-scope seam is 100% parsed.
+  unvalidatedCalls: 25,
   minScannedCalls: 2400,
 };
 
@@ -137,7 +143,6 @@ const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/api/users/bulk-mutations.ts", 1],
   ["hooks/common/use-file-url.ts", 1],
   ["hooks/api/crm/bulk-import.ts", 1],
-  ["components/import-export/import-export-grid.tsx", 1],
 ]);
 
 /**

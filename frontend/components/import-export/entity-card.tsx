@@ -1,18 +1,12 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-  FileSpreadsheet,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { UploadIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { DownloadIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -23,53 +17,25 @@ export interface ImportEntity {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
   templateUrl?: string;
-  importEndpoint?: string;
   exportEndpoint?: string;
   accent: string;
   supported: { import: boolean; export: boolean };
 }
 
-export interface UploadState {
-  status: "idle" | "uploading" | "success" | "error";
-  progress: number;
-  message: string;
-}
-
 interface EntityCardProps {
   entity: ImportEntity;
-  upload: UploadState;
   isExporting: boolean;
-  onFileChange: (entityId: string, endpoint: string, file: File) => void;
   onExport: (entity: ImportEntity) => void;
 }
 
 export function EntityCard({
   entity,
-  upload,
   isExporting,
-  onFileChange,
   onExport,
 }: EntityCardProps) {
   const { fadeUp } = useMotionVariants();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = entity.icon;
-  const { iconRef: uploadIconRef, hoverHandlers: uploadHoverHandlers } = useAnimatedIcon();
   const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } = useAnimatedIcon();
-
-  const handleImportClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleFileInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file && entity.importEndpoint) {
-        onFileChange(entity.id, entity.importEndpoint, file);
-      }
-      e.target.value = "";
-    },
-    [entity.id, entity.importEndpoint, onFileChange],
-  );
 
   const handleExportClick = useCallback(() => {
     onExport(entity);
@@ -112,68 +78,13 @@ export function EntityCard({
 
         <TruncatedText text={entity.description} lines={2} className="text-xs text-muted-foreground leading-snug" />
 
-        {upload.status !== "idle" && (
-          <div className="space-y-1">
-            {upload.status === "uploading" && (
-              <Progress value={upload.progress} className="h-1" />
-            )}
-            <div
-              className={cn(
-                "flex items-center gap-1.5 text-dense",
-                upload.status === "success"
-                  ? "text-status-success-ink"
-                  : upload.status === "error"
-                    ? "text-status-danger-ink"
-                    : "text-muted-foreground",
-              )}
-            >
-              {upload.status === "uploading" && (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              )}
-              {upload.status === "success" && (
-                <CheckCircle2 className="h-3 w-3" />
-              )}
-              {upload.status === "error" && (
-                <AlertCircle className="h-3 w-3" />
-              )}
-              {upload.message}
-            </div>
-          </div>
-        )}
-
         <div className="mt-auto flex flex-col gap-2">
           <div className="flex gap-2">
-            {entity.supported.import && entity.importEndpoint && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.xlsx,.xls"
-                  className="hidden"
-                  onChange={handleFileInputChange}
-                  aria-label={`Import ${entity.label}`}
-                />
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5"
-                  onClick={handleImportClick}
-                  isPending={upload.status === "uploading"}
-                  {...uploadHoverHandlers}
-                >
-                  {upload.status !== "uploading" && <UploadIcon ref={uploadIconRef} size={14} />}
-                  Import
-                </LoadingButton>
-              </>
-            )}
             {entity.supported.export && entity.exportEndpoint && (
               <LoadingButton
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "text-xs h-8 gap-1.5",
-                  entity.supported.import ? "flex-1" : "w-full",
-                )}
+                className="w-full text-xs h-8 gap-1.5"
                 onClick={handleExportClick}
                 isPending={isExporting}
                 {...downloadHoverHandlers}

@@ -6,13 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMotionVariants } from "@/lib/motion-variants";
-import { EntityCard, type ImportEntity, type UploadState } from "./entity-card";
-
-const DEFAULT_UPLOAD_STATE: UploadState = {
-  status: "idle",
-  progress: 0,
-  message: "",
-};
+import { EntityCard, type ImportEntity } from "./entity-card";
 
 interface ImportExportGridProps {
   entities: ImportEntity[];
@@ -20,66 +14,7 @@ interface ImportExportGridProps {
 
 export function ImportExportGrid({ entities }: ImportExportGridProps) {
   const { staggerContainer } = useMotionVariants();
-  const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>(
-    {},
-  );
   const [exportingIds, setExportingIds] = useState<Set<string>>(new Set());
-
-  const setUploadState = useCallback(
-    (id: string, state: Partial<UploadState>) => {
-      setUploadStates((prev) => ({
-        ...prev,
-        [id]: {
-          ...(prev[id] ?? DEFAULT_UPLOAD_STATE),
-          ...state,
-        },
-      }));
-    },
-    [],
-  );
-
-  const handleFileChange = useCallback(
-    async (entityId: string, endpoint: string, file: File) => {
-      setUploadState(entityId, {
-        status: "uploading",
-        progress: 10,
-        message: "Uploading…",
-      });
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        setUploadState(entityId, { progress: 40 });
-        const result = await apiClient.upload<{
-          imported?: number;
-          skipped?: number;
-          created?: number;
-          failed?: number;
-          errors?: string[];
-        }>(endpoint, formData);
-        const imported = result.imported ?? result.created ?? 0;
-        const skipped = result.skipped ?? result.failed ?? 0;
-        setUploadState(entityId, {
-          status: "success",
-          progress: 100,
-          message: `Imported ${imported}${skipped > 0 ? ` · ${skipped} skipped` : ""}`,
-        });
-        toast.success(`${imported} records imported`);
-        setTimeout(() => setUploadState(entityId, DEFAULT_UPLOAD_STATE), 4000);
-      } catch (err) {
-        const message = getErrorMessage(err);
-        setUploadState(entityId, {
-          status: "error",
-          progress: 0,
-          message: message || "Import failed. Check the file format.",
-        });
-        toast.error(message || "Import failed");
-        setTimeout(() => setUploadState(entityId, DEFAULT_UPLOAD_STATE), 4000);
-      }
-    },
-    [setUploadState],
-  );
 
   const handleExport = useCallback(async (entity: ImportEntity) => {
     if (!entity.exportEndpoint) return;
@@ -115,9 +50,7 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
         <EntityCard
           key={entity.id}
           entity={entity}
-          upload={uploadStates[entity.id] ?? DEFAULT_UPLOAD_STATE}
           isExporting={exportingIds.has(entity.id)}
-          onFileChange={handleFileChange}
           onExport={handleExport}
         />
       ))}
