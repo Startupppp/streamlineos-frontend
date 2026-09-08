@@ -16,10 +16,32 @@ import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
  * provide. The first test below is the guard against a third time: it fails
  * loudly rather than letting the suite pass while proving nothing.
  */
-const BACKEND_PERMS_DIR = path.resolve(
-  __dirname,
+/**
+ * Resolved by looking, not by counting `..` segments.
+ *
+ * The comment above documents two wrong guesses; the hardcoded path was a third,
+ * resolving to `streamlineos-frontend/backend/...` on the checkout this actually
+ * runs in. Each time the five cross-repo assertions below returned before
+ * asserting anything, and the suite stayed green while the drift guard it exists
+ * to be was switched off.
+ *
+ * A list of candidates ends that argument: the layout may be `backend/` beside
+ * `frontend/` in one checkout or `streamlineos-backend/` beside
+ * `streamlineos-frontend/` in another, and this finds whichever is there. The
+ * first test still fails loudly if none of them is, because a fourth layout is
+ * likelier than this list being complete.
+ */
+const BACKEND_PERMS_CANDIDATES = [
+  // frontend/ and backend/ inside one repository.
   "../../../../../backend/src/modules/rbac/permissions",
-);
+  // streamlineos-frontend/ and streamlineos-backend/ as sibling repositories.
+  "../../../../../../streamlineos-backend/src/modules/rbac/permissions",
+] as const;
+
+const BACKEND_PERMS_DIR =
+  BACKEND_PERMS_CANDIDATES.map((candidate) => path.resolve(__dirname, candidate)).find((dir) =>
+    fs.existsSync(dir),
+  ) ?? path.resolve(__dirname, BACKEND_PERMS_CANDIDATES[0]);
 
 const EXCLUDED_BACKEND_FILES = new Set([
   "index.ts",
