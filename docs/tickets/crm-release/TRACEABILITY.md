@@ -25,7 +25,7 @@ disproving the finding, and that is the more useful outcome.
 |---|---|
 | "Legacy identity modules were never deleted — `leads/` still has 30 files, `clients/` 14, `contacts/` 12, all mounted" | **Must stay.** ~45 routes have live frontend callers; `SurveysModule` injects `LeadsService` and `LeadsDetailService`, so deleting breaks bootstrap; 11 files under `ai/` and `crm/` import pure helpers out of those directories. The schema collapse — the part X7 actually ratcheted — is genuinely done. Acting on this finding would have 404'd three CRM screens. |
 | "Golden path fails — `contact_party_map` NOT NULL violation, then a CHECK violation on `autonomous_decisions.kind`" | **Database drift, not defects.** Both template databases carry 634 applied rows against a 417-entry journal and a watermark stamped 2027; one lacked 0277, the other 0535. Cold-built from this branch, all six pass. |
-| "P5-mk segments UI is missing" | **Half right, and the wrong half.** Nurture sequences are complete end to end. Segments exist at no layer — no table, service, route or UI. A feature to build, not a gap to close; UI first would have produced exactly the unreachable surface this programme has been correcting. |
+| "P5-mk segments UI is missing" | **Segments confirmed absent at every layer** — no table, service, route or hook. But the rest of that verdict was WRONG and is withdrawn: it said "nurture sequences are complete end to end", which was a name match on `@Controller("crm/sequences")`. Those are a different feature over the `crm_sequences` task tables; the PRD's nurture machinery (`crm_nurture_sequences/_steps/_enrollments/_step_attempts`) is touched only by `sequence-reply-exit.service.ts` and its spec — no controller, no enrollment writer, no step sender. See the PRD sweep below. |
 
 ## Open, and why
 
@@ -53,3 +53,32 @@ DATABASE_URL=<owner> APP_DATABASE_URL=<streamline_app> CRON_SECRET=… \
 `APP_DATABASE_URL` is not optional. Without it the app runs as the owner, RLS is
 bypassed, two harness self-tests fail and the golden path fails a hold
 assertion. A green run without it is measuring nothing about RLS.
+
+## PRD sweep — added 2026-09-08, after the above
+
+Neither `2026-08-24-crm-phase-4-loops-prd.md` nor
+`2026-08-24-crm-phase-5-best-in-class-prd.md` was ever ticketed, so nothing had
+checked either against the code. Both were swept. Full detail in
+`streamlineos-backend/docs/crm-final-handoff.md`.
+
+**The headline: nothing schedules the loops.** No `@nestjs/schedule`, no `@Cron`,
+no `ScheduleModule` anywhere in `src/`. Phase 4's first goal is that the loops run
+with no human step; every one waits for a person or an external job to POST.
+`lifecycle-triggers.service.ts:61` states this plainly in the source.
+
+**Ten surfaces are written and reached by nothing** — the `generateAndHoldQuote`
+shape, ten more times over: the learned-forecast library, multi-touch attribution
+(`AttributionModule` is not in `app.module.ts`), the nurture-sequence machinery,
+reply-exit, the lifecycle sweep, the repair operator surface, the reporting query
+surface, `POST /crm/autonomy/outbound`, the relationship reader, and a
+`meeting_request` class hardcoded to never fire.
+
+**Most of phase 4's mechanism is genuinely built**, and the sweep says so:
+relationship state, out-of-office vs reply, compose→hold→send-time snapshot,
+consent and suppression at send time, frequency caps, the cold gate with ramp and
+self-pause, auto-repair with per-item revert, and kill switches with a UI.
+
+**A lesson for the next pass.** Two of this document's own verdicts were reached
+by name matching and one of them was wrong. Reachability is not a property of a
+name, a route or a table — it is a property of a caller, and it has to be grepped
+for every single time.
