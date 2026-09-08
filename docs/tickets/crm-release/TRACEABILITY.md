@@ -82,3 +82,37 @@ self-pause, auto-repair with per-item revert, and kill switches with a UI.
 by name matching and one of them was wrong. Reachability is not a property of a
 name, a route or a table — it is a property of a caller, and it has to be grepped
 for every single time.
+
+## Wiring pass — the unreached surfaces
+
+Ten surfaces were written and reached by nothing. Five are now reached. Each was
+wired by calling the existing service, never by rebuilding its judgement.
+
+| Surface | Outcome | Commit |
+|---|---|---|
+| `LifecycleTriggersService.sweep` — the only autonomous caller of `composeAndHold`, invoked by nothing | `POST /cron/crm-lifecycle-triggers-sweep`. Verified live: 200, 6 orgs, `failed: 0`, non-owner role; two concurrent calls, one skipped by the lease. | be `74348c5ac` |
+| `SequenceReplyExitService.onInboundReply` — written, module registered, never called | Called from `processActivity`, after the delivery gate (a bounce must not end a sequence) and before the eligibility gate ("thanks" is too thin to spend a model call on, but it is still a reply) | be `b4f506a36` |
+| `crm_outbound_class_stops` — read at send time, written by nothing, so US8 was a read with no writer | `cancelHold` writes it | be `6ea3c53c4` |
+| …which made it a one-way door, because nothing wrote `released_at` either | `GET /crm/autonomy/class-stops` and `POST …/:id/release`. The golden path now proves US8 end to end. | be `778cd29cd` |
+| `listAwaitingReply` — "the read ticket 02's detector runs", per its own docstring, with no caller; and `runRepairs`, reachable only by a person POSTing | `POST /cron/crm-silence-sweep` and `POST /cron/crm-field-repairs` | be `74d631a20` |
+
+**No scheduler was invented.** There is still no `@nestjs/schedule` and no `@Cron`
+anywhere in `src/`. The repository already had a cron surface — endpoints behind
+`assertCronSecret` that the deployment's scheduler drives — and the CRM autonomy
+loops were simply not on it.
+
+**Two bugs caught before shipping**, both from calling services that expect
+Zod-validated input: `runRepairs` passes `input.limit` straight into its query and
+the default lives on the schema, so `{}` hands it an undefined LIMIT; and a draft
+passed a `dealId` from a ternary whose branches were both null.
+
+**One self-inflicted defect, found and fixed.** The class-stop writer shipped
+without a release path — `released_at` is documented as cleared only by a person
+and there was no person-shaped way to clear it. One cancellation would have
+silenced a class for that party permanently. The seeded golden path is what caught
+it: its third test re-nudges the party the second test just stopped, which was
+legal before the writer and correctly refused after.
+
+**A fourth bad finding, not acted on.** The phase-5 sweep claimed campaign
+attribution reports pipeline value with no won-stage predicate. False — both
+first- and last-touch filter on `stageType = 'won'` via `resolveWonStageKeys`.
