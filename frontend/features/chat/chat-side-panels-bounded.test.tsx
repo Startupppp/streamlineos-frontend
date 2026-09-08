@@ -88,7 +88,24 @@ function makeSaved(count: number): SavedMessage[] {
     membershipId: 1,
     messageId: i + 1,
     savedAt: "2026-01-01T00:00:00.000Z",
-    message: { ...makeMessage(i + 1), content: `saved-${i + 1}`, channel: null },
+    message: {
+      id: i + 1,
+      channelId: 1,
+      senderId: "user-1",
+      sender: { id: "user-1", name: "Ada", image: null },
+      content: `saved-${i + 1}`,
+      replyToId: null,
+      isEdited: false,
+      isDeleted: false,
+      messageType: "text",
+      metadata: null,
+      actionStatus: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      attachments: [],
+      replyTo: null,
+      channel: null,
+    },
   }));
 }
 

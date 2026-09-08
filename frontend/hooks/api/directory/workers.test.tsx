@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type { WorkerEngagement } from "@/types/directory/workers";
 import { useCan } from "@/hooks/api/access";
 import { useCancelEngagement, useUpdateEngagement } from "./workers";
+import { workerEngagementContract } from "./workers-schema";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -95,6 +96,9 @@ describe("directory engagement mutations", () => {
 
     expect(mockedPost).toHaveBeenCalledWith(
       "/directory/engagements/engagement-1/cancel",
+      undefined,
+      undefined,
+      workerEngagementContract,
     );
     expect(
       client.getQueryData<WorkerEngagement[]>(
@@ -145,6 +149,8 @@ describe("directory engagement mutations", () => {
         endsOn: "2026-09-30",
         designation: "Senior Engineer",
       },
+      undefined,
+      workerEngagementContract,
     );
     expect(
       client.getQueryData<WorkerEngagement[]>(
