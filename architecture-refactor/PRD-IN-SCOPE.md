@@ -584,6 +584,6 @@ The final report must contain separate sections for VERIFIED DONE, REGRESSED, ST
 
 ## 28. Current completion execution
 
-The architecture contract above is stable. The only authoritative execution backlog is [PRD-10-10-TODO.md](PRD-10-10-TODO.md). Separate session tickets and status files are prohibited; completed implementation facts live here, in the single TODO PRD, and in executable gates.
+The architecture contract above is stable. The sole active execution backlog is [prd/README.md](prd/README.md), which routes module-owned files for parallel work. Do not create ad hoc session status files. Completed implementation facts live in durable evidence and executable gates; the legacy PRDs retain requirements and history.
 
 Historical session reports and completed ticket trees were removed because their point-in-time counts contradicted executable gates. Git history remains the archive. CRM and Inventory remain excluded, and public landing-page visuals and animations must not change.

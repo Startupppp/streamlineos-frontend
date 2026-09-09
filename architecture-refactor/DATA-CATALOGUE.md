@@ -613,7 +613,7 @@ enterprise customers require. Recorded as D18.
 | P12 | **Razorpay** | `backend/src/modules/billing/payments/adapters/razorpay.adapter.ts` | Customer email, amount, payment signature | **India** | Statutory (RBI/PA-PG) | India |
 | P13 | **Cloudflare Turnstile** | `backend/src/common/security/turnstile.service.ts` | **Visitor IP address** and challenge token | Cloudflare global | Transient | DECISION REQUIRED. **Absent from revision 1** |
 | P14 | **Web Push (VAPID)** | `backend/src/modules/realtime/web-push.service.ts` | Push endpoint (identifies the browser/device) and notification body → **Google FCM / Mozilla / Apple**, whichever the subscriber's browser names | Browser-vendor-determined | Transient | DECISION REQUIRED. **Absent from revision 1** |
-| P15 | **TURN/STUN relay** | `TURN_URLS`, `GET /realtime/ice-servers` | **Relayed audio/video and the participants' IP addresses** for huddle calls across strict NATs | Operator-configured; unset by default | Transient | DECISION REQUIRED. **Absent from revision 1** |
+| P15 | **TURN/STUN relay (retired)** | Removed with the Google Meet migration | No current data flow; the former relay could see participant IP addresses and media | Not configured | None | RETIRED; no approval required |
 
 ---
 

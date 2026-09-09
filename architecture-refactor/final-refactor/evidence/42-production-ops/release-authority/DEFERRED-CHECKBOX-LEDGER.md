@@ -11,8 +11,9 @@ because it converts a 195-row backlog into three piles with different owners.
 | Frontend/root commit | `7469d27895add587f9427e7c50c457f56e0048bf` (`release/code-10-10-v2`) |
 | Backend commit | `2f37e1bb035006e5c03680497298ad62031e79d6` (`release/code-10-10-v2`) |
 | Source of criteria | `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md` |
-| Source of ownership | `.scratch/code-release-10-10-v2/TRACEABILITY.md` |
-| Mapping verified by | `pnpm -C frontend check:prd-traceability` — **exit 0**, 195 manifest rows, 195 ticket criteria, 0 checked, 195 unchecked, every criterion quoted verbatim with exactly one owner |
+| Historical source of ownership | Removed `.scratch/code-release-10-10-v2/TRACEABILITY.md`; retained here only as provenance for the 2026-09-03 classification |
+| Current source of task ownership | `architecture-refactor/prd/README.md` and its indexed module lanes |
+| Current mapping gate | `pnpm -C frontend check:prd-traceability` validates indexed lanes, unique task ids, PRD mappings, metadata and dependencies |
 | Author | Automation. **Nothing in this file is signed, and nothing in it may be read as an approval.** |
 
 ---

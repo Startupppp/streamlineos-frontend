@@ -26,6 +26,7 @@ import {
   type ChecklistItemId,
 } from "@/hooks/common/use-workspace-checklist-progress";
 import { cn } from "@/lib/utils";
+import { ChecklistErrorBoundary } from "./checklist-error-boundary";
 
 const MOBILE_HEADER_SLOT_ID = "mobile-header-checklist-slot";
 
@@ -303,20 +304,23 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
   );
 }
 
-export function SuccessChecklist() {
+function SuccessChecklistInner() {
   const { data: session } = useSession();
   const { data: access } = useAccess();
   const orgId = session?.orgId;
   const canSetUpWorkspace =
     access?.isOrgOwner === true;
   const { data: org } = useOrgSettings({ enabled: canSetUpWorkspace });
-  const { completed, doneCount, isLoading } =
-    useWorkspaceChecklistProgress(canSetUpWorkspace);
   const storedDismissed = useSyncExternalStore(
     subscribeDismissed,
     () => readDismissed(orgId),
     () => false,
   );
+  const onboardingCompleted = Boolean(org?.onboardingCompletedAt);
+  const shouldTrackProgress =
+    canSetUpWorkspace && !storedDismissed && onboardingCompleted;
+  const { completed, doneCount, isLoading } =
+    useWorkspaceChecklistProgress(shouldTrackProgress);
   const [collapsed, setCollapsed] = useState(false);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
 
@@ -325,8 +329,8 @@ export function SuccessChecklist() {
   const allDone = doneCount >= TOTAL;
   const dismissed = storedDismissed || allDone;
   const isActive =
-    Boolean(canSetUpWorkspace) &&
-    Boolean(org?.onboardingCompletedAt) &&
+    canSetUpWorkspace &&
+    onboardingCompleted &&
     !dismissed &&
     !isLoading &&
     !allDone;
@@ -441,5 +445,13 @@ export function SuccessChecklist() {
         </AnimatePresence>
       </div>
     </>
+  );
+}
+
+export function SuccessChecklist() {
+  return (
+    <ChecklistErrorBoundary>
+      <SuccessChecklistInner />
+    </ChecklistErrorBoundary>
   );
 }

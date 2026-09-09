@@ -25,7 +25,7 @@ export function useWorkspaceChecklistProgress(enabled = true) {
     useDashboardStats({ enabled });
   const { data: connections, isLoading: connectionsLoading } =
     useIntegrationConnections({ enabled });
-  const { data: aiUsage, isLoading: aiUsageLoading } = useAiUsage();
+  const { data: aiUsage, isLoading: aiUsageLoading } = useAiUsage({ enabled });
   const { data: leadsData, isLoading: leadsLoading } = useLeads(
     { limit: 1 },
     { enabled },

@@ -167,7 +167,7 @@ export const aiUsageContract = z.object({
       total: z.number().int(),
       ratio: z.number().nullable(),
     })),
-    suggestions: z.object({
+    supportSuggestions: z.object({
       accepted: z.number().int(),
       rejected: z.number().int(),
       pending: z.number().int(),

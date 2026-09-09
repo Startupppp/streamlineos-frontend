@@ -1,0 +1,2204 @@
+{
+  "generatedAt": "2026-09-09T18:10:47.283Z",
+  "baseUrl": "http://localhost:1000",
+  "widths": [
+    375,
+    768,
+    1280
+  ],
+  "journeys": [
+    "home",
+    "crm",
+    "inventory",
+    "hr",
+    "build",
+    "accounting",
+    "workspace",
+    "settings"
+  ],
+  "tokens": {},
+  "stepsPlanned": 63,
+  "stepsRun": 57,
+  "crossOriginApiAllowed": false,
+  "writesPlanned": 4,
+  "writesAsserted": 0,
+  "writes": [
+    {
+      "name": "accounting-create-account",
+      "route": "/accounting/coa",
+      "subject": "journey-write-1788977432003-9db216",
+      "asserted": false
+    },
+    {
+      "name": "workflows-create-workflow",
+      "route": "/workflows",
+      "subject": "journey-write-1788977437830-1f2eda",
+      "asserted": false
+    },
+    {
+      "name": "hr-create-holiday",
+      "route": "/hr/attendance",
+      "subject": "journey-write-1788977441450-45f4ca",
+      "asserted": false
+    }
+  ],
+  "axeTags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa"
+  ],
+  "axeRulesDisabled": [
+    "color-contrast"
+  ],
+  "axeStepsProbed": 57,
+  "axeStepsRun": 57,
+  "axeNodesChecked": 8112,
+  "axeViolations": 53,
+  "findings": [
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/dashboard",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/inbox",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/notifications",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/parties",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "axe:scrollable-region-focusable",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        ".overflow-auto"
+      ],
+      "html": [
+        "<div class=\"flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "contrast",
+      "ratio": 4.34,
+      "need": 4.5,
+      "fg": "#64748b",
+      "bg": "#f1f5f9",
+      "size": 12,
+      "sample": "Offline"
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "contrast",
+      "ratio": 4.34,
+      "need": 4.5,
+      "fg": "#64748b",
+      "bg": "#f1f5f9",
+      "size": 12,
+      "sample": "Offline"
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "contrast",
+      "ratio": 4.34,
+      "need": 4.5,
+      "fg": "#64748b",
+      "bg": "#f1f5f9",
+      "size": 12,
+      "sample": "Offline"
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build/all",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build/{projectId}",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build/{projectId}/backlog",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "accounting",
+      "route": "/accounting",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "workspace",
+      "route": "/workflows",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "settings",
+      "route": "/settings",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 375,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/dashboard",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/inbox",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/notifications",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "kind": "never-settled"
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/parties",
+      "kind": "axe:aria-prohibited-attr",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "#feedbucket-root,.launcher-logo"
+      ],
+      "html": [
+        "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "kind": "never-settled"
+    },
+    {
+      "width": 768,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "kind": "axe:scrollable-region-focusable",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        "div[data-slot=\"table-container\"]"
+      ],
+      "html": [
+        "<div data-slot=\"table-container\" class=\"relative w-full overflow-x-auto\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "kind": "never-settled"
+    },
+    {
+      "width": 768,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "kind": "never-settled"
+    },
+    {
+      "width": 768,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "axe:scrollable-region-focusable",
+      "impact": "serious",
+      "nodes": 1,
+      "targets": [
+        ".overflow-auto"
+      ],
+      "html": [
+        "<div class=\"flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "never-settled"
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build/all",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build/all",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build/{projectId}",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build/{projectId}/backlog",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/calendar",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/calendar",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/workflows",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/workflows",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/dashboard",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/dashboard",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/inbox",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/inbox",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/notifications",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/notifications",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/parties",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/parties",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build/all",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build/all",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build/{projectId}",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build/{projectId}/backlog",
+      "kind": "step-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/calendar",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/calendar",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/workflows",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/workflows",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings",
+      "kind": "no-main-landmark"
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "kind": "axe:meta-viewport",
+      "impact": "moderate",
+      "nodes": 1,
+      "targets": [
+        "meta[name=\"viewport\"]"
+      ],
+      "html": [
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">"
+      ]
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "kind": "no-main-landmark"
+    },
+    {
+      "journey": "build-create-ticket",
+      "route": "/build/{projectId}",
+      "kind": "write-not-reached",
+      "unresolved": [
+        "projectId"
+      ]
+    },
+    {
+      "journey": "accounting-create-account",
+      "route": "/accounting/coa",
+      "kind": "write-step-failed",
+      "step": "open the new-account dialog",
+      "subject": "journey-write-1788977432003-9db216"
+    },
+    {
+      "journey": "workflows-create-workflow",
+      "route": "/workflows",
+      "kind": "write-step-failed",
+      "step": "open the new-workflow dialog",
+      "subject": "journey-write-1788977437830-1f2eda"
+    },
+    {
+      "journey": "hr-create-holiday",
+      "route": "/hr/attendance",
+      "kind": "write-step-failed",
+      "step": "type the holiday name",
+      "subject": "journey-write-1788977441450-45f4ca"
+    }
+  ],
+  "steps": [
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/dashboard",
+      "template": "/dashboard",
+      "landed": "/dashboard",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_s_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/inbox",
+      "template": "/inbox",
+      "landed": "/inbox",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_3b_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "home",
+      "route": "/notifications",
+      "template": "/notifications",
+      "landed": "/notifications",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_32_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "template": "/crm/leads",
+      "landed": "/crm/leads",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_q_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "template": "/crm/deals",
+      "landed": "/crm/deals",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 8,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 228,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "crm",
+      "route": "/parties",
+      "template": "/parties",
+      "landed": "/parties",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_3g_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "template": "/inventory/products",
+      "landed": "/inventory/products",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 111,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 571,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "template": "/inventory/stock",
+      "landed": "/inventory/stock",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 65,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 1111,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 0
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "template": "/hr/employees",
+      "landed": "/hr/employees",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 61,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 367,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "template": "/hr/attendance",
+      "landed": "/hr/attendance",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 243,
+      "contrastUnresolved": 0,
+      "contrastFailures": 50,
+      "axeRan": true,
+      "axeNodesChecked": 642,
+      "axeRulesEvaluated": 65,
+      "axeViolations": 2
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build",
+      "template": "/build",
+      "landed": "/build",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_14_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "build",
+      "route": "/build/all",
+      "template": "/build/all",
+      "landed": "/build/all",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_17_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "accounting",
+      "route": "/accounting",
+      "template": "/accounting",
+      "landed": "/accounting",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_o_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 77,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "template": "/accounting/coa",
+      "landed": "/accounting/coa",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 8,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 225,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "template": "/directory/workers",
+      "landed": "/directory/workers",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_12_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "workspace",
+      "route": "/calendar",
+      "template": "/calendar",
+      "landed": "/calendar",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 8,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 171,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 0
+    },
+    {
+      "width": 375,
+      "journey": "workspace",
+      "route": "/workflows",
+      "template": "/workflows",
+      "landed": "/workflows",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_v_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "settings",
+      "route": "/settings",
+      "template": "/settings",
+      "landed": "/settings",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_q_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 375,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "template": "/settings/roles",
+      "landed": "/settings/roles",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_13_",
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/dashboard",
+      "template": "/dashboard",
+      "landed": "/dashboard",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_h_",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/inbox",
+      "template": "/inbox",
+      "landed": "/inbox",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_2o_",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "home",
+      "route": "/notifications",
+      "template": "/notifications",
+      "landed": "/notifications",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "_r_2d_",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 1,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 79,
+      "axeRulesEvaluated": 62,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "template": "/crm/leads",
+      "landed": "/crm/leads",
+      "state": "error",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 10,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 327,
+      "axeRulesEvaluated": 64,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "template": "/crm/deals",
+      "landed": "/crm/deals",
+      "state": "loading",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 15,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 283,
+      "axeRulesEvaluated": 63,
+      "axeViolations": 0
+    },
+    {
+      "width": 768,
+      "journey": "crm",
+      "route": "/parties",
+      "template": "/parties",
+      "landed": "/parties",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 56,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 651,
+      "axeRulesEvaluated": 64,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "template": "/inventory/products",
+      "landed": "/inventory/products",
+      "state": "loading",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 14,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 460,
+      "axeRulesEvaluated": 63,
+      "axeViolations": 0
+    },
+    {
+      "width": 768,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "template": "/inventory/stock",
+      "landed": "/inventory/stock",
+      "state": "loading",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 15,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 440,
+      "axeRulesEvaluated": 63,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "template": "/hr/employees",
+      "landed": "/hr/employees",
+      "state": "loading",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 7,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 480,
+      "axeRulesEvaluated": 63,
+      "axeViolations": 0
+    },
+    {
+      "width": 768,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "template": "/hr/attendance",
+      "landed": "/hr/attendance",
+      "state": "loading",
+      "h1Count": 1,
+      "mainName": "Main content",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 20,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 553,
+      "axeRulesEvaluated": 64,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build",
+      "template": "/build",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "build",
+      "route": "/build/all",
+      "template": "/build/all",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting",
+      "template": "/accounting",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "template": "/accounting/coa",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "template": "/directory/workers",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/calendar",
+      "template": "/calendar",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "workspace",
+      "route": "/workflows",
+      "template": "/workflows",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings",
+      "template": "/settings",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 768,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "template": "/settings/roles",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/dashboard",
+      "template": "/dashboard",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/inbox",
+      "template": "/inbox",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "home",
+      "route": "/notifications",
+      "template": "/notifications",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/leads",
+      "template": "/crm/leads",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/crm/deals",
+      "template": "/crm/deals",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "crm",
+      "route": "/parties",
+      "template": "/parties",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/products",
+      "template": "/inventory/products",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "inventory",
+      "route": "/inventory/stock",
+      "template": "/inventory/stock",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/employees",
+      "template": "/hr/employees",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "hr",
+      "route": "/hr/attendance",
+      "template": "/hr/attendance",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build",
+      "template": "/build",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "build",
+      "route": "/build/all",
+      "template": "/build/all",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting",
+      "template": "/accounting",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "accounting",
+      "route": "/accounting/coa",
+      "template": "/accounting/coa",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/directory/workers",
+      "template": "/directory/workers",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/calendar",
+      "template": "/calendar",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "workspace",
+      "route": "/workflows",
+      "template": "/workflows",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings",
+      "template": "/settings",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    },
+    {
+      "width": 1280,
+      "journey": "settings",
+      "route": "/settings/roles",
+      "template": "/settings/roles",
+      "landed": "/",
+      "state": "content",
+      "h1Count": 1,
+      "mainName": "",
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "contrastSampled": 9,
+      "contrastUnresolved": 0,
+      "contrastFailures": 0,
+      "axeRan": true,
+      "axeNodesChecked": 15,
+      "axeRulesEvaluated": 61,
+      "axeViolations": 1
+    }
+  ]
+}

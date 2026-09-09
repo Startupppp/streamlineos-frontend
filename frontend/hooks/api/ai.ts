@@ -313,12 +313,12 @@ export interface AiUsageData {
   daily: AiUsageDaily[];
 }
 
-export function useAiUsage() {
+export function useAiUsage(options?: { enabled?: boolean }) {
   const canView = useCan("ai:usage:view");
   return useQuery({
     queryKey: platformHierarchyQueryKeys.settings.aiUsage(),
     queryFn: ({ signal }) => apiClient.get<AiUsageData>("/settings/ai-usage", undefined, signal, aiUsageContract),
-    enabled: canView,
+    enabled: canView && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });
 }

@@ -62,7 +62,7 @@ and every other provider's region follows the credential issued to it. Where a c
 | P12 | **Razorpay** | `razorpay.adapter.ts:124` → `https://api.razorpay.com/v1/orders` | Customer email, amount, payment signature | **India** | Statutory (RBI / PA-PG rules) | India |
 | P13 | **Cloudflare Turnstile** | `turnstile.service.ts:42` → `https://challenges.cloudflare.com/turnstile/v0/siteverify` | **Visitor IP address** and challenge token | Cloudflare global | transient | **DECISION REQUIRED** |
 | P14 | **Web Push (VAPID)** | `web-push@^3.6.7`, `realtime/web-push.service.ts:28,82` | Push endpoint (**identifies the browser/device**) and notification body → **Google FCM / Mozilla / Apple**, whichever the subscriber's browser names | browser-vendor-determined | transient | **DECISION REQUIRED** |
-| P15 | **TURN/STUN relay** | `TURN_URLS`, `GET /realtime/ice-servers` | **Relayed audio/video and the participants' IP addresses** for huddle calls across strict NATs | operator-configured; **unset by default** | transient | **DECISION REQUIRED** |
+| P15 | **TURN/STUN relay (retired)** | Removed with the Google Meet migration | No current data flow; the former relay could see participant IP addresses and media | not configured | none | **RETIRED — NO APPROVAL REQUIRED** |
 
 **The register is not published.** `subprocessors` and `subprocessor_subscribers` exist as
 tables and are **empty, with no application code reading or writing them** — the only reference
@@ -88,7 +88,7 @@ anything:
 | **AI** | P8 OpenAI, P9 Google | Approve **only for the redacted path**, conditional on C-3 and C-4 below |
 | **AI relay** | P10 OpenRouter | **Recommend: do not approve for personal data.** The terminal processor is unknowable from configuration, which makes a subprocessor list naming "OpenRouter" incomplete by construction |
 | **Integrations** | P11 Composio | Approve **only with user-facing disclosure** — it carries mailbox and calendar *content*, not just tokens, and the correspondents have no relationship with this platform |
-| **Realtime relay** | P15 TURN | Defer — unset by default; approve when an operator configures one, since the relay sees participants' IPs and media |
+| **Realtime relay** | P15 TURN | Retired with the Google Meet migration; no TURN approval remains open |
 
 ### 2. PII minimization — measured, and it does not hold
 

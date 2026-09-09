@@ -60,8 +60,6 @@ export default function OrgSetupPage() {
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
-  const exitedRef = useRef(false);
-  const completionStartedRef = useRef(false);
   const hydratedFromServerRef = useRef(false);
   const mountedOnceRef = useRef(false);
 
@@ -136,10 +134,6 @@ export default function OrgSetupPage() {
     }
   }, [skipOrgSetup, update, userId]);
 
-  const handleCompletionStarted = useCallback(() => {
-    completionStartedRef.current = true;
-  }, []);
-
   useEffect(() => {
     if (!userId || mountedOnceRef.current) return;
     mountedOnceRef.current = true;
@@ -179,17 +173,6 @@ export default function OrgSetupPage() {
     setStep(restoredStep);
     saveStep(restoredStep, userId);
   }, [mounted, serverSession, userId]);
-
-  useEffect(() => {
-    if (exitedRef.current) return;
-    if (!session?.orgId || !session?.orgOnboardingCompletedAt) return;
-    if (completionStartedRef.current) return;
-    exitedRef.current = true;
-    const orgId = session?.orgId ?? "";
-    clearAll(userId);
-    void completeOnboardingGate("org-setup-done", orgId, update);
-    window.location.replace("/dashboard");
-  }, [session?.orgId, session?.orgOnboardingCompletedAt, update, userId]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -259,7 +242,6 @@ export default function OrgSetupPage() {
           data={data}
           onBack={goBack}
           onChangeInvitees={(invitees) => patch({ invitees })}
-          onCompletionStarted={handleCompletionStarted}
         />
       )}
     </OrgSetupShell>

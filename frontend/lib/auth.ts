@@ -187,7 +187,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ? await fetchSessionDataCached(token.id, tokenOrgId)
           : null;
 
-        const orgId = fresh ? fresh.orgId : (token.orgId ?? null);
+        const orgId = fresh?.orgId ?? token.orgId ?? null;
         const isOrgOwner = fresh
           ? fresh.isOrgOwner
           : (token.isOrgOwner ?? false);

@@ -35,7 +35,6 @@ type GenerationPendingState = {
 
 type StepGenerationProps = {
   data: WizardData;
-  onCompletionStarted: () => void;
 };
 
 function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: string[] }[] {
@@ -54,10 +53,7 @@ function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: strin
   });
 }
 
-export function StepGeneration({
-  data,
-  onCompletionStarted,
-}: StepGenerationProps) {
+export function StepGeneration({ data }: StepGenerationProps) {
   const { data: session, update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupError, setSetupError] = useState<SetupError | null>(null);
@@ -133,7 +129,6 @@ export function StepGeneration({
     } catch {
       void 0;
     }
-    onCompletionStarted();
 
     if (autoLoginToken) {
       await signInWithMagicToken(autoLoginToken);
@@ -215,7 +210,6 @@ export function StepGeneration({
     if (!orgCreatedResult || isContinuing) return;
     setIsContinuing(true);
     const orgResult = orgCreatedResult;
-    onCompletionStarted();
     try {
       clearBackendTokenCache();
       clearAll(session?.user?.id ?? "");

@@ -26,14 +26,12 @@ type StepInviteLaunchProps = {
   data: WizardData;
   onBack: () => void;
   onChangeInvitees: (invitees: Invitee[]) => void;
-  onCompletionStarted: () => void;
 };
 
 export function StepInviteLaunch({
   data,
   onChangeInvitees,
   onBack,
-  onCompletionStarted,
 }: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
@@ -81,12 +79,7 @@ export function StepInviteLaunch({
   }, [phase]);
 
   if (phase === "generating") {
-    return (
-      <StepGeneration
-        data={data}
-        onCompletionStarted={onCompletionStarted}
-      />
-    );
+    return <StepGeneration data={data} />;
   }
 
   const isPending = phase === "pending";

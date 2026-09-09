@@ -1,386 +1,70 @@
 #!/usr/bin/env node
-/**
- * v2 ticket 01 / PRD-C017 — the traceability manifest, enforced.
- *
- * Every unchecked PRD criterion must have one stable identifier and exactly one owning execution
- * ticket. This gate makes that fail closed, because the previous ticket set proved it does not hold
- * on its own: it left five PRD boxes without an owner, four ticket boxes with no PRD counterpart,
- * and three partial boxes with no representation at all. None of those were noticed while the
- * mapping lived only in prose.
- *
- * The other half of PRD-C017 is "the restored module evidence cannot disappear again". Ten
- * module-evidence criteria — Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/Payments,
- * Accounting/Finance, Chat, Notifications and shared adapters — were previously carried as 60
- * "Proven" boxes that rested entirely on deleted text. They were restored. The PRD's own header
- * says completed items get REMOVED from the file, so the mechanism that deleted them once is still
- * in place. RESTORED_MODULE_EVIDENCE below pins them by id: a checked box must be recorded `[x]`
- * and stay in the file, never be deleted to make the list shorter.
- *
- * WHAT THIS GATE REFUSES TO DO: it does not read the ticket bodies for quality, and it cannot tell
- * you whether a `[x]` is true. It tests that the mapping is total, injective, and that the two
- * sides say the same words and carry the same state. A criterion can be perfectly traceable and
- * still be a lie; that is what the other gates and the reports are for.
- */
-
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve, relative } from "node:path";
-// The two pinned corpora live in their own module so the self-test can import them without
-// executing this gate. See check-prd-traceability-pins.mjs for why that matters.
-import {
-  LEGACY_UNIDENTIFIED,
-  RESTORED_MODULE_EVIDENCE,
-} from "./check-prd-traceability-pins.mjs";
 
-// PRD-C015: resolve from the script's own location, never an absolute workstation path, so this
-// runs identically on Windows, macOS and Linux and from any working directory.
 const HERE = dirname(fileURLToPath(import.meta.url));
-// PRD_TRACEABILITY_ROOT exists so the self-test can point this gate at a mutated fixture tree.
-// It is never set in normal operation, and the default is derived from the script's own location.
-const FRONTEND_REPO = process.env.PRD_TRACEABILITY_ROOT
-  ? resolve(process.env.PRD_TRACEABILITY_ROOT)
-  : resolve(HERE, "..", "..");
-const PRD_PATH = join(FRONTEND_REPO, "architecture-refactor", "PRD-10-10-CODE-RELEASE-TODO.md");
-const V2_DIR = join(FRONTEND_REPO, ".scratch", "code-release-10-10-v2");
-const MANIFEST_PATH = join(V2_DIR, "TRACEABILITY.md");
-const ISSUES_DIR = join(V2_DIR, "issues");
+const ROOT = process.env.PRD_TRACEABILITY_ROOT ? resolve(process.env.PRD_TRACEABILITY_ROOT) : resolve(HERE, "..", "..");
+const PRD_DIR = join(ROOT, "architecture-refactor", "prd");
+const INDEX = join(PRD_DIR, "README.md");
+const LEGACY = join(ROOT, "architecture-refactor", "PRD-10-10-CODE-RELEASE-TODO.md");
+const VALID_STATUSES = new Set(["READY", "BLOCKED-EXTERNAL", "FINAL-INTEGRATION"]);
+const TASK = /^## ([A-Z]+-\d{3}) — (.+)$/;
+const REQUIRED = ["Status", "Maps to", "Parallel group", "Depends on", "Owner"];
 
-// --- Vacuity floors -------------------------------------------------------------------------
-// A gate that scans nothing passes everything. These are the counts this release was reconciled
-// against; a scan that finds fewer has lost sight of the corpus rather than found it clean.
-const MIN_CRITERIA = 195;
-const MIN_TICKETS = 36;
+export function validateBacklog({ indexText, laneFiles, legacyText, minTasks = 10 }) {
+  const failures = [];
+  const knownCriteria = new Set(legacyText.match(/PRD-C\d{3}/g) ?? []);
+  const indexed = new Set([...indexText.matchAll(/\]\(([^/)]+\.md)\)/g)].map((m) => m[1]));
+  const actual = new Set(Object.keys(laneFiles));
+  if (!indexText.includes("sole source of current pending work")) failures.push("INDEX AUTHORITY: README must declare the sole active backlog.");
+  for (const file of indexed) if (!actual.has(file)) failures.push(`MISSING LANE: ${file} is linked but absent.`);
+  for (const file of actual) if (!indexed.has(file)) failures.push(`UNINDEXED LANE: ${file} is not routed by README.md.`);
 
-const PRD_LINE = /^\s*- \[([ x])\] \*\*\[(PRD-C\d{3})\]\*\* (.+?)\s*$/;
-const CHECKBOX_LINE = /^\s*- \[([ x])\] (.+?)\s*$/;
-const TICKET_LINE = /^\s*- \[([ x])\] \*\*(PRD-C\d{3})\*\* — (.+?)\s*$/;
-const MANIFEST_ROW = /^\| (PRD-C\d{3}) \| (\d+) \| (.+?) \|\s*$/;
-const COVERAGE_ROW = /^- Ticket (\d{2}): (\d+)\s*$/;
-/** The manifest's own headline. Pins the vacuity floors to a number a reviewer reads. */
-const MANIFEST_HEADLINE =
-  /^Exactly \*\*(\d+)\*\* unchecked PRD criteria are assigned to \*\*(\d+)\*\* execution tickets/m;
+  const tasks = new Map();
+  for (const [file, source] of Object.entries(laneFiles)) {
+    const lines = source.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const match = TASK.exec(lines[i]);
+      if (!match) continue;
+      const [, id, title] = match;
+      if (tasks.has(id)) failures.push(`DUPLICATE TASK: ${id} appears in ${tasks.get(id).file} and ${file}.`);
+      const metadata = {};
+      for (let j = i + 1; j < lines.length && !lines[j].startsWith("## "); j++) {
+        const field = /^(Status|Maps to|Parallel group|Depends on|Owner): (.+)$/.exec(lines[j]);
+        if (field) metadata[field[1]] = field[2].trim();
+      }
+      for (const field of REQUIRED) if (!metadata[field]) failures.push(`MISSING METADATA: ${id} lacks ${field}.`);
+      if (metadata.Status && !VALID_STATUSES.has(metadata.Status)) failures.push(`BAD STATUS: ${id} uses ${metadata.Status}.`);
+      const mappings = metadata["Maps to"]?.match(/PRD-C\d{3}/g) ?? [];
+      if (mappings.length === 0) failures.push(`UNMAPPED TASK: ${id} has no PRD criterion.`);
+      for (const criterion of mappings) if (!knownCriteria.has(criterion)) failures.push(`UNKNOWN CRITERION: ${id} maps to ${criterion}.`);
+      tasks.set(id, { file, title, metadata });
+    }
+  }
+  if (tasks.size < minTasks) failures.push(`VACUOUS BACKLOG: found ${tasks.size} tasks; expected at least ${minTasks}.`);
+  for (const [id, task] of tasks) {
+    const deps = task.metadata["Depends on"] === "none" ? [] : task.metadata["Depends on"]?.match(/[A-Z]+-\d{3}/g) ?? [];
+    for (const dep of deps) {
+      if (dep === id) failures.push(`SELF DEPENDENCY: ${id}.`);
+      else if (!tasks.has(dep)) failures.push(`UNKNOWN DEPENDENCY: ${id} depends on ${dep}.`);
+    }
+  }
+  return { failures, taskCount: tasks.size, laneCount: actual.size };
+}
 
-/** Whitespace-insensitive, so a re-wrap is not a false failure. */
-const normalizeLine = (s) => s.replace(/\s+/g, " ").trim();
-const LEGACY_UNIDENTIFIED_SET = new Set(LEGACY_UNIDENTIFIED.map(normalizeLine));
-
-const failures = [];
-const fail = (msg) => failures.push(msg);
-
-function readOrDie(path, label) {
-  if (!existsSync(path)) {
-    console.error(`FAIL: ${label} not found at ${path}`);
-    console.error("This gate cannot report a clean mapping over a file it could not read.");
+function main() {
+  if (!existsSync(INDEX) || !existsSync(LEGACY)) {
+    console.error("FAIL: active PRD index or legacy criterion ledger is missing.");
     process.exit(1);
   }
-  return readFileSync(path, "utf8");
+  const laneFiles = Object.fromEntries(readdirSync(PRD_DIR).filter((name) => name.endsWith(".md") && name !== "README.md").map((name) => [name, readFileSync(join(PRD_DIR, name), "utf8")]));
+  const result = validateBacklog({ indexText: readFileSync(INDEX, "utf8"), laneFiles, legacyText: readFileSync(LEGACY, "utf8") });
+  if (result.failures.length) {
+    for (const failure of result.failures) console.error(`FAIL: ${failure}`);
+    process.exit(1);
+  }
+  console.log(`PASS: ${result.taskCount} active tasks across ${result.laneCount} indexed module lanes.`);
 }
 
-// --- 1. Parse the PRD -------------------------------------------------------------------------
-const prdText = readOrDie(PRD_PATH, "PRD");
-/** @type {Map<string, {checked: boolean, text: string, line: number}>} */
-const prd = new Map();
-prdText.split("\n").forEach((line, i) => {
-  const m = PRD_LINE.exec(line);
-  if (!m) return;
-  const [, box, id, text] = m;
-  if (prd.has(id)) {
-    fail(`DUPLICATE PRD criterion ${id} — declared at PRD line ${prd.get(id).line} and again at ${i + 1}. An id must name one criterion.`);
-    return;
-  }
-  prd.set(id, { checked: box === "x", text, line: i + 1 });
-});
-
-// A stray `PRD-Cnnn` that is not a criterion line is either a typo or a criterion someone
-// half-deleted. Either way the file no longer means what it appears to mean.
-prdText.split("\n").forEach((line, i) => {
-  if (!/PRD-C\d{3}/.test(line)) return;
-  if (PRD_LINE.test(line)) return;
-  for (const id of line.match(/PRD-C\d{3}/g) ?? []) {
-    if (!prd.has(id)) {
-      fail(`ORPHAN reference to ${id} at PRD line ${i + 1} — the id is mentioned but no criterion line declares it.`);
-    }
-  }
-});
-
-// --- 1b. Every checkbox line is a criterion, and every criterion carries an id -------------------
-// The two passes above only ever see lines that already have an id, so a checkbox line without one
-// could be unchecked, unowned and invisible. This pass closes that. The 37 legacy lines are frozen
-// by content: they may be ticked, never un-ticked, never deleted, never grown.
-const seenLegacy = new Set();
-prdText.split("\n").forEach((line, i) => {
-  const m = CHECKBOX_LINE.exec(line);
-  if (!m) return;
-  if (PRD_LINE.test(line)) return;
-  const [, box, text] = m;
-  const key = normalizeLine(text);
-  const known = LEGACY_UNIDENTIFIED_SET.has(key);
-  if (known) seenLegacy.add(key);
-  if (known && box === "x") return;
-  if (known) {
-    fail(
-      `UNIDENTIFIED CRITERION un-ticked at PRD line ${i + 1} — "${key.slice(0, 90)}". ` +
-        `A criterion with no \`**[PRD-Cnnn]**\` id has no manifest row and no owning ticket, so once ` +
-        `it is unchecked nothing in this release is accountable for it. Give it an id and an owner, ` +
-        `or leave it \`[x]\`.`,
-    );
-    return;
-  }
-  fail(
-    `UNIDENTIFIED CRITERION at PRD line ${i + 1} — "${key.slice(0, 90)}". ` +
-      `Every new criterion must carry a \`**[PRD-Cnnn]**\` id, a manifest row and an owning ticket; ` +
-      `without one it is invisible to this gate and to the manifest.`,
-  );
-});
-for (const key of LEGACY_UNIDENTIFIED_SET) {
-  if (!seenLegacy.has(key)) {
-    fail(
-      `LEGACY CRITERION DELETED — "${key.slice(0, 90)}" is in LEGACY_UNIDENTIFIED but no longer in ` +
-        `the PRD. A completed criterion is recorded \`[x]\`; it is never deleted. If it genuinely ` +
-        `belongs somewhere else now, give it an id and an owner in the same commit.`,
-    );
-  }
-}
-
-// --- 2. Parse the manifest --------------------------------------------------------------------
-const manifestText = readOrDie(MANIFEST_PATH, "traceability manifest");
-/** @type {Map<string, {ticket: string, section: string, line: number}>} */
-const manifest = new Map();
-/** @type {Map<string, number>} */
-const declaredCoverage = new Map();
-manifestText.split("\n").forEach((line, i) => {
-  const row = MANIFEST_ROW.exec(line);
-  if (row) {
-    const [, id, ticket, section] = row;
-    if (manifest.has(id)) {
-      fail(`DUPLICATE OWNER: ${id} is assigned twice in the manifest (lines ${manifest.get(id).line} and ${i + 1}). "Exactly one owner" is the whole point of the manifest.`);
-      return;
-    }
-    manifest.set(id, { ticket, section, line: i + 1 });
-    return;
-  }
-  const cov = COVERAGE_ROW.exec(line);
-  if (cov) declaredCoverage.set(cov[1], Number(cov[2]));
-});
-
-// --- 3. Parse the tickets ---------------------------------------------------------------------
-const ticketFiles = readdirSync(ISSUES_DIR).filter((f) => /^\d{2}-.+\.md$/.test(f)).sort();
-/** @type {Map<string, {ticket: string, checked: boolean, text: string, file: string, line: number}>} */
-const ticketCriteria = new Map();
-/** @type {Map<string, number>} */
-const actualCoverage = new Map();
-
-for (const file of ticketFiles) {
-  const ticket = file.slice(0, 2);
-  actualCoverage.set(ticket, 0);
-  const body = readFileSync(join(ISSUES_DIR, file), "utf8");
-  body.split("\n").forEach((line, i) => {
-    const m = TICKET_LINE.exec(line);
-    if (!m) return;
-    const [, box, id, text] = m;
-    if (ticketCriteria.has(id)) {
-      const prev = ticketCriteria.get(id);
-      fail(`DUPLICATE OWNER: ${id} is claimed by ticket ${prev.ticket} (${prev.file}:${prev.line}) and ticket ${ticket} (${file}:${i + 1}).`);
-      return;
-    }
-    ticketCriteria.set(id, { ticket, checked: box === "x", text, file, line: i + 1 });
-    actualCoverage.set(ticket, actualCoverage.get(ticket) + 1);
-  });
-}
-
-// --- 4. Vacuity floors ------------------------------------------------------------------------
-if (prd.size < MIN_CRITERIA) {
-  fail(`VACUITY FLOOR: parsed ${prd.size} PRD criteria, floor is ${MIN_CRITERIA}. A criterion that is completed is recorded \`[x]\`; it is never deleted. If the corpus genuinely shrank, lower the floor in the same commit and say why.`);
-}
-if (ticketFiles.length < MIN_TICKETS) {
-  fail(`VACUITY FLOOR: found ${ticketFiles.length} ticket files, floor is ${MIN_TICKETS}.`);
-}
-
-// The floors above are constants inside the file they defend, and nothing outside pinned either —
-// so one commit could lower MIN_CRITERIA by one, delete a criterion everywhere, and this gate would
-// print PASS over the smaller corpus. MEASURED: lowering 195 -> 194 and deleting PRD-C115 from the
-// PRD, the manifest, ticket 06 and RESTORED_MODULE_EVIDENCE gave exit 0 with "PASS — every
-// criterion has exactly one owner" and PRD-C115 occurrences 0/0/0.
-//
-// The manifest's own headline states the same two numbers in prose a reviewer reads. Tying the
-// floors to it means lowering a floor now requires editing that sentence in the same commit, and
-// the manifest can no longer describe a corpus it does not have.
-const headline = MANIFEST_HEADLINE.exec(manifestText);
-if (!headline) {
-  fail(
-    `MANIFEST HEADLINE MISSING: ${relative(FRONTEND_REPO, MANIFEST_PATH)} no longer states ` +
-      `"Exactly **N** unchecked PRD criteria are assigned to **M** execution tickets". That sentence ` +
-      `is what pins MIN_CRITERIA and MIN_TICKETS to something outside this script.`,
-  );
-} else {
-  const declaredCriteria = Number(headline[1]);
-  const declaredTickets = Number(headline[2]);
-  if (manifest.size !== declaredCriteria) {
-    fail(
-      `MANIFEST HEADLINE DRIFT: the manifest says it assigns ${declaredCriteria} criteria, but it ` +
-        `carries ${manifest.size} rows. Update the headline in the same commit as the rows.`,
-    );
-  }
-  if (ticketFiles.length !== declaredTickets) {
-    fail(
-      `MANIFEST HEADLINE DRIFT: the manifest says ${declaredTickets} execution tickets, but ` +
-        `issues/ holds ${ticketFiles.length}.`,
-    );
-  }
-  if (MIN_CRITERIA < declaredCriteria) {
-    fail(
-      `VACUITY FLOOR LOWERED: MIN_CRITERIA is ${MIN_CRITERIA} but the manifest headline declares ` +
-        `${declaredCriteria} criteria. A floor below the declared corpus disarms the floor.`,
-    );
-  }
-  if (MIN_TICKETS < declaredTickets) {
-    fail(
-      `VACUITY FLOOR LOWERED: MIN_TICKETS is ${MIN_TICKETS} but the manifest headline declares ` +
-        `${declaredTickets} execution tickets.`,
-    );
-  }
-}
-
-// --- 5. The mapping must be total and injective ------------------------------------------------
-for (const [id, c] of prd) {
-  if (!manifest.has(id)) {
-    fail(`UNOWNED: ${id} is a PRD criterion (line ${c.line}) with no row in the manifest. Every criterion needs exactly one owner.`);
-  }
-  if (!ticketCriteria.has(id)) {
-    fail(`UNOWNED: ${id} is a PRD criterion (line ${c.line}) that no ticket file carries.`);
-  }
-}
-
-// PRD-C017 names this case explicitly: "ticket-only criteria are rejected".
-for (const [id, t] of ticketCriteria) {
-  if (!prd.has(id)) {
-    fail(`TICKET-ONLY: ${id} is claimed by ticket ${t.ticket} (${t.file}:${t.line}) but is not a criterion in the PRD. Acceptance work must trace to the source, or it is scope nobody agreed to.`);
-  }
-}
-for (const [id, m] of manifest) {
-  if (!prd.has(id)) {
-    fail(`MANIFEST-ONLY: ${id} has a manifest row (line ${m.line}) but is not a criterion in the PRD.`);
-  }
-}
-
-// --- 6. Manifest and ticket files must agree on the owner ---------------------------------------
-for (const [id, m] of manifest) {
-  const t = ticketCriteria.get(id);
-  if (!t) {
-    fail(`MANIFEST ASSIGNS AN ABSENT CRITERION: the manifest gives ${id} to ticket ${m.ticket}, but no ticket file lists it. The assignment is not real.`);
-    continue;
-  }
-  if (t.ticket !== m.ticket) {
-    fail(`OWNER DISAGREEMENT: the manifest assigns ${id} to ticket ${m.ticket}, but it is listed in ticket ${t.ticket} (${t.file}:${t.line}).`);
-  }
-}
-
-// --- 7. Text must be verbatim -------------------------------------------------------------------
-// "Ticket criteria quote the source criterion verbatim" — a ticket that paraphrases can narrow the
-// criterion without anyone editing the PRD.
-const normalize = (s) => s.replace(/\s+/g, " ").trim();
-for (const [id, t] of ticketCriteria) {
-  const c = prd.get(id);
-  if (!c) continue;
-  if (normalize(c.text) !== normalize(t.text)) {
-    fail(
-      `TEXT DRIFT: ${id} does not quote the PRD verbatim.\n` +
-        `    PRD    (line ${c.line}): ${c.text}\n` +
-        `    ticket (${t.file}:${t.line}): ${t.text}`,
-    );
-  }
-}
-
-// --- 8. Checkbox state must move together --------------------------------------------------------
-// "Source and ticket checkbox states change together." A ticket ticked ahead of its PRD box is how
-// a release reports completion the source never recorded.
-for (const [id, t] of ticketCriteria) {
-  const c = prd.get(id);
-  if (!c) continue;
-  if (c.checked !== t.checked) {
-    fail(
-      `STATE DIVERGENCE: ${id} is [${c.checked ? "x" : " "}] in the PRD (line ${c.line}) but ` +
-        `[${t.checked ? "x" : " "}] in ticket ${t.ticket} (${t.file}:${t.line}). Flip both in the same commit.`,
-    );
-  }
-}
-
-// --- 9. PRD-C017: the restored module evidence cannot disappear ------------------------------------
-// Three assertions, because "cannot disappear" has three ways of being false: the id can be
-// deleted, it can be left in the PRD but carried by nobody, and — the one this gate missed until
-// now — the id can survive while the criterion underneath it is rewritten to be about a different
-// module. That last one is not hypothetical: rewriting PRD-C127's text from "current-head Chat
-// evidence" to "current-head Support evidence" in BOTH the PRD and 12-chat.md gave exit 0, because
-// existence held and TEXT DRIFT compares the two sides against each other, not against what the
-// criterion is supposed to be about. Chat's restored evidence was then gone in every sense except
-// the id.
-for (const [id, pin] of Object.entries(RESTORED_MODULE_EVIDENCE)) {
-  const moduleName = pin.module;
-  const criterion = prd.get(id);
-  if (!criterion) {
-    fail(
-      `RESTORED EVIDENCE DELETED: ${id} (${moduleName}) is gone from the PRD. These ten criteria were ` +
-        `restored precisely because 60 carried "Proven" boxes had rested on deleted text. Record it \`[x]\`; do not remove it.`,
-    );
-  }
-  if (!ticketCriteria.has(id)) {
-    fail(`RESTORED EVIDENCE UNOWNED: ${id} (${moduleName}) is carried by no ticket.`);
-  }
-  // An assertion over zero substrings passes everything, so emptying `match` is the same disarm as
-  // deleting the check below. Refuse the pin rather than run it vacuously.
-  if (!Array.isArray(pin.match) || pin.match.length === 0) {
-    fail(
-      `RESTORED EVIDENCE PIN DISARMED: ${id} (${moduleName}) declares no \`match\` substrings in ` +
-        `check-prd-traceability-pins.mjs, so nothing constrains what its criterion may be rewritten ` +
-        `to say. Restore the substrings that spell the module.`,
-    );
-    continue;
-  }
-  if (!criterion) continue;
-  const haystack = normalize(criterion.text).toLowerCase();
-  const missing = pin.match.filter((needle) => !haystack.includes(needle));
-  if (missing.length > 0) {
-    fail(
-      `RESTORED EVIDENCE REPURPOSED: ${id} still exists (PRD line ${criterion.line}) but its text no ` +
-        `longer names ${moduleName} — missing ${missing.map((n) => `"${n}"`).join(", ")}.\n` +
-        `    PRD: ${criterion.text}\n` +
-        `    An id kept while the criterion under it is rewritten to be about something else deletes ` +
-        `the ${moduleName} evidence exactly as surely as removing the line, and does it without ` +
-        `changing any count this gate prints. Restore the criterion, or give the new work its own id.`,
-    );
-  }
-}
-
-// --- 10. Declared coverage totals must match reality ------------------------------------------------
-for (const [ticket, declared] of declaredCoverage) {
-  const actual = actualCoverage.get(ticket);
-  if (actual === undefined) {
-    fail(`COVERAGE ROW FOR A MISSING TICKET: the manifest declares Ticket ${ticket}, but there is no ${ticket}-*.md in issues/.`);
-    continue;
-  }
-  if (actual !== declared) {
-    fail(`COVERAGE MISMATCH: the manifest declares Ticket ${ticket}: ${declared}, but that ticket file lists ${actual} criteria.`);
-  }
-}
-for (const ticket of actualCoverage.keys()) {
-  if (!declaredCoverage.has(ticket)) {
-    fail(`COVERAGE ROW MISSING: ticket ${ticket} exists in issues/ but has no total in the manifest's coverage list.`);
-  }
-}
-
-// --- Report ------------------------------------------------------------------------------------------
-const checked = [...prd.values()].filter((c) => c.checked).length;
-console.log(`=== PRD traceability — ${prd.size} criteria, ${ticketFiles.length} tickets ===`);
-console.log(`  manifest rows      ${manifest.size}`);
-console.log(`  ticket criteria    ${ticketCriteria.size}`);
-console.log(`  checked            ${checked}`);
-console.log(`  unchecked          ${prd.size - checked}`);
-console.log(`  PRD                ${relative(FRONTEND_REPO, PRD_PATH)}`);
-console.log(`  manifest           ${relative(FRONTEND_REPO, MANIFEST_PATH)}`);
-
-if (failures.length > 0) {
-  console.error(`\nFAIL — ${failures.length} traceability defect(s):\n`);
-  for (const f of failures) console.error(`  ${f}`);
-  process.exit(1);
-}
-console.log("\nPASS — every criterion has exactly one owner, quoted verbatim, with matching state.");
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

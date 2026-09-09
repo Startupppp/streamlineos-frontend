@@ -1,14 +1,12 @@
 # StreamlineOS final 10/10 completion PRD
 
-Status: **superseded as the authoritative checklist 2026-09-07** — retained as cross-program history  
+Status: **superseded** — retained as cross-program history
 Last reconciled: 2026-09-01  
 Scope: all platform domains except CRM and Inventory
 
-**Authority: [PRD-10-10-CODE-RELEASE-TODO.md](PRD-10-10-CODE-RELEASE-TODO.md) is the single code-release
-checklist.** It is the only one of these documents a gate enforces — `check:prd-traceability` reads it by
-path with `MIN_CRITERIA = 195` — and its `PRD-C001`–`PRD-C195` ids are the vocabulary every ticket file and
-evidence record already uses. [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) stands beside it in a different role, as
-the approved target specification rather than a backlog, and does not compete.
+**Current task authority: [`prd/README.md`](prd/README.md).** It routes module-owned files that parallel
+agents can execute independently. [PRD-10-10-CODE-RELEASE-TODO.md](PRD-10-10-CODE-RELEASE-TODO.md)
+retains the `PRD-C001`–`PRD-C195` requirements vocabulary and historical evidence.
 
 This file's former claim to be "the only architecture/refactor TODO list", and its instruction not to
 create session tickets, is withdrawn: the release program is *built* on 36 per-ticket files under
@@ -35,7 +33,7 @@ Local mocks and self-tests prove implementation behavior only. They never prove 
 - Never solve a growing workflow with silent truncation. Use keyset pagination, resumable batches, streams or queues.
 - Tenant-owned relationships, queries, cache keys, events and search ACLs must preserve organization scope.
 - Never mark deletion, dead code or schema removal complete from text search alone.
-- Do not recreate `luna-10-10-sessions` or split this backlog into session files.
+- Keep task ownership in the module files routed by `prd/README.md`; do not create ad hoc session backlogs.
 
 ## Verified complete — preserve these results
 
