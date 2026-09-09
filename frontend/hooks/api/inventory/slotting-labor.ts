@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { LocationType } from "@/hooks/api/inventory/warehouses";
 
 /**
  * NEO-6 / NEO-7 - slotting and the labour board.
@@ -30,6 +31,25 @@ export interface SlottingRule {
   targetLocationType: string | null;
   priority: number;
   isActive: boolean;
+}
+
+/**
+ * Mirrors `createSlottingRuleSchema` — which is `.strict()`, so an extra key is
+ * a 400 rather than a field the server ignores. The three match payloads are
+ * separately optional here and made exclusive by the form's own `superRefine`:
+ * the server refuses a rule carrying two of them, and a rule that reads as
+ * configured while matching nothing is worse than one that was refused.
+ */
+export interface CreateSlottingRuleInput {
+  warehouseId: number;
+  name: string;
+  matchType: SlottingMatchType;
+  velocityClass?: VelocityClass;
+  categoryId?: number;
+  productVariantId?: number;
+  targetZoneLocationId: number;
+  targetLocationType?: LocationType;
+  priority: number;
 }
 
 export interface SlottingRecommendation {
@@ -67,6 +87,50 @@ export function useSlottingRules(warehouseId?: number) {
       }),
     enabled: canView,
     staleTime: 60_000,
+  });
+}
+
+/**
+ * `POST /inventory/slotting/rules` carries `@Idempotent("inventory.slotting.rule.create")`,
+ * so the `Idempotency-Key` header is REQUIRED — without it the route answers 400
+ * and the message reads like a body validation failure. The key belongs to the
+ * planner's intent rather than to the attempt, which is what `useIdempotentMutation`
+ * holds: a submit that stalls and is pressed again must not write a second rule.
+ */
+export function useCreateSlottingRule() {
+  const qc = useQueryClient();
+  return useIdempotentMutation<SlottingRule, Error, CreateSlottingRuleInput>({
+    mutationKey: ["inventory", "slotting", "rule", "create"],
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<SlottingRule>("/inventory/slotting/rules", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRulesAll });
+      // A new rule changes which zone the next sweep says a SKU belongs in, so
+      // the recommendations computed against the old rule set are stale.
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
+    },
+  });
+}
+
+/**
+ * `PATCH /inventory/slotting/rules/:ruleId` is activate/deactivate and nothing
+ * else: `setSlottingRuleActiveSchema` is `.strict()` over exactly `{ isActive }`,
+ * so any other field sent alongside is a 400. It carries no `@Idempotent`, so an
+ * ordinary mutation is the right shape — a repeated flip to the same boolean is
+ * already idempotent in the database.
+ */
+export function useSetSlottingRuleActive() {
+  const qc = useQueryClient();
+  return useMutation<SlottingRule, Error, { ruleId: number; isActive: boolean }>({
+    mutationKey: ["inventory", "slotting", "rule", "setActive"],
+    mutationFn: ({ ruleId, isActive }) =>
+      apiClient.patch<SlottingRule>(`/inventory/slotting/rules/${ruleId}`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRulesAll });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
+    },
   });
 }
 
