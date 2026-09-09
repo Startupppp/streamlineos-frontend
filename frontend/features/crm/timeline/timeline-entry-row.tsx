@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { CallAnalysisPanel } from "@/features/crm/intelligence/call-analysis-panel";
+import { callIntelligenceHref } from "@/features/crm/intelligence/call-intelligence-href";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatTime } from "@/lib/format-utils";
 import { formatShortDate } from "@/lib/date-utils";
@@ -224,7 +225,7 @@ export function TimelineEntryRow({
                 Call analysis
               </Button>
               <Button size="sm" variant="ghost" className="w-fit px-2 text-muted-foreground" asChild>
-                <Link href={`/crm/intelligence/${entry.activityId}`}>Open</Link>
+                <Link href={callIntelligenceHref(entry.activityId)}>Open</Link>
               </Button>
             </div>
             {analysisOpen ? <CallAnalysisPanel activityId={entry.activityId} /> : null}
