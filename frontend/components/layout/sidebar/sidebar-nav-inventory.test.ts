@@ -55,8 +55,21 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * read alike, and gating the child on the parent's key would hide the builder
  * from exactly the people the backend grants it to.
  */
+/*
+ * Updated 2026-09-09 again, for the same class of gap one row further down.
+ *
+ * **Nurture sequences** (/crm/autonomy/nurture), a child of "What the system
+ * did", gated on `crm:autonomy:view`. The nurture engine landed with nine
+ * permission-guarded routes and no frontend caller at all, so a tenant could
+ * neither author a cadence nor see who was in one. It carries its PARENT's key
+ * rather than one of its own, which is the opposite of the query-builder note
+ * above and deliberate for the opposite reason: `NurtureSequencesController`
+ * declares `crm:autonomy:view` and `crm:autonomy:manage` on every handler, and
+ * a key of its own would need a catalogue entry in both repos plus a backfill
+ * for every organisation that already exists.
+ */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "d7203df55a2adeaafbb1b81d91374a5203fa5c7386fb76718f61a82533512f03";
+  "e54bd47a5989e4b770dac26ad5e4a4aa12ecdec205aa63328c9842b0f7eed1a6";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

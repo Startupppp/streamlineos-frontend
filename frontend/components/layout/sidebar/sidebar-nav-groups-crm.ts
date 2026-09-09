@@ -152,6 +152,18 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Bot,
         href: "/crm/autonomy",
         requiredPermission: "crm:autonomy:view",
+        children: [
+          {
+            // The nurture engine's authoring surface. Same key as its parent
+            // because the controller declares the same one on every read —
+            // enrolling somebody schedules autonomous messages, which is what
+            // `crm:autonomy:manage` already governs, so no key of its own.
+            label: "Nurture sequences",
+            icon: RefreshCw,
+            href: "/crm/autonomy/nurture",
+            requiredPermission: "crm:autonomy:view",
+          },
+        ],
       },
       {
         // Gated on reading parties, not on importing: export is ungated by

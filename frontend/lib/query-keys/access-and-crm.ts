@@ -67,6 +67,29 @@ export const accessAndCrmQueryKeys = {
     autonomyHolds: () => [...base, "crm", "autonomy", "holds"] as const,
     autonomyColdOutbound: () => [...base, "crm", "autonomy", "cold-outbound"] as const,
     /**
+     * The prefix everything nurture extends, so one invalidation after a write
+     * reaches the list, the open cadence and its enrolments together. A step
+     * replacement changes `stepCount` on the list row and a delete exits every
+     * enrolment, so refreshing one of the three leaves the other two describing
+     * a sequence the server has moved past.
+     */
+    autonomyNurture: () => [...base, "crm", "autonomy", "nurture"] as const,
+    autonomyNurtureSequences: (params: Record<string, unknown>) =>
+      [...base, "crm", "autonomy", "nurture", "sequences", "list", params] as const,
+    autonomyNurtureSequence: (nurtureSequenceId: string) =>
+      [...base, "crm", "autonomy", "nurture", "sequences", nurtureSequenceId] as const,
+    autonomyNurtureEnrollments: (nurtureSequenceId: string, params: Record<string, unknown>) =>
+      [
+        ...base,
+        "crm",
+        "autonomy",
+        "nurture",
+        "sequences",
+        nurtureSequenceId,
+        "enrollments",
+        params,
+      ] as const,
+    /**
      * The prefix every issue key extends, so one invalidation reaches the list
      * and the open record together. A transition changes the stage on both, and
      * refreshing only one leaves the other showing a stage the ledger has moved
