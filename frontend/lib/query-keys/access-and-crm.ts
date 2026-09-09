@@ -54,6 +54,8 @@ export const accessAndCrmQueryKeys = {
       [...base, "crm", "activities", activityId, "participants"] as const,
     dealStageTransitions: (dealId: number) =>
       [...base, "crm", "deals", dealId, "transitions"] as const,
+    /** The prefix a new decision invalidates, whatever filters are on screen. */
+    autonomyDecisionsAll: () => [...base, "crm", "autonomy", "decisions"] as const,
     autonomyDecisions: (filters?: Record<string, unknown>) =>
       [...base, "crm", "autonomy", "decisions", filters] as const,
     autonomyDecision: (decisionId: string) =>

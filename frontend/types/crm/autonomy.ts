@@ -374,3 +374,49 @@ export interface RepairMeasure {
     oldestOpenAgeDays: number | null;
   };
 }
+
+/**
+ * The classes of autonomous outbound message, mirroring `OUTBOUND_CLASSES`.
+ *
+ * The class is never a caller's choice — `judgeOutbound` picks it — so this
+ * exists to read one back, not to send one.
+ */
+export const OUTBOUND_CLASSES = [
+  "follow_up",
+  "nudge",
+  "check_in",
+  "meeting_request",
+  "cold_outreach",
+] as const;
+export type OutboundClass = (typeof OUTBOUND_CLASSES)[number];
+
+/**
+ * What `POST /crm/autonomy/outbound` answers.
+ *
+ * The route is not "send a message" — it is "consider this customer", and its
+ * most common honest answer is a refusal with a reason. Modelled as a
+ * discriminated union on `held` because those two answers share no fields and a
+ * screen that treated a refusal as a failed request would report an outage
+ * every time the system correctly declined to write to somebody.
+ */
+export type ComposeOutboundOutcome =
+  | {
+      readonly held: false;
+      /** Where it stopped, so a refusal is distinguishable from an outage. */
+      readonly stage: "eligibility" | "draft" | "confidence";
+      readonly reason: string;
+    }
+  | {
+      readonly held: true;
+      readonly outboundMessageId: string;
+      readonly autonomyHoldId: string;
+      readonly decisionId: string;
+      readonly outboundClass: OutboundClass;
+      readonly holdUntil: string;
+      readonly windowSeconds: number;
+    };
+
+export interface ComposeOutboundInput {
+  readonly partyId: string;
+  readonly dealId?: string;
+}

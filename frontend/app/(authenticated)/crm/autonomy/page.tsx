@@ -13,6 +13,7 @@ import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard"
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
 import { ClassStopsPanel } from "@/features/crm/autonomy/class-stops-panel";
 import { AutoQuotePanel } from "@/features/crm/autonomy/auto-quote-panel";
+import { ConsiderOutboundPanel } from "@/features/crm/autonomy/consider-outbound-panel";
 
 /**
  * Oversight for a product that acts without asking.
@@ -40,6 +41,12 @@ export default function AutonomyReviewPage() {
         <div className="flex flex-col gap-gap-section">
           {/* First, because it is the only thing here that is time-critical. */}
           <PendingSendsPanel />
+          {/*
+            Directly under the countdown, because that is where anything it
+            starts appears. Renders nothing without the manage key, so a
+            reviewer sees no gap.
+          */}
+          <ConsiderOutboundPanel />
           {/* Directly under it: the same decision, after the window closed. */}
           <ClassStopsPanel />
           <AutonomyScoreboard />

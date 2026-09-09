@@ -7,6 +7,8 @@ import { usePermissionGate } from "@/hooks/api/access";
 import { gated, useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   AutonomySettings,
+  ComposeOutboundInput,
+  ComposeOutboundOutcome,
   DecisionFilters,
   DecisionPage,
   AutonomyRepairPage,
@@ -317,6 +319,46 @@ export function useCancelHold() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
+    },
+  });
+}
+
+/**
+ * `POST /crm/autonomy/outbound` — consider writing to a customer.
+ *
+ * A mutation rather than a query, and not because it writes a draft. It spends
+ * the tenant's AI credits and, when the judge agrees, holds a message that will
+ * go out on its own unless somebody stops it. Nothing about that may happen
+ * because a component re-rendered.
+ *
+ * The idempotency key is minted by the caller and travels in the variables, not
+ * built here. `@Idempotent` makes the header required, and the API client mints
+ * one per *fetch* — so a retried request would carry a new key, replay nothing,
+ * pay for a second draft and hold a second, differently worded message to the
+ * same person. One press of the button is one key; a deliberate second look an
+ * hour later is a new intent and gets a new one.
+ */
+export function useComposeOutbound() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["crm", "autonomy", "outbound", "compose"],
+    mutationFn: ({
+      intentKey,
+      ...input
+    }: ComposeOutboundInput & { intentKey: string }) =>
+      apiClient.post<ComposeOutboundOutcome>("/crm/autonomy/outbound", input, {
+        headers: { "Idempotency-Key": `outbound-compose:${intentKey}` },
+      }),
+    onSuccess: (outcome) => {
+      /*
+        A refusal changes the decision ledger and nothing else; a hold also puts
+        a countdown on the screen above this one. Invalidating the holds on a
+        refusal would refetch a list that cannot have changed.
+      */
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyDecisionsAll() });
+      if (outcome.held)
+        void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyHolds() });
     },
   });
 }
