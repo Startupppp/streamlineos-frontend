@@ -227,6 +227,11 @@ export interface CreateBudgetInput {
   status?: "ACTIVE" | "ARCHIVED";
 }
 
+/**
+ * One row per (project, currency), not per project. A project billed in two
+ * currencies arrives as two rows: the API will not sum across currencies, so
+ * `billableAmount` is always money in exactly the `currency` beside it.
+ */
 export interface BillingGroup {
   projectId: number | null;
   projectName: string;
