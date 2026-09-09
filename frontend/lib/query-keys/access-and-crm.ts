@@ -161,6 +161,8 @@ export const accessAndCrmQueryKeys = {
      */
     reportingDefinitionRun: (reportDefinitionId: string, overrides: unknown) =>
       [...base, "crm", "reporting", "definitions", reportDefinitionId, "run", overrides] as const,
+    /** Every timetable, and the prefix a change to one invalidates. */
+    reportingSchedules: () => [...base, "crm", "reporting", "schedules"] as const,
     /** The audit read: what has been run, and what statement was executed. */
     reportingRunsAll: () => [...base, "crm", "reporting", "runs"] as const,
     reportingRuns: (params: Record<string, unknown>) =>

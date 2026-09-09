@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
@@ -24,6 +23,7 @@ import {
 import { buildQueryDescription } from "./report-query-description";
 import { toBuilderValues } from "./report-builder-values";
 import { planReportRun, type ReportRunRequest } from "./report-run-mode";
+import { ReportBuilderActions } from "./report-builder-actions";
 import { ReportBuilderPanel } from "./report-builder-panel";
 import {
   ReportBuilderFormSkeleton,
@@ -33,6 +33,7 @@ import { ReportResultsPanel } from "./report-results-panel";
 import { ReportExplainDialog } from "./report-explain-dialog";
 import { SaveReportDialog } from "./save-report-dialog";
 import { SavedReportsSheet } from "./saved-reports-sheet";
+import { ScheduleReportSheet } from "./schedule-report-sheet";
 import type { SaveReportValues } from "./save-report-schema";
 import { sourceFieldOptions } from "./report-source-fields";
 import { useSaveReport } from "./use-save-report";
@@ -77,6 +78,7 @@ export function ReportBuilderPage() {
   const [request, setRequest] = useState<ReportRunRequest | null>(null);
   const [offset, setOffset] = useState(0);
   const [savedReportsOpen, setSavedReportsOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [explainOf, setExplainOf] = useState<ReportingQueryDescription | null>(null);
   const [pendingSave, setPendingSave] = useState<ReportBuilderValues | null>(null);
 
@@ -170,6 +172,10 @@ export function ReportBuilderPage() {
     setSavedReportsOpen(true);
   }
 
+  function handleOpenSchedule() {
+    setScheduleOpen(true);
+  }
+
   function handleSaveSubmit(values: SaveReportValues) {
     if (pendingSave) save(pendingSave, values);
   }
@@ -199,28 +205,13 @@ export function ReportBuilderPage() {
       backHref="/crm/reports"
       backLabel="Back to reports"
       actions={
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          {definitionId !== null ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none"
-              onClick={handleNewReport}
-            >
-              New report
-            </Button>
-          ) : null}
-          {canViewSaved ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none"
-              onClick={handleOpenSavedReports}
-            >
-              Saved reports
-            </Button>
-          ) : null}
-        </div>
+        <ReportBuilderActions
+          reportDefinitionId={definitionId}
+          canViewSaved={canViewSaved}
+          onNewReport={handleNewReport}
+          onOpenSchedule={handleOpenSchedule}
+          onOpenSavedReports={handleOpenSavedReports}
+        />
       }
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       contentClassName="flex min-h-0 flex-1 flex-col"
@@ -311,6 +302,15 @@ export function ReportBuilderPage() {
         isSubmitting={isSaving}
         onSubmit={handleSaveSubmit}
       />
+
+      {definitionId !== null ? (
+        <ScheduleReportSheet
+          open={scheduleOpen}
+          onOpenChange={setScheduleOpen}
+          reportDefinitionId={definitionId}
+          reportName={definition?.name ?? "This report"}
+        />
+      ) : null}
 
       <ReportExplainDialog
         open={explainOf !== null}

@@ -6,15 +6,18 @@ import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CreateReportDefinitionInput,
+  CreateReportScheduleInput,
   ReportDefinition,
   ReportDefinitionSummary,
   ReportRunLogEntry,
+  ReportSchedule,
   ReportingExplainResult,
   ReportingQueryDescription,
   ReportingRunResult,
   ReportingSource,
   RunReportDefinitionOverrides,
   UpdateReportDefinitionInput,
+  UpdateReportScheduleInput,
 } from "@/types/crm/reporting";
 
 /**
@@ -184,5 +187,69 @@ export function useDeleteReportDefinition() {
         queryKey: queryKeys.crm.reportingDefinitionsAll(),
       });
     },
+  });
+}
+
+/**
+ * The timetable a saved report runs on.
+ *
+ * Read behind `view` and authored behind `manage`, matching the controller.
+ * `run` is deliberately not required to author one: a schedule does not run
+ * anything when it is created, it names whose authority the unattended run will
+ * carry, and that person's `run` key is checked every time it fires.
+ */
+export function useReportSchedules() {
+  return useGatedQuery("crm:reporting:view", {
+    queryKey: queryKeys.crm.reportingSchedules(),
+    queryFn: () => apiClient.get<ReportSchedule[]>("/crm/reporting/schedules"),
+    staleTime: 60_000,
+  });
+}
+
+function useSchedulesInvalidate() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.crm.reportingSchedules() });
+  };
+}
+
+export function useCreateReportSchedule() {
+  const invalidate = useSchedulesInvalidate();
+
+  return useMutation({
+    mutationKey: ["crm", "reporting", "schedules", "create"],
+    mutationFn: (input: CreateReportScheduleInput) =>
+      apiClient.post<ReportSchedule>("/crm/reporting/schedules", input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateReportSchedule() {
+  const invalidate = useSchedulesInvalidate();
+
+  return useMutation({
+    mutationKey: ["crm", "reporting", "schedules", "update"],
+    mutationFn: ({
+      reportScheduleId,
+      ...input
+    }: UpdateReportScheduleInput & { reportScheduleId: string }) =>
+      apiClient.patch<ReportSchedule>(
+        `/crm/reporting/schedules/${reportScheduleId}`,
+        input,
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteReportSchedule() {
+  const invalidate = useSchedulesInvalidate();
+
+  return useMutation({
+    mutationKey: ["crm", "reporting", "schedules", "delete"],
+    mutationFn: ({ reportScheduleId }: { reportScheduleId: string }) =>
+      apiClient.delete<{ deleted: boolean }>(
+        `/crm/reporting/schedules/${reportScheduleId}`,
+      ),
+    onSuccess: invalidate,
   });
 }

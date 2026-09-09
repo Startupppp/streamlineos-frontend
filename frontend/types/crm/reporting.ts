@@ -235,3 +235,55 @@ export interface ReportingExplainResult {
   readonly parameterCount: number;
   readonly columns: readonly ReportingCompiledColumn[];
 }
+
+export const REPORT_CADENCES = ["daily", "weekly", "monthly"] as const;
+export type ReportCadence = (typeof REPORT_CADENCES)[number];
+
+/** 29-31 are refused, never clamped — see `report-schedule-cadence.ts`. */
+export const MAX_REPORT_DAY_OF_MONTH = 28;
+
+/**
+ * One row of `GET /crm/reporting/schedules`.
+ *
+ * `runAsUserId` is not decoration. A schedule has no requester when it fires,
+ * so it names one, and the unattended run carries that person's permissions and
+ * DataScope — which is why a schedule stops delivering when its owner's access
+ * to the source is withdrawn, and why `lastError` exists to say so.
+ */
+export interface ReportSchedule {
+  readonly reportScheduleId: string;
+  readonly organizationId: string;
+  readonly reportDefinitionId: string;
+  readonly cadence: ReportCadence;
+  readonly hourOfDay: number;
+  readonly dayOfWeek: number;
+  readonly dayOfMonth: number;
+  readonly runAsUserId: string;
+  readonly enabled: boolean;
+  readonly runCount: number;
+  readonly nextRunAt: string;
+  readonly lastRunAt: string | null;
+  readonly lastError: string | null;
+  readonly createdByUserId: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly recipients: readonly string[];
+}
+
+export interface CreateReportScheduleInput {
+  readonly reportDefinitionId: string;
+  readonly cadence: ReportCadence;
+  readonly hourOfDay: number;
+  readonly dayOfWeek?: number;
+  readonly dayOfMonth?: number;
+  readonly recipients: readonly string[];
+}
+
+export interface UpdateReportScheduleInput {
+  readonly cadence?: ReportCadence;
+  readonly hourOfDay?: number;
+  readonly dayOfWeek?: number;
+  readonly dayOfMonth?: number;
+  readonly enabled?: boolean;
+  readonly recipients?: readonly string[];
+}
