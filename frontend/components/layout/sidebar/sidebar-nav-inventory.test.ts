@@ -138,8 +138,20 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // for the READ key beside Valuation and Costing; raising and applying a voucher
 // re-gate on inventory:landed-cost:manage inside the page, because applying one
 // restates what inventory is worth and posts to the ledger.
+// Moved 2026-09-10 by the route census: "Allocation Overrides"
+// (/inventory/reports/allocation-overrides, on inventory:audit:read) —
+// `GET /inventory/traceability/allocation-overrides` is the only record that a
+// near-expiry or minimum-shelf-life policy was overruled on a specific lot, for
+// a named client, by a named person, with a stated reason, and it had no caller
+// in this repo. A control that runs and is never reviewed is a control in name
+// only, so the override log was being written for nobody. It sits beside Audit
+// Trail and asks for the same key: the register names individuals and the
+// judgements they made, which is the authority inventory:audit:read exists to
+// grant, and not something that should arrive with the ability to read a stock
+// summary. It is not gated on inventory:reports:read like its six siblings for
+// the same reason Audit Trail is not.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "799a565be249fe9688050a8737f041cf86d374dd2bb986450a3e6707d86c559d";
+  "d1b695c6eae79e63d35d7a34eb489680cc861613485df568fd1e79dda1796845";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

@@ -58,6 +58,8 @@ const REPORT_DESCRIPTIONS: Readonly<Record<string, string>> = {
   "/inventory/reports/expiry": "Lots approaching or past their expiry date",
   "/inventory/reports/throughput": "Receiving, picking and shipping against SLA",
   "/inventory/reports/audit-trail": "Who changed which inventory record, and when",
+  "/inventory/reports/allocation-overrides":
+    "Every time an expiry rule was set aside for a lot, and the reason given",
 };
 
 /**

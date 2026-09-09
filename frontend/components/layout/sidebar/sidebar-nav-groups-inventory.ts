@@ -1,4 +1,4 @@
-import { LayoutDashboard, ListChecks, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles, BookX, Ship } from "lucide-react";
+import { LayoutDashboard, ListChecks, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, ShieldAlert, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles, BookX, Ship } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -182,6 +182,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "Audit Trail",
             icon: History,
             href: "/inventory/reports/audit-trail",
+            requiredPermission: "inventory:audit:read",
+          },
+          {
+            label: "Allocation Overrides",
+            icon: ShieldAlert,
+            href: "/inventory/reports/allocation-overrides",
             requiredPermission: "inventory:audit:read",
           },
         ],

@@ -73,6 +73,7 @@ export const inventoryQueryKeys = {
     aiInsightsList: list("aiInsights"),
     webhookEventsList: list("webhookEvents"),
     auditEventsList: list("auditEvents"),
+    allocationOverridesList: list("allocationOverrides"),
 
     products: (params?: Record<string, unknown>) => k(...base, "inventory", "products", params),
     product: (productId: number) => k(...base, "inventory", "product", productId),
@@ -109,6 +110,8 @@ export const inventoryQueryKeys = {
     reorderReport: (params?: object) => k(...base, "inventory", "reorderReport", params),
     movementsReport: (params?: object) => k(...base, "inventory", "movementsReport", params),
     auditEvents: (params?: object) => k(...base, "inventory", "auditEvents", params),
+    allocationOverrides: (params?: object) =>
+      k(...base, "inventory", "allocationOverrides", params),
     lots: (params?: Record<string, unknown>) => k(...base, "inventory", "lots", params),
     lot: (lotId: number) => k(...base, "inventory", "lot", lotId),
     serials: (params?: Record<string, unknown>) => k(...base, "inventory", "serials", params),
