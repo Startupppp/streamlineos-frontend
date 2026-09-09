@@ -86,9 +86,16 @@ function TokenSkeleton() {
 interface TokenRowProps {
   token: AgentToken;
   onRevoke: (tokenId: string | number) => void;
+  /**
+   * CRM-P1-20. Revoking is `settings:api-tokens:write` on the server, while
+   * reading the list is `:read`. The button used to render for anyone who
+   * could see a token, so a reader was offered an action that answered 403 —
+   * the present-and-failing control this codebase avoids everywhere else.
+   */
+  canRevoke: boolean;
 }
 
-function TokenRow({ token, onRevoke }: TokenRowProps) {
+function TokenRow({ token, onRevoke, canRevoke }: TokenRowProps) {
   const state = tokenState(token);
   const handleRevoke = useCallback(() => onRevoke(token.id), [onRevoke, token.id]);
 
@@ -104,7 +111,7 @@ function TokenRow({ token, onRevoke }: TokenRowProps) {
         </div>
         <div className="flex flex-wrap gap-1">
           {token.scopes.map((scope) => (
-            <Badge key={scope} variant="secondary" className="text-[10px]">
+            <Badge key={scope} variant="secondary" className="text-micro">
               {scopeLabel(scope)}
             </Badge>
           ))}
@@ -115,7 +122,7 @@ function TokenRow({ token, onRevoke }: TokenRowProps) {
           <span>Expires {dateLabel(token.expiresAt)}</span>
         </div>
       </div>
-      {state === "active" ? (
+      {state === "active" && canRevoke ? (
         <Button
           type="button"
           variant="ghost"
@@ -232,6 +239,7 @@ export function CrmMcpSettings() {
                         key={String(token.id)}
                         token={token}
                         onRevoke={setRevokeId}
+                        canRevoke={canWriteTokens}
                       />
                     ))}
                   </div>
@@ -270,11 +278,11 @@ export function CrmMcpSettings() {
                   <div className="space-y-2">
                     {tools.map((tool) => (
                       <div key={tool.name} className="rounded-lg border border-border/70 p-3">
-                        <p className="font-mono text-[11px] font-medium">{tool.name}</p>
+                        <p className="font-mono text-dense font-medium">{tool.name}</p>
                         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                           {tool.description}
                         </p>
-                        <Badge variant="secondary" className="mt-2 text-[10px]">
+                        <Badge variant="secondary" className="mt-2 text-micro">
                           {tool.requiredPermission}
                         </Badge>
                       </div>
