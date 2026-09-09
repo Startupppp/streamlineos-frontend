@@ -35,6 +35,15 @@ interface ComboboxProps {
   disabled?: boolean;
   className?: string;
   onSearchChange?: (search: string) => void;
+  /**
+   * The trigger's accessible name.
+   *
+   * Without it the name is whatever text the trigger happens to show, which is
+   * the placeholder until something is chosen — so a table rendering one of
+   * these per row gives every row the identical name, and neither a screen
+   * reader nor a test can tell them apart.
+   */
+  ariaLabel?: string;
 }
 
 export function Combobox({
@@ -47,6 +56,7 @@ export function Combobox({
   disabled = false,
   className,
   onSearchChange,
+  ariaLabel,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -98,6 +108,7 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
           disabled={disabled}
           className={cn(
             FIELD_CONTROL_CLASS,
