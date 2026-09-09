@@ -27,6 +27,8 @@ import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { CampaignSheet } from "./campaign-sheet";
@@ -60,6 +62,7 @@ export function CampaignListPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [density, setDensity] = useDensity();
   const canManageCampaigns = useCan("crm:campaigns:manage");
+  const canViewReports = useCan("crm:reports:view");
 
   const { data, isLoading, isError, refetch } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -112,12 +115,26 @@ export function CampaignListPage() {
         </div>
       }
       actions={
-        canManageCampaigns ? (
-          <LoadingButton size="sm" onClick={handleOpenSheet}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Create campaign
-          </LoadingButton>
-        ) : undefined
+        <div className="flex items-center gap-gap-toolbar">
+          {/*
+            CRM-P1-01. The multi-touch report had no way in at all — the only
+            attribution on screen was first-touch and last-touch, the two models
+            that make the strongest claim about which single touch mattered.
+            Gated on the report key, so somebody who cannot read reports is not
+            offered a link that 403s.
+          */}
+          {canViewReports ? (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/crm/campaigns/attribution">Attribution</Link>
+            </Button>
+          ) : null}
+          {canManageCampaigns ? (
+            <LoadingButton size="sm" onClick={handleOpenSheet}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Create campaign
+            </LoadingButton>
+          ) : null}
+        </div>
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">

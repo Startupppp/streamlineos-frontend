@@ -35,6 +35,9 @@ export const growthAndSignQueryKeys = {
       [...base, "crmCampaigns", "roi", campaignId] as const,
     leads: (campaignId: number, params?: Record<string, unknown>) =>
       [...base, "crmCampaigns", "leads", campaignId, params] as const,
+    /** Half-life is part of the answer for time_decay, so it is part of the key. */
+    attributionByModel: (model: string, halfLifeDays: number) =>
+      [...base, "crmCampaigns", "attributionByModel", model, halfLifeDays] as const,
     attribution: (model: string) =>
       [...base, "crmCampaigns", "attribution", model] as const,
   },
