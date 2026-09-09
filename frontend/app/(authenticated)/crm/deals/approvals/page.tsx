@@ -125,7 +125,18 @@ export default function DealApprovalsPage() {
 
   const money = useOrgDisplay();
   const [density, setDensity] = useDensity();
-  const canApprove = useCan("crm:deals:approve");
+  /*
+    `crm:deals:update`, which is what `POST /deals/approvals` actually declares.
+    This gated on `crm:deals:approve` — a key that exists in the catalog and
+    guards no handler anywhere in the backend, so it got the audience exactly
+    backwards: granting it showed the buttons to somebody whose every click
+    would 403, while the people who can genuinely resolve an approval never saw
+    them at all. The handler additionally requires structural org-admin standing,
+    which no key expresses and the client cannot see, so a non-admin holding
+    update still gets a refusal — a narrower control than this can draw, but the
+    right direction: the guard is the boundary and hiding a control is only UX.
+  */
+  const canApprove = useCan("crm:deals:update");
 
   const [decision, setDecision] = useState<PendingDecision | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");

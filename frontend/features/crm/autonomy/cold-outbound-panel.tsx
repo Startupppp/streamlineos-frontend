@@ -74,6 +74,14 @@ export function ColdOutboundPanel() {
 
   const cold = data?.domains.find((d) => d.purpose === "cold") ?? null;
   const ready = Boolean(cold?.verifiedAt && cold.warmupStartedAt);
+  /*
+    A failed read is not an empty configuration. Without this the panel falls
+    through to the "Add domain" form — because `data` is undefined, so `cold` is
+    null — and invites a tenant to register a second domain beside one that may
+    already exist, which is the exact "nothing is configured" reading the alert
+    above exists to prevent.
+  */
+  const unknown = isError || !data;
 
   const handleRegister = () => {
     register.mutate(
@@ -145,7 +153,7 @@ export function ColdOutboundPanel() {
           </div>
         ) : null}
 
-        {cold ? (
+        {unknown ? null : cold ? (
           <ColdDomainRow
             domain={cold}
             onVerify={() => verify.mutate(cold.sendingDomainId)}
@@ -192,6 +200,7 @@ export function ColdOutboundPanel() {
           </div>
         )}
 
+        {unknown ? null : (
         <div className="flex flex-wrap items-center justify-between gap-gap-field border-t border-border pt-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">
@@ -226,6 +235,7 @@ export function ColdOutboundPanel() {
             </p>
           ) : null}
         </div>
+        )}
       </CardContent>
     </Card>
   );
