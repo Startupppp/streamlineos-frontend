@@ -55,7 +55,7 @@ describe("CRM MCP scope groups stay in step with the backend tool catalogue", ()
   });
 
   it("can issue a token for every tool the server exposes", () => {
-    const offered = new Set(CRM_MCP_SCOPE_GROUPS.flatMap((group) => [...group.scopes]));
+    const offered = new Set<string>(CRM_MCP_SCOPE_GROUPS.flatMap((group) => [...group.scopes]));
     const unreachable = [...backendKeys].filter((key) => !offered.has(key));
     expect(unreachable).toEqual([]);
   });

@@ -18,7 +18,7 @@ jest.mock("@/hooks/api/access", () => ({ useCan: () => mockCan() }));
 const repair = (over: Partial<AutonomyRepair> = {}): AutonomyRepair => ({
   autonomyRepairId: "r-1",
   autonomousDecisionId: "d-1",
-  repairClass: "phone_format",
+  repairClass: "phone.non-ascii-characters",
   findingId: null,
   partyId: "p-1",
   partyName: "Acme Ltd",

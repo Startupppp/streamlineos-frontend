@@ -6,6 +6,7 @@ import {
   homeSectionModule,
   homeSectionPermission,
 } from "../home-sections";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 import { backendPath } from "@/lib/test-support/backend-path";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
@@ -76,7 +77,7 @@ describe("Home section access metadata", () => {
 
   it("uses only permission keys that exist in the catalog", () => {
     const ghosts = HOME_SECTIONS.map((section) => homeSectionPermission(section.id))
-      .filter((key): key is string => key !== null)
+      .filter((key): key is PermissionKey => key !== null)
       .filter((key) => !catalog.has(key));
     expect(ghosts).toEqual([]);
   });

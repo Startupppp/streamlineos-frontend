@@ -3,11 +3,18 @@ import { canManageOrganizationMembership } from "./access";
 
 jest.mock("@/lib/api-client", () => ({ apiClient: {} }));
 
+/**
+ * `scopes`, not `permissions`. The fixture used to carry a `permissions` array,
+ * which `AccessResponse` has never had and `canManageOrganizationMembership`
+ * therefore could not read — so the "does not infer authority" case below put
+ * its permission somewhere nothing looks, and passed for that reason rather
+ * than because the capability is structural. Held on the real surface it bites.
+ */
 function accessResponse(
   overrides: Partial<AccessResponse> = {},
 ): AccessResponse {
   return {
-    permissions: [],
+    scopes: {},
     isOrgOwner: false,
     canManageOrganizationMembership: false,
     modules: {},
@@ -28,7 +35,7 @@ describe("organization membership capability", () => {
     expect(
       canManageOrganizationMembership(
         accessResponse({
-          permissions: ["settings:organization:manage"],
+          scopes: { "settings:organization:manage": "all" },
           canManageOrganizationMembership: false,
         }),
       ),

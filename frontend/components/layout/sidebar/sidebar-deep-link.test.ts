@@ -23,7 +23,7 @@ const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets"];
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
 function groupsShownFor(product: ProductKey): NavGroup[] {
-  return getNavGroupsForProduct(product, "OWNER", [], EVERY_MODULE);
+  return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
 }
 
 function leavesOf(group: NavGroup): NavRoute[] {

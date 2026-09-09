@@ -54,11 +54,11 @@ jest.mock("@/components/ui/tabs", () => {
   type OnChange = (value: string) => void;
   const Ctx = createContext<OnChange>(() => {});
   return {
-    Tabs: ({ children, onValueChange }: { children: unknown; onValueChange?: OnChange }) =>
+    Tabs: ({ children, onValueChange }: { children: ReactNode; onValueChange?: OnChange }) =>
       createElement(Ctx.Provider, { value: onValueChange ?? (() => {}) }, children),
-    TabsList: ({ children }: { children: unknown }) =>
+    TabsList: ({ children }: { children: ReactNode }) =>
       createElement("div", { role: "tablist" }, children),
-    TabsTrigger: ({ children, value }: { children: unknown; value: string }) => {
+    TabsTrigger: ({ children, value }: { children: ReactNode; value: string }) => {
       const onChange = useContext(Ctx);
       return createElement("button", { type: "button", role: "tab", onClick: () => onChange(value) }, children);
     },
