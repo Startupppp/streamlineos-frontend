@@ -135,6 +135,34 @@ export const accessAndCrmQueryKeys = {
      */
     reportingRun: (description: unknown) =>
       [...base, "crm", "reporting", "run", description] as const,
+    /**
+     * The compiled statement for a description, never the run. Its own key
+     * because it answers a different question about the same input and shares
+     * nothing with the result — one key for both would serve a run result to a
+     * caller that asked what the SQL was.
+     */
+    reportingExplain: (description: unknown) =>
+      [...base, "crm", "reporting", "explain", description] as const,
+    /**
+     * The prefix a save, edit or delete invalidates — the list, every page of
+     * it, and every opened definition sit underneath it.
+     */
+    reportingDefinitionsAll: () => [...base, "crm", "reporting", "definitions"] as const,
+    reportingDefinitions: (params: Record<string, unknown>) =>
+      [...base, "crm", "reporting", "definitions", "list", params] as const,
+    reportingDefinition: (reportDefinitionId: string) =>
+      [...base, "crm", "reporting", "definitions", "detail", reportDefinitionId] as const,
+    /**
+     * A saved report's own run, keyed by id and overrides rather than by the
+     * description — the same description run through the saved route is a
+     * different act, because the audit row it writes names the definition.
+     */
+    reportingDefinitionRun: (reportDefinitionId: string, overrides: unknown) =>
+      [...base, "crm", "reporting", "definitions", reportDefinitionId, "run", overrides] as const,
+    /** The audit read: what has been run, and what statement was executed. */
+    reportingRunsAll: () => [...base, "crm", "reporting", "runs"] as const,
+    reportingRuns: (params: Record<string, unknown>) =>
+      [...base, "crm", "reporting", "runs", "list", params] as const,
   },
 
   crmSettings: {

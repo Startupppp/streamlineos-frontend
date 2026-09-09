@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FileDown, Sparkles } from "lucide-react";
+import { FileDown, History, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -36,6 +36,12 @@ import { ReportsError } from "@/features/crm/reports/components/reports-error";
 export default function CrmReportsPage() {
   const [period, setPeriod] = useState<Period>("month");
   const canBuildReports = useCan("crm:reporting:run");
+  /*
+    The audit read is its own key. An auditor holds `view` and not `run`, so the
+    way into the run log must not be gated on the ability to run reports — that
+    is the whole reason the controller separates the two.
+  */
+  const canReviewRuns = useCan("crm:reporting:view");
 
   const dateRange = useMemo(() => periodToDateRange(period), [period]);
 
@@ -99,6 +105,14 @@ export default function CrmReportsPage() {
             <FileDown className="h-3.5 w-3.5 mr-1.5" />
             Export
           </Button>
+          {canReviewRuns ? (
+            <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none">
+              <Link href="/crm/reports/activity">
+                <History className="h-3.5 w-3.5 mr-1.5" />
+                Activity
+              </Link>
+            </Button>
+          ) : null}
           {canBuildReports ? (
             <Button size="sm" asChild className="flex-1 sm:flex-none">
               <Link href="/crm/reports/builder">

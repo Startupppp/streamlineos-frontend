@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import type { ReportingSource } from "@/types/crm/reporting";
@@ -24,7 +25,12 @@ interface ReportBuilderFormProps {
   form: UseFormReturn<ReportBuilderValues>;
   sources: readonly ReportingSource[];
   isRunning: boolean;
+  /** Saving and explaining are separate keys from running; the page resolves them. */
+  canSave: boolean;
+  canExplain: boolean;
   onSubmit: (values: ReportBuilderValues) => void;
+  onSave: (values: ReportBuilderValues) => void;
+  onExplain: (values: ReportBuilderValues) => void;
   onSourceChange: (sourceKey: string) => void;
 }
 
@@ -32,13 +38,25 @@ export function ReportBuilderForm({
   form,
   sources,
   isRunning,
+  canSave,
+  canExplain,
   onSubmit,
+  onSave,
+  onExplain,
   onSourceChange,
 }: ReportBuilderFormProps) {
   const sourceKey = form.watch("source");
   const source = sources.find((entry) => entry.key === sourceKey);
   const options = sourceFieldOptions(source);
   const handleSubmit = form.handleSubmit(onSubmit);
+  /*
+    Both secondary actions run the same validation the submit does. Offering to
+    save a description the compiler would refuse only moves the refusal to the
+    server, and offering to explain one produces a 400 where the point of the
+    button is to show a statement.
+  */
+  const handleSave = form.handleSubmit(onSave);
+  const handleExplain = form.handleSubmit(onExplain);
 
   return (
     <Form {...form}>
@@ -82,15 +100,32 @@ export function ReportBuilderForm({
           ) : null}
         </div>
 
-        <LoadingButton
-          type="submit"
-          className="w-full shrink-0"
-          isPending={isRunning}
-          loadingText="Running…"
-          disabled={!source}
-        >
-          Run report
-        </LoadingButton>
+        <div className="flex shrink-0 flex-col gap-2">
+          <LoadingButton
+            type="submit"
+            className="w-full"
+            isPending={isRunning}
+            loadingText="Running…"
+            disabled={!source}
+          >
+            Run report
+          </LoadingButton>
+
+          {source && (canSave || canExplain) ? (
+            <div className="flex items-center gap-2">
+              {canSave ? (
+                <Button type="button" variant="outline" size="sm" className="flex-1" onClick={handleSave}>
+                  Save report
+                </Button>
+              ) : null}
+              {canExplain ? (
+                <Button type="button" variant="outline" size="sm" className="flex-1" onClick={handleExplain}>
+                  Show SQL
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </form>
     </Form>
   );

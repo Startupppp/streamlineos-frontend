@@ -144,3 +144,94 @@ export interface ReportingRunResult {
   /** The page came back full, so there may be more behind it. */
   readonly truncated: boolean;
 }
+
+/**
+ * One row of `GET /crm/reporting/definitions` — the saved-report list.
+ *
+ * The stored description is deliberately absent: the list screen never needs
+ * it, and it is the largest field on the row.
+ */
+export interface ReportDefinitionSummary {
+  readonly reportDefinitionId: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly sourceKey: string;
+  readonly createdByUserId: string | null;
+  /** Projected from `users.name` by a LEFT JOIN; null for a deleted author. */
+  readonly createdByName: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+/**
+ * `GET /crm/reporting/definitions/:reportDefinitionId`, which returns the whole
+ * stored row.
+ *
+ * Deliberately not an extension of the summary: the list projects an author
+ * name through a join and the row read does not, so inheriting would claim a
+ * field the detail response has never carried.
+ */
+export interface ReportDefinition {
+  readonly reportDefinitionId: string;
+  readonly organizationId: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly sourceKey: string;
+  readonly queryDescription: ReportingQueryDescription;
+  readonly createdByUserId: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface CreateReportDefinitionInput {
+  readonly name: string;
+  readonly description?: string;
+  readonly query: ReportingQueryDescription;
+}
+
+/**
+ * `description: null` clears it, `undefined` leaves it alone — the update
+ * schema is `.nullable().optional()` and the two mean different things.
+ */
+export interface UpdateReportDefinitionInput {
+  readonly name?: string;
+  readonly description?: string | null;
+  readonly query?: ReportingQueryDescription;
+}
+
+/** Overrides accepted by `POST definitions/:reportDefinitionId/run`. */
+export interface RunReportDefinitionOverrides {
+  readonly limit?: number;
+  readonly offset?: number;
+}
+
+/**
+ * One row of `GET /crm/reporting/runs`.
+ *
+ * `compiledSql` carries placeholders and no literals, which is what makes this
+ * readable by somebody holding only `crm:reporting:view` — the audit read is
+ * separable from a view of the data precisely because the statement is
+ * content-free.
+ */
+export interface ReportRunLogEntry {
+  readonly reportRunId: string;
+  readonly reportDefinitionId: string | null;
+  readonly sourceKey: string;
+  readonly compiledSql: string;
+  readonly parameterCount: number;
+  readonly rowCount: number | null;
+  readonly durationMs: number | null;
+  readonly ranByUserId: string | null;
+  /** Projected from `users.name`, so the log names a person and not an id. */
+  readonly ranByName: string | null;
+  readonly createdAt: string;
+}
+
+/** `POST /crm/reporting/explain` — what would run, without running it. */
+export interface ReportingExplainResult {
+  readonly source: string;
+  readonly sql: string;
+  /** The count, never the values. The server refuses to echo the parameters. */
+  readonly parameterCount: number;
+  readonly columns: readonly ReportingCompiledColumn[];
+}
