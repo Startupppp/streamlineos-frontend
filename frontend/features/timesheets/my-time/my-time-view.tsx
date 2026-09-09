@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
+import { missingOnSubmit } from "@/features/timesheets/settings/required-fields";
+import { IncompleteEntriesNotice } from "./incomplete-entries-notice";
 import { resolveWeekStart, useWeek } from "./use-week";
 import { TimerPanel } from "./timer-panel";
 import { WeekGrid } from "./week-grid";
@@ -55,9 +57,30 @@ export function MyTimeView() {
     return label;
   }, [weekStart, weekEnd, totalHours]);
 
+  /*
+   * The same rule `periods.service.ts#submitPeriod` applies, run before the
+   * button rather than after it. The server refuses the whole period naming a
+   * row id — "Entry 4211 is missing a required description" — which is a
+   * number that appears on no screen, so the refusal arrived with nowhere to go.
+   *
+   * Scoped by `timesheetPeriodId` exactly as the server scopes it, over the
+   * entries this week has loaded. Anything in the period but outside the week
+   * on screen is still the server's to catch; this only ever removes surprises,
+   * never adds one.
+   */
+  const incomplete = useMemo(() => {
+    const required = settings?.requiredFields ?? [];
+    if (!period || required.length === 0) return [];
+    return entries
+      .filter((entry) => entry.timesheetPeriodId === period.id && !entry.voidedAt)
+      .map((entry) => ({ entry, missing: missingOnSubmit(required, entry) }))
+      .filter((row) => row.missing.length > 0);
+  }, [entries, period, settings]);
+
   const canSubmit =
     isCurrentWeek &&
     !!period &&
+    incomplete.length === 0 &&
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
   const canRecall = isCurrentWeek && period?.status === "SUBMITTED";
 
@@ -177,6 +200,8 @@ export function MyTimeView() {
             compact
           />
         )}
+
+        {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
 
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
           <div role="alert" className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
