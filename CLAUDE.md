@@ -84,7 +84,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
 - **Named event handlers only.** **Single-statement `if`/`for` bodies omit braces.**
-- **No comments in code.** Delete stray comments, commented-out code, `console.log`s. If something genuinely needs explaining, **at most one** comment — otherwise remove it.
+- **No comments in code.** Delete stray comments, commented-out code, `console.log`s. If something genuinely needs explaining, use **at most one single-line comment** — otherwise remove it.
 - Mentally test: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 
 ## 7. Structure & Naming (both repos)
