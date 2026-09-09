@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
@@ -19,10 +19,17 @@ const recipientSchema = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(80, "Name must be at most 80 characters")
     .regex(PERSON_NAME_REGEX, "Enter a valid name (letters, spaces, and ' . - only)"),
+  /**
+   * Required for every recipient type, in-person hosts included (SIGN-P2-01).
+   * An emailless recipient is never invited and blocks the envelope forever,
+   * so the server refuses one — this catches it in the form rather than as a
+   * 400 after the sheet closes.
+   */
   email: z
     .string()
     .trim()
-    .refine((v) => v === "" || z.string().email().safeParse(v).success, "Enter a valid email"),
+    .min(1, "Email is required")
+    .refine((v) => z.string().email().safeParse(v).success, "Enter a valid email"),
   roleName: z
     .string()
     .trim()
@@ -51,7 +58,7 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
     try {
       await addRecipient.mutateAsync({
         name: values.name,
-        email: values.email || undefined,
+        email: values.email,
         roleName: values.roleName,
         recipientType: values.recipientType as SignRecipientType,
         routingOrder: values.routingOrder,
@@ -149,6 +156,20 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
                     <SelectItem value="internal_reviewer">Internal reviewer</SelectItem>
                   </SelectContent>
                 </Select>
+                {field.value === "in_person_host" && (
+                  /**
+                   * SIGN-P2-01. The dropdown used to offer an in-person
+                   * ceremony the product does not have — there is no host-led
+                   * session anywhere, and the recipient was exempt from
+                   * needing an email, so they were never invited and the
+                   * envelope waited on them forever. The type is a label; say
+                   * so where the choice is made, not in a support ticket.
+                   */
+                  <FormDescription>
+                    A label for your records. They sign through an emailed link like any
+                    other signer — there is no separate in-person session.
+                  </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}
