@@ -184,10 +184,10 @@ export function useUpdatePackageLines() {
 
 export function useClosePackage() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, { packageId: number; cartonTypeId?: number }>({
+  return useIdempotentMutation<Package, Error, { packageId: number; cartonTypeId?: number }>({
     mutationKey: ["inventory", "package", "close"],
-    mutationFn: ({ packageId, ...body }) =>
-      apiClient.post<Package>(`/inventory/packages/${packageId}/close`, body),
+    mutationFn: ({ packageId, ...body }, idempotencyKey) =>
+      apiClient.post<Package>(`/inventory/packages/${packageId}/close`, body, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
@@ -199,10 +199,10 @@ export function useClosePackage() {
 
 export function useReopenPackage() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, number>({
+  return useIdempotentMutation<Package, Error, number>({
     mutationKey: ["inventory", "package", "reopen"],
-    mutationFn: (packageId) =>
-      apiClient.post<Package>(`/inventory/packages/${packageId}/reopen`, {}),
+    mutationFn: (packageId, idempotencyKey) =>
+      apiClient.post<Package>(`/inventory/packages/${packageId}/reopen`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, packageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
@@ -285,10 +285,10 @@ export function useUpdateShipment() {
 
 export function useShipShipment() {
   const qc = useQueryClient();
-  return useMutation<Shipment, Error, number>({
+  return useIdempotentMutation<Shipment, Error, number>({
     mutationKey: ["inventory", "shipment", "ship"],
-    mutationFn: (shipmentId) =>
-      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}),
+    mutationFn: (shipmentId, idempotencyKey) =>
+      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
@@ -396,10 +396,10 @@ export function useRefreshShipmentTracking() {
 
 export function useCancelShipment() {
   const qc = useQueryClient();
-  return useMutation<Shipment, Error, number>({
+  return useIdempotentMutation<Shipment, Error, number>({
     mutationKey: ["inventory", "shipment", "cancel"],
-    mutationFn: (shipmentId) =>
-      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}),
+    mutationFn: (shipmentId, idempotencyKey) =>
+      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
@@ -454,10 +454,10 @@ export function useCreateLoad() {
 
 export function useDispatchLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useIdempotentMutation<Load, Error, number>({
     mutationKey: ["inventory", "load", "dispatch"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}),
+    mutationFn: (loadId, idempotencyKey) =>
+      apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
@@ -467,10 +467,10 @@ export function useDispatchLoad() {
 
 export function useCloseLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useIdempotentMutation<Load, Error, number>({
     mutationKey: ["inventory", "load", "close"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}),
+    mutationFn: (loadId, idempotencyKey) =>
+      apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
@@ -480,10 +480,10 @@ export function useCloseLoad() {
 
 export function useCancelLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useIdempotentMutation<Load, Error, number>({
     mutationKey: ["inventory", "load", "cancel"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}),
+    mutationFn: (loadId, idempotencyKey) =>
+      apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });

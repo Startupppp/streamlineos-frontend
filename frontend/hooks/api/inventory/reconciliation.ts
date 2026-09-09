@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -73,15 +74,13 @@ export function useReconciliationReport(params?: ReconciliationParams) {
 
 export function useRepairProjection() {
   const queryClient = useQueryClient();
-  return useMutation<RepairResult, Error, { reason: string; warehouseId?: number; productVariantId?: number }>({
+  return useIdempotentMutation<RepairResult, Error, { reason: string; warehouseId?: number; productVariantId?: number }>({
     mutationKey: ["inventory", "reconciliation", "repair"],
-    mutationFn: (input) =>
+    mutationFn: (input, idempotencyKey) =>
       apiClient.post<RepairResult>(
         "/inventory/stock/reconciliation/repair",
         { apply: true, ...input },
-        // The command is retry-safe on the server; the key `apiClient` mints is
-        // what makes a retried request replay its first result instead of
-        // reporting a second set of changed rows.
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -93,9 +94,9 @@ export function useHandlingUnit(handlingUnitId: number | null) {
 
 export function useCreateHandlingUnit() {
   const qc = useQueryClient();
-  return useMutation<HandlingUnitDetail, Error, CreateHandlingUnitInput>({
+  return useIdempotentMutation<HandlingUnitDetail, Error, CreateHandlingUnitInput>({
     mutationKey: ["inventory", "handling-unit", "create"],
-    mutationFn: (data) => apiClient.post<HandlingUnitDetail>("/inventory/handling-units", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<HandlingUnitDetail>("/inventory/handling-units", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnitsList });
     },
@@ -104,10 +105,10 @@ export function useCreateHandlingUnit() {
 
 export function useMoveHandlingUnit() {
   const qc = useQueryClient();
-  return useMutation<HandlingUnitDetail, Error, MoveHandlingUnitInput>({
+  return useIdempotentMutation<HandlingUnitDetail, Error, MoveHandlingUnitInput>({
     mutationKey: ["inventory", "handling-unit", "move"],
-    mutationFn: ({ handlingUnitId, ...data }) =>
-      apiClient.post<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}/move`, data),
+    mutationFn: ({ handlingUnitId, ...data }, idempotencyKey) =>
+      apiClient.post<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}/move`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnitsList });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnit(vars.handlingUnitId) });

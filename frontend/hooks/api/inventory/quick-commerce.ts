@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -145,10 +145,10 @@ export function usePlatformPurchaseOrder(platformPoId: number | null) {
 
 export function useIngestPlatformPo() {
   const qc = useQueryClient();
-  return useMutation<PlatformPoDetail, Error, IngestPlatformPoInput>({
+  return useIdempotentMutation<PlatformPoDetail, Error, IngestPlatformPoInput>({
     mutationKey: ["inventory", "quick-commerce", "ingest"],
-    mutationFn: (data) =>
-      apiClient.post<PlatformPoDetail>("/inventory/quick-commerce/purchase-orders/ingest", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<PlatformPoDetail>("/inventory/quick-commerce/purchase-orders/ingest", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.platformPurchaseOrdersList });
     },
@@ -157,12 +157,12 @@ export function useIngestPlatformPo() {
 
 export function useAcceptPlatformPo() {
   const qc = useQueryClient();
-  return useMutation<PlatformPoDetail, Error, AcceptPlatformPoInput>({
+  return useIdempotentMutation<PlatformPoDetail, Error, AcceptPlatformPoInput>({
     mutationKey: ["inventory", "quick-commerce", "accept"],
-    mutationFn: ({ platformPoId, ...data }) =>
+    mutationFn: ({ platformPoId, ...data }, idempotencyKey) =>
       apiClient.post<PlatformPoDetail>(
         `/inventory/quick-commerce/purchase-orders/${platformPoId}/accept`,
-        data,
+        data, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.platformPurchaseOrdersList });

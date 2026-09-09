@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -116,12 +117,12 @@ interface ScanIntoPackageVariables {
  */
 export function useScanIntoPackage() {
   const qc = useQueryClient();
-  return useMutation<PackingReconciliation, Error, ScanIntoPackageVariables>({
+  return useIdempotentMutation<PackingReconciliation, Error, ScanIntoPackageVariables>({
     mutationKey: ["inventory", "package", "scan"],
-    mutationFn: ({ packageId, ...body }) =>
+    mutationFn: ({ packageId, ...body }, idempotencyKey) =>
       apiClient.post<PackingReconciliation>(
         `/inventory/packages/${packageId}/scan`,
-        body,
+        body, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (data, variables) => {
       qc.setQueryData(queryKeys.packing.reconciliation(variables.packageId), data);

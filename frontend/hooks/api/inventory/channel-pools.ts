@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -93,12 +94,12 @@ export function useChannelPools(channelId: number | null) {
 
 export function useAllocateChannelPool() {
   const qc = useQueryClient();
-  return useMutation<ChannelPool, Error, AllocateChannelPoolInput>({
+  return useIdempotentMutation<ChannelPool, Error, AllocateChannelPoolInput>({
     mutationKey: ["inventory", "channel-pool", "allocate"],
     // `apiClient` mints the `Idempotency-Key` for every mutating request, and the
     // server refuses this command without one — a retried allocation must not be
     // able to claim the units a second time.
-    mutationFn: (data) => apiClient.post<ChannelPool>("/inventory/channels/pools/allocate", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post<ChannelPool>("/inventory/channels/pools/allocate", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPools(vars.channelId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPoolsAll });

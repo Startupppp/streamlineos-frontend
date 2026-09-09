@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -118,7 +119,7 @@ export function usePickExceptions(
  */
 export function useResolvePickException() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     {
       pickLineId: number;
       status: PickExceptionStatus;
@@ -135,11 +136,11 @@ export function useResolvePickException() {
     }
   >({
     mutationKey: ["inventory", "picking", "resolveException"],
-    mutationFn: ({ pickLineId, resolution, notes }) =>
+    mutationFn: ({ pickLineId, resolution, notes }, idempotencyKey) =>
       apiClient.post(`/inventory/picking/exceptions/${pickLineId}/resolve`, {
         resolution,
         notes,
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.exceptionsList });
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
@@ -150,14 +151,14 @@ export function useResolvePickException() {
 
 export function useAssignPickException() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     { pickLineId: number; ownerUserId: string },
     Error,
     { pickLineId: number; pickListId: number; ownerUserId: string }
   >({
     mutationKey: ["inventory", "picking", "assignException"],
-    mutationFn: ({ pickLineId, ownerUserId }) =>
-      apiClient.post(`/inventory/picking/exceptions/${pickLineId}/assign`, { ownerUserId }),
+    mutationFn: ({ pickLineId, ownerUserId }, idempotencyKey) =>
+      apiClient.post(`/inventory/picking/exceptions/${pickLineId}/assign`, { ownerUserId }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.exceptionsList });
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });

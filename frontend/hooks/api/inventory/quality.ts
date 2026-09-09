@@ -292,10 +292,10 @@ export function useCreateInspection() {
 
 export function useStartInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useIdempotentMutation<Inspection, Error, number>({
     mutationKey: ["inventory", "quality", "inspection", "start"],
-    mutationFn: (inspectionId) =>
-      apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/start`),
+    mutationFn: (inspectionId, idempotencyKey) =>
+      apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/start`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
@@ -305,12 +305,12 @@ export function useStartInspection() {
 
 export function usePassInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useIdempotentMutation<Inspection, Error, number>({
     mutationKey: ["inventory", "quality", "inspection", "pass"],
-    mutationFn: (inspectionId) =>
+    mutationFn: (inspectionId, idempotencyKey) =>
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/pass`,
-        undefined,
+        undefined, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
@@ -323,7 +323,7 @@ export function usePassInspection() {
 
 export function useFailInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Inspection,
     Error,
     {
@@ -332,8 +332,8 @@ export function useFailInspection() {
     }
   >({
     mutationKey: ["inventory", "quality", "inspection", "fail"],
-    mutationFn: ({ inspectionId, lines }) =>
-      apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/fail`, { lines }),
+    mutationFn: ({ inspectionId, lines }, idempotencyKey) =>
+      apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/fail`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(vars.inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
@@ -345,16 +345,16 @@ export function useFailInspection() {
 
 export function useDisposeInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     Inspection,
     Error,
     { inspectionId: number; lineId?: number }
   >({
     mutationKey: ["inventory", "quality", "inspection", "dispose"],
-    mutationFn: ({ inspectionId, lineId }) =>
+    mutationFn: ({ inspectionId, lineId }, idempotencyKey) =>
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/dispose`,
-        lineId !== undefined ? { lineId } : {},
+        lineId !== undefined ? { lineId } : {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(vars.inspectionId) });
@@ -372,12 +372,12 @@ export function useDisposeInspection() {
  */
 export function useCancelInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useIdempotentMutation<Inspection, Error, number>({
     mutationKey: ["inventory", "quality", "inspection", "cancel"],
-    mutationFn: (inspectionId) =>
+    mutationFn: (inspectionId, idempotencyKey) =>
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/cancel`,
-        undefined,
+        undefined, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
@@ -394,12 +394,12 @@ export function useCancelInspection() {
  */
 export function useCorrectInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, { inspectionId: number; reason: string }>({
+  return useIdempotentMutation<Inspection, Error, { inspectionId: number; reason: string }>({
     mutationKey: ["inventory", "quality", "inspection", "correct"],
-    mutationFn: ({ inspectionId, reason }) =>
+    mutationFn: ({ inspectionId, reason }, idempotencyKey) =>
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/correct`,
-        { reason },
+        { reason }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
@@ -444,16 +444,16 @@ export function useQualityHold(holdId: number) {
 
 export function useCreateQualityHold() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     QualityHold,
     Error,
     { productVariantId: number; locationId: number; lotId?: number; serialId?: number; quantity: number; reason: string }
   >({
     mutationKey: ["inventory", "quality", "hold", "create"],
-    mutationFn: ({ quantity, ...rest }) =>
+    mutationFn: ({ quantity, ...rest }, idempotencyKey) =>
       apiClient.post<QualityHold>(
         "/inventory/quality/holds",
-        { ...rest, quantity: String(quantity) },
+        { ...rest, quantity: String(quantity) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHolds() });
@@ -465,12 +465,12 @@ export function useCreateQualityHold() {
 
 export function useReleaseQualityHold() {
   const qc = useQueryClient();
-  return useMutation<QualityHold, Error, number>({
+  return useIdempotentMutation<QualityHold, Error, number>({
     mutationKey: ["inventory", "quality", "hold", "release"],
-    mutationFn: (holdId) =>
+    mutationFn: (holdId, idempotencyKey) =>
       apiClient.post<QualityHold>(
         `/inventory/quality/holds/${holdId}/release`,
-        undefined,
+        undefined, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, holdId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHold(holdId) });

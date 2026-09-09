@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -90,9 +91,9 @@ export function usePurchaseOrder(poId: number) {
 
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
+  return useIdempotentMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
     mutationKey: ["inventory", "purchase-orders", "create"],
-    mutationFn: (data) => {
+    mutationFn: (data, idempotencyKey) => {
       const body: CreatePoWire = {
         vendorId: data.vendorId,
         orderDate: data.orderDate,
@@ -108,7 +109,7 @@ export function useCreatePurchaseOrder() {
           lineOrder: line.lineOrder ?? 0,
         })),
       };
-      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body);
+      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body, { headers: { "Idempotency-Key": idempotencyKey } });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -118,12 +119,12 @@ export function useCreatePurchaseOrder() {
 
 export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
+  return useIdempotentMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
     mutationKey: ["inventory", "purchase-orders", "send", poId],
-    mutationFn: (vars) => {
+    mutationFn: (vars, idempotencyKey) => {
       const id = poId ?? vars?.poId;
       if (!id) throw new Error("Purchase order id is required");
-      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {});
+      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {}, { headers: { "Idempotency-Key": idempotencyKey } });
     },
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -141,10 +142,10 @@ export function useSendPurchaseOrder(poId?: number) {
  */
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
+  return useIdempotentMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
-    mutationFn: (data) =>
-      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
@@ -162,12 +163,12 @@ interface CancelPurchaseOrderInput {
 
 export function useApprovePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, void>({
+  return useIdempotentMutation<PurchaseOrderSummary, Error, void>({
     mutationKey: ["inventory", "purchase-orders", "approve", poId],
-    mutationFn: () =>
+    mutationFn: (_variables, idempotencyKey) =>
       apiClient.post<PurchaseOrderSummary>(
         `/inventory/purchase-orders/${poId}/approve`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -178,12 +179,12 @@ export function useApprovePurchaseOrder(poId: number) {
 
 export function useClosePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<void, Error, void>({
+  return useIdempotentMutation<void, Error, void>({
     mutationKey: ["inventory", "purchase-orders", "close", poId],
-    mutationFn: () =>
+    mutationFn: (_variables, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/close`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -194,12 +195,12 @@ export function useClosePurchaseOrder(poId: number) {
 
 export function useCancelPurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelPurchaseOrderInput | undefined>({
+  return useIdempotentMutation<void, Error, CancelPurchaseOrderInput | undefined>({
     mutationKey: ["inventory", "purchase-orders", "cancel", poId],
-    mutationFn: (vars) =>
+    mutationFn: (vars, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/cancel`,
-        vars ?? {},
+        vars ?? {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });

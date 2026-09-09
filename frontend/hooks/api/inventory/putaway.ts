@@ -190,9 +190,9 @@ export function useCreatePutawayTask() {
 
 export function useClaimPutawayTask() {
   const qc = useQueryClient();
-  return useMutation<{ taskId: number; assignedTo: string; claimed: boolean }, Error, number>({
+  return useIdempotentMutation<{ taskId: number; assignedTo: string; claimed: boolean }, Error, number>({
     mutationKey: ["inventory", "putaway", "claim"],
-    mutationFn: (taskId) => apiClient.post(`/inventory/putaway/tasks/${taskId}/claim`, {}),
+    mutationFn: (taskId, idempotencyKey) => apiClient.post(`/inventory/putaway/tasks/${taskId}/claim`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, taskId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.tasksList });
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.task(taskId) });
@@ -222,9 +222,9 @@ export function useAbandonPutawayTask() {
  */
 export function useCompletePutaway() {
   const qc = useQueryClient();
-  return useMutation<CompletePutawayResult, Error, CompletePutawayInput>({
+  return useIdempotentMutation<CompletePutawayResult, Error, CompletePutawayInput>({
     mutationKey: ["inventory", "putaway", "complete"],
-    mutationFn: ({ taskId, taskLineId, quantity, toLocationId }) =>
+    mutationFn: ({ taskId, taskLineId, quantity, toLocationId }, idempotencyKey) =>
       apiClient.post<CompletePutawayResult>(
         `/inventory/putaway/tasks/${taskId}/complete`,
         {
@@ -235,7 +235,7 @@ export function useCompletePutaway() {
               ...(toLocationId !== undefined ? { toLocationId } : {}),
             },
           ],
-        },
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.task(variables.taskId) });

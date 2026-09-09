@@ -162,10 +162,10 @@ export function useCreateCycleCount() {
 
 export function useStartCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useIdempotentMutation<CycleCount, Error, number>({
     mutationKey: ["inventory", "cycleCounts", "start"],
-    mutationFn: (countId) =>
-      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`),
+    mutationFn: (countId, idempotencyKey) =>
+      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
@@ -187,10 +187,10 @@ export function useUpdateCycleCountLines() {
 
 export function useReviewCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useIdempotentMutation<CycleCount, Error, number>({
     mutationKey: ["inventory", "cycleCounts", "review"],
-    mutationFn: (countId) =>
-      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`),
+    mutationFn: (countId, idempotencyKey) =>
+      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
@@ -200,10 +200,10 @@ export function useReviewCycleCount() {
 
 export function usePostCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useIdempotentMutation<CycleCount, Error, number>({
     mutationKey: ["inventory", "cycleCounts", "post"],
-    mutationFn: (countId) =>
-      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined),
+    mutationFn: (countId, idempotencyKey) =>
+      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
@@ -215,10 +215,10 @@ export function usePostCycleCount() {
 
 export function useCancelCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useIdempotentMutation<CycleCount, Error, number>({
     mutationKey: ["inventory", "cycleCounts", "cancel"],
-    mutationFn: (countId) =>
-      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`),
+    mutationFn: (countId, idempotencyKey) =>
+      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
@@ -261,10 +261,10 @@ export function useCreatePhysicalAudit() {
 
 export function useStartPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useIdempotentMutation<PhysicalAudit, Error, number>({
     mutationKey: ["inventory", "physicalAudits", "start"],
-    mutationFn: (auditId) =>
-      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`),
+    mutationFn: (auditId, idempotencyKey) =>
+      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
@@ -286,10 +286,10 @@ export function useUpdatePhysicalAuditLines() {
 
 export function useReviewPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useIdempotentMutation<PhysicalAudit, Error, number>({
     mutationKey: ["inventory", "physicalAudits", "review"],
-    mutationFn: (auditId) =>
-      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`),
+    mutationFn: (auditId, idempotencyKey) =>
+      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
@@ -299,10 +299,10 @@ export function useReviewPhysicalAudit() {
 
 export function usePostPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useIdempotentMutation<PhysicalAudit, Error, number>({
     mutationKey: ["inventory", "physicalAudits", "post"],
-    mutationFn: (auditId) =>
-      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined),
+    mutationFn: (auditId, idempotencyKey) =>
+      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
@@ -314,10 +314,10 @@ export function usePostPhysicalAudit() {
 
 export function useCancelPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useIdempotentMutation<PhysicalAudit, Error, number>({
     mutationKey: ["inventory", "physicalAudits", "cancel"],
-    mutationFn: (auditId) =>
-      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`),
+    mutationFn: (auditId, idempotencyKey) =>
+      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AiInsight } from "./reports";
@@ -42,9 +43,9 @@ export function useInventoryInsights(params?: InsightsParams) {
 
 export function useGenerateInsights() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, void>({
+  return useIdempotentMutation<unknown, Error, void>({
     mutationKey: ["inventory", "ai", "insights", "generate"],
-    mutationFn: () => apiClient.post("/inventory/ai/insights/generate"),
+    mutationFn: (_variables, idempotencyKey) => apiClient.post("/inventory/ai/insights/generate", undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

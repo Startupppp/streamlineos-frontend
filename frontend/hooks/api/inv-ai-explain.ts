@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
@@ -203,10 +204,10 @@ export function useReorderProposal() {
 
 export function useConfirmReorderProposal() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, { proposalId: number; token: string }>({
+  return useIdempotentMutation<unknown, Error, { proposalId: number; token: string }>({
     mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
-    mutationFn: (body) =>
-      apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),
+    mutationFn: (body, idempotencyKey) =>
+      apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
     },

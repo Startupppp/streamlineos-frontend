@@ -249,12 +249,12 @@ export function useCreateVendorReturn() {
 
 export function useApproveVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<VendorReturnSummary, Error, ApproveReturnInput>({
+  return useIdempotentMutation<VendorReturnSummary, Error, ApproveReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "approve"],
-    mutationFn: ({ returnId, creditReference }) =>
+    mutationFn: ({ returnId, creditReference }, idempotencyKey) =>
       apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/approve`,
-        { ...(creditReference !== undefined ? { creditReference } : {}) },
+        { ...(creditReference !== undefined ? { creditReference } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => invalidateVendorReturn(qc, variables.returnId),
   });
@@ -262,12 +262,12 @@ export function useApproveVendorReturn() {
 
 export function usePostVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<VendorReturnSummary, Error, PostReturnInput>({
+  return useIdempotentMutation<VendorReturnSummary, Error, PostReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "post"],
-    mutationFn: ({ returnId, reason }) =>
+    mutationFn: ({ returnId, reason }, idempotencyKey) =>
       apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/post`,
-        { ...(reason !== undefined ? { reason } : {}) },
+        { ...(reason !== undefined ? { reason } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       invalidateVendorReturn(qc, variables.returnId);
@@ -278,10 +278,10 @@ export function usePostVendorReturn() {
 
 export function useCancelVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<VendorReturnSummary, Error, CancelReturnInput>({
+  return useIdempotentMutation<VendorReturnSummary, Error, CancelReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "cancel"],
-    mutationFn: ({ returnId }) =>
-      apiClient.post<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}/cancel`, {}),
+    mutationFn: ({ returnId }, idempotencyKey) =>
+      apiClient.post<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => invalidateVendorReturn(qc, variables.returnId),
   });
 }
@@ -353,12 +353,12 @@ export function useInspectCustomerReturnLine() {
 
 export function useApproveCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<CustomerReturnSummary, Error, ApproveReturnInput>({
+  return useIdempotentMutation<CustomerReturnSummary, Error, ApproveReturnInput>({
     mutationKey: ["inventory", "customerReturns", "approve"],
-    mutationFn: ({ returnId, creditReference }) =>
+    mutationFn: ({ returnId, creditReference }, idempotencyKey) =>
       apiClient.post<CustomerReturnSummary>(
         `/inventory/customer-returns/${returnId}/approve`,
-        { ...(creditReference !== undefined ? { creditReference } : {}) },
+        { ...(creditReference !== undefined ? { creditReference } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => invalidateCustomerReturn(qc, variables.returnId),
   });
@@ -366,12 +366,12 @@ export function useApproveCustomerReturn() {
 
 export function usePostCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<CustomerReturnSummary, Error, PostReturnInput>({
+  return useIdempotentMutation<CustomerReturnSummary, Error, PostReturnInput>({
     mutationKey: ["inventory", "customerReturns", "post"],
-    mutationFn: ({ returnId, reason }) =>
+    mutationFn: ({ returnId, reason }, idempotencyKey) =>
       apiClient.post<CustomerReturnSummary>(
         `/inventory/customer-returns/${returnId}/post`,
-        { ...(reason !== undefined ? { reason } : {}) },
+        { ...(reason !== undefined ? { reason } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       invalidateCustomerReturn(qc, variables.returnId);
@@ -382,10 +382,10 @@ export function usePostCustomerReturn() {
 
 export function useCancelCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<CustomerReturnSummary, Error, CancelReturnInput>({
+  return useIdempotentMutation<CustomerReturnSummary, Error, CancelReturnInput>({
     mutationKey: ["inventory", "customerReturns", "cancel"],
-    mutationFn: ({ returnId }) =>
-      apiClient.post<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}/cancel`, {}),
+    mutationFn: ({ returnId }, idempotencyKey) =>
+      apiClient.post<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => invalidateCustomerReturn(qc, variables.returnId),
   });
 }

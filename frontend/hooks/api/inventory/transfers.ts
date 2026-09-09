@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { TransferStatus } from "@/features/inventory/lib";
@@ -238,9 +239,9 @@ export function useTransfer(transferId: number) {
 
 export function useCreateTransfer() {
   const qc = useQueryClient();
-  return useMutation<CreatedTransfer, Error, CreateTransferInput>({
+  return useIdempotentMutation<CreatedTransfer, Error, CreateTransferInput>({
     mutationKey: ["inventory", "transfer", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<CreatedTransfer>("/inventory/stock/transfers", {
         fromLocationId: data.fromLocationId,
         toLocationId: data.toLocationId,
@@ -251,7 +252,7 @@ export function useCreateTransfer() {
           lotId: l.lotId,
           serialId: l.serialId,
         })),
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -261,10 +262,10 @@ export function useCreateTransfer() {
 
 export function useCompleteTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CompleteTransferInput>({
+  return useIdempotentMutation<void, Error, CompleteTransferInput>({
     mutationKey: ["inventory", "transfer", "complete"],
-    mutationFn: ({ transferId, lines }) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }),
+    mutationFn: ({ transferId, lines }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -276,10 +277,10 @@ export function useCompleteTransfer() {
 
 export function useDispatchTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, { transferId: number }>({
+  return useIdempotentMutation<void, Error, { transferId: number }>({
     mutationKey: ["inventory", "transfer", "dispatch"],
-    mutationFn: ({ transferId }) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
+    mutationFn: ({ transferId }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -290,12 +291,12 @@ export function useDispatchTransfer() {
 
 export function useReserveTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useIdempotentMutation<void, Error, number>({
     mutationKey: ["inventory", "transfer", "reserve"],
-    mutationFn: (transferId) =>
+    mutationFn: (transferId, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/stock/transfers/${transferId}/reserve`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
@@ -306,10 +307,10 @@ export function useReserveTransfer() {
 
 export function useCancelTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useIdempotentMutation<void, Error, number>({
     mutationKey: ["inventory", "transfer", "cancel"],
-    mutationFn: (transferId) =>
-      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}),
+    mutationFn: (transferId, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });

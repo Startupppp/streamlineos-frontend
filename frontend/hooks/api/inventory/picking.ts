@@ -233,10 +233,10 @@ export function useCreatePickWave() {
 
 export function useClaimPickWave() {
   const qc = useQueryClient();
-  return useMutation<{ pickListId: number; assignedTo: string; claimed: boolean }, Error, number>({
+  return useIdempotentMutation<{ pickListId: number; assignedTo: string; claimed: boolean }, Error, number>({
     mutationKey: ["inventory", "picking", "claim"],
-    mutationFn: (pickListId) =>
-      apiClient.post(`/inventory/picking/waves/${pickListId}/claim`, {}),
+    mutationFn: (pickListId, idempotencyKey) =>
+      apiClient.post(`/inventory/picking/waves/${pickListId}/claim`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, pickListId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wavesList });
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(pickListId) });
@@ -259,14 +259,14 @@ export function useAbandonPickWave() {
 
 export function useReassignPickWave() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     { pickListId: number; assignedTo: string },
     Error,
     { pickListId: number; assigneeUserId: string }
   >({
     mutationKey: ["inventory", "picking", "reassign"],
-    mutationFn: ({ pickListId, assigneeUserId }) =>
-      apiClient.post(`/inventory/picking/waves/${pickListId}/reassign`, { assigneeUserId }),
+    mutationFn: ({ pickListId, assigneeUserId }, idempotencyKey) =>
+      apiClient.post(`/inventory/picking/waves/${pickListId}/reassign`, { assigneeUserId }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wavesList });
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
@@ -285,9 +285,9 @@ export function useReassignPickWave() {
  */
 export function useConfirmPick() {
   const qc = useQueryClient();
-  return useMutation<ConfirmPickResult, Error, ConfirmPickInput>({
+  return useIdempotentMutation<ConfirmPickResult, Error, ConfirmPickInput>({
     mutationKey: ["inventory", "picking", "confirm"],
-    mutationFn: ({ pickListId, pickLineId, quantityPicked, locationId, scannedPayload }) =>
+    mutationFn: ({ pickListId, pickLineId, quantityPicked, locationId, scannedPayload }, idempotencyKey) =>
       apiClient.post<ConfirmPickResult>(
         `/inventory/picking/waves/${pickListId}/confirm`,
         {
@@ -295,7 +295,7 @@ export function useConfirmPick() {
           quantityPicked,
           ...(locationId !== undefined ? { locationId } : {}),
           ...(scannedPayload !== undefined ? { scannedPayload } : {}),
-        },
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
@@ -323,7 +323,7 @@ export function useConfirmPick() {
  */
 export function useReportPickException() {
   const qc = useQueryClient();
-  return useMutation<PickExceptionResult, Error, ReportPickExceptionInput>({
+  return useIdempotentMutation<PickExceptionResult, Error, ReportPickExceptionInput>({
     mutationKey: ["inventory", "picking", "exception"],
     mutationFn: ({
       pickListId,
@@ -333,7 +333,7 @@ export function useReportPickException() {
       foundLocationId,
       substituteVariantId,
       quantityPicked,
-    }) =>
+    }, idempotencyKey) =>
       reason === "SUBSTITUTED"
         ? apiClient.post<PickExceptionResult>(
             `/inventory/picking/waves/${pickListId}/substitute`,
@@ -342,7 +342,7 @@ export function useReportPickException() {
               substituteVariantId,
               quantityPicked,
               ...(notes ? { notes } : {}),
-            },
+            }, { headers: { "Idempotency-Key": idempotencyKey } },
           )
         : apiClient.post<PickExceptionResult>(
             `/inventory/picking/waves/${pickListId}/exception`,
@@ -353,7 +353,7 @@ export function useReportPickException() {
               ...(reason === "WRONG_LOCATION" && foundLocationId !== undefined
                 ? { foundLocationId }
                 : {}),
-            },
+            }, { headers: { "Idempotency-Key": idempotencyKey } },
           ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });

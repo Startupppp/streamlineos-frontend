@@ -127,10 +127,10 @@ export function useCreateSalesOrder() {
 
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, ConfirmSalesOrderInput>({
+  return useIdempotentMutation<void, Error, ConfirmSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "confirm"],
-    mutationFn: ({ soId }) =>
-      apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}),
+    mutationFn: ({ soId }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -140,9 +140,9 @@ export function useConfirmSalesOrder() {
 
 export function useShipSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, ShipSalesOrderInput>({
+  return useIdempotentMutation<void, Error, ShipSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "ship"],
-    mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }) =>
+    mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/sales-orders/${soId}/ship`,
         {
@@ -150,7 +150,7 @@ export function useShipSalesOrder() {
           ...(carrierId !== undefined ? { carrierId } : {}),
           ...(trackingNumber !== undefined ? { trackingNumber } : {}),
           ...(notes !== undefined ? { notes } : {}),
-        },
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -175,15 +175,15 @@ export function useInvoiceSalesOrder() {
 
 export function useReserveSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
+  return useIdempotentMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "reserve"],
-    mutationFn: ({ soId, warehouseId, allocations }) =>
+    mutationFn: ({ soId, warehouseId, allocations }, idempotencyKey) =>
       apiClient.post<ReserveSalesOrderResult>(
         `/inventory/sales-orders/${soId}/reserve`,
         {
           ...(warehouseId !== undefined ? { warehouseId } : {}),
           ...(allocations !== undefined ? { allocations } : {}),
-        },
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -195,10 +195,10 @@ export function useReserveSalesOrder() {
 
 export function usePickSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PickSalesOrderInput>({
+  return useIdempotentMutation<void, Error, PickSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "pick"],
-    mutationFn: ({ soId, lines }) =>
-      apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }),
+    mutationFn: ({ soId, lines }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -208,15 +208,15 @@ export function usePickSalesOrder() {
 
 export function usePackSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PackSalesOrderInput>({
+  return useIdempotentMutation<void, Error, PackSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "pack"],
-    mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }) =>
+    mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }, idempotencyKey) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pack`, {
         ...(weight !== undefined ? { weight } : {}),
         ...(dimensionsL !== undefined ? { dimensionsL } : {}),
         ...(dimensionsW !== undefined ? { dimensionsW } : {}),
         ...(dimensionsH !== undefined ? { dimensionsH } : {}),
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -226,12 +226,12 @@ export function usePackSalesOrder() {
 
 export function useCancelSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelSalesOrderInput>({
+  return useIdempotentMutation<void, Error, CancelSalesOrderInput>({
     mutationKey: ["inventory", "salesOrders", "cancel"],
-    mutationFn: ({ soId, reason }) =>
+    mutationFn: ({ soId, reason }, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/sales-orders/${soId}/cancel`,
-        { ...(reason !== undefined ? { reason } : {}) },
+        { ...(reason !== undefined ? { reason } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });

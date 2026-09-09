@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -133,9 +134,9 @@ function useInvalidatePlans() {
 
 export function useCreateInspectionPlan() {
   const invalidate = useInvalidatePlans();
-  return useMutation<InspectionPlan, Error, CreateInspectionPlanPayload>({
+  return useIdempotentMutation<InspectionPlan, Error, CreateInspectionPlanPayload>({
     mutationKey: ["inventory", "quality", "inspection-plan", "create"],
-    mutationFn: (payload) => apiClient.post<InspectionPlan>(BASE, payload),
+    mutationFn: (payload, idempotencyKey) => apiClient.post<InspectionPlan>(BASE, payload, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => invalidate(),
   });
 }

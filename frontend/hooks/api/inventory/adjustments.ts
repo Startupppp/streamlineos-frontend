@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AdjustmentDetail } from "@/types/inventory";
@@ -145,9 +146,9 @@ export function useAdjustmentDetail(adjustmentId: number) {
 
 export function useCreateAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, CreateAdjustmentInput>({
+  return useIdempotentMutation<AdjustmentDetail, Error, CreateAdjustmentInput>({
     mutationKey: ["inventory", "adjustment", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<AdjustmentDetail>(
         "/inventory/stock/adjustments",
         {
@@ -163,10 +164,11 @@ export function useCreateAdjustment() {
             },
           ],
         },
-        // `apiClient` mints the `Idempotency-Key` for every mutating request,
-        // and the endpoint refuses this command without one. A write-off is the
-        // case where a duplicate is not cosmetic: two documents, both
-        // approvable, both postable, against the same missing stock.
+        // A write-off is the case where a duplicate is not cosmetic: two
+        // documents, both approvable, both postable, against the same missing
+        // stock. The key `apiClient` mints is per fetch, so it cannot prevent
+        // that; this one belongs to the operator's intent and survives a retry.
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -178,12 +180,12 @@ export function useCreateAdjustment() {
 
 export function useApproveAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useIdempotentMutation<AdjustmentDetail, Error, number>({
     mutationKey: ["inventory", "adjustment", "approve"],
-    mutationFn: (adjustmentId) =>
+    mutationFn: (adjustmentId, idempotencyKey) =>
       apiClient.post<AdjustmentDetail>(
         `/inventory/stock/adjustments/${adjustmentId}/approve`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -193,12 +195,12 @@ export function useApproveAdjustment() {
 
 export function usePostAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useIdempotentMutation<AdjustmentDetail, Error, number>({
     mutationKey: ["inventory", "adjustment", "post"],
-    mutationFn: (adjustmentId) =>
+    mutationFn: (adjustmentId, idempotencyKey) =>
       apiClient.post<AdjustmentDetail>(
         `/inventory/stock/adjustments/${adjustmentId}/post`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -210,10 +212,10 @@ export function usePostAdjustment() {
 
 export function useCancelAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useIdempotentMutation<AdjustmentDetail, Error, number>({
     mutationKey: ["inventory", "adjustment", "cancel"],
-    mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}),
+    mutationFn: (adjustmentId, idempotencyKey) =>
+      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

@@ -106,16 +106,16 @@ export function useSetKitBom() {
 
 export function useAssembleKit() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     KitAssemblyResult,
     Error,
     { kitVariantId: number; locationId: number; quantity: string; disassemble?: boolean }
   >({
     mutationKey: ["inventory", "kits", "assemble"],
-    mutationFn: ({ disassemble, ...data }) =>
+    mutationFn: ({ disassemble, ...data }, idempotencyKey) =>
       apiClient.post<KitAssemblyResult>(
         disassemble ? "/inventory/kits/disassemble" : "/inventory/kits/assemble",
-        data,
+        data, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       // Assembling consumes components and creates the kit, so every stock and
@@ -141,7 +141,7 @@ export function useConsignedStock(warehouseId?: number) {
 
 export function useConvertOwnership() {
   const qc = useQueryClient();
-  return useMutation<
+  return useIdempotentMutation<
     unknown,
     Error,
     {
@@ -154,7 +154,7 @@ export function useConvertOwnership() {
     }
   >({
     mutationKey: ["inventory", "ownership", "convert"],
-    mutationFn: (data) => apiClient.post("/inventory/ownership/convert", data),
+    mutationFn: (data, idempotencyKey) => apiClient.post("/inventory/ownership/convert", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.consignedStockAll });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevelsList });

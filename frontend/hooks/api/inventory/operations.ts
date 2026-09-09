@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -170,10 +171,10 @@ function useReceiptInvalidation() {
 
 export function useCreateGrnDraft() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<GrnDetail, Error, CreateGrnDraftInput>({
+  return useIdempotentMutation<GrnDetail, Error, CreateGrnDraftInput>({
     mutationKey: ["inventory", "goodsReceipts", "createDraft"],
-    mutationFn: (body) =>
-      apiClient.post<GrnDetail>("/inventory/goods-receipts", body),
+    mutationFn: (body, idempotencyKey) =>
+      apiClient.post<GrnDetail>("/inventory/goods-receipts", body, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (data) => invalidate(data.id, false),
   });
 }
@@ -191,20 +192,20 @@ export function useUpdateGrnDraft() {
 /** DRAFT -> COUNTING, and back from quality review when a count is disputed. */
 export function useStartGrnCount() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<GrnDetail, Error, { grnId: number }>({
+  return useIdempotentMutation<GrnDetail, Error, { grnId: number }>({
     mutationKey: ["inventory", "goodsReceipts", "count"],
-    mutationFn: ({ grnId }) =>
-      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/count`, {}),
+    mutationFn: ({ grnId }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/count`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (data) => invalidate(data.id, false),
   });
 }
 
 export function useSubmitGrnForQuality() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<GrnDetail, Error, { grnId: number }>({
+  return useIdempotentMutation<GrnDetail, Error, { grnId: number }>({
     mutationKey: ["inventory", "goodsReceipts", "qualityReview"],
-    mutationFn: ({ grnId }) =>
-      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/quality-review`, {}),
+    mutationFn: ({ grnId }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/quality-review`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (data) => invalidate(data.id, false),
   });
 }
@@ -212,12 +213,12 @@ export function useSubmitGrnForQuality() {
 /** The only action here that writes to the stock ledger. */
 export function usePostGrn() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<GrnDetail, Error, { grnId: number }>({
+  return useIdempotentMutation<GrnDetail, Error, { grnId: number }>({
     mutationKey: ["inventory", "goodsReceipts", "post"],
-    mutationFn: ({ grnId }) =>
+    mutationFn: ({ grnId }, idempotencyKey) =>
       apiClient.post<GrnDetail>(
         `/inventory/goods-receipts/${grnId}/post`,
-        {},
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (data) => invalidate(data.id, true),
   });
@@ -225,12 +226,12 @@ export function usePostGrn() {
 
 export function useCancelGrn() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<GrnDetail, Error, { grnId: number; reason?: string }>({
+  return useIdempotentMutation<GrnDetail, Error, { grnId: number; reason?: string }>({
     mutationKey: ["inventory", "goodsReceipts", "cancel"],
-    mutationFn: ({ grnId, reason }) =>
+    mutationFn: ({ grnId, reason }, idempotencyKey) =>
       apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/cancel`, {
         ...(reason ? { reason } : {}),
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (data) => invalidate(data.id, false),
   });
 }
@@ -242,12 +243,12 @@ interface ReverseGrnInput {
 
 export function useReverseGrn() {
   const invalidate = useReceiptInvalidation();
-  return useMutation<void, Error, ReverseGrnInput>({
+  return useIdempotentMutation<void, Error, ReverseGrnInput>({
     mutationKey: ["inventory", "goodsReceipts", "reverse"],
-    mutationFn: ({ grnId, reason }) =>
+    mutationFn: ({ grnId, reason }, idempotencyKey) =>
       apiClient.post<void>(
         `/inventory/goods-receipts/${grnId}/reverse`,
-        { reason },
+        { reason }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => invalidate(variables.grnId, true),
   });

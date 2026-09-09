@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { StockReservation, StockReservationStatus } from "@/types/inventory";
@@ -56,10 +57,10 @@ export function useReservations(filters?: ReservationsFilters) {
 
 export function useReleaseReservation() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useIdempotentMutation<void, Error, number>({
     mutationKey: ["inventory", "stock", "release-reservation"],
-    mutationFn: (reservationId) =>
-      apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }),
+    mutationFn: (reservationId, idempotencyKey) =>
+      apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -69,10 +70,10 @@ export function useReleaseReservation() {
 
 export function useOpeningStock() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, OpeningStockInput>({
+  return useIdempotentMutation<unknown, Error, OpeningStockInput>({
     mutationKey: ["inventory", "stock", "opening"],
-    mutationFn: (data) =>
-      apiClient.post<unknown>("/inventory/stock/opening", data),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<unknown>("/inventory/stock/opening", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

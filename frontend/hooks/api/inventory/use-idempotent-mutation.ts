@@ -6,6 +6,8 @@ import {
   type UseMutationOptions,
   type UseMutationResult,
 } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 import { randomId } from "@/lib/random-id";
 
 /**
@@ -75,6 +77,30 @@ export function useIdempotentMutation<TData, TError = Error, TVariables = void>(
       keyRef.current = null;
       payloadRef.current = null;
       onSuccess?.(...args);
+    },
+  });
+}
+
+/**
+ * The permission gate of `useAuthorizedMutation` over the intent-scoped key.
+ *
+ * The two could not simply be nested: both wrap `useMutation`, and
+ * `useAuthorizedMutation` hands its inner function react-query's own
+ * `MutationFunctionContext` as a second argument. A hook that took the key
+ * there would receive that context object instead and send `undefined` as the
+ * header — well-formed enough to pass a smoke test, and no protection at all.
+ */
+export function useAuthorizedIdempotentMutation<TData, TError = Error, TVariables = void>(
+  permission: PermissionKey,
+  options: IdempotentMutationOptions<TData, TError, TVariables>,
+): UseMutationResult<TData, TError, TVariables> {
+  const allowed = useCan(permission);
+  const { mutationFn, ...rest } = options;
+  return useIdempotentMutation<TData, TError, TVariables>({
+    ...rest,
+    mutationFn: async (variables, idempotencyKey) => {
+      if (!allowed) throw new Error(`Missing permission: ${permission}`);
+      return mutationFn(variables, idempotencyKey);
     },
   });
 }

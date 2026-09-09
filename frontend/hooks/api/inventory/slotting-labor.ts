@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -88,12 +89,12 @@ export function useSlottingRecommendations(filters?: {
 
 export function useDismissRecommendation() {
   const qc = useQueryClient();
-  return useMutation<SlottingRecommendation, Error, { recommendationId: number; reason?: string }>({
+  return useIdempotentMutation<SlottingRecommendation, Error, { recommendationId: number; reason?: string }>({
     mutationKey: ["inventory", "slotting", "dismiss"],
-    mutationFn: ({ recommendationId, reason }) =>
+    mutationFn: ({ recommendationId, reason }, idempotencyKey) =>
       apiClient.post<SlottingRecommendation>(
         `/inventory/slotting/recommendations/${recommendationId}/dismiss`,
-        reason ? { reason } : {},
+        reason ? { reason } : {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
@@ -103,12 +104,12 @@ export function useDismissRecommendation() {
 
 export function useApproveRecommendation() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, { recommendationId: number; toLocationId: number }>({
+  return useIdempotentMutation<unknown, Error, { recommendationId: number; toLocationId: number }>({
     mutationKey: ["inventory", "slotting", "approve"],
-    mutationFn: ({ recommendationId, toLocationId }) =>
+    mutationFn: ({ recommendationId, toLocationId }, idempotencyKey) =>
       apiClient.post(`/inventory/slotting/recommendations/${recommendationId}/approve`, {
         toLocationId,
-      }),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
       // Approving raises a transfer, so the transfer list is stale too.

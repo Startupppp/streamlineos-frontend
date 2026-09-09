@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
@@ -100,12 +101,12 @@ export function useTransferPlan(
  */
 export function useApproveTransferRecommendation() {
   const qc = useQueryClient();
-  return useMutation<ApprovedTransfer, Error, ApproveTransferInput>({
+  return useIdempotentMutation<ApprovedTransfer, Error, ApproveTransferInput>({
     mutationKey: ["inventory", "planning", "transfer-recommendation", "approve"],
-    mutationFn: (input) =>
+    mutationFn: (input, idempotencyKey) =>
       apiClient.post<ApprovedTransfer>(
         "/inventory/replenishment/transfer-recommendations/approve",
-        input,
+        input, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_result, variables) => {
       qc.invalidateQueries({
@@ -315,10 +316,10 @@ export function useRefreshProposals() {
 
 export function useCreatePoBatch() {
   const qc = useQueryClient();
-  return useMutation<CreatedPoBatch, Error, CreatePoBatchInput>({
+  return useIdempotentMutation<CreatedPoBatch, Error, CreatePoBatchInput>({
     mutationKey: ["inventory", "planning", "po-batch", "create"],
-    mutationFn: (input) =>
-      apiClient.post<CreatedPoBatch>("/inventory/replenishment/po-batches", input),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<CreatedPoBatch>("/inventory/replenishment/po-batches", input, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: queryKeys.inventoryPlanning.batchableProposalsList,
