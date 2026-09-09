@@ -200,8 +200,21 @@ for.
 
 Three things the four committed scenarios cannot answer were probed directly against the same
 seeded database, as `streamline_app` with the GUC set. **These were one-off `node -e`
-invocations; no script was committed for them, so they are not reproducible by name.** They are
+invocations; no script was committed for them, so they were not reproducible by name.** They are
 reported because the deferred decision in §8 cannot be answered without them.
+
+> **SUPERSEDED 2026-09-09 (same day, later session).** §7a and §7c are now measured by a
+> committed harness — `backend/test/perf/ai/measure-kb-retrieval-recall.mjs`, runnable as
+> `pnpm -C backend measure:kb-retrieval-recall` — over **100 probe vectors** instead of 12, with
+> an `hnsw.ef_search` sweep and a plan-choice matrix. Read
+> [`KB-RETRIEVAL-RECALL-FLOOR.md`](./KB-RETRIEVAL-RECALL-FLOOR.md) for the current numbers and
+> the recall floor; the tables below are kept as the historical record of the probe that raised
+> the finding. The larger sample moved several figures (e.g. `perf_kb_mid` at cap 24 measured
+> 43.21% mean over 100 vectors against 43.75% over 12), and it contradicts one framing below:
+> §7c's "the minority tenant is *protected*" holds only because the **planner** chose exact for
+> it. When HNSW is priced at that size directly, the 800-chunk tenant scores 44.73–86.87% and
+> costs 5.4–8.8× more buffers than exact — ANN is worse for small tenants on both axes, not
+> better.
 
 ### 7a. The harness's `ann.*` SQL is not the production query
 
@@ -331,6 +344,13 @@ qual is an index condition rather than a post-filter; or accept approximate reca
 and change the in-service guard from a cardinality check to something that can actually observe
 it. Recommending among those needs a further measurement this harness does not perform.
 
+> **The first of those options is now measured.** `KB-RETRIEVAL-RECALL-FLOOR.md` §9 sweeps
+> `hnsw.ef_search` over 40 / 100 / 200 / 400 / 1000 at both caps and all four tenant sizes: it
+> clears a 0.95 mean-recall floor at cap 24 (ef ≥ 100) and **cannot** clear it at cap 120 at any
+> legal value, topping out at 88.18% at pgvector's maximum of 1000. Raising `ef_search` is
+> therefore a partial answer, and the remaining options — a higher-`m` rebuild, or an
+> `org_id`-leading / partitioned vector index — are still unmeasured.
+
 **No production retrieval code was changed by this task.**
 
 ---
@@ -339,8 +359,10 @@ it. Recommending among those needs a further measurement this harness does not p
 
 - Not deployed evidence. A local Windows PostgreSQL 18.6 on a laptop, not Neon, not a cell.
 - **The recall and production-shape numbers in §7 came from one-off `node -e` probes.** No
-  script was committed for them and they are not reproducible by name. Only the §6 table is
-  reproducible via `pnpm -C backend measure:kb-retrieval`.
+  script was committed for them at the time. **Closed later the same day:**
+  `pnpm -C backend measure:kb-retrieval-recall` now reproduces them by name at 100 probe
+  vectors, and [`KB-RETRIEVAL-RECALL-FLOOR.md`](./KB-RETRIEVAL-RECALL-FLOOR.md) supersedes §7a
+  and §7c. The §6 table remains reproducible via `pnpm -C backend measure:kb-retrieval`.
 - **Run-to-run variance on this host is large and the §6 latencies should be read as one
   observation, not a budget.** A second full run of the identical command (used to confirm that
   `pnpm … -- --runs= --json=` forwards its arguments) took 49.7s wall against 32.0s, and its

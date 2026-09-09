@@ -15,6 +15,7 @@ import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storag
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
+import { useAblyConnection } from "./use-ably-connection";
 import { getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { useChatScroll } from "./use-chat-scroll";
@@ -77,6 +78,7 @@ export function useMessagePanelData({
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  const { isConnected: ablySocketConnected } = useAblyConnection();
   useHuddleRealtime(channelId);
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
@@ -443,5 +445,6 @@ export function useMessagePanelData({
     thread: { messageId: threadMessageId, channelId, currentUserId, onClose: handleCloseThread },
     sidePanels: { channelId, isChatMobile, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
     isOnline,
+    isReconnecting: isOnline && !ablySocketConnected,
   };
 }

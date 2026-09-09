@@ -256,7 +256,8 @@ export function MessageList({
           }}
         >
         {isLoading ? (
-          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5">
+          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5" aria-busy="true">
+            <span role="status" className="sr-only">Loading messages…</span>
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
                 <div className="w-8 rounded-full bg-muted animate-pulse shrink-0" />

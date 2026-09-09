@@ -300,7 +300,8 @@ export function ChannelSidebar({
               onRetry={handleRetryChannels}
             />
           ) : isLoading ? (
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2" aria-busy="true">
+              <span role="status" className="sr-only">Loading conversations…</span>
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-2.5 px-2 py-2">
                   <Skeleton className="h-10 w-10 rounded-full" />

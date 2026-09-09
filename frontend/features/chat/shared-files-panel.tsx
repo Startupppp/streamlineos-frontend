@@ -48,7 +48,8 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="space-y-1 p-2">
+          <div className="space-y-1 p-2" aria-busy="true">
+            <span role="status" className="sr-only">Loading shared files…</span>
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex gap-2.5 items-center px-2 py-2">
                 <Skeleton className="h-9 w-9 rounded-lg shrink-0" />

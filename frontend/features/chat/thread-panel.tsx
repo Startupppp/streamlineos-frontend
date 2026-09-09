@@ -144,8 +144,9 @@ export function ThreadPanel({
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-10" aria-busy="true">
+            <span role="status" className="sr-only">Loading thread…</span>
+            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
           </div>
         ) : (
           <div className="py-2">

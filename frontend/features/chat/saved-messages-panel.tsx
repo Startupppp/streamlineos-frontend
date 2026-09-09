@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bookmark, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -112,7 +113,7 @@ export function SavedMessagesPanel({
   onClose: () => void;
   onJumpToChannel: (channelId: number) => void;
 }) {
-  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
+  const { data, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
@@ -158,7 +159,8 @@ export function SavedMessagesPanel({
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="space-y-2 p-3">
+          <div className="space-y-2 p-3" aria-busy="true">
+            <span role="status" className="sr-only">Loading saved messages…</span>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-2.5 p-2">
                 <Skeleton className="h-8 w-8 rounded-full shrink-0" />
@@ -171,15 +173,13 @@ export function SavedMessagesPanel({
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <h4 className="text-label font-semibold mb-1">Could not load saved messages</h4>
-            <button
-              onClick={handleRetry}
-              className="text-dense text-primary hover:underline mt-1"
-            >
-              Try again
-            </button>
-          </div>
+          <ErrorState
+            compact
+            className="m-3"
+            title="Couldn't load saved messages"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="h-12 w-12 rounded-xl bg-status-warning-surface flex items-center justify-center mb-3">

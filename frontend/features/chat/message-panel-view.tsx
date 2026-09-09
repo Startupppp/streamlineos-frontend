@@ -86,6 +86,7 @@ interface MessagePanelViewProps {
   thread: ThreadProps;
   sidePanels: React.ComponentProps<typeof MessagePanelSidePanels>;
   isOnline: boolean;
+  isReconnecting: boolean;
 }
 
 export function MessagePanelView({
@@ -94,6 +95,7 @@ export function MessagePanelView({
   thread,
   sidePanels,
   isOnline,
+  isReconnecting,
 }: MessagePanelViewProps) {
   const {
     onBack,
@@ -329,12 +331,23 @@ export function MessagePanelView({
           </div>
         </div>
 
-        {!isOnline && (
-          <div className="shrink-0 px-4 py-1.5 bg-status-warning-surface border-b border-status-warning-rule flex items-center gap-2 text-xs text-status-warning-ink font-medium">
+        {!isOnline ? (
+          <div
+            role="status"
+            className="shrink-0 px-4 py-1.5 bg-status-warning-surface border-b border-status-warning-rule flex items-center gap-2 text-xs text-status-warning-ink font-medium"
+          >
             <span className="h-1.5 w-1.5 rounded-full bg-status-warning-fill animate-pulse shrink-0" />
             You&apos;re offline — messages will be sent when you reconnect
           </div>
-        )}
+        ) : isReconnecting ? (
+          <div
+            role="status"
+            className="shrink-0 px-4 py-1.5 bg-status-info-surface border-b border-status-info-rule flex items-center gap-2 text-xs text-status-info-ink font-medium"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-status-info-fill animate-pulse shrink-0" />
+            Reconnecting to live chat…
+          </div>
+        ) : null}
         <MessagePanelWorkspace {...workspace} />
       </div>
 
