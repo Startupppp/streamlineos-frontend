@@ -16,20 +16,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import {
-  useValuationReport,
-  useValuationLayers,
-  type ValuationRow,
-} from "@/hooks/api/inventory/valuation";
+import { useValuationReport, type ValuationRow } from "@/hooks/api/inventory/valuation";
+import { ValuationEvidenceSheet } from "./valuation-evidence-sheet";
 
 const SENTINEL = "__all__";
 
@@ -53,96 +49,6 @@ function formatCents(cents: number): string {
   return formatCurrencyFull(cents / 100, "INR");
 }
 
-
-type ValuationLayerRow = {
-  id: number;
-  qty: number;
-  unitCost: number;
-  remainingQty: number;
-  receivedAt: string;
-};
-
-const layerColumns: DataTableColumn<ValuationLayerRow>[] = [
-  {
-    key: "receivedAt",
-    header: "Received",
-    className: "text-muted-foreground",
-    cell: (row) => formatShortDate(row.receivedAt),
-  },
-  {
-    key: "qty",
-    header: "Qty",
-    className: "tabular-nums",
-    cell: (row) => row.qty,
-  },
-  {
-    key: "remainingQty",
-    header: "Remaining",
-    className: "tabular-nums",
-    cell: (row) => row.remainingQty,
-  },
-  {
-    key: "unitCost",
-    header: "Unit Cost",
-    className: "tabular-nums",
-    cell: (row) => formatCents(row.unitCost),
-  },
-];
-
-function LayersSheet({
-  variantId,
-  open,
-  onClose,
-}: {
-  variantId: number;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [layersPage, setLayersPage] = useState(1);
-  const { data, isLoading, error } = useValuationLayers(variantId, layersPage);
-  const layers = data?.items ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const layersTotal = data?.total ?? 0;
-
-  function handleOpenChange(v: boolean): void {
-    if (!v) onClose();
-  }
-
-  return (
-    <AppSheet
-      open={open}
-      onOpenChange={handleOpenChange}
-      title="Cost Layers"
-      description="FIFO/LIFO cost layers for this variant."
-    >
-      <div className="px-6 py-4">
-        {error ? (
-          <ErrorState compact />
-        ) : !isLoading && layers.length === 0 ? (
-          <InventoryEmptyState
-            illustrationPreset="inventory"
-            title="No cost layers"
-            description="No stock layers recorded for this variant."
-            compact
-          />
-        ) : (
-          <DataTable
-            data={layers}
-            columns={layerColumns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            pagination={
-              totalPages > 1
-                ? { mode: "server", page: layersPage, pageSize: 20, total: layersTotal, onPageChange: setLayersPage }
-                : undefined
-            }
-            minWidth="400px"
-          />
-        )}
-      </div>
-    </AppSheet>
-  );
-}
 
 function ViewLayersButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -345,7 +251,7 @@ export function ValuationClient() {
         )}
       </div>
 
-      <LayersSheet
+      <ValuationEvidenceSheet
         variantId={selectedVariantId}
         open={layersOpen}
         onClose={handleCloseLayersSheet}

@@ -55,6 +55,7 @@ export const inventoryQueryKeys = {
     forecastingList: list("forecasting"),
     valuationReportList: list("valuationReport"),
     valuationLayersList: list("valuationLayers"),
+    valuationConsumptionsList: list("valuationConsumptions"),
     costingProductsList: list("costingProducts"),
     qualityInspectionsList: list("qualityInspections"),
     qualityHoldsList: list("qualityHolds"),
@@ -146,6 +147,9 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "valuationReport", params),
     valuationLayers: (variantId: number, page?: number) =>
       k(...base, "inventory", "valuationLayers", variantId, page),
+    valuationConsumptions: (params?: Record<string, unknown>) =>
+      k(...base, "inventory", "valuationConsumptions", params),
+    valuationPeriods: () => [...base, "inventory", "valuationPeriods"] as const,
     costingProducts: (params?: Record<string, unknown>) =>
       k(...base, "inventory", "costingProducts", params),
     slowMovingReport: (params?: object) => k(...base, "inventory", "slowMovingReport", params),
