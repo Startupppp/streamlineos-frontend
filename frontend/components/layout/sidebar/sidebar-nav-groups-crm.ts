@@ -179,6 +179,22 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             href: "/crm/analytics",
             requiredPermission: "crm:reports:view",
           },
+          {
+            /*
+              `crm:reporting:*` and `crm:reports:*` are two different features
+              that read alike: the parent is the fixed dashboard, this is the
+              query engine, and the endpoints behind it declare
+              `crm:reporting:run`. Listed in its own right so somebody who may
+              run a query but not read the dashboard can still reach it — an
+              inaccessible parent may promote an accessible child, and gating
+              this on the parent's key would hide the builder from the people
+              the backend grants it to.
+            */
+            label: "Query builder",
+            icon: BarChart2,
+            href: "/crm/reports/builder",
+            requiredPermission: "crm:reporting:run",
+          },
         ],
       },
       {

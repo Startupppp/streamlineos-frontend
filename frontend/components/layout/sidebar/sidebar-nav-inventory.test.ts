@@ -44,8 +44,19 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * what the sidebar offers, not a claim that the list is final — it moves when
  * the list is meant to, and this is one of those times.
  */
+/*
+ * Updated 2026-09-09 for one destination that had a backend and no way in.
+ *
+ * **Query builder** (/crm/reports/builder), gated on `crm:reporting:run`. The
+ * `crm/reporting` compiler shipped with zero frontend callers, so the endpoint
+ * that lets somebody ask a question they thought of themselves could not be
+ * reached at all. It sits under Reports but carries its own key deliberately:
+ * `crm:reporting:*` and `crm:reports:*` are two different features whose names
+ * read alike, and gating the child on the parent's key would hide the builder
+ * from exactly the people the backend grants it to.
+ */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "d02e39b5f34d04f7a8b3944bde2d64e310dbd9d1b118b6b062520349b8bfaf2a";
+  "d7203df55a2adeaafbb1b81d91374a5203fa5c7386fb76718f61a82533512f03";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
