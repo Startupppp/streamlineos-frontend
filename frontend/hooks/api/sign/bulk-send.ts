@@ -95,11 +95,12 @@ export function useBulkSendJobs() {
 export interface BulkSendJobRow {
   id: number;
   rowNumber: number;
-  status: "pending" | "sent" | "failed" | "skipped";
-  recipientName: string | null;
-  recipientEmail: string | null;
+  /** Mirrors the backend `sign_bulk_row_status` enum exactly. */
+  status: "pending" | "success" | "failed";
+  rawDataJson: Record<string, unknown>;
   errorMessage: string | null;
   envelopeId: number | null;
+  attempts: number;
 }
 
 export interface BulkSendJobDetail {
