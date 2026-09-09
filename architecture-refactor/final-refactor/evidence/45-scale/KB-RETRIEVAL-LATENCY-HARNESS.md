@@ -381,3 +381,59 @@ it. Recommending among those needs a further measurement this harness does not p
 - Lint and tests were **not run**. Typecheck was not run — this task changed only two
   `package.json` script strings and one new markdown file, neither of which `tsc` reads.
 - No git command was run, so no SHA is attested and nothing was committed by this task.
+
+---
+
+## 10. Committed recall run — 2026-09-09, and what it changed
+
+§7's recall figures came from throwaway `node -e` probes. They are now **superseded** by a
+committed, re-runnable harness (`pnpm measure:kb-retrieval-recall`, artifact
+`kb-retrieval-recall-2026-09-09.json`): 100 probe vectors per cell, `hnsw.ef_search` swept
+40 → 1000, scored against exact top-k, recording the plan Postgres actually chose.
+
+Where the two disagree, **this section is authoritative** — it is the one that can be re-run.
+
+### 10.1 Forced-ANN recall vs the exact ground truth
+
+| chunks | cap | ANN@ef40 | ANN@ef1000 | exact buffers | exact p50 |
+|---|---|---|---|---|---|
+| 200 | 24 | 0.4892 | 0.6633 | 3,245 | 1.76 ms |
+| 200 | 120 | 0.3784 | 0.5334 | 3,245 | 1.93 ms |
+| 800 | 24 | 0.6929 | 0.8687 | 12,920 | 8.18 ms |
+| 800 | 120 | 0.4473 | 0.6222 | 12,920 | 6.78 ms |
+| 8,000 | 24 | 0.4321 | 0.8500 | 129,130 | 67.86 ms |
+| 8,000 | 120 | 0.6447 | 0.7233 | 129,130 | 67.07 ms |
+| 40,000 | 24 | 0.9425 | 0.9721 | 647,040 | 387.32 ms |
+| 40,000 | 120 | 0.4457 | 0.8818 | 647,040 | 356.67 ms |
+
+Exact scanning is 1.0000 by construction in every cell.
+
+### 10.2 Three findings
+
+1. **ANN recall is worst for the SMALLEST tenants**, inverting the framing in §7 and §8. The
+   HNSW graph spans every organisation, so the more selective the tenant filter, the more of
+   the traversal is spent on rows that are then discarded. A 200-chunk tenant scores 0.4892
+   at cap 24 while costing 86,523 buffers — against 3,245 buffers and 1.0000 for exact. For a
+   small tenant ANN is worse on **both** axes; there is no tradeoff to weigh.
+2. **`ef_search` cannot buy the floor at the top end.** For the 40,000-chunk tenant at cap 120,
+   400 → 1000 moves recall 0.6706 → 0.8818 while roughly doubling buffers, and 1,000 is
+   pgvector's ceiling. No setting of `ef_search` reaches 0.95 there.
+3. **Returning `LIMIT` rows proves nothing**, which is the defect this replaced: `shortPool` is
+   0 in every losing cell.
+
+### 10.3 The floor, and where it is not met
+
+`KB_RETRIEVAL_MIN_RECALL = 0.95`, declared in
+`backend/src/modules/kb/retrieval/kb-retrieval-strategy.ts`.
+
+- **Met, by construction, for tenants ≤ `KB_EXACT_SCAN_MAX_CHUNKS` (10,000)** — exact scanning,
+  1.0000. The threshold is set at 10,000 rather than lower so the 8,000-chunk tenant clears the
+  floor: forced ANN peaks at 0.7233 there, exact is 129,130 buffers / 67.86 ms.
+- **NOT met above the threshold.** A 40,000-chunk tenant tops out at 0.8818 (cap 120). Exact is
+  not the answer there either — 647,040 buffers and ~387 ms per pre-pass.
+
+This is recorded as an accepted, documented gap rather than a solved problem. Closing it needs
+an **index** change, not a query change: a higher `m` / `ef_construction` rebuild, or an
+`org_id`-partitioned vector index so a tenant's traversal stays inside its own rows. **Neither
+is measured yet**, and neither should be adopted on reasoning alone — the whole point of this
+document is that the last two architectural premises here were both wrong until measured.
