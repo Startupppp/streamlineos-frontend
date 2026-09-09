@@ -41,17 +41,6 @@ export const storageUploadContract = z.object({
   sha256: z.string(),
 });
 
-/** `iceServersResponseSchema` */
-export const iceServersContract = z.object({
-  iceServers: z.array(
-    z.object({
-      urls: z.array(z.string()),
-      username: z.string().optional(),
-      credential: z.string().optional(),
-    }),
-  ),
-});
-
 /** `aiConversationSchema` */
 export const aiConversationContract = z.object({
   id: z.number().int(),

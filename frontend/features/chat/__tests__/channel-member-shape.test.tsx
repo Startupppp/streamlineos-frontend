@@ -137,7 +137,6 @@ describe("the member row renders the identity it is given", () => {
           member={DETAIL_MEMBER}
           currentUserId={ME}
           isOnline={false}
-          isMutedInCall={false}
           isAdmin={false}
           isMultiMemberChannel={false}
           isRemoving={false}

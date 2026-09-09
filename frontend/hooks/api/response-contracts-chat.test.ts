@@ -190,9 +190,6 @@ const HUDDLE_PARTICIPANT = {
   huddleId: 11,
   joinedAt: "2026-09-02T12:00:00.000Z",
   leftAt: null,
-  isMuted: false,
-  handRaised: false,
-  isScreenSharing: false,
   userId: "usr_alice",
   user: { id: "usr_alice", name: "Alice", image: null },
 };
@@ -202,6 +199,7 @@ const HUDDLE = {
   channelId: 7,
   status: "active",
   calendarEventId: null,
+  meetingUrl: "https://meet.google.com/abc-defg-hij",
   startedAt: "2026-09-02T12:00:00.000Z",
   endedAt: null,
   startedBy: "usr_alice",
@@ -222,16 +220,37 @@ describe("the huddle contract accepts what loadHuddleWire actually builds", () =
     const orphan = { ...HUDDLE, startedBy: null, startedByUser: null, participants: [{ ...HUDDLE_PARTICIPANT, userId: null, user: null }] };
     expect(chatHuddleContract.safeParse(orphan).success).toBe(true);
   });
+
+  it("accepts a huddle whose Meet link was never minted", () => {
+    expect(chatHuddleContract.safeParse({ ...HUDDLE, meetingUrl: null }).success).toBe(true);
+  });
+});
+
+describe("BITE — a huddle read without a meeting link key is rejected, not silently linkless", () => {
+  it("rejects a payload missing meetingUrl entirely", () => {
+    const { meetingUrl: _meetingUrl, ...withoutLink } = HUDDLE;
+    const result = chatHuddleContract.safeParse(withoutLink);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((i) => i.path.join("."))).toEqual(["meetingUrl"]);
+  });
+
+  it("rejects a meeting link that is not a URL", () => {
+    const result = chatHuddleContract.safeParse({ ...HUDDLE, meetingUrl: "meet.google.com/abc-defg-hij" });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((i) => i.path.join("."))).toEqual(["meetingUrl"]);
+  });
 });
 
 describe("BITE — the huddle payload that actually shipped is rejected", () => {
   /**
    * `with: { membership: { columns: {} } }` — an empty selection selects
-   * NOTHING. `userId` was never on the payload, so every tile read "Unknown",
-   * `isInHuddle` was permanently false and the WebRTC mesh had no peer ids.
+   * NOTHING. `userId` was never on the payload, so every tile read "Unknown"
+   * and `isInHuddle` was permanently false.
    */
   it("rejects a participant whose membership sub-select was empty", () => {
-    const shipped = { ...HUDDLE, participants: [{ id: 3, huddleId: 11, joinedAt: "2026-09-02T12:00:00.000Z", leftAt: null, isMuted: false, handRaised: false, isScreenSharing: false, membership: {} }] };
+    const shipped = { ...HUDDLE, participants: [{ id: 3, huddleId: 11, joinedAt: "2026-09-02T12:00:00.000Z", leftAt: null, membership: {} }] };
     const result = chatHuddleContract.safeParse(shipped);
     expect(result.success).toBe(false);
     if (result.success) return;
@@ -248,6 +267,19 @@ describe("BITE — the huddle payload that actually shipped is rejected", () => 
   it("rejects a participant carrying the membership id the wire keys exclude", () => {
     const shipped = { ...HUDDLE, participants: [{ ...HUDDLE_PARTICIPANT, membershipId: 41 }] };
     expect(chatHuddleContract.safeParse(shipped).success).toBe(false);
+  });
+
+  it("rejects the self-hosted media columns dropped with the Meet cutover", () => {
+    for (const dropped of ["isMuted", "handRaised", "isScreenSharing"]) {
+      const shipped = { ...HUDDLE, participants: [{ ...HUDDLE_PARTICIPANT, [dropped]: false }] };
+      const result = chatHuddleContract.safeParse(shipped);
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      const unrecognized = result.error.issues.flatMap((i) =>
+        i.code === "unrecognized_keys" ? i.keys : [],
+      );
+      expect(unrecognized).toEqual([dropped]);
+    }
   });
 });
 

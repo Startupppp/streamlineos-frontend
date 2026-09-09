@@ -59,15 +59,6 @@ export function huddleChannelName(orgId: string, channelId: number): string {
 }
 
 /** Granted subscribe-only, and only for the caller's own user id. */
-export function huddleSignalChannelName(
-  orgId: string,
-  channelId: number,
-  userId: string,
-): string {
-  return cellPrefixed(`huddle-signal:${orgId}:${channelId}:${userId}`);
-}
-
-/** Granted subscribe-only, and only for the caller's own user id. */
 export function notificationsChannelName(orgId: string, userId: string): string {
   return cellPrefixed(`notifications:${orgId}:${userId}`);
 }

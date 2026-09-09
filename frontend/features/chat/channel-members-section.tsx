@@ -6,7 +6,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useActiveHuddle, useRemoveChannelMember } from "@/hooks/api";
+import { useRemoveChannelMember } from "@/hooks/api";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
 import {
@@ -52,18 +52,7 @@ export function ChannelMembersSection({
 }: ChannelMembersSectionProps) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
-  const { data: activeHuddle } = useActiveHuddle(channelId);
   const removeMember = useRemoveChannelMember();
-
-  const mutedInCallUserIds = useMemo(
-    () =>
-      new Set(
-        (activeHuddle?.participants ?? [])
-          .filter((p) => !p.leftAt && p.isMuted)
-          .map((p) => p.userId),
-      ),
-    [activeHuddle],
-  );
 
   const { onlineMembers, offlineMembers } = useMemo(() => {
     const byName = (a: ChannelMember, b: ChannelMember) =>
@@ -143,7 +132,6 @@ export function ChannelMembersSection({
                 <ChannelMemberRow
                   member={m}
                   isOnline
-                  isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
                   currentUserId={currentUserId}
                   isAdmin={isAdmin}
                   isMultiMemberChannel={isMultiMemberChannel}
@@ -181,7 +169,6 @@ export function ChannelMembersSection({
                 <ChannelMemberRow
                   member={m}
                   isOnline={false}
-                  isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
                   currentUserId={currentUserId}
                   isAdmin={isAdmin}
                   isMultiMemberChannel={isMultiMemberChannel}

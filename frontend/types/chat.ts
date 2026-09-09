@@ -300,9 +300,6 @@ export interface HuddleParticipant {
   userId: string | null;
   joinedAt: Date | string;
   leftAt: Date | string | null;
-  isMuted: boolean;
-  handRaised: boolean;
-  isScreenSharing: boolean;
   user?: { id: string; name: string | null; image: string | null } | null;
 }
 
@@ -312,16 +309,11 @@ export interface Huddle {
   startedBy: string | null;
   status: "active" | "ended";
   calendarEventId: number | null;
+  meetingUrl: string | null;
   startedAt: Date | string;
   endedAt: Date | string | null;
   participants: HuddleParticipant[];
   startedByUser?: { id: string; name: string | null } | null;
-}
-
-export interface HuddleSignalInput {
-  type: "offer" | "answer" | "ice-candidate";
-  targetUserId: string;
-  payload: unknown;
 }
 
 export type SearchMessagesResult = z.infer<typeof chatSearchMessagesContract>;

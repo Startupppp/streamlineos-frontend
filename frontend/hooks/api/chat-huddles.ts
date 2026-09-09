@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -10,7 +11,16 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import { lazyContract } from "@/lib/api-envelope";
-import type { Huddle, HuddleSignalInput } from "@/types/chat";
+import type { Huddle } from "@/types/chat";
+
+const HEARTBEAT_INTERVAL_MS = 30_000;
+
+/**
+ * 412 is a standing precondition only an org owner or admin can clear, so it gets no
+ * retry; 503 is transient (Composio unconfigured, provider failure, timeout) so it does.
+ */
+const MEETING_PRECONDITION_FAILED = 412;
+const MEETING_TEMPORARILY_UNAVAILABLE = 503;
 
 /**
  * `hooks/api/index.ts` re-exports this module, so a value import of
@@ -45,7 +55,8 @@ export function useActiveHuddle(channelId: number) {
 
 export function useStartHuddle() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:huddles:start", {
+  const retryRef = useRef<(channelId: number) => void>(() => undefined);
+  const startHuddle = useAuthorizedMutation("chat:huddles:start", {
     mutationKey: ["chat", "huddle", "start"],
     mutationFn: (channelId: number) =>
       apiClient.post<Huddle>(
@@ -58,10 +69,23 @@ export function useStartHuddle() {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(channelId) });
       queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
+    onError: (error, channelId) => {
+      const message = getErrorMessage(error);
+      if (isApiError(error) && error.status === MEETING_PRECONDITION_FAILED) {
+        toast.error(message, { duration: Number.POSITIVE_INFINITY });
+        return;
+      }
+      if (isApiError(error) && error.status === MEETING_TEMPORARILY_UNAVAILABLE) {
+        toast.error(message, {
+          action: { label: "Try again", onClick: () => retryRef.current(channelId) },
+        });
+        return;
+      }
+      toast.error(message);
     },
   });
+  retryRef.current = startHuddle.mutate;
+  return startHuddle;
 }
 
 export function useJoinHuddle() {
@@ -92,56 +116,23 @@ export function useLeaveHuddle() {
   });
 }
 
-export function useHuddleHeartbeat() {
-  return useAuthorizedMutation("chat:channels:read", {
+/**
+ * Keeps the caller's participant row warm while the huddle panel is mounted, so
+ * a closed tab is reaped server-side. Deleting the route means deleting this
+ * hook and its one call site in `huddle-panel.tsx`.
+ */
+export function useHuddleHeartbeat(huddleId: number): void {
+  const heartbeat = useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],
-    mutationFn: ({ huddleId }: { huddleId: number }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/heartbeat`, undefined, undefined, chatOkContract),
+    mutationFn: (id: number) =>
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${id}/heartbeat`, undefined, undefined, chatOkContract),
   });
-}
+  const { mutate } = heartbeat;
 
-export function useSetHuddleMute() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "huddle", "mute"],
-    mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }, undefined, chatOkContract),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
-    },
-  });
-}
-
-export function useRaiseHand() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "huddle", "hand"],
-    mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }, undefined, chatOkContract),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
-    },
-  });
-}
-
-export function useSendHuddleSignal() {
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "huddle", "signal"],
-    mutationFn: ({ huddleId, ...signal }: { huddleId: number } & HuddleSignalInput) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/signal`, signal, undefined, chatOkContract),
-  });
-}
-
-export function useSetHuddleScreenShare() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "huddle", "screenshare"],
-    mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }, undefined, chatOkContract),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
-    },
-  });
+  useEffect(() => {
+    const id = setInterval(() => mutate(huddleId), HEARTBEAT_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [huddleId, mutate]);
 }
 
 export function useKickParticipant() {
@@ -150,18 +141,6 @@ export function useKickParticipant() {
     mutationKey: ["chat", "huddle", "kick"],
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }, undefined, chatOkContract),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
-    },
-  });
-}
-
-export function useSetHuddleDeafen() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:channels:write", {
-    mutationKey: ["chat", "huddle", "deafen"],
-    mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },

@@ -7,7 +7,6 @@ import {
   chatChannelName,
   chatPresenceChannelName,
   huddleChannelName,
-  huddleSignalChannelName,
   notificationsChannelName,
   supportChannelName,
 } from "../ably-channels";
@@ -51,12 +50,12 @@ import {
  * instances of a gate passing over code it never read.
  */
 
-const MEASURED_NAMESPACE_FLOOR = 5;
+const MEASURED_NAMESPACE_FLOOR = 4;
 const MEASURED_CALLSITE_FLOOR = 10;
-/** Measured at backend 299cd1009: notifications, huddle-signal, chat presence, chat:{id}, huddle:{id}. */
-const MEASURED_CHAT_CAPABILITY_FLOOR = 5;
-/** Measured at frontend 7633c38b9: chat, chat presence, huddle, huddle-signal, notifications, support. */
-const MEASURED_BUILDER_FLOOR = 6;
+/** Measured after the Meet cutover: notifications, chat presence, chat:{id}, huddle:{id}. */
+const MEASURED_CHAT_CAPABILITY_FLOOR = 4;
+/** Measured after the Meet cutover: chat, chat presence, huddle, notifications, support. */
+const MEASURED_BUILDER_FLOOR = 5;
 
 const BACKEND_NAMESPACE = backendPath(
   "src",
@@ -135,7 +134,7 @@ function backendPrefixedNamespaces(): string[] {
  * wildcard for `${channelId}` would make `chat:org-1:presence` "match" the
  * numbered-channel template, and the missing presence grant would hide behind the
  * very key whose absence broke it. A literal `*` in a template stays a wildcard —
- * `huddle-signal:${orgId}:*:${clientId}` really is granted with one.
+ * `support:${orgId}:*` really is granted with one.
  */
 const TEMPLATE_VALUES: Readonly<Record<string, string>> = {
   orgId: "org-1",
@@ -246,8 +245,8 @@ function backendSupportCapabilityKeys(): string[] {
 
 /**
  * An Ably capability resource may carry a `*`, which matches one or more whole
- * segments. `huddle-signal:${orgId}:*:${clientId}` is granted that way on purpose,
- * so a name is covered when it equals a key or matches one whose `*` is expanded.
+ * segments. `support:${orgId}:*` is granted that way on purpose, so a name is
+ * covered when it equals a key or matches one whose `*` is expanded.
  */
 function capabilityCovers(key: string, name: string): boolean {
   if (!key.includes("*")) return key === name;
@@ -344,13 +343,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
       ["chat", { built: chatChannelName("org-1", 7), inner: "chat:org-1:7" }],
       ["huddle", { built: huddleChannelName("org-1", 7), inner: "huddle:org-1:7" }],
       [
-        "huddle-signal",
-        {
-          built: huddleSignalChannelName("org-1", 7, "user-1"),
-          inner: "huddle-signal:org-1:7:user-1",
-        },
-      ],
-      [
         "notifications",
         {
           built: notificationsChannelName("org-1", "user-1"),
@@ -402,7 +394,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
         ["chatChannelName", chatChannelName("org-1", 7)],
         ["chatPresenceChannelName", chatPresenceChannelName("org-1")],
         ["huddleChannelName", huddleChannelName("org-1", 7)],
-        ["huddleSignalChannelName", huddleSignalChannelName("org-1", 7, "user-1")],
         ["notificationsChannelName", notificationsChannelName("org-1", "user-1")],
       ];
 
@@ -441,7 +432,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
         "chatChannelName",
         "chatPresenceChannelName",
         "huddleChannelName",
-        "huddleSignalChannelName",
         "notificationsChannelName",
         "supportChannelName",
       ]);
