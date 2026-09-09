@@ -24,6 +24,7 @@ import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/sc
 import { ScanField } from "@/features/inventory/components/scan";
 import { PickTaskRow } from "./pick-task-row";
 import { PickExceptionDialog } from "./pick-exception-dialog";
+import { PickWaveReassign } from "./pick-wave-reassign";
 
 interface PickWaveSheetProps {
   open: boolean;
@@ -232,6 +233,22 @@ export function PickWaveSheet({
                 </span>
               ) : null}
             </div>
+
+            {/*
+              B4, item 3 — the supervisor's half of the claim.
+
+              `abandon` is the picker saying "not me"; this is somebody else
+              saying "not them". It sits under the sentence explaining who holds
+              the wave because that sentence is what prompts it, and it hides
+              itself when the viewer cannot ship, so a picker sees the walk and
+              nothing else.
+            */}
+            <PickWaveReassign
+              pickListId={detail.id}
+              warehouseId={detail.warehouseId}
+              assignedTo={detail.assignedTo}
+              finished={finished}
+            />
 
             <ul className="flex flex-col gap-2">
               {detail.lines.map((line) => (

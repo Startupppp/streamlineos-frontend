@@ -249,6 +249,7 @@ function assignableWarehouseUsersKey(warehouseId: number, search: string) {
 export function useWarehouseAssignees(
   warehouseId: number,
   filters: { page: number; limit: number },
+  options?: { enabled?: boolean },
 ) {
   const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
   return useQuery<WarehouseAssigneePage, Error>({
@@ -258,7 +259,7 @@ export function useWarehouseAssignees(
         page: filters.page,
         limit: filters.limit,
       }),
-    enabled: canManage && warehouseId > 0,
+    enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

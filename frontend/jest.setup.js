@@ -20,6 +20,15 @@ if (typeof globalThis.ResizeObserver === "undefined") {
   };
 }
 
+// jsdom implements no layout, so `Element.prototype.scrollIntoView` does not
+// exist. cmdk calls it in a layout effect whenever a Command list selects an
+// item, which is every Combobox, MemberPicker and the command palette — the
+// popover opens and then the whole tree throws, so a test that clicks one reads
+// as a broken component rather than a missing DOM method.
+if (typeof Element !== "undefined" && typeof Element.prototype.scrollIntoView !== "function") {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}
+
 // jsdom has no window.matchMedia — code checking prefers-reduced-motion / dark-mode media
 // queries needs at least a stub (defaults to "no match") to run under Jest.
 if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
