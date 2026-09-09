@@ -27,13 +27,13 @@ export const velocityContract = z.array(z.object({
   completedPoints: z.number().int(),
   committedCount: z.number().int(),
   completedCount: z.number().int(),
-}));
+})).max(100);
 
 export const burnupDataContract = z.array(z.object({
   date: z.string(),
   scope: z.number(),
   completed: z.number(),
-}));
+})).max(366);
 
 export const cfdDataContract = z.object({
   dates: z.array(z.string()),

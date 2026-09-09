@@ -32,7 +32,7 @@ export function VelocitySection({ projectId }: { projectId: number }) {
   );
 
   return (
-    <ChartCard title="Velocity" icon={Gauge}>
+    <ChartCard title="Velocity · latest 100 sprints" icon={Gauge}>
       {isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : isError ? (

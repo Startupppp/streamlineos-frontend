@@ -18,6 +18,7 @@ import { TrendingUp } from "lucide-react";
 import { useVelocityReport, useBurnupReport } from "@/hooks/api/build/reports";
 import { format } from "date-fns";
 import { ChartCard } from "./chart-card";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const BurnupChart = dynamic(
   () => import("./burnup-chart").then((m) => ({ default: m.BurnupChart })),
@@ -33,12 +34,12 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     sprints.length > 0 ? sprints[sprints.length - 1].sprintId : undefined;
   const selectedSprintId = sprintId ?? activeSprintId;
 
-  const { data, isLoading, isError, refetch } = useBurnupReport(
+  const { data, isLoading, isError, error, refetch } = useBurnupReport(
     projectId,
     selectedSprintId,
   );
 
-  const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleRetry = useCallback(() => Promise.all([velocity.refetch(), refetch()]), [velocity.refetch, refetch]);
 
   const chartData = useMemo(
     () =>
@@ -61,7 +62,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
         onValueChange={handleSprintChange}
       >
         <SelectTrigger className="w-44 text-sm bg-muted/40 border-border">
-          <SelectValue placeholder="Select sprint" />
+          <SelectValue placeholder="Recent sprints" />
         </SelectTrigger>
         <SelectContent>
           {sprints.map((s) => (
@@ -74,13 +75,13 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     ) : null;
 
   return (
-    <ChartCard title="Burnup" icon={TrendingUp} actions={sprintSelect}>
+    <ChartCard title="Burnup · latest 100 sprints" icon={TrendingUp} actions={sprintSelect}>
       {velocity.isLoading || isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : velocity.isError || isError ? (
         <ErrorState
           title="Could not load burnup"
-          description="Something went wrong while computing the burnup chart."
+          description={getErrorMessage(velocity.error ?? error)}
           onRetry={handleRetry}
           compact
         />

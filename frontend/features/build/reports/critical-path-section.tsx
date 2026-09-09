@@ -8,9 +8,10 @@ import { EmptySearchIllustration } from "@/components/illustrations";
 import { Route, ChevronRight, AlertTriangle } from "lucide-react";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { ChartCard, numberFormatter } from "./chart-card";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export function CriticalPathSection({ projectId }: { projectId: number }) {
-  const { data, isLoading, isError, refetch } = useCriticalPath(projectId);
+  const { data, isLoading, isError, error, refetch } = useCriticalPath(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
@@ -23,7 +24,7 @@ export function CriticalPathSection({ projectId }: { projectId: number }) {
       ) : isError ? (
         <ErrorState
           title="Could not load critical path"
-          description="Something went wrong while computing the project's critical path."
+          description={getErrorMessage(error)}
           onRetry={handleRetry}
           compact
         />
