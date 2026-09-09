@@ -83,6 +83,45 @@ export function useAddRequirement() {
   });
 }
 
+/**
+ * What a line may be corrected to, mirroring `updateRequirementSchema`.
+ *
+ * `RESERVED`, `PARTIALLY_FULFILLED` and `FULFILLED` are absent on purpose: those
+ * are what reserving and dispatching make true, and a hand-set one would claim
+ * stock is held that nothing is holding. Lowering `requiredQty` below what is
+ * already reserved plus delivered is refused by the server with
+ * `REQUIREMENT_BELOW_COMMITTED`.
+ */
+export interface UpdateRequirementInput {
+  projectId: number;
+  requirementId: number;
+  warehouseId?: number | null;
+  requiredQty?: string;
+  requiredBy?: string | null;
+  status?: "DRAFT" | "REQUESTED" | "CANCELLED";
+  notes?: string | null;
+}
+
+export function useUpdateRequirement() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<ProjectRequirement, Error, UpdateRequirementInput>(
+    "inventory:projects:manage",
+    {
+      mutationKey: ["inventory", "project", "requirement", "update"],
+      mutationFn: ({ projectId, requirementId, ...body }) =>
+        apiClient.patch<ProjectRequirement>(
+          `/inventory/projects/${projectId}/requirements/${requirementId}`,
+          body,
+        ),
+      onSuccess: (_r, vars) => {
+        void qc.invalidateQueries({ queryKey: queryKeys.inventoryProjects.detail(vars.projectId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.inventoryProjects.atRisk });
+        void qc.invalidateQueries({ queryKey: queryKeys.inventoryOpsBoard.attention });
+      },
+    },
+  );
+}
+
 export interface ReserveRequirementInput {
   projectId: number;
   requirementId: number;

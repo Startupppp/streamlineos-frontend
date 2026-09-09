@@ -12,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { useReleaseRequirement, useReserveRequirement } from "@/hooks/api/inventory/projects";
 import type { ProjectRequirement } from "@/hooks/api/inventory/projects";
 import { AtRiskBadge, RequirementStatusBadge } from "./requirement-status";
+import { RequirementEditSheet } from "./requirement-edit-sheet";
 
 const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
@@ -32,6 +33,7 @@ export function RequirementRow({
   projectId: number;
 }) {
   const canReserve = useCan("inventory:stock:reserve");
+  const canManage = useCan("inventory:projects:manage");
   const reserve = useReserveRequirement();
   const release = useReleaseRequirement();
   const [reserveOpen, setReserveOpen] = useState(false);
@@ -104,35 +106,40 @@ export function RequirementRow({
         </dl>
       </div>
 
-      {canReserve ? (
+      {canReserve || canManage ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            disabled={reserveBlockedReason !== null || reserve.isPending}
-            title={reserveBlockedReason ?? undefined}
-            onClick={() => {
-              setQty(String(shortfall));
-              setReserveOpen(true);
-            }}
-          >
-            <Lock className="h-3 w-3" aria-hidden="true" />
-            {reserve.isPending ? "Reserving…" : "Reserve Stock"}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 text-xs"
-            disabled={reserved <= 0 || release.isPending}
-            title={reserved <= 0 ? "Nothing is held for this line." : undefined}
-            onClick={() => setReleaseOpen(true)}
-          >
-            <Unlock className="h-3 w-3" aria-hidden="true" />
-            {release.isPending ? "Releasing…" : "Release Reservation"}
-          </Button>
-          {reserveBlockedReason ? (
+          {canReserve ? (
+            <>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              disabled={reserveBlockedReason !== null || reserve.isPending}
+              title={reserveBlockedReason ?? undefined}
+              onClick={() => {
+                setQty(String(shortfall));
+                setReserveOpen(true);
+              }}
+            >
+              <Lock className="h-3 w-3" aria-hidden="true" />
+              {reserve.isPending ? "Reserving…" : "Reserve Stock"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 text-xs"
+              disabled={reserved <= 0 || release.isPending}
+              title={reserved <= 0 ? "Nothing is held for this line." : undefined}
+              onClick={() => setReleaseOpen(true)}
+            >
+              <Unlock className="h-3 w-3" aria-hidden="true" />
+              {release.isPending ? "Releasing…" : "Release Reservation"}
+            </Button>
+            </>
+          ) : null}
+          <RequirementEditSheet requirement={requirement} projectId={projectId} />
+          {canReserve && reserveBlockedReason ? (
             <p className="text-dense text-muted-foreground">{reserveBlockedReason}</p>
           ) : null}
         </div>
