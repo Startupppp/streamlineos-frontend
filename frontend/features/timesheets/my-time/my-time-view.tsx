@@ -11,28 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
+import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
-import { useWeek, type WeekStartDay } from "./use-week";
+import { resolveWeekStart, useWeek } from "./use-week";
 import { TimerPanel } from "./timer-panel";
 import { WeekGrid } from "./week-grid";
 import { DayTimeline } from "./day-timeline";
 import { cn } from "@/lib/utils";
-
-const WEEK_START_DAYS: readonly WeekStartDay[] = [0, 1, 2, 3, 4, 5, 6];
 
 export function MyTimeView() {
   const shouldReduceMotion = useReducedMotion();
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
 
   const { data: periodDetail, isLoading: periodLoading, isError: periodError, refetch: refetchPeriod } = useCurrentPeriod();
+  const { data: settings } = useTimesheetSettings();
 
-  const weekStartsOn = useMemo<WeekStartDay>(() => {
-    const start = periodDetail?.period?.periodStart;
-    if (!start) return 1;
-    const dow = parseISO(start).getDay();
-    return WEEK_START_DAYS.find((d) => d === dow) ?? 1;
-  }, [periodDetail?.period?.periodStart]);
+  const weekStartsOn = resolveWeekStart(
+    settings?.workWeekStart,
+    periodDetail?.period?.periodStart,
+  );
 
   const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
@@ -239,7 +236,12 @@ export function MyTimeView() {
             </TabsContent>
 
             <TabsContent value="day" className="mt-4">
-              <DayTimeline entries={entriesData} days={days} />
+              <DayTimeline
+                entries={entriesData}
+                days={days}
+                weekStart={weekStart}
+                weekEnd={weekEnd}
+              />
             </TabsContent>
           </Tabs>
         )}

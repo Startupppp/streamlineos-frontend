@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
+import { describeDayColumn } from "./day-label";
 import {
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
@@ -251,7 +252,8 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                 return (
                   <th
                     key={d}
-                    title={holiday ?? undefined}
+                    scope="col"
+                    aria-label={describeDayColumn(d, holiday)}
                     className={cn(
                       "text-center px-1 py-2 font-medium text-muted-foreground w-16",
                       holiday && "bg-muted text-foreground",
