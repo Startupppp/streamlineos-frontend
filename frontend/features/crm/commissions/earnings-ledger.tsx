@@ -74,9 +74,27 @@ export function EarningsLedger({ earnings, locale }: EarningsLedgerProps) {
 
   if (earnings.length === 0)
     return (
-      <p className="px-1 py-8 text-center text-sm text-muted-foreground">
-        No earnings match this filter.
-      </p>
+      /**
+       * CRM-P1-12. This said "No earnings match this filter", and there is no
+       * filter — the page asks for every earning. So the message explained an
+       * empty ledger as a narrowed view, when the real reason is almost always
+       * that nothing has calculated one.
+       *
+       * Earnings are created per deal by POST crm/commission/earnings/calculate
+       * and by nothing else: there is no scheduled run anywhere in the
+       * repository, no outbox consumer, and no caller on deal-won. A rep
+       * reading an empty ledger would otherwise conclude they had earned
+       * nothing, which is a different and much worse statement than "nobody has
+       * worked this out yet".
+       */
+      <div className="px-1 py-8 text-center">
+        <p className="text-sm text-muted-foreground">No earnings recorded yet.</p>
+        <p className="mt-1 text-micro text-muted-foreground">
+          Commission is worked out per deal when somebody runs the calculation — there
+          is no scheduled run, so an empty ledger means it has not been done, not that
+          nothing was earned.
+        </p>
+      </div>
     );
 
   return (
