@@ -4,6 +4,8 @@
 
 **How to use it:**
 
+Five-area verification (2026-09-09): the focused organization/RBAC, Settings, module-access, billing and payments frontend run passed **52 suites / 474 tests**. Query-scope validation passed across 5,933 files; route-access validation checked 205 navigation permission keys against 633 contract permissions; the permission catalog remained current at 704 keys. Madge processed 5,929 files with zero circular dependencies (20 resolution warnings). Raw logs are in `.artifacts/five-areas-2026-09-09/frontend-agent/`. These checks do not certify individual page layouts or production infrastructure.
+
 Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtime on first opening and preserves state after minimizing; Inbox no longer preloads its closed notification drawer on mount. The two focused suites pass 6 tests and frontend source typecheck passes. This does not mark individual page audits or measured browser performance complete.
 
 - `- [ ]` = not yet audited for this cycle. `- [x]` = audited; mark done after Audit → Plan → Confirm → Edit.
