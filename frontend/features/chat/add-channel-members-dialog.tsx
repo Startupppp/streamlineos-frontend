@@ -9,6 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Loader2, RefreshCw } from "lucide-react";
@@ -28,6 +36,13 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import type { OrgUser } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
+
+const INVITE_EXPIRY_OPTIONS = [
+  { value: "never", label: "Never expires", ttlSeconds: undefined },
+  { value: "24h", label: "Expires in 24 hours", ttlSeconds: 24 * 60 * 60 },
+  { value: "7d", label: "Expires in 7 days", ttlSeconds: 7 * 24 * 60 * 60 },
+  { value: "30d", label: "Expires in 30 days", ttlSeconds: 30 * 24 * 60 * 60 },
+] as const;
 
 const MEMBER_LIST_BOX_HEIGHT = 280;
 const MEMBER_LIST_PADDING = 8;
@@ -57,6 +72,7 @@ export function AddChannelMembersDialog({
   const regenerateInviteLink = useRegenerateInviteLink();
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expiry, setExpiry] = useState<string>("never");
 
   const inviteUrl = useMemo(() => {
     if (!inviteLink?.token || typeof window === "undefined") return null;
@@ -73,14 +89,23 @@ export function AddChannelMembersDialog({
     }
   }, [inviteUrl]);
 
+  const handleExpiryChange = useCallback((value: string) => {
+    setExpiry(value);
+  }, []);
+
   const handleRegenerateLink = useCallback(async () => {
+    const ttlSeconds = INVITE_EXPIRY_OPTIONS.find((o) => o.value === expiry)?.ttlSeconds;
     try {
-      await regenerateInviteLink.mutateAsync(channelId);
-      toast.success("Generated a new invite link");
+      await regenerateInviteLink.mutateAsync({ channelId, ttlSeconds });
+      toast.success(
+        ttlSeconds === undefined
+          ? "Generated a new invite link"
+          : "Generated a new invite link with an expiry",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [regenerateInviteLink, channelId]);
+  }, [regenerateInviteLink, channelId, expiry]);
 
   const availableUsers = useMemo(() => {
     if (!orgUsers) return [];
@@ -247,8 +272,23 @@ export function AddChannelMembersDialog({
                 </LoadingButton>
               </div>
             )}
+            <div className="mt-2 flex items-center gap-2">
+              <Select value={expiry} onValueChange={handleExpiryChange}>
+                <SelectTrigger className="flex-1" aria-label="Invite link expiry">
+                  <SelectValue placeholder="Select an expiry" />
+                </SelectTrigger>
+                <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                  {INVITE_EXPIRY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <p className="text-micro text-muted-foreground/70 mt-1.5">
-              Anyone signed in to your org with this link can join this channel.
+              Anyone signed in to your org with this link can join this channel. The expiry applies
+              to the next link you generate; the current link keeps the expiry it was created with.
             </p>
           </div>
         )}

@@ -19,6 +19,8 @@ jest.mock("@/lib/api-client", () => ({
     patch: jest.fn(),
     delete: jest.fn(),
   },
+  isApiError: (error: unknown) => error instanceof Error && error.name === "ApiError",
+  getApiErrorCode: () => undefined,
 }));
 
 jest.mock("@/hooks/api/access", () => ({

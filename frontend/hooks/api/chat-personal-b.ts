@@ -170,21 +170,32 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
   });
 }
 
+export interface RegenerateInviteLinkInput {
+  channelId: number;
+  ttlSeconds?: number;
+  maxUses?: number;
+}
+
 export function useRegenerateInviteLink() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:invite-links:manage", {
-    mutationKey: ["chat", "channels", "invite-link", "regenerate"],
-    mutationFn: (channelId: number) =>
-      apiClient.post<{ token: string }>(
-        `/chat/channels/${channelId}/invite-link/regenerate`,
-        undefined, undefined, chatInviteLinkContract,
-      ),
-    onSuccess: (_, channelId) => {
-      queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.inviteLink(channelId),
-      });
+  return useAuthorizedMutation<{ token: string }, Error, RegenerateInviteLinkInput>(
+    "chat:invite-links:manage",
+    {
+      mutationKey: ["chat", "channels", "invite-link", "regenerate"],
+      mutationFn: ({ channelId, ttlSeconds, maxUses }) =>
+        apiClient.post<{ token: string }>(
+          `/chat/channels/${channelId}/invite-link/regenerate`,
+          { ...(ttlSeconds !== undefined && { ttlSeconds }), ...(maxUses !== undefined && { maxUses }) },
+          undefined,
+          chatInviteLinkContract,
+        ),
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.inviteLink(variables.channelId),
+        });
+      },
     },
-  });
+  );
 }
 
 export function useJoinViaInviteLink() {
