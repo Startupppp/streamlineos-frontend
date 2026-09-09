@@ -8,6 +8,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { KbImageIcon, KbXIcon } from "@/features/wiki/lib/kb-icons";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { resolveImageUrl } from "@/lib/utils";
 
 const GRADIENT_PRESETS = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },
@@ -47,8 +48,10 @@ function getCoverStyle(parsed: ParsedCover, displayPosY: number): React.CSSPrope
     const preset = GRADIENT_PRESETS.find((p) => p.key === key);
     return preset ? { background: preset.css } : {};
   }
+  const url = resolveImageUrl(parsed.url);
+  if (!url) return {};
   return {
-    backgroundImage: `url(${parsed.url})`,
+    backgroundImage: `url("${url}")`,
     backgroundSize: "cover",
     backgroundPosition: `center ${displayPosY}%`,
   };
