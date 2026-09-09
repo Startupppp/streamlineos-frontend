@@ -263,3 +263,35 @@ export interface RepairPoliciesResponse {
   autonomy: { allowed: boolean; decidedBy: string; reason: string | null };
   classes: EffectiveRepairPolicy[];
 }
+
+/** What a domain is registered to send, and what the cold track will accept. */
+export const SENDING_DOMAIN_PURPOSES = ["transactional", "cold"] as const;
+export type SendingDomainPurpose = (typeof SENDING_DOMAIN_PURPOSES)[number];
+
+export interface SendingDomain {
+  sendingDomainId: string;
+  domain: string;
+  purpose: SendingDomainPurpose;
+  /** DNS proved it. Null means the domain still sends nothing on the cold track. */
+  verifiedAt: string | null;
+  /** The day the ramp counts from. Null means warm-up never began. */
+  warmupStartedAt: string | null;
+  /**
+   * What to publish, and where. Null once the domain is verified — a record that
+   * has already done its job is noise on the screen.
+   */
+  verificationRecord: { name: string; value: string } | null;
+}
+
+export interface ColdOutboundOverview {
+  enabled: boolean;
+  enabledAt: string | null;
+  /**
+   * Set by the send path itself when bounces or complaints cross their ceiling,
+   * and cleared only by a person. Distinct from `enabled: false`, which is
+   * somebody choosing not to run the track at all.
+   */
+  pausedAt: string | null;
+  pauseReason: string | null;
+  domains: SendingDomain[];
+}

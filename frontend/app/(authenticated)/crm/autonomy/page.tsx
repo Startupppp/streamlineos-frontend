@@ -7,6 +7,7 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { AutonomyReviewFeed } from "@/features/crm/autonomy/autonomy-review-feed";
 import { AutonomySwitchesPanel } from "@/features/crm/autonomy/autonomy-switches-panel";
 import { RepairPoliciesPanel } from "@/features/crm/autonomy/repair-policies-panel";
+import { ColdOutboundPanel } from "@/features/crm/autonomy/cold-outbound-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
 
@@ -40,6 +41,8 @@ export default function AutonomyReviewPage() {
           <AutonomySwitchesPanel />
           {/* Under the switches, because the kill switch above vetoes all of it. */}
           <RepairPoliciesPanel />
+          {/* Renders nothing without the manage key, so a reviewer sees no gap. */}
+          <ColdOutboundPanel />
           <AutonomyReviewFeed />
         </div>
       )}

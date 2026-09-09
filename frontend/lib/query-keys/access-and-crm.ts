@@ -65,6 +65,7 @@ export const accessAndCrmQueryKeys = {
     autonomyReviewQueue: () => [...base, "crm", "autonomy", "review-queue"] as const,
     autonomySettings: () => [...base, "crm", "autonomy", "settings"] as const,
     autonomyHolds: () => [...base, "crm", "autonomy", "holds"] as const,
+    autonomyColdOutbound: () => [...base, "crm", "autonomy", "cold-outbound"] as const,
     /**
      * The prefix every issue key extends, so one invalidation reaches the list
      * and the open record together. A transition changes the stage on both, and
@@ -97,6 +98,15 @@ export const accessAndCrmQueryKeys = {
       [...base, "crm", "customerExecutiveDashboard"] as const,
     person: (slug: string) => [...base, "crm", "person", slug] as const,
     peopleSlugs: () => [...base, "crm", "peopleSlugs"] as const,
+    /** The queryable surface, already filtered to what the caller may run. */
+    reportingSources: () => [...base, "crm", "reporting", "sources"] as const,
+    /**
+     * A run keyed by the whole description, because the description *is* the
+     * question — two runs differing only in a filter value are two different
+     * reports, and sharing a key would serve one answer for both.
+     */
+    reportingRun: (description: unknown) =>
+      [...base, "crm", "reporting", "run", description] as const,
   },
 
   crmSettings: {
