@@ -120,11 +120,20 @@ export const ASSIGNMENT_RULE_LAYOUT: RecordLayout = {
       visibleWhen: { field: "assignmentType", equals: ["assign_user"] },
     },
     {
+      /*
+       * Shown for three arms, because the server reads candidates out of this
+       * one column for all three. A least-loaded rule with nobody in it does
+       * not fall back to the org -- `resolveAssignment` returns null and the
+       * lead is assigned to no one.
+       */
       name: "roundRobinUserIds",
-      label: "Round-robin members",
+      label: "Members",
       kind: "text",
-      visibleWhen: { field: "assignmentType", equals: ["round_robin"] },
-      hint: "Leads are handed out to these people in turn.",
+      visibleWhen: {
+        field: "assignmentType",
+        equals: ["round_robin", "least_loaded"],
+      },
+      hint: "Leads are handed out across these people.",
     },
     {
       name: "weightedMembers",
@@ -136,17 +145,19 @@ export const ASSIGNMENT_RULE_LAYOUT: RecordLayout = {
       hint: "A member with twice the weight receives roughly twice the leads.",
     },
     {
-      name: "windowHours",
-      label: "Window (hours)",
-      kind: "number",
-      visibleWhen: { field: "assignmentType", equals: ["least_loaded"] },
-      hint: "How far back to look when deciding who is carrying the least.",
-    },
-    {
-      name: "territoryId",
-      label: "Territory",
+      /*
+       * A territory rule takes its territory from the org's territory table,
+       * matched on the lead's city -- there is no territory to choose here, and
+       * the picker that used to stand in this place sent a `territoryId` no
+       * column accepts. What the rule does own is who gets the lead when no
+       * territory matches, which is otherwise nobody.
+       */
+      name: "fallbackUserId",
+      label: "Fallback owner",
       kind: "reference",
+      referenceTo: "user",
       visibleWhen: { field: "assignmentType", equals: ["territory"] },
+      hint: "Who takes the lead when its city matches no territory.",
     },
   ],
   list: {

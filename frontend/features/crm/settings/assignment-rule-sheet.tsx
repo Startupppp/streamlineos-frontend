@@ -9,13 +9,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { MemberPicker } from "@/components/shared";
 import {
   RecordForm,
@@ -25,19 +18,22 @@ import {
   type RecordFormValues,
 } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
-import { useTerritories } from "@/hooks/api/crm-settings";
 import type {
   AssignmentRule,
   AssignmentRuleCondition,
-  AssignmentType,
   CreateAssignmentRuleInput,
   WeightedMember,
 } from "@/hooks/api/crm-settings";
 import { ASSIGNMENT_RULE_LAYOUT } from "@/lib/renderer/crm/settings/assignment-rule-layout";
 import {
+  armPayload,
+  asAssignmentType,
+  effectiveTypeOf,
+  membersFrom,
+} from "./assignment-arms";
+import {
   flagOr,
   listValue,
-  numberOrOmit,
   requiredText,
   textOrOmit,
 } from "./shared/record-payload";
@@ -54,30 +50,19 @@ import {
  * to look like.
  */
 
-const ASSIGNMENT_TYPES: readonly AssignmentType[] = [
-  "assign_user",
-  "round_robin",
-  "weighted_round_robin",
-  "least_loaded",
-  "territory",
-];
-
-function asAssignmentType(value: string | undefined): AssignmentType {
-  return ASSIGNMENT_TYPES.find((candidate) => candidate === value) ?? "assign_user";
-}
-
 function initialValues(rule: AssignmentRule): Record<string, unknown> {
   return {
     name: rule.name,
-    assignmentType: rule.assignmentType,
+    // What the rule does, not the column it is stored in: opening a weighted
+    // rule showed "Round robin" and its member weights nowhere.
+    assignmentType: effectiveTypeOf(rule),
     priority: rule.priority,
     isActive: rule.isActive,
     conditions: rule.conditions,
     assignToUserId: rule.assignToUserId ?? "",
     roundRobinUserIds: (rule.roundRobinUserIds ?? []).join(", "),
-    weightedMembers: rule.weightedMembers ?? [],
-    windowHours: rule.windowHours,
-    territoryId: rule.territoryId,
+    weightedMembers: membersFrom(rule.config),
+    fallbackUserId: rule.config?.fallbackUserId ?? "",
   };
 }
 
@@ -93,29 +78,10 @@ function conditionsFrom(lines: RecordFormLines | undefined): AssignmentRuleCondi
 }
 
 /** Rows that name a member; a row with nobody in it is not a share of anything. */
-function weightsFrom(lines: RecordFormLines | undefined): WeightedMember[] {
+function weightedRows(lines: RecordFormLines | undefined): WeightedMember[] {
   return (lines?.weightedMembers ?? [])
     .map((row) => ({ userId: row.userId?.trim() ?? "", weight: Number(row.weight ?? "") }))
     .filter((member) => member.userId && Number.isFinite(member.weight));
-}
-
-/**
- * The arm's own half of the payload.
- *
- * Only the arm the rule is on contributes. The engine already drops the fields
- * of every other arm before this is called, so a rule switched from round robin
- * to territory does not carry its old member list into the update.
- */
-function armPayload(
-  type: AssignmentType,
-  values: RecordFormValues,
-  lines: RecordFormLines | undefined,
-): Partial<CreateAssignmentRuleInput> {
-  if (type === "assign_user") return { assignToUserId: textOrOmit(values, "assignToUserId") };
-  if (type === "round_robin") return { roundRobinUserIds: listValue(values, "roundRobinUserIds") ?? [] };
-  if (type === "weighted_round_robin") return { weightedMembers: weightsFrom(lines) };
-  if (type === "least_loaded") return { windowHours: numberOrOmit(values, "windowHours") };
-  return { territoryId: numberOrOmit(values, "territoryId") };
 }
 
 export interface AssignmentRuleSheetProps {
@@ -134,7 +100,6 @@ export function AssignmentRuleSheet({
   onSubmit,
 }: AssignmentRuleSheetProps) {
   const layout = useTenantLayout(ASSIGNMENT_RULE_LAYOUT);
-  const { data: territories = [] } = useTerritories();
 
   const controls = useMemo(
     () => ({
@@ -150,26 +115,17 @@ export function AssignmentRuleSheet({
       roundRobinUserIds: (control: RecordFieldControl) => (
         <RoundRobinMembers control={control} />
       ),
-      territoryId: (control: RecordFieldControl) => (
-        <Select
-          value={control.value}
-          onValueChange={control.onChange}
+      fallbackUserId: (control: RecordFieldControl) => (
+        <MemberPicker
+          mode="single"
+          value={control.value || undefined}
+          onChange={(id) => control.onChange(id ?? "")}
           disabled={control.disabled}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select territory" />
-          </SelectTrigger>
-          <SelectContent>
-            {territories.map((territory) => (
-              <SelectItem key={territory.id} value={String(territory.id)}>
-                {territory.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Select user"
+        />
       ),
     }),
-    [territories],
+    [],
   );
 
   const lineControls = useMemo<
@@ -201,10 +157,14 @@ export function AssignmentRuleSheet({
     const type = asAssignmentType(values.assignmentType);
     onSubmit({
       name: requiredText(values, "name"),
-      assignmentType: type,
       isActive: flagOr(values, "isActive", true),
       conditions: conditionsFrom(lines),
-      ...armPayload(type, values, lines),
+      ...armPayload(type, {
+        assignToUserId: textOrOmit(values, "assignToUserId"),
+        members: listValue(values, "roundRobinUserIds") ?? [],
+        weighted: weightedRows(lines),
+        fallbackUserId: textOrOmit(values, "fallbackUserId"),
+      }),
     });
   }
 

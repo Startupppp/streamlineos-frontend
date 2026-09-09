@@ -20,6 +20,7 @@ import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
 import { AssignmentRuleSheet } from "@/features/crm/settings/assignment-rule-sheet";
+import { effectiveTypeOf } from "@/features/crm/settings/assignment-arms";
 import { AssignmentRulePreviewPanel } from "./assignment-rule-preview-panel";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -81,7 +82,7 @@ export function AssignmentRulesPage() {
       rules.map((rule) => ({
         id: rule.id,
         name: rule.name,
-        assignmentType: rule.assignmentType,
+        assignmentType: effectiveTypeOf(rule),
         priority: rule.priority,
         isActive: rule.isActive,
         conditions: rule.conditions,
