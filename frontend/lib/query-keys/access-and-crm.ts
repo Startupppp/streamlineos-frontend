@@ -167,6 +167,41 @@ export const accessAndCrmQueryKeys = {
     reportingRunsAll: () => [...base, "crm", "reporting", "runs"] as const,
     reportingRuns: (params: Record<string, unknown>) =>
       [...base, "crm", "reporting", "runs", "list", params] as const,
+    /**
+     * The criteria vocabulary a segment may be written against — the same
+     * registry reporting exposes, filtered to the sources this caller may
+     * evaluate. One answer per tenant, so no arguments.
+     */
+    segmentSources: () => [...base, "crm", "segments", "sources"] as const,
+    /**
+     * The prefix a save, edit or delete invalidates.
+     *
+     * `saved` sits between `segments` and the reads on purpose. The obvious
+     * prefix — `["crm", "segments"]` — also covers the source catalogue and the
+     * unsaved preview, so every mutation would refetch a 30-minute catalogue
+     * that cannot have changed. Naming the saved half separately keeps one
+     * invalidation call reaching exactly the reads a mutation moves.
+     */
+    segmentsSaved: () => [...base, "crm", "segments", "saved"] as const,
+    segments: (params: Record<string, unknown>) =>
+      [...base, "crm", "segments", "saved", "list", params] as const,
+    segment: (segmentId: string) =>
+      [...base, "crm", "segments", "saved", "detail", segmentId] as const,
+    /**
+     * Who is in a segment, keyed by the bound as well as the id — a sample of
+     * ten and a sample of a hundred are different answers to the same question,
+     * and sharing a key would serve the short one to a caller that asked for the
+     * long one.
+     */
+    segmentMembers: (segmentId: string, limit: number) =>
+      [...base, "crm", "segments", "saved", "detail", segmentId, "members", limit] as const,
+    /**
+     * A count for criteria nobody has saved, keyed by the whole tree because the
+     * tree *is* the question — two previews differing only in a value are two
+     * different counts.
+     */
+    segmentPreview: (source: string, criteria: unknown) =>
+      [...base, "crm", "segments", "preview", source, criteria] as const,
   },
 
   crmSettings: {
@@ -238,6 +273,21 @@ export const accessAndCrmQueryKeys = {
     all: [...base, "dealActivities"] as const,
     list: (dealId: number, params?: Record<string, unknown>) =>
       [...base, "dealActivities", "list", dealId, params] as const,
+  },
+
+  /**
+   * CRM-P2-12. Suggested competitors, keyed apart from `deals.competitors`.
+   *
+   * A separate factory rather than another member of the deals one, so that
+   * invalidating the manual list after an accept and invalidating the proposal
+   * list are two statements a reader can see are both there. Folding them into
+   * one prefix would make the accept path look correct while refreshing only
+   * half the card.
+   */
+  dealCompetitorSuggestions: {
+    all: [...base, "dealCompetitorSuggestions"] as const,
+    list: (dealId: number, status?: string) =>
+      [...base, "dealCompetitorSuggestions", "list", dealId, status] as const,
   },
 
   salesTeamCapacity: {
