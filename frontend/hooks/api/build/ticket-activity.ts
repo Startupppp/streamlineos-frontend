@@ -1,7 +1,9 @@
 "use client";
 
 import type { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -19,17 +21,20 @@ export type TicketActivityAction = TicketActivityEntry["action"];
 
 export function useTicketActivity(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
-  return useQuery<TicketActivityPage, Error, TicketActivityEntry[]>({
+  const query = useInfiniteQuery({
     queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
-    queryFn: ({ signal }) =>
+    queryFn: ({ signal, pageParam }) =>
       apiClient.get<TicketActivityPage>(
         `/build/${projectId}/tickets/${ticketId}/activity`,
-        undefined,
+        { limit: 25, ...(pageParam === undefined ? {} : { cursor: pageParam }) },
         signal,
         ticketActivityPageLazy,
       ),
-    select: (page) => page.data,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
   });
+  const data = useMemo(() => query.data?.pages.flatMap((page) => page.data) ?? [], [query.data]);
+  return { ...query, data };
 }

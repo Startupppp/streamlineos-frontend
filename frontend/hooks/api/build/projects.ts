@@ -17,6 +17,7 @@ import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateBuildViews } from "./ticket-cache";
 import {
   applyProjectDetailPatch,
   getWorkspaceUsersFromCache,
@@ -208,6 +209,7 @@ export function useUpdateProject(
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
+      invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
@@ -232,8 +234,10 @@ export function useDeleteProject(
     mutationKey: ["projects", "delete"],
     mutationFn: ({ projectId }) =>
       apiClient.delete<void>(`/build/${projectId}`, undefined, undefined, projectDeleteNoContentLazy),
-    onSuccess: () => {
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
 }
@@ -260,11 +264,13 @@ export function useArchiveProject(
       apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, {
         status: restore ? "ACTIVE" : "ARCHIVED",
       }, undefined, projectDetailLazy),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
 }

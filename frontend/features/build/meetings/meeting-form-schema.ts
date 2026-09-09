@@ -11,15 +11,15 @@ export const meetingSchema = z
       .transform((v) => v.trim())
       .refine((v) => v.length > 0, "Title cannot be blank or whitespace only")
       .refine((v) => !SYMBOL_ONLY_RE.test(v), "Title must contain at least one letter or number"),
-    type: z.enum(["meeting", "standup", "retro", "planning", "review"] as const),
-    status: z.enum(["scheduled", "in_progress", "completed", "cancelled"] as const),
+    type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
+    status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
     agenda: z.string(),
     scheduledAt: z.string(),
     endAt: z.string(),
     durationMinutes: z.string(),
     timezone: z.string(),
     recurrenceEnabled: z.boolean(),
-    recurrenceFrequency: z.enum(["daily", "weekly", "biweekly", "custom"] as const),
+    recurrenceFrequency: z.enum(["daily", "weekly", "biweekly", "custom"]),
     recurrenceEndDate: z.string(),
   })
   .refine(

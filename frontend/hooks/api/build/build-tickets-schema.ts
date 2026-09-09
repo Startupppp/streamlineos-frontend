@@ -136,8 +136,23 @@ const paginationContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const ticketListRowContract = ticketRowContract.pick({
+  id: true, orgId: true, title: true, type: true, status: true, priority: true,
+  projectId: true, ticketNumber: true, sprintId: true, epicId: true,
+  assigneeMembershipId: true, reporterId: true, points: true, storyPoints: true,
+  link: true, rank: true, parentTicketId: true, originalEstimate: true,
+  timeSpent: true, startDate: true, dueDate: true, moduleId: true, cycleId: true,
+  sequenceId: true, estimate: true, createdAt: true, updatedAt: true,
+}).extend({
+  assigneeId: z.string().nullable(),
+  assignee: userSummarySchema,
+  assignees: z.array(z.object({ id: z.number().int(), ticketId: z.number().int(), assignedAt: z.string(), assignedBy: z.string().nullable(), userId: z.string(), user: userSummarySchema.unwrap() })),
+  labels: z.array(z.object({ id: z.number().int(), ticketId: z.number().int(), labelId: z.number().int(), createdAt: z.string(), label: z.object({ id: z.number().int(), orgId: z.string(), name: z.string(), color: z.string().nullable(), createdAt: z.string() }) })),
+  cycle: z.object({ id: z.number().int(), name: z.string(), status: z.string(), startDate: z.string(), endDate: z.string() }).nullable(),
+});
+
 export const ticketListPageContract = z.object({
-  data: z.array(ticketRowContract),
+  data: z.array(ticketListRowContract),
   pagination: paginationContract,
 });
 

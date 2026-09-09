@@ -6,7 +6,9 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { useRankTicket, useReorderCustomStates } from "@/hooks/api";
+import { useRankTicket } from "@/hooks/api/build/ticket-mutations";
+import { useReorderCustomStates } from "@/hooks/api/build/custom-states";
+import { patchTicketCollections, restoreTicketCollections, ticketRollback, type TicketSnapshots } from "@/hooks/api/build/ticket-cache";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -24,7 +26,8 @@ import {
 
 type RankDragContext = {
   previous: KanbanTicket[];
-  previousCache: KanbanTicket[] | undefined;
+  optimistic: KanbanTicket[];
+  previousCache: TicketSnapshots;
 };
 
 function isRankDragContext(v: unknown): v is RankDragContext {
@@ -65,63 +68,55 @@ export function useKanbanDrag({
   dragStartRef,
 }: KanbanDragParams) {
   const queryClient = useQueryClient();
-  const boardTicketsKey = buildWorkQueryKeys.projects.tickets({ projectId, view: "board" });
+  const boardTicketsKey = buildWorkQueryKeys.projects.tickets({ projectId });
   const reorderStates = useReorderCustomStates(projectId);
 
   const rankTicket = useRankTicket<RankDragContext>({
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: boardTicketsKey });
-      const previousCache = queryClient.getQueryData<KanbanTicket[]>(boardTicketsKey);
+      const dragged = optimisticTickets.find((t) => t.id === variables.ticketId);
+      const effectiveStatus = variables.status ?? dragged?.status ?? "";
 
-      if (previousCache) {
-        const dragged = previousCache.find((t) => t.id === variables.ticketId);
-        const effectiveStatus = variables.status ?? dragged?.status ?? "";
+      const destColTickets = optimisticTickets
+        .filter((t) => t.status === effectiveStatus && t.id !== variables.ticketId)
+        .sort(compareByRank);
 
-        const destColTickets = previousCache
-          .filter((t) => t.status === effectiveStatus && t.id !== variables.ticketId)
-          .sort(compareByRank);
+      const beforeNeighbor = variables.beforeTicketId != null
+        ? destColTickets.find((t) => t.id === variables.beforeTicketId)
+        : null;
+      const afterNeighbor = variables.afterTicketId != null
+        ? destColTickets.find((t) => t.id === variables.afterTicketId)
+        : null;
 
-        const beforeNeighbor =
-          variables.beforeTicketId != null
-            ? destColTickets.find((t) => t.id === variables.beforeTicketId)
-            : null;
-        const afterNeighbor =
-          variables.afterTicketId != null
-            ? destColTickets.find((t) => t.id === variables.afterTicketId)
-            : null;
+      const optimisticRank = computeOptimisticRank(
+        beforeNeighbor?.rank ?? null,
+        afterNeighbor?.rank ?? null,
+      );
 
-        const optimisticRank = computeOptimisticRank(
-          beforeNeighbor?.rank ?? null,
-          afterNeighbor?.rank ?? null,
-        );
-
-        queryClient.setQueryData<KanbanTicket[]>(boardTicketsKey, (old) => {
-          if (!old) return old;
-          return old.map((t) =>
-            t.id === variables.ticketId
-              ? { ...t, status: effectiveStatus, rank: optimisticRank }
-              : t,
-          );
-        });
-      }
-
-      return { previous: optimisticTickets, previousCache };
+      const previousCache = patchTicketCollections(queryClient, projectId, (t) =>
+        t.id === variables.ticketId
+          ? { ...t, status: effectiveStatus, rank: optimisticRank }
+          : t,
+      );
+      const optimistic = optimisticTickets.map((ticket) => ticket.id === variables.ticketId
+        ? { ...ticket, status: effectiveStatus, rank: optimisticRank } : ticket);
+      setOptimisticTickets((current) => current.map((ticket) => ticket.id === variables.ticketId
+        ? { ...ticket, status: effectiveStatus, rank: optimisticRank } : ticket));
+      return { previous: optimisticTickets, optimistic, previousCache };
     },
     onError: (error, _vars, context) => {
       if (isRankDragContext(context)) {
-        setOptimisticTickets(context.previous);
-        queryClient.setQueryData(boardTicketsKey, context.previousCache);
+        const restore = ticketRollback(context.previous, context.optimistic);
+        setOptimisticTickets((current) => current.map(restore));
+        restoreTicketCollections(queryClient, context.previousCache);
       }
       toast.error(getErrorMessage(error));
     },
     onSettled: (data) => {
       if (data) {
-        queryClient.setQueryData<KanbanTicket[]>(boardTicketsKey, (old) => {
-          if (!old) return old;
-          return old.map((t) =>
-            t.id === data.id ? { ...t, rank: data.rank, status: data.status } : t,
-          );
-        });
+        patchTicketCollections(queryClient, projectId, (t) =>
+          t.id === data.id ? { ...t, rank: data.rank, status: data.status } : t,
+        );
       }
       queryClient.invalidateQueries({ queryKey: boardTicketsKey });
     },
@@ -238,17 +233,6 @@ export function useKanbanDrag({
 
       const beforeTicketId = destColTickets[destination.index - 1]?.id ?? null;
       const afterTicketId = destColTickets[destination.index]?.id ?? null;
-
-      const optimisticRank = computeOptimisticRank(
-        destColTickets.find((t) => t.id === beforeTicketId)?.rank ?? null,
-        destColTickets.find((t) => t.id === afterTicketId)?.rank ?? null,
-      );
-
-      setOptimisticTickets(
-        optimisticTickets.map((t) =>
-          t.id === ticketId ? { ...t, status: newStatus, rank: optimisticRank } : t,
-        ),
-      );
 
       rankTicket.mutate({
         projectId,

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -22,6 +22,7 @@ import type {
   UpdateSprintInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateBuildViews } from "./ticket-cache";
 
 export function useSprints(
   projectId?: number,
@@ -38,24 +39,23 @@ export function useSprints(
   });
 }
 
-export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
+export function useCreateSprint(options?: Omit<UseMutationOptions<Sprint, Error, CreateSprintInput>, "mutationFn">) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:sprints:manage", {
     ...options,
     mutationKey: ["projects", "sprints", "create"],
     mutationFn: ({ projectId, ...data }: CreateSprintInput) =>
       apiClient.post<Sprint>(`/build/${projectId}/sprints`, data, undefined, sprintRowContract),
-    onSuccess: (_: unknown, variables: CreateSprintInput) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.sprints(variables.projectId),
-      });
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId);
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
 }
 
 export function useUpdateSprint(
   projectId: number,
-  options?: Parameters<typeof useMutation>[0]
+  options?: Omit<UseMutationOptions<{ success: true }, Error, UpdateSprintInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:sprints:manage", {
@@ -68,10 +68,9 @@ export function useUpdateSprint(
         undefined,
         sprintUpdateResultContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.sprints(projectId),
-      });
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, projectId);
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
 }

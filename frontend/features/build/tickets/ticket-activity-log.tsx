@@ -19,6 +19,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useTicketActivity,
@@ -96,13 +97,19 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
 const ACTIVITY_RENDER_PAGE_SIZE = 25;
 
 export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProps) {
-  const { data, isLoading, isError } = useTicketActivity(projectId, ticketId);
-  // The endpoint returns the whole audit trail with no cursor.
+  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage, refetch } = useTicketActivity(projectId, ticketId);
   const [visibleCount, setVisibleCount] = useState(ACTIVITY_RENDER_PAGE_SIZE);
   const handleShowOlder = useCallback(
-    () => setVisibleCount((count) => count + ACTIVITY_RENDER_PAGE_SIZE),
-    [],
+    async () => {
+      if (visibleCount >= data.length && hasNextPage) {
+        const result = await fetchNextPage();
+        if (result.isError) return;
+      }
+      setVisibleCount((count) => count + ACTIVITY_RENDER_PAGE_SIZE);
+    },
+    [visibleCount, data.length, hasNextPage, fetchNextPage],
   );
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
     <div className="space-y-3">
@@ -113,9 +120,10 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
 
       {isLoading ? (
         <LoadingState variant="list" rows={8} className="p-0" />
-      ) : isError ? (
+      ) : isError && data.length === 0 ? (
         <p className="py-2 text-center text-dense text-muted-foreground">
           Could not load activity history.
+          <button type="button" onClick={handleRetry}>Retry</button>
         </p>
       ) : !data || data.length === 0 ? (
         <EmptyState
@@ -131,17 +139,19 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
               <ActivityItem key={entry.id} entry={entry} />
             ))}
           </ul>
-          {data.length > visibleCount && (
-            <button
+          {isFetchNextPageError && <p role="alert">Could not load older activity. Try again.</p>}
+          {(data.length > visibleCount || hasNextPage) && (
+            <LoadingButton
               type="button"
               onClick={handleShowOlder}
+              isPending={isFetchingNextPage}
               className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             >
               Show older activity
               <span className="ml-1 tabular-nums opacity-70">
-                ({visibleCount} of {data.length})
+                ({Math.min(visibleCount, data.length)} loaded)
               </span>
-            </button>
+            </LoadingButton>
           )}
         </>
       )}

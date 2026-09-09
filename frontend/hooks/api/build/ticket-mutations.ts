@@ -1,14 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type {
   Ticket,
-  CursorPageResponse,
   CreateTicketInput,
   UpdateTicketInput,
   RankTicketInput,
@@ -17,6 +14,7 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { invalidateBuildViews, patchTicketCollections, restoreTicketCollections, rollbackTicketFields, ticketRollback, type TicketSnapshots } from "./ticket-cache";
 
 
 const ticketRowLazy = lazyContract(() =>
@@ -50,11 +48,11 @@ export interface UpdateTicketResponse {
 interface UpdateTicketContext {
   detailKey: readonly unknown[];
   ticketKey: readonly unknown[];
-  boardKey: readonly unknown[];
   previousDetail: ProjectWithDetails | null | undefined;
   previousTicket: Ticket | null | undefined;
-  previousBoard: Ticket[] | undefined;
-  listSnapshots: [readonly unknown[], CursorPageResponse<Ticket> | undefined][];
+  optimisticDetail: ProjectWithDetails | null | undefined;
+  optimisticTicket: Ticket | null | undefined;
+  listSnapshots: TicketSnapshots;
 }
 
 function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
@@ -112,20 +110,7 @@ export function useCreateTicket(
     mutationFn: ({ projectId, ...data }) =>
       apiClient.post<Ticket>(`/build/${projectId}/tickets`, data, undefined, ticketRowLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.sprints(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.columnCounts(variables.projectId),
-      });
-      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
+      invalidateBuildViews(queryClient, variables.projectId);
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -152,19 +137,16 @@ export function useUpdateTicket(
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
-      const boardKey = buildWorkQueryKeys.projects.tickets({ projectId, view: "board" });
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
-        queryClient.cancelQueries({ queryKey: boardKey }),
+        queryClient.cancelQueries({ queryKey: ticketKey }),
         queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) }),
       ]);
       const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
-      const previousBoard = queryClient.getQueryData<Ticket[]>(boardKey);
       const members = previousDetail?.members ?? [];
-      const listSnapshots = queryClient.getQueriesData<CursorPageResponse<Ticket>>({
-        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-      });
+      const listSnapshots = patchTicketCollections(queryClient, projectId, (ticket) =>
+        ticket.id === variables.ticketId ? applyTicketPatch(ticket, variables, members) : ticket);
 
       if (previousDetail?.tickets) {
         queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) => {
@@ -182,73 +164,30 @@ export function useUpdateTicket(
           old ? applyTicketPatch(old, variables, members) : old,
         );
       }
-      if (previousBoard) {
-        queryClient.setQueryData<Ticket[]>(boardKey, (old) =>
-          old
-            ? old.map((t) =>
-                t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
-              )
-            : old,
-        );
-      }
-      for (const [key, page] of listSnapshots) {
-        if (!page?.data) continue;
-        queryClient.setQueryData<CursorPageResponse<Ticket>>(key, {
-          ...page,
-          data: page.data.map((t) =>
-            t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
-          ),
-        });
-      }
       return {
         detailKey,
         ticketKey,
-        boardKey,
         previousDetail,
         previousTicket,
-        previousBoard,
+        optimisticDetail: queryClient.getQueryData<ProjectWithDetails | null>(detailKey),
+        optimisticTicket: queryClient.getQueryData<Ticket | null>(ticketKey),
         listSnapshots,
       };
     },
     onError: (error, variables, context, mutFnCtx) => {
       if (context) {
-        queryClient.setQueryData(context.detailKey, context.previousDetail);
-        queryClient.setQueryData(context.ticketKey, context.previousTicket);
-        queryClient.setQueryData(context.boardKey, context.previousBoard);
-        for (const [key, page] of context.listSnapshots) {
-          queryClient.setQueryData(key, page);
-        }
+        const restore = ticketRollback(context.previousDetail?.tickets ?? [], context.optimisticDetail?.tickets ?? []);
+        queryClient.setQueryData<ProjectWithDetails | null>(context.detailKey, (current) =>
+          current?.tickets ? { ...current, tickets: current.tickets.map(restore) } : current);
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) =>
+          current && context.previousTicket && context.optimisticTicket
+            ? rollbackTicketFields(current, context.previousTicket, context.optimisticTicket) : current);
+        restoreTicketCollections(queryClient, context.listSnapshots);
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
-      });
-      const affectsSprintAggregates =
-        variables.status !== undefined ||
-        variables.sprintId !== undefined ||
-        variables.points !== undefined;
-      const affectsAssignment =
-        variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
-      if (variables.status !== undefined) {
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
-        });
-      }
-      if (affectsSprintAggregates) {
-        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
-        queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
-      }
-      if (affectsSprintAggregates || affectsAssignment) {
-        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
-      }
+      invalidateBuildViews(queryClient, projectId, [variables.ticketId], variables.status !== undefined || variables.sprintId !== undefined || variables.points !== undefined || variables.startDate !== undefined || variables.dueDate !== undefined);
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
@@ -270,20 +209,7 @@ export function useDeleteTicket(
         noContentLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.detail(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.sprints(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
-      });
-      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
+      invalidateBuildViews(queryClient, projectId, [variables.ticketId]);
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -301,7 +227,8 @@ export function useRankTicket<TContext = unknown>(
     "mutationFn" | "mutationKey"
   >
 ) {
-  return useMutation<RankTicketResponse, Error, RankTicketInput, TContext>({
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<RankTicketResponse, Error, RankTicketInput, TContext>("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "rank"],
     mutationFn: ({ projectId, ticketId, ...data }) =>
@@ -311,6 +238,10 @@ export function useRankTicket<TContext = unknown>(
         undefined,
         rankTicketResultLazy,
       ),
+    onSettled: (data, error, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId, [variables.ticketId], variables.status !== undefined);
+      options?.onSettled?.(data, error, variables, context, mutationContext);
+    },
   });
 }
 
@@ -334,12 +265,8 @@ export function useBulkUpdateTickets(projectId: number) {
         undefined,
         bulkUpdateResultLazy,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.columnCounts(projectId) });
-      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
+    onSuccess: (_data, variables) => {
+      invalidateBuildViews(queryClient, projectId, variables.ticketIds);
     },
   });
 }
