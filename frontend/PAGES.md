@@ -135,11 +135,11 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 
 ## Chat
 
-- [ ] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ? States ?
-- [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ?
-- [ ] `/chat/invite/[token]` · **Communications** · hooks: channel invite fetch · §8: States ?
-- [ ] `/chat/moderation` · **Communications** · hooks: `enforceRouteAccess("/chat/moderation")` · §8: L ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
-- [ ] `/chat/settings` · **Communications** · hooks: `enforceRouteAccess("/chat/settings")` · §8: E ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
+- [ ] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ? States ? — Chat authz audit (2026-09-09): backend fixed a cross-channel reply content leak on message send, attachments readable outside channel membership, a private-channel existence oracle on send/edit/delete, and admin-check bypasses on channel-update/role-change — all exercised from this page's message panel and channel-info panel, now covered by new seeded real-database e2e specs. Unread badges now key off a commit-ordered position cursor (migration 1074), not a timestamp. Huddle panel shows a Join-meeting link only; the WebRTC mesh, device pickers and mute/deafen controls were deleted (`huddle-panel.tsx`).
+- [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ? — Chat authz audit (2026-09-09): "Create Channel" on this page reached a channel-create record-binding bypass — the insert returned the raw row instead of a membership-bound detail load, and entity/DM channels could skip the plan-limit check; both fixed in `chat-channels.service.ts`, now covered by new seeded real-database e2e specs for channel lifecycle and membership.
+- [ ] `/chat/invite/[token]` · **Communications** · hooks: channel invite fetch · §8: States ? — checked against the 2026-09-09 chat authz audit: `chat-invite-links.service.ts` and the token-join flow were not touched by this round's fixes or by the six new seeded e2e spec files; no update warranted.
+- [ ] `/chat/moderation` · **Communications** · hooks: `enforceRouteAccess("/chat/moderation")` · §8: L ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships. Checked against the 2026-09-09 huddle-to-meeting-link change: page still renders no huddle data, so nothing here to update.
+- [ ] `/chat/settings` · **Communications** · hooks: `enforceRouteAccess("/chat/settings")` · §8: E ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships. Unaffected by the 2026-09-09 chat authz/huddle work.
 
 ---
 

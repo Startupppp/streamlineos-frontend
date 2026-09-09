@@ -385,14 +385,6 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/chat/use-network-quality.ts": {
-      "as": 3,
-      "nonNull": 0
-    },
-    "features/chat/webrtc-huddle.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/crm/autonomy/autonomy-review-feed.tsx": {
       "as": 2,
       "nonNull": 0
