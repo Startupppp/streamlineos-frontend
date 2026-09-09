@@ -30,7 +30,8 @@ export interface WarehouseLocation {
   isPickable: boolean;
   isReceivable: boolean;
   isSellable: boolean;
-  capacity: number | null;
+  /** `numeric(18,4)`, so a decimal string — never a float. */
+  capacity: string | null;
   isActive: boolean;
   isSpecial?: boolean;
   createdAt: string;
@@ -87,7 +88,31 @@ interface CreateLocationInput {
   isPickable?: boolean;
   isReceivable?: boolean;
   isSellable?: boolean;
-  capacity?: number;
+  /**
+   * A decimal string, because the endpoint validates it as one. Sent as a
+   * number it was rejected by the `.strict()` schema, so a location created
+   * with a capacity 400d while one created without it worked.
+   */
+  capacity?: string;
+}
+
+/**
+ * `updateLocationSchema` is `createLocationSchema.partial()`, so every field is
+ * optional and `isActive` joins them. `parentLocationId` is a positive integer
+ * with no null: a parent can be changed, never cleared.
+ */
+interface UpdateLocationInput {
+  warehouseId: number;
+  locationId: number;
+  name?: string;
+  code?: string;
+  locationType?: LocationType;
+  parentLocationId?: number;
+  isPickable?: boolean;
+  isReceivable?: boolean;
+  isSellable?: boolean;
+  capacity?: string;
+  isActive?: boolean;
 }
 
 export function useWarehouses(filters?: WarehouseListFilters) {
@@ -154,6 +179,29 @@ export function useCreateLocation() {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventory.locations(vars.warehouseId),
       });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
+    },
+  });
+}
+
+/**
+ * Correcting a location, and taking one out of service.
+ *
+ * Deactivating one the warehouse still holds stock in is refused by the server
+ * with a 409 — a location nothing can reach is not the same as an empty one —
+ * and that message reaches the operator through `getErrorMessage`.
+ */
+export function useUpdateLocation() {
+  const qc = useQueryClient();
+  return useMutation<WarehouseLocation, Error, UpdateLocationInput>({
+    mutationKey: ["inventory", "locations", "update"],
+    mutationFn: ({ warehouseId, locationId, ...data }) =>
+      apiClient.patch<WarehouseLocation>(
+        `/inventory/warehouses/${warehouseId}/locations/${locationId}`,
+        data,
+      ),
+    onSuccess: (_, vars) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
     },
   });
