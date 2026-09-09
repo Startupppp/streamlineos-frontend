@@ -77,6 +77,8 @@ export function StagedImportRunner({
   const errors = useStagedImportErrors(
     progress !== null && progress.failedRows > 0 ? progress.jobId : null,
   );
+  const shownErrors = errors.data?.items.length ?? 0;
+  const totalErrors = errors.data?.total ?? 0;
 
   const run = useCallback(async () => {
     setPhase("running");
@@ -221,20 +223,38 @@ export function StagedImportRunner({
       {progress !== null && progress.failedRows > 0 ? (
         <div className="space-y-2">
           <p className="text-sm font-semibold">Rows the import rejected</p>
-          <DataTable
-            data={errors.data?.items ?? []}
-            columns={ERROR_COLUMNS}
-            getRowKey={(row) => row.rowNumber}
-            isLoading={errors.isLoading}
-            emptyState={
-              <InventoryEmptyState
-                illustrationPreset="default"
-                title="No detail was recorded"
-                description="The job counted rejected rows but stored no reason for them."
-                compact
+          {errors.isError ? (
+            <ErrorState
+              title="Couldn't load the rejected rows"
+              description={getErrorMessage(errors.error)}
+              onRetry={() => void errors.refetch()}
+            />
+          ) : (
+            <>
+              <DataTable
+                data={errors.data?.items ?? []}
+                columns={ERROR_COLUMNS}
+                getRowKey={(row) => row.rowNumber}
+                isLoading={errors.isLoading}
+                emptyState={
+                  <InventoryEmptyState
+                    illustrationPreset="default"
+                    title="No detail was recorded"
+                    description="The job counted rejected rows but stored no reason for them."
+                    compact
+                  />
+                }
               />
-            }
-          />
+              {shownErrors > 0 && totalErrors > shownErrors ? (
+                <p className="text-dense text-muted-foreground">
+                  Showing the first{" "}
+                  <span className="font-mono tabular-nums">{shownErrors}</span> of{" "}
+                  <span className="font-mono tabular-nums">{totalErrors}</span> rejected rows.
+                  Fix these, re-stage, and the next run reports what is left.
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
     </div>

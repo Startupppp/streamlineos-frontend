@@ -21,13 +21,24 @@ const stage = jest.fn();
 const open = jest.fn();
 const process = jest.fn();
 
+type ErrorsResult = {
+  data?: { items: Array<{ rowNumber: number; message: string }>; total: number };
+  isLoading: boolean;
+  isError?: boolean;
+  error?: Error;
+  refetch?: () => void;
+};
+
+const EMPTY_ERRORS: ErrorsResult = { data: { items: [], total: 0 }, isLoading: false };
+let mockErrors: ErrorsResult = EMPTY_ERRORS;
+
 jest.mock("@/hooks/api/inventory/staged-import", () => ({
   ...jest.requireActual("@/hooks/api/inventory/staged-import"),
   useOpenStagedImport: () => ({ mutateAsync: open, isPending: false }),
   useStageImportRows: () => ({ mutateAsync: stage, isPending: false }),
   useProcessImportChunk: () => ({ mutateAsync: process, isPending: false }),
   useCancelStagedImport: () => ({ mutate: jest.fn(), isPending: false }),
-  useStagedImportErrors: () => ({ data: { items: [], total: 0 }, isLoading: false }),
+  useStagedImportErrors: () => mockErrors,
   checksumOf: async () => "deadbeefdeadbeef",
 }));
 
@@ -56,7 +67,10 @@ function csvOf(rows: number): File {
   return new File([`sku,name\n${body.join("\n")}`], "products.csv", { type: "text/csv" });
 }
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  mockErrors = EMPTY_ERRORS;
+});
 
 describe("staged import", () => {
   it("stages every data row in the file, not a sample of them", async () => {
@@ -128,6 +142,68 @@ describe("staged import", () => {
     expect(await screen.findByText(/The import stopped/i)).toBeInTheDocument();
     expect(screen.getByText(/Rows already applied stay applied/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Resume$/i })).toBeInTheDocument();
+  });
+
+  it("says the rejected rows could not be loaded rather than that none were recorded", async () => {
+    const user = userEvent.setup();
+    open.mockResolvedValue(progress({ totalRows: 2 }));
+    stage.mockResolvedValue(progress({ totalRows: 2, stagedRows: 2 }));
+    process.mockResolvedValue(
+      progress({ totalRows: 2, stagedRows: 2, appliedRows: 1, failedRows: 1, finished: true }),
+    );
+    // The list of reasons fails to load. Reading that as "no detail was
+    // recorded" tells the operator the job stored nothing, which is a different
+    // and far more comfortable fact than "we could not ask".
+    mockErrors = {
+      isLoading: false,
+      isError: true,
+      error: new Error("Network request failed"),
+      refetch: jest.fn(),
+    };
+
+    renderWithProviders(
+      <TooltipProvider>
+        <StagedImportRunner file={csvOf(2)} importType="products" onDone={jest.fn()} />
+      </TooltipProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Import all rows/i }));
+
+    expect(await screen.findByText(/Couldn't load the rejected rows/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No detail was recorded/i)).not.toBeInTheDocument();
+  });
+
+  it("admits the rejected-row list is truncated instead of showing 50 of 500 silently", async () => {
+    const user = userEvent.setup();
+    open.mockResolvedValue(progress({ totalRows: 500 }));
+    stage.mockResolvedValue(progress({ totalRows: 500, stagedRows: 500 }));
+    process.mockResolvedValue(
+      progress({ totalRows: 500, stagedRows: 500, appliedRows: 0, failedRows: 500, finished: true }),
+    );
+    // The endpoint pages at 50. Rendering that page under a heading counting 500
+    // lets an operator fix what they can see and re-run believing it is clean.
+    mockErrors = {
+      isLoading: false,
+      data: {
+        items: Array.from({ length: 50 }, (_, index) => ({
+          rowNumber: index + 2,
+          message: "sku is required",
+        })),
+        total: 500,
+      },
+    };
+
+    renderWithProviders(
+      <TooltipProvider>
+        <StagedImportRunner file={csvOf(500)} importType="products" onDone={jest.fn()} />
+      </TooltipProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Import all rows/i }));
+
+    const notice = await screen.findByText(/Showing the first/i);
+    expect(notice).toHaveTextContent("50");
+    expect(notice).toHaveTextContent("500");
   });
 
   it("refuses a file that cannot be parsed rather than importing it approximately", async () => {
