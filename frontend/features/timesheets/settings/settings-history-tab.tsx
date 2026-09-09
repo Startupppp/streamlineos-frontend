@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { usePermissionGate } from "@/hooks/api/access";
 import { useSettingsHistory } from "@/hooks/api/timesheets-core/settings-history";
 import type { SettingsHistoryEntry } from "@/features/timesheets/types";
 
@@ -54,12 +54,21 @@ function renderValue(value: unknown): string {
  * late?" is this list.
  */
 export function SettingsHistoryTab() {
-  const canView = useCan("timesheets:settings:view");
+  /*
+   * `usePermissionGate`, not `useCan`. `useCan` is false both when the reader is
+   * denied and while access is still loading, so gating on it renders "Access
+   * restricted" at somebody who is merely waiting. The gate keeps the two apart,
+   * and `EmptyState access={...}` turns a denial into `NoPermissionState` while
+   * leaving "not known yet" alone — which is why every empty state on this tab
+   * carries it, not just the one guarding entry.
+   */
+  const access = usePermissionGate("timesheets:settings:view");
   const { data, isLoading, isError, error, refetch } = useSettingsHistory();
 
-  if (!canView) {
+  if (access.denied) {
     return (
       <EmptyState
+        access={access}
         title="Access restricted"
         description="You don't have permission to view timesheet settings."
         compact
@@ -93,6 +102,7 @@ export function SettingsHistoryTab() {
   if (entries.length === 0) {
     return (
       <EmptyState
+        access={access}
         title="No settings changes recorded"
         description="Every change to these settings is snapshotted here with who made it and why."
         compact

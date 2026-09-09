@@ -34,7 +34,20 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "payroll": 53,
   "accounting": 32,
   "settings": 27,
-  "timesheets": 23,
+  /*
+   * 23 -> 24 for `features/timesheets/overdue/overdue-columns.tsx`, the TS-11
+   * queue that closed `GET /timesheets/periods/overdue` — a route that had
+   * shipped with no caller at all.
+   *
+   * Counted rather than exempted, which is what this map is for: `lib/renderer/`
+   * holds layouts for `crm`, `party` and `subject` and nothing else, no
+   * timesheets surface uses `RecordList`/`RecordDetail`/`RecordForm`, and the
+   * other 23 here are hand-written for the same reason. This is not a surface
+   * the renderer cannot describe — it is a surface in a module the renderer has
+   * no vocabulary for yet, so `CRAFTED_BY_DESIGN` would be the wrong answer and
+   * its argument would not be true.
+   */
+  "timesheets": 24,
   "support": 15,
   "billing": 10,
   "users": 10,
