@@ -17,9 +17,16 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
-import { useCreatePickWave } from "@/hooks/api/inventory/picking";
+import {
+  useCreatePickWave,
+  useJoinPickWave,
+  useProposeWaveJoin,
+  type WaveJoinDecision,
+} from "@/hooks/api/inventory/picking";
 
 interface CreateWaveDialogProps {
   open: boolean;
@@ -40,16 +47,27 @@ const MAX_ORDERS = 50;
 export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDialogProps) {
   const [warehouseId, setWarehouseId] = useState("");
   const [selected, setSelected] = useState<number[]>([]);
+  /**
+   * The server's answer to "would these join an open wave?".
+   *
+   * Held rather than acted on: `createWave` that silently appended to somebody
+   * else's wave is the surprise waveless picking is hedged about, so the two
+   * acts stay separate here as they do at the API.
+   */
+  const [proposal, setProposal] = useState<WaveJoinDecision | null>(null);
 
   const warehouses = useWarehouses({ status: "active" });
   const orders = useSalesOrders({ status: "RESERVED", limit: MAX_ORDERS });
   const createWave = useCreatePickWave();
+  const proposeJoin = useProposeWaveJoin();
+  const joinWave = useJoinPickWave();
 
   const rows = orders.data?.items ?? [];
 
   function reset(): void {
     setWarehouseId("");
     setSelected([]);
+    setProposal(null);
   }
 
   function handleOpenChange(next: boolean): void {
@@ -65,7 +83,35 @@ export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDi
     setWarehouseId(value);
   }
 
+  function handleCheckJoin(): void {
+    if (!warehouseId || selected.length === 0) return;
+    proposeJoin.mutate(
+      { warehouseId: Number(warehouseId), soIds: selected },
+      {
+        onSuccess: setProposal,
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  function handleJoin(): void {
+    if (proposal?.waveId == null || !warehouseId) return;
+    joinWave.mutate(
+      { pickListId: proposal.waveId, warehouseId: Number(warehouseId), soIds: selected },
+      {
+        onSuccess: (result) => {
+          toast.success(`${result.pickNumber} — these orders joined the open wave.`);
+          reset();
+          onOpenChange(false);
+          onCreated(result.pickListId);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
   function toggleOrder(soId: number): void {
+    setProposal(null);
     setSelected((current) =>
       current.includes(soId)
         ? current.filter((id) => id !== soId)
@@ -106,15 +152,26 @@ export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDi
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <LoadingButton
-            size="sm"
-            onClick={handleSubmit}
-            isPending={createWave.isPending}
-            loadingText="Creating…"
-            disabled={!warehouseId || selected.length === 0}
-          >
-            Create wave
-          </LoadingButton>
+          {proposal?.join && proposal.waveId !== null ? (
+            <LoadingButton
+              size="sm"
+              onClick={handleJoin}
+              isPending={joinWave.isPending}
+              loadingText="Joining…"
+            >
+              Join the open wave
+            </LoadingButton>
+          ) : (
+            <LoadingButton
+              size="sm"
+              onClick={handleSubmit}
+              isPending={createWave.isPending}
+              loadingText="Creating…"
+              disabled={!warehouseId || selected.length === 0}
+            >
+              Create wave
+            </LoadingButton>
+          )}
         </div>
       }
     >
@@ -173,6 +230,31 @@ export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDi
               </ul>
             )}
           </div>
+        </div>
+
+        <div className="grid gap-2">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            onClick={handleCheckJoin}
+            isPending={proposeJoin.isPending}
+            loadingText="Checking…"
+            disabled={!warehouseId || selected.length === 0}
+          >
+            Could these join an open wave?
+          </LoadingButton>
+          {proposal === null ? null : (
+            <p
+              className={cn(
+                "rounded-md border px-3 py-2 text-dense",
+                statusToneClasses(proposal.join ? "success" : "neutral"),
+              )}
+            >
+              {proposal.join
+                ? "There is an open wave in this building with room for these lines. Joining it means one walk instead of two."
+                : (proposal.reason ?? "These orders need a wave of their own.")}
+            </p>
+          )}
         </div>
       </div>
     </AppDialog>

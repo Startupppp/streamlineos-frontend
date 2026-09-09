@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useAbandonPutawayTask,
+  useCancelPutawayTask,
   useClaimPutawayTask,
   usePutawayTask,
   type PutawayTaskLine,
@@ -54,6 +55,7 @@ export function PutawayTaskSheet({
   const detail = usePutawayTask(taskId ?? 0, { enabled: open && !!taskId });
   const claim = useClaimPutawayTask();
   const abandon = useAbandonPutawayTask();
+  const cancel = useCancelPutawayTask();
 
   const task = detail.data?.task;
   const lines = useMemo(() => detail.data?.lines ?? [], [detail.data]);
@@ -119,6 +121,25 @@ export function PutawayTaskSheet({
     });
   }
 
+  /**
+   * Killing the task, which is not the same as handing it back.
+   *
+   * Handing back returns it to the queue for somebody else; cancelling takes it
+   * out of the queue. A task raised against a receipt that was later reversed
+   * had neither route out — the route existed on the backend and nothing called
+   * it, so the task stayed in the RF queue forever.
+   */
+  function handleCancel(): void {
+    if (!taskId) return;
+    cancel.mutate(taskId, {
+      onSuccess: () => {
+        toast.success("Task cancelled and taken out of the queue");
+        onOpenChange(false);
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
+
   function handleClose(): void {
     onOpenChange(false);
   }
@@ -133,10 +154,21 @@ export function PutawayTaskSheet({
       }
       className="sm:max-w-lg"
       footer={
-        <div className="grid w-full grid-cols-2 gap-2">
+        <div className="grid w-full grid-flow-col auto-cols-fr gap-2">
           <Button variant="outline" size="sm" onClick={handleClose}>
             Close
           </Button>
+          {finished || !canPutAway ? null : (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              isPending={cancel.isPending}
+              loadingText="Cancelling…"
+            >
+              Cancel task
+            </LoadingButton>
+          )}
           {finished || !canPutAway ? null : heldByMe ? (
             <LoadingButton
               variant="outline"
@@ -218,6 +250,7 @@ export function PutawayTaskSheet({
                 line={line}
                 disabled={!canPutAway || heldBySomeoneElse || finished}
                 isActive={line.id === activeLineId}
+                warehouseId={task.warehouseId}
               />
             ))}
           </ul>

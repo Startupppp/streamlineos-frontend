@@ -202,3 +202,99 @@ export function useSyncThreePlConnection() {
     },
   });
 }
+
+/**
+ * E6 — what the marketplace thinks it holds, against what the ledger says.
+ *
+ * Three routes, none of them called from this repo, so a channel snapshot
+ * difference could be produced by the nightly sweep and never seen. That is the
+ * signal that a listing is oversold or that a sync silently stopped.
+ *
+ * Reading is `inventory:channels:manage`. **Accepting** is `inventory:stock:adjust`
+ * — deliberately a different key, because accepting posts a stock movement whose
+ * only justification is that a marketplace disagreed with us, and whoever
+ * administers a connection is not automatically somebody who may correct the
+ * ledger. Dismissing stays on the channel key, because it touches nothing.
+ */
+export type SnapshotDiffStatus = "OPEN" | "ACCEPTED" | "DISMISSED";
+
+export interface ChannelSnapshotDiff {
+  id: number;
+  externalSku: string | null;
+  productVariantId: number | null;
+  channelQty: string;
+  internalQty: string;
+  difference: string;
+  status: SnapshotDiffStatus;
+  snapshotAt: string;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+  stockTransactionId: number | null;
+}
+
+export interface ChannelSnapshotDiffsResult {
+  items: ChannelSnapshotDiff[];
+  total: number;
+  page: number;
+  totalPages: number;
+  /** So a screen renders "accepting is not permitted here" rather than a button that 409s. */
+  snapshotPolicy: string;
+}
+
+export function useChannelSnapshotDiffs(
+  channelId: number | null,
+  filters?: { status?: SnapshotDiffStatus; page?: number; limit?: number },
+) {
+  const canManage = useCan("inventory:channels:manage");
+  return useQuery<ChannelSnapshotDiffsResult, Error>({
+    queryKey: queryKeys.inventoryChannelSnapshots.diffs(
+      channelId ?? 0,
+      filters as Record<string, unknown>,
+    ),
+    queryFn: () =>
+      apiClient.get<ChannelSnapshotDiffsResult>(
+        `/inventory/channels/${channelId ?? 0}/snapshot-differences`,
+        {
+          ...(filters?.status ? { status: filters.status } : {}),
+          ...(filters?.page ? { page: String(filters.page) } : {}),
+          ...(filters?.limit ? { limit: String(filters.limit) } : {}),
+        },
+      ),
+    staleTime: 30_000,
+    enabled: canManage && channelId !== null,
+  });
+}
+
+function useResolveSnapshotDiff(action: "accept" | "dismiss") {
+  const qc = useQueryClient();
+  return useIdempotentMutation<
+    ChannelSnapshotDiff,
+    Error,
+    { channelId: number; diffId: number; note: string }
+  >({
+    mutationKey: ["inventory", "channels", "snapshot-difference", action],
+    mutationFn: ({ diffId, note }, idempotencyKey) =>
+      apiClient.post<ChannelSnapshotDiff>(
+        `/inventory/channels/snapshot-differences/${diffId}/${action}`,
+        { note },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
+    onSuccess: (_result, variables) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventoryChannelSnapshots.channel(variables.channelId),
+      });
+      if (action === "accept") {
+        void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevelsList });
+        void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockTransactionsList });
+      }
+    },
+  });
+}
+
+export function useAcceptSnapshotDiff() {
+  return useResolveSnapshotDiff("accept");
+}
+
+export function useDismissSnapshotDiff() {
+  return useResolveSnapshotDiff("dismiss");
+}

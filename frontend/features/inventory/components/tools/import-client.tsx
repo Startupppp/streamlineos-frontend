@@ -12,24 +12,22 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
-import {
-  useImportPreview,
-  useCreateImportJob,
-  useImportJobs,
-} from "@/hooks/api/inventory/admin";
+import { useImportPreview, useImportJobs } from "@/hooks/api/inventory/admin";
 import type { ImportPreviewResult } from "@/hooks/api/inventory/admin";
+import type { StagedImportType } from "@/hooks/api/inventory/staged-import";
 import { ImportTypeStep, type ImportType } from "./import-type-step";
 import { ImportPreviewStep } from "./import-preview-step";
+import { StagedImportRunner } from "./staged-import-runner";
 import { ImportResultStep } from "./import-result-step";
+import { AppSheet } from "@/components/shared";
 import { ExportTab } from "./export-tab";
 
-type Step = "type" | "preview" | "running" | "done";
+type Step = "type" | "preview" | "running";
 
 const STEP_LABELS: Record<Step, string> = {
   type: "1. Select Type",
   preview: "2. Upload & Preview",
-  running: "3. Running",
-  done: "4. Done",
+  running: "3. Import",
 };
 
 interface ImportJobRow {
@@ -110,10 +108,23 @@ export function ImportClient() {
   const [step, setStep] = React.useState<Step>("type");
   const [selectedType, setSelectedType] = React.useState<ImportType | null>(null);
   const [preview, setPreview] = React.useState<ImportPreviewResult | null>(null);
-  const [jobId, setJobId] = React.useState<number | null>(null);
+  /**
+   * Kept because the import is driven from the file's own rows.
+   *
+   * The previous flow sent `preview.sample` to the single-shot job endpoint, and
+   * the backend defines that sample as `rows.slice(0, 20)` — so importing five
+   * thousand products applied twenty of them under a job that read COMPLETED.
+   * The staged routes take the whole file in chunks, which means the file has to
+   * survive the preview step.
+   */
+  const [file, setFile] = React.useState<File | null>(null);
+  /**
+   * A past job's rejected rows had no way in at all: the history table listed an
+   * error count and nothing opened it.
+   */
+  const [inspectingJobId, setInspectingJobId] = React.useState<number | null>(null);
 
   const previewMutation = useImportPreview();
-  const createJobMutation = useCreateImportJob();
   const {
     data: jobsData,
     isLoading: isJobsLoading,
@@ -136,30 +147,30 @@ export function ImportClient() {
     try {
       const result = await previewMutation.mutateAsync(fd);
       setPreview(result);
-    } catch {
-      toast.error("Failed to preview file. Check the format and try again.");
+      setFile(file);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
-  async function handleConfirm(): Promise<void> {
-    if (!selectedType || !preview) return;
-    try {
-      const job = await createJobMutation.mutateAsync({
-        importType: selectedType,
-        rows: preview.sample,
-      });
-      setJobId(job.id);
-      setStep("running");
-    } catch {
-      toast.error("Failed to start import job.");
-    }
+  function handleConfirm(): void {
+    if (!selectedType || !preview || !file) return;
+    setStep("running");
   }
 
   function handleReset(): void {
     setStep("type");
     setSelectedType(null);
     setPreview(null);
-    setJobId(null);
+    setFile(null);
+  }
+
+  function handleInspectJob(job: ImportJobRow): void {
+    setInspectingJobId(job.id);
+  }
+
+  function handleInspectClose(open: boolean): void {
+    if (!open) setInspectingJobId(null);
   }
 
   // G8. Denied is not empty. Placed after every hook, not at the top of
@@ -196,7 +207,7 @@ export function ImportClient() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    {(["type", "preview", "running", "done"] as Step[]).map(function renderStep(s) {
+                    {(["type", "preview", "running"] as Step[]).map(function renderStep(s) {
                       return (
                         <span
                           key={s}
@@ -223,11 +234,15 @@ export function ImportClient() {
                       preview={preview}
                       onUpload={handleUpload}
                       onConfirm={handleConfirm}
-                      isConfirming={createJobMutation.isPending}
+                      isConfirming={false}
                     />
                   )}
-                  {(step === "running" || step === "done") && jobId !== null && (
-                    <ImportResultStep jobId={jobId} onReset={handleReset} />
+                  {step === "running" && selectedType && file && (
+                    <StagedImportRunner
+                      file={file}
+                      importType={selectedType as StagedImportType}
+                      onDone={handleReset}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -252,6 +267,7 @@ export function ImportClient() {
                     getRowKey={(job) => job.id}
                     isLoading={isJobsLoading}
                     className="flex-1 min-h-0"
+                    onRowClick={handleInspectJob}
                     emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
                   />
                 )}
@@ -264,6 +280,17 @@ export function ImportClient() {
           <ExportTab />
         </TabsContent>
       </Tabs>
+
+      <AppSheet
+        open={inspectingJobId !== null}
+        onOpenChange={handleInspectClose}
+        title="Import job"
+        description="What this run applied, and every row it rejected."
+      >
+        {inspectingJobId === null ? null : (
+          <ImportResultStep jobId={inspectingJobId} onReset={() => setInspectingJobId(null)} />
+        )}
+      </AppSheet>
     </PageWrapper>
   );
 }

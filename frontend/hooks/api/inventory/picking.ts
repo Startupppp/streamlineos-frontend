@@ -231,6 +231,60 @@ export function useCreatePickWave() {
   });
 }
 
+/**
+ * NEO-14 — would these orders join a wave that is already open?
+ *
+ * A question, not a command: it reads and returns a decision, and the caller
+ * then either joins or raises a new wave. Both routes were mounted and neither
+ * was called, so waveless picking was a setting that changed nothing: every
+ * release built a fresh wave and a building ended up with six half-full walks
+ * where one full one would have done.
+ */
+export interface WaveJoinDecision {
+  join: boolean;
+  waveId: number | null;
+  /** Why not, for a caller that has to explain itself. Null when it would join. */
+  reason: string | null;
+}
+
+export function useProposeWaveJoin() {
+  return useMutation<WaveJoinDecision, Error, CreatePickWaveInput>({
+    mutationKey: ["inventory", "picking", "proposeJoin"],
+    mutationFn: (data) =>
+      apiClient.post<WaveJoinDecision>("/inventory/picking/waves/propose-join", data),
+  });
+}
+
+/**
+ * Append to a wave that is still only a plan.
+ *
+ * The gate is re-applied server-side against the wave as it stands now, not
+ * against the proposal: a picker can claim the wave and confirm a line between
+ * the two calls, and appending to a walk somebody has started is exactly what
+ * the check refuses.
+ */
+export function useJoinPickWave() {
+  const qc = useQueryClient();
+  return useIdempotentMutation<
+    CreatePickWaveResult,
+    Error,
+    { pickListId: number } & CreatePickWaveInput
+  >({
+    mutationKey: ["inventory", "picking", "joinWave"],
+    mutationFn: ({ pickListId, ...body }, idempotencyKey) =>
+      apiClient.post<CreatePickWaveResult>(
+        `/inventory/picking/waves/${pickListId}/join`,
+        body,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
+    onSuccess: (_result, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.picking.wavesList });
+      void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+    },
+  });
+}
+
 export function useClaimPickWave() {
   const qc = useQueryClient();
   return useIdempotentMutation<{ pickListId: number; assignedTo: string; claimed: boolean }, Error, number>({

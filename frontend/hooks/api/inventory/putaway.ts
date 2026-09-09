@@ -63,6 +63,10 @@ export interface PutawaySuggestion {
   remaining: string | null;
   holdsVariant: boolean;
   fits: boolean;
+  /** True when this bin sits inside a zone the slotting rules point at for this SKU. */
+  inSlot: boolean;
+  /** The rule that put it there, so a screen can explain the order. */
+  slotRuleName: string | null;
 }
 
 /**
@@ -242,6 +246,62 @@ export function useCompletePutaway() {
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.tasksList });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
+  });
+}
+
+/**
+ * Killing a task nobody is going to walk.
+ *
+ * A supervisor's action rather than an operator's abandon: abandon puts the task
+ * back in the queue, cancel takes it out of the queue entirely. It was mounted
+ * and never called, so a task raised against a receipt that was later reversed
+ * stayed in the RF queue forever and could only be worked or ignored.
+ */
+export function useCancelPutawayTask() {
+  const qc = useQueryClient();
+  return useIdempotentMutation<{ taskId: number; status: string }, Error, number>({
+    mutationKey: ["inventory", "putaway", "cancel"],
+    mutationFn: (taskId, idempotencyKey) =>
+      apiClient.post(`/inventory/putaway/tasks/${taskId}/cancel`, {}, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
+    onSuccess: (_result, taskId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.putaway.tasksList });
+      void qc.invalidateQueries({ queryKey: queryKeys.putaway.task(taskId) });
+    },
+  });
+}
+
+/**
+ * Where the slotting rules say this quantity should go.
+ *
+ * Uncalled, so the RF putaway runner asked an operator to choose a bin from the
+ * whole warehouse with no ranking at all — which is how stock ends up in a bin
+ * the rules point somewhere else, and how a slotting rule quietly stops meaning
+ * anything.
+ */
+export function usePutawaySuggestions(input: {
+  warehouseId: number | null;
+  productVariantId: number | null;
+  quantity: string;
+}) {
+  const canView = useCan("inventory:stock:read");
+  const ready =
+    input.warehouseId !== null && input.productVariantId !== null && input.quantity !== "";
+  return useQuery<PutawaySuggestion[], Error>({
+    queryKey: queryKeys.putaway.suggestions(
+      input.warehouseId ?? 0,
+      input.productVariantId ?? 0,
+      input.quantity,
+    ),
+    queryFn: () =>
+      apiClient.get<PutawaySuggestion[]>("/inventory/warehouses/putaway/suggestions", {
+        warehouseId: String(input.warehouseId ?? 0),
+        productVariantId: String(input.productVariantId ?? 0),
+        quantity: input.quantity,
+      }),
+    staleTime: 30_000,
+    enabled: canView && ready,
   });
 }
 

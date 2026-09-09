@@ -23,5 +23,13 @@ export const inventoryPutawayQueryKeys = {
     tasks: (params?: Record<string, unknown>) =>
       k(...base, "putaway", "tasks", params),
     task: (taskId: number) => [...base, "putaway", "task", taskId] as const,
+    /**
+     * Where the slotting rules would put one quantity of one SKU. Keyed on all
+     * three inputs because the ranking changes with every one of them — a
+     * suggestion cached against the variant alone would offer a bin that cannot
+     * hold the quantity actually being put away.
+     */
+    suggestions: (warehouseId: number, productVariantId: number, quantity: string) =>
+      [...base, "putaway", "suggestions", warehouseId, productVariantId, quantity] as const,
   },
 } as const;

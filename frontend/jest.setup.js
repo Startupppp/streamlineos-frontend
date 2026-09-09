@@ -27,3 +27,26 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
     dispatchEvent: () => false,
   });
 }
+
+// jsdom implements `Blob`/`File` but not `Blob.prototype.text()` or
+// `arrayBuffer()`, so any component that reads an uploaded file — the staged
+// importer, for one — throws before a single assertion runs. Reading the
+// FileReader way is what jsdom does support.
+if (typeof Blob !== "undefined" && typeof Blob.prototype.text !== "function") {
+  Blob.prototype.arrayBuffer = function arrayBuffer() {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(this);
+    });
+  };
+  Blob.prototype.text = function text() {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(this);
+    });
+  };
+}

@@ -192,16 +192,17 @@ export function useImportPreview() {
   });
 }
 
-export function useCreateImportJob() {
-  const qc = useQueryClient();
-  return useIdempotentMutation<ImportJobDetail, Error, { importType: string; rows?: Record<string, unknown>[] }>({
-    mutationKey: ["inventory", "import", "job", "create"],
-    mutationFn: (data, idempotencyKey) => apiClient.post<ImportJobDetail>("/inventory/import/jobs", data, { headers: { "Idempotency-Key": idempotencyKey } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.importJobs() });
-    },
-  });
-}
+/*
+ * `useCreateImportJob` was removed here.
+ *
+ * It posted to the single-shot `POST /inventory/import/jobs`, which takes the
+ * whole file in one body, and the only caller handed it `preview.sample` — the
+ * backend's own `rows.slice(0, 20)`. Importing five thousand products applied
+ * twenty of them under a job that reported COMPLETED. The staged routes
+ * (`hooks/api/inventory/staged-import.ts`) replace it rather than sit beside it:
+ * they take the file in chunks, resume from the next unprocessed row, and can
+ * say which lines were rejected and why.
+ */
 
 export function useImportJobs(params?: { page?: number }) {
   const canView = useCan("inventory:import");

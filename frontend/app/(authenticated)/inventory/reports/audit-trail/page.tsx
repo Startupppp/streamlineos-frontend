@@ -11,6 +11,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { AuditExportPanel } from "@/features/inventory/components/reports/audit-export-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDateTime } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
@@ -173,6 +174,13 @@ export default function InventoryAuditTrailPage() {
       filters={filterBar}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
+        {/*
+          Renders nothing without `inventory:audit:export`. That key exists
+          because taking evidence away is a stronger right than reading the
+          trail, and until now it governed nothing anybody could do.
+        */}
+        <AuditExportPanel />
+
         {query.isError ? (
           <ErrorState
             className="flex-1"

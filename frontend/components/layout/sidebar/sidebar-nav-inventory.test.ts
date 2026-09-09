@@ -130,8 +130,16 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Reconciliation but asks for a different key, because that page compares the
 // projection against the ledger and this one compares the ledger against the
 // journals.
+// Moved 2026-09-09 by the same audit, second pass: "Landed Cost"
+// (/inventory/landed-cost, on inventory:valuation:read). Six routes, a
+// permission key of its own and a backfill migration existed for it, and no way
+// in the product to raise a voucher -- so freight and duty never reached a cost
+// layer and margin was computed off the goods price alone. The nav entry asks
+// for the READ key beside Valuation and Costing; raising and applying a voucher
+// re-gate on inventory:landed-cost:manage inside the page, because applying one
+// restates what inventory is worth and posts to the ledger.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "2b00a244558709bcccd23338f5f3ac1893ff2b2fff5a50dc9ce7b87b32b9bdcd";
+  "799a565be249fe9688050a8737f041cf86d374dd2bb986450a3e6707d86c559d";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

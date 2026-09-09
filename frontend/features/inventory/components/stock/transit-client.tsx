@@ -213,7 +213,7 @@ export function TransitClient() {
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
             <Select value={view} onValueChange={handleViewChange}>
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")}>
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")} aria-label="Which lines to show">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -225,7 +225,7 @@ export function TransitClient() {
               value={warehouseId === undefined ? ALL_WAREHOUSES : String(warehouseId)}
               onValueChange={handleWarehouseChange}
             >
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-48")}>
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-48")} aria-label="Filter by warehouse">
                 <SelectValue placeholder="All warehouses" />
               </SelectTrigger>
               <SelectContent>

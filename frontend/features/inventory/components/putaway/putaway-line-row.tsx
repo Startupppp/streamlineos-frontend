@@ -17,7 +17,11 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCompletePutaway, type PutawayTaskLine } from "@/hooks/api/inventory/putaway";
+import {
+  useCompletePutaway,
+  usePutawaySuggestions,
+  type PutawayTaskLine,
+} from "@/hooks/api/inventory/putaway";
 import {
   PUTAWAY_DISPOSITION_BADGE,
   PUTAWAY_DISPOSITION_LABEL,
@@ -29,6 +33,8 @@ interface PutawayLineRowProps {
   disabled: boolean;
   /** The line a scan just named. It scrolls into view and takes the thumb. */
   isActive: boolean;
+  /** The warehouse the receipt landed in, for re-ranking the bins live. */
+  warehouseId: number | null;
 }
 
 /**
@@ -52,13 +58,35 @@ function capacityLabel(remaining: string | null): string {
  * fact about them, decided by the quality state of the receipt, and the server
  * refuses any other destination — so it shows the bin rather than offering it.
  */
-export function PutawayLineRow({ taskId, line, disabled, isActive }: PutawayLineRowProps) {
+export function PutawayLineRow({
+  taskId,
+  line,
+  disabled,
+  isActive,
+  warehouseId,
+}: PutawayLineRowProps) {
   const [quantity, setQuantity] = useState(line.remaining);
   const [destination, setDestination] = useState(
     line.to_location_id === null ? "" : String(line.to_location_id),
   );
   const complete = useCompletePutaway();
   const cardRef = useRef<HTMLLIElement>(null);
+
+  /**
+   * The bins, re-ranked now rather than when the task was raised.
+   *
+   * `line.suggestions` is a snapshot taken at task creation. A bin that was
+   * empty at six in the morning can be full by two in the afternoon, so `fits`
+   * on that snapshot is a claim about the past — and an operator sent to a bin
+   * that will not hold the pallet walks it twice. The live list falls back to
+   * the stored one, which is what a QUARANTINE line and an offline read get.
+   */
+  const live = usePutawaySuggestions({
+    warehouseId,
+    productVariantId: line.product_variant_id,
+    quantity: quantity,
+  });
+  const suggestions = live.data ?? line.suggestions;
 
   useEffect(
     function revealScannedLine() {
@@ -157,10 +185,11 @@ export function PutawayLineRow({ taskId, line, disabled, isActive }: PutawayLine
                   <SelectValue placeholder="Where did these go?" />
                 </SelectTrigger>
                 <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                  {line.suggestions.map((suggestion) => (
+                  {suggestions.map((suggestion) => (
                     <SelectItem key={suggestion.locationId} value={String(suggestion.locationId)}>
                       {suggestion.code} — {capacityLabel(suggestion.remaining)}
                       {suggestion.holdsVariant ? " · already holds this SKU" : ""}
+                      {suggestion.slotRuleName === null ? "" : ` · ${suggestion.slotRuleName}`}
                       {suggestion.fits ? "" : " · will not fit"}
                     </SelectItem>
                   ))}

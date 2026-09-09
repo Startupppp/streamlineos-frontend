@@ -17,6 +17,10 @@ import { inventoryPutawayQueryKeys } from "./query-keys/inventory-putaway";
 import { inventoryTransitQueryKeys } from "./query-keys/inventory-transit";
 import { inventoryGlReconQueryKeys } from "./query-keys/inventory-gl-recon";
 import { inventorySystemHealthQueryKeys } from "./query-keys/inventory-system-health";
+import { inventoryStagedImportQueryKeys } from "./query-keys/inventory-staged-import";
+import { inventoryLandedCostQueryKeys } from "./query-keys/inventory-landed-cost";
+import { inventoryAuditExportQueryKeys } from "./query-keys/inventory-audit-export";
+import { inventoryChannelSnapshotQueryKeys } from "./query-keys/inventory-channel-snapshots";
 import { inventoryQualityPlanQueryKeys } from "./query-keys/inventory-quality-plans";
 import { inventoryRecallSimulationQueryKeys } from "./query-keys/inventory-recall-simulation";
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
@@ -51,6 +55,10 @@ export const queryKeys = {
   ...inventoryTransitQueryKeys,
   ...inventoryGlReconQueryKeys,
   ...inventorySystemHealthQueryKeys,
+  ...inventoryStagedImportQueryKeys,
+  ...inventoryLandedCostQueryKeys,
+  ...inventoryAuditExportQueryKeys,
+  ...inventoryChannelSnapshotQueryKeys,
   ...inventoryQualityPlanQueryKeys,
   ...inventoryRecallSimulationQueryKeys,
   ...inventoryReturnsQueryKeys,

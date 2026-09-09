@@ -110,7 +110,7 @@ export function GlReconciliationClient() {
             value={periodId === undefined ? ALL : String(periodId)}
             onValueChange={handlePeriodChange}
           >
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")} aria-label="Accounting period">
               <SelectValue placeholder="This month" />
             </SelectTrigger>
             <SelectContent>
@@ -123,7 +123,7 @@ export function GlReconciliationClient() {
             </SelectContent>
           </Select>
           <Select value={status ?? ALL} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-52")} aria-label="Filter by reconciliation status">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -139,7 +139,7 @@ export function GlReconciliationClient() {
             value={warehouseId === undefined ? ALL : String(warehouseId)}
             onValueChange={handleWarehouseChange}
           >
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-48")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-48")} aria-label="Filter by warehouse">
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>
