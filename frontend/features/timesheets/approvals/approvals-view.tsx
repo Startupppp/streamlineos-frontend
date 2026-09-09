@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { useCan } from "@/hooks/api/access";
+import { useSession } from "next-auth/react";
+import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
 import {
+  APPROVALS_PAGE_SIZE,
   useApprovals,
   useBulkApprove,
   useBulkReject,
@@ -25,6 +27,8 @@ import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
+import { summarizeBorrowedAuthority } from "./approval-standing";
+import { DelegateActingBanner } from "./delegate-acting-banner";
 import {
   ALL_APPROVAL_TABS,
   APPROVAL_TAB_LABEL,
@@ -34,7 +38,18 @@ import {
 
 export function ApprovalsView() {
   const canManage = useCan("timesheets:approvals:manage");
-  const canView = useCan("timesheets:team:view");
+  /**
+   * The list this page renders is `GET /timesheets/approvals`, whose guard is
+   * `timesheets:approvals:view`. It was gated on `timesheets:team:view`, a
+   * different key: a viewer holding approvals-view but not team-view was told
+   * access was restricted, and one holding team-view but not approvals-view
+   * got the page with a permanently empty table instead of a denial.
+   */
+  const access = usePermissionGate("timesheets:approvals:view");
+  const { data: accessData } = useAccess();
+  const { data: session } = useSession();
+  const viewerId = session?.user?.id;
+  const isOrgOwner = accessData?.isOrgOwner ?? false;
   const shouldReduceMotion = useReducedMotion();
 
   const [activeTab, setActiveTab] = useState<ApprovalTab>("SUBMITTED");
@@ -46,7 +61,7 @@ export function ApprovalsView() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
 
-  const canAccess = canView || canManage;
+  const canAccess = access.allowed;
 
   const sharedFilters = {
     userId: memberFilter !== "all" ? memberFilter : undefined,
@@ -54,13 +69,39 @@ export function ApprovalsView() {
     endDate: dateTo || undefined,
   };
 
+  /**
+   * Page 1 of the pending queue, deliberately keyed identically to what
+   * `ApprovalsTabPanel` asks for on the Pending tab, so the two share one
+   * cache entry rather than issuing two requests for the same rows. It powers
+   * the pending count and the delegate banner, both of which have to be right
+   * even while another tab is showing.
+   */
   const { data: pendingData } = useApprovals(
-    { status: "SUBMITTED", ...sharedFilters },
+    { status: "SUBMITTED", ...sharedFilters, page: 1, limit: APPROVALS_PAGE_SIZE },
     canAccess,
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: Employee[] = unwrapEmployees(employeesRaw);
+  const employees: Employee[] = useMemo(
+    () => unwrapEmployees(employeesRaw),
+    [employeesRaw],
+  );
+
+  const employeeNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const emp of employees) map.set(emp.id, emp.name ?? emp.email ?? emp.id);
+    return map;
+  }, [employees]);
+
+  const resolveApproverName = useCallback(
+    (userId: string) => employeeNameById.get(userId) ?? "another approver",
+    [employeeNameById],
+  );
+
+  const borrowedAuthority = useMemo(
+    () => summarizeBorrowedAuthority(viewerId, isOrgOwner, pendingData?.data ?? []),
+    [viewerId, isOrgOwner, pendingData],
+  );
 
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();
@@ -129,11 +170,12 @@ export function ApprovalsView() {
     return undefined;
   }, [activeTab, pendingCount]);
 
-  if (!canAccess) {
+  if (access.denied) {
     return (
       <PageWrapper title="Approvals">
         <EmptyState
           illustrationPreset="approval"
+          access={access}
           title="Access restricted"
           description="You don't have permission to view timesheet approvals."
         />
@@ -203,7 +245,12 @@ export function ApprovalsView() {
       subtitle={subtitle}
       filters={pageFilters}
     >
-      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-3">
+        <DelegateActingBanner
+          authority={borrowedAuthority}
+          resolveName={resolveApproverName}
+          className="shrink-0"
+        />
         {activeTab === "SUBMITTED" && (
           <ApprovalsTabPanel status="SUBMITTED" {...tabPanelProps} />
         )}
