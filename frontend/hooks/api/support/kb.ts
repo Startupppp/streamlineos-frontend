@@ -80,15 +80,25 @@ interface CreateKbArticleInput {
   tags?: string[];
 }
 
-interface UpdateKbArticleInput {
+interface KbArticleMetadataPatch {
   title?: string;
   categoryId?: number | null;
   excerpt?: string | null;
-  content?: string;
   status?: KbArticleStatus;
   visibility?: KbArticleVisibility;
   tags?: string[] | null;
 }
+
+/**
+ * Writing `content` requires the revision it replaces — the backend refuses a body without
+ * one — so an unguarded body write cannot be expressed. Metadata is not gated on someone
+ * else's typing, because content_revision tracks the body alone.
+ */
+type UpdateKbArticleInput = KbArticleMetadataPatch &
+  (
+    | { content: string; expectedContentRevision: number }
+    | { content?: undefined; expectedContentRevision?: number }
+  );
 
 interface PublicKbCategory {
   id: number;

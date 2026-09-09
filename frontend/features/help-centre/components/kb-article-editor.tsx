@@ -220,6 +220,7 @@ export function KbArticleEditor({
         categoryId: categoryId === CATEGORY_NONE ? null : Number(categoryId),
         excerpt: excerpt.trim() || null,
         content,
+        expectedContentRevision: article.contentRevision,
         status,
         visibility,
         tags: tags.length > 0 ? tags : null,
