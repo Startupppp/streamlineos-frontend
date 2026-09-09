@@ -77,7 +77,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSavePage = useCallback(
-    (payload: PageAutosavePatch & { pageId: number; expectedContentRevision?: number }) =>
+    (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
       updatePage.mutateAsync(payload),
     [updatePage],
   );

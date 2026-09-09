@@ -16,7 +16,7 @@ type PageSaveState = "idle" | "pending" | "saving" | "saved";
 
 type SavePayload = PageAutosavePatch & {
   pageId: number;
-  expectedContentRevision?: number;
+  expectedContentRevision: number;
 };
 
 interface UsePageAutosaveArgs {
@@ -108,23 +108,28 @@ export function usePageAutosave({
     timerRef.current = null;
   }, []);
 
-  useEffect(() => {
-    if (contentRevision !== undefined) revisionRef.current = { pageId, value: contentRevision };
-  }, [pageId, contentRevision]);
-
   const setStateIfMounted = useCallback((next: PageSaveState) => {
     if (mountedRef.current) setSaveState(next);
   }, []);
 
   const run = useCallback((patch: PageAutosavePatch) => {
-    setStateIfMounted("saving");
     const targetPageId = pageIdRef.current;
     const known = revisionRef.current;
-    const revisionSnapshot = known?.pageId === targetPageId ? known.value : undefined;
-    const payload: SavePayload =
-      revisionSnapshot !== undefined
-        ? { pageId: targetPageId, ...patch, expectedContentRevision: revisionSnapshot }
-        : { pageId: targetPageId, ...patch };
+    /**
+     * The server requires the precondition, so a save with no known revision would 400 and
+     * lose the edit. Hold the patch until the page's revision arrives instead of sending it.
+     */
+    if (known?.pageId !== targetPageId) {
+      pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
+      setStateIfMounted("pending");
+      return;
+    }
+    setStateIfMounted("saving");
+    const payload: SavePayload = {
+      pageId: targetPageId,
+      ...patch,
+      expectedContentRevision: known.value,
+    };
     handlersRef.current
       .save(payload)
       .then((data) => {
@@ -173,6 +178,17 @@ export function usePageAutosave({
     pendingPatchRef.current = null;
     run(queued);
   }, [clearTimer, run]);
+
+  /**
+   * Declared after `flush` so a patch typed before the page's revision arrived — which `run`
+   * holds rather than sending unguarded — is drained the moment that revision lands.
+   */
+  useEffect(() => {
+    if (contentRevision === undefined) return;
+    const hadRevision = revisionRef.current?.pageId === pageId;
+    revisionRef.current = { pageId, value: contentRevision };
+    if (!hadRevision && pendingPatchRef.current !== null) flush();
+  }, [pageId, contentRevision, flush]);
 
   useEffect(() => {
     const onHidden = () => {

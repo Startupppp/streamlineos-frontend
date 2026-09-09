@@ -210,6 +210,7 @@ export default function TemplatesPage() {
                 pageId: page.id,
                 content: template.content as Record<string, unknown>,
                 contentText: deriveContentText(template.content),
+                expectedContentRevision: page.contentRevision,
               },
               {
                 onSettled: () => {

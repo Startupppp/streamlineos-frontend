@@ -110,8 +110,8 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     expect((caught as ApiError).status).toBe(409);
   });
 
-  it("succeeds without expectedContentRevision (backward compatible)", async () => {
-    const updatedPage = { id: 2, contentRevision: 1, title: "U", orgId: "o" };
+  it("always carries the precondition — an unguarded page write is not expressible", async () => {
+    const updatedPage = { id: 2, contentRevision: 4, title: "U", orgId: "o" };
     patchMock.mockResolvedValueOnce(updatedPage);
 
     const { result } = renderHook(() => useUpdateKbPage(), {
@@ -119,12 +119,16 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ pageId: 2, title: "Updated" });
+      await result.current.mutateAsync({
+        pageId: 2,
+        title: "Updated",
+        expectedContentRevision: 3,
+      });
     });
 
     expect(patchMock).toHaveBeenCalledWith(
       "/kb/pages/2",
-      expect.not.objectContaining({ expectedContentRevision: expect.anything() }),
+      expect.objectContaining({ expectedContentRevision: 3 }),
       undefined,
       expect.any(Function),
     );

@@ -12,7 +12,7 @@ import { ApiError } from "@/lib/api-envelope";
 
 type SavePayload = PageAutosavePatch & {
   pageId: number;
-  expectedContentRevision?: number;
+  expectedContentRevision: number;
 };
 
 function harness(over: { failWith?: unknown; contentRevision?: number; pageId?: number } = {}) {
@@ -39,7 +39,7 @@ function harness(over: { failWith?: unknown; contentRevision?: number; pageId?: 
     {
       initialProps: {
         pageId: over.pageId ?? 12,
-        contentRevision: over.contentRevision,
+        contentRevision: "contentRevision" in over ? over.contentRevision : 4,
       },
     },
   );
@@ -119,9 +119,8 @@ describe("wiki autosave — merging successive patches", () => {
       hook.result.current.schedule({ contentText: "typed on 12" });
     });
     act(() => {
-      // Page 13 is opened; its own revision has not arrived yet (`page` is
-      // still loading), so `contentRevision` is undefined. Sending 12's would be
-      // a made-up precondition and would come back 409.
+      // Page 13 is opened; its own revision has not arrived yet (`page` is still
+      // loading). Sending 12's would be a made-up precondition.
       hook.rerender({ pageId: 13, contentRevision: undefined });
     });
     act(() => {
@@ -132,11 +131,44 @@ describe("wiki autosave — merging successive patches", () => {
     });
     await drain();
 
-    expect(sent).toHaveLength(2);
+    expect(sent).toHaveLength(1);
     expect(sent[0]!.pageId).toBe(12);
     expect(sent[0]!.expectedContentRevision).toBe(9);
-    expect(sent[1]!.pageId).toBe(13);
-    expect(sent[1]!.expectedContentRevision).toBeUndefined();
+  });
+
+  it("holds an edit typed before the revision arrives, then sends it under that revision", async () => {
+    const { hook, sent } = harness({ contentRevision: undefined });
+
+    act(() => {
+      hook.result.current.schedule({ contentText: "typed while loading" });
+    });
+    await settle();
+
+    expect(sent).toHaveLength(0);
+
+    await act(async () => {
+      hook.rerender({ pageId: 12, contentRevision: 7 });
+    });
+    await drain();
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.contentText).toBe("typed while loading");
+    expect(sent[0]!.expectedContentRevision).toBe(7);
+  });
+
+  it("BITE: no save is ever dispatched without a precondition", async () => {
+    const { hook, sent } = harness({ contentRevision: undefined });
+
+    act(() => {
+      hook.result.current.schedule({ title: "no revision yet" });
+    });
+    await settle();
+    act(() => {
+      hook.unmount();
+    });
+    await drain();
+
+    expect(sent.every((p) => typeof p.expectedContentRevision === "number")).toBe(true);
   });
 });
 

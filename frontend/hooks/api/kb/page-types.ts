@@ -94,19 +94,28 @@ export type CreateKbPageInput = {
   projectId?: number | null;
 };
 
-export type UpdateKbPageInput = {
+type KbPageMetadataPatch = {
   spaceId?: number | null;
   title?: string;
   icon?: string | null;
   coverImage?: string | null;
-  content?: unknown;
   contentText?: string;
   changeSummary?: string;
   status?: "draft" | "in_review" | "published" | "archived";
   contentType?: string;
   ownerUserId?: string | null;
-  expectedContentRevision?: number;
 };
+
+/**
+ * Writing `content` requires the revision it is replacing — the backend refuses a body without
+ * one — so an unguarded body write cannot be expressed. Metadata is not gated on someone
+ * else's typing, because `contentRevision` tracks the body alone.
+ */
+export type UpdateKbPageInput = KbPageMetadataPatch &
+  (
+    | { content: unknown; expectedContentRevision: number }
+    | { content?: undefined; expectedContentRevision?: number }
+  );
 
 export type MoveKbPageInput = {
   parentPageId: number | null;
