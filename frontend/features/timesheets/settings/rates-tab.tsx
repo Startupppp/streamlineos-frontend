@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { RateFormSheet } from "./rate-form-sheet";
+import { RatePreviewPanel } from "./rate-preview-panel";
 import { formatMoney } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 
@@ -235,6 +236,13 @@ export function RatesTab() {
       <p className="text-xs text-muted-foreground">
         Higher priority overrides lower. Scope specificity: user &gt; project &gt; task &gt; client &gt; any.
       </p>
+
+      {/*
+        Above the table, because it answers the question the sentence above
+        raises: those precedence rules are exactly what makes "which card wins
+        here?" hard to read off the rows.
+      */}
+      <RatePreviewPanel />
 
       <DataTable
         data={rates}

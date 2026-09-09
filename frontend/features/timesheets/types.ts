@@ -595,3 +595,19 @@ export interface SettingsHistoryEntry {
   changeReason: string | null;
   createdAt: string;
 }
+
+/**
+ * What the rate resolver returns for one project/person combination.
+ *
+ * Mirrors `ResolvedRate` in `timesheets/core/rate-resolver.service.ts`.
+ * `source: null` with `billRate: null` is the case that matters and the reason
+ * this is worth showing: it means no rate card matched and no project-member
+ * rate exists, so work on that combination bills at nothing. That is a finding,
+ * not an empty state.
+ */
+export interface ResolvedRatePreview {
+  billRate: number | null;
+  costRate: number | null;
+  currency: string;
+  source: "RATE_CARD" | "PROJECT_MEMBER" | null;
+}
