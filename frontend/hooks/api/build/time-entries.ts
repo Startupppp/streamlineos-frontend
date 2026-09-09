@@ -6,10 +6,11 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TimeEntry, LogTimeInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { invalidateBuildViews } from "./ticket-cache";
 
 
-const successLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+const timeEntryRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/time-entry-schema").then((m) => m.timeEntryRowContract),
 );
 
 export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
@@ -22,15 +23,13 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
         `/build/${projectId}/tickets/${ticketId}/time-entries`,
         data,
         undefined,
-        successLazy,
+        timeEntryRowLazy,
       ),
     onSuccess: (_: unknown, variables: LogTimeInput) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.timeEntries(),
       });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
-      });
+      invalidateBuildViews(queryClient, variables.projectId, [variables.ticketId]);
     },
   });
 }
