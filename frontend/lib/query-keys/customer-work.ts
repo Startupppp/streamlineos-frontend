@@ -40,6 +40,8 @@ export const customerWorkQueryKeys = {
       [...base, "deals", "forecastSnapshots", params] as const,
     forecastCompare: (period: string) =>
       [...base, "deals", "forecastCompare", period] as const,
+    forecastModel: () => [...base, "deals", "forecastModel"] as const,
+    forecastScore: (dealId: number) => [...base, "deals", "forecastScore", dealId] as const,
     stakeholders: (dealId: number) =>
       [...base, "deals", "stakeholders", dealId] as const,
   },

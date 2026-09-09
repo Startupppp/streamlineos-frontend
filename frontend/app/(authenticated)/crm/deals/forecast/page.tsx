@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useCanState } from "@/hooks/api/access";
 import { motion, useReducedMotion } from "framer-motion";
-import { TrendingUp, Target, Handshake, Camera } from "lucide-react";
+import { TrendingUp, Target, Layers, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -26,7 +26,7 @@ function ForecastSkeleton() {
       <StatCardGrid cols={3}>
         <StatCard label="Total Pipeline" value="" isLoading icon={TrendingUp} tone="blue" />
         <StatCard label="Weighted Forecast" value="" isLoading icon={Target} tone="blue" />
-        <StatCard label="Commit Forecast" value="" isLoading icon={Handshake} tone="emerald" />
+        <StatCard label="Open Deals" value="" isLoading icon={Layers} tone="emerald" />
       </StatCardGrid>
       <Skeleton className="h-48 rounded-lg" />
       <Skeleton className="h-64 rounded-lg" />
@@ -131,7 +131,7 @@ export default function DealForecastPage() {
           animate="visible"
         >
           <motion.div variants={itemVariants}>
-            <DealForecastSummary deals={allDeals} />
+            <DealForecastSummary />
           </motion.div>
 
           <motion.div variants={itemVariants}>
