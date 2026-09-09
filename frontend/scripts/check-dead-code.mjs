@@ -78,7 +78,6 @@ const EXPORT_VERDICTS = new Map([
   ["dep:sharp", { verdict: "KEEP", reason: "Next.js's image optimiser loads sharp itself at runtime, by name, from the server bundle — there is no import of it in this repo and there must not be one. Removing it makes next/image fall back to the slow unoptimised path in production. Stale the day next/image is no longer used or Next bundles its own encoder" }],
   ["dep:tailwindcss", { verdict: "KEEP", reason: "loaded by CSS, not by the module graph: globals.css line 1 is `@import \"tailwindcss\"`, resolved by @tailwindcss/postcss at build time. knip reads TypeScript imports and cannot see a CSS @import. Stale the day the project stops importing tailwind from CSS" }],
   ["dep:@tailwindcss/typography", { verdict: "KEEP", reason: "same shape one line further down: globals.css line 3 is `@plugin \"@tailwindcss/typography\"`, a Tailwind 4 CSS-first plugin registration with no JS import anywhere. Stale the day that @plugin line is removed" }],
-  ["dep:feedbucket-widget", { verdict: "KEEP", reason: "not a binary. knip parses package.json script strings as shell, and `check:cycles` passes madge `--exclude \"node_modules|\\.next|feedbucket-widget\"`; the `|` characters read as pipeline separators, so the last alternative of the regex is reported as a command being run. It is a directory name inside a regex. Stale the day that --exclude pattern changes shape" }],
 
   ["lib/command-catalog.ts:NotificationCommandName", { verdict: "KEEP", reason: "keyof typeof NOTIFICATION_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
   ["lib/command-catalog.ts:ChatCommandName", { verdict: "KEEP", reason: "keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
@@ -582,9 +581,18 @@ function runSelfTest() {
   assert(depKnown.reason.length > 40,
     `(v) a dependency verdict carries a WRITTEN reason, not a bare suppression (got ${depKnown.reason.length} chars)`);
 
-  const depBinary = classifyExport("package.json", "feedbucket-widget", EXPORT_VERDICTS, "binaries", new Set(), true);
-  assert(depBinary.cls === "KEEP",
-    `(w) the binaries finding this gate never read → expected KEEP, got ${depBinary.cls}`);
+  // (w) used `feedbucket-widget` as its fixture until 2026-09-09, when that verdict was retired:
+  // knip only ever reported it because `check:cycles` shelled to `npx --yes madge@8 --exclude
+  // "node_modules|\.next|feedbucket-widget"`, and knip parses a script string as shell, so the
+  // regex's `|` read as a pipeline and its last alternative looked like a command. madge is now a
+  // devDependency invoked as a local binary, the misparse is gone, and the verdict went stale
+  // exactly as its own reason predicted. The binaries GROUP is still proven read by (ac); what is
+  // asserted here is the classification path for a binaries finding that carries no verdict.
+  const depBinary = classifyExport("package.json", "some-unrecorded-binary", EXPORT_VERDICTS, "binaries", new Set(), true);
+  assert(depBinary.cls === "UNCLASSIFIED",
+    `(w) an unrecorded binaries finding → expected UNCLASSIFIED, got ${depBinary.cls}`);
+  assert(depBinary.reason.includes("dep:some-unrecorded-binary"),
+    `(w2) the unclassified binaries reason names the dep: key to add, got "${depBinary.reason}"`);
 
   // Same name, source key space: the path rules must still answer it, and must not be reachable
   // from a package finding. `test-utils/x.ts` is RETAINED-BY-CONVENTION as a file path, but the
@@ -703,7 +711,7 @@ function runSelfTest() {
   console.log("  (r) a TYPE outside hooks/api                          → UNCLASSIFIED (rule is scoped)");
   console.log("  (s) unused dependency with no verdict                 → UNCLASSIFIED (gate bites)");
   console.log("  (u) dependency with a written verdict                 → KEEP");
-  console.log("  (w) the knip `binaries` finding, previously unread    → KEEP");
+  console.log("  (w) an unrecorded knip `binaries` finding             → UNCLASSIFIED");
   console.log("  (x) a package finding is not answered by a path rule  → UNCLASSIFIED");
   console.log("  (aa) a dep: verdict knip no longer reports            → stale (gate bites)");
   console.log("  (af) knip.json carries no unexplained ignoreDependencies");
