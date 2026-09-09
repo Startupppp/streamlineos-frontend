@@ -258,3 +258,18 @@ export interface SignPublicSession {
   documents?: { id: number; fileName: string; pageCount: number | null }[];
   fields?: SignField[];
 }
+
+export type SignSweepName = "reminder" | "expiration";
+
+export type SignSweepStaleness = "ok" | "never_run" | "stale" | "errored";
+
+export interface SignSweepRunSummary {
+  sweep: SignSweepName;
+  ranAt: string | null;
+  affected: number;
+  error: string | null;
+  neverRun: boolean;
+  staleness: SignSweepStaleness;
+  healthy: boolean;
+  expectedWithinHours: number;
+}

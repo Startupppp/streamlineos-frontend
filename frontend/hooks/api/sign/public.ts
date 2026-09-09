@@ -67,7 +67,8 @@ function useInvalidateSession(token: string) {
 export function useRequestSignOtp(token: string) {
   return useMutation({
     mutationKey: ["signPublic", "request-otp", token],
-    mutationFn: () => publicPost<{ sent: boolean }>(`/public/sign/${token}/request-otp`, {}, "Unable to send code."),
+    mutationFn: () =>
+      publicPost<{ sent: boolean; via?: "email" | "sms" }>(`/public/sign/${token}/request-otp`, {}, "Unable to send code."),
   });
 }
 

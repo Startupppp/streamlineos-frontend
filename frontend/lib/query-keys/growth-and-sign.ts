@@ -86,6 +86,21 @@ export const growthAndSignQueryKeys = {
       [...base, "crmCallIntelligence", "analysis", activityId] as const,
     coaching: (sinceDays: number) =>
       [...base, "crmCallIntelligence", "coaching", sinceDays] as const,
+    /**
+     * Per-rep metrics and the best-call search, keyed by every parameter that
+     * changes the answer.
+     *
+     * The window is in the key and so is the page, because these are aggregates
+     * over a period: a 7-day summary cached under a 30-day key would show a
+     * manager last week's numbers under this month's heading. The scope is NOT
+     * in the key and does not need to be — `scopedQueryKeyHashFn` already hashes
+     * every key under `authenticated:<orgId>:<userId>`, so one person's own-scope
+     * rows can never be served to another person's team-scope read.
+     */
+    reps: (params: Record<string, unknown>) =>
+      [...base, "crmCallIntelligence", "reps", params] as const,
+    exemplars: (params: Record<string, unknown>) =>
+      [...base, "crmCallIntelligence", "exemplars", params] as const,
   },
 
   crmInbox: {
@@ -131,6 +146,7 @@ export const growthAndSignQueryKeys = {
     settings: () => [...base, "signAdmin", "settings"] as const,
     watermarkPolicies: () =>
       [...base, "signAdmin", "watermarkPolicies"] as const,
+    sweepStatus: () => [...base, "signAdmin", "sweepStatus"] as const,
   },
 
   signPublic: {
