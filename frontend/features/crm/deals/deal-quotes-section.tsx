@@ -37,6 +37,7 @@ import {
   useDealQuotes,
   useDeleteQuote,
   useUpdateQuoteStatus,
+  useSendQuote,
 } from "@/hooks/api/crm/quotes";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -71,6 +72,7 @@ interface QuoteRowActionsProps {
 
 function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProps) {
   const updateStatus = useUpdateQuoteStatus();
+  const sendQuote = useSendQuote();
   const id = Number(quote.id);
   const status = typeof quote.status === "string" ? quote.status : "";
   const quoteNumber = typeof quote.quoteNumber === "string" ? quote.quoteNumber : "this quote";
@@ -88,7 +90,20 @@ function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProp
     [id, dealId, updateStatus],
   );
 
-  const handleMarkSent = useCallback(() => changeStatus("SENT"), [changeStatus]);
+  /*
+   * Sending goes through its own endpoint, not `changeStatus`. Only that route
+   * refuses a quote pending discount approval or one with no linked contact,
+   * writes the audit row and emits `quote.sent` for the automation rules.
+   */
+  const handleMarkSent = useCallback(() => {
+    sendQuote.mutate(
+      { id, dealId },
+      {
+        onSuccess: () => toast.success("Quote sent"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [id, dealId, sendQuote]);
   const handleMarkAccepted = useCallback(() => changeStatus("ACCEPTED"), [changeStatus]);
   const handleMarkRejected = useCallback(() => changeStatus("REJECTED"), [changeStatus]);
   const handleDeleteRequest = useCallback(() => onDeleteRequest(id), [id, onDeleteRequest]);
@@ -101,7 +116,7 @@ function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProp
             variant="ghost"
             size="sm"
             className="shrink-0 px-2 text-xs"
-            disabled={updateStatus.isPending}
+            disabled={updateStatus.isPending || sendQuote.isPending}
             aria-label={`Actions for ${quoteNumber}`}
           >
             Actions

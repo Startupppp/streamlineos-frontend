@@ -39,6 +39,7 @@ import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
+import { useSendQuote } from "@/hooks/api/crm/quotes";
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -62,6 +63,7 @@ export default function QuotesPage() {
   const layout = useTenantLayout(QUOTE_LAYOUT);
   const money = useOrgDisplay();
   const updateQuoteStatus = useUpdateQuoteStatus();
+  const sendQuote = useSendQuote();
   const deleteQuote = useDeleteQuote();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
@@ -164,15 +166,24 @@ export default function QuotesPage() {
 
   const handleStatusUpdate = useCallback(
     (id: number, status: QuoteStatus) => {
-      updateQuoteStatus.mutate(
-        { id, status },
-        {
-          onSuccess: () => toast.success(`Quote marked as ${STATUS_LABELS[status].toLowerCase()}`),
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
+      const onSuccess = () =>
+        toast.success(`Quote marked as ${STATUS_LABELS[status].toLowerCase()}`);
+      const onError = (e: unknown) => toast.error(getErrorMessage(e));
+
+      /*
+       * Sending has its own endpoint and the generic PATCH is not a substitute:
+       * only the dedicated route refuses a quote that is pending discount
+       * approval, refuses one with no linked contact, writes the audit row and
+       * emits `quote.sent` for the automation rules. Accept and reject are
+       * customer outcomes with no endpoint of their own and stay on the PATCH.
+       */
+      if (status === "SENT") {
+        sendQuote.mutate({ id }, { onSuccess, onError });
+        return;
+      }
+      updateQuoteStatus.mutate({ id, status }, { onSuccess, onError });
     },
-    [updateQuoteStatus],
+    [updateQuoteStatus, sendQuote],
   );
 
   const handlePageChange = useCallback(
