@@ -75,3 +75,7 @@ docs/superpowers/
 .claude-flow
 
 .env*
+
+# Playwright run artifacts
+/blob-report/
+/playwright/.cache/

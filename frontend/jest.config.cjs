@@ -6,7 +6,10 @@ const createJestConfig = nextJest({ dir: "./" });
 const config = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
+  // `e2e/` is Playwright's. Jest takes the default testMatch here, which
+  // matches `*.spec.ts` anywhere — without this it loads a Playwright spec
+  // into jsdom and dies on `test.describe`.
+  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/", "<rootDir>/e2e/"],
   // next/jest's automatic tsconfig "paths" -> moduleNameMapper generation isn't resolving
   // "@/*" in this Next 16 setup — mapped explicitly so component tests can import via "@/...".
   moduleNameMapper: {
