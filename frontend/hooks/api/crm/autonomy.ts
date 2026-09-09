@@ -9,8 +9,10 @@ import type {
   AutonomySettings,
   DecisionFilters,
   DecisionPage,
+  AutonomyRepairPage,
   LiveClassStop,
   LiveHold,
+  RepairMeasure,
   RepairClass,
   RepairPoliciesResponse,
   ReviewQueueItem,
@@ -146,6 +148,57 @@ export function useSetRepairPolicy() {
       apiClient.patch<RepairPoliciesResponse>("/crm/autonomy/repair-policies", input),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomyRepairPolicies(), data);
+    },
+  });
+}
+
+/**
+ * CRM-P1-05. What the repair loop actually changed, most recent first.
+ *
+ * Read under the review key, matching the endpoint: seeing what the system did
+ * to a customer's record is a different authority from letting it, and from
+ * taking it back.
+ */
+export function useRepairs(filters: { limit?: number; revertedOnly?: boolean } = {}) {
+  const params = new URLSearchParams();
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.revertedOnly) params.set("revertedOnly", "true");
+  const query = params.toString();
+
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairs(filters),
+    queryFn: () =>
+      apiClient.get<AutonomyRepairPage>(`/crm/autonomy/repairs${query ? `?${query}` : ""}`),
+    staleTime: 30_000,
+  });
+}
+
+/** The loop's own measure, over a window. */
+export function useRepairMeasure(days = 30) {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairMeasure(days),
+    queryFn: () => apiClient.get<RepairMeasure>(`/crm/autonomy/repair-measure?days=${days}`),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Put one field back the way it was.
+ *
+ * `crm:autonomy:reverse` on the server, which is not the key that granted the
+ * repair — undoing what the system did is deliberately its own authority.
+ */
+export function useRevertRepair() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["crm", "autonomy", "repairs", "revert"],
+    mutationFn: ({ repairId, reason }: { repairId: string; reason?: string }) =>
+      apiClient.post<{ reverted: boolean }>(`/crm/autonomy/repairs/${repairId}/revert`, {
+        ...(reason ? { reason } : {}),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },
   });
 }

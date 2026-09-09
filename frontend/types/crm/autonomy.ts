@@ -321,3 +321,56 @@ export interface ColdOutboundOverview {
   pauseReason: string | null;
   domains: SendingDomain[];
 }
+
+/** One field the system changed on its own, and whether a person took it back. */
+export interface AutonomyRepair {
+  autonomyRepairId: string;
+  autonomousDecisionId: string | null;
+  repairClass: RepairClass;
+  findingId: string | null;
+  partyId: string | null;
+  partyName: string | null;
+  field: string;
+  previousValue: string | null;
+  repairedValue: string | null;
+  appliedAt: string;
+  revertedAt: string | null;
+  revertedByUserId: string | null;
+  revertedReason: string | null;
+}
+
+export interface AutonomyRepairPage {
+  items: AutonomyRepair[];
+  nextCursor: string | null;
+}
+
+/**
+ * How much of the queue the system cleared, against how much a person did, and
+ * what is left.
+ *
+ * `automatedShare` is null rather than zero when nothing was decided: a ratio
+ * over an empty window is not "no automation", it is no evidence, and the two
+ * look the same on a chart only if one of them lies. `remaining` sits beside it
+ * because the ratio alone is gameable — a loop that repaired every trivial
+ * finding and left every hard one would show a rising share while the queue got
+ * harder.
+ */
+export interface RepairMeasure {
+  windowDays: number;
+  resolution: {
+    automated: number;
+    manual: number;
+    automatedShare: number | null;
+  };
+  repairs: {
+    byClass: { repairClass: RepairClass; applied: number; reverted: number }[];
+    applied: number;
+    reverted: number;
+  };
+  remaining: {
+    total: number;
+    weighted: number;
+    byProducer: { producer: string; open: number }[];
+    oldestOpenAgeDays: number | null;
+  };
+}

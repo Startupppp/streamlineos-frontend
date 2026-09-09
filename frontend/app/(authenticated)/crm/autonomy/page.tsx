@@ -7,6 +7,7 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { AutonomyReviewFeed } from "@/features/crm/autonomy/autonomy-review-feed";
 import { AutonomySwitchesPanel } from "@/features/crm/autonomy/autonomy-switches-panel";
 import { RepairPoliciesPanel } from "@/features/crm/autonomy/repair-policies-panel";
+import { RepairActivityPanel } from "@/features/crm/autonomy/repair-activity-panel";
 import { ColdOutboundPanel } from "@/features/crm/autonomy/cold-outbound-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
@@ -47,6 +48,8 @@ export default function AutonomyReviewPage() {
           <AutoQuotePanel />
           {/* Under the switches, because the kill switch above vetoes all of it. */}
           <RepairPoliciesPanel />
+          {/* Directly under the grant: what was done with it. */}
+          <RepairActivityPanel />
           {/* Renders nothing without the manage key, so a reviewer sees no gap. */}
           <ColdOutboundPanel />
           <AutonomyReviewFeed />

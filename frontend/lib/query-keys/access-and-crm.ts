@@ -61,6 +61,10 @@ export const accessAndCrmQueryKeys = {
     autonomySwitches: () => [...base, "crm", "autonomy", "switches"] as const,
     autonomyClassStops: () => [...base, "crm", "autonomy", "class-stops"] as const,
     autonomyRepairPolicies: () => [...base, "crm", "autonomy", "repair-policies"] as const,
+    autonomyRepairs: (filters?: Record<string, unknown>) =>
+      [...base, "crm", "autonomy", "repairs", filters] as const,
+    autonomyRepairMeasure: (days: number) =>
+      [...base, "crm", "autonomy", "repair-measure", days] as const,
     autonomyScoreboard: (days: number) =>
       [...base, "crm", "autonomy", "scoreboard", days] as const,
     autonomyReviewQueue: () => [...base, "crm", "autonomy", "review-queue"] as const,
