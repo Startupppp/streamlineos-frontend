@@ -551,3 +551,47 @@ export interface OverdueQueryInput {
   page?: number;
   limit?: number;
 }
+
+/**
+ * TS. The result of walking the audit hash chain.
+ *
+ * `truncated` is the field that makes this readable. The server verifies the
+ * OLDEST `limit` events (10,000), so on a longer chain everything past the cut
+ * is unexamined — and `valid: true` comes back either way. A surface showing a
+ * green tick without saying which of the two it is looking at is worse than no
+ * check, because it is believed. `legacyRows` carries the same weight: a chain
+ * "valid" over 400 rows of which 380 predate hashing is a much weaker statement.
+ */
+export interface AuditChainVerification {
+  valid: boolean;
+  /** Present only on a break. */
+  brokenAtId?: number;
+  /** Rows examined, hashed and legacy together. */
+  checked: number;
+  /** Rows whose stored hash was recomputed and matched. */
+  verified: number;
+  /** Rows written before hashing existed, which prove nothing either way. */
+  legacyRows: number;
+  /** Every audit event the org has, not just those examined. */
+  total: number;
+  /** True when `total` exceeds what this pass could read. */
+  truncated: boolean;
+}
+
+/**
+ * One numbered snapshot of the org's timesheet settings.
+ *
+ * `changeReason` is nullable because the column shipped nullable and nothing
+ * required it until TS-16 — so old rows record a change nobody can now explain.
+ * That is the failure the requirement exists to stop repeating, and the surface
+ * must show the gap rather than hiding it behind an em dash.
+ */
+export interface SettingsHistoryEntry {
+  id: number;
+  orgId: string;
+  version: number;
+  settings: Record<string, unknown>;
+  changedBy: string | null;
+  changeReason: string | null;
+  createdAt: string;
+}

@@ -125,6 +125,7 @@ export const usersAndCommerceQueryKeys = {
     budgets: () => [...base, "timesheets", "budgets"] as const,
     audit: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "audit", params] as const,
+    auditVerify: () => [...base, "timesheets", "audit", "verify"] as const,
   },
 
 } as const;
