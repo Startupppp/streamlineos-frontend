@@ -62,6 +62,9 @@ type InspectionListResponse = {
   totalPages: number;
 };
 
+/** Whose stock a movement or hold is against. Absent means OWNED. */
+export type StockOwnership = "OWNED" | "VENDOR" | "CUSTOMER";
+
 interface QualityHold {
   id: number;
   orgId: string;
@@ -70,6 +73,17 @@ interface QualityHold {
   locationId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
+  /**
+   * NEO-4/NEO-11. The pallet the held units stand on, and whose stock they are.
+   *
+   * Both are part of `inv_stock_levels`' natural key, so a hold against a
+   * consigned pallet and one against loose owned stock in the same bin are
+   * different holds on different rows. Without them the list shows two
+   * identical-looking rows and an operator cannot say which stock is held —
+   * which is the question a hold exists to answer.
+   */
+  handlingUnitId?: number | null;
+  ownership?: StockOwnership | null;
   quantity: string;
   reason: string;
   releasedBy?: string | null;
