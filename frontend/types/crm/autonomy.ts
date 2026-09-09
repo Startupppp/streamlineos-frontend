@@ -217,6 +217,14 @@ export interface AutonomySettings {
   shadowSampleRate: number;
   shadowDailyCap: number;
   holdWindowSeconds: number;
+  /**
+   * CRM-P1-17. Whether the system may draft a quote without being asked.
+   *
+   * Was missing from this type while the endpoint had returned it all along, so
+   * the field could not be read or written from anywhere typed — an opt-in that
+   * existed only as a raw PATCH.
+   */
+  autoQuoteEnabled: boolean;
 }
 
 export interface LiveHold {

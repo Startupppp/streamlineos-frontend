@@ -11,6 +11,7 @@ import { ColdOutboundPanel } from "@/features/crm/autonomy/cold-outbound-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
 import { ClassStopsPanel } from "@/features/crm/autonomy/class-stops-panel";
+import { AutoQuotePanel } from "@/features/crm/autonomy/auto-quote-panel";
 
 /**
  * Oversight for a product that acts without asking.
@@ -42,6 +43,8 @@ export default function AutonomyReviewPage() {
           <ClassStopsPanel />
           <AutonomyScoreboard />
           <AutonomySwitchesPanel />
+          {/* Beside the switches: it is the same kind of choice, one rung down. */}
+          <AutoQuotePanel />
           {/* Under the switches, because the kill switch above vetoes all of it. */}
           <RepairPoliciesPanel />
           {/* Renders nothing without the manage key, so a reviewer sees no gap. */}
