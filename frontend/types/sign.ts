@@ -174,6 +174,49 @@ export interface SignBulkSendJob {
   completedAt: string | null;
 }
 
+export type SignBulkSendRowStatus = "pending" | "success" | "failed";
+
+export interface SignBulkSendRow {
+  id: number;
+  jobId: number;
+  rowNumber: number;
+  rawDataJson: Record<string, unknown>;
+  status: SignBulkSendRowStatus;
+  envelopeId: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SignBulkSendJobDetail {
+  job: SignBulkSendJob;
+  rows: SignBulkSendRow[];
+}
+
+/**
+ * The stored row. `certificateJson` is jsonb on the backend and typed there as
+ * `Record<string, unknown>`, so it stays unknown here too — the sheet narrows it
+ * through a Zod schema rather than asserting a shape it cannot prove.
+ */
+export interface SignCertificate {
+  id: number;
+  orgId: string;
+  envelopeId: number;
+  certificateNumber: string;
+  certificateFileKey: string;
+  finalPdfFileKey: string;
+  finalPdfHash: string;
+  watermarked: boolean;
+  generatedAt: string;
+  certificateJson: Record<string, unknown>;
+}
+
+export interface SignCertificateResponse {
+  url: string;
+  expiresInSeconds: number;
+  certificate: SignCertificate;
+}
+
 export interface SignAuditEvent {
   id: number;
   envelopeId: number | null;

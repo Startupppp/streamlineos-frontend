@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ShieldCheck, Send, History, Download } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Send, History, Download, ScrollText } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,18 @@ import {
   useVoidSignEnvelope,
 } from "@/hooks/api/sign/envelopes";
 import { useSaveEnvelopeAsTemplate } from "@/hooks/api/sign/templates";
+import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { EnvelopeAiMenu } from "./envelope-ai-menu";
+import { CompletionCertificateSheet } from "./completion-certificate-sheet";
 import type { SignEnvelope } from "@/types/sign";
 
 export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelope; onShowAudit: () => void }) {
   const router = useRouter();
   const [validationErrors, setValidationErrors] = useState<string[] | null>(null);
+  const [certificateOpen, setCertificateOpen] = useState(false);
+  const canViewCertificate = useCan("sign:certificate:download");
   const validate = useValidateSignEnvelope(envelope.id);
   const send = useSendSignEnvelope(envelope.id);
   const resend = useResendSignEnvelope(envelope.id);
@@ -147,6 +151,17 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleSaveAsTemplate}>Save as template</DropdownMenuItem>
+            {canViewCertificate && (
+              <DropdownMenuItem onClick={() => setCertificateOpen(true)} disabled={!isCompleted}>
+                <ScrollText className="size-4" />
+                <span className="flex flex-col items-start">
+                  <span>Certificate of completion</span>
+                  {!isCompleted && (
+                    <span className="text-xs text-muted-foreground">Issued once every signer has completed</span>
+                  )}
+                </span>
+              </DropdownMenuItem>
+            )}
             {isActive && <DropdownMenuItem onClick={handleResend}>Resend to pending recipients</DropdownMenuItem>}
             {(isDraft || isActive) && (
               <DropdownMenuItem onClick={handleVoid} variant="destructive">
@@ -157,6 +172,8 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <CompletionCertificateSheet envelopeId={envelope.id} open={certificateOpen} onOpenChange={setCertificateOpen} />
     </div>
   );
 }

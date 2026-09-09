@@ -1,0 +1,191 @@
+import type { ReactNode } from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import type { SignEnvelope, SignEnvelopeStatus } from "@/types/sign";
+import { BuilderTopBar } from "./builder-top-bar";
+
+const grantedKeys = new Set<string>();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => grantedKeys.has(key),
+}));
+
+const idleMutation = { mutateAsync: jest.fn(), mutate: jest.fn(), isPending: false };
+
+jest.mock("@/hooks/api/sign/envelopes", () => ({
+  useValidateSignEnvelope: () => idleMutation,
+  useSendSignEnvelope: () => idleMutation,
+  useResendSignEnvelope: () => idleMutation,
+  useSendSignEnvelopeReminder: () => idleMutation,
+  useVoidSignEnvelope: () => idleMutation,
+  useDownloadSignEnvelopeFinalPdf: () => idleMutation,
+}));
+
+jest.mock("@/hooks/api/sign/templates", () => ({
+  useSaveEnvelopeAsTemplate: () => idleMutation,
+}));
+
+jest.mock("./envelope-ai-menu", () => ({
+  EnvelopeAiMenu: () => <div data-testid="envelope-ai-menu" />,
+}));
+
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
+}));
+
+jest.mock("@/components/ui/sheet", () => ({
+  Sheet: ({ open, children }: { open: boolean; children: ReactNode }) => (open ? <div>{children}</div> : null),
+  SheetContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SheetHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SheetTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
+  SheetDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
+  SheetBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+const certificateJson = {
+  certificateNumber: "SGN-42-9A7C1B2D",
+  tenantName: "Acme Pvt Ltd",
+  envelopeTitle: "Vendor Agreement",
+  senderName: "Priya Raman",
+  senderEmail: "priya@acme.test",
+  finalPdfHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  watermarked: false,
+  completedAt: "2026-03-04T09:15:00.000Z",
+  documents: [{ fileName: "agreement.pdf", sha256Hash: "aa11bb22cc33", pageCount: 4 }],
+  recipients: [
+    {
+      name: "Sam Iyer",
+      email: "sam@vendor.test",
+      role: "signer",
+      authMethod: "otp_email",
+      completedAt: "2026-03-04T09:14:00.000Z",
+    },
+  ],
+  events: [],
+};
+
+jest.mock("@/hooks/api/sign/certificates", () => ({
+  useSignEnvelopeCertificate: (envelopeId: number | undefined) => ({
+    data:
+      envelopeId === undefined
+        ? undefined
+        : {
+            url: "https://files.test/certificate.pdf",
+            expiresInSeconds: 900,
+            certificate: {
+              id: 1,
+              orgId: "org-1",
+              envelopeId: 42,
+              certificateNumber: "SGN-42-9A7C1B2D",
+              certificateFileKey: "k1",
+              finalPdfFileKey: "k2",
+              finalPdfHash: certificateJson.finalPdfHash,
+              watermarked: false,
+              generatedAt: "2026-03-04T09:15:00.000Z",
+              certificateJson,
+            },
+          },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
+  useRegenerateSignCertificate: () => idleMutation,
+}));
+
+function makeEnvelope(status: SignEnvelopeStatus): SignEnvelope {
+  return {
+    id: 42,
+    orgId: "org-1",
+    title: "Vendor Agreement",
+    subject: null,
+    message: null,
+    status,
+    routingMode: "parallel",
+    ccTiming: "on_send",
+    allowDecline: true,
+    sourceModule: null,
+    sourceEntityType: null,
+    sourceEntityId: null,
+    templateId: null,
+    watermarkPolicyId: null,
+    senderUserId: "user-1",
+    reminderEnabled: false,
+    reminderFirstAfterDays: 3,
+    reminderRepeatDays: 3,
+    reminderMaxCount: 3,
+    reminderSentCount: 0,
+    lastReminderAt: null,
+    expiresAt: null,
+    sentAt: null,
+    completedAt: null,
+    voidedAt: null,
+    voidReason: null,
+    declinedAt: null,
+    finalPdfFileKey: null,
+    finalPdfHash: null,
+    createdAt: "2026-03-01T09:00:00.000Z",
+    updatedAt: "2026-03-04T09:15:00.000Z",
+  };
+}
+
+function renderTopBar(status: SignEnvelopeStatus) {
+  return render(
+    <TooltipProvider>
+      <BuilderTopBar envelope={makeEnvelope(status)} onShowAudit={jest.fn()} />
+    </TooltipProvider>,
+  );
+}
+
+describe("BuilderTopBar certificate control", () => {
+  beforeEach(() => {
+    grantedKeys.clear();
+  });
+
+  it("reaches the certificate sheet from the envelope's own action menu", () => {
+    grantedKeys.add("sign:certificate:download");
+    renderTopBar("completed");
+
+    const control = screen.getByRole("button", { name: /Certificate of completion/ });
+    expect(control).toBeEnabled();
+
+    fireEvent.click(control);
+
+    expect(screen.getByText("SGN-42-9A7C1B2D")).toBeInTheDocument();
+    expect(screen.getByText(certificateJson.finalPdfHash)).toBeInTheDocument();
+    expect(screen.getByText(/not a\s+digital signature issued by a certifying authority/)).toBeInTheDocument();
+  });
+
+  it("keeps the control visible but disabled, with its reason, before the envelope completes", () => {
+    grantedKeys.add("sign:certificate:download");
+    renderTopBar("sent");
+
+    expect(screen.getByRole("button", { name: /Certificate of completion/ })).toBeDisabled();
+    expect(screen.getByText("Issued once every signer has completed")).toBeInTheDocument();
+  });
+
+  it("hides the certificate control from a role without the download permission", () => {
+    renderTopBar("completed");
+
+    expect(screen.queryByRole("button", { name: /Certificate of completion/ })).not.toBeInTheDocument();
+  });
+});
