@@ -19,6 +19,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { GenealogyExportButton } from "./genealogy-export-button";
 import {
   useLotGenealogy,
   type GenealogyDirection,
@@ -222,6 +223,9 @@ export function LotGenealogyPanel({ lotId }: LotGenealogyPanelProps) {
             <SelectItem value="include">Include reversed movements</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <GenealogyExportButton params={{ lotId, direction, maxDepth, includeReversed }} />
+        </div>
       </div>
 
       {data && !data.truncation.complete ? (

@@ -116,3 +116,38 @@ export function useLotGenealogy(
     enabled: canView && hasAnchor && (options?.enabled ?? true),
   });
 }
+
+/**
+ * The same walk as a CSV, one row per edge.
+ *
+ * Not a `useQuery`: the response is a file, and a recall trace held in the query
+ * cache would keep every byte of it for the rest of the session. It takes the
+ * caps the reader is looking at, so the file is the screen rather than a second,
+ * differently-bounded answer.
+ *
+ * `X-Genealogy-Complete` and `X-Genealogy-Truncation-Reasons` ride on the
+ * response and are not readable through a Blob. They do not need to be: the JSON
+ * walk behind the same filters is already on screen and says so in the
+ * truncation banner above this control.
+ */
+export async function downloadGenealogyCsv(params: GenealogyParams): Promise<void> {
+  const blob = await apiClient.download("/inventory/traceability/genealogy/export", {
+    lotId: params.lotId,
+    serialId: params.serialId,
+    direction: params.direction,
+    maxDepth: params.maxDepth,
+    maxNodes: params.maxNodes,
+    maxFanout: params.maxFanout,
+    includeReversed: params.includeReversed === true ? "true" : undefined,
+  });
+  const anchorId = params.lotId ?? params.serialId ?? 0;
+  const kind = params.lotId !== undefined ? "lot" : "serial";
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `genealogy-${kind}-${String(anchorId)}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
