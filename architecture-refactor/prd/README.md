@@ -2,10 +2,9 @@
 
 Status: active 2026-09-09
 
-This directory is the sole source of current pending work. The legacy
-[`PRD-10-10-CODE-RELEASE-TODO.md`](../PRD-10-10-CODE-RELEASE-TODO.md) retains the
-complete `PRD-C001`–`PRD-C195` requirements and historical evidence, but its
-checkboxes do not assign current work.
+This directory is the sole source of current pending work. The compact
+[`PRD-10-10-CODE-RELEASE-TODO.md`](../PRD-10-10-CODE-RELEASE-TODO.md) provides
+stable `PRD-C001`–`PRD-C195` identifiers and contains no task status.
 
 Give each parallel agent one lane file. Agents edit only their assigned lane and
 implementation files. They do not commit, rewrite another lane, or run the shared
@@ -26,4 +25,3 @@ final gates, evidence reconciliation, and commits.
 Statuses are `READY`, `BLOCKED-EXTERNAL`, and `FINAL-INTEGRATION`. A task is removed
 only after its completion evidence is linked from the lane file. Historical reports
 are evidence, not backlogs.
-

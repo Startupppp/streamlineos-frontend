@@ -7,7 +7,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.PRD_TRACEABILITY_ROOT ? resolve(process.env.PRD_TRACEABILITY_ROOT) : resolve(HERE, "..", "..");
 const PRD_DIR = join(ROOT, "architecture-refactor", "prd");
 const INDEX = join(PRD_DIR, "README.md");
-const LEGACY = join(ROOT, "architecture-refactor", "PRD-10-10-CODE-RELEASE-TODO.md");
+const CRITERIA = join(ROOT, "architecture-refactor", "PRD-10-10-CODE-RELEASE-TODO.md");
 const VALID_STATUSES = new Set(["READY", "BLOCKED-EXTERNAL", "FINAL-INTEGRATION"]);
 const TASK = /^## ([A-Z]+-\d{3}) — (.+)$/;
 const REQUIRED = ["Status", "Maps to", "Parallel group", "Depends on", "Owner"];
@@ -54,12 +54,12 @@ export function validateBacklog({ indexText, laneFiles, legacyText, minTasks = 1
 }
 
 function main() {
-  if (!existsSync(INDEX) || !existsSync(LEGACY)) {
-    console.error("FAIL: active PRD index or legacy criterion ledger is missing.");
+  if (!existsSync(INDEX) || !existsSync(CRITERIA)) {
+    console.error("FAIL: active PRD index or criterion registry is missing.");
     process.exit(1);
   }
   const laneFiles = Object.fromEntries(readdirSync(PRD_DIR).filter((name) => name.endsWith(".md") && name !== "README.md").map((name) => [name, readFileSync(join(PRD_DIR, name), "utf8")]));
-  const result = validateBacklog({ indexText: readFileSync(INDEX, "utf8"), laneFiles, legacyText: readFileSync(LEGACY, "utf8") });
+  const result = validateBacklog({ indexText: readFileSync(INDEX, "utf8"), laneFiles, legacyText: readFileSync(CRITERIA, "utf8") });
   if (result.failures.length) {
     for (const failure of result.failures) console.error(`FAIL: ${failure}`);
     process.exit(1);
