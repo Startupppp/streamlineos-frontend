@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { FileDown } from "lucide-react";
+import { FileDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
@@ -33,6 +35,7 @@ import { ReportsError } from "@/features/crm/reports/components/reports-error";
 
 export default function CrmReportsPage() {
   const [period, setPeriod] = useState<Period>("month");
+  const canBuildReports = useCan("crm:reporting:run");
 
   const dateRange = useMemo(() => periodToDateRange(period), [period]);
 
@@ -91,10 +94,20 @@ export default function CrmReportsPage() {
         <PeriodFilter period={period} onPeriodChange={handlePeriodChange} />
       }
       actions={
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <FileDown className="h-3.5 w-3.5 mr-1.5" />
-          Export
-        </Button>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 sm:flex-none">
+            <FileDown className="h-3.5 w-3.5 mr-1.5" />
+            Export
+          </Button>
+          {canBuildReports ? (
+            <Button size="sm" asChild className="flex-1 sm:flex-none">
+              <Link href="/crm/reports/builder">
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                Report builder
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       }
     >
       <motion.div
