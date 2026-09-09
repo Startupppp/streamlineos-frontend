@@ -46,11 +46,17 @@ const FRONTEND_SCAN_DIRS = [
  * The floor that stops a broken sweep reading as full coverage.
  *
  * A regex that matches nothing reports zero unguarded keys, which is
- * indistinguishable from every key being guarded. 53 is what was found when this
- * was written; the floor sits below it so keys may be added and the sweep may
- * not quietly stop finding them.
+ * indistinguishable from every key being guarded.
+ *
+ * 58 distinct keys over 328 gate call sites is what resolving constants finds;
+ * the literal-only sweep this replaced saw 53 keys over 259 sites. The key floor
+ * sits above 53 deliberately, so dropping constant resolution fails here rather
+ * than quietly narrowing the sweep again. The call-site floor is the one that
+ * actually measures reach: distinct keys barely moved (five), while a fifth of
+ * every gate in the module had never been looked at.
  */
-const MIN_GATED_KEYS = 40;
+const MIN_GATED_KEYS = 55;
+const MIN_GATE_SITES = 300;
 
 function walk(dir: string, acc: string[] = []): string[] {
   let entries: string[];
@@ -68,23 +74,91 @@ function walk(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-/** Every key passed to `useCan`, with the file that gates on it. */
-function gatedKeys(): Map<string, string[]> {
-  const found = new Map<string, string[]>();
-  for (const dir of FRONTEND_SCAN_DIRS) {
-    for (const file of walk(dir)) {
-      const source = readFileSync(file, "utf8");
-      for (const match of source.matchAll(/useCan\(\s*["']([^"']+)["']\s*\)/g)) {
-        const key = match[1];
-        if (key === undefined) continue;
-        const where = relative(FRONTEND_ROOT, file);
-        const existing = found.get(key);
-        if (existing) existing.push(where);
-        else found.set(key, [where]);
-      }
+/**
+ * `SCREAMING_CASE` string constants declared anywhere in the scanned tree.
+ *
+ * Most inventory gates do not read `useCan("literal")` — they read
+ * `useCan(PUTAWAY_READ_KEY)`, and a literal-only sweep cannot see any of them.
+ * That is 69 of the 328 gate call sites, and among them are every key the RF
+ * putaway and picking flows gate on, so the surfaces most worth checking were
+ * the ones this file was blind to.
+ *
+ * A name that resolves to two different values is recorded as ambiguous rather
+ * than resolved to whichever file was walked last, because a sweep that guesses
+ * is worse than one that admits the gap.
+ */
+function constantValues(
+  files: string[],
+  wanted: Set<string>,
+): {
+  values: Map<string, string>;
+  ambiguous: string[];
+} {
+  const seen = new Map<string, Set<string>>();
+  for (const file of files) {
+    const source = readFileSync(file, "utf8");
+    const declaration =
+      /(?:const|let)\s+([A-Z][A-Z0-9_]*)\s*(?::\s*[A-Za-z<>[\]" |]+)?=\s*["']([a-z0-9:_-]+)["']/g;
+    for (const match of source.matchAll(declaration)) {
+      const [, name, value] = match;
+      if (name === undefined || value === undefined) continue;
+      // Only names a gate actually reads. `ALL`, `FORM_ID` and `SENTINEL` are
+      // UI sentinels that legitimately differ per file and never reach useCan.
+      if (!wanted.has(name)) continue;
+      const existing = seen.get(name);
+      if (existing) existing.add(value);
+      else seen.set(name, new Set([value]));
     }
   }
-  return found;
+  const values = new Map<string, string>();
+  const ambiguous: string[] = [];
+  for (const [name, candidates] of seen) {
+    const [only] = [...candidates];
+    if (candidates.size === 1 && only !== undefined) values.set(name, only);
+    else ambiguous.push(`${name} (${[...candidates].join(" | ")})`);
+  }
+  return { values, ambiguous };
+}
+
+/** Every key passed to `useCan`, with the file that gates on it. */
+function gatedKeys(): {
+  keys: Map<string, string[]>;
+  sites: number;
+  ambiguous: string[];
+  unresolved: string[];
+} {
+  const files = FRONTEND_SCAN_DIRS.flatMap((dir) => walk(dir));
+  const gate = /useCan\(\s*(["'][^"']+["']|[A-Z][A-Z0-9_]*)\s*\)/g;
+  const identifiers = new Set<string>();
+  for (const file of files) {
+    for (const match of readFileSync(file, "utf8").matchAll(gate)) {
+      const argument = match[1];
+      if (argument !== undefined && !/^["']/.test(argument)) identifiers.add(argument);
+    }
+  }
+  const { values, ambiguous } = constantValues(files, identifiers);
+  const keys = new Map<string, string[]>();
+  const unresolved: string[] = [];
+  let sites = 0;
+  for (const file of files) {
+    const source = readFileSync(file, "utf8");
+    const where = relative(FRONTEND_ROOT, file);
+    for (const match of source.matchAll(gate)) {
+      const argument = match[1];
+      if (argument === undefined) continue;
+      sites += 1;
+      const quoted = /^["']/.test(argument);
+      const key = quoted ? argument.slice(1, -1) : values.get(argument);
+      if (key === undefined) {
+        unresolved.push(`${argument} (gated in ${where})`);
+        continue;
+      }
+      const existing = keys.get(key);
+      if (existing) existing.push(where);
+      else keys.set(key, [where]);
+    }
+  }
+  return { keys, sites, ambiguous, unresolved };
 }
 
 /** Every string literal the backend guards something with, outside the catalogue. */
@@ -110,10 +184,22 @@ function backendEnforcedKeys(modulesDir: string): { all: Set<string>; inventory:
 const backend = backendRoot();
 
 describe("inventory permission keys", () => {
-  const keys = gatedKeys();
+  const { keys, sites, ambiguous, unresolved } = gatedKeys();
 
   it("finds the gates at all", () => {
     expect(keys.size).toBeGreaterThanOrEqual(MIN_GATED_KEYS);
+  });
+
+  it("looks at every gate call site, not only the ones written as literals", () => {
+    expect(sites).toBeGreaterThanOrEqual(MIN_GATE_SITES);
+  });
+
+  it("resolves every constant-valued gate", () => {
+    expect(unresolved).toEqual([]);
+  });
+
+  it("has no constant name standing for two different keys", () => {
+    expect(ambiguous).toEqual([]);
   });
 
   it("has a backend checkout to compare against", () => {
