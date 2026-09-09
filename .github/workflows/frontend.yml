@@ -43,6 +43,11 @@ jobs:
       - name: Type Check
         run: pnpm run type-check
 
+      # tsconfig.json excludes every test path and jest transforms with SWC, so
+      # without this no gate ever typechecks a spec.
+      - name: Type Check (specs)
+        run: pnpm run type-check:specs
+
       - name: Query keys and caches stay tenant-scoped
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 
