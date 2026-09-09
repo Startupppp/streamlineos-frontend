@@ -16,6 +16,7 @@ import type {
   TimesheetSettings,
   UpdateTimesheetSettingsInput,
 } from "@/features/timesheets/types";
+import { CREATE_REQUIRED_FIELDS, requiredFieldLabel } from "./required-fields";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,13 +65,16 @@ const APPROVAL_OPTIONS: { value: ApprovalMode; label: string }[] = [
   { value: "MULTI_LEVEL", label: "Multi-level approval" },
 ];
 
-const REQUIRED_FIELD_OPTIONS = [
-  { key: "project", label: "Project" },
-  { key: "ticket", label: "Ticket" },
-  { key: "description", label: "Description" },
-  { key: "billable", label: "Billable flag" },
-  { key: "workLink", label: "Work link" },
-];
+/*
+ * Only what the server enforces. "Billable flag" and "Work link" were offered
+ * here and checked nowhere — ticking either saved, showed a tick on reload, and
+ * changed nothing about what anyone could log. `required-fields.test.ts` reads
+ * the backend's own `if`s so a third inert option cannot appear.
+ */
+const REQUIRED_FIELD_OPTIONS = CREATE_REQUIRED_FIELDS.map((key) => ({
+  key,
+  label: requiredFieldLabel(key),
+}));
 
 function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
   return {
