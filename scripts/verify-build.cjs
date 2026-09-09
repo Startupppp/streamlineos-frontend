@@ -23,7 +23,7 @@ env.ALLOW_DESTRUCTIVE_DB_TESTS = '1';
 env.NODE_OPTIONS = '--max-old-space-size=8192';
 const selected = new Set((process.env.BUILD_CHECKS ?? '').split(',').filter(Boolean));
 const gates = ['spec-typecheck', 'test-typecheck', 'scope-application', 'record-access', 'migration-ledger', 'migration-discipline', 'operation-ids', 'openapi-coverage', 'tenant-isolation-coverage'];
-const known = new Set(['unit', 'http', 'http-complete', 'http-db', 'seeded', 'read-cost', 'backend-typecheck', 'openapi-generate', 'openapi-fresh', ...gates]);
+const known = new Set(['unit', 'http', 'http-complete', 'http-db', 'http-timesheets', 'seeded', 'read-cost', 'backend-typecheck', 'openapi-generate', 'openapi-fresh', ...gates]);
 if ([...selected].some(name => !known.has(name))) throw new Error('Unknown BUILD_CHECKS selection');
 const runId = process.env.BUILD_RUN ?? 'build-2026-09-09';
 if (!/^[a-z0-9][a-z0-9-]*$/.test(runId)) throw new Error('BUILD_RUN must be a simple directory name');
@@ -49,12 +49,13 @@ function run(name, args, cwd = backend) {
   if (result.error) throw result.error;
 }
 async function main() {
-  if (!selected.size || ['http', 'http-complete', 'http-db', 'seeded', 'read-cost'].some(name => selected.has(name)))
+  if (!selected.size || ['http', 'http-complete', 'http-db', 'http-timesheets', 'seeded', 'read-cost'].some(name => selected.has(name)))
     await verifySeededDatabaseHead(env, backend);
   const jest = './node_modules/jest/bin/jest.js';
   run('unit', [jest, '--runInBand', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/unit.json`]);
-  run('http', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http.json`]);
-  if (selected.has('http-complete')) {
+  if (selected.has('http'))
+    run('http', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http.json`]);
+  if (!selected.size || selected.has('http-complete')) {
     env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
     run('http-complete', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http-complete.json`]);
     delete env.RBAC_E2E_DATABASE_URL;
@@ -62,6 +63,11 @@ async function main() {
   if (selected.has('http-db')) {
     env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
     run('http-db', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=projects-access.e2e|projects-team-access.e2e|projects-scope.e2e|projects-tickets-key.e2e|timesheets-scope.e2e', '--json', `--outputFile=${output}/http-db.json`]);
+    delete env.RBAC_E2E_DATABASE_URL;
+  }
+  if (selected.has('http-timesheets')) {
+    env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
+    run('http-timesheets', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=timesheets-scope.e2e', '--json', `--outputFile=${output}/http-timesheets.json`]);
     delete env.RBAC_E2E_DATABASE_URL;
   }
   run('seeded', ['-r', 'ts-node/register/transpile-only', 'test/helpers/run-seeded-e2e.ts', database, 'test/build/build-ticket-scope-and-isolation.seeded-e2e-spec.ts', 'test/build/build-workflow-lifecycle.seeded-e2e-spec.ts']);
