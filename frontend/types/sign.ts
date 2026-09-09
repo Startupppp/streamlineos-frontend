@@ -166,6 +166,7 @@ export interface SignBulkSendJob {
   id: number;
   orgId: string;
   templateId: number;
+  columnMappingJson: Record<string, string>;
   status: "pending" | "validating" | "running" | "completed" | "failed" | "cancelled";
   totalCount: number;
   successCount: number;
