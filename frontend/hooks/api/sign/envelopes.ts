@@ -27,6 +27,15 @@ export interface EnvelopeValidationResult {
   errors: string[];
 }
 
+export interface CorrectSignEnvelopeInput {
+  reason?: string;
+  recipients?: { id: number; name?: string; email?: string; phone?: string }[];
+}
+
+export interface ExtendSignEnvelopeExpirationInput {
+  expiresAt: string;
+}
+
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
   qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(id) });
   qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all });
@@ -98,6 +107,18 @@ export function useVoidSignEnvelope(id: number) {
     mutationKey: ["signEnvelopes", "void", id],
     mutationFn: (reason: string) => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/void`, { reason }),
     onSuccess: () => invalidateEnvelope(qc, id),
+  });
+}
+
+export function useCorrectSignEnvelope(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["signEnvelopes", "correct", id],
+    mutationFn: (input: CorrectSignEnvelopeInput) => apiClient.post<SignEnvelopeFull>(`/sign/envelopes/${id}/correct`, input),
+    onSuccess: () => {
+      invalidateEnvelope(qc, id);
+      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.audit(id) });
+    },
   });
 }
 

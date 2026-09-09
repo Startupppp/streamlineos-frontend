@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ShieldCheck, Send, History, Download, ScrollText } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Send, History, Download, ScrollText, PenLine } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,22 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { EnvelopeAiMenu } from "./envelope-ai-menu";
 import { CompletionCertificateSheet } from "./completion-certificate-sheet";
-import type { SignEnvelope } from "@/types/sign";
+import { CorrectEnvelopeSheet } from "./correct-envelope-sheet";
+import type { SignEnvelope, SignRecipient } from "@/types/sign";
 
-export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelope; onShowAudit: () => void }) {
+interface BuilderTopBarProps {
+  envelope: SignEnvelope;
+  recipients: SignRecipient[];
+  onShowAudit: () => void;
+}
+
+export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopBarProps) {
   const router = useRouter();
   const [validationErrors, setValidationErrors] = useState<string[] | null>(null);
   const [certificateOpen, setCertificateOpen] = useState(false);
+  const [correctOpen, setCorrectOpen] = useState(false);
   const canViewCertificate = useCan("sign:certificate:download");
+  const canCorrect = useCan("sign:envelope:correct");
   const validate = useValidateSignEnvelope(envelope.id);
   const send = useSendSignEnvelope(envelope.id);
   const resend = useResendSignEnvelope(envelope.id);
@@ -42,6 +51,12 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
   const isDraft = envelope.status === "draft" || envelope.status === "ready_to_send";
   const isActive = envelope.status === "sent" || envelope.status === "delivered" || envelope.status === "partially_completed";
   const isCompleted = envelope.status === "completed";
+  const isTerminal = isCompleted || envelope.status === "voided";
+  const correctionReason = isTerminal
+    ? "Completed and voided envelopes cannot be corrected"
+    : isDraft
+      ? "Draft envelopes are edited directly, not corrected"
+      : null;
 
   async function handleSend() {
     try {
@@ -162,6 +177,15 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
                 </span>
               </DropdownMenuItem>
             )}
+            {canCorrect && (
+              <DropdownMenuItem onClick={() => setCorrectOpen(true)} disabled={correctionReason !== null}>
+                <PenLine className="size-4" />
+                <span className="flex flex-col items-start">
+                  <span>Correct recipients</span>
+                  {correctionReason && <span className="text-xs text-muted-foreground">{correctionReason}</span>}
+                </span>
+              </DropdownMenuItem>
+            )}
             {isActive && <DropdownMenuItem onClick={handleResend}>Resend to pending recipients</DropdownMenuItem>}
             {(isDraft || isActive) && (
               <DropdownMenuItem onClick={handleVoid} variant="destructive">
@@ -174,6 +198,12 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
       </div>
 
       <CompletionCertificateSheet envelopeId={envelope.id} open={certificateOpen} onOpenChange={setCertificateOpen} />
+      <CorrectEnvelopeSheet
+        envelopeId={envelope.id}
+        recipients={recipients}
+        open={correctOpen}
+        onOpenChange={setCorrectOpen}
+      />
     </div>
   );
 }

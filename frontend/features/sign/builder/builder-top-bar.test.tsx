@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { SignEnvelope, SignEnvelopeStatus } from "@/types/sign";
+import type { SignEnvelope, SignEnvelopeStatus, SignRecipient } from "@/types/sign";
 import { BuilderTopBar } from "./builder-top-bar";
 
 const grantedKeys = new Set<string>();
@@ -23,6 +23,7 @@ jest.mock("@/hooks/api/sign/envelopes", () => ({
   useSendSignEnvelopeReminder: () => idleMutation,
   useVoidSignEnvelope: () => idleMutation,
   useDownloadSignEnvelopeFinalPdf: () => idleMutation,
+  useCorrectSignEnvelope: () => idleMutation,
 }));
 
 jest.mock("@/hooks/api/sign/templates", () => ({
@@ -148,10 +149,35 @@ function makeEnvelope(status: SignEnvelopeStatus): SignEnvelope {
   };
 }
 
-function renderTopBar(status: SignEnvelopeStatus) {
+function makeRecipient(id: number, name: string, status: SignRecipient["status"]): SignRecipient {
+  return {
+    id,
+    envelopeId: 42,
+    roleName: "Signer",
+    recipientType: "signer",
+    name,
+    email: `${name.toLowerCase().replace(/\s/g, ".")}@vendor.test`,
+    phone: null,
+    routingOrder: id,
+    status,
+    authMethod: "email_link",
+    viewedAt: null,
+    authenticatedAt: null,
+    completedAt: status === "completed" ? "2026-03-04T09:14:00.000Z" : null,
+    declinedAt: null,
+    declinedReason: null,
+  };
+}
+
+const RECIPIENTS: SignRecipient[] = [
+  makeRecipient(1, "Sam Iyer", "invited"),
+  makeRecipient(2, "Dana Khan", "completed"),
+];
+
+function renderTopBar(status: SignEnvelopeStatus, recipients: SignRecipient[] = RECIPIENTS) {
   return render(
     <TooltipProvider>
-      <BuilderTopBar envelope={makeEnvelope(status)} onShowAudit={jest.fn()} />
+      <BuilderTopBar envelope={makeEnvelope(status)} recipients={recipients} onShowAudit={jest.fn()} />
     </TooltipProvider>,
   );
 }
@@ -187,5 +213,57 @@ describe("BuilderTopBar certificate control", () => {
     renderTopBar("completed");
 
     expect(screen.queryByRole("button", { name: /Certificate of completion/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("BuilderTopBar correction control", () => {
+  beforeEach(() => {
+    grantedKeys.clear();
+  });
+
+  it("reaches the correction sheet from the envelope's own action menu once it has been sent", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("sent");
+
+    const control = screen.getByRole("button", { name: /Correct recipients/ });
+    expect(control).toBeEnabled();
+
+    fireEvent.click(control);
+
+    expect(screen.getByText("Correct this envelope")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Sam Iyer")).toBeInTheDocument();
+  });
+
+  it("lists a completed recipient as locked rather than offering fields the backend refuses", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("partially_completed");
+
+    fireEvent.click(screen.getByRole("button", { name: /Correct recipients/ }));
+
+    expect(screen.queryByDisplayValue("Dana Khan")).not.toBeInTheDocument();
+    expect(screen.getByText(/Dana Khan/)).toBeInTheDocument();
+    expect(screen.getByText(/A completed recipient cannot be modified/)).toBeInTheDocument();
+  });
+
+  it("keeps the control visible but disabled on a terminal envelope, with the reason", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("voided");
+
+    expect(screen.getByRole("button", { name: /Correct recipients/ })).toBeDisabled();
+    expect(screen.getByText("Completed and voided envelopes cannot be corrected")).toBeInTheDocument();
+  });
+
+  it("says a draft is edited directly rather than corrected", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("draft");
+
+    expect(screen.getByRole("button", { name: /Correct recipients/ })).toBeDisabled();
+    expect(screen.getByText("Draft envelopes are edited directly, not corrected")).toBeInTheDocument();
+  });
+
+  it("hides the correction control from a role without the correct permission", () => {
+    renderTopBar("sent");
+
+    expect(screen.queryByRole("button", { name: /Correct recipients/ })).not.toBeInTheDocument();
   });
 });
