@@ -98,10 +98,7 @@ const BASELINE = {
  * CRM and Inventory are out of scope for the 10/10 code release. Each of these
  * is a one-line change the day they re-enter scope.
  */
-const HELD_BACK = new Map([
-  ["hooks/api/leads.ts", "crm:leads:view — CRM is out of release scope"],
-  ["hooks/api/inv-ai-explain.ts", "inventory:reports:read — Inventory is out of release scope"],
-]);
+const HELD_BACK = new Map([]);
 
 /**
  * Routes the contract calls `permissioned` that a read may still take ungated,
