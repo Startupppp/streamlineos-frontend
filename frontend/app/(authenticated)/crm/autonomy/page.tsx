@@ -10,6 +10,7 @@ import { RepairPoliciesPanel } from "@/features/crm/autonomy/repair-policies-pan
 import { ColdOutboundPanel } from "@/features/crm/autonomy/cold-outbound-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
 import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
+import { ClassStopsPanel } from "@/features/crm/autonomy/class-stops-panel";
 
 /**
  * Oversight for a product that acts without asking.
@@ -37,6 +38,8 @@ export default function AutonomyReviewPage() {
         <div className="flex flex-col gap-gap-section">
           {/* First, because it is the only thing here that is time-critical. */}
           <PendingSendsPanel />
+          {/* Directly under it: the same decision, after the window closed. */}
+          <ClassStopsPanel />
           <AutonomyScoreboard />
           <AutonomySwitchesPanel />
           {/* Under the switches, because the kill switch above vetoes all of it. */}

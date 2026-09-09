@@ -231,6 +231,24 @@ export interface LiveHold {
   secondsRemaining: number;
 }
 
+/**
+ * A class of outbound message that may no longer reach one party.
+ *
+ * Created when somebody stops a message: the stop applies to that class for
+ * that party, not to the single message and not to the party everywhere.
+ * Open-ended by design — only a person clears it, because a stop that quietly
+ * expired is a stop the customer never agreed to.
+ */
+export interface LiveClassStop {
+  outboundClassStopId: string;
+  partyId: string;
+  outboundClass: string;
+  outboundMessageId: string | null;
+  reason: string | null;
+  stoppedByUserId: string | null;
+  stoppedAt: string;
+}
+
 /** The deterministic field repairs a tenant may grant, and its answer to each. */
 export const REPAIR_CLASSES = [
   "email.whitespace",

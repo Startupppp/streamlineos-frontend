@@ -9,6 +9,7 @@ import type {
   AutonomySettings,
   DecisionFilters,
   DecisionPage,
+  LiveClassStop,
   LiveHold,
   RepairClass,
   RepairPoliciesResponse,
@@ -217,6 +218,38 @@ export function useLiveHolds() {
     queryFn: () => apiClient.get<LiveHold[]>("/crm/autonomy/holds"),
     refetchInterval: 10_000,
     staleTime: 0,
+  });
+}
+
+/**
+ * The classes currently stopped for somebody, and who stopped them.
+ *
+ * Not polled like the holds are. A hold is a countdown measured in seconds; a
+ * class stop is open-ended and changes only when a person acts on it, so a
+ * ten-second refetch would be asking a question whose answer moves once a week.
+ */
+export function useLiveClassStops() {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyClassStops(),
+    queryFn: () => apiClient.get<LiveClassStop[]>("/crm/autonomy/class-stops"),
+    staleTime: 30_000,
+  });
+}
+
+/** The stop's only exit. */
+export function useReleaseClassStop() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["crm", "autonomy", "class-stops", "release"],
+    mutationFn: ({ outboundClassStopId }: { outboundClassStopId: string }) =>
+      apiClient.post<{ released: boolean }>(
+        `/crm/autonomy/class-stops/${outboundClassStopId}/release`,
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyClassStops() });
+    },
   });
 }
 
