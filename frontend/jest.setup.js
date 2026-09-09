@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom";
 import { toHaveNoViolations } from "jest-axe";
 
+// lib/api-client.ts, lib/portal-api-client.ts and lib/backend-url.ts throw at MODULE scope
+// when NEXT_PUBLIC_API_URL is unset. next/jest reads .env, which is gitignored and absent in
+// CI and in every fresh worktree, so 26 suites — including the rf-surface and inventory-a11y
+// ratchets — died in setup and reported as one failure each instead of running. Tests never
+// reach a real backend (fetch is always mocked); a real value still wins.
+process.env.NEXT_PUBLIC_API_URL ||= "http://localhost:1500";
+
 expect.extend(toHaveNoViolations);
 
 // jsdom has no ResizeObserver — components like TruncatedText (used inside PageWrapper,
