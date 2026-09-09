@@ -1,5 +1,8 @@
 # Five-area certification run — 2026-09-08
 
+Current follow-up: [2026-09-09 completed five-area code certification](CERTIFICATION-FIVE-AREAS-2026-09-09.md).
+This file preserves the historical run; the follow-up records the final fixes and consolidated verification.
+
 Scope: the twelve certification items raised against Organization-level RBAC, Module-level
 RBAC, Organization, Settings/module access, and Billing/payments. CRM and Inventory remain
 excluded (root `CLAUDE.md`). Nothing outside those five areas was certified here.
