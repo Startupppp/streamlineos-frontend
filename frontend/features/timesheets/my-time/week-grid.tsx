@@ -12,6 +12,7 @@ import {
   useUpdateTimesheetEntry,
   useVoidTimesheetEntry,
   useTimesheetEntries,
+  useTimesheetHolidays,
 } from "@/hooks/api/timesheets-core";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TimesheetEntry } from "@/features/timesheets";
@@ -54,6 +55,18 @@ interface WeekGridProps {
 }
 
 export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekGridProps) {
+  /**
+   * Marked, not blocked. A holiday is a day the organisation does not expect
+   * work on, which is not the same as a day nobody may log — people do work
+   * public holidays, and refusing the entry would lose that time rather than
+   * record it. So the column is shaded and named, and the input stays live.
+   */
+  const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
+  const holidayByDate = useMemo(
+    () => new Map((holidayData?.holidays ?? []).map((h) => [h.date, h.name])),
+    [holidayData],
+  );
+
   const createEntry = useCreateTimesheetEntry();
   const updateEntry = useUpdateTimesheetEntry();
   const voidEntry = useVoidTimesheetEntry();
@@ -233,12 +246,28 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
           <thead>
             <tr className="bg-muted/40 border-b border-border">
               <th className="text-left px-3 py-2 font-medium text-muted-foreground w-48">Project / Ticket</th>
-              {days.map((d) => (
-                <th key={d} className="text-center px-1 py-2 font-medium text-muted-foreground w-16">
-                  <div>{format(parseISO(d), "EEE")}</div>
-                  <div className="text-micro text-muted-foreground/70">{format(parseISO(d), "d")}</div>
-                </th>
-              ))}
+              {days.map((d) => {
+                const holiday = holidayByDate.get(d);
+                return (
+                  <th
+                    key={d}
+                    title={holiday ?? undefined}
+                    className={cn(
+                      "text-center px-1 py-2 font-medium text-muted-foreground w-16",
+                      holiday && "bg-muted text-foreground",
+                    )}
+                  >
+                    <div>{format(parseISO(d), "EEE")}</div>
+                    <div className="text-micro text-muted-foreground/70">{format(parseISO(d), "d")}</div>
+                    {holiday && (
+                      <TruncatedText
+                        text={holiday}
+                        className="text-micro font-normal text-muted-foreground"
+                      />
+                    )}
+                  </th>
+                );
+              })}
               <th className="text-center px-2 py-2 font-medium text-muted-foreground w-14">Total</th>
             </tr>
           </thead>
@@ -263,7 +292,10 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                     const isEditing = editingCell === cellKey;
                     const displayValue = isEditing ? editingValue : (existing ? existing.hours : "");
                     return (
-                      <td key={d} className="px-1 py-1">
+                      <td
+                        key={d}
+                        className={cn("px-1 py-1", holidayByDate.has(d) && "bg-muted/40")}
+                      >
                         <div className="relative flex items-center justify-center">
                           <input
                             ref={(el) => { cellRefs.current[cellKey] = el; }}

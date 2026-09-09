@@ -89,6 +89,9 @@ export const usersAndCommerceQueryKeys = {
         ] as const,
       settings: () => [...base, "timesheets", "payroll", "settings"] as const,
     },
+    /** Org holidays for a week, so the grid can mark closed days. */
+    holidays: (startDate: string, endDate: string) =>
+      [...base, "timesheets", "holidays", startDate, endDate] as const,
     entries: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "entries", params] as const,
     timerActive: () => [...base, "timesheets", "timer", "active"] as const,
