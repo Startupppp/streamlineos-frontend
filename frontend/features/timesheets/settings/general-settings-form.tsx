@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -28,6 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  describeMaterialChanges,
+  materialChangesIn,
+} from "./settings-material-changes";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,6 +89,12 @@ function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
     expectedDailyHours: s.expectedDailyHours != null ? String(parseFloat(s.expectedDailyHours)) : "",
     expectedWeeklyHours: s.expectedWeeklyHours != null ? String(parseFloat(s.expectedWeeklyHours)) : "",
     submissionGraceDays: s.submissionGraceDays != null ? String(s.submissionGraceDays) : "",
+    /*
+     * Never carried back from the server. The stored reason explains the change
+     * that produced these values, not the next one — pre-filling it would let
+     * an unrelated edit inherit somebody else's justification.
+     */
+    changeReason: "",
   };
 }
 
@@ -159,7 +170,7 @@ export function GeneralSettingsForm() {
   const { data: settings, isLoading, isError, refetch } = useTimesheetSettings();
   const update = useUpdateTimesheetSettings();
 
-  const { control, handleSubmit, reset, register, formState: { isDirty, errors } } = useForm<GeneralSettingsFormValues>({
+  const { control, handleSubmit, reset, register, setError, clearErrors, formState: { isDirty, errors } } = useForm<GeneralSettingsFormValues>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
       workWeekStart: "1",
@@ -177,10 +188,28 @@ export function GeneralSettingsForm() {
       expectedDailyHours: "",
       expectedWeeklyHours: "",
       submissionGraceDays: "",
+      changeReason: "",
     },
   });
 
   const allowBackdated = useWatch({ control, name: "allowBackdatedEntries" });
+
+  /**
+   * Which pending changes the server will refuse without a reason.
+   *
+   * Derived from the same diff `handleSave` sends, not from the form's dirty
+   * state: a value typed and typed back is not a change, and asking for a
+   * justification when nothing was altered is a prompt people answer with a
+   * full stop. Watching every field is what makes the prompt appear as soon as
+   * a material control moves rather than only after a rejected save.
+   */
+  const watched = useWatch({ control });
+  const pendingMaterial = useMemo(() => {
+    if (!settings) return [];
+    return materialChangesIn(
+      buildChanges(watched as GeneralSettingsFormValues, settings),
+    );
+  }, [watched, settings]);
 
   useEffect(() => {
     if (settings) reset(toFormValues(settings));
@@ -189,11 +218,35 @@ export function GeneralSettingsForm() {
   const handleSave = handleSubmit((values) => {
     if (!settings) return;
     const changes = buildChanges(values, settings);
-    if (Object.keys(changes).length > 0) {
-      update.mutate(changes, {
-        onError: (err) => toast.error(getErrorMessage(err)),
+    if (Object.keys(changes).length === 0) return;
+
+    /*
+     * The same rule the server applies, applied here first. Not to replace the
+     * server check — that stays the boundary — but so the answer arrives beside
+     * the empty box instead of as a toast naming a JSON key.
+     */
+    const material = materialChangesIn(changes);
+    const reason = values.changeReason.trim();
+    if (material.length > 0 && !reason) {
+      setError("changeReason", {
+        type: "required",
+        message: `Say why you are changing ${describeMaterialChanges(material)}.`,
       });
+      return;
     }
+    clearErrors("changeReason");
+
+    update.mutate(
+      { ...changes, ...(reason ? { changeReason: reason } : {}) },
+      {
+        /*
+         * The reason belongs to the change that was just made, so it is cleared
+         * rather than left to be attached to the next one.
+         */
+        onSuccess: () => reset({ ...values, changeReason: "" }),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
   });
 
   const handleRetry = () => { void refetch(); };
@@ -530,6 +583,35 @@ export function GeneralSettingsForm() {
           </div>
         </CardContent>
       </Card>
+
+      {canManage && pendingMaterial.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3 pt-4 px-5">
+            <CardTitle className="text-sm font-medium">Why this change?</CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pb-4 space-y-2">
+            <p className="text-dense text-muted-foreground">
+              You are changing {describeMaterialChanges(pendingMaterial)}. These
+              settings decide how past timesheets are read, so the reason is kept
+              with the change and shown to whoever asks later why a period was
+              treated the way it was.
+            </p>
+            <Textarea
+              {...register("changeReason")}
+              rows={3}
+              maxLength={500}
+              placeholder="e.g. Finance asked for a 5-day grace period from October."
+              aria-label="Reason for this change"
+              aria-invalid={errors.changeReason ? true : undefined}
+            />
+            {errors.changeReason && (
+              <p role="alert" className="text-dense text-destructive">
+                {errors.changeReason.message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {canManage && (
         <div className="flex justify-end pb-2">
