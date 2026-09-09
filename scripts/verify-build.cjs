@@ -52,25 +52,33 @@ async function main() {
   if (!selected.size || ['http', 'http-complete', 'http-db', 'http-timesheets', 'seeded', 'read-cost'].some(name => selected.has(name)))
     await verifySeededDatabaseHead(env, backend);
   const jest = './node_modules/jest/bin/jest.js';
+  const http = ['--expose-gc', jest, '--config', 'jest-e2e.json', '--runInBand', '--logHeapUsage', '--forceExit'];
   run('unit', [jest, '--runInBand', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/unit.json`]);
   if (selected.has('http'))
-    run('http', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http.json`]);
+    run('http', [...http, '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http.json`]);
   if (!selected.size || selected.has('http-complete')) {
     env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
-    run('http-complete', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http-complete.json`]);
+    run('http-complete', [...http, '--testPathPattern=modules/build', '--json', `--outputFile=${output}/http-complete.json`]);
     delete env.RBAC_E2E_DATABASE_URL;
   }
   if (selected.has('http-db')) {
     env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
-    run('http-db', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=projects-access.e2e|projects-team-access.e2e|projects-scope.e2e|projects-tickets-key.e2e|timesheets-scope.e2e', '--json', `--outputFile=${output}/http-db.json`]);
+    run('http-db', [...http, '--testPathPattern=projects-access.e2e|projects-team-access.e2e|projects-scope.e2e|projects-tickets-key.e2e|timesheets-scope.e2e', '--json', `--outputFile=${output}/http-db.json`]);
     delete env.RBAC_E2E_DATABASE_URL;
   }
   if (selected.has('http-timesheets')) {
     env.RBAC_E2E_DATABASE_URL = env.DATABASE_URL;
-    run('http-timesheets', [jest, '--config', 'jest-e2e.json', '--runInBand', '--forceExit', '--testPathPattern=timesheets-scope.e2e', '--json', `--outputFile=${output}/http-timesheets.json`]);
+    run('http-timesheets', [...http, '--testPathPattern=timesheets-scope.e2e', '--json', `--outputFile=${output}/http-timesheets.json`]);
     delete env.RBAC_E2E_DATABASE_URL;
   }
-  run('seeded', ['-r', 'ts-node/register/transpile-only', 'test/helpers/run-seeded-e2e.ts', database, 'test/build/build-ticket-scope-and-isolation.seeded-e2e-spec.ts', 'test/build/build-workflow-lifecycle.seeded-e2e-spec.ts']);
+  run('seeded', ['-r', 'ts-node/register/transpile-only', 'test/helpers/run-seeded-e2e.ts', database,
+    'test/build/build-ticket-scope-and-isolation.seeded-e2e-spec.ts',
+    'test/build/build-workflow-lifecycle.seeded-e2e-spec.ts',
+    'test/build/build-activity-scope.seeded-e2e-spec.ts',
+    'test/build/build-project-list.seeded-e2e-spec.ts',
+    'test/build/build-ticket-producers.seeded-e2e-spec.ts',
+    'test/build/build-timesheet-writes.seeded-e2e-spec.ts',
+    'test/build/build-report-bounds.seeded-e2e-spec.ts']);
   run('read-cost', ['src/scripts/check-build-read-cost.mjs']);
   run('backend-typecheck', ['./node_modules/typescript/bin/tsc', '--noEmit', '--pretty', 'false']);
   run('openapi-generate', ['-r', 'ts-node/register/transpile-only', 'src/scripts/generate-openapi.ts']);
