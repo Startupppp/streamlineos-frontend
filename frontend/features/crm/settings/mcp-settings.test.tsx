@@ -9,6 +9,8 @@ const mockCan = jest.fn();
 const mockTokens = jest.fn();
 const mockTools = jest.fn();
 const mockRevoke = jest.fn();
+const mockMcpAccess = jest.fn();
+const mockSetMcpAccess = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockAccess(),
@@ -19,6 +21,9 @@ jest.mock("@/hooks/api/crm/mcp-agent-tokens", () => ({
   useCrmMcpTools: () => mockTools(),
   useRevokeCrmAgentToken: () => mockRevoke(),
   useCreateCrmAgentToken: () => ({ mutate: jest.fn(), isPending: false }),
+  /** CRM-P2-09's tenant switch, which the page renders above the tokens. */
+  useCrmMcpAccess: () => mockMcpAccess(),
+  useSetCrmMcpAccess: () => mockSetMcpAccess(),
 }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
@@ -59,6 +64,8 @@ describe("CrmMcpSettings", () => {
     mockTokens.mockReturnValue({ data: [token()], isLoading: false, isError: false, refetch: jest.fn() });
     mockTools.mockReturnValue({ data: { tools: [] }, isLoading: false, isError: false, refetch: jest.fn() });
     mockRevoke.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockMcpAccess.mockReturnValue({ data: { enabled: true }, isLoading: false });
+    mockSetMcpAccess.mockReturnValue({ mutate: jest.fn(), isPending: false });
   });
 
   it("lists an issued token by its prefix, never the secret", () => {
@@ -114,5 +121,35 @@ describe("CrmMcpSettings", () => {
     allow(["settings:api-tokens:read"]);
     renderSettings();
     expect(screen.queryByRole("button", { name: /revoke/i })).not.toBeInTheDocument();
+  });
+
+  /**
+   * CRM-P2-09. The switch that vetoes every token on this page.
+   *
+   * It has to be readable from the same screen that issues them, or an operator
+   * mints a credential that works nowhere and finds out from an integrator.
+   */
+  it("shows whether agents may reach the CRM at all", () => {
+    renderSettings();
+    expect(
+      screen.getByText(/agents may use the crm tools their token allows/i),
+    ).toBeInTheDocument();
+  });
+
+  it("says plainly that turning it off is not a revocation", () => {
+    /**
+     * The alternative is an operator switching it off and assuming the tokens
+     * are gone. They are not — they are refused, and revoking them is a separate
+     * act with a separate consequence.
+     */
+    renderSettings();
+    expect(screen.getByText(/does not revoke anything/i)).toBeInTheDocument();
+  });
+
+  it("reads off when nobody has turned it on", () => {
+    /** A missing setting is off; the absence of a decision is not consent. */
+    mockMcpAccess.mockReturnValue({ data: { enabled: false }, isLoading: false });
+    renderSettings();
+    expect(screen.getByText(/agents cannot reach the crm/i)).toBeInTheDocument();
   });
 });

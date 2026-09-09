@@ -26,6 +26,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { AgentToken } from "@/types/projects";
 import { CrmMcpTokenDialog } from "./mcp-token-dialog";
 import { scopeLabel } from "./mcp-scopes";
+import { CrmMcpAccessCard } from "./mcp-access-card";
 
 function tokenState(token: AgentToken): "active" | "revoked" | "expired" {
   if (token.revokedAt) return "revoked";
@@ -202,6 +203,9 @@ export function CrmMcpSettings() {
         <NoPermissionState permission="settings:api-tokens:read" />
       ) : (
         <div className="space-y-4">
+          {/* Above the tokens, because it vetoes all of them. */}
+          <CrmMcpAccessCard />
+
           <StatCardGrid cols={3}>
             <StatCard label="Active tokens" value={activeCount} icon={KeyRound} tone="blue" />
             <StatCard label="Available tools" value={tools.length} icon={Plug} tone="default" />
