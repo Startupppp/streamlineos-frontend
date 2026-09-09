@@ -250,4 +250,17 @@ export const CRM_PERMISSIONS: Permission[] = [
     action: "run",
     description: "Run a report and return its rows",
   },
+  {
+    name: "crm:segments:view",
+    resource: "crm:segments",
+    action: "view",
+    description:
+      "View saved CRM segments and evaluate one to see how many parties it matches and who they are",
+  },
+  {
+    name: "crm:segments:manage",
+    resource: "crm:segments",
+    action: "manage",
+    description: "Create, edit and delete CRM segments",
+  },
 ];

@@ -191,6 +191,8 @@ export type ExtendedPermissionKey =
   | "crm:reporting:view"
   | "crm:reporting:manage"
   | "crm:reporting:run"
+  | "crm:segments:view"
+  | "crm:segments:manage"
   | "compliance:subject-requests:view"
   | "compliance:subject-requests:execute"
   | "crm:customer360:view"
