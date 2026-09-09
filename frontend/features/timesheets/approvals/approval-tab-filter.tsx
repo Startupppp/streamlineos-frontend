@@ -1,0 +1,89 @@
+"use client";
+
+import { useCallback, useRef } from "react";
+import { cn } from "@/lib/utils";
+import { ALL_APPROVAL_TABS, APPROVAL_TAB_LABEL, type ApprovalTab } from "./approvals-tab-panel";
+
+interface ApprovalTabFilterProps {
+  value: ApprovalTab;
+  onChange: (tab: ApprovalTab) => void;
+}
+
+/**
+ * The Pending / Approved / Rejected switch, as a tablist rather than three
+ * buttons that happen to be next to each other.
+ *
+ * They were bare `<button>`s whose selected state was carried entirely by a
+ * background colour: no role, no `aria-selected`, no `type`, and every one of
+ * them in the tab order — so a keyboard user tabbed through all three to reach
+ * the table, and a screen reader was told nothing about which was active.
+ * Now: one tab stop for the group, arrows and Home/End to move within it, and
+ * the selection announced.
+ */
+export function ApprovalTabFilter({ value, onChange }: ApprovalTabFilterProps) {
+  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      const index = ALL_APPROVAL_TABS.indexOf(value);
+      let next: ApprovalTab | undefined;
+      if (event.key === "ArrowRight")
+        next = ALL_APPROVAL_TABS[(index + 1) % ALL_APPROVAL_TABS.length];
+      else if (event.key === "ArrowLeft")
+        next =
+          ALL_APPROVAL_TABS[
+            (index - 1 + ALL_APPROVAL_TABS.length) % ALL_APPROVAL_TABS.length
+          ];
+      else if (event.key === "Home") next = ALL_APPROVAL_TABS[0];
+      else if (event.key === "End") next = ALL_APPROVAL_TABS.at(-1);
+      if (!next) return;
+
+      event.preventDefault();
+      onChange(next);
+      refs.current[next]?.focus();
+    },
+    [value, onChange],
+  );
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const tab = event.currentTarget.dataset.tab as ApprovalTab | undefined;
+      if (tab) onChange(tab);
+    },
+    [onChange],
+  );
+
+  return (
+    <div role="tablist" aria-label="Approval status" className="flex items-center gap-1">
+      {ALL_APPROVAL_TABS.map((tab) => {
+        const active = tab === value;
+        return (
+          <button
+            key={tab}
+            ref={(el) => {
+              refs.current[tab] = el;
+            }}
+            type="button"
+            role="tab"
+            id={`approvals-tab-${tab}`}
+            data-tab={tab}
+            aria-selected={active}
+            aria-controls="approvals-tabpanel"
+            tabIndex={active ? 0 : -1}
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {APPROVAL_TAB_LABEL[tab]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

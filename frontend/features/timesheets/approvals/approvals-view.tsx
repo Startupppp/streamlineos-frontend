@@ -29,12 +29,8 @@ import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
 import { summarizeBorrowedAuthority } from "./approval-standing";
 import { DelegateActingBanner } from "./delegate-acting-banner";
-import {
-  ALL_APPROVAL_TABS,
-  APPROVAL_TAB_LABEL,
-  ApprovalsTabPanel,
-  type ApprovalTab,
-} from "./approvals-tab-panel";
+import { ApprovalsTabPanel, type ApprovalTab } from "./approvals-tab-panel";
+import { ApprovalTabFilter } from "./approval-tab-filter";
 
 export function ApprovalsView() {
   const canManage = useCan("timesheets:approvals:manage");
@@ -185,23 +181,9 @@ export function ApprovalsView() {
 
   const pageFilters = (
     <>
-      {ALL_APPROVAL_TABS.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          onClick={() => handleTabSelect(tab)}
-          className={cn(
-            "shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-            activeTab === tab
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted",
-          )}
-        >
-          {APPROVAL_TAB_LABEL[tab]}
-        </button>
-      ))}
+      <ApprovalTabFilter value={activeTab} onChange={handleTabSelect} />
       <Select value={memberFilter} onValueChange={setMemberFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Member">
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -251,15 +233,14 @@ export function ApprovalsView() {
           resolveName={resolveApproverName}
           className="shrink-0"
         />
-        {activeTab === "SUBMITTED" && (
-          <ApprovalsTabPanel status="SUBMITTED" {...tabPanelProps} />
-        )}
-        {activeTab === "APPROVED" && (
-          <ApprovalsTabPanel status="APPROVED" {...tabPanelProps} />
-        )}
-        {activeTab === "REJECTED" && (
-          <ApprovalsTabPanel status="REJECTED" {...tabPanelProps} />
-        )}
+        <div
+          id="approvals-tabpanel"
+          role="tabpanel"
+          aria-labelledby={`approvals-tab-${activeTab}`}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <ApprovalsTabPanel status={activeTab} {...tabPanelProps} />
+        </div>
       </motion.div>
 
       <ApprovalDetailSheet

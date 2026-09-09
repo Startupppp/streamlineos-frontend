@@ -179,7 +179,7 @@ export function MyTimeView() {
         )}
 
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
-          <div className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
+          <div role="alert" className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-status-danger-ink">Timesheet rejected</p>
               {period.rejectionReason && (
