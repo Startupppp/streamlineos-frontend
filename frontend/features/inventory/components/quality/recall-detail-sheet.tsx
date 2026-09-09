@@ -18,8 +18,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
+  RECALL_QUARANTINE_BADGE,
+  RECALL_QUARANTINE_EXPLAINER,
+  RECALL_QUARANTINE_LABEL,
   RECALL_STATUS_BADGE,
   RECALL_STATUS_LABEL,
+  isRecallLineUnheld,
+  toRecallLineQuarantine,
 } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +39,7 @@ interface RecallLine {
   productVariantId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
+  status?: string | null;
 }
 
 /**
@@ -62,7 +68,66 @@ const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
     className: "text-muted-foreground text-xs",
     cell: (line) => (line.serialId ? `#${line.serialId}` : "—"),
   },
+  /**
+   * INV-33. Whether the quarantine leg actually held this line's stock.
+   *
+   * The recall's own status says OPEN whether every unit was pulled off the
+   * shelf or none of them were, so a screen that renders only that is a screen
+   * that reports a failed recall as a working one.
+   */
+  {
+    key: "quarantine",
+    header: "Quarantine",
+    cell: (line) => {
+      const outcome = toRecallLineQuarantine(line.status);
+      return (
+        <Badge
+          variant="outline"
+          className={cn("h-5 text-micro px-2 border", RECALL_QUARANTINE_BADGE[outcome])}
+          title={RECALL_QUARANTINE_EXPLAINER[outcome]}
+        >
+          {RECALL_QUARANTINE_LABEL[outcome]}
+        </Badge>
+      );
+    },
+  },
 ];
+
+/**
+ * INV-33. The one sentence an operator needs before they believe a recall
+ * worked, sitting above the lines rather than inside them.
+ *
+ * A recall commits whether or not the quarantine held anything, so "every line
+ * held" and "nothing was held anywhere" both render as an OPEN recall with a
+ * list of lots. This says which happened, and stays silent when everything is
+ * held so it does not become chrome people learn to ignore.
+ */
+function RecallQuarantineSummary({ lines }: { lines: RecallLine[] }) {
+  const unheld = lines.filter((line) => isRecallLineUnheld(toRecallLineQuarantine(line.status)));
+  if (unheld.length === 0) return null;
+
+  const nothingHeldAtAll = unheld.length === lines.length;
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "rounded-md border px-3 py-2 text-xs",
+        nothingHeldAtAll ? RECALL_QUARANTINE_BADGE.NOT_QUARANTINABLE : RECALL_QUARANTINE_BADGE.OPEN,
+      )}
+    >
+      <p className="font-medium">
+        {nothingHeldAtAll
+          ? "No stock is held by this recall"
+          : `${unheld.length} of ${lines.length} lines hold no stock`}
+      </p>
+      <p className="mt-0.5">
+        {nothingHeldAtAll
+          ? "The recall document was raised but the quarantine held nothing. Check each line below before treating these goods as contained."
+          : "The lines marked below were not quarantined. Their goods may still be pickable."}
+      </p>
+    </div>
+  );
+}
 
 export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const [editingNotes, setEditingNotes] = useState(false);
@@ -232,6 +297,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
           {recall.lines.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs font-medium text-foreground">Affected Lines ({recall.lines.length})</p>
+              <RecallQuarantineSummary lines={recall.lines} />
               <DataTable
                 data={recall.lines}
                 columns={RECALL_LINE_COLUMNS}

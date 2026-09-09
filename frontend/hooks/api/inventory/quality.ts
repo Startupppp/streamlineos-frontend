@@ -108,6 +108,15 @@ interface RecallLine {
   productVariantId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
+  /**
+   * INV-33. What the quarantine leg did to this line — `QUARANTINED`,
+   * `NOTHING_TO_QUARANTINE` or `NOT_QUARANTINABLE`, and `OPEN` on a recall
+   * raised before the outcome was recorded. Widened to `string` because the
+   * column is `text` and a value this build has not heard of must render as
+   * pending rather than crash a safety screen; narrow with
+   * `toRecallLineQuarantine`.
+   */
+  status?: string | null;
 }
 
 interface AffectedShipment {

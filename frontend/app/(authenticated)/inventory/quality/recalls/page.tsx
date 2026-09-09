@@ -16,7 +16,14 @@ import { useRecalls } from "@/hooks/api/inventory/quality";
 import type { Recall } from "@/hooks/api/inventory/quality";
 import { RecallDetailSheet } from "@/features/inventory/components/quality/recall-detail-sheet";
 import { RecallPlanSheet } from "@/features/inventory/components/quality/recall-plan-sheet";
-import { RECALL_STATUS_BADGE, RECALL_STATUS_LABEL } from "@/features/inventory/lib";
+import {
+  RECALL_QUARANTINE_BADGE,
+  RECALL_STATUS_BADGE,
+  RECALL_STATUS_LABEL,
+  isRecallLineUnheld,
+  toRecallLineQuarantine,
+  type RecallLineQuarantine,
+} from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useCan } from "@/hooks/api/access";
@@ -106,6 +113,34 @@ function RecallsPageInner() {
       headerClassName: "w-[70px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
       cell: (r) => r.lines.length,
+    },
+    /**
+     * INV-33. Whether the quarantine actually held anything.
+     *
+     * A recall commits even when it held nothing, and the Status column says
+     * OPEN in both cases — so without this the list reports a recall that
+     * blocked no stock exactly like one that blocked all of it.
+     */
+    {
+      key: "quarantine",
+      header: "Quarantine",
+      headerClassName: "w-[130px]",
+      cell: (r) => {
+        const unheld = r.lines.filter((line) =>
+          isRecallLineUnheld(toRecallLineQuarantine(line.status)),
+        ).length;
+        if (r.lines.length === 0) return <span className="text-muted-foreground">—</span>;
+        const outcome: RecallLineQuarantine =
+          unheld === 0 ? "QUARANTINED" : unheld === r.lines.length ? "NOT_QUARANTINABLE" : "OPEN";
+        return (
+          <Badge
+            variant="outline"
+            className={cn("h-4 text-micro px-1.5 py-0 border", RECALL_QUARANTINE_BADGE[outcome])}
+          >
+            {unheld === 0 ? "All held" : `${unheld} unheld`}
+          </Badge>
+        );
+      },
     },
     {
       key: "createdAt",

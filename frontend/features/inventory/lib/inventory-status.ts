@@ -353,6 +353,54 @@ export const RECALL_STATUS_LABEL: Record<RecallStatus, string> = {
   CLOSED: "Closed",
 };
 
+/**
+ * INV-33. What the quarantine leg of a recall did to one line.
+ *
+ * `OPEN` is the column default and means the outcome was never recorded — every
+ * line of every recall raised before the backend started writing it. It is shown
+ * as pending, not as success: a recall that cannot say what it held is precisely
+ * the one an operator must not read as safe.
+ *
+ * The other three are recorded. Only `QUARANTINED` means stock is actually held.
+ */
+export type RecallLineQuarantine =
+  | "OPEN"
+  | "QUARANTINED"
+  | "NOTHING_TO_QUARANTINE"
+  | "NOT_QUARANTINABLE";
+
+export const RECALL_QUARANTINE_BADGE: Record<RecallLineQuarantine, string> = {
+  OPEN: WARNING,
+  QUARANTINED: SUCCESS,
+  NOTHING_TO_QUARANTINE: WARNING,
+  NOT_QUARANTINABLE: DANGER,
+};
+
+export const RECALL_QUARANTINE_LABEL: Record<RecallLineQuarantine, string> = {
+  OPEN: "Pending",
+  QUARANTINED: "Held",
+  NOTHING_TO_QUARANTINE: "Nothing on hand",
+  NOT_QUARANTINABLE: "Not held",
+};
+
+export const RECALL_QUARANTINE_EXPLAINER: Record<RecallLineQuarantine, string> = {
+  OPEN: "This recall was raised before the outcome was recorded. Check the quality holds before treating this line as contained.",
+  QUARANTINED: "The stock this line names is on quality hold and cannot be picked.",
+  NOTHING_TO_QUARANTINE: "The lot is blocked, so nothing new can be allocated from it, but there was no stock on hand to hold.",
+  NOT_QUARANTINABLE: "This line names no lot, so no stock was blocked and no hold was raised. The goods are still sellable.",
+};
+
+/** Every line whose stock is not actually held. */
+export function isRecallLineUnheld(status: RecallLineQuarantine): boolean {
+  return status !== "QUARANTINED";
+}
+
+export function toRecallLineQuarantine(value: string | null | undefined): RecallLineQuarantine {
+  return value === "QUARANTINED" || value === "NOTHING_TO_QUARANTINE" || value === "NOT_QUARANTINABLE"
+    ? value
+    : "OPEN";
+}
+
 export const PACKAGE_STATUS_BADGE: Record<PackageStatus, string> = {
   OPEN: INFO,
   CLOSED: NEUTRAL,
