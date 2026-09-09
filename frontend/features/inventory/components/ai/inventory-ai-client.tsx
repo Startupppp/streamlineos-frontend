@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import { AnomalyQueuePanel } from "./anomaly-queue-panel";
 import { DemandRiskPanel } from "./demand-risk-panel";
 import { InventoryCopilotPanel } from "./inventory-copilot-panel";
+import { ReportBuilderPanel } from "./report-builder-panel";
 
 /**
  * F3/F6 — one place the inventory AI surfaces actually live.
@@ -47,6 +48,7 @@ export function InventoryAiClient() {
           <TabsTrigger value="anomalies">Anomaly queue</TabsTrigger>
           <TabsTrigger value="demand-risk">Demand risk</TabsTrigger>
           <TabsTrigger value="copilot">Ask</TabsTrigger>
+          <TabsTrigger value="report-builder">Report builder</TabsTrigger>
         </TabsList>
 
         <TabsContent value="anomalies" className="min-h-0 flex-1">
@@ -59,6 +61,10 @@ export function InventoryAiClient() {
 
         <TabsContent value="copilot" className="flex min-h-0 flex-1 flex-col">
           <InventoryCopilotPanel />
+        </TabsContent>
+
+        <TabsContent value="report-builder" className="flex min-h-0 flex-1 flex-col">
+          <ReportBuilderPanel />
         </TabsContent>
       </Tabs>
     </PageWrapper>

@@ -26,6 +26,7 @@ import { inventoryRecallSimulationQueryKeys } from "./query-keys/inventory-recal
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
 import { inventoryVendorScorecardQueryKeys } from "./query-keys/inventory-vendor-scorecard";
 import { inventoryCopilotQueryKeys } from "./query-keys/inventory-copilot";
+import { inventoryReportBuilderQueryKeys } from "./query-keys/inventory-report-builder";
 import { inventoryAiReviewQueryKeys } from "./query-keys/inventory-ai-review";
 import { inventoryOutboxQueryKeys } from "./query-keys/inventory-outbox";
 import { inventoryOpsMetricsQueryKeys } from "./query-keys/inventory-ops-metrics";
@@ -64,6 +65,7 @@ export const queryKeys = {
   ...inventoryReturnsQueryKeys,
   ...inventoryVendorScorecardQueryKeys,
   ...inventoryCopilotQueryKeys,
+  ...inventoryReportBuilderQueryKeys,
   ...inventoryAiReviewQueryKeys,
   ...inventoryOutboxQueryKeys,
   ...inventoryOpsMetricsQueryKeys,
