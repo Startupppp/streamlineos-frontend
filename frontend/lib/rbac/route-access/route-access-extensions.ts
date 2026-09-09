@@ -151,13 +151,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
-    prefix: "/chat/moderation",
-    product: "administration",
-    permission: "chat:huddles:moderate",
-    reason:
-      "Huddle moderation controls (kick, restrict, view active sessions) are administrative. chat:huddles:moderate is outside the universal MEMBER set.",
-  },
-  {
     prefix: "/calendar/settings",
     product: "administration",
     permission: "calendar:admin:manage",

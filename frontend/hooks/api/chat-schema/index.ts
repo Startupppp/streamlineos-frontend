@@ -93,7 +93,9 @@ export {
   chatJoinViaInviteContract,
   chatMuteResponseContract,
   chatNotifPrefResponseContract,
+  chatOrgSettingsContract,
 } from "./channel-settings-schema";
+export type { ChatOrgSettingsWire } from "./channel-settings-schema";
 export {
   chatPinItemContract,
   chatPinsContract,
