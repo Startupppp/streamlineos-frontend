@@ -106,3 +106,59 @@ describe("getErrorMessage", () => {
     );
   });
 });
+
+/**
+ * Validation refusals, which used to arrive as three words.
+ *
+ * `AllExceptionsFilter` answers a `ZodError` with `"Validation failed."` and
+ * the issues in `details`. Reading only `message` meant a form could be refused
+ * for a named field and say nothing about which one -- the CRM assignment-rule
+ * sheet lost three of its five options behind that sentence.
+ */
+describe("getErrorMessage on a validation refusal", () => {
+  function refusal(details: unknown, message = "Validation failed.") {
+    return Object.assign(new Error(message), { status: 400, code: "VALIDATION_FAILED", details });
+  }
+
+  it("says which field was refused instead of just that something was", () => {
+    expect(
+      getErrorMessage(
+        refusal([{ path: "unitPrice", message: "Unit price must be positive" }]),
+      ),
+    ).toBe("unitPrice: Unit price must be positive");
+  });
+
+  it("drops the placeholder path the filter uses for a whole-body issue", () => {
+    expect(getErrorMessage(refusal([{ path: "body", message: "Expected an object" }]))).toBe(
+      "Expected an object",
+    );
+  });
+
+  it("caps a long list rather than filling the screen with it", () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({
+      path: `field${i}`,
+      message: "Required",
+    }));
+    const result = getErrorMessage(refusal(many));
+    expect(result).toBe("field0: Required; field1: Required; field2: Required (and 3 more)");
+  });
+
+  it("keeps a real message and adds the detail to it", () => {
+    expect(
+      getErrorMessage(
+        refusal([{ path: "stage", message: "Required" }], "Stage transition blocked"),
+      ),
+    ).toBe("Stage transition blocked stage: Required");
+  });
+
+  it("ignores details that carry no readable issue", () => {
+    expect(getErrorMessage(refusal([{ path: "x" }, { message: "  " }]))).toBe("Validation failed.");
+    expect(getErrorMessage(refusal({ missingFields: ["a"] }))).toBe("Validation failed.");
+  });
+
+  it("leaves every other error exactly as it was", () => {
+    expect(getErrorMessage(new Error("Quote is pending approval and cannot be sent"))).toBe(
+      "Quote is pending approval and cannot be sent",
+    );
+  });
+});
