@@ -498,3 +498,56 @@ export const EXCEPTION_STATUS_BADGE: Record<ExceptionStatus, string> = {
   DISMISSED:
     "bg-muted text-foreground border-border",
 };
+
+/**
+ * TS-11. One period that is late, and how late.
+ *
+ * Mirrors `OverduePeriodRow` in `overdue.service.ts`. `dueDate` is derived on
+ * the server from `period_end + submissionGraceDays` rather than stored, so it
+ * always reflects the policy as it stands right now — raise the grace from two
+ * days to five and the whole queue is correct on the next read.
+ */
+export interface OverduePeriod {
+  periodId: number;
+  userId: string;
+  userName: string | null;
+  userEmail: string | null;
+  periodStart: string;
+  periodEnd: string;
+  /**
+   * Only ever `OPEN`, `DRAFT` or `REJECTED` — the endpoint's `UNSETTLED` set,
+   * which is deliberately a status test rather than `submitted_at IS NULL`: a
+   * rejected period has been submitted once and is owed again.
+   */
+  status: Extract<PeriodStatus, "OPEN" | "DRAFT" | "REJECTED">;
+  totalHours: string;
+  dueDate: string;
+  daysOverdue: number;
+  /**
+   * How many configured reminder thresholds this period has passed.
+   *
+   * **Zero is ambiguous on its own** and the server says so: it means "passed
+   * none" for an organisation that configured thresholds, and it also means
+   * "there are none to pass" for one that did not. `escalationThresholds` on
+   * the response is what separates the two, and any surface rendering this
+   * number has to read both or it will tell half its tenants something false.
+   */
+  escalationLevel: number;
+}
+
+export interface OverdueQueueResult {
+  /** The org's `remindAfterDueDays`, ascending. Empty when reminders are off. */
+  escalationThresholds: number[];
+  /** The grace added to every period end to get its due date. */
+  graceDays: number;
+  asOf: string;
+  items: OverduePeriod[];
+  total: number;
+}
+
+export interface OverdueQueryInput {
+  userId?: string;
+  asOf?: string;
+  page?: number;
+  limit?: number;
+}

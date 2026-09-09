@@ -98,6 +98,8 @@ export const usersAndCommerceQueryKeys = {
     periods: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "periods", "list", params] as const,
     periodCurrent: () => [...base, "timesheets", "periods", "current"] as const,
+    periodsOverdue: (params?: Record<string, unknown>) =>
+      [...base, "timesheets", "periods", "overdue", params] as const,
     period: (periodId: number) =>
       [...base, "timesheets", "periods", "detail", periodId] as const,
     approvals: (params?: Record<string, unknown>) =>
