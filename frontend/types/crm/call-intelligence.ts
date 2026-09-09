@@ -136,3 +136,112 @@ export interface CoachingDigestResponse {
     privateWindowHours: number;
   };
 }
+
+/**
+ * CRM-P2-05: one rep's calls over a window, and the trend behind them.
+ *
+ * Two things about this shape are worth stating rather than inferring.
+ *
+ * `scope` is the response telling the client which surface it is looking at. A
+ * rep holding only `crm:call-analysis:view` gets `own` and exactly one row —
+ * their own — because the server never had anybody else's calls to group. A
+ * holder of `crm:call-analysis:view-team` gets `team`. Rendering the same
+ * heading for both would tell a rep their team made two calls this month.
+ *
+ * `embargoed` counts only calls inside this reader's scope that have not opened
+ * yet. A colleague's call, seen by somebody without the team key, is not counted
+ * anywhere — a total would say how many calls the rest of the team made, which
+ * is the leaderboard arriving as bookkeeping.
+ */
+export interface RepTrendPoint {
+  bucketStart: string;
+  bucketEnd: string;
+  calls: number;
+  medianTalkRatioBps: number | null;
+  medianQuestionRateBps: number | null;
+  nextStepCommittedBps: number | null;
+}
+
+export interface RepCallMetrics {
+  repUserId: string;
+  /** Null when the rep has left. Render a fallback; never render the id. */
+  repName: string | null;
+  callsAnalysed: number;
+  /** This rep's calls in the window still inside their private window. */
+  embargoed: number;
+  withoutSpeakerMetrics: number;
+  /** Basis points. Median, never a mean — one bad transcript must not move it. */
+  medianTalkRatioBps: number | null;
+  medianQuestionRateBps: number | null;
+  nextStepCommittedBps: number | null;
+  /** Every bucket in the window, oldest first, including the empty ones. */
+  trend: RepTrendPoint[];
+}
+
+export interface RepCallMetricsResponse {
+  data: RepCallMetrics[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+  meta: {
+    sinceDays: number;
+    since: string;
+    /** Chosen by the server from the window; a chart labels its axis from this. */
+    bucket: "day" | "week";
+    truncated: boolean;
+    scope: "own" | "team";
+    /** Visible calls with nobody attributed. Counted, never given a rep row. */
+    unattributed: number;
+    embargoed: number;
+    /** Calls the consent rule refuses. They count towards nothing at all. */
+    consentBlocked: number;
+    privateWindowHours: number;
+  };
+}
+
+/**
+ * CRM-P2-06: the calls worth listening to, for one metric.
+ *
+ * A row is a pointer, never content. There is no quote, no next-step sentence
+ * and no objection here by design — the reader follows `activityId` to the
+ * analysis route, which applies the visibility rule again on its own terms.
+ */
+export const EXEMPLAR_METRICS = ["talk-ratio", "question-rate", "next-step"] as const;
+export type ExemplarMetric = (typeof EXEMPLAR_METRICS)[number];
+
+export interface CallExemplar {
+  activityId: string;
+  repUserId: string | null;
+  repName: string | null;
+  occurredAt: string | null;
+  analysedAt: string;
+  talkRatioBps: number | null;
+  questionRateBps: number | null;
+  repTurnCount: number | null;
+  repQuestionCount: number | null;
+  nextStepCommitted: boolean;
+  /** The value this call was ranked on. Null for `next-step`, which has none. */
+  metricValueBps: number | null;
+}
+
+export interface CallExemplarsResponse {
+  data: CallExemplar[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+  meta: {
+    metric: ExemplarMetric;
+    sinceDays: number;
+    since: string;
+    truncated: boolean;
+    scope: "own" | "team";
+    /**
+     * The three reasons a call is not on the list, kept apart because they lead
+     * to three different actions: it could not be measured, it is not yours to
+     * read yet, or it may never be processed at all.
+     */
+    ineligible: number;
+    embargoed: number;
+    consentBlocked: number;
+    /** The talk ratio the ranking aims at, so a short list can be explained. */
+    talkRatioTargetBps: number;
+    minimumRepTurns: number;
+    privateWindowHours: number;
+  };
+}

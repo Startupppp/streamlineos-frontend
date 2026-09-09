@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +51,18 @@ export default function CallIntelligencePage() {
     <PageWrapper
       title="Call intelligence"
       subtitle="How the team's calls are going"
+      actions={
+        /**
+         * The per-rep view (CRM-P2-05) and the best-call search (CRM-P2-06) live
+         * one level down. They are not on this page because they answer a
+         * different question and carry a different gate: this digest is
+         * deliberately un-attributed and manager-only, while `/reps` is gated on
+         * `crm:call-analysis:view` so a rep can read their own numbers.
+         */
+        <Button asChild variant="outline" size="sm">
+          <Link href="/crm/intelligence/reps">Per-rep metrics</Link>
+        </Button>
+      }
       filters={
         <Tabs value={String(sinceDays)} onValueChange={handleWindowChange}>
           <TabsList>

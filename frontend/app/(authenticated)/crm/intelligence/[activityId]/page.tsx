@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { use } from "react";
 import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
@@ -48,6 +50,14 @@ function CallIntelligenceDetail({ activityId }: { activityId: string }) {
    */
   const state = useCanState("crm:call-analysis:view");
   /**
+   * Whether `/crm/intelligence` is somewhere this reader can actually go. The
+   * digest is gated on the team key, so the back button used to land a rep on a
+   * permission wall — worse than having no back button. `/crm/intelligence/reps`
+   * carries the same key as this page, so it is the honest destination for
+   * everybody else and doubles as the way a rep reaches their own metrics at all.
+   */
+  const canReadTeam = useCanState("crm:call-analysis:view-team") === "granted";
+  /**
    * Read here as well as inside the panel so the subtitle can say when the call
    * was analysed. Same query key, so TanStack serves both from one request.
    */
@@ -74,8 +84,13 @@ function CallIntelligenceDetail({ activityId }: { activityId: string }) {
     <PageWrapper
       title="Call analysis"
       subtitle={analysedOn ? `Analysed ${analysedOn}` : undefined}
-      backHref="/crm/intelligence"
-      backLabel="Back to call intelligence"
+      backHref={canReadTeam ? "/crm/intelligence" : "/crm/intelligence/reps"}
+      backLabel={canReadTeam ? "Back to call intelligence" : "Back to call metrics"}
+      actions={
+        <Button asChild variant="outline" size="sm">
+          <Link href="/crm/intelligence/reps">Call metrics</Link>
+        </Button>
+      }
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">

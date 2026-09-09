@@ -1,13 +1,16 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CallAnalysisReleaseResponse,
   CallAnalysisResponse,
+  CallExemplarsResponse,
   CoachingDigestResponse,
+  ExemplarMetric,
+  RepCallMetricsResponse,
 } from "@/types/crm/call-intelligence";
 
 /**
@@ -102,5 +105,49 @@ export function useCoachingDigest(sinceDays = 30) {
     queryFn: () =>
       apiClient.get<CoachingDigestResponse>("/crm/calls/coaching", { sinceDays }),
     staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * CRM-P2-05. Per-rep metrics and trends over a trailing window.
+ *
+ * Gated on `crm:call-analysis:view` and not on `:view-team`, matching the route.
+ * Every CRM member holds the view key, so a rep can open their own trend; the
+ * server decides per call whether anybody else's appear, using the same rule the
+ * per-call route applies. Gating this hook on the team key instead would make
+ * "how am I doing on calls" a manager-only question, which is the surveillance
+ * reading of a coaching tool.
+ *
+ * `staleTime` is the slow-list tier: this is an aggregate over a period and it
+ * does not move between two clicks of a window tab.
+ */
+export function useCallRepMetrics(params: { sinceDays: number; page: number; limit: number }) {
+  return useGatedQuery("crm:call-analysis:view", {
+    queryKey: queryKeys.crmCallIntelligence.reps(params),
+    queryFn: () => apiClient.get<RepCallMetricsResponse>("/crm/calls/reps", params),
+    staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * CRM-P2-06. The calls that exemplify one metric, best first.
+ *
+ * `metric` is required here exactly as it is on the route: "best calls" with no
+ * stated definition of best is a ranking nobody asked for. The server drops
+ * calls the consent rule refuses and calls still inside another rep's private
+ * window before ranking, so this hook can render whatever it is given.
+ */
+export function useCallExemplars(params: {
+  metric: ExemplarMetric;
+  sinceDays: number;
+  page: number;
+  limit: number;
+}) {
+  return useGatedQuery("crm:call-analysis:view", {
+    queryKey: queryKeys.crmCallIntelligence.exemplars(params),
+    queryFn: () => apiClient.get<CallExemplarsResponse>("/crm/calls/exemplars", params),
+    staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
