@@ -24,6 +24,7 @@ jest.mock("@/hooks/api/sign/envelopes", () => ({
   useVoidSignEnvelope: () => idleMutation,
   useDownloadSignEnvelopeFinalPdf: () => idleMutation,
   useCorrectSignEnvelope: () => idleMutation,
+  useExtendSignEnvelopeExpiration: () => idleMutation,
 }));
 
 jest.mock("@/hooks/api/sign/templates", () => ({
@@ -113,7 +114,7 @@ jest.mock("@/hooks/api/sign/certificates", () => ({
   useRegenerateSignCertificate: () => idleMutation,
 }));
 
-function makeEnvelope(status: SignEnvelopeStatus): SignEnvelope {
+function makeEnvelope(status: SignEnvelopeStatus, expiresAt: string | null = null): SignEnvelope {
   return {
     id: 42,
     orgId: "org-1",
@@ -136,7 +137,7 @@ function makeEnvelope(status: SignEnvelopeStatus): SignEnvelope {
     reminderMaxCount: 3,
     reminderSentCount: 0,
     lastReminderAt: null,
-    expiresAt: null,
+    expiresAt,
     sentAt: null,
     completedAt: null,
     voidedAt: null,
@@ -174,10 +175,17 @@ const RECIPIENTS: SignRecipient[] = [
   makeRecipient(2, "Dana Khan", "completed"),
 ];
 
-function renderTopBar(status: SignEnvelopeStatus, recipients: SignRecipient[] = RECIPIENTS) {
+function renderTopBar(
+  status: SignEnvelopeStatus,
+  options?: { recipients?: SignRecipient[]; expiresAt?: string | null },
+) {
   return render(
     <TooltipProvider>
-      <BuilderTopBar envelope={makeEnvelope(status)} recipients={recipients} onShowAudit={jest.fn()} />
+      <BuilderTopBar
+        envelope={makeEnvelope(status, options?.expiresAt ?? null)}
+        recipients={options?.recipients ?? RECIPIENTS}
+        onShowAudit={jest.fn()}
+      />
     </TooltipProvider>,
   );
 }
@@ -265,5 +273,37 @@ describe("BuilderTopBar correction control", () => {
     renderTopBar("sent");
 
     expect(screen.queryByRole("button", { name: /Correct recipients/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("BuilderTopBar expiry control", () => {
+  beforeEach(() => {
+    grantedKeys.clear();
+  });
+
+  it("reaches the extend-expiry picker from the envelope's own expiry chip", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("sent", { expiresAt: "2026-03-20T18:29:59.999Z" });
+
+    const chip = screen.getByRole("button", { name: /Expires/ });
+    fireEvent.click(chip);
+
+    expect(screen.getByRole("button", { name: "Extend expiry" })).toBeInTheDocument();
+    expect(screen.getByText(/Everyone who has not finished gets the new deadline/)).toBeInTheDocument();
+  });
+
+  it("renders the expiry read-only, with no picker, once the envelope is completed", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("completed", { expiresAt: "2026-03-20T18:29:59.999Z" });
+
+    expect(screen.queryByRole("button", { name: /Expires/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/^Expires \d{1,2} Mar 2026$/)).toBeInTheDocument();
+  });
+
+  it("hides the picker from a role without the correct permission", () => {
+    renderTopBar("sent", { expiresAt: "2026-03-20T18:29:59.999Z" });
+
+    expect(screen.queryByRole("button", { name: /Expires/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Expires/)).toBeInTheDocument();
   });
 });

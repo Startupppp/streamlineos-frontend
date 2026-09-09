@@ -25,6 +25,7 @@ import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { EnvelopeAiMenu } from "./envelope-ai-menu";
 import { CompletionCertificateSheet } from "./completion-certificate-sheet";
 import { CorrectEnvelopeSheet } from "./correct-envelope-sheet";
+import { EnvelopeExpiryControl } from "./envelope-expiry-control";
 import type { SignEnvelope, SignRecipient } from "@/types/sign";
 
 interface BuilderTopBarProps {
@@ -135,6 +136,7 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
           )}
         </div>
         <EnvelopeStatusBadge status={envelope.status} />
+        <EnvelopeExpiryControl envelope={envelope} />
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

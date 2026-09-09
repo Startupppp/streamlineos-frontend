@@ -122,6 +122,19 @@ export function useCorrectSignEnvelope(id: number) {
   });
 }
 
+export function useExtendSignEnvelopeExpiration(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["signEnvelopes", "extend-expiration", id],
+    mutationFn: (input: ExtendSignEnvelopeExpirationInput) =>
+      apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/extend-expiration`, input),
+    onSuccess: () => {
+      invalidateEnvelope(qc, id);
+      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.audit(id) });
+    },
+  });
+}
+
 export function useResendSignEnvelope(id: number) {
   const qc = useQueryClient();
   return useMutation({
