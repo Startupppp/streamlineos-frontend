@@ -8,8 +8,9 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { useUtilizationReport } from "@/hooks/api/timesheets-core/reports";
-import type { UtilizationReportUser } from "./reports-types";
+import type { UtilizationReport, UtilizationReportUser } from "./reports-types";
 import { formatReportHours, formatReportPercent, memberLabel } from "./report-format";
 
 const ByMemberChart = dynamic(
@@ -108,26 +109,37 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
     [data],
   );
 
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load utilization"
-        description="Something went wrong while loading the utilization report."
-        onRetry={handleRetry}
-      />
-    );
-  }
+  return (
+    <Gated
+      permission="timesheets:reports:view"
+      isLoading={!isError && (isLoading || !data)}
+      isError={isError}
+      loading={
+        <div className="space-y-4">
+          <StatCardGridSkeleton cols={5} count={5} />
+          <Skeleton className="h-[220px] rounded-md" />
+          <DataTableSkeleton rows={8} columns={5} />
+        </div>
+      }
+      error={
+        <ErrorState
+          title="Couldn't load utilization"
+          description="Something went wrong while loading the utilization report."
+          onRetry={handleRetry}
+        />
+      }
+    >
+      {data ? <UtilizationReportBody data={data} chartData={chartData} /> : null}
+    </Gated>
+  );
+}
 
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        <StatCardGridSkeleton cols={5} count={5} />
-        <Skeleton className="h-[220px] rounded-md" />
-        <DataTableSkeleton rows={8} columns={5} />
-      </div>
-    );
-  }
+interface UtilizationReportBodyProps {
+  data: UtilizationReport;
+  chartData: { name: string; billableHours: number; nonBillableHours: number }[];
+}
 
+function UtilizationReportBody({ data, chartData }: UtilizationReportBodyProps) {
   const { summary, users } = data;
 
   return (

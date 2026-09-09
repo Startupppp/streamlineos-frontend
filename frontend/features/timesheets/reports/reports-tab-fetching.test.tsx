@@ -22,17 +22,26 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(),
-  useScope: jest.fn(),
-  useModuleEnabled: jest.fn(() => true),
-  usePermissionGate: jest.fn(() => ({
-    permission: "timesheets:reports:view",
-    allowed: true,
-    denied: false,
-    pending: false,
-  })),
-}));
+jest.mock("@/hooks/api/access", () => {
+  const useCan = jest.fn();
+  return {
+    useCan,
+    useScope: jest.fn(),
+    useModuleEnabled: jest.fn(() => true),
+    usePermissionGate: jest.fn(() => ({
+      permission: "timesheets:reports:view",
+      allowed: true,
+      denied: false,
+      pending: false,
+    })),
+    /**
+     * `<Gated>` reads this, not `useCan`, and the two must agree or a test that
+     * revokes the permission would still render the granted branch. Derived from
+     * the same mock so `can.mockReturnValue(false)` means denied here too.
+     */
+    useCanState: jest.fn(() => (useCan() ? "granted" : "denied")),
+  };
+});
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
