@@ -3,10 +3,8 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -15,19 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { InspectionPlanCreateSheet } from "@/features/inventory/components/quality/inspection-plan-create-sheet";
 import { InspectionPlanDetailSheet } from "@/features/inventory/components/quality/inspection-plan-detail-sheet";
-import { statusToneClasses } from "@/lib/design-tokens";
+import { buildInspectionPlanColumns } from "@/features/inventory/components/quality/inspection-plan-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { describeSampling, useInspectionPlans } from "@/hooks/api/inventory/inspection-plans";
+import { useInspectionPlans } from "@/hooks/api/inventory/inspection-plans";
 import type { InspectionPlan } from "@/hooks/api/inventory/inspection-plans";
 
 const PAGE_LIMIT = 20;
@@ -108,62 +106,7 @@ function InspectionPlansPageInner() {
   const total = plansQuery.data?.total ?? 0;
   const hasFilters = !!search || !!appliesOnParam;
 
-  const columns: DataTableColumn<InspectionPlan>[] = [
-    {
-      key: "plan",
-      header: "Plan",
-      cell: (row) => (
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{row.name}</p>
-          <p className="truncate font-mono text-dense text-muted-foreground">{row.code}</p>
-        </div>
-      ),
-    },
-    {
-      key: "scope",
-      header: "Applies to",
-      cell: (row) => <span className="text-sm">{row.scopeLabel ?? "All products"}</span>,
-    },
-    {
-      key: "trigger",
-      header: "Trigger",
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground">{describeTrigger(row)}</span>
-      ),
-    },
-    {
-      key: "sampling",
-      header: "Sampling",
-      cell: (row) =>
-        row.activeVersion ? (
-          <span className="text-sm">
-            {describeSampling(row.activeVersion.samplingMethod, row.activeVersion.sampleValue)}
-          </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">No published version</span>
-        ),
-    },
-    {
-      key: "version",
-      header: "Version",
-      headerClassName: "w-[90px]",
-      className: "font-mono tabular-nums text-dense",
-      cell: (row) => (row.activeVersion ? `v${row.activeVersion.version}` : "—"),
-    },
-    {
-      key: "status",
-      header: "Status",
-      headerClassName: "w-[100px]",
-      cell: (row) => <PlanStatusBadge isActive={row.isActive} />,
-    },
-    {
-      key: "updatedAt",
-      header: "Updated",
-      headerClassName: "w-[130px]",
-      className: "text-muted-foreground tabular-nums",
-      cell: (row) => format(new Date(row.updatedAt), "dd MMM yyyy"),
-    },
-  ];
+  const columns = buildInspectionPlanColumns(canManage);
 
   if (!canView)
     return (
@@ -268,24 +211,6 @@ function InspectionPlansPageInner() {
       />
     </>
   );
-}
-
-function PlanStatusBadge({ isActive }: { isActive: boolean }) {
-  const tone = statusToneClasses(isActive ? "success" : "neutral");
-  return (
-    <Badge
-      variant="outline"
-      className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule)}
-    >
-      {isActive ? "Active" : "Paused"}
-    </Badge>
-  );
-}
-
-function describeTrigger(plan: InspectionPlan): string {
-  if (plan.appliesOnReceipt && plan.appliesOnReturn) return "Receipt and return";
-  if (plan.appliesOnReceipt) return "Receipt";
-  return "Return";
 }
 
 export default function InspectionPlansPage() {

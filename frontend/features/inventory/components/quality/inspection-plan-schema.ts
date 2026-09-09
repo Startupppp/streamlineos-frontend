@@ -76,6 +76,37 @@ export const inspectionPlanFormSchema = z
 
 export type InspectionPlanFormValues = z.infer<typeof inspectionPlanFormSchema>;
 
+/**
+ * What a live plan may be edited to, mirroring the backend's
+ * `updateInspectionPlanSchema` field for field.
+ *
+ * The sampling rule is deliberately absent: a completed inspection names the
+ * version it was judged against, so tightening the rule is a new version rather
+ * than an edit. The three scope ids are absent for a different reason — the
+ * resolver matches a variant, a product or a category, this form can express
+ * only two of the three, and a patch that named a scope it cannot see would
+ * null the one it does not offer.
+ */
+export const inspectionPlanEditSchema = z
+  .object({
+    name: z.string().min(1, "A name is required").max(160),
+    description: z.string().max(2000).optional(),
+    appliesOnReceipt: z.boolean(),
+    appliesOnReturn: z.boolean(),
+    isActive: z.boolean(),
+  })
+  .superRefine((values, ctx) => {
+    if (!values.appliesOnReceipt && !values.appliesOnReturn) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["appliesOnReceipt"],
+        message: "A plan that applies to nothing would never be consulted",
+      });
+    }
+  });
+
+export type InspectionPlanEditValues = z.infer<typeof inspectionPlanEditSchema>;
+
 export const planVersionFormSchema = z
   .object({
     samplingMethod: z.enum(SAMPLING_METHODS),
