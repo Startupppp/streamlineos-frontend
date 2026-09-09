@@ -1,6 +1,11 @@
 # Build/PM verification evidence — 2026-09-09
 
-**Status: Build implementation and review repairs committed; final consolidated Build checks passed. Browser sign-off and an unrelated KB coverage gate remain open.**
+**Status: Build implementation and review repairs committed; final consolidated Build checks passed. The KB coverage gap is closed; browser sign-off remains blocked.**
+
+The later acceptance follow-up is recorded in `BUILD-ACCEPTANCE-FOLLOWUP-2026-09-09.md`:
+946/946 declared isolation coverage, 469 suites / 1,992 runtime isolation tests passed,
+two real-PostgreSQL KB controls passed, synchronous timesheet totals deliberately
+retained, and matching whole OpenAPI documents regenerated and committed.
 
 This certifies only the measured Build delta, not universal bug freedom, a numeric
 10/10 rating, or production infrastructure readiness. The independent review is
@@ -108,6 +113,7 @@ Chat, KB and Integrations work was preserved, not rolled back or swept into comm
 ## Verification results
 
 Counts are separate runs and must not be added as if they were disjoint tests.
+This table retains the original consolidated run; the follow-up closes the KB gate.
 
 | Check | Result | Evidence |
 |---|---|---|
@@ -205,20 +211,19 @@ An unrelated in-progress KB edit temporarily failed the shared typecheck. Its ow
 session corrected it; the later backend source gate passed. Earlier failing attempts
 are not counted as successful verification.
 
-## Remaining verification blockers
+## Remaining verification blocker
 
 Browser sign-off is blocked: the Browser skill reported no available browser and
 discovery returned an empty list. A connected, signed-in local Build page and URL
 have been requested. Visual layout, responsive breakpoints, accessibility, cross-tab
 freshness and browser loading/Web Vitals cannot be certified without that access.
 
-The shared tenant-isolation coverage gate fails for
-`src/modules/kb/retrieval/kb-stuck-source-reaper.service.ts`, outside Build. Independent
-review confirmed existing mocks inspect predicates but do not prove a second tenant's
-stale sources remain unchanged. Production includes an organization filter; no leak
-was demonstrated. A two-tenant database test is needed, not a renamed test or an
-allowlist exception. Scope direction was requested before editing the separate KB
-workstream. This failure is not counted as a passing Build or whole-product gate.
+The earlier shared tenant-isolation coverage failure for the KB reaper was closed
+after the user approved the scope extension. The new PostgreSQL suite proves a
+second tenant's stale sources remain unchanged, with both owner and non-bypass
+application connections. No allowlist exception or production reaper change was
+needed. The follow-up also records a repaired test-only Chat dependency and the
+passing full runtime selection; this resolved gap is not retained in the backlog.
 
 Production infrastructure and whole-product clean-release certification remain
 separate from these code-level measurements. No confirmed repaired finding is copied

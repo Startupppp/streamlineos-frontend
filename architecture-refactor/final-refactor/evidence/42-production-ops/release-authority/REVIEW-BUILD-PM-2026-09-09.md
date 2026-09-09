@@ -107,9 +107,11 @@ regressed.
 See the latest execution disposition in
 `CERTIFICATION-BUILD-PM-2026-09-09.md`. Passing Build checks do not override an
 unrelated failing repository gate or certify unmeasured browser/scale behavior.
-The remaining external items are a connected signed-in browser for UI sign-off and
-the shared tenant-isolation gate's missing KB reaper negative test. The latter is
-outside Build; no production leak was demonstrated, and scope direction was requested.
+The remaining external item is a connected signed-in browser for UI sign-off.
+After scope approval, the KB reaper gap was closed by real two-tenant PostgreSQL
+tests and the broader isolation selection passed 469 suites / 1,992 tests.
+Matching whole OpenAPI snapshots are committed; the deliberate synchronous
+timesheet totals decision and limits are in `BUILD-ACCEPTANCE-FOLLOWUP-2026-09-09.md`.
 
 ## NEW
 
