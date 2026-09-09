@@ -45,6 +45,7 @@ import {
   CreateProjectDialog,
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
+import { DealForecastScoreCard } from "@/features/crm/deals/detail/deal-forecast-score-card";
 import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
 import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
@@ -480,6 +481,7 @@ export default function DealDetailPage({
               nextStep={deal.nextStep}
               pipelineId={deal.pipelineId}
             />
+            <DealForecastScoreCard dealId={dealId} />
             <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
             <DealStageHistory dealId={dealId} card />
             <DealQuotesSection dealId={dealId} />

@@ -53,7 +53,9 @@ export function useForecastModel() {
 export function useDealForecastScore(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.forecastScore(dealId),
-    queryFn: () => apiClient.get<DealForecastScore | null>(`/deals/forecast/deals/${dealId}`),
+    queryFn: () =>
+      apiClient.get<{ score: DealForecastScore | null }>(`/deals/forecast/deals/${dealId}`),
+    select: (payload) => payload.score,
     staleTime: 5 * 60_000,
     enabled: dealId > 0,
   });
