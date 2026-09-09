@@ -115,8 +115,23 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // branch was adding the inventory entries below. Both sides are in the graph, so
 // neither side's digest describes it and the merge cannot inherit one of them --
 // this is the hash of the merged graph, recomputed and re-read, not copied across.
+// Moved 2026-09-09 by the reachability audit: two inventory routes were mounted
+// on the backend, called from nowhere in this repo, and therefore did not exist
+// for a user. "In Transit" (/inventory/stock/transit, on inventory:stock:read)
+// is the queue of goods a dispatch put on the road and of what a short receipt
+// left stranded on a transit bin -- stock that is on hand, unsellable and, until
+// the exit command was reachable, had no route out of the waypoint at all. It is
+// gated on the read key rather than on inventory:transit:abandon because the
+// queue is a read and a supervisor who cannot see it cannot decide anything
+// about it; the Resolve action re-gates on the abandon key. "GL Reconciliation"
+// (/inventory/reconciliation/gl, on inventory:reports:read) is the report that
+// names a movement which produced no journal entry -- the only surface in the
+// module that can say money did not follow stock. It sits beside Stock
+// Reconciliation but asks for a different key, because that page compares the
+// projection against the ledger and this one compares the ledger against the
+// journals.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "34e1af910e68bad4320180d3025888c60f233d85bf4e289c1efd650c9ae014d3";
+  "2b00a244558709bcccd23338f5f3ac1893ff2b2fff5a50dc9ce7b87b32b9bdcd";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

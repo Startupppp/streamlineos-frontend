@@ -14,6 +14,9 @@ import { inventoryPickingQueryKeys } from "./query-keys/inventory-picking";
 import { inventoryPlanningQueryKeys } from "./query-keys/inventory-planning";
 import { inventoryPackingQueryKeys } from "./query-keys/inventory-packing";
 import { inventoryPutawayQueryKeys } from "./query-keys/inventory-putaway";
+import { inventoryTransitQueryKeys } from "./query-keys/inventory-transit";
+import { inventoryGlReconQueryKeys } from "./query-keys/inventory-gl-recon";
+import { inventorySystemHealthQueryKeys } from "./query-keys/inventory-system-health";
 import { inventoryQualityPlanQueryKeys } from "./query-keys/inventory-quality-plans";
 import { inventoryRecallSimulationQueryKeys } from "./query-keys/inventory-recall-simulation";
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
@@ -45,6 +48,9 @@ export const queryKeys = {
   ...inventoryPlanningQueryKeys,
   ...inventoryPackingQueryKeys,
   ...inventoryPutawayQueryKeys,
+  ...inventoryTransitQueryKeys,
+  ...inventoryGlReconQueryKeys,
+  ...inventorySystemHealthQueryKeys,
   ...inventoryQualityPlanQueryKeys,
   ...inventoryRecallSimulationQueryKeys,
   ...inventoryReturnsQueryKeys,

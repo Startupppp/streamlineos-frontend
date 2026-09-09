@@ -18,6 +18,8 @@ import { InventorySettingsForm } from "./inventory-settings-form";
 import { NumberSequencesCard } from "./number-sequences-card";
 import { SettingsHealthCard } from "./settings-health-card";
 import { WebhooksSettingsCard } from "./webhooks-settings-card";
+import { InventoryMetricsCard } from "./inventory-metrics-card";
+import { ShelfLifeRulesCard } from "./shelf-life-rules-card";
 
 const settingsSchema = z.object({
   allowNegativeStock: z.boolean(),
@@ -140,7 +142,9 @@ export function InventorySettingsClient() {
 
       <div className="space-y-4">
         <NumberSequencesCard />
+        <ShelfLifeRulesCard />
         <SettingsHealthCard />
+        <InventoryMetricsCard />
         <WebhooksSettingsCard />
       </div>
       </div>

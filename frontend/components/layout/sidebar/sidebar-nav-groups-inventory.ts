@@ -1,4 +1,4 @@
-import { LayoutDashboard, ListChecks, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
+import { LayoutDashboard, ListChecks, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles, BookX } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -51,6 +51,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "Transfers",
             icon: ArrowLeftRight,
             href: "/inventory/stock/transfers",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "In Transit",
+            icon: Truck,
+            href: "/inventory/stock/transit",
             requiredPermission: "inventory:stock:read",
           },
           {
@@ -311,6 +317,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             icon: Scale,
             href: "/inventory/reconciliation",
             requiredPermission: "inventory:stock:reconcile",
+          },
+          {
+            label: "GL Reconciliation",
+            icon: BookX,
+            href: "/inventory/reconciliation/gl",
+            requiredPermission: "inventory:reports:read",
           },
         ],
       },
