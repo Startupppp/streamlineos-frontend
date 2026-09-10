@@ -76,6 +76,62 @@ read.read(
 
 **What is now NOT protected.** A caller can still receive a `ScopedWhere` and decline to put it in the query. Nothing in TypeScript prevents ignoring an argument. What is prevented is *building* a scoped query whose WHERE lacks the tenant predicate or the scope predicate, and *obtaining* the scope string outside the resolver layer. The residue is the `rawScope` allowlist, which is finite, named and tested.
 
+## Measured outcome
+
+| | Before | After |
+|---|---|---|
+| Production files spending a DataScope | 55 | 0 |
+| Files carrying a `ScopedRead` | 0 | 123 |
+| `applyScope` callers | 53 | 1 (`scoped-read.ts`) |
+| Enforcement | 329-line text classifier, 153 sites | 4 structural rules + 14 declared escapes |
+| Scanner self-test checks | 12 (over its own regexes) | 15 (each proved to bite) |
+
+`unrestricted` and `broadest` were added during the migration, not designed up front.
+Thirteen call sites independently wrote `rawScope(...) !== "all"` — the standing
+question root `CLAUDE.md` §5 already names as the gate an optional `userId` filter
+must pass — and two combined two resolved scopes by hand. Both are typed decisions
+that keep the value private, so they belong beside `denied` rather than behind the
+escape hatch.
+
+## The residual raw consumers
+
+Fourteen files read the value through `rawScope(reason)`. Each is enumerated with its
+reason in `check-scope-boundary.mjs`; an unlisted call fails the gate. They fall into
+four kinds, and none of them is a row predicate:
+
+- **Persisted authorization snapshots.** The HR export pipeline (`hr-export.controller`,
+  `hr-export-jobs.service`, `hr-export-worker.service`) and the expenses export
+  controller store the scope on a job row so a worker can replay it, and compare a
+  stored scope against a live one by rank.
+- **Audit metadata.** `attendance-email-report.service` records which scope produced a
+  report; the report's own rows are scoped by predicate.
+- **A different answer shape per scope.** The Ably capability
+  (`support-realtime.service`) is a channel wildcard or an id list; the agent-performance
+  report (`support-reports.controller`) narrows its `GROUP BY` subject; the dashboard
+  project sections pick a different membership query entirely; the payroll and workspace
+  AI copilots answer self rows, a refusal, or an org summary.
+- **An authorization gate on a subject rather than a row set.** GDPR export of another
+  subject's data, dashboard stats collapsing attendance visibility to a flag, and one
+  timesheets period read that authorises an already-fetched row — that last one also
+  treats `team` as a bypass where every list treats it as `own`, a pre-existing
+  difference this migration preserved rather than silently unified.
+
+## What the type still cannot prove
+
+A caller can receive a `ScopedWhere` and decline to put it in the query; nothing in
+TypeScript prevents ignoring an argument. Nine handlers resolve a scope and spend it as
+a *subject* gate rather than a predicate — `?userId=` widening on attendance, work logs
+and timesheets, and the assignee/reporter check on build tickets, where `build:manage`
+at `none` means "not a manager" and the participation check is the real authorization.
+Those are classified, not defects: attendance and work-log self-reads are platform core
+under root `CLAUDE.md` §8, and denying them would remove a universal surface.
+
+The mutation checks that make this concrete: removing the scoped read from
+`deals-import-export` fails exactly the `own`-predicate and `none`-no-query tests while
+the tenant test still passes; removing it from `support-tickets.getTicket` fails the
+three BOLA gate tests while the 404 tests still pass; and deleting the `tenant` field
+from a spec is a compile error, not a test failure.
+
 ## What would reverse this decision
 
 - Materialising `team` against `org_unit_members` in a way that needs a second resolution round-trip inside the predicate; `ScopeShape` would need to become async.
