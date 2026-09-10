@@ -6,17 +6,27 @@ import { tenantEnv } from "./tenant";
 /**
  * A read-only window onto the backend, used as the ORACLE for UI flows.
  *
- * The UI is what these specs drive; it is not always what they can trust to
- * report the result. `GET /inventory/stock` returns raw snake_case rows with no
- * product or location join, while the frontend maps `onHand`, `productVariant`
- * and `location` — so the Stock Levels table renders `NaN` for on-hand and `—`
- * for every name, and reading a quantity off that screen would mean asserting
- * against a known-broken projection.
+ * The UI is what these specs drive; it is not what they trust to report the
+ * result. The flow specs act through the screen and verify against the LEDGER
+ * (`/inventory/stock/transactions`), because the ledger is what actually moved —
+ * an endpoint that accepted the request and wrote nothing renders exactly the
+ * same toast as one that worked.
  *
- * The ledger does not have that problem: `/inventory/stock/transactions`
- * returns the camelCase, joined shape the frontend expects. So the flow specs
- * act through the UI and verify against the ledger, which is also the more
- * honest oracle — the ledger is what actually moved.
+ * Being the oracle, everything here is typed to what the API actually sends and
+ * never to what a reader assumes it sends. Getting that backwards is neither a
+ * compile error nor a visible failure: a field read under the wrong name is
+ * `undefined`, `Number()`s to `NaN`, and every comparison against it quietly
+ * passes. It has already cost a run here — these helpers described
+ * `/inventory/stock` as "raw snake_case rows with no product or location join",
+ * and the endpoint returns the camelCase NESTED shape `RawStockLevel` in
+ * `hooks/api/inventory/stock-levels.ts` parses field for field (the backend says
+ * so at `inv-stock.service.ts`, and its `RESPONSE_SHAPE` cache-key version is at
+ * "s2" because the shape has already changed once). So `row.on_hand` read
+ * `undefined` and the projection assertion failed with `NaN` on a run where the
+ * product was correct.
+ *
+ * Probe an endpoint before typing it here, and re-probe before believing a
+ * comment like this one.
  */
 
 /**
@@ -69,21 +79,39 @@ export async function apiOracle(): Promise<ApiOracle> {
   };
 }
 
+/**
+ * One row of `/inventory/stock`, measured off the live endpoint.
+ *
+ * camelCase and NESTED — the variant and the bin arrive as objects, not as
+ * `*_id` scalars. Note what is absent: the row's lot, serial, handling unit and
+ * ownership are NOT projected, even though they are part of
+ * `inv_stock_levels`' key. That is why `onHandFor` below cannot name a grain.
+ */
 export interface StockGrain {
   id: number;
-  product_variant_id: number;
-  location_id: number;
-  on_hand: string;
+  onHand: string;
+  /** Held by a reservation. */
+  committed: string;
+  available: string;
+  productVariant: { id: number; sku: string } | null;
+  location: { id: number; name: string } | null;
 }
 
 /**
- * On-hand for one (variant, location) grain, read straight from the levels
- * endpoint in its real snake_case shape.
+ * On-hand at one (variant, location), which is NOT a unique grain.
  *
- * Deliberately typed to what the API actually sends rather than to what the
- * frontend wishes it sent. This is the oracle: if it were written against the
- * camelCase contract it would read `undefined`, `Number()` it to `NaN`, and
- * every comparison against it would quietly pass.
+ * `inv_stock_levels` is keyed wider than variant and location — lot, serial,
+ * handling unit and ownership complete it — so one bin legitimately holds several
+ * rows for the same SKU, and the seeded capacity tenant has exactly that: two
+ * rows for variant 382 in "Free bin". The projection returns none of those four
+ * columns, so the grain a given ledger movement belongs to is not addressable
+ * from here.
+ *
+ * `items[0]` is therefore the most-recently-updated row (the list is ordered
+ * `updatedAt DESC`), which right after a write is the row that was written. That
+ * holds for a spec asserting its own write and is worth knowing the edge of: in a
+ * tenant another suite is writing to concurrently, the newest row may be theirs,
+ * and this then compares one movement's balance against a different grain's.
  */
 export async function onHandFor(
   api: ApiOracle,
@@ -97,7 +125,7 @@ export async function onHandFor(
     limit: 50,
   });
   const row = res.items?.[0];
-  return row ? Number(row.on_hand) : 0;
+  return row ? Number(row.onHand) : 0;
 }
 
 export interface Warehouse {
@@ -170,14 +198,22 @@ export async function findLocationWithHeadroom(
   );
 }
 
-/** Everything currently in a bin, across every variant and lot. */
-async function binOccupancy(api: ApiOracle, locationId: number): Promise<number> {
+/**
+ * Everything currently in a bin, across every variant, lot and grain — which is
+ * what a bin's `capacity` is counted against.
+ *
+ * Summing the wrong field name returned `NaN`, and `capacity - NaN >= qty` is
+ * false, so `findLocationWithHeadroom` rejected every capped bin and fell through
+ * to an uncapped one. It reached a usable bin anyway, which is exactly why it went
+ * unnoticed: broken arithmetic producing the right answer.
+ */
+export async function binOccupancy(api: ApiOracle, locationId: number): Promise<number> {
   const res = await api.get<{ items: StockGrain[] }>("/inventory/stock", {
     locationId,
     page: 1,
     limit: 200,
   });
-  return (res.items ?? []).reduce((sum, row) => sum + Number(row.on_hand), 0);
+  return (res.items ?? []).reduce((sum, row) => sum + Number(row.onHand), 0);
 }
 
 export interface LedgerEntry {
