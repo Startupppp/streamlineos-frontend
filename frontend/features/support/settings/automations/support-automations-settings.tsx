@@ -38,7 +38,7 @@ import {
 import type { AutomationRule } from "@/hooks/api/automations";
 import { matchesOrgModule } from "@/lib/org-module-keys";
 
-const SUPPORT_TRIGGER_OPTIONS = NON_CRM_TRIGGER_META.filter((t) => t.module === "support");
+const SUPPORT_TRIGGER_OPTIONS = NON_CRM_TRIGGER_META.filter((t) => t.module === "support" && t.value.startsWith("ticket."));
 
 export function SupportAutomationsSettings() {
   const { data: automationsData, isLoading, isError, refetch } = useSupportAutomations({ limit: 100 });
@@ -171,7 +171,7 @@ export function SupportAutomationsSettings() {
         <AutomationBuilderSheet
           rule={editTarget}
           onClose={handleCloseEdit}
-          triggerOptions={NON_CRM_TRIGGER_META}
+          triggerOptions={SUPPORT_TRIGGER_OPTIONS}
           create={create}
           update={update}
           test={test}

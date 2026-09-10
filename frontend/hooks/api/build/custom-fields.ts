@@ -2,7 +2,7 @@
 
 import { lazyContract } from "@/lib/api-envelope";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys as queryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type {
