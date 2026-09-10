@@ -11,13 +11,18 @@ Scope approved by the owner: **all eleven candidates**. All eleven are closed.
 | **Built differently, because the card was wrong** | C3 (blocker was false — nothing needed porting) · C6 (the backend half would have been a security regression) |
 | **Deliberately NOT built, on measurement** | C5 (both prohibitions target legitimate, load-bearing operations) · `useSettingsSectionForm` (deletion test fails) |
 
-**Gate at sign-off.** Backend: `tsc --noEmit` **0 errors** · `madge` **6,475 files, zero cycles** ·
-`check:route-classification` **3,654 handlers, 0 undeclared** · `check:permission-keys` **704/704 both
-directions** · full suite **2,196 / 2,201 suites, 18,985 tests**. Frontend: `tsc --noEmit` **0 errors** ·
-`madge` **5,836 files, zero cycles** · full suite **466 / 466 suites, 4,775 / 4,775 tests**. Lint **not
-run** — it was never requested. The 5 backend suites still red are itemised under "Found while running
-the gate"; none was caused by this program, two hold genuine security review items that were left red on
-purpose rather than silenced, and three are wall-clock AI timing suites that pass in isolation.
+**Gate at sign-off — re-run 2026-09-10 after the follow-up pass, and the backend is now FULLY GREEN.**
+Backend: `tsc --noEmit` **0 errors** · `madge` **zero cycles** · `check:route-classification` **ALL ROUTES
+CLASSIFIED, 0 undeclared** · `check:permission-keys` **OK both directions** · `openapi:check` **current,
+3,667 operations, 3,667 exposure-stamped** · full suite **2,201 / 2,201 suites, 18,996 passed, 0 failed**
+(1 suite skipped, 46 tests skipped, 1 todo). Frontend: `tsc --noEmit` **0 errors** · `madge` **zero
+cycles** · `check:contract-vendor` **matches** · full suite **466 / 466 suites, 4,776 / 4,776 tests**.
+Lint **not run** — it was never requested.
+
+The 5 suites that were red at first sign-off are all closed: 2 were a **stale `openapi.json`** still
+carrying routes C3 had deleted, 1 was a spec asserting a defect that had since been **fixed**, 1 was
+wall-clock flake now driven by fake timers, and the census rework turned up **a real cross-tenant write**
+on `POST /crm/ingress/inbound`.
 
 **Seven lane verdicts were wrong and were corrected by hand** — the pattern is worth keeping: a lane
 that must not cross a file boundary will rationalise a duplicate, and a lane reading one file in
@@ -122,9 +127,15 @@ resolved module availability twice per request through resolvers that diverged i
       field was written as a constant `null` at three sites and read at **zero**. Not a mismatch to
       reconcile — dead surface. Removed from `SessionClaims`, `SessionData`, `next-auth.d.ts`, both
       `session()` paths, `signIn()` and the test.
-- [ ] **Left open, reported not fixed:** backend `plan` is `string | null` while the frontend types it
-      `Plan` (a 4-value union). `unwrapBackend` widens silently, so an unrecognised plan string would be
-      accepted unchecked. Narrow the backend schema to the enum, or parse it on the frontend.
+- [x] **CLOSED 2026-09-10 — both halves, not either/or.** Backend: `EFFECTIVE_PLANS` is now a tuple in
+      `plan-entitlements.constants.ts` (`EffectivePlan` derives from it), and `authSessionDataResponseSchema`
+      is `z.enum(EFFECTIVE_PLANS).nullable()`. The `ResponseContractInterceptor` validates it under test, so
+      the producer can no longer emit an unrecognised plan. Frontend: `unwrapBackend<SessionData>` was a
+      **cast**, so the union was a claim rather than a fact — `fetchSessionData` now `safeParse`s against
+      NEW `lib/auth-session-schema.ts` and falls back to the existing "no fresh data" path. `SessionData` is
+      `z.infer` of that schema, deleting the hand-written parallel interface.
+- [x] **Found while doing it:** `getSessionData` restated all 17 fields of the response schema as an inline
+      return type — a parallel shape free to drift. It now returns `AuthSessionData = z.infer<…>`.
 
 ---
 
@@ -269,10 +280,15 @@ stop one being *unused*, which is the entire defect class.
       invariant the type system cannot carry, not a stopgap for a brand that never arrives.
 - [x] Real scale re-measured for the record: **84** `applyScope(` call sites across **52** files and
       15 `rbacScope` reads — not the "132 call sites, 30 resolvers" the card cited.
-- [ ] If this is ever reopened, the tractable half is narrower and worth stating: give `applyScope` a
-      **named return type** so a predicate is greppable and self-documenting, while leaving `DataScope`
-      a plain union so the deny gate and the cache keys keep working. That is a naming change, not a
-      migration, and it does not retire the scanner.
+- [x] **The tractable half is DONE 2026-09-10.** `ScopePredicate` now sits beside `DataScope` in
+      `common/rbac/data-scope.ts` (the leaf, not beside the runtime code) and is re-exported from
+      `access.types.ts`. `DataScope` stays a plain union, so the 75 `"none"` comparisons and the cache-key
+      interpolation are untouched. Applied to the seven signatures that actually **spend** a scope:
+      `applyScope` · `ObjectAccess.predicate` · `applyClientAccountsScope` · `clientPartyViewScope` ·
+      `contactPartyViewScope` · `ticketScopePredicate` · `AutonomyReviewService.scopePredicate`.
+      Deliberately NOT applied to `clientPartyScope`/`contactPartyScope` (tenant join conditions) or
+      `clientIdIs`/`contactIdIs` (plain filters) — they return `SQL` without spending a `DataScope`, and
+      that distinction is the whole value of the name. The scanner is untouched and still the enforcement.
 
 ---
 
@@ -529,22 +545,43 @@ silenced; two were fixed because the fix was mechanical and provably safe, two w
       passed, with a new self-test proving both the guarded and unguarded delegated cases. Both original
       thresholds hold unchanged (≥21 guarded, ≤45 unguarded) and the TRIAGED named set still matches
       exactly, so nothing was reclassified to make it pass.
-- [ ] **NOT FIXED, needs its owner — the BOLA census in `bola-body-id-binding.spec.ts` /
-      `bola-body-synthesis.spec.ts`.** `b20dca13b` regenerated `openapi.json` without re-reading the
-      census the file itself says must be re-read after a regeneration. `counts.operations` was updated
-      3666 → 3669 (descriptive), but **two assertions are real review items and were deliberately left
-      red**: a **13th** tenant/actor selector now appears where 12 were reviewed, and **2** handlers no
-      longer resolve — an unresolved handler is a blind spot by this file's own definition. Root
-      `CLAUDE.md` §5 makes a client-sent `orgId` a cross-tenant hole unless it is one of the documented
-      legitimate cases, so admitting a 13th into an allowlist is a security review, not a count bump.
-- [ ] **NOT FIXED — `session-revocation-enforced.spec.ts` "DEFECT SHAPE".** Asserts that with Redis up and
-      no tombstone, a DB `is_revoked` flag alone does **not** reject the token; the guard now rejects it.
-      The contract changed under the test in `d6ad7c4bd` ("revocation took up to five seconds to bite").
-      Deciding which behaviour is correct is a security call for that change's owner. (This spec ALSO had
-      a real arity break from C1, which is fixed — see the typecheck blind spot below.)
-- [ ] **`ai-call-metrics.spec.ts`** — three wall-clock assertions (`< 60ms`, got 94ms). Machine-dependent,
-      fails in isolation on this host. Not a correctness defect; the thresholds need a floor that is not
-      a bare millisecond count.
+- [x] **FIXED 2026-09-10 — and the review found a real cross-tenant write.** The card's attribution was
+      wrong: `b20dca13b` added exactly 2 KB operations and removed none, and the tenant-selector count was
+      **already 13 at its parent**. What was actually stale was `openapi.json` itself — `openapi:check`
+      reported it STALE, still carrying `POST|PATCH|DELETE /branches`, the routes **C3 deleted**. So the
+      "2 unresolved handlers" were `BranchesController_create` / `_update`: a stale contract, not a blind
+      spot. Regenerated — 3,667 operations, 0 undeclared, and the app boots.
+- [x] **The 13th selector was 3 false positives, and hid one true one.** `contacts` declares
+      `organizationId` as a **number** (`dto/contact.schemas.ts:7,23,40`, `z.coerce.number()`) — the CRM
+      company FK, not our string-UUID tenant. The census classified by NAME alone, and the selector buckets
+      are **exempt from the object-reference sweep**, so those three reached rows unanalysed.
+      `declaresNumericId` now rules them out by declared type and sends them back through the sweep. 13 → 10,
+      actor selectors unchanged at 100 (the rule is a no-op there, which is the control).
+- [x] **`POST /crm/ingress/inbound` was a genuine cross-tenant write.** `InboundIngressService.accept`
+      checked only that the body's `organizationId` **existed** — never that it was the caller's. So any
+      holder of `crm:ingress:submit` could write an `inbound_events` row and start a
+      `crm.inbound-communication` workflow in **any other tenant**. The org now comes from the token
+      (`@CurrentUser()`), a mismatch answers 404 per §4, and the three internal sweeps pass their own
+      connection's org. Two deny tests added, one of which uses an org that **exists** — the point.
+- [x] **The census is now pinned BY NAME** (`tenant-selector-surface.json`), like the actor surface.
+      `toHaveLength(12)` said nothing about *which* surfaces were reviewed, so a swapped-in selector netted
+      to zero and a wrong count could be "fixed" by editing the number. All 10 were read against §5:
+      session-exchange is membership-checked at `auth.controller.ts:377-383`; cron and internal/audit are
+      secret-gated; restore and the three operator-access routes are platform administration;
+      `organization/switch` is named legitimate in §5; `public/referrals/register` is `@Public()` with the
+      org as its only tenant selector.
+- [x] **RESOLVED 2026-09-10 — the test was documenting a defect that `d6ad7c4bd` FIXED.** Read the guard:
+      the tombstone is a **cache, not the sole authority**. Only a *positive* tombstone short-circuits; an
+      absent one is a cache MISS that falls through to `user_sessions.is_revoked`, and both authorities
+      failing denies (`jwt-auth.guard.ts:147-166`). So the newer behaviour is strictly safer and the
+      assertion was inverted, not the code — exactly the "a spec documenting a gap reads as requiring it"
+      trap. The test now asserts the DB flag alone DOES revoke, with a control proving the deny came from
+      the flag and not from the miss. `backend/CLAUDE.md` §4 said the opposite and is corrected.
+- [x] **FIXED — `ai-call-metrics.spec.ts` is deterministic.** `AiCallMetrics` reads the clock only through
+      `Date.now()`, which Jest 29 modern fake timers fake, so the sleeps became
+      `jest.advanceTimersByTimeAsync` and every tolerance window became an **exact equality** — stricter
+      than the thresholds it replaced, and immune to machine load. Fake timers are scoped to the one
+      describe block. Each of the four tests carries a named mutation that would fail it.
 
 ### The typecheck blind spot this exposed — now written into `backend/CLAUDE.md` §8
 `tsconfig.json` includes only `src/**/*` and `evals/**/*`, but jest's `roots` add `test/security` and
@@ -560,21 +597,28 @@ Recorded so they are not lost. None is approved work; each needs a decision.
 - [x] `frontend/lib/auth-session.ts` — `fetchSessionDataWithCache(userId, _orgId)`. **Done in C2**: the
       parameter is dropped. It was never read, the backend endpoint takes no org argument, and React
       `cache()` resets per server request, so it was inert even as a key.
-- [ ] `frontend/features/crm/quotes/components/quote-create-sheet.tsx:77` — `defaultExpiryDate` builds a
-      calendar date with `d.toISOString().split("T")[0]`, which is UTC. For a reader east or west of UTC
-      near midnight that is off by a day. `lib/date-utils.ts` already exports `formatDateOnly`, which does
-      it in local time. Found while consolidating the token-sheet duplication; left alone because it is
-      CRM, outside this program's scope. One-line fix. `[V]`
-- [ ] `backend/src/modules/auth/auth-passwordless.service.ts` — 451 lines holding three independent
-      flows (verify-email `:111-156`, magic-link `:187-333`, email-OTP `:335-451`) that share only
-      `findOrCreateUser`. Size/cohesion note, not a defect. `[R]`
-- [ ] `frontend/lib/rbac/route-access/route-access-extensions.ts:14-160` — 24 entries whose `reason`
-      prose asserts a match with a specific backend gate, while the test
-      (`__tests__/route-access-keys.test.ts:44-51`) only checks the key exists in the catalog. The
-      file itself records one past drift (`:20`). Consider asserting against the `x-exposure`
-      OpenAPI stamp instead of prose. `[R]`
-- [ ] Liveness gap in `getMembershipAccessState` — filed as NEWLY DISCOVERED RISK; see
-      [PRD-AUTH-CONTEXT.md](PRD-AUTH-CONTEXT.md) §5. Affects the two callers that never pass a guard.
+- [x] **FIXED** `quote-create-sheet.tsx:77` — `defaultExpiryDate` now calls `formatDateOnly(d)`, which
+      builds the calendar date in local time. One line plus an import.
+- [x] **DONE** `auth-passwordless.service.ts` split into `auth-email-verification.service.ts` (98) ·
+      `auth-magic-link.service.ts` (180) · `auth-email-otp.service.ts` (141) · `auth-passwordless.utils.ts`
+      (71, holding the genuinely shared `findOrCreateUser`/`generateToken`/`serializeEmailError`).
+      **Orchestrator correction:** the lane kept `AuthPasswordlessService` as a 48-line coordinator
+      forwarding all six methods — the exact facade C11 deleted. It existed only because my brief did not
+      give the lane `auth.controller.ts`; a lane artifact, not a constraint. The controller now injects the
+      three services and the coordinator is deleted.
+- [x] **Found by the full suite, not by typecheck:** `notification-delivery-class.spec.ts` matches
+      `/\b[A-Za-z]*EmailService\b/` to find direct email callers — deliberately loose, so it catches the
+      module-owned wrappers (`AutomationEmailService`, `CrmOutboundEmailService`, `ClientsEmailService`).
+      `AuthVerifyEmailService` collided with it and dragged `auth.controller.ts` into the inventory though
+      it sends no mail. Renamed to `AuthEmailVerificationService` (a better name: it is the
+      email-verification flow, not an email sender) rather than loosening a gate or filing a false entry.
+- [x] **DONE** `route-access-extensions.ts` — the prose→machine gap is closed by making the claim a
+      **structured field**. `backendRoute` names the operation; the test reads `x-permission` from the
+      vendored `contracts/openapi.json` and fails on a mismatch. The brief's premise was wrong and the lane
+      said so: **5** entries claim a specific backend gate, not ~24, and there are **23** entries, not 24.
+      The other 18 justify a key choice and are already covered by the key-exists assertion.
+- [x] **FIXED — the liveness gap, at the two callers that lack a guard, not in the resolver.**
+      See [PRD-AUTH-CONTEXT.md](PRD-AUTH-CONTEXT.md) §5.
 
 ## Explicitly settled — do not re-raise
 

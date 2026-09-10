@@ -61,6 +61,41 @@ describe("route-access registry keys", () => {
     expect(ghosts).toEqual([]);
   });
 
+  it("each backendRoute entry carries the same permission the backend operation declares (x-permission in contracts/openapi.json)", () => {
+    // x-permission is an internal stamp, read from the vendored artifact, not a published contract.
+    const OPENAPI_PATH = path.resolve(__dirname, "../../../../contracts/openapi.json");
+    type OpenApiDoc = {
+      paths: Record<string, Record<string, { "x-permission"?: string } | undefined> | undefined>;
+    };
+    const doc = JSON.parse(fs.readFileSync(OPENAPI_PATH, "utf8")) as OpenApiDoc;
+    const mismatches: string[] = [];
+    for (const entry of ROUTE_ACCESS_EXTENSIONS) {
+      if (!entry.backendRoute) continue;
+      const { method, path: backendPath } = entry.backendRoute;
+      const op = doc.paths[backendPath]?.[method];
+      const xPermission = op?.["x-permission"];
+      if (typeof xPermission !== "string") {
+        mismatches.push(
+          `${entry.prefix}: ${method.toUpperCase()} ${backendPath} has no x-permission in contracts/openapi.json`,
+        );
+        continue;
+      }
+      const frontendKey = entry.permission;
+      if (frontendKey === undefined) {
+        mismatches.push(`${entry.prefix}: has backendRoute but no permission field`);
+        continue;
+      }
+      const match = Array.isArray(frontendKey)
+        ? frontendKey.some((key) => key === xPermission)
+        : frontendKey === xPermission;
+      if (!match)
+        mismatches.push(
+          `${entry.prefix}: frontend "${String(frontendKey)}" !== backend x-permission "${xPermission}" on ${method.toUpperCase()} ${backendPath}`,
+        );
+    }
+    expect(mismatches).toEqual([]);
+  });
+
   it("never contradicts navigation for a route navigation already owns", () => {
     const conflicts: string[] = [];
     for (const route of routes) {

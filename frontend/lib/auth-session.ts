@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { randomUUID } from "crypto";
 import { decodeJwt, SignJWT } from "jose";
-import type { Plan } from "@/lib/billing/feature-gates";
+import { sessionDataSchema, type SessionData } from "@/lib/auth-session-schema";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { isRecord } from "@/lib/is-record";
@@ -90,25 +90,6 @@ export async function exchangeSessionForBackendJwt(
   }
 }
 
-export interface SessionData {
-  userId: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  name: string | null;
-  image: string | null;
-  role: string | null;
-  isActive: boolean;
-  orgId: string | null;
-  isOrgOwner: boolean;
-  enabledModules: string[];
-  plan: Plan | null;
-  orgOnboardingCompletedAt: string | null;
-  userOnboardingCompletedAt: string | null;
-  organizationAccess: "active" | "suspended" | "none";
-  suspendedOrganizationName: string | null;
-}
-
 export async function fetchSessionData(userId: string): Promise<SessionData | null> {
   const attempts = 2;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -123,7 +104,8 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
       clearTimeout(timeout);
       if (!res.ok) continue;
       const body: unknown = await res.json();
-      return unwrapBackend<SessionData>(body);
+      const parsed = sessionDataSchema.safeParse(unwrapBackend<unknown>(body));
+      if (parsed.success) return parsed.data;
     } catch {
       clearTimeout(timeout);
     }

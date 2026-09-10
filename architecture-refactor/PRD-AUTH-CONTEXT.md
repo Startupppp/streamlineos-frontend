@@ -179,7 +179,7 @@ thrown `TypeError` deep inside a guard, which reads as an environment problem ra
       passed only because the missing dependency was never reached. After a signature change, grep
       `test/` by hand.
 
-## 5. Filed, not fixed — NEWLY DISCOVERED RISK
+## 5. FIXED 2026-09-10 — was: filed, not fixed
 
 `AccessPermissionResolver.getMembershipAccessState` (`access-permission.resolver.ts:356-383`)
 queries `organizationMembers` alone and treats `status === "ACTIVE"` as active. It never checks
@@ -193,4 +193,24 @@ for the two callers that never pass a guard:
 - `WorkflowsCronController` — `@Public()`, cron-secret only, resolves for a stored `triggeredBy`
 
 Concrete failure: a deactivated or deleted user's queued export or scheduled workflow continues to
-resolve permissions as if the account were live. Needs its own audit; not folded into this change.
+resolve permissions as if the account were live.
+
+### How it was fixed, and the wrong fix that was tried first
+
+- [x] **`HrExportJobsService.resolveExecutionScope`** — deleted its hand-rolled `organizationMembers`
+      read (which checked `status === "ACTIVE"` and nothing else) and now calls
+      `MembershipStateService.resolve`, which returns `active`/`isOwner`/`role`/`membershipId` — every
+      field the hand-built actor needed, with all three liveness dimensions checked.
+- [x] **`WorkflowRunnerService.runOne`** — resolves the trigger's membership state before
+      `resolveUserPermissions` and fails the execution rather than running as a dead account.
+      It logs who it refused; a `failed` execution is visible, a silent grant is not.
+- [x] **REJECTED, after building it: adding the liveness join to `AccessPermissionResolver`.** It
+      typechecked and read well, and it was wrong twice over. It forked liveness into a **second
+      definition** competing with `MembershipStateService` (§4: one owner), and it broke **14 access
+      spec files** whose doubles model `organizationMembers.findFirst` — every one of which would have
+      had to be rewritten to keep asserting the same thing. In-request the resolver is already covered,
+      because `JwtAuthGuard` checks liveness first; the defect was only ever the two paths that pass no
+      guard. Fixing it at those two closes the whole gap and adds no second answer. Reverted in full.
+- [x] Dead field removed while there: `MembershipAccessState.exists` had **zero** readers.
+- [x] Constructor arity: typecheck caught 15 spec sites across 6 files; `test/` is not typechecked, so
+      `test/security/bola-export-download.spec.ts` was found by the §8 hand-grep rule and fixed.

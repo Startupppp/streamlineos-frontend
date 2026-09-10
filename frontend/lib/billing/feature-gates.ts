@@ -6,7 +6,7 @@
  * Consistency is covered by `lib/__tests__/feature-gates-consistency.test.ts`.
  */
 
-const PLANS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
+export const PLANS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
 export type Plan = (typeof PLANS)[number];
 
 const FEATURES = [
