@@ -253,12 +253,6 @@ export const accessAndCrmQueryKeys = {
       [...base, "contactRoles", "list", contactId, params] as const,
   },
 
-  contactDuplicates: {
-    all: [...base, "contactDuplicates"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "contactDuplicates", "list", params] as const,
-  },
-
   customer360: {
     all: [...base, "customer360"] as const,
     company: (companyId: number) =>

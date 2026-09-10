@@ -31,7 +31,7 @@ import {
   ContactSelectionBar,
   useContactMergeSelection,
 } from "./contact-merge-selection";
-import { ContactMergeDialog } from "./detail/contact-merge-dialog";
+import { PartyMergeDialog } from "@/features/party/duplicates/party-merge-dialog";
 import {
   ContactActionsMenu,
   useEnrichContact,
@@ -45,7 +45,13 @@ function stopRowClick(event: React.MouseEvent) {
 
 export function ContactListPage() {
   const canManageContacts = useCan("crm:contacts:manage");
-  const canMergeContacts = useCan("crm:contacts:merge");
+  /*
+   * The party key, because merging is `POST /party/merges` — a contact is an
+   * alias for a party, and the contact-grain endpoint that took the numbers is
+   * gone. CRM administers the `party` namespace, so anyone who could merge a
+   * contact already holds this.
+   */
+  const canMergeContacts = useCan("party:merges:manage");
   const canViewContacts = useCan("crm:contacts:view");
 
   const router = useRouter();
@@ -314,12 +320,11 @@ export function ContactListPage() {
       ) : null}
 
       {canMergeContacts && merge.pair ? (
-        <ContactMergeDialog
+        <PartyMergeDialog
           pair={merge.pair}
-          currentContactId={merge.pair.contact1.id}
           open={merge.isOpen}
           onOpenChange={merge.onOpenChange}
-          onMergeComplete={merge.clear}
+          onMerged={merge.clear}
         />
       ) : null}
     </PageWrapper>

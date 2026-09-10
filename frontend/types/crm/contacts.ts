@@ -22,6 +22,16 @@ export interface CrmOrganization {
 
 export interface Contact {
   id: number;
+  /**
+   * The record this contact id is an alias for.
+   *
+   * A contact is one row in `contact_party_map` — a number the URLs, vCards and
+   * CSV columns still speak, pointing at a `business_parties` row that holds
+   * every field on this type. Carried because merging duplicates happens at
+   * that grain, `POST /party/merges`, and the screens offering it are addressed
+   * by contact id.
+   */
+  partyId: string;
   orgId: string;
   name: string;
   email: string | null;

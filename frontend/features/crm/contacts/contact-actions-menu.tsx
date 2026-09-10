@@ -62,7 +62,7 @@ export function ContactActionsMenu({
 }: ContactActionsMenuProps) {
   const router = useRouter();
   const canManageContacts = useCan("crm:contacts:manage");
-  const canMergeContacts = useCan("crm:contacts:merge");
+  const canMergeContacts = useCan("party:merges:manage");
   const canUseCrmAi = useCan("crm:ai:use");
 
   const handleView = useCallback(() => {

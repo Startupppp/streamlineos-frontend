@@ -24,7 +24,7 @@ import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline
 import { ContactRelatedDeals } from "@/features/crm/contacts/detail/contact-related-deals";
 import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
-import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
+import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-duplicate-banner";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -165,7 +165,7 @@ export default function ContactDetailPage({
       }
     >
       <div className="flex min-w-0 flex-col gap-gap-section">
-        <ContactDuplicateBanner contactId={id} />
+        <ContactDuplicateBanner partyId={contact.partyId} />
 
         <RecordDetail layout={layout} record={record} showTitle={false} />
 

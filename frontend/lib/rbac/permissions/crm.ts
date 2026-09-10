@@ -61,7 +61,6 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:incentives:approve", resource: "crm:incentives", action: "approve", description: "Approve incentives" },
   { name: "crm:contacts:view", resource: "crm:contacts", action: "view", description: "View CRM contacts" },
   { name: "crm:contacts:manage", resource: "crm:contacts", action: "manage", description: "Create and manage CRM contacts" },
-  { name: "crm:contacts:merge", resource: "crm:contacts", action: "merge", description: "Merge duplicate CRM contacts" },
   { name: "crm:organizations:view", resource: "crm:organizations", action: "view", description: "View CRM companies" },
   { name: "crm:organizations:manage", resource: "crm:organizations", action: "manage", description: "Create and manage CRM companies" },
   { name: "crm:organizations:merge", resource: "crm:organizations", action: "merge", description: "Merge duplicate CRM companies" },
