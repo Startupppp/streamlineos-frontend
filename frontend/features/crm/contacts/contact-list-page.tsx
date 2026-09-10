@@ -25,6 +25,7 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PAGE_SIZE } from "./contacts-constants";
+import { ConsentGapNotice } from "./consent-gap-notice";
 import { ContactSheet } from "./contact-sheet";
 import { ContactDeleteDialog } from "./contact-delete-dialog";
 import {
@@ -254,6 +255,7 @@ export function ContactListPage() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-toolbar">
+        <ConsentGapNotice />
         {canMergeContacts ? <ContactSelectionBar selection={merge} /> : null}
 
         {isLoading ? (
