@@ -131,7 +131,19 @@ interface StockTransactionsResult {
   nextCursor: string | null;
 }
 
-interface RawStockLevel {
+/**
+ * The wire shape of `GET /inventory/stock`, exactly as the API sends it.
+ *
+ * Exported so the backend's response-shape drift gate
+ * (`src/modules/inventory/__tests__/inventory-response-shape-drift.spec.ts`) can
+ * read it. It compares this interface's own members against the service's
+ * `select()` projection: `apiClient.get<T>()` is an assertion about a payload,
+ * not a fact `tsc` can check, and this endpoint spent its whole life returning
+ * the driver's snake_case column names to a hook that reads camelCase --
+ * `NaN` in every quantity column and a dash for every name -- with both repos
+ * compiling green throughout.
+ */
+export interface RawStockLevel {
   id: number;
   onHand: string;
   committed: string;
