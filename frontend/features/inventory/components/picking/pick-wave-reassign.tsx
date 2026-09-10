@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { toast } from "sonner";
 import { UserRoundCogIcon } from "@animateicons/react/lucide";
 import { MemberPicker } from "@/components/shared";
@@ -12,13 +12,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useCan } from "@/hooks/api/access";
 import { useReassignPickWave, WAVE_WRITE_KEY } from "@/hooks/api/inventory/picking";
-import {
-  useWarehouseAssignees,
-  WAREHOUSE_ASSIGNMENT_PERMISSION,
-} from "@/hooks/api/inventory/warehouses";
-
-/** `listWarehouseUsersSchema` caps `limit` at 100; asking for more is a 400. */
-const ROSTER_LIMIT = 100;
+import { useWarehouseRoster } from "@/features/inventory/hooks/use-warehouse-roster";
 
 interface PickWaveReassignProps {
   pickListId: number;
@@ -74,28 +68,12 @@ export function PickWaveReassign({
   finished,
 }: PickWaveReassignProps) {
   const canReassign = useCan(WAVE_WRITE_KEY);
-  const canReadRoster = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
   const reassign = useReassignPickWave();
-  const roster = useWarehouseAssignees(
-    warehouseId ?? 0,
-    { page: 1, limit: ROSTER_LIMIT },
-    { enabled: canReassign && !finished },
-  );
-
-  const candidates = useMemo(
-    () =>
-      (roster.data?.items ?? [])
-        .filter((assignee) => assignee.userId !== assignedTo)
-        .map((assignee) => ({
-          id: assignee.userId,
-          name: assignee.name,
-          firstName: assignee.firstName,
-          lastName: assignee.lastName,
-          email: assignee.email,
-          image: assignee.image,
-        })),
-    [roster.data?.items, assignedTo],
-  );
+  const roster = useWarehouseRoster(warehouseId, {
+    enabled: canReassign && !finished,
+    exclude: assignedTo,
+  });
+  const candidates = roster.members;
 
   function handleSelect(userId: string | null): void {
     if (!userId) return;
@@ -113,7 +91,7 @@ export function PickWaveReassign({
   }
 
   function handleRetry(): void {
-    void roster.refetch();
+    roster.refetch();
   }
 
   // Denied, and the sheet already says why it is read-only. A control the
@@ -128,7 +106,7 @@ export function PickWaveReassign({
     );
   }
 
-  if (!canReadRoster) {
+  if (!roster.canRead) {
     return (
       <ReassignNote>
         Handing this wave to someone else needs warehouse-assignment access.

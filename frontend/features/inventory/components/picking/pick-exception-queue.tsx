@@ -28,6 +28,7 @@ import {
   PICK_EXCEPTION_STATUS_LABEL,
 } from "@/features/inventory/lib/inventory-status";
 import { ResolveExceptionDialog } from "./resolve-exception-dialog";
+import { ExceptionOwnerCell } from "./exception-owner-cell";
 
 interface PickExceptionQueueProps {
   status: PickExceptionStatus | undefined;
@@ -111,9 +112,7 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
     {
       key: "ownerName",
       header: "Owner",
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground">{row.ownerName ?? "Unassigned"}</span>
-      ),
+      cell: (row) => <ExceptionOwnerCell exception={row} />,
       className: "hidden md:table-cell",
       headerClassName: "hidden md:table-cell",
     },
@@ -201,8 +200,9 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
               </Badge>
             </div>
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="truncate">
-                {row.pickNumber} · {row.ownerName ?? "Unassigned"}
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="truncate">{row.pickNumber} ·</span>
+                <ExceptionOwnerCell exception={row} />
               </span>
               <span className="shrink-0 font-mono tabular-nums">
                 {Number(row.quantityPicked).toFixed(2)} /{" "}
