@@ -1,4 +1,4 @@
-import { matchesOrgModule, orgModuleAliasesFor } from "./module-vocabulary";
+import { matchesOrgModule, orgModuleAliasesFor } from "./org-module-keys";
 
 describe("orgModuleAliasesFor", () => {
   it("treats build and the legacy projects spelling as the same module", () => {

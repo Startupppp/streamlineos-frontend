@@ -1,6 +1,6 @@
 import { LayoutDashboard, Users, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
 import type { ComponentType } from "react";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
 import type { ProductKey } from "./sidebar-nav-types";
 

@@ -9,7 +9,7 @@ import {
   normalizeOrgModuleKey,
   orgModuleAliasesFor,
   matchesOrgModule,
-} from "./module-vocabulary";
+} from "./org-module-keys";
 
 describe("manifest shape", () => {
   it("validates and exposes all 23 registry modules", () => {

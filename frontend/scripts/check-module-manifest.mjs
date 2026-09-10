@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   BACKEND_ROOT,
   backendAvailable,
@@ -40,7 +40,17 @@ function parseRegistryVersion(content) {
   return match ? Number(match[1]) : null;
 }
 
-function parseRegistryModules(content) {
+function parseAdministersNamespaces(line) {
+  if (/\badministersNamespaces:\s*NONE\b/.exec(line)) return [];
+  const arrayMatch = /\badministersNamespaces:\s*\[([^\]]*)\]/.exec(line);
+  if (!arrayMatch) return undefined;
+  return arrayMatch[1]
+    .split(",")
+    .map((entry) => entry.trim().replace(/^["']|["']$/g, ""))
+    .filter((entry) => entry.length > 0);
+}
+
+export function parseRegistryModules(content) {
   const registryStart = content.indexOf("MODULE_REGISTRY = [");
   if (registryStart === -1) return null;
 
@@ -61,6 +71,9 @@ function parseRegistryModules(content) {
 
       const routeMatch = /\broute:\s*(?:"([^"]+)"|(null))/.exec(line);
       if (routeMatch) current.route = routeMatch[1] ?? null;
+
+      const namespaces = parseAdministersNamespaces(line);
+      if (namespaces !== undefined) current.administersNamespaces = namespaces;
     }
 
     const closesObject =
@@ -93,7 +106,7 @@ function parseLoaderExpectedVersion(content) {
   return match ? Number(match[1]) : null;
 }
 
-function checkRegistryAgreement(manifest, registryContent) {
+export function checkRegistryAgreement(manifest, registryContent) {
   const violations = [];
 
   const registryVersion = parseRegistryVersion(registryContent);
@@ -149,6 +162,52 @@ function checkRegistryAgreement(manifest, registryContent) {
     if (registryModule.route !== manifestModule.route) {
       violations.push(
         `  [rule-1] Module "${registryModule.id}" route mismatch: manifest="${manifestModule.route}", registry="${registryModule.route}"`,
+      );
+    }
+  }
+
+  violations.push(...compareAdministersNamespaces(registryModules, manifest.modules));
+
+  return violations;
+}
+
+export function compareAdministersNamespaces(registryModules, manifestModules) {
+  const violations = [];
+  const registryById = new Map(registryModules.map((m) => [m.id, m]));
+  const manifestById = new Map(manifestModules.map((m) => [m.id, m]));
+  const allIds = new Set([...registryById.keys(), ...manifestById.keys()]);
+
+  for (const id of allIds) {
+    const registryModule = registryById.get(id);
+    const manifestModule = manifestById.get(id);
+
+    if (!registryModule) {
+      violations.push(
+        `  [rule-5] Module "${id}" administersNamespaces=[${(manifestModule.administersNamespaces ?? []).join(", ")}] is in the vendored manifest but not in the backend registry`,
+      );
+      continue;
+    }
+    if (!manifestModule) {
+      violations.push(
+        `  [rule-5] Module "${id}" administersNamespaces=[${(registryModule.administersNamespaces ?? []).join(", ")}] is in the backend registry but not in the vendored manifest`,
+      );
+      continue;
+    }
+    if (registryModule.administersNamespaces === undefined) {
+      violations.push(
+        `  [rule-5] Could not parse administersNamespaces for registry module "${id}" — the parser found neither NONE nor an array literal, regenerate the module list check`,
+      );
+      continue;
+    }
+
+    const registrySet = new Set(registryModule.administersNamespaces);
+    const manifestSet = new Set(manifestModule.administersNamespaces ?? []);
+    const matches =
+      registrySet.size === manifestSet.size &&
+      [...registrySet].every((namespace) => manifestSet.has(namespace));
+    if (!matches) {
+      violations.push(
+        `  [rule-5] Module "${id}" administersNamespaces mismatch: registry=[${[...registrySet].sort().join(", ")}], vendored manifest=[${[...manifestSet].sort().join(", ")}] — regenerate frontend/lib/module-manifest.json via backend/src/scripts/export-module-manifest.ts, never hand-edit it`,
       );
     }
   }
@@ -407,60 +466,68 @@ function runSelfTest() {
   if (failed > 0) process.exit(1);
 }
 
-if (process.argv.includes("--self-test")) {
-  runSelfTest();
-  process.exit(0);
-}
+function runCheck() {
+  const violations = [];
 
-const violations = [];
+  const manifest = readJson(FRONTEND_MANIFEST);
 
-const manifest = readJson(FRONTEND_MANIFEST);
-
-let registryCompared = false;
-if (BACKEND_REGISTRY === null || !existsSync(BACKEND_REGISTRY)) {
-  reportBackendUnreachable(
-    "check-module-manifest",
-    "rule-1 (backend registry agreement)",
-  );
-} else {
-  const registryContent = readFileSync(BACKEND_REGISTRY, "utf8");
-  const registryEntries = (registryContent.match(/\bid:\s*"/g) ?? []).length;
-  if (registryEntries < 5) {
-    console.error(
-      `INCONCLUSIVE — check-module-manifest: parsed ${registryEntries} entries from ${BACKEND_REGISTRY} (floor 5); the registry parser is broken, so rule-1 proves nothing.`,
+  let registryCompared = false;
+  if (BACKEND_REGISTRY === null || !existsSync(BACKEND_REGISTRY)) {
+    reportBackendUnreachable(
+      "check-module-manifest",
+      "rule-1 (backend registry agreement)",
     );
-    process.exit(2);
+  } else {
+    const registryContent = readFileSync(BACKEND_REGISTRY, "utf8");
+    const registryEntries = (registryContent.match(/\bid:\s*"/g) ?? []).length;
+    if (registryEntries < 5) {
+      console.error(
+        `INCONCLUSIVE — check-module-manifest: parsed ${registryEntries} entries from ${BACKEND_REGISTRY} (floor 5); the registry parser is broken, so rule-1 proves nothing.`,
+      );
+      process.exit(2);
+    }
+    violations.push(...checkRegistryAgreement(manifest, registryContent));
+    registryCompared = true;
   }
-  violations.push(...checkRegistryAgreement(manifest, registryContent));
-  registryCompared = true;
+
+  if (!existsSync(SIDEBAR_PRODUCTS)) {
+    console.error(`  [ERROR] Missing required file: ${SIDEBAR_PRODUCTS}`);
+    process.exit(1);
+  }
+  const sidebarContent = readFileSync(SIDEBAR_PRODUCTS, "utf8");
+  violations.push(...checkProductKeySet(manifest, sidebarContent));
+  violations.push(...checkProductHrefs(manifest, sidebarContent));
+
+  if (!existsSync(MANIFEST_LOADER)) {
+    console.error(`  [ERROR] Missing required file: ${MANIFEST_LOADER}`);
+    process.exit(1);
+  }
+  const loaderContent = readFileSync(MANIFEST_LOADER, "utf8");
+  violations.push(...checkLoaderVersion(manifest, loaderContent));
+
+  if (violations.length === 0) {
+    console.log(
+      registryCompared
+        ? "✔  Module manifest is consistent."
+        : "PARTIAL — module manifest is consistent with the frontend surfaces, but rule-1 (backend registry agreement) did NOT run.",
+    );
+    process.exit(0);
+  } else {
+    console.error(
+      `✖  ${violations.length} module manifest violation(s) found:`,
+    );
+    for (const v of violations) console.error(v);
+    process.exit(1);
+  }
 }
 
-if (!existsSync(SIDEBAR_PRODUCTS)) {
-  console.error(`  [ERROR] Missing required file: ${SIDEBAR_PRODUCTS}`);
-  process.exit(1);
-}
-const sidebarContent = readFileSync(SIDEBAR_PRODUCTS, "utf8");
-violations.push(...checkProductKeySet(manifest, sidebarContent));
-violations.push(...checkProductHrefs(manifest, sidebarContent));
+const invokedDirectly =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 
-if (!existsSync(MANIFEST_LOADER)) {
-  console.error(`  [ERROR] Missing required file: ${MANIFEST_LOADER}`);
-  process.exit(1);
-}
-const loaderContent = readFileSync(MANIFEST_LOADER, "utf8");
-violations.push(...checkLoaderVersion(manifest, loaderContent));
-
-if (violations.length === 0) {
-  console.log(
-    registryCompared
-      ? "✔  Module manifest is consistent."
-      : "PARTIAL — module manifest is consistent with the frontend surfaces, but rule-1 (backend registry agreement) did NOT run.",
-  );
-  process.exit(0);
-} else {
-  console.error(
-    `✖  ${violations.length} module manifest violation(s) found:`,
-  );
-  for (const v of violations) console.error(v);
-  process.exit(1);
+if (invokedDirectly) {
+  if (process.argv.includes("--self-test")) {
+    runSelfTest();
+    process.exit(0);
+  }
+  runCheck();
 }

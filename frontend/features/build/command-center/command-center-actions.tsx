@@ -36,7 +36,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import type { ReactNode, RefObject } from "react";
 import { cn } from "@/lib/utils";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 import {
   COMMAND_CENTER_JUMP_LINKS,
   type CommandCenterJumpLink,

@@ -1,3 +1,4 @@
+import { MANIFEST } from "@/lib/module-manifest";
 import {
   administeringModuleOf,
   moduleOwningNamespace,
@@ -41,6 +42,16 @@ describe("administeringModuleOf (Simulate screen grouping)", () => {
   it("handles a key with no separator", () => {
     expect(administeringModuleOf("build")).toBe("build");
   });
+
+  it("returns a key with no separator unchanged even when it names no manifest module", () => {
+    expect(administeringModuleOf("totallyunknown")).toBe("totallyunknown");
+  });
+
+  it("returns the namespace unchanged when no module administers it", () => {
+    expect(administeringModuleOf("unknownnamespace:resource:action")).toBe(
+      "unknownnamespace",
+    );
+  });
 });
 
 describe("moduleOwningNamespace", () => {
@@ -53,4 +64,28 @@ describe("moduleOwningNamespace", () => {
     expect(moduleOwningNamespace("hr")).toBe("hr");
     expect(moduleOwningNamespace("unknown")).toBe("unknown");
   });
+});
+
+// MANIFEST-driven, so a namespace added to any module's administersNamespaces later is covered with no test edit.
+describe("no administered namespace can fall back to naive prefix grouping", () => {
+  const administeredNamespaces = MANIFEST.modules.flatMap((module) =>
+    module.administersNamespaces.map((namespace) => ({
+      namespace,
+      moduleId: module.id,
+    })),
+  );
+
+  it("the manifest currently declares at least one administered namespace to guard", () => {
+    expect(administeredNamespaces.length).toBeGreaterThan(0);
+  });
+
+  it.each(administeredNamespaces)(
+    "administeringModuleOf disagrees with key.split(':')[0] for namespace '$namespace' (administered by '$moduleId')",
+    ({ namespace, moduleId }) => {
+      const key = `${namespace}:resource:action`;
+      const naivePrefix = key.split(":")[0];
+      expect(administeringModuleOf(key)).toBe(moduleId);
+      expect(administeringModuleOf(key)).not.toBe(naivePrefix);
+    },
+  );
 });

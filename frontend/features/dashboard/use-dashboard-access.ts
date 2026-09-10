@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { homeSectionPermission } from "@/lib/home/home-sections";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface DashboardAccess {

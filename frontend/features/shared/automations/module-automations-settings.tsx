@@ -46,7 +46,7 @@ import {
 import { ACTION_TYPES } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 
 export type SectionModule = "hr" | "support" | "finance";
 

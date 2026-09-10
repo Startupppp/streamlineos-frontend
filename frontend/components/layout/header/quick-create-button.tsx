@@ -31,7 +31,7 @@ import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette"
 import { cn } from "@/lib/utils"
-import { matchesOrgModule } from "@/lib/module-vocabulary"
+import { matchesOrgModule } from "@/lib/org-module-keys"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import {
   QUICK_CREATE_GROUPS,

@@ -21,7 +21,7 @@
  */
 
 import { render } from "@testing-library/react";
-import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { RequireModule } from "@/components/auth/require-module";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 

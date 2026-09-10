@@ -1,4 +1,4 @@
-import { ORG_MODULE_NAME } from "@/lib/module-vocabulary";
+import { ORG_MODULE_NAME } from "@/lib/org-module-keys";
 import { HOME_NAV_GROUPS } from "./sidebar-home-nav";
 import {
   NAV_GROUPS,

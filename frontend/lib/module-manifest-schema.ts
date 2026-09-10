@@ -5,7 +5,7 @@
  * WIRE boundary, so deferring the schema module until the read runs costs
  * nothing: `apiClient` resolves the contract in parallel with the request and
  * parses the body exactly as before. This one guards `lib/module-manifest.json`,
- * a file compiled INTO the bundle, and `lib/module-vocabulary.ts` reads the
+ * a file compiled INTO the bundle, and `lib/org-module-keys.ts` reads the
  * parsed result at module scope to build the lookup maps `normalizeOrgModuleKey`
  * answers from. There is no later moment to defer to: the value has to exist
  * synchronously at import time, so a Zod schema here pins Zod's whole runtime

@@ -5,7 +5,7 @@ import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
-import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { getModuleCatalogEntry } from "@/lib/module-catalog";
 
 interface RequireModuleProps {

@@ -36,7 +36,7 @@ import {
   useTestSupportAutomation,
 } from "@/hooks/api/support-automations";
 import type { AutomationRule } from "@/hooks/api/automations";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 
 const SUPPORT_TRIGGER_OPTIONS = NON_CRM_TRIGGER_META.filter((t) => t.module === "support");
 
