@@ -84,9 +84,29 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * one — and the key has a catalogue entry in BOTH repos
  * (`lib/rbac/permissions/party.ts:11` and the backend's `permissions/party.ts:47`),
  * so `useCan` can answer it and the gate is real on both sides.
+ *
+ * Updated 2026-09-10 again, for three gates that named keys NO ROUTE ENFORCES —
+ * the inverse of the mismatches above, and caught by
+ * `pnpm check:navigation-permissions` rather than by reading.
+ *
+ *  - The group and **Overview** (/accounting) gated on `accounting:view`.
+ *    Nothing enforces it: `AccountingHubClient` reads `accounting:read`, and 14
+ *    routes require that. (`accounting:view` is still a real catalogue key,
+ *    granted by a role template and used by billing's own DashboardGate — it is
+ *    simply not what this destination checks.)
+ *  - **Debit notes** (/accounting/vendor-credits) gated on
+ *    `accounting:vendor-credits:read`. That page renders `ApDocumentsPage`,
+ *    which reads `useCan("accounting:payables:read")` and fetches AP documents,
+ *    whose routes all require that same key. The ONLY vendor-credit route in
+ *    the backend is a POST on `:manage`, so `:read` is enforced nowhere.
+ *
+ * That last one was wrong in both directions at once: it offered the link to
+ * somebody holding a key the page would refuse, and hid it from somebody
+ * holding the key the page actually wants. All three now name what their
+ * destination checks.
  */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "61a4d7173218caedbe54b8cb85004f947a08a5a698c19ec671aab9225425d9af";
+  "dd7568d00f697a3c4f4ec53908c72ec97b284a9445c60df0265adebd64baecd3";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

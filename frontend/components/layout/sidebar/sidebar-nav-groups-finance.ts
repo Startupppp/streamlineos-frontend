@@ -31,14 +31,18 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
     label: "Accounting & Finance",
     product: "finance",
     module: "finance",
-    requiredPermission: ["accounting:view", "payments:providers:view"],
+    // `accounting:read` and not `accounting:view`: no route enforces the
+    // latter, so the group offered itself on a key the server never checks.
+    requiredPermission: ["accounting:read", "payments:providers:view"],
     routes: [
       {
         label: "Overview",
         icon: Calculator,
         href: "/accounting",
         exact: true,
-        requiredPermission: "accounting:view",
+        // `AccountingHubClient` gates on `accounting:read`, and 14 routes
+        // enforce it. Aligned to the page, as three earlier nav corrections were.
+        requiredPermission: "accounting:read",
       },
       {
         label: "Set up",
@@ -111,7 +115,14 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "Debit notes",
             icon: RefreshCcw,
             href: "/accounting/vendor-credits",
-            requiredPermission: "accounting:vendor-credits:read",
+            // This page renders `ApDocumentsPage`, which reads
+            // `useCan("accounting:payables:read")` and fetches AP documents —
+            // whose routes all require that same key. Nothing enforces
+            // `accounting:vendor-credits:read`; the only vendor-credit route
+            // is a POST on `:manage`. So the old gate was wrong in BOTH
+            // directions: it showed the link to someone who would be refused,
+            // and hid it from someone who could use it.
+            requiredPermission: "accounting:payables:read",
           },
           {
             label: "Payments made",
