@@ -131,3 +131,32 @@ export function useRecordConsent() {
     },
   });
 }
+
+/**
+ * The way out, from the recipient's side.
+ *
+ * Unauthenticated on purpose: the token IS the authorisation, and the person
+ * holding it has no account here. `apiClient` sends the session cookie when
+ * there is one, which changes nothing — the route is `@Public()` and the
+ * backend records the withdrawal as `UNSUBSCRIBE_LINK` regardless of who is
+ * signed in.
+ *
+ * The body form (`POST /crm/consent/unsubscribe` with the token in the body) is
+ * used rather than the path form the email footer points at, because the two
+ * are addressed to different readers. The path form answers a GET, which means
+ * a mail-client link scanner or a corporate URL-rewriter following the link
+ * opts the person out before they have decided anything. Requiring a click on
+ * this page, which then POSTs, makes the withdrawal an act rather than a side
+ * effect of the email being delivered.
+ *
+ * The response is deliberately identical for a valid and an invalid token — the
+ * endpoint refuses to be an oracle for whether a contact exists — so this hook
+ * cannot and must not try to report "that link was wrong".
+ */
+export function usePublicUnsubscribe(token: string) {
+  return useMutation({
+    mutationKey: ["crmConsent", "unsubscribe", token] as const,
+    mutationFn: () =>
+      apiClient.post<{ success: boolean }>("/crm/consent/unsubscribe", { token }),
+  });
+}
