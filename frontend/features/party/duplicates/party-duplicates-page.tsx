@@ -61,7 +61,7 @@ function CandidateRow({
     <li className={cn(CONTENT_PANEL_SOLID, "flex flex-col gap-3 p-4")}>
       <div className="flex flex-wrap items-center gap-2">
         {candidate.signals.map((signal) => (
-          <Badge key={signal} variant="outline" className="h-5 px-2 py-0.5 text-[10px]">
+          <Badge key={signal} variant="outline" className="h-5 px-2 py-0.5 text-micro">
             {signalLabel(signal)}
           </Badge>
         ))}
@@ -69,13 +69,13 @@ function CandidateRow({
           <Badge
             key={blocker}
             variant="outline"
-            className="h-5 border-status-warning-rule bg-status-warning-surface px-2 py-0.5 text-[10px] text-status-warning-ink"
+            className="h-5 border-status-warning-rule bg-status-warning-surface px-2 py-0.5 text-micro text-status-warning-ink"
             title="A reason these may not be the same record"
           >
             {signalLabel(blocker)} differs
           </Badge>
         ))}
-        <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+        <span className="ml-auto font-mono text-dense tabular-nums text-muted-foreground">
           {Math.round(candidate.score * 100)}% match
         </span>
       </div>

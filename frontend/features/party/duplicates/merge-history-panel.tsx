@@ -63,7 +63,7 @@ export function MergeHistoryPanel() {
     <section className={cn(CONTENT_PANEL_SOLID, "flex flex-col gap-3 p-4")}>
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold">Merge history</h2>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Undo a merge here at any time
         </p>
       </div>
@@ -111,12 +111,12 @@ export function MergeHistoryPanel() {
                       className="min-w-0 text-xs font-medium"
                     />
                   </div>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 flex items-center gap-1.5 text-dense text-muted-foreground">
                     <span className="tabular-nums">{formatShortDate(record.mergedAt)}</span>
                     {record.decidedBy === "SYSTEM" ? (
                       <Badge
                         variant="outline"
-                        className="h-4 px-1.5 py-0 text-[9px]"
+                        className="h-4 px-1.5 py-0 text-micro"
                         title="Merged automatically, without being asked"
                       >
                         Automatic
@@ -134,7 +134,7 @@ export function MergeHistoryPanel() {
                 {record.revertedAt ? (
                   <Badge
                     variant="outline"
-                    className="h-5 shrink-0 px-2 py-0.5 text-[10px] text-muted-foreground"
+                    className="h-5 shrink-0 px-2 py-0.5 text-micro text-muted-foreground"
                   >
                     Undone
                   </Badge>

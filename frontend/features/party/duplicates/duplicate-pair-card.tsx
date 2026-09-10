@@ -46,16 +46,16 @@ export function DuplicatePartyCard({
         </span>
         <div className="min-w-0 flex-1">
           <TruncatedText text={side.name} className="text-sm font-medium" />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Added {formatShortDate(side.createdAt)}
           </p>
         </div>
         {isSurvivor ? (
-          <Badge className="h-5 shrink-0 px-2 py-0.5 text-[10px]">Keeping</Badge>
+          <Badge className="h-5 shrink-0 px-2 py-0.5 text-micro">Keeping</Badge>
         ) : (
           <Badge
             variant="outline"
-            className="h-5 shrink-0 px-2 py-0.5 text-[10px] text-muted-foreground"
+            className="h-5 shrink-0 px-2 py-0.5 text-micro text-muted-foreground"
           >
             Merging away
           </Badge>
@@ -64,18 +64,18 @@ export function DuplicatePartyCard({
 
       <dl className="mt-3 flex flex-col gap-1">
         <div className="flex items-baseline gap-2">
-          <dt className="w-14 shrink-0 text-[11px] text-muted-foreground">Email</dt>
-          <dd className="min-w-0 flex-1 text-[11px]">
+          <dt className="w-14 shrink-0 text-dense text-muted-foreground">Email</dt>
+          <dd className="min-w-0 flex-1 text-dense">
             {side.email ? (
-              <TruncatedText text={side.email} className="text-[11px]" />
+              <TruncatedText text={side.email} className="text-dense" />
             ) : (
               <span className="text-muted-foreground">—</span>
             )}
           </dd>
         </div>
         <div className="flex items-baseline gap-2">
-          <dt className="w-14 shrink-0 text-[11px] text-muted-foreground">Phone</dt>
-          <dd className="min-w-0 flex-1 font-mono text-[11px] tabular-nums">
+          <dt className="w-14 shrink-0 text-dense text-muted-foreground">Phone</dt>
+          <dd className="min-w-0 flex-1 font-mono text-dense tabular-nums">
             {side.phone ?? <span className="font-sans text-muted-foreground">—</span>}
           </dd>
         </div>

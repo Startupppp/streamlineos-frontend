@@ -106,7 +106,7 @@ export function PartyMergeDialog({
       onConfirm={handleConfirm}
       content={
         <div className="flex flex-col gap-3">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Choose the record to keep. Where the two disagree, the kept record&apos;s
             details win.
           </p>
