@@ -262,6 +262,14 @@ export const accessAndCrmQueryKeys = {
       the email number, which is the one mistake this registry exists to stop.
     */
     missing: (channel: string) => [...base, "contactConsent", "missing", channel] as const,
+    /*
+      The limit is in the key for the same reason the channel is: it changes the
+      result. A cache keyed without it would answer a request for twenty events
+      with the five somebody else asked for, and the caller has no way to see
+      that the trail was truncated.
+    */
+    events: (contactId: number, limit: number) =>
+      [...base, "contactConsent", "events", contactId, limit] as const,
   },
 
   customer360: {

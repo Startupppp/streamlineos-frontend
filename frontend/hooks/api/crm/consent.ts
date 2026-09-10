@@ -7,7 +7,8 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { ConsentChannel } from "@/lib/renderer/crm/contact-consent-layout";
 
 export interface ContactConsentRow {
-  id: number;
+  /* A uuid. An earlier version of this interface said `number` and was wrong. */
+  id: string;
   contactId: number;
   channel: ConsentChannel;
   status: "OPTED_IN" | "OPTED_OUT" | "UNKNOWN";
@@ -50,6 +51,50 @@ export function useMissingConsentCount(channel: ConsentChannel, enabled = true) 
       apiClient.get<{ channel: string; count: number }>("/crm/consent/missing", { channel }),
     staleTime: 5 * 60_000,
     enabled,
+  });
+}
+
+export interface ContactConsentEvent {
+  id: string;
+  contactId: number;
+  channel: ConsentChannel;
+  /* Null on the first event for a channel: there was no previous position. */
+  fromStatus: "OPTED_IN" | "OPTED_OUT" | "UNKNOWN" | null;
+  toStatus: "OPTED_IN" | "OPTED_OUT" | "UNKNOWN";
+  legalBasis: "CONSENT" | "CONTRACT" | "LEGITIMATE_INTEREST" | "LEGAL_OBLIGATION" | null;
+  source: "USER_ENTRY" | "IMPORT" | "API" | "ENRICHMENT" | "UNSUBSCRIBE_LINK" | "WEB_FORM";
+  sourceDetail: string | null;
+  recordedByUserId: string | null;
+  /* Null for a system event, and null for a colleague who has since left. */
+  recordedByName: string | null;
+  createdAt: string;
+}
+
+/** Matches the API default; the API caps it at 100. */
+export const CONSENT_EVENTS_LIMIT = 20;
+
+/**
+ * The evidence trail: every change, not the current position.
+ *
+ * `useContactConsent` above answers "what may we send them now" — at most one
+ * row per channel, because the unique index allows one and the write upserts.
+ * This answers "when did that become true, on what basis, at whose hand", which
+ * is the question a DPDP or GDPR review actually asks. The rows were being
+ * written on every change from the beginning and no service method or route
+ * read them, so the product held the evidence and could not produce it.
+ *
+ * Not fetched until the history is opened: the trail is unbounded and most
+ * visits to a contact never ask for it.
+ */
+export function useContactConsentEvents(contactId: number, enabled: boolean) {
+  return useGatedQuery("crm:contacts:view", {
+    queryKey: queryKeys.contactConsent.events(contactId, CONSENT_EVENTS_LIMIT),
+    queryFn: () =>
+      apiClient.get<ContactConsentEvent[]>(`/crm/consent/contacts/${contactId}/events`, {
+        limit: CONSENT_EVENTS_LIMIT,
+      }),
+    staleTime: 2 * 60_000,
+    enabled: enabled && contactId > 0,
   });
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { ActivityIcon, PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { CONTACT_CONSENT_LAYOUT } from "@/lib/renderer/crm/contact-consent-layou
 import { useContactConsent, useRecordConsent, type ContactConsentRow } from "@/hooks/api/crm";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { ContactConsentHistory } from "./contact-consent-history";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ContactConsentCardProps {
@@ -32,17 +33,20 @@ interface ContactConsentCardProps {
  * `uniq_crm_consent_org_contact_channel` permits one row per contact per channel
  * and `record()` upserts onto it.
  *
- * It is deliberately not called a history, because the history is somewhere else
- * and is not reachable. `record()` also appends to `crm_contact_consent_events`,
- * an immutable trail that no service method and no route reads — so the product
- * records the evidence a DPDP audit would ask for and has no way to produce it.
- * Showing that trail needs a read endpoint first.
+ * It is deliberately not called a history, because the history is a different
+ * thing and lives behind the History button: `record()` also appends to
+ * `crm_contact_consent_events`, an immutable trail of every change. That trail
+ * had no service method and no route when this card was written, so the product
+ * recorded the evidence a DPDP audit asks for and could not produce it; the read
+ * endpoint exists now and `ContactConsentHistory` shows it.
  */
 export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
   const layout = useTenantLayout(CONTACT_CONSENT_LAYOUT);
   const canManage = useCan("crm:contacts:manage");
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const history = useAnimatedIcon();
   const [addOpen, setAddOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const { data: rows, isLoading, isError, error, refetch } = useContactConsent(contactId);
   const record = useRecordConsent();
@@ -68,6 +72,7 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleOpenAdd = useCallback(() => setAddOpen(true), []);
+  const handleOpenHistory = useCallback(() => setHistoryOpen(true), []);
   const handleCloseAdd = useCallback(() => setAddOpen(false), []);
 
   const handleSubmit = useCallback(
@@ -111,18 +116,36 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between border-b px-4 py-3">
         <CardTitle className="text-sm font-medium">Contact consent</CardTitle>
-        {canManage ? (
+        <div className="flex items-center gap-gap-inline">
+          {/*
+            Not gated on `manage`. Reading the trail is a read, and the route
+            carries the same `crm:contacts:view` key this whole card is already
+            behind — a viewer who can see the current position can see how it
+            got there.
+          */}
           <Button
             variant="ghost"
             size="sm"
             className="gap-1 px-2 text-xs"
-            onClick={handleOpenAdd}
-            {...hoverHandlers}
+            onClick={handleOpenHistory}
+            {...history.hoverHandlers}
           >
-            <PlusIcon ref={iconRef} size={14} />
-            Record consent
+            <ActivityIcon ref={history.iconRef} size={14} />
+            History
           </Button>
-        ) : null}
+          {canManage ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 px-2 text-xs"
+              onClick={handleOpenAdd}
+              {...hoverHandlers}
+            >
+              <PlusIcon ref={iconRef} size={14} />
+              Record consent
+            </Button>
+          ) : null}
+        </div>
       </CardHeader>
 
       <CardContent className="px-4 py-3">
@@ -173,6 +196,12 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
           </ul>
         )}
       </CardContent>
+
+      <ContactConsentHistory
+        contactId={contactId}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
 
       <AppDialog
         open={addOpen}
