@@ -41,32 +41,6 @@ export interface OrgSettings {
 
 export type { OrgMember } from "@/hooks/api/organization-schema";
 
-export interface Branch {
-  id: string;
-  orgId: string;
-  name: string;
-  code: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  pincode: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  status: "ACTIVE" | "INACTIVE";
-  branchManager: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-  branchHr: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export type { Role } from "@/hooks/api/roles-schema";
 

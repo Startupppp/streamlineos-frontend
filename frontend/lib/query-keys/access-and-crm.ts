@@ -37,13 +37,6 @@ export const accessAndCrmQueryKeys = {
       [...base, "principalGroups", "roles", groupId] as const,
   },
 
-  branches: {
-    all: [...base, "branches"] as const,
-    list: () => [...base, "branches", "list"] as const,
-    detail: (branchId: number) =>
-      [...base, "branches", "detail", branchId] as const,
-  },
-
   crm: {
     all: [...base, "crm"] as const,
     activityTimeline: (anchor: Record<string, unknown>) =>

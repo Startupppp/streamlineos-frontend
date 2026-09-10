@@ -85,7 +85,7 @@ const createHolidayContract = lazyContract(() =>
   import("@/hooks/api/org-hierarchy-schema").then((m) => m.createHolidayContract),
 );
 
-interface CursorResponse<T> {
+export interface CursorResponse<T> {
   data: T[];
   pageInfo: {
     limit: number;

@@ -10,7 +10,7 @@ import {
 } from "@/features/hr/announcements/announcement-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDepartments } from "@/hooks/api/hr/employees";
-import { useBranches } from "@/hooks/api/branches";
+import { useBranchOptions } from "@/hooks/api/org-hierarchy-branch-options";
 import { useRoles } from "@/hooks/api/roles";
 import {
   useCreateHrAnnouncement,
@@ -82,7 +82,7 @@ export function useAnnouncementForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: departments } = useHrDepartments();
-  const { data: branches } = useBranches({
+  const { data: branches } = useBranchOptions({
     enabled: formData.targetType === "BRANCH",
   });
   const { data: roles } = useRoles({
@@ -95,7 +95,7 @@ export function useAnnouncementForm({
   );
 
   const branchOptions = useMemo(
-    () => (branches ?? []).map((b) => ({ value: String(b.id), label: b.name })),
+    () => (branches?.data ?? []).map((b) => ({ value: b.id, label: b.name })),
     [branches],
   );
 

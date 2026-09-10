@@ -66,6 +66,7 @@ export const platformHierarchyQueryKeys = {
       params !== undefined
         ? ([...base, "hierarchy", "businessUnits", params] as const)
         : ([...base, "hierarchy", "businessUnits"] as const),
+    branchOptions: () => [...base, "hierarchy", "branchOptions"] as const,
     orgBranches: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "orgBranches", params] as const)
