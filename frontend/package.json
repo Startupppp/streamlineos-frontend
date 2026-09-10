@@ -41,7 +41,10 @@
     "check:module-manifest:self-test": "node scripts/check-module-manifest.mjs --self-test",
     "check:client-pages": "node scripts/check-client-pages.mjs",
     "check:client-pages:self-test": "node scripts/check-client-pages.mjs --self-test",
-    "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" ."
+    "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" .",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",
@@ -140,6 +143,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.6.3",

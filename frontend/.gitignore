@@ -83,3 +83,9 @@ docs/superpowers/
 .next-build-check
 # Local agent scratch (token minters, API walk harness).
 .scratch
+
+# Playwright run artifacts
+/blob-report/
+/playwright/.cache/
+# The e2e suite's own dev-server build dir (playwright.config.ts NEXT_DIST_DIR).
+.next-e2e
