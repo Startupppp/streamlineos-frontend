@@ -1,0 +1,26 @@
+{
+  // The Playwright specs, typechecked.
+  //
+  // `tsconfig.json` excludes `**/*.spec.ts` and `tsconfig.specs.json` excludes
+  // `e2e` outright, so between them the end-to-end suite was checked by
+  // nothing — the same hole `tsconfig.specs.json` was written to close, left
+  // open one directory over. `playwright.config.ts` was the exception: it is a
+  // plain `.ts`, so `type-check` already covered it.
+  //
+  // Separate from `tsconfig.specs.json` rather than folded into it, because
+  // that one declares `types: ["jest", ...]`. Playwright ships its own `test`
+  // and `expect` and its runner never defines jest's globals, so a spec
+  // checked against jest's ambient types would typecheck against functions
+  // that do not exist at runtime — green on exactly the mistake worth
+  // catching.
+  //
+  //     npx tsc --noEmit -p tsconfig.e2e.json
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": ["playwright.config.ts", "e2e/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
+}
