@@ -417,6 +417,48 @@ stop one being *unused*, which is the entire defect class.
       `permission-matrix-types.ts` for "any external consumers". A repo-wide search found **zero**
       importers — a dead pass-through of the kind §1.12 and §9 forbid. Deleted.
 
+### Completion pass 2026-09-10 — wave 2 closed the five copies it looked for, not the class
+
+`7991acb02` (backend) · `91bd50eb3` (root). Wave 2 fixed the parsers it had a list of. It did not
+leave anything enforcing the rule, so five more survived and one new consumer had already drifted.
+
+- [x] **NEW defect, not a leftover copy.** `rbac.service.getDiscoveryPermissions` **filtered** by
+      `administeringModuleOf` and **labelled** `moduleKey` with the raw namespace, in the same function.
+      A CRM admin saw `party:*` keys labelled `party` — a module no screen lists — while
+      `permission-catalog-rows.ts` wrote `home` into `permissions.module_key` for the same key. Both
+      now `administeringModuleOf`. Nothing in wave 2 could have caught this: the endpoint has no
+      frontend consumer, and `moduleKeySchema` is `z.string()`, so the wrong answer validated fine.
+- [x] `impliedViewKey` was defined **twice, character-for-character**, in `module-access.service.ts`
+      and `module-role-permissions.ts` — two copies of the arity rule §5 documents. One canonical copy
+      now sits beside the vocabulary helpers; its spec repoints there.
+- [x] `grantability.ts` held two more private parsers, one per question: `isOrgOnlyNamespace` (own
+      namespace → `namespaceOf`) and `buildPermissionModuleMap` (administering → `administeringModuleOf`).
+      The latter is renamed `buildPermissionAdministeringModuleMap` with its type and all eight call
+      sites, because "PermissionModuleMap" names neither question.
+- [x] **The scripts were never in wave 2's scope and had their own copies of the table.**
+      `verify-rbac-verdict.mjs` and `route-attribution.mjs` each hand-coded `chat|mail|calendar|
+      notifications → home` and `party → crm`. Both deleted; every `.mjs` now shares one helper in
+      `permission-key-extractors.mjs`. It reads the **committed** manifest rather than spawning ts-node,
+      because `alert-p95.mjs` and `alert-seam-latency.mjs` import `route-attribution` on a hot path.
+- [x] **A spec was holding the duplicate in place.** `slo-catalogue.spec.ts` asserted the literal
+      SOURCE TEXT of `route-attribution.mjs` (`toContain("chat:")`, `toContain('"home"')`), so deleting
+      the table would have failed it — the spec pinned the defect. Rewritten to assert behaviour through
+      the self-test, which grew 14 → 19 checks (calendar, notifications, dashboard, auth, platform).
+- [x] **Manifest sync only checked three fields.** `check-module-manifest.mjs` compared `id`,
+      `productKey` and `route` — never `administersNamespaces`, which is the ownership half and the one
+      thing C6 depends on. New `rule-5` compares it per module id. `module-manifest-sync.spec.ts` pins
+      both committed manifests against `MODULE_REGISTRY` on the backend side.
+- [x] **HEAD carried a duplicate of the very file this item is about.** A neighbouring lane had
+      committed `frontend/lib/org-module-keys.ts` and three importers while `lib/module-vocabulary.ts`
+      was still in the tree. Deleted, remaining importers repointed.
+- [x] **The enforcement wave 2 lacked.** `no-private-permission-key-parsers.spec.ts` (backend) and
+      `.test.ts` (frontend). Each fails on a new private parser, a **stale allowlist entry**, a second
+      declaration of the helper, and a hand-coded mapping — and asserts it scanned a real tree first,
+      so an empty result cannot mean "read nothing". Both were proved to bite by appending a real
+      parser to a real file and watching the named line fail, then reverting.
+- [ ] **Left open, out of scope:** `route-attribution.mjs`'s `MODULE_OWNERS` still mirrors
+      `MODULE_SLO_OWNERSHIP` by hand. Different table, different question — needs its own item.
+
 ---
 
 ## C7 — One answer to "is this module enabled" on the frontend · **DONE (wave 2)**
