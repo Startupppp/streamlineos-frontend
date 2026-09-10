@@ -1,3 +1,9 @@
+> **STATUS: DONE — 2026-09-10, commit `a6a9808b1`.** All 10 required-work items and all 6 "tests that
+> must bite" are closed; the full record is at the bottom of this file under "Completion record".
+> Banner added 2026-09-10 by the C9 session, which re-verified rather than restated the claim:
+> commit present · all five named artefacts present · 23 `page.tsx` on disk matching the census's 23 ·
+> `lib/prefetch` **14 suites / 214 tests passing**.
+
 # Complete C8: account for every settings surface prefetch
 
 Work directly in the StreamlineOS repository and complete implementation plus verification. Read applicable `CLAUDE.md` files before editing, preserve unrelated changes, and do not commit or push unless explicitly requested.
