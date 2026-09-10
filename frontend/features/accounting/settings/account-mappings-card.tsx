@@ -108,7 +108,7 @@ export function AccountMappingsCard({ enabled }: AccountMappingsCardProps) {
         </CardTitle>
         <p className="text-label text-muted-foreground">
           {unmappedRequired > 0
-            ? "A stock movement that needs an unmapped account is refused after the stock has already moved. Map these before your next goods receipt."
+            ? "A goods receipt or shipment that needs an unmapped account will not go through at all. Map these before your next receipt."
             : "Stock movements resolve accounts by role, so renaming or renumbering your chart never breaks them."}
         </p>
       </CardHeader>

@@ -13,9 +13,8 @@ import { AccountMappingsCard } from "../account-mappings-card";
  * template and never moved.
  *
  * The screen's job is to show what is NOT mapped. A book missing `inventory`
- * refuses its next goods receipt AFTER the stock has already moved
- * (`docs/inventory-gl-contract.md` §3.3), so the warning has to be specific
- * about that rather than reading as a general setup nag.
+ * has its next goods receipt refused outright, so the warning has to say that
+ * rather than reading as a general setup nag.
  */
 
 const can = jest.fn<boolean, [string]>();
@@ -67,18 +66,16 @@ describe("the account-mapping card", () => {
     expect(screen.getByText("2 not mapped")).toBeInTheDocument();
   });
 
-  it("says the refusal arrives after the stock has moved", () => {
+  it("says what an unmapped role costs, not merely that one is unmapped", () => {
     /*
       The sentence that makes this actionable. "Finish setting up accounting"
       would be true and would not tell anyone that the cost of ignoring it is a
-      half-completed goods receipt.
+      goods receipt that does not go through.
     */
     mappings.mockReturnValue({ data: [mapping({ account: null })], isLoading: false });
 
     render(<AccountMappingsCard enabled />);
-    expect(
-      screen.getByText(/refused after the stock has already moved/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/will not go through at all/)).toBeInTheDocument();
   });
 
   it("does not warn when every required role is mapped", () => {
