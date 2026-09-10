@@ -1,12 +1,17 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { OrgSetupInvitee, OrgSetupStatus } from "@/lib/api/hooks/org-schema";
 
 const orgSetupSessionContract = lazyContract(() =>
   import("@/lib/api/hooks/org-schema").then((m) => m.orgSetupSessionContract),
+);
+const orgSetupStatusContract = lazyContract(() =>
+  import("@/lib/api/hooks/org-schema").then((m) => m.orgSetupStatusContract),
 );
 const orgSetupCompleteContract = lazyContract(() =>
   import("@/lib/api/hooks/org-schema").then((m) => m.orgSetupCompleteContract),
@@ -23,6 +28,7 @@ export type OrgSetupPayload = {
   timezone?: string;
   phone?: string;
   enabledModules: string[];
+  invitees?: OrgSetupInvitee[];
 };
 
 export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };
@@ -44,6 +50,24 @@ export function useOrgSetupSessionQuery(enabled = true) {
     staleTime: 30_000,
     retry: false,
     enabled,
+  });
+}
+
+export function useOrgSetupStatusQuery(
+  options?: Omit<UseQueryOptions<OrgSetupStatus, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: platformCoreQueryKeys.orgSetup.status(),
+    queryFn: ({ signal }) =>
+      apiClient.get<OrgSetupStatus>(
+        "/org/setup/status",
+        undefined,
+        signal,
+        orgSetupStatusContract,
+      ),
+    staleTime: 0,
+    retry: false,
+    ...options,
   });
 }
 

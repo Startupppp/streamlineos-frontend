@@ -1,5 +1,4 @@
 const GATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
-const CLAIM_REFRESH_TIMEOUT_MS = 18_000;
 
 export type GateCookieBase = "org-setup-done" | "onboarding-done";
 
@@ -7,7 +6,8 @@ export function gateCookieName(base: GateCookieBase, scopeId: string): string {
   return `${base}--${scopeId}`;
 }
 
-type SessionUpdate = (data?: unknown) => Promise<unknown>;
+// Structural mirror of `SessionClaimsRefresh`; importing the type would close a cycle with auth-hooks.
+type SessionClaimsRefreshFn = (data?: unknown) => Promise<unknown>;
 
 function secureFlag(): string {
   return typeof window !== "undefined" && window.location.protocol === "https:"
@@ -46,13 +46,10 @@ export function clearGateCookies(): void {
 export async function completeOnboardingGate(
   cookieName: GateCookieBase,
   scopeId: string,
-  update: SessionUpdate,
+  refreshSessionClaims: SessionClaimsRefreshFn,
 ): Promise<void> {
   const name = gateCookieName(cookieName, scopeId);
   const secure = secureFlag();
   document.cookie = `${name}=1; path=/; max-age=${GATE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
-  await Promise.race([
-    update().catch(() => null),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), CLAIM_REFRESH_TIMEOUT_MS)),
-  ]);
+  await refreshSessionClaims();
 }

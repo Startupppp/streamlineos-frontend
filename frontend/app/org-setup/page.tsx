@@ -9,7 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
-import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import {
+  signInWithMagicToken,
+  useSessionClaimsRefresh,
+} from "@/hooks/common/auth-hooks";
 import {
   useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
@@ -48,7 +51,8 @@ function syncAppsFromGoals(data: WizardData): WizardData {
 }
 
 export default function OrgSetupPage() {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const { data: serverSession } = useOrgSetupSessionQuery();
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
@@ -125,14 +129,18 @@ export default function OrgSetupPage() {
       if (res?.autoLoginToken) {
         await signInWithMagicToken(res.autoLoginToken);
       }
-      await completeOnboardingGate("org-setup-done", res.orgId, update);
+      await completeOnboardingGate(
+        "org-setup-done",
+        res.orgId,
+        refreshSessionClaims,
+      );
       clearAll(userId);
       window.location.replace("/dashboard");
     } catch (err) {
       setIsSkipping(false);
       toast.error(getErrorMessage(err));
     }
-  }, [skipOrgSetup, update, userId]);
+  }, [skipOrgSetup, refreshSessionClaims, userId]);
 
   useEffect(() => {
     if (!userId || mountedOnceRef.current) return;

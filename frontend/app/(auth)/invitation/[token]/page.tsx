@@ -12,11 +12,11 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { clearBackendTokenCache } from "@/lib/api-client";
 import {
   signInWithMagicToken,
   useAcceptInvitation,
   useDeclineInvitation,
+  useSessionClaimsRefresh,
   useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
 import { motion } from "framer-motion";
@@ -43,7 +43,8 @@ export default function InvitationPage() {
   const router = useRouter();
   const params = useParams();
   const token = typeof params.token === "string" ? params.token : "";
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
 
   const form = useForm<NewUserFormValues>({
     resolver: zodResolver(newUserSchema),
@@ -143,8 +144,7 @@ export default function InvitationPage() {
           if (data?.autoLoginToken) {
             await autoLoginWithToken(data.autoLoginToken);
           } else {
-            clearBackendTokenCache();
-            await update().catch(() => null);
+            await refreshSessionClaims();
             router.push("/dashboard");
           }
         },
@@ -159,7 +159,7 @@ export default function InvitationPage() {
     router,
     acceptInvitation,
     invitation,
-    update,
+    refreshSessionClaims,
     autoLoginWithToken,
   ]);
 

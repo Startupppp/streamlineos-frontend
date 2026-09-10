@@ -5,61 +5,40 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
-import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import {
+  signInWithMagicToken,
+  useSessionClaimsRefresh,
+} from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearAll } from "@/features/org-setup/lib/draft";
-import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hooks/org";
-import { useGenerateWorkspace } from "@/hooks/api/workspace-onboarding";
-import { useBulkInviteUsers } from "@/hooks/api/users";
+import { useCompleteOrgSetupMutation } from "@/lib/api/hooks/org";
 import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 import { toast } from "sonner";
-import type { Invitee, WizardData } from "../lib/wizard-data-schema";
-import { DEFAULT_APPS, GENERATION_STEPS } from "../lib/constants";
+import type { WizardData } from "../lib/wizard-data-schema";
+import { GENERATION_STEPS } from "../lib/constants";
+import { buildOrgSetupPayload } from "../lib/setup-payload";
+import { useSetupProvisioning } from "../hooks/use-setup-provisioning";
 import type { SetupError } from "./generation-failure-stage";
 import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
 
 const SETUP_DONE_KEY = "org-setup-complete";
-const MAX_BULK_INVITES = 500;
 
 type OrgCreatedResult = {
   autoLoginToken: string | null;
   orgId: string;
 };
 
-type GenerationPendingState = {
-  industry: string;
-  enabledModules: string[];
-  failureMessage: string;
-};
-
 type StepGenerationProps = {
   data: WizardData;
 };
 
-function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: string[] }[] {
-  const byRole = new Map<string, string[]>();
-  for (const invitee of invitees) {
-    const emails = byRole.get(invitee.role) ?? [];
-    emails.push(invitee.email);
-    byRole.set(invitee.role, emails);
-  }
-  return Array.from(byRole.entries()).flatMap(([role, emails]) => {
-    const groups: { role: string; emails: string[] }[] = [];
-    for (let index = 0; index < emails.length; index += MAX_BULK_INVITES) {
-      groups.push({ role, emails: emails.slice(index, index + MAX_BULK_INVITES) });
-    }
-    return groups;
-  });
-}
-
 export function StepGeneration({ data }: StepGenerationProps) {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupError, setSetupError] = useState<SetupError | null>(null);
   const [orgCreatedResult, setOrgCreatedResult] = useState<OrgCreatedResult | null>(null);
-  const [generationPending, setGenerationPending] = useState<GenerationPendingState | null>(null);
-  const [isRetryingGeneration, setIsRetryingGeneration] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
   const dataRef = useRef(data);
@@ -77,31 +56,14 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const apiDoneRef = useRef(false);
   const hasRunRef = useRef(false);
 
-  const generateWorkspace = useGenerateWorkspace();
   const completeOrgSetup = useCompleteOrgSetupMutation();
-  const bulkInvite = useBulkInviteUsers();
-  const generateWorkspaceRef = useRef(generateWorkspace);
   const completeOrgSetupRef = useRef(completeOrgSetup);
-  const bulkInviteRef = useRef(bulkInvite);
+  const provisioning = useSetupProvisioning(orgCreatedResult !== null);
 
   useLayoutEffect(() => {
     dataRef.current = data;
-    generateWorkspaceRef.current = generateWorkspace;
     completeOrgSetupRef.current = completeOrgSetup;
-    bulkInviteRef.current = bulkInvite;
   });
-
-  function buildPayload(d: WizardData): OrgSetupPayload {
-    return {
-      industry: d.industry,
-      companyName: d.companyName,
-      companySize: d.teamSize,
-      ...(d.country ? { country: d.country } : {}),
-      ...(d.timezone ? { timezone: d.timezone } : {}),
-      phone: d.phone,
-      enabledModules: d.modules.length > 0 ? d.modules : [...DEFAULT_APPS],
-    };
-  }
 
   const goToWorkspace = useCallback(() => {
     if (isContinuing) return;
@@ -110,17 +72,26 @@ export function StepGeneration({ data }: StepGenerationProps) {
     window.location.replace("/dashboard");
   }, [isContinuing, session?.user?.id]);
 
-  async function handleSuccess(autoLoginToken: string | null, orgId: string) {
+  function stopAnimation() {
+    if (!intervalRef.current) return;
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  }
+
+  function handleSetupError(err: SetupError) {
+    stopAnimation();
+    hasRunRef.current = false;
+    sessionStorage.removeItem(SETUP_DONE_KEY);
+    setSetupError(err);
+  }
+
+  async function finishSetup(autoLoginToken: string | null, orgId: string) {
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    stopAnimation();
     setCompletedSteps(total);
     clearBackendTokenCache();
-    const userId = session?.user?.id ?? "";
-    clearAll(userId);
+    clearAll(session?.user?.id ?? "");
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
     try {
       sessionStorage.setItem(WELCOME_POP_KEY, "1");
@@ -130,79 +101,27 @@ export function StepGeneration({ data }: StepGenerationProps) {
       void 0;
     }
 
-    if (autoLoginToken) {
-      await signInWithMagicToken(autoLoginToken);
+    try {
+      if (autoLoginToken) await signInWithMagicToken(autoLoginToken);
+      await completeOnboardingGate("org-setup-done", orgId, refreshSessionClaims);
+    } catch (err) {
+      apiDoneRef.current = false;
+      handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+      return;
     }
-    await completeOnboardingGate("org-setup-done", orgId, update);
 
     setShowWelcome(true);
   }
 
-  async function runPostSetupTasks(payload: OrgSetupPayload, invitees: Invitee[]) {
-    const generation = generateWorkspaceRef.current
-      .mutateAsync({
-        industry: payload.industry,
-        enabledModules: payload.enabledModules,
-      })
-      .then(() => null)
-      .catch((error: unknown) => getErrorMessage(error));
-
-    const invitationRequests = groupInviteesByRole(invitees).map((group) =>
-      bulkInviteRef.current.mutateAsync(group).catch((error: unknown) => ({
-        results: group.emails.map((email) => ({
-          email,
-          success: false,
-          error: getErrorMessage(error),
-        })),
-      })),
-    );
-    const [generationFailure, inviteResults] = await Promise.all([
-      generation,
-      Promise.all(invitationRequests),
-    ]);
-
-    if (generationFailure) {
-      toast.warning(
-        `Your workspace is ready, but starter content could not be generated: ${generationFailure}`,
-      );
-    }
-
-    const failedInvites = inviteResults.flatMap((result) =>
-      result.results.filter((item) => !item.success),
-    );
-    if (failedInvites.length > 0) {
-      toast.warning(
-        `${failedInvites.length} invitation${failedInvites.length === 1 ? "" : "s"} could not be queued. You can retry them from People.`,
-      );
-    } else if (invitees.length > 0) {
-      toast.success(
-        `${invitees.length} invitation${invitees.length === 1 ? "" : "s"} queued in the background.`,
-      );
-    }
-  }
-
-  function handleSetupError(err: SetupError) {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    hasRunRef.current = false;
-    sessionStorage.removeItem(SETUP_DONE_KEY);
-    setSetupError(err);
-  }
-
   function startAnimation() {
     apiDoneRef.current = false;
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    stopAnimation();
     let count = 0;
     intervalRef.current = setInterval(() => {
       if (count >= HOLD_AT && !apiDoneRef.current) return;
       count += 1;
       setCompletedSteps(count);
-      if (count >= total && intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (count >= total) stopAnimation();
     }, 650);
   }
 
@@ -216,7 +135,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
       if (orgResult.autoLoginToken) {
         await signInWithMagicToken(orgResult.autoLoginToken);
       }
-      await completeOnboardingGate("org-setup-done", orgResult.orgId, update);
+      await completeOnboardingGate(
+        "org-setup-done",
+        orgResult.orgId,
+        refreshSessionClaims,
+      );
       sessionStorage.setItem(SETUP_DONE_KEY, "1");
       window.location.replace(destination);
     } catch (err) {
@@ -233,40 +156,13 @@ export function StepGeneration({ data }: StepGenerationProps) {
     void navigateToPostSetup("/settings/users?view=invitations");
   }
 
-  async function retryGeneration() {
-    if (!generationPending || isRetryingGeneration || !orgCreatedResult) return;
-    const pending = generationPending;
-    const orgResult = orgCreatedResult;
-    setIsRetryingGeneration(true);
-    try {
-      await generateWorkspaceRef.current.mutateAsync({
-        industry: pending.industry,
-        enabledModules: pending.enabledModules,
-      });
-    } catch (err) {
-      toast.warning(`Starter content could not be generated: ${getErrorMessage(err)}`);
-    } finally {
-      setIsRetryingGeneration(false);
-      setGenerationPending(null);
-    }
-    try {
-      await handleSuccess(orgResult.autoLoginToken, orgResult.orgId);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+  function handleRecheckProvisioning() {
+    provisioning.recheck();
   }
 
-  function handleRetryGeneration() {
-    void retryGeneration();
-  }
-
-  function continueWithoutGeneration() {
-    if (!generationPending || !orgCreatedResult) return;
-    const orgResult = orgCreatedResult;
-    setGenerationPending(null);
-    handleSuccess(orgResult.autoLoginToken, orgResult.orgId).catch((err: unknown) => {
-      toast.error(getErrorMessage(err));
-    });
+  function handleContinueAnyway() {
+    if (!orgCreatedResult) return;
+    void finishSetup(orgCreatedResult.autoLoginToken, orgCreatedResult.orgId);
   }
 
   async function runSetup() {
@@ -274,32 +170,27 @@ export function StepGeneration({ data }: StepGenerationProps) {
     hasRunRef.current = true;
     setCompletedSteps(0);
     setSetupError(null);
-    setGenerationPending(null);
     startAnimation();
 
-    const payload = buildPayload(dataRef.current);
-
     try {
-      const res = await completeOrgSetupRef.current.mutateAsync(payload);
-      clearBackendTokenCache();
-      setOrgCreatedResult({ autoLoginToken: res?.autoLoginToken ?? null, orgId: res.orgId });
-
-      await handleSuccess(res?.autoLoginToken ?? null, res.orgId);
-      void runPostSetupTasks(payload, dataRef.current.invitees).catch(
-        (error: unknown) => {
-          toast.warning(
-            `Your workspace is ready, but some background setup work failed: ${getErrorMessage(error)}`,
-          );
-        },
+      const res = await completeOrgSetupRef.current.mutateAsync(
+        buildOrgSetupPayload(dataRef.current),
       );
+      clearBackendTokenCache();
+      setOrgCreatedResult({
+        autoLoginToken: res.autoLoginToken ?? null,
+        orgId: res.orgId,
+      });
     } catch (err) {
       handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
     }
   }
 
   const runSetupRef = useRef(runSetup);
+  const finishSetupRef = useRef(finishSetup);
   useEffect(() => {
     runSetupRef.current = runSetup;
+    finishSetupRef.current = finishSetup;
   });
 
   useEffect(() => {
@@ -313,6 +204,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (provisioning.phase !== "completed" || !orgCreatedResult) return;
+    finishSetupRef.current(orgCreatedResult.autoLoginToken, orgCreatedResult.orgId);
+  }, [provisioning.phase, orgCreatedResult]);
+
   const progress = Math.round((completedSteps / total) * 100);
   const companyName = data.companyName?.trim();
 
@@ -324,12 +220,12 @@ export function StepGeneration({ data }: StepGenerationProps) {
         progress={progress}
         companyName={companyName}
         setupError={setupError}
-        generationPending={generationPending}
-        isRetryingGeneration={isRetryingGeneration}
+        provisioningIssue={provisioning.issue}
+        isRecheckingProvisioning={provisioning.isRechecking}
         showWelcome={showWelcome}
         onRetry={runSetup}
-        onRetryGeneration={handleRetryGeneration}
-        onContinueWithoutGeneration={continueWithoutGeneration}
+        onRecheckProvisioning={handleRecheckProvisioning}
+        onContinueAnyway={handleContinueAnyway}
         onOpenOrganization={orgCreatedResult ? openOrganization : undefined}
         onGoToInvitations={orgCreatedResult ? goToInvitations : undefined}
         isNavigating={isContinuing}

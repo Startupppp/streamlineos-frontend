@@ -2,15 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { ArrowRight, Building2, RefreshCw, ShieldAlert } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   useGetOrganizations,
+  useSessionClaimsRefresh,
   useSignOut,
   useSwitchOrg,
 } from "@/hooks/common/auth-hooks";
-import { clearBackendTokenCache } from "@/lib/api-client";
 
 type SuspendedAccessCardProps = {
   organizationName: string | null;
@@ -77,7 +76,7 @@ function formatOrganizationRole(role: string): string {
 export function SuspendedAccessCard({
   organizationName,
 }: SuspendedAccessCardProps) {
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const signOut = useSignOut();
   const switchOrg = useSwitchOrg();
   const {
@@ -108,26 +107,27 @@ export function SuspendedAccessCard({
   const handleCheckAgain = useCallback(async () => {
     if (isChecking) return;
     setIsChecking(true);
-    clearBackendTokenCache();
 
     try {
-      const fresh = await update();
-      if (fresh?.organizationAccess === "suspended") {
+      const fresh = await refreshSessionClaims();
+      if (!fresh) {
+        toast.error("We couldn't check your access", {
+          description: "Check your connection and try again.",
+        });
+        return;
+      }
+      if (fresh.organizationAccess === "suspended") {
         toast.info("Access has not been restored yet", {
           description: "Ask an organization admin to reactivate your membership.",
         });
         return;
       }
 
-      window.location.replace(fresh?.orgId ? "/dashboard" : "/org-setup");
-    } catch {
-      toast.error("We couldn't check your access", {
-        description: "Check your connection and try again.",
-      });
+      window.location.replace(fresh.orgId ? "/dashboard" : "/org-setup");
     } finally {
       setIsChecking(false);
     }
-  }, [isChecking, update]);
+  }, [isChecking, refreshSessionClaims]);
 
   return (
     <section

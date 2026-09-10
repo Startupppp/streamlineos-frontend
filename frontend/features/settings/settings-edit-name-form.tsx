@@ -3,12 +3,12 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -23,7 +23,7 @@ interface SettingsEditNameFormProps {
 }
 
 export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProps) {
-  const { update: updateSession } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const updateProfile = useUpdateMyProfile();
   const form = useForm<SettingsDisplayNameValues>({
     resolver: zodResolver(settingsDisplayNameSchema),
@@ -40,7 +40,7 @@ export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProp
       { name: nextName },
       {
         onSuccess: async () => {
-          await updateSession({ name: nextName });
+          await refreshSessionClaims({ name: nextName });
           toast.success("Name updated");
           onClose();
         },

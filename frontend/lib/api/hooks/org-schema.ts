@@ -19,6 +19,36 @@ export const orgSetupSessionContract = z.object({
   updatedAt: z.string().optional(),
 });
 
+const ORG_SETUP_INVITEE_ROLES = ["OWNER", "ORG_ADMIN", "MEMBER"] as const;
+
+export const MAX_ORG_SETUP_INVITEES = 50;
+
+export const orgSetupInviteeRoleSchema = z.enum(ORG_SETUP_INVITEE_ROLES);
+
+const orgSetupInviteeSchema = z
+  .object({
+    email: z.string(),
+    role: orgSetupInviteeRoleSchema,
+  })
+  .strict();
+
+export type OrgSetupInvitee = z.infer<typeof orgSetupInviteeSchema>;
+
+export const orgSetupStatusContract = z.object({
+  orgId: z.string().nullable(),
+  onboardingCompletedAt: z.string().nullable(),
+  provisioning: z.enum([
+    "not-started",
+    "pending",
+    "in-progress",
+    "completed",
+    "failed",
+  ]),
+  lastError: z.string().nullable(),
+});
+
+export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;
+
 export const orgSetupCompleteContract = z.union([
   z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
   z.object({ success: z.literal(true), orgId: z.string() }),

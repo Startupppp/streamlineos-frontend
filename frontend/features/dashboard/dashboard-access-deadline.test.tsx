@@ -75,8 +75,6 @@ jest.mock("./module-setup-banners", () => ({
   useModuleSetupBannersPending: () => false,
 }));
 
-jest.mock("./use-home-cache-sync", () => ({ useHomeCacheSync: () => undefined }));
-
 jest.mock("./dashboard-deferred-body", () => ({
   DashboardDeferredBody: () => <div data-testid="home-sections" />,
 }));

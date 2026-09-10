@@ -42,6 +42,8 @@ function MembershipLifecycleSync() {
   return null;
 }
 
+const CLAIMS_BACKSTOP_POLL_SECONDS = 5 * 60;
+
 export function SessionProvider({
   children,
   session,
@@ -53,7 +55,7 @@ export function SessionProvider({
     <NextAuthSessionProvider
       session={session}
       refetchOnWindowFocus
-      refetchInterval={0}
+      refetchInterval={CLAIMS_BACKSTOP_POLL_SECONDS}
     >
       <MembershipLifecycleSync />
       {children}

@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useDeleteOrg, useOrgMembers } from "@/hooks/api/organization";
 import { useInitiateOrgTransfer } from "@/hooks/api/ownership";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
 
@@ -146,7 +145,7 @@ export function DeleteOrganizationDialog({
 }: DeleteOrganizationDialogProps) {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const deleteMutation = useDeleteOrg();
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -182,8 +181,7 @@ export function DeleteOrganizationDialog({
               : "Organization deleted. Create or join an organization to continue.",
           );
           handleOpenChange(false);
-          clearBackendTokenCache();
-          await update({ orgId: data.nextOrgId });
+          await refreshSessionClaims({ orgId: data.nextOrgId });
           queryClient.clear();
           router.replace(data.nextOrgId ? "/dashboard" : "/org-setup");
           router.refresh();

@@ -1,11 +1,13 @@
 "use client";
 
+import { useCallback } from "react";
 import {
   keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { Session } from "next-auth";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -215,8 +217,28 @@ export function useMicrosoftSignIn(getCallbackUrl: () => string) {
   });
 }
 
-export function useSwitchOrg() {
+const CLAIM_REFRESH_TIMEOUT_MS = 18_000;
+
+export type SessionClaimsRefresh = (data?: unknown) => Promise<Session | null>;
+
+export function useSessionClaimsRefresh(): SessionClaimsRefresh {
   const { update } = useSession();
+  return useCallback(
+    (data?: unknown) => {
+      clearBackendTokenCache();
+      return Promise.race([
+        update(data).catch(() => null),
+        new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), CLAIM_REFRESH_TIMEOUT_MS);
+        }),
+      ]);
+    },
+    [update],
+  );
+}
+
+export function useSwitchOrg() {
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
@@ -233,8 +255,7 @@ export function useSwitchOrg() {
       clearGateCookies();
     },
     onSuccess: async (data) => {
-      clearBackendTokenCache();
-      await update({ orgId: data.orgId });
+      await refreshSessionClaims({ orgId: data.orgId });
       queryClient.clear();
       router.replace("/dashboard");
       router.refresh();

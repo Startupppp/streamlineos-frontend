@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { LogOut } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,7 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useAccess } from "@/hooks/api/access";
 import { useLeaveOrg } from "@/hooks/api/organization";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +71,7 @@ export function LeaveOrganizationDialog({
   onOpenChange,
 }: LeaveOrganizationDialogProps) {
   const { data: access } = useAccess();
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
   const leaveMutation = useLeaveOrg();
@@ -82,8 +81,7 @@ export function LeaveOrganizationDialog({
       onSuccess: async (data) => {
         toast.success("You have left the organization");
         onOpenChange(false);
-        clearBackendTokenCache();
-        await update(
+        await refreshSessionClaims(
           data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
         );
         queryClient.clear();
@@ -96,7 +94,7 @@ export function LeaveOrganizationDialog({
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }, [leaveMutation, onOpenChange, update, queryClient, router]);
+  }, [leaveMutation, onOpenChange, refreshSessionClaims, queryClient, router]);
 
   if (access?.isOrgOwner !== false) return null;
 

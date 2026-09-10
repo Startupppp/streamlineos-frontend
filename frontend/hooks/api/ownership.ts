@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { lazyContract } from "@/lib/api-envelope";
 
 const initiateTransferContract = lazyContract(() =>
@@ -128,7 +128,7 @@ export function useCancelOrgTransfer() {
 
 export function useAcceptTransfer() {
   const queryClient = useQueryClient();
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
 
   return useAuthorizedMutation<{ success: true }, Error, string>("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "accept"],
@@ -146,7 +146,7 @@ export function useAcceptTransfer() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
-      void update();
+      void refreshSessionClaims();
     },
   });
 }

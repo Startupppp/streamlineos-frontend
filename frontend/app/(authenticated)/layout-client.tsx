@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
+import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 import type { ShellVariant } from "@/lib/shell-variant";
 
@@ -46,6 +47,11 @@ function renderChatMobileNav(onOpenMobileMenu: () => void) {
 
 const notificationBellSlot = <NotificationBell />;
 
+function AccessVersionSync() {
+  useAccessVersionSync();
+  return null;
+}
+
 export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
   return (
     <DashboardShell
@@ -54,6 +60,7 @@ export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
       chatMobileNavSlot={renderChatMobileNav}
       notificationBellSlot={notificationBellSlot}
     >
+      <AccessVersionSync />
       {children}
     </DashboardShell>
   );

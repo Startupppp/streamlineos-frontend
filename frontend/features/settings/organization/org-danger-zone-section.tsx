@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Clock } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +15,7 @@ import {
   usePendingOrgTransfers,
   useCancelOrgTransfer,
 } from "@/hooks/api/ownership";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
 import { OrgSettingsCard, OrgSettingsActionRow } from "./org-settings-chrome";
@@ -34,7 +33,7 @@ const DESTRUCTIVE_OUTLINE_BTN =
 
 export function OrgDangerZoneSection({ org }: Props) {
   const canManage = useCan("settings:manage");
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const { data: access } = useAccess();
   const isOwner = access?.isOrgOwner === true;
   const isKnownNonOwner = access?.isOrgOwner === false;
@@ -81,8 +80,7 @@ export function OrgDangerZoneSection({ org }: Props) {
       onSuccess: async (data) => {
         toast.success("Organization archived");
         setArchiveOpen(false);
-        clearBackendTokenCache();
-        await update(
+        await refreshSessionClaims(
           data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
         );
         queryClient.clear();
@@ -102,8 +100,7 @@ export function OrgDangerZoneSection({ org }: Props) {
       onSuccess: async (data) => {
         toast.success("You have left the organization");
         setLeaveOpen(false);
-        clearBackendTokenCache();
-        await update(
+        await refreshSessionClaims(
           data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
         );
         queryClient.clear();

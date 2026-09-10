@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Archive } from "lucide-react";
@@ -11,7 +10,7 @@ import {
   useArchivedOrganizations,
   useRestoreOrg,
 } from "@/hooks/api/organization";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +23,7 @@ export function ArchivedOrgsRestore({
   className,
   variant = "card",
 }: ArchivedOrgsRestoreProps) {
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
   const archivedQuery = useArchivedOrganizations();
@@ -35,8 +34,7 @@ export function ArchivedOrgsRestore({
       restoreMutation.mutate(orgId, {
         onSuccess: async (data) => {
           toast.success("Organization restored");
-          clearBackendTokenCache();
-          await update({ orgId: data.orgId });
+          await refreshSessionClaims({ orgId: data.orgId });
           queryClient.clear();
           router.replace("/dashboard");
           router.refresh();
@@ -44,7 +42,7 @@ export function ArchivedOrgsRestore({
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
-    [restoreMutation, update, queryClient, router],
+    [restoreMutation, refreshSessionClaims, queryClient, router],
   );
 
   const orgs = archivedQuery.data ?? [];

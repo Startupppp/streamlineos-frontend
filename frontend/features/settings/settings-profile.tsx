@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { apiClient } from "@/lib/api-client";
 import { z } from "zod";
 
@@ -33,7 +34,8 @@ const SettingsEditNameForm = dynamic(
 );
 
 export function SettingsProfile() {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
 
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export function SettingsProfile() {
           { image: key },
           {
             onSuccess: async () => {
-              await updateSession({});
+              await refreshSessionClaims({});
               toast.success("Profile photo updated");
               setTimeout(() => setPreviewUrl(null), 1000);
               resolve();
@@ -116,7 +118,7 @@ export function SettingsProfile() {
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile, updateSession]);
+  }, [session, updateProfile, refreshSessionClaims]);
 
   const handleRemovePhoto = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -126,7 +128,7 @@ export function SettingsProfile() {
         updateProfile.mutate(
           { image: "" },
           {
-            onSuccess: async () => { await updateSession({}); setPreviewUrl(null); resolve(); },
+            onSuccess: async () => { await refreshSessionClaims({}); setPreviewUrl(null); resolve(); },
             onError: (err) => reject(err),
           }
         );
@@ -137,7 +139,7 @@ export function SettingsProfile() {
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile, updateSession]);
+  }, [session, updateProfile, refreshSessionClaims]);
 
   const handleOpenFileInput = useCallback(() => {
     fileInputRef.current?.click();

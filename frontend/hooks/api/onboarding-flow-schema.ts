@@ -2,15 +2,7 @@ import { z } from "zod";
 
 /**
  * Contracts for `OnboardingController` handlers (onboarding session, module
- * checklists, guided tours) and `WorkspaceOnboardingController`.
- *
- * DISAGREEMENT FOUND: The frontend `WorkspaceGenerationResult` declared four
- * number fields (`businessUnits`, `branches`, `departments`, `teams`), but the
- * backend `generateWorkspaceResponseSchema` returns four STRING ARRAYS — the
- * names of created units, not counts. Corrected here; the hook file is updated
- * to use the correct type.
- *
- * Timestamps are ISO strings over JSON. NOT `.strict()`.
+ * checklists, guided tours). Timestamps are ISO strings over JSON. NOT `.strict()`.
  */
 
 export const onboardingFlowSessionContract = z.object({
@@ -97,11 +89,3 @@ const guidedTourContract = z.object({
 export const guidedTourListContract = z.array(guidedTourContract);
 export const tourProgressRowContract = tourProgressContract;
 
-export const generateWorkspaceContract = z.object({
-  businessUnits: z.array(z.string()),
-  branches: z.array(z.string()),
-  departments: z.array(z.string()),
-  teams: z.array(z.string()),
-});
-
-export type GenerateWorkspaceResult = z.infer<typeof generateWorkspaceContract>;

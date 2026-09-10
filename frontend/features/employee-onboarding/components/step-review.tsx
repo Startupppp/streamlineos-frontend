@@ -8,9 +8,9 @@ import {
   Shield,
 } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
-import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
@@ -119,7 +119,8 @@ export function StepReview({
   onEditPersonal,
   onEditBank,
 }: StepReviewProps) {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
@@ -209,8 +210,11 @@ export function StepReview({
       await savePersonal(personalParsed.data);
       await saveBank({ countryCode, ...bankFormValues });
       await submitOnboarding();
-      clearBackendTokenCache();
-      await completeOnboardingGate("onboarding-done", session?.user?.id ?? "", update);
+      await completeOnboardingGate(
+        "onboarding-done",
+        session?.user?.id ?? "",
+        refreshSessionClaims,
+      );
       setShowCelebration(true);
     } catch (err) {
       toast.error(getErrorMessage(err));

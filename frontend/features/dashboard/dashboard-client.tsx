@@ -39,7 +39,6 @@ import {
 } from "@/features/dashboard/module-setup-banners";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
-import { useHomeCacheSync } from "./use-home-cache-sync";
 import { DashboardDeferredBody } from "./dashboard-deferred-body";
 import {
   HOME_ACCESS_DEADLINE_MS,
@@ -80,7 +79,6 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
   const access = useDashboardAccess();
   const setupBannersPending = useModuleSetupBannersPending();
   const accessDeadlineElapsed = useSettleDeadline(HOME_ACCESS_DEADLINE_MS);
-  useHomeCacheSync();
   const { hrEnabled, canViewExecutive } = access;
 
   const [headerClock, setHeaderClock] = useState<{

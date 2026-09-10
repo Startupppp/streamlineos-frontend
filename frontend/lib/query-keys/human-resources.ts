@@ -18,10 +18,6 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", orgId, userId, accessVersion, "leaves"] as const)
         : ([...base, "hr", orgId, userId, accessVersion, "leaves", params] as const),
-    leaveBalance: (userId?: string) =>
-      userId === undefined
-        ? ([...base, "hr", "leaveBalance"] as const)
-        : ([...base, "hr", "leaveBalance", userId] as const),
     expenses: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "expenses"] as const)
