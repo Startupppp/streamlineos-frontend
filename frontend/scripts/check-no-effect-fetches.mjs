@@ -7,7 +7,7 @@ const EXCLUDE_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", "scr
 
 /*
   A build directory is any name starting with `.next`, not the one called
-  exactly `.next`. A dev server run with a custom `distDir` (`.next-buildmart`)
+  exactly `.next`. A dev server run with a custom `distDir` (`.next-local`)
   left its Turbopack output here and this walk read all of it: two gates went
   red over compiled chunks and the rest merely scanned 718MB for nothing.
 */
