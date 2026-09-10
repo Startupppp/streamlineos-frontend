@@ -1,47 +1,47 @@
 # Chat
 
-No confirmed product-code defect remains in the audited Chat scope. The current work closes test and evidence drift.
+The current work closes test and evidence drift. The entity-action dialog accessibility defect
+found during verification is also repaired. Real-PostgreSQL proof and final revision binding
+remain outstanding; historical passes are not current execution evidence.
 
-## CHAT-001 — Finalize entity-channel E2E repair
-Status: READY
-Maps to: PRD-C127
-Parallel group: 1
-Depends on: none
-Owner: chat agent
+Completed source and focused checks (2026-09-10):
 
-Scope: Review and preserve the current entity-channel E2E repair in `backend/src/modules/chat/chat-entity-channel.controller.e2e-spec.ts`.
+- CHAT-001: entity-channel harness repaired and 12/12 passing. The existing-channel case now
+  requires HTTP 200 and cannot pass on a malformed-fixture 500. Final release revision binding
+  remains in CHAT-003.
+- CHAT-004: both provider documents describe retired TURN/ICE and the current Composio →
+  Google Calendar → browser Google Meet boundary; the replacement's approval stays unsigned.
+- Additional acceptance repairs: message/idempotency mocks supply the real transaction surface,
+  XSS coverage requires a successful sanitized write, and the entity-action dialog includes an
+  accessible description. Timeline sender selections now consume the existing canonical
+  identity-only projection; five focused suites / 47 tests pass.
 
-Completion: All 12 entity-channel E2E cases pass at the final backend revision and the diff contains no unrelated changes.
+Evidence: [current Chat checks](../final-refactor/evidence/42-production-ops/release-authority/CHAT-EVIDENCE-2026-09-09.md).
 
 ## CHAT-002 — Make the read-path index assertion fixture-safe
-Status: READY
+Status: BLOCKED-EXTERNAL
 Maps to: PRD-C128, PRD-C129
 Parallel group: 1
 Depends on: none
 Owner: chat agent
 
-Scope: Correct the exact-index test fixture in `chat-read-path-hardening.db.spec.ts`; the production index already exists.
+Scope: The exact-index test fixture in `chat-read-path-hardening.db.spec.ts` now clones the live
+index portfolio into a transaction-local temporary table, seeds a four-tenant pending/sent/cancelled
+mix, analyzes it, checks 20 due rows and asserts the intended index. The production index is unchanged.
+The suite was attempted and refused before running any tests because no approved disposable
+PostgreSQL database is configured in this environment.
 
 Completion: The database-backed assertion proves the intended index-served path without relying on an unrealistic all-identical fixture, and the focused DB suite passes.
 
 ## CHAT-003 — Reconcile current Chat evidence
-Status: READY
+Status: FINAL-INTEGRATION
 Maps to: PRD-C127, PRD-C128, PRD-C129, PRD-C156
 Parallel group: 2
-Depends on: CHAT-001, CHAT-002
+Depends on: CHAT-002
 Owner: chat agent
 
-Scope: Update `CHAT-EVIDENCE-2026-09-09.md` to remove the stale F2 failure and stale KB contract-registry statement, then record current totals and revision.
+Scope: Current focused totals and the F2/governance reconciliation are recorded in
+`CHAT-EVIDENCE-2026-09-09.md`. Complete the database proof and bind the final root/backend/frontend
+revisions plus shared type/cycle/contract gates after lane integration.
 
 Completion: Every claimed command is reproducible at the recorded root/backend revisions and no resolved finding remains described as open.
-
-## CHAT-004 — Reconcile retired TURN and ICE documentation
-Status: READY
-Maps to: PRD-C156, PRD-C185
-Parallel group: 1
-Depends on: none
-Owner: chat documentation agent
-
-Scope: Update `DATA-CATALOGUE.md` and `decisions/privacy-C185-provider-approvals.md` so retired TURN/ICE language agrees with the Google Meet migration.
-
-Completion: Current provider boundaries and required approvals agree across both documents and contain no retired implementation claim.

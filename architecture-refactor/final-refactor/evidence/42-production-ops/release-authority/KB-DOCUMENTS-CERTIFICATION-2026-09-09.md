@@ -132,3 +132,77 @@ stale-test-wiring regression, not a production defect. Added `KbAccessService` a
 - Latency/recall are referenced from prior harness runs; they are host-variance-sensitive and are read in buffers, not milliseconds (see the referenced docs).
 - **Lint and typecheck were not run** — reported as not run, never as passing.
 - **The deployment-gated Documents items remain open and are NOT closed here** — deployed private-storage/search/vector/cache deletion, retention, legal-hold and erasure **drills** (register **D06**) and **Privacy/Legal named approvals** (register **D03/D08**) cannot be manufactured from a local scratch database and are deferred per [`CODE-RELEASE-HUMAN-INPUTS.md`](../../../../decisions/CODE-RELEASE-HUMAN-INPUTS.md). Code-level acceptance being green does not close them.
+
+## 8. Current-source local consolidation — 2026-09-10
+
+DOC-001's local consolidation was rerun on Windows from `D:/projects/personal/Streamlineos`.
+Evidence was reconciled at **2026-09-10 17:57:33 UTC**. Revision references supplied by the
+release coordinator: root/frontend **`96d4ef1a5e2d7d6e9ff3a2bafd197f800043e037`**, backend
+**`75ec87be3fcefd0490b2b93634ca6eaebc051e93`**, each **plus the current uncommitted changes**.
+This is not a clean-tree attestation. No git operation was performed by the Documents agent.
+The earlier database results in sections 1–7 remain historical, not rerun claims.
+
+Commands below run from the named repository directory. The totals are disjoint final runs;
+intermediate failing runs and subsequent focused reruns are not added to the totals.
+
+| Repository | Exact command | Exit | Executed proof |
+| --- | --- | --- | --- |
+| backend | `pnpm exec jest --runInBand --silent src/modules/kb src/modules/e-sign test/security/bola/bola-esign-envelope-children-404.spec.ts test/security/bola/bola-esign-scope-sweeps-and-token.spec.ts test/security/bola-bulk-search-public-token.spec.ts test/security/bola/bola-kb-reindex-404.spec.ts` | 0 | **143 suites / 1,107 tests passed**; KB/e-sign and additional security acceptance, including revisions, ACL/citation visibility, ingestion/replay, purge, retrieval, envelope-child scope, public token boundaries and KB reindex denial |
+| frontend | `pnpm exec jest --runInBand --silent features/wiki features/help-centre hooks/api/kb components/kb lib/query-error-policy.test.ts hooks/api/read-state-contract.test.tsx` | 0 | **17 suites / 139 tests passed**; editor/revision conflict, citations, streamed answers, polling, permission controls, offline policy and component accessibility |
+
+After the final projection/type-owner adjustment in e-sign, the specifically affected
+`sign-authentication-durability.spec.ts` and `sign-state.spec.ts` were also rerun with
+`pnpm exec jest --runInBand --silent --runTestsByPath src/modules/e-sign/sign-authentication-durability.spec.ts src/modules/e-sign/sign-state.spec.ts`:
+**2 suites / 27 tests passed, exit 0**. This overlapping rerun is not added to the totals above.
+
+### Current delta and repaired regressions
+
+- **VERIFIED DONE:** Current local KB/wiki and signing checks above pass. In the first run,
+  `kb-media.service.spec.ts` and `kb-media-ledger-compensation.spec.ts` failed during environment
+  validation because their fixture used `postgres://test`, with neither a username nor database.
+  Both now use the valid inert fixture `postgres://test@localhost/kb_media_test`. Storage and DB
+  collaborators remain mocked; the fixture is not used to open a connection. Their **42 tests**
+  pass and are included in the 1,107 above.
+- **NEW, repaired:** A failed comments read rendered “No comments yet”. A test reproduced that
+  false empty state. `page-comments-sheet.tsx` now renders the shared error state with retry,
+  preserves cached comments, and suppresses the empty state on failure. The same sheet now
+  describes its discussion and labels compose, reply and edit textareas. The component acceptance
+  test verifies the names, retry invocation and an axe-clean editing/reply state.
+- **NEW, repaired:** Signing authentication rolled back failed-attempt counters and audit rows
+  when throwing 403 inside the tenant transaction. Concurrent attempts also overwrote the counter
+  and used stale lockout state; a tenant/id/token row lock with fresh state now serializes them. The dedicated
+  [e-sign certification](./E-SIGN-CERTIFICATION-2026-09-10.md) records the red/green proof.
+- **STILL PENDING:** Browser layout, real keyboard/screen-reader flow and deployed verification
+  remain outstanding. No current regression in the earlier KB product fixes was reproduced.
+- An explicit `TODO|FIXME|HACK|XXX` source scan returned **zero matches** in backend KB/e-sign,
+  frontend wiki/sign and their KB/sign API hooks. This only inventories literal markers; it is
+  not a claim that every possible product defect has been excluded.
+
+### DOC-002 state acceptance matrix
+
+| State or interaction | Current local proof | Remaining proof |
+| --- | --- | --- |
+| Editor save and revision conflict | Autosave and page concurrency specs pass | Rendered Plate editing and reload persistence |
+| Search and citation visibility | Backend ACL/read-search tests; page citation controls and deduplication pass | Real result navigation and visual search states |
+| Permission denial | KB gating, comments ownership, AI action gates and BOLA checks pass | Signed-in browser permission-change journey |
+| Ingestion processing, failed, ready and empty | Sources sheet axe checks and adaptive polling pass | Real upload/index transition against storage |
+| Offline, error and retry | Shared offline/read-state tests; failed comments read and retry pass | Browser offline/reconnect journey |
+| Compose, reply and edit accessibility | Discussion description, named textareas and axe checks pass | Human screen-reader and keyboard flow |
+| Responsive 375 / 768 / 1280 | **Not executed** | Browser visual evidence at every width |
+| Core Web Vitals | **Not executed** | Current production-build measurements |
+
+### Explicit environment exclusions and follow-on requirements
+
+- **No real database test was run in this follow-up.** `D:/localstack` and its previously used
+  `backend-local.env` are absent. The release coordinator's read-only preflight found the configured
+  remote scratch database at **573/708 migrations**, so it cannot certify current schema behavior.
+  The `.db.spec.ts` and seeded-e2e KB sets, live tenant FKs/RLS, append-only trigger bite,
+  real-corpus vector recall and latency all require a current disposable database.
+- The coordinator's browser discovery returned **no available browser**. Component axe checks
+  do not certify rendered layout, browser screenshots, Web Vitals or assistive-technology flow.
+- No deployed storage, email, integration, AI, search or vector provider was called. No outbound
+  message or signing request was sent. Deployed purge/retention/legal-hold drills and named privacy
+  approval remain **DOC-004**. Current scratch DB acceptance and actual PDF/signing integration
+  are prerequisites recorded there, not silently counted as passed by this consolidation.
+- Typechecks, builds and dependency-cycle gates are coordinated separately by the release owner;
+  their results are not inferred from Jest. Lint was not run by the Documents agent.

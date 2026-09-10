@@ -3,6 +3,20 @@
 Status: **COMPLETE** · Baseline commit `db887baad` · Source: architecture review run 2026-09-09/10
 Scope approved by the owner: **all eleven candidates**. All eleven are closed.
 
+## Current-source verification note (2026-09-10)
+
+The completion statements and measurements below record their original sign-off,
+not a fresh whole-product release verdict. Current pending work is indexed in
+[`prd/README.md`](prd/README.md). Re-verification found a Support automation
+cross-module authorization gap, now tracked as RBAC-004 in the RBAC lane.
+
+Two earlier snapshots are superseded: C5's rejected proposal does not mean scoped
+reads lack an owner; current `ScopedRead` and `check-scope-boundary.mjs` implement
+the accepted boundary, replacing the old `check-scope-application` scanner. C8's
+initial 11-prefetch/12-skip census is historical; the current executable census
+accounts for 23 settings routes (22 prefetched, one deliberate no-prefetch route).
+Final build, database, browser and approval status belongs to the active lanes.
+
 ## Outcome
 
 | | |

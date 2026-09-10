@@ -22,9 +22,10 @@
   provider, changing `AI_LLM_PROVIDER` / `AI_CHAT_PROVIDER` / `EMAIL_PROVIDER`, or enabling a
   new Composio toolkit — whichever is sooner
 - Decision status: _blank — `approved` / `approved-with-conditions` / `rejected` / `deferred`_
-- Scope: the **15 external providers** reachable from backend commit `45f8a2e99` on branch
-  `release/code-10-10-v2`. All organizations, all regions. Environments: every environment
-  running this commit with the corresponding credential set.
+- Scope: the original **15 provider entries** were enumerated from backend commit `45f8a2e99`
+  on branch `release/code-10-10-v2`. The 2026-09-10 huddle reconciliation marks P15 retired and
+  adds the current Google Calendar/Meet boundary as P16. All organizations, all regions;
+  each current flow requires its corresponding configured connection and unsigned approval.
 
 ## Accountable approval
 
@@ -63,6 +64,13 @@ and every other provider's region follows the credential issued to it. Where a c
 | P13 | **Cloudflare Turnstile** | `turnstile.service.ts:42` → `https://challenges.cloudflare.com/turnstile/v0/siteverify` | **Visitor IP address** and challenge token | Cloudflare global | transient | **DECISION REQUIRED** |
 | P14 | **Web Push (VAPID)** | `web-push@^3.6.7`, `realtime/web-push.service.ts:28,82` | Push endpoint (**identifies the browser/device**) and notification body → **Google FCM / Mozilla / Apple**, whichever the subscriber's browser names | browser-vendor-determined | transient | **DECISION REQUIRED** |
 | P15 | **TURN/STUN relay (retired)** | Removed with the Google Meet migration | No current data flow; the former relay could see participant IP addresses and media | not configured | none | **RETIRED — NO APPROVAL REQUIRED** |
+| P16 | **Google Calendar / Google Meet** | `backend/src/modules/chat/chat-huddle-meeting.ts` creates a Google Calendar event through Composio; `frontend/features/chat/huddle-mini-bar.tsx` opens the returned Meet URL | Composio and Google Calendar receive the channel name and meeting start/end times; participants join Google's Meet surface for the meeting | Not established by repository configuration | Not established by repository configuration | **DECISION REQUIRED** for the current Google Calendar/Meet flow; retiring TURN does not approve its replacement |
+
+The huddle connection is resolved through P11 Composio, which retains the provider OAuth
+credentials. StreamlineOS stores the returned meeting URL; the browser joins Google Meet
+directly. The former ICE-server endpoint and WebRTC mesh/relay path are retired. P16 still
+requires the accountable approval above and appropriate provider terms; no signature or
+approval is implied by the migration.
 
 **The register is not published.** `subprocessors` and `subprocessor_subscribers` exist as
 tables and are **empty, with no application code reading or writing them** — the only reference
@@ -76,7 +84,7 @@ table is condition **C-5** below.
 ### 1. Which providers are approved, and for what data
 
 Nothing is approved by this document. The recommendation put to the signers is a **tiering**,
-because approving fifteen providers as one block is how a subprocessor list stops meaning
+because approving every provider as one block is how a subprocessor list stops meaning
 anything:
 
 | Tier | Providers | Recommended position |
@@ -89,6 +97,7 @@ anything:
 | **AI relay** | P10 OpenRouter | **Recommend: do not approve for personal data.** The terminal processor is unknowable from configuration, which makes a subprocessor list naming "OpenRouter" incomplete by construction |
 | **Integrations** | P11 Composio | Approve **only with user-facing disclosure** — it carries mailbox and calendar *content*, not just tokens, and the correspondents have no relationship with this platform |
 | **Realtime relay** | P15 TURN | Retired with the Google Meet migration; no TURN approval remains open |
+| **Calendar and meetings** | P16 Google Calendar / Google Meet, reached through P11 Composio and the browser | Review the channel-name/calendar-data disclosure, participant meeting surface, provider terms, region and retention; no approval is recorded |
 
 ### 2. PII minimization — measured, and it does not hold
 

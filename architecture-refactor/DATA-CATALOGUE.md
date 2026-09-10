@@ -107,7 +107,7 @@ the live catalog. They are corrected here rather than silently overwritten.
 | R1 | `hr_people.date_of_birth`, `.gender`, `.national_id_number`, `.phone`, `.mobile_phone`, `.current_address` | **None of these columns exist.** `hr_people` is now an 11-column link table (`id`, `org_id`, `user_id`, `organization_person_id`, `deleted_at`, `row_version`, `archived_at`, `archived_by_membership_id`, `updated_by_membership_id`, `created_at`, `updated_at`). Every one of those attributes now lives on **`organization_people`**. | The whole of §2 was cataloguing a table that holds no personal data. Rewritten as §3 against `organization_people`. |
 | R2 | `projects`, `project_members`, `project_meetings`, `meeting_attendees`, `webhook_deliveries` catalogued as `public` tables | They exist, but in the **`build` schema**, not `public`. A `public`-only inventory misses them and the other 78 `build` tables with them. | Scan widened to all four schemas; `build` intake data added as §11. |
 | R3 | D8: "AI PII-stripping layer — implement before any EU HR data sent to AI providers" | **The layer exists and is on by default.** `redactSensitiveData` (`backend/src/modules/ai/core/redaction.util.ts`) is applied in `preflightCall` (`backend/src/modules/ai/core/gateway/ai-gateway-runner-call.ts:76-82`) to every gateway call unless the caller passes `redact: false`. | D8 restated as a *scope* decision, not a build decision — see §10 and the measured coverage gap. |
-| R4 | §10 listed 11 subprocessors | The code also calls **Twilio**, **Cloudflare Turnstile**, a **TURN/STUN relay**, and **Web Push (VAPID → FCM/Mozilla/Apple)**. The `subprocessors` table exists and is **empty, with no application code reading or writing it**. | Provider register rebuilt as §14 and fed to `decisions/privacy-C185-provider-approvals.md`. |
+| R4 | §10 listed 11 subprocessors | The original review also found **Twilio**, **Cloudflare Turnstile**, a **TURN/STUN relay**, and **Web Push (VAPID → FCM/Mozilla/Apple)**. TURN/STUN has since been retired; huddles now create a Google Calendar event through Composio and open its Google Meet link. | Provider register rebuilt as §14 and fed to `decisions/privacy-C185-provider-approvals.md`; current huddle boundaries are P11, P15 and P16 below. |
 
 ### 1.1 Corrections to revision 2 (made by revision 3)
 
@@ -614,6 +614,14 @@ enterprise customers require. Recorded as D18.
 | P13 | **Cloudflare Turnstile** | `backend/src/common/security/turnstile.service.ts` | **Visitor IP address** and challenge token | Cloudflare global | Transient | DECISION REQUIRED. **Absent from revision 1** |
 | P14 | **Web Push (VAPID)** | `backend/src/modules/realtime/web-push.service.ts` | Push endpoint (identifies the browser/device) and notification body → **Google FCM / Mozilla / Apple**, whichever the subscriber's browser names | Browser-vendor-determined | Transient | DECISION REQUIRED. **Absent from revision 1** |
 | P15 | **TURN/STUN relay (retired)** | Removed with the Google Meet migration | No current data flow; the former relay could see participant IP addresses and media | Not configured | None | RETIRED; no approval required |
+| P16 | **Google Calendar / Google Meet** | `backend/src/modules/chat/chat-huddle-meeting.ts` creates a Google Calendar event through Composio; `frontend/features/chat/huddle-mini-bar.tsx` opens the returned Meet URL | Composio and Google Calendar receive the channel name and meeting start/end times; participants join Google's Meet surface for the meeting | Not established by repository configuration | Not established by repository configuration | DECISION REQUIRED for the current Google Calendar/Meet flow; retiring TURN does not approve its replacement |
+
+Huddle boundary reconciliation (2026-09-10): P11 Composio resolves the connected Google account
+and executes the calendar tool; provider OAuth credentials remain with Composio. StreamlineOS
+stores the returned meeting URL. The browser joins Google Meet directly, so StreamlineOS no
+longer exposes an ICE-server endpoint or operates the former WebRTC mesh/relay path. Approval
+of the current calendar/meeting flow remains unsigned in
+`decisions/privacy-C185-provider-approvals.md`; P15 records only the retired relay.
 
 ---
 

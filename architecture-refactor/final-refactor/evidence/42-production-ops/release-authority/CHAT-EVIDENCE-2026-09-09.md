@@ -1,89 +1,136 @@
-# PRD-C127 Chat — Current-Head Executable Evidence 2026-09-09
+# PRD-C127–C129 / C156 Chat — executable evidence
 
-Reconstruction of executable proof at current head. It supersedes the removed 2026-09-04
-source-read note, which predated the huddle→Meet migration, the five mutation-auth
-fixes, attachment membership-gating at every seam, invite expiry/caps, atomic unread counting,
-the `/chat/saved` contract fix and the attachment-URL-expiry proof.
+Updated 2026-09-10. This existing record distinguishes commands run in the current
+Windows workspace from the previous machine's database/provider evidence. It does not
+certify production behavior or responsive browser acceptance.
 
-Environment: PostgreSQL 18.6 `scratch_local` (`D:\localstack\data18`, loopback, `sslmode=disable`),
-**migration head 701** (the 2026-09-04 doc cited 685), `streamline_app` + `neondb_owner` roles,
-899 RLS-enabled tables. Backend booted in production mode against `scratch_local`; mention probe
-observed over the real Ably app. Local jest binary throughout (not `npx`).
+## Current result
 
-> Note: the PG18 cluster was resetting every connection with Windows error 487 (shared-memory
-> reservation failure under memory pressure); a `pg_ctl restart` re-based it and cleared it. See
-> [[windows-postgres-dies-under-memory-pressure]].
+| Check | Observed result |
+| --- | --- |
+| Backend Chat unit selection | **53 suites / 503 tests PASS** |
+| Backend entity-channel controller E2E | **1 suite / 12 tests PASS** after strengthening the successful-read control |
+| Backend message/idempotency fixture follow-up | **2 suites / 18 tests PASS**, no missing-`tx.execute` error |
+| Backend sender/timeline consolidation follow-up | **5 suites / 47 tests PASS** |
+| Frontend Chat selection, excluding KB/support/assistant component directories | **26 suites / 234 tests PASS** |
+| Entity-action accessibility follow-up | **1 suite / 6 tests PASS**, no missing-description warning |
+| Read-path PostgreSQL suite | **NOT EXECUTED: setup refused, 0 tests**; no approved disposable database configured |
+| Shared typechecks, cycle gates and contract gates | Release coordinator owns the final run and revision binding |
+| Live mention delivery / Ably / Google Meet | Not rerun; no external messages or provider calls made |
+| Browser loading/error/retry/responsive acceptance | Not verified in this run |
 
----
+The previous all-green entity-channel count hid a malformed fixture: its no-join case
+asserted only that no insert happened. Adding HTTP 200 reproduced a red control
+(expected 200, received 500). The fixture now reuses the complete channel row and supplies
+the nested membership/user shape; all 12 cases pass with no response-contract exception.
+Negative cases still withhold unauthorized entity titles, including poll and thread reads.
 
-## VERDICT: PASS with one remaining test-only finding (no product defect)
+The unit rerun also exposed two outdated transaction mocks. They now supply `execute`,
+so deferred tenant work reaches its mocked reminder/cache dependencies. The XSS case
+requires a successful write and asserts both retained text and absent script markup;
+it no longer catches every error or conditionally skips its assertion.
 
-Every product dimension is proven at current head. The remaining failure is a fixture-sensitive
-index assertion, not a product regression. The entity-channel harness finding is resolved below.
+The timeline now consumes the existing `SENDER_MEMBERSHIP_ID_ONLY` projection in all five
+source locations: list, poll, thread parent, thread replies and the shared reply preview.
+That covers eight executed relation selections without changing the selected fields.
+Sender shape, tenant isolation, cursor ordering, poll pagination and reply-channel tests pass.
 
-## Measured totals (this session)
+## Reproducible commands
 
-| Suite | Result |
-|---|---|
-| Backend chat unit specs (`jest`, DB-free) | **53 suites / 503 tests PASS** |
-| Backend chat real-DB specs (`jest-db.json`, `scratch_local`) | 4 suites — **3 PASS (17 tests) / 1 FAIL (1 test)** → Finding F1 |
-| Backend chat controller e2e (`jest-e2e.json`) | Five previously green suites plus repaired entity-channel suite; focused rerun **12/12 PASS** |
-| Frontend chat tests (`jest`) | **27 suites / 243 tests PASS** |
-| Live mention delivery probe (booted API + Ably) | **2 / 2 runs PASS** |
+From `backend/`, run the controller check with the existing isolated environment builder.
+It generates a fresh Ed25519 signing key, disables workers and excludes external credentials
+and `.env`. These loopback URLs are mocked harness targets, not an assertion that a server exists.
 
-## Sub-claim evidence (current head)
+```powershell
+@'
+const { buildSeededProcessEnvironment, assertSeededProcessIsolation } = require('./test/helpers/seeded-process-environment');
+const env = buildSeededProcessEnvironment({ ...process.env, DATABASE_URL: 'postgres://owner:test@127.0.0.1:5432/scratch_chat_mocked', APP_DATABASE_URL: 'postgres://streamline_app:test@127.0.0.1:5432/scratch_chat_mocked' }, 'scratch_chat_mocked');
+assertSeededProcessIsolation(env);
+const result = require('node:child_process').spawnSync(process.execPath, ['--max-old-space-size=8192', './node_modules/jest/bin/jest.js', '--config', './jest-e2e.json', '--runInBand', '--testPathPattern=chat-entity-channel.controller.e2e-spec'], { env, stdio: 'inherit', windowsHide: true });
+process.exitCode = result.status ?? 1;
+'@ | node -r ts-node/register/transpile-only
+```
 
-| Sub-claim | Result | Mechanism |
-|---|---|---|
-| Channel/thread/member/message/reaction/attachment schema, tenant-composite integrity | PASS | 13 `chat_*` tables (2 huddle) at head 701; tenant-isolation unit + `.db.spec` pass; RLS live |
-| Channel & mutation authorization | PASS | Entity-channel controller E2E now 12/12; sibling suites cover guard-chain and mutation authorization |
-| Cross-channel & cross-tenant denial | PASS | `chat-cross-tenant-404`, `chat-*-tenant-isolation`, `chat-bola-proof` unit specs pass; e2e returns 404 not 403 |
-| Message ordering & concurrent position allocation | PASS | `chat-unread-concurrent-delivery.db.spec.ts` on real DB: `UPDATE … message_count+1 RETURNING` row-lock yields gapless, strictly-increasing `channel_position`; BITE (bare SELECT) duplicates, LOCK serializes |
-| Fanout & unread counters | PASS | atomic unread proven above; `chat-fanout-outbox.consumer` + `outbox-backed-message-fanout.provider` unit specs pass |
-| Bounded history & search | PASS | history cap + channel-history index-served (`idx_chat_messages_channel_position`, no Seq Scan) proven in `chat-read-path-hardening.db.spec.ts`; search unit specs pass |
-| Reconnect / realtime / offline | PASS | `chat-reconnect-replay` unit; frontend realtime channel/sender-spoof/dedup/schema + offline UI (243 FE tests) |
-| Attachment privacy & signed URLs | PASS | `chat-attachments` unit (3600s TTL); gated at every read seam (`28bd181b2`); URL-expiry storage proof (`21eecbbc3`) |
-| Invitation expiration & usage limits | PASS | `chat-invite-link-expiry` + `chat-invite-links.service` unit specs (expire / cap uses / admit once) |
-| Cache & realtime invalidation | PASS | unread namespace invalidation (deferred post-commit) unit-covered; FE query-key + realtime dedup |
-| Provider/realtime outage, retry, recovery | PASS | outbox-consumer retry, realtime-revocation, huddle Composio/Meet-failure (412/503) unit specs |
-| Live mention delivery | PASS | 2/2 probe runs: `@alex`→Alex 1 / Alexander 0 (no substring over-match); `@everyone`→Alex 1 / Alexander 1 (roster expansion); 2 persisted rows |
-| Huddle WebRTC + ICE-route removal reconciled | PASS | see below |
+Backend unit selection and the follow-up after changing its two fixtures:
 
-## Huddle / ICE-server route reconciliation
+```powershell
+$env:NODE_ENV='test'
+$env:DOTENV_CONFIG_PATH='NUL'
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --testPathPattern=src/modules/chat/
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/modules/chat/chat-messages.service.spec.ts src/modules/chat/__tests__/chat-send-idempotency.spec.ts
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/modules/chat/__tests__/chat-message-wire-shape.spec.ts src/modules/chat/__tests__/chat-message-timeline-isolation.spec.ts src/modules/chat/__tests__/chat-position-cursor-ordering.spec.ts src/modules/chat/__tests__/chat-poll-pagination.spec.ts src/modules/chat/__tests__/chat-reply-target-channel-scope.spec.ts
+```
 
-The WebRTC mesh controls (`PATCH /chat/huddles/{id}/{mute,deafen,hand,screenshare}`,
-`POST /chat/huddles/{id}/signal`) and `GET /realtime/ice-servers` were removed with the Google-Meet
-migration. They are **correctly retained as `internal` entries** in
-`backend/contracts/api-contract-registry.json` — the registry is a ledger of what was ever exposed so
-`check:contract-breaking-change` can detect removals ([[retained-huddle-ice-registry-entries-are-the-removal-ledger]]).
-`check:contract-breaking-change` is **green** (internal removals are not breaking); `openapi.json` no
-longer serves them; `chat-huddles.controller.e2e-spec.ts` asserts `GET /realtime/ice-servers` now 404s
-(**passed** this session). Nothing to delete or regenerate for chat.
+From `frontend/`, the selection and the follow-up after adding the dialog description:
 
-- `check:contract-registry` is now green; the two former KB registry gaps were repaired after this evidence was first drafted.
-- Stale governance docs still list the retired ICE/TURN flow as "DECISION REQUIRED"
-  (`architecture-refactor/DATA-CATALOGUE.md:616`, `decisions/privacy-C185-provider-approvals.md:65`);
-  flagged for reconciliation to "retired (no TURN relay after huddle→Meet)".
+```powershell
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --testPathPattern=chat --testPathIgnorePatterns='features/support|wiki|kb|components/assistant|node_modules|.next'
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath features/chat/entity-action-dialog.test.tsx
+```
 
-## Remaining finding (test-only, no product defect)
+From `backend/`, the attempted database command:
 
-### F1 — `chat-read-path-hardening.db.spec.ts` due-reminder assertion is fixture-distribution-fragile
-The due-reminder cron query (`org_id=? AND remind_at<=now() AND sent_at IS NULL AND cancelled_at IS NULL`)
-asserts index `idx_chat_reply_reminders_pending`. That partial index **exists and matches the query
-exactly**. On `scratch_local` the planner instead picks `(org_id, sender_membership_id)` for the tiny
-`probe-org` slice (still an **index scan on the org slice, not a Seq Scan** — the anti-O(tenant) intent
-holds), and a **Seq Scan** for the one seed org holding 309,380 of 312,800 rows as pending+due (≈99% of
-the table matches, so the partial index is correctly not selective). Neither slice is a realistic
-production distribution. **Fix:** seed `probe-org` with a realistic pending/sent mix, or assert
-"index-served / no Seq Scan" rather than the exact index name.
+```powershell
+node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --config ./jest-db.json --runInBand --testPathPattern=chat-read-path-hardening.db
+```
 
-### Resolved F2 — entity-channel controller harness
-The harness now supplies the current access, placement, and database surfaces. The focused
-`chat-entity-channel.controller.e2e-spec.ts` rerun passes **12/12**, including guarded negative
-cases. Preserve the current worktree repair and bind it to the final backend revision before closing
-the active Chat task.
+Actual result: `REFUSED: .db.spec.ts suites are DESTRUCTIVE` and `no *DATABASE_URL is set`.
+The setup guard ran before the suite. Running its six cases requires an approved disposable
+PostgreSQL database containing migrated Chat tables and at least one organization row,
+all database URL variables directed at that target, and `ALLOW_DESTRUCTIVE_DB_TESTS=1`.
+No remote application database was used as a substitute.
 
-## Metadata
-- Date: 2026-09-09 · Auditor: current-head executable reconstruction
-- DB: `scratch_local` PG18.6, migration head 701 · API booted prod-mode against it · Ably live
-- Git commands run: read-only `log`/`grep` for the delta; no mutating git
+## Read-path fixture repair — execution still pending
+
+The production `idx_chat_reply_reminders_pending` already exists in migration 1060 and the
+Drizzle declaration. The former assertion queried literal `probe-org` in whatever seed
+distribution happened to be installed, so a different valid index or a nearly all-due seed
+could determine the result.
+
+The corrected case clones the live reminder table and every live index definition into
+`pg_temp` inside a rolled-back transaction. Its 40,000 rows span four tenants: 99.2% sent,
+0.4% cancelled and 0.4% pending, with both future and due reminders. It checks exactly
+20 due rows for the selected tenant, runs `ANALYZE`, then requires the exact pending index
+and no sequential scan in `EXPLAIN (ANALYZE, BUFFERS)`. Other source indexes stay present,
+so the case does not force its answer by removing competing indexes. No production index
+or persistent fixture row changes. This controls planner distribution; it is not an RLS
+benchmark because the temporary clone has no source-table RLS policies.
+
+CHAT-002 remains open until this SQL executes successfully on the approved target.
+
+## Huddle and provider reconciliation
+
+The retired mesh controls and `GET /realtime/ice-servers` remain removal-ledger entries
+marked `internal` in the API contract registry. They are not current product routes.
+The former F2 failure and old KB registry-gap wording are not carried forward as open
+Chat defects; the coordinator must bind current contract-gate results at integration.
+
+`DATA-CATALOGUE.md` and `decisions/privacy-C185-provider-approvals.md` now agree: P15 is a
+retired TURN/STUN relay with no current approval requirement. P11 Composio resolves the
+Google connection and sends the channel name and meeting times to Google Calendar;
+StreamlineOS stores the meeting URL and the browser joins Google Meet. P16 records this
+current replacement boundary, with region/retention unestablished and approval unsigned.
+Retiring TURN does not approve Google Calendar/Meet.
+
+## Revision provenance and historical limits
+
+Coordinator-provided base revisions: root/frontend `96d4ef1a5e2d7d6e9ff3a2bafd197f800043e037`,
+backend `75ec87be3fcefd0490b2b93634ca6eaebc051e93`. The commands above tested the working
+tree containing these repairs plus other uncommitted changes. This is not a clean revision
+pair. Final root/backend/frontend revisions and shared gate results must be attached by the
+release coordinator after integration (CHAT-003). No Git command was run by the Chat agent.
+
+Working-tree SHA-256 for the controller fixture:
+`189C85A5DBB108693C63CE23435BAC4FB8E370E256D57FD445BFBC9CBFF25ACB`.
+Read-path fixture:
+`419C71386F5775C993C6008F93C28095B612E283A23152C6A5BC0FDB297F5418`.
+The final lint cleanup removes the unused full-schema registration from this insert-only
+fixture; it does not need relational-query metadata. Database execution remains pending.
+Accessible dialog:
+`EBD883E863FFE2E88D4E5E1AC5F2472F48515CFC270A083BF117651469F7BEB0`.
+
+The preceding 2026-09-09 record reported PostgreSQL 18.6 `scratch_local`, migration head
+701, 899 RLS-enabled tables, a production-mode API and two live Ably mention probes.
+That machine's database and provider run were not available for reproduction here.
+Those observations remain historical context, not current-head proof. In particular,
+this run does not renew its blanket statement that every product dimension is proven.

@@ -4,6 +4,17 @@
 
 **How to use it:**
 
+Current local verification (2026-09-10): the final full frontend unit run passed 486 suites /
+5,123 tests, including ten cross-tab cases and Support create/edit trigger coverage. Build mutations
+now notify same-user/same-organization peer caches, including when the originating
+provider unmounts during the request. Ticket resolution failures offer retry; risk
+cells, parent search and reaction controls expose accessible state/names and touch
+controls. Wiki comments distinguish read errors from empty results and support retry.
+These checks do not mark responsive or screen-reader journeys visually certified:
+the browser runtime has no connected browser. Current evidence and unresolved work:
+`architecture-refactor/prd/build.md`, `architecture-refactor/prd/documents.md` and
+`architecture-refactor/prd/overall-release.md`.
+
 Build acceptance follow-up (2026-09-09): the KB isolation gap is closed (946/946 declared coverage; 469 runtime suites / 1,992 tests; two real-PostgreSQL controls). Whole OpenAPI snapshots were regenerated and committed byte-identically; 2,668/2,668 response seam calls carry parsing contracts. Exact timesheet totals remain synchronous by explicit compatibility decision, with their O(history) cost disclosed. Browser discovery still finds no connection, so loading/empty/error/retry/responsive states and current Web Vitals remain unverified. Evidence: `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/BUILD-ACCEPTANCE-FOLLOWUP-2026-09-09.md`.
 
 Build/PM verification (2026-09-09): repaired infinite-board edit/drag cache updates, conditional field rollback, project analytics/report invalidation, ticket/detail/sprint/dashboard refresh, cursor-based older activity, and logged-time response parsing. Bounded reports display actionable errors and retry both burnup dependencies. The final focused run passed **24 suites / 137 tests**; frontend source and strict test-tree typechecks passed. Madge processed 5,926 files with zero cycles (20 external-import warnings). Evidence: `.artifacts/build-review-20260909-frontend-final-results.json` and `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/CERTIFICATION-BUILD-PM-2026-09-09.md`. Browser validation is blocked until a signed-in browser is connected; production latency, Web Vitals and responsive layouts are not certified by these checks.
@@ -140,6 +151,15 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ---
 
 ## Chat
+
+2026-09-10 verification: Chat frontend selection passed 26 suites / 234 tests. The entity-action
+dialog now has an accessible description; its focused follow-up passed 6/6 with no Radix
+description warning. Backend Chat passed 53 suites / 503 tests; the strengthened entity-channel
+controller suite passed 12/12, and the message/idempotency fixture follow-up passed 18/18.
+The read-path database fixture has been isolated from seed distribution, but its real-PostgreSQL
+suite has not executed in this environment because no approved disposable database is configured.
+Responsive browser acceptance remains unverified. Evidence:
+`architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/CHAT-EVIDENCE-2026-09-09.md`.
 
 - [x] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ✓ E ✓ Err ✓ Offline ✓ States ✓ — Chat authz audit (2026-09-09): backend fixed a cross-channel reply content leak on message send, attachments readable outside channel membership, a private-channel existence oracle on send/edit/delete, and admin-check bypasses on channel-update/role-change — all exercised from this page's message panel and channel-info panel, now covered by new seeded real-database e2e specs. Unread badges now key off a commit-ordered position cursor (migration 1074), not a timestamp. Huddle panel shows a Join-meeting link only; the WebRTC mesh, device pickers and mute/deafen controls were deleted (`huddle-panel.tsx`). States completed 2026-09-09: loading skeletons, empty, error, and an offline/reconnect banner driven by `navigator.onLine` in `use-message-panel-data.ts` ("You're offline — messages will be sent when you reconnect"). Unread counting proved atomic under concurrent delivery by a two-connection real-DB spec, and cursor replay proved gapless and duplicate-free by `chat-realtime-unread.seeded-e2e-spec.ts` (12/12). Read cost measured as `streamline_app` with the tenant GUC: a 50-message page is 96 buffers, page 2 is 72, and unread across 52 channels is 33 — unread is O(channels), never O(messages). Query counts over the HTTP stack (`route-budget-http`, 5 of 7 chat routes measured): `/chat/unread` db=14, `/chat/channels` db=18, `/messages` db=16, `/members` db=16, `/chat/saved` db=13. That run found `GET /chat/saved` returning a shape its `@ResponseSchema` did not describe (`reactions` never hydrated, and `nextCursor` null vs `optional`) — the client contract rejected it too, so the Saved Messages panel failed closed for anyone whose first page was also their last. Both ends fixed.
 - [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ? — Chat authz audit (2026-09-09): "Create Channel" on this page reached a channel-create record-binding bypass — the insert returned the raw row instead of a membership-bound detail load, and entity/DM channels could skip the plan-limit check; both fixed in `chat-channels.service.ts`, now covered by new seeded real-database e2e specs for channel lifecycle and membership. A11y 2026-09-09: the discovery list now carries `aria-busy` + an `sr-only` `role="status"` while loading, and each row an `aria-label="Open <channel>"`. **Responsive was NOT visually verified at 375/768/1280** — the breakpoint classes are present in source but nobody rendered the page at those widths, so this row stays unchecked until someone does.
@@ -784,6 +804,8 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ---
 
 ## Support
+
+2026-09-10 RBAC-004 verification: Support automation create/edit now share ticket-only trigger options; the rendered editor regression passes 2/2. Backend ownership and manual-ticket-target regressions plus adjacent automation tests pass 115/115 across 8 suites. Scope, commands, red/green evidence and remaining integration/deployed proof are recorded in [the RBAC lane](../architecture-refactor/prd/rbac.md). This does not mark the unverified Support page checklist below complete.
 
 ### Hub & inbox
 - [ ] `/support` · **Support** · hooks: `→ features/support` · §8: States ?

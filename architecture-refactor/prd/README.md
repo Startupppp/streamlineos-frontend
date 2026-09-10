@@ -1,6 +1,6 @@
 # Active delivery backlog
 
-Status: active 2026-09-09
+Status: active 2026-09-10
 
 This directory is the sole source of current pending work. The compact
 [`PRD-10-10-CODE-RELEASE-TODO.md`](../PRD-10-10-CODE-RELEASE-TODO.md) provides
@@ -13,12 +13,12 @@ final gates, evidence reconciliation, and commits.
 
 | Parallel lane | Backlog | Current state | May start |
 | --- | --- | --- | --- |
-| Architecture and performance | [architecture.md](architecture.md) | 2 ready | Now |
+| Architecture and performance | [architecture.md](architecture.md) | HR pagination verified; mobile measurement blocked | When authenticated browser exists |
 | Billing and payments | [billing-payments.md](billing-payments.md) | External proof only | When environment/approver exists |
-| Chat | [chat.md](chat.md) | 3 ready | Now |
-| Build/PM | [build.md](build.md) | 1 ready | Now |
-| RBAC and tenant isolation | [rbac.md](rbac.md) | Final integration only | After lane work lands |
-| Documents, KB and e-sign | [documents.md](documents.md) | 3 ready | Now |
+| Chat | [chat.md](chat.md) | Source fixes complete; database and final integration pending | When disposable database exists |
+| Build/PM | [build.md](build.md) | Cross-tab sync complete; browser and performance acceptance pending | When authenticated browser exists |
+| RBAC and tenant isolation | [rbac.md](rbac.md) | Local security repairs and final verification | Now; database/deployed proof needs environment |
+| Documents, KB and e-sign | [documents.md](documents.md) | Local certification complete; browser/database/deployed proof pending | When environments exist |
 | Production and approvals | [production-and-approvals.md](production-and-approvals.md) | Externally blocked | When deployed access/owners exist |
 | Overall release | [overall-release.md](overall-release.md) | Final integration only | After all ready work lands |
 
