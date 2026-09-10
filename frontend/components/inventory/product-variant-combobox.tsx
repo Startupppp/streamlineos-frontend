@@ -11,6 +11,13 @@ interface ProductVariantComboboxProps {
   disabled?: boolean;
   className?: string;
   activeOnly?: boolean;
+  /**
+   * `role="combobox"` does not take its name from content, so the trigger's
+   * visible label is not an accessible name and axe reports `button-name`. The
+   * underlying `Combobox` has carried the escape hatch all along; this was the
+   * only thing between it and the callers.
+   */
+  ariaLabel?: string;
 }
 
 export function ProductVariantCombobox({
@@ -20,6 +27,7 @@ export function ProductVariantCombobox({
   disabled,
   className,
   activeOnly = true,
+  ariaLabel,
 }: ProductVariantComboboxProps) {
   const { data: variants = [], isLoading } = useProductVariants(
     activeOnly ? { activeOnly: true } : undefined,
@@ -45,6 +53,7 @@ export function ProductVariantCombobox({
       emptyText={isLoading ? "Loading variants…" : "No variants match your search."}
       disabled={disabled || isLoading}
       className={className}
+      ariaLabel={ariaLabel}
     />
   );
 }

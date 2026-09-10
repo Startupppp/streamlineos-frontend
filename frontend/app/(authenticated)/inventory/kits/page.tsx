@@ -21,25 +21,14 @@ import {
   useKitBuildable,
   type KitComponent,
 } from "@/hooks/api/inventory/stock-types-dock";
-
-const COMPONENT_COLUMNS: DataTableColumn<KitComponent>[] = [
-  {
-    key: "component",
-    header: "Component",
-    cell: (row) => <span className="text-sm">Variant #{row.componentVariantId}</span>,
-  },
-  {
-    key: "per",
-    header: "Per kit",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    cell: (row) => Number(row.quantityPer).toLocaleString(undefined, { maximumFractionDigits: 4 }),
-  },
-];
+import { useProductVariants } from "@/hooks/api/inventory/products";
+import { KitBomEditorSheet } from "@/features/inventory/components/kits/kit-bom-editor-sheet";
 
 function KitsContent() {
   const canRead = useCan("inventory:products:read");
   const canAssemble = useCan("inventory:kits:assemble");
+  const canEditBom = useCan("inventory:products:update");
+  const [editingBom, setEditingBom] = useState(false);
 
   const [kitInput, setKitInput] = useState("");
   const kitVariantId = Number(kitInput) > 0 ? Number(kitInput) : null;
@@ -52,6 +41,48 @@ function KitsContent() {
   const [quantity, setQuantity] = useState("");
 
   const components = useMemo(() => (Array.isArray(bom.data) ? bom.data : []), [bom.data]);
+
+  /*
+   * The BOM projection carries `componentVariantId` and nothing else, so this
+   * table used to print "Variant #42" at a person and expect them to know what
+   * that was (§5). The variant list is already in the cache — the component
+   * picker in the editor reads the same query — so the name is resolved at the
+   * display boundary rather than asked of the server again.
+   */
+  const { data: variants } = useProductVariants({ activeOnly: false });
+  const variantNames = useMemo(() => {
+    const byId = new Map<number, string>();
+    for (const variant of variants ?? [])
+      byId.set(variant.id, `${variant.productName} — ${variant.name}`);
+    return byId;
+  }, [variants]);
+
+  const componentColumns: DataTableColumn<KitComponent>[] = useMemo(
+    () => [
+      {
+        key: "component",
+        header: "Component",
+        cell: (row) => (
+          <span className="text-sm">
+            {variantNames.get(row.componentVariantId) ?? `Variant #${String(row.componentVariantId)}`}
+          </span>
+        ),
+      },
+      {
+        key: "per",
+        header: "Per kit",
+        headerClassName: "text-right",
+        className: "text-right font-mono tabular-nums",
+        cell: (row) =>
+          Number(row.quantityPer).toLocaleString(undefined, { maximumFractionDigits: 4 }),
+      },
+    ],
+    [variantNames],
+  );
+
+  function handleEditBomOpen(): void {
+    setEditingBom(true);
+  }
 
   const handleRetry = useCallback(() => {
     void bom.refetch();
@@ -142,14 +173,21 @@ function KitsContent() {
         ) : (
           <>
             <section className="space-y-2">
-              <h2 className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
-                Bill of materials
-              </h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+                  Bill of materials
+                </h2>
+                {canEditBom ? (
+                  <Button size="sm" variant="outline" onClick={handleEditBomOpen}>
+                    {components.length > 0 ? "Edit components" : "Set components"}
+                  </Button>
+                ) : null}
+              </div>
               {components.length > 0 ? (
                 <>
                   <DataTable
                     data={components}
-                    columns={COMPONENT_COLUMNS}
+                    columns={componentColumns}
                     getRowKey={(row) => row.id}
                   pagination={{ pageSize: 25 }}
                   />
@@ -163,7 +201,16 @@ function KitsContent() {
                 <InventoryEmptyState
                   illustration={<EmptyWarehouseIllustration />}
                   title="This SKU has no bill of materials"
-                  description="Without components it cannot be assembled. Set them on the product, then come back."
+                  description={
+                    canEditBom
+                      ? "Without components it cannot be assembled. Say what it is made of to make it a kit."
+                      : "Without components it cannot be assembled, and changing that needs permission to update products."
+                  }
+                  action={
+                    canEditBom
+                      ? { label: "Set components", onClick: handleEditBomOpen }
+                      : undefined
+                  }
                 />
               )}
             </section>
@@ -217,6 +264,15 @@ function KitsContent() {
           </>
         )}
       </div>
+
+      {kitVariantId !== null ? (
+        <KitBomEditorSheet
+          open={editingBom}
+          onOpenChange={setEditingBom}
+          kitVariantId={kitVariantId}
+          components={components}
+        />
+      ) : null}
     </PageWrapper>
   );
 }
