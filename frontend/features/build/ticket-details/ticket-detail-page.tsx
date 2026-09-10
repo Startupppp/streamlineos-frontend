@@ -7,6 +7,7 @@ import { EllipsisIcon, ShareIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 
 interface TicketDetailPageProps {
@@ -74,9 +76,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError } = useTicketByKey(
+  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError, refetch: refetchByKey } = useTicketByKey(
     projectId,
     parsed?.ticketNumber ?? null,
+    INLINE_READ_ERROR,
   );
   const ticketId = byKeyTicket?.id ?? null;
 
@@ -98,6 +101,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     ticket,
     isLoading,
     ticketError,
+    refetchTicket,
     sprints,
     subtasks,
     members,
@@ -170,7 +174,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </PageWrapper>
       );
     }
-    return notFound();
+    if (isApiError(byKeyError) && byKeyError.status === 404) return notFound();
+    return (
+      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
+      </PageWrapper>
+    );
   }
 
   if (!byKeyTicket) return notFound();
@@ -201,6 +210,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_TICKET_NOT_FOUND") {
     return notFound();
+  }
+
+  if (ticketError && !ticket) {
+    return (
+      <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
+      </PageWrapper>
+    );
   }
 
   if (!ticket || !ticketId) {

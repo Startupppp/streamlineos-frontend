@@ -159,7 +159,8 @@ function ViewRow({
             type="button"
             onClick={handleTogglePin}
             title={view.isPinned ? "Unpin" : "Pin"}
-            className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground transition-opacity"
+            aria-label={view.isPinned ? `Unpin ${view.name}` : `Pin ${view.name}`}
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
           >
             {view.isPinned ? (
               <PinOff className="h-3 w-3" />
@@ -171,7 +172,8 @@ function ViewRow({
             type="button"
             onClick={handleDelete}
             title="Delete view"
-            className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+            aria-label={`Delete ${view.name}`}
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
             {...deleteHoverHandlers}
           >
             <Trash2Icon ref={deleteIconRef} size={12} />

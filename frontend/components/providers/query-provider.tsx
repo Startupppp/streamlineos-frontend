@@ -17,6 +17,7 @@ import {
   scopedQueryKeyHashFn,
 } from "@/lib/query-scope";
 import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
+import { publishBuildCacheChange, subscribeBuildCacheSync } from "@/lib/build-cache-sync";
 
 const MAX_QUERY_RETRIES = 1;
 
@@ -58,7 +59,9 @@ function carriesAiCharge(data: unknown): boolean {
 
 export function createAppQueryClient(scope = "unscoped"): QueryClient {
   const mutationCache = new MutationCache({
-    onSuccess: (data) => {
+    onSuccess: (...args) => {
+      const [data, , , mutation] = args;
+      publishBuildCacheChange(client, scope, mutation.options.meta?.permission);
       if (!carriesAiCharge(data)) return;
       void client.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
     },
@@ -93,6 +96,8 @@ function ScopedQueryProvider({
   scope: string;
 }) {
   const [queryClient] = useState(() => createAppQueryClient(scope));
+
+  useEffect(() => subscribeBuildCacheSync(queryClient, scope), [queryClient, scope]);
 
   useEffect(
     () => registerQueryCacheClearer(() => queryClient.clear()),

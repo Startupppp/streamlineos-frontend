@@ -51,6 +51,8 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           key={r.emoji}
           type="button"
           onClick={() => handleEmojiClick(r.emoji)}
+          aria-label={`${r.emoji}: ${r.count} ${r.count === 1 ? "reaction" : "reactions"}`}
+          aria-pressed={r.hasReacted}
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all",
             r.hasReacted
@@ -68,7 +70,8 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           type="button"
           onClick={handleToggle}
           aria-label="Add reaction"
-          className="h-6 w-6 flex items-center justify-center rounded-full border border-border bg-muted hover:border-border/80 hover:bg-accent transition-all opacity-0 group-hover:opacity-100"
+          aria-expanded={showPicker}
+          className="h-6 w-6 flex items-center justify-center rounded-full border border-border bg-muted hover:border-border/80 hover:bg-accent transition-all"
         >
           <SmilePlus className="h-3 w-3 text-muted-foreground" />
         </button>

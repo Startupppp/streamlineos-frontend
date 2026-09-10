@@ -33,6 +33,7 @@ export function useAuthorizedMutation<
   const { data: access, refetch } = useAccess();
   return useMutation({
     ...options,
+    meta: { ...options.meta, permission },
     mutationFn: async (
       variables: TVariables,
       context: MutationFunctionContext,

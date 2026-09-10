@@ -106,6 +106,7 @@ function ParentPickerPopover({
         <Input
           ref={inputRef}
           placeholder="Search tickets…"
+          aria-label="Search parent tickets"
           value={q}
           onChange={handleInputChange}
           className="mb-2 h-8 text-xs"

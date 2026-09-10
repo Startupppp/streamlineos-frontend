@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import { lazyContract } from "@/lib/api-envelope";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -27,18 +28,10 @@ const tfvCreateLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketFieldValueCreateContract),
 );
 
-function customFieldKeys(projectId: number) {
-  return ["projects", projectId, "custom-fields"] as const;
-}
-
-function ticketCustomFieldValueKeys(projectId: number, ticketId: number) {
-  return ["projects", projectId, "tickets", ticketId, "custom-field-values"] as const;
-}
-
 export function useProjectCustomFields(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectCustomField[]>({
-    queryKey: customFieldKeys(projectId),
+    queryKey: queryKeys.projects.customFields(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`, undefined, signal, cfListLazy),
     enabled: canView && !!projectId,
@@ -63,7 +56,7 @@ export function useCreateProjectCustomField(projectId: number) {
         cfLazy,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.projects.customFields(projectId) }),
   });
 }
 
@@ -74,14 +67,14 @@ export function useDeleteProjectCustomField(projectId: number) {
     mutationFn: (fieldId: number) =>
       apiClient.delete<void>(`/build/${projectId}/custom-fields/${fieldId}`, undefined, undefined, cfDeleteLazy),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.projects.customFields(projectId) }),
   });
 }
 
 export function useTicketCustomFieldValues(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<TicketCustomFieldValue[]>({
-    queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
+    queryKey: queryKeys.projects.ticketCustomFieldValues(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketCustomFieldValue[]>(
         `/build/${projectId}/tickets/${ticketId}/custom-field-values`, undefined, signal, tfvListLazy,
@@ -114,7 +107,7 @@ export function useUpsertTicketCustomFieldValues(
       ),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
+        queryKey: queryKeys.projects.ticketCustomFieldValues(projectId, ticketId),
       }),
   });
 }

@@ -99,6 +99,7 @@ export const accountingAndSupportQueryKeys = {
   },
 
   whiteboards: {
+    all: [...base, "whiteboards"] as const,
     list: (projectId: number) =>
       [...base, "whiteboards", "list", projectId] as const,
     detail: (whiteboardId: number) =>

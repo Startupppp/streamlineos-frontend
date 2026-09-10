@@ -52,6 +52,8 @@ export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps
                   <button
                     key={prob}
                     type="button"
+                    aria-label={`${prob} probability, ${impact} impact: ${count} open ${count === 1 ? "risk" : "risks"}`}
+                    aria-pressed={isSelected}
                     onClick={() => onCellClick?.(prob, impact)}
                     className={cn(
                       "flex-1 h-10 rounded flex items-center justify-center text-label font-semibold transition-all",

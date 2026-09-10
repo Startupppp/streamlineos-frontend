@@ -15,6 +15,7 @@ import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-s
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
 
 interface ProjectManager {
@@ -48,7 +49,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     data: ticket,
     isLoading,
     error: ticketError,
-  } = useTicket(projectId, ticketId ?? 0);
+    refetch: refetchTicket,
+  } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
@@ -193,6 +195,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     ticket,
     isLoading,
     ticketError,
+    refetchTicket,
     projectData,
     sprints: sprints ?? [],
     subtasks: subtasks ?? [],

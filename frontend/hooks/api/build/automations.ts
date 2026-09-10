@@ -1,5 +1,6 @@
 ﻿"use client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -34,14 +35,10 @@ export const ACTION_TYPES = [
   { value: "add_comment", label: "Add Comment" },
 ] as const;
 
-function automationKeys(projectId: number) {
-  return ["projects", projectId, "automations"] as const;
-}
-
 export function useAutomations(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectAutomation[]>({
-    queryKey: automationKeys(projectId),
+    queryKey: queryKeys.projects.automations(projectId),
     queryFn: ({ signal }) => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`, undefined, signal, projectAutomationListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -54,7 +51,7 @@ export function useCreateAutomation(projectId: number) {
     mutationKey: ["projects", projectId, "automations", "create"],
     mutationFn: (data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">) =>
       apiClient.post<ProjectAutomation>(`/build/${projectId}/automations`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: automationKeys(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
   });
 }
 
@@ -64,7 +61,7 @@ export function useUpdateAutomation(projectId: number) {
     mutationKey: ["projects", projectId, "automations", "update"],
     mutationFn: ({ id, ...data }: Partial<ProjectAutomation> & { id: number }) =>
       apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${id}`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: automationKeys(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
   });
 }
 
@@ -74,6 +71,6 @@ export function useDeleteAutomation(projectId: number) {
     mutationKey: ["projects", projectId, "automations", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/build/${projectId}/automations/${id}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: automationKeys(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
   });
 }
