@@ -1,6 +1,6 @@
 # ADR 0004 — Module availability is resolved once per request
 
-**Status:** Accepted
+**Status:** Accepted · extended by [ADR 0006](0006-the-request-context-owns-membership-and-mfa-too.md), which adds membership and MFA to the same context and corrects the finding below that the membership pair was not a duplicate
 **Date:** 2026-09-10
 
 ## Context

@@ -1,7 +1,8 @@
-# PRD — AuthContext: one per-request answer for module availability
+# PRD — AuthContext: one per-request answer for module availability, membership and MFA
 
-Status: **COMPLETE** · Opened and closed 2026-09-10 · Owner: this session
-Baseline commit: `db887baad`
+Status: **COMPLETE** · §6 (the C1 completion) closed 2026-09-10 · §1–§5 unchanged
+Opened, closed, reopened for §6 and closed again 2026-09-10 · Owner: this session
+Baseline commit: `db887baad` · C1-completion baseline: `7d5c126df`
 
 Not a lane file. Deliberately **outside** `architecture-refactor/prd/`, because
 `frontend/scripts/check-prd-traceability.mjs` reads `architecture-refactor/prd/**` plus
@@ -214,3 +215,84 @@ resolve permissions as if the account were live.
 - [x] Dead field removed while there: `MembershipAccessState.exists` had **zero** readers.
 - [x] Constructor arity: typecheck caught 15 spec sites across 6 files; `test/` is not typechecked, so
       `test/security/bola-export-download.spec.ts` was found by the §8 hand-grep rule and fixed.
+
+---
+
+## 6. C1 completion — membership and MFA join the request context
+
+Source: `claude-prompts/architecture-review-pending/01-c1-full-request-auth-context.md`.
+§1–§5 delivered the module-availability memo only (D1). The HTML candidate asks for **one
+request-owned answer** for membership, module availability and MFA. This section closes that.
+
+### 6.1 What was still duplicated
+
+| Fact | Guard-chain resolution | Second, independent resolution |
+|---|---|---|
+| Membership | `JwtAuthGuard` → `MembershipStateService.resolve` (joins user + org + membership) | `AccessPermissionResolver` reads `organizationMembers` alone and calls `status === "ACTIVE"` active — twice per resolution (`computeUserPermissions`, `getMembershipAccessState`) |
+| MFA | `MfaGuard` → `MFA_POLICY.resolve` | `AccessSnapshotResolver` → `MfaPolicyService.resolve` |
+| Module availability | `ModuleGuard` → `ctx.moduleAvailable` | already shared — §1–§4 |
+
+The membership row is the load-bearing one: two definitions of "live", and the weaker one decides
+what a background caller is allowed to do.
+
+### 6.2 Decisions
+
+| # | Decision | Rationale |
+|---|---|---|
+| D12 | `AuthContext` owns actor, `moduleAvailable()`, `membership()`, `mfa()` | One request-facing surface; no second request cache beside it |
+| D13 | `JwtAuthGuard` **seeds** the membership it already resolved | The request then costs one `resolve`, not two |
+| D14 | `AuthContextFactory` assembles the three lookups | Callers stop hand-wiring a seam; detached callers use the same factory |
+| D15 | `AccessPermissionResolver` delegates both membership reads to `MembershipStateService` | One authority (§4), and the detached path inherits all three liveness dimensions |
+| D16 | The context is consulted only when `ctx.actor` matches the `(orgId, userId)` being resolved | A snapshot for another member must not read the caller's membership |
+| D17 | `MfaGuard` and the snapshot share `ctx.mfa()`; both keep a direct fallback | A request with no context (e2e fakes, non-HTTP) keeps its current answer |
+| D18 | `MfaState` moves to `common/auth/mfa-policy.token.ts` | `common/auth` must not import `modules/access` for a type it owns |
+| D19 | `evaluateMembershipGate` is deleted | Its only production consumer was the duplicate read; leaving it leaves a second definition of "live" |
+
+### 6.3 TODO — all complete
+
+#### Lane CORE — the request-owned context
+- [x] `common/auth/auth-context.ts` — `membership()` + `mfa()` beside `moduleAvailable()`, each memoized once, in-flight promise shared, org-less actor short-circuits to no membership
+- [x] `common/auth/mfa-policy.token.ts` — owns `MfaState`; `modules/access/access.types.ts` re-exports it, as it already did for `DataScope`
+- [x] `common/auth/auth-context.factory.ts` — NEW; injects `MODULE_AVAILABILITY_LOOKUP`, `MembershipStateService`, `MFA_POLICY`
+- [x] `common/auth/auth-context.module.ts` — provides and exports the factory (`@Global()`, so no module-graph work)
+- [x] `common/auth/jwt-auth.guard.ts` — builds through the factory and seeds the resolved membership on the JWT path **and** the PAT path (`tryPatAuth` now returns `{ actor, membership }`)
+- [x] `common/auth/mfa.guard.ts` — reads `ctx.mfa()` when the context is bound to the same actor; falls back to the policy otherwise
+
+#### Lane ACCESS — request-path resolution consumes the context
+- [x] `modules/access/authorize.ts` — `scopeFor(ctx.actor, key, ctx)`
+- [x] `modules/access/access-permission.resolver.ts` — both membership reads come from the injected `MembershipReader`; `ownsOrAdministers` and `membershipId` derive from `MembershipState`; the `organizationMembers` import is gone
+- [x] `modules/access/access.service.ts` — injects `MembershipStateService`; threads the context through `scopeFor` → `resolveUserPermissions` → `resolveWithValidity` / `getMembershipAccessState`, gated by `contextFor()`'s identity check
+- [x] `modules/access/access-snapshot.resolver.ts` — optional context; `ctx.mfa()` when present, the policy otherwise
+- [x] `modules/access/access-policy.ts` — `evaluateMembershipGate` and `MembershipGateResult` deleted; the `access.service.ts` re-export dropped. Zero references remain anywhere in `src/` or `test/`
+
+#### Lane CALLERS
+- [x] `modules/rbac/rbac.controller.ts` · `me/me.controller.ts` — both take `@AuthCtx()` and pass it into `getAccessSnapshot`
+- [x] `modules/hr/import/hr-export-jobs.service.ts` — builds the detached context through the factory
+- [x] Every remaining `createAuthContext(` call site compiles against the three-lookup seam — 10 sites, migrated to `testAuthContext` in `test/helpers/module-guard-context.ts`, which defaults the two facts a module-gate spec does not care about
+
+#### Lane TESTS — must bite
+- [x] `common/auth/auth-context.spec.ts` — 15 tests: memoization and in-flight sharing for all three facts, a seeded membership calling no lookup, an org-less actor reading no membership, each rejection preserved, one failing fact not poisoning the other two, and each context bound to its own actor/tenant
+- [x] NEW `modules/access/__tests__/request-authorization-composition.spec.ts` — the real `JwtAuthGuard` → `MfaGuard` → `ModuleGuard` → `PermissionGuard` → `authorize()` → `AccessService` boundary over one request, asserting call counts
+- [x] COMPOSITION: **exactly one** `MembershipStateService.resolve` across authentication and permission resolution — with an A/B against the same resolution without the context, which costs **two**, so the count is not vacuous
+- [x] COMPOSITION: **exactly one** MFA resolution across `MfaGuard` and the access snapshot
+- [x] COMPOSITION: **exactly one** module lookup across `ModuleGuard` and `authorize()`; distinct keys and `"HR"` / `"hr"` / `" hr "` covered in the unit spec
+- [x] COMPOSITION: a context bound to one actor/tenant is refused for any other pair — two extra reads, with the arguments asserted
+- [x] Deny paths hold: suspended membership (403), deactivated account (401), unsatisfied MFA (403 `MFA_REQUIRED`), unavailable module (`ModuleDisabledException` from both guards), rejected availability lookup (denies, never allows)
+- [x] Liveness moved to the authority: `common/auth/membership-state.service.spec.ts` now drives the **real** `fetchMembershipState` query and denies a suspended, left or invited membership, a deactivated user, a soft-deleted user, an inactive organization, a soft-deleted organization, an absent row, and a failed read
+- [x] Background resolution denies a deactivated user with no HTTP context
+- [x] Account-only and `@AllowNoOrg()` flows keep their status codes and read no membership at all
+
+#### Gate
+- [x] `tsc --noEmit -p tsconfig.test.json` — **zero errors in every file this lane touches.** The run is not globally clean: 73 errors remain, all in `e-sign`, `feedbucket`, `search`, `hr`, `build`, `dashboard`, `accounting` and `test/security/bola/bola-{esign,rag}` — the concurrent C5 scoped-read migration, in another session's lane
+- [x] `madge --circular --extensions ts src` — **6,485 files, zero cycles**
+- [x] `test/` is inside `tsconfig.test.json`, so the §8 hand-grep blind spot did not apply this time — the arity breaks under `test/security/**` were reported by the typecheck itself
+- [x] Focused suites (auth · rbac · access · settings · payroll · me): **1,867 of 1,868 pass across 173 suites.** The single failure is `apply-scope-team.spec.ts`, which counts files containing `applyScope(` and expects more than 20; C5 has rewritten those call sites to `scopedRead`, so it reports 6. Not this lane's, and not repaired here
+- [x] Lint and the full suite: **not run**
+
+### 6.4 Notes for the reviewer
+
+- **The seeded membership is what makes the count one, not the cache.** `MembershipStateService` has its own 15-second versioned cache, so a second `resolve` would usually have been cheap — but it would still have been a second call, and on a cache miss a second query. Seeding removes the call.
+- **The identity check is the safety property, not an optimization.** `AccessService.contextFor` refuses a context whose actor or tenant differs from the pair being resolved. Without it, `getAccessSnapshot(orgId, someOtherMember)` inside a request would have read the *caller's* membership and reported the caller's admin standing for someone else.
+- **Deleting `evaluateMembershipGate` removed a rule, not coverage.** Every assertion it carried moved onto `MembershipStateService`, where it now exercises the real joined query rather than a pure function no production path called.
+- **§5's earlier verdict is corrected, not contradicted.** It rejected adding a liveness *join* to `AccessPermissionResolver`, because that forked a second definition. Delegating to the authority is the opposite move: it removes the fork. The 14 spec files §5 worried about were migrated by giving each its existing member fixture as the authority's answer.
+- **The concurrent session wired `hr-export-jobs.service.ts` to the new factory** while unblocking its own typecheck. The change is correct and is counted here rather than reverted.
