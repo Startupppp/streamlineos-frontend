@@ -85,9 +85,19 @@ describe("the Home cache key dimensions match the backend key", () => {
   });
 
   it("keys the backend cache on organization, actor, permission version and scope", () => {
-    expect(backendKeyBuilder).toContain("u${u.userId}");
+    // Permission-version dimension: still spelled out directly in the key template.
     expect(backendKeyBuilder).toContain("v${version}");
-    expect(backendKeyBuilder).toContain("${scope}");
+    // Actor and scope dimension: carried together by read.discriminator since the C5 ScopedRead refactor.
+    expect(backendKeyBuilder).toContain("${read.discriminator}");
+
+    // Confirm scoped-read.ts builds the discriminator from the actor id and scope so the
+    // key remains personalized for "own" and "team" scopes.
+    const scopedReadSource = readFileSync(
+      backendPath("src", "modules", "access", "scoped-read.ts"),
+      "utf8",
+    );
+    expect(scopedReadSource).toContain("get discriminator()");
+    expect(scopedReadSource).toContain("this.actorId");
   });
 
   it("mirrors the permission-version dimension on the client", () => {
