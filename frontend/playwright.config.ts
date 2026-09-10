@@ -51,6 +51,37 @@ const E2E_ENV: Record<string, string> = {
   NEXT_DIST_DIR: ".next-e2e",
 };
 
+/**
+ * The two secrets that are NOT fixtures and are deliberately absent here.
+ *
+ * `BACKEND_JWT_SECRET` must byte-match the backend's, because the session
+ * callback signs the token the API authenticates with; `INTERNAL_API_SECRET`
+ * authenticates the frontend's server-to-server session-data lookup. Both are
+ * real deployment secrets, so a committed default would be either a leak or a
+ * lie, and inventing one produces a session the API rejects — which surfaces as
+ * an empty page rather than as an auth error.
+ *
+ * Passed through only when the environment supplies them. The authenticated
+ * specs check `hasBackendSecrets()` and skip with a message naming what is
+ * missing, so an incomplete environment reports a skip rather than a failure
+ * that looks like a product bug.
+ */
+for (const key of ["BACKEND_JWT_SECRET", "INTERNAL_API_SECRET"] as const) {
+  const value = process.env[key];
+  if (value) E2E_ENV[key] = value;
+}
+
+/**
+ * The session fixture runs in the TEST process, not in the server's, so it does
+ * not inherit `webServer.env` — and a fixture that minted a cookie under a
+ * different secret than the server decrypts with produces a browser that is
+ * simply signed out, with nothing anywhere saying why.
+ *
+ * Publishing the resolved value back onto this process makes the two halves one
+ * source rather than two that have to be kept in agreement by hand.
+ */
+process.env.NEXTAUTH_SECRET = E2E_ENV.NEXTAUTH_SECRET;
+
 export default defineConfig({
   testDir: "./e2e",
 
