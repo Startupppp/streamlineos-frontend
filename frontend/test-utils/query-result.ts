@@ -13,7 +13,7 @@ function baseResult<TData>() {
     isStale: false,
     isEnabled: true,
     refetch: () => Promise.reject(new Error("refetch is not wired in this test")),
-    promise: Promise.reject(new Error("promise is not awaited in this test")) as Promise<TData>,
+    promise: new Promise<TData>(() => undefined),
   };
 }
 
