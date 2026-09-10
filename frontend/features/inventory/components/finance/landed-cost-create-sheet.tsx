@@ -23,19 +23,12 @@ import {
   useCreateLandedCostVoucher,
 } from "@/hooks/api/inventory/landed-cost";
 import {
+  CHARGE_TYPE_LABEL,
   createLandedCostVoucherFormSchema,
   toMinorUnits,
   type CreateLandedCostVoucherFormOutput,
   type CreateLandedCostVoucherFormValues,
 } from "./landed-cost-schema";
-
-const CHARGE_TYPE_LABEL: Record<(typeof LANDED_COST_CHARGE_TYPES)[number], string> = {
-  FREIGHT: "Freight",
-  DUTY: "Duty",
-  INSURANCE: "Insurance",
-  HANDLING: "Handling",
-  OTHER: "Other",
-};
 
 /**
  * Raising a voucher against a receipt.

@@ -22,6 +22,23 @@ export const landedCostChargeSchema = z.object({
   reference: z.string().trim().max(120).optional(),
 });
 
+/** One charge on its own, for adding to a voucher already raised. */
+export type LandedCostChargeFormValues = z.input<typeof landedCostChargeSchema>;
+export type LandedCostChargeFormOutput = z.output<typeof landedCostChargeSchema>;
+
+/**
+ * Lives here rather than in either sheet: both the create form and the
+ * add-charge dialog label the same five enum members, and a second copy is how
+ * "Handling" becomes "handling" on one screen and not the other.
+ */
+export const CHARGE_TYPE_LABEL: Record<(typeof LANDED_COST_CHARGE_TYPES)[number], string> = {
+  FREIGHT: "Freight",
+  DUTY: "Duty",
+  INSURANCE: "Insurance",
+  HANDLING: "Handling",
+  OTHER: "Other",
+};
+
 export const createLandedCostVoucherFormSchema = z.object({
   grnId: z.string().min(1, "Choose the receipt these costs belong to"),
   allocationBasis: z.enum(["VALUE", "QUANTITY"]),

@@ -93,6 +93,29 @@ export interface CreateLandedCostVoucherInput {
   }>;
 }
 
+export interface AddLandedCostChargeInput {
+  voucherId: number;
+  chargeType: LandedCostChargeType;
+  description: string;
+  /** Integer minor units, always positive — the backend refuses a fraction. */
+  amountCents: number;
+  vendorId?: number;
+  reference?: string;
+}
+
+/**
+ * The route answers with the voucher's new total, not the voucher.
+ *
+ * It was typed as `LandedCostVoucherDetail`, which nothing noticed because
+ * nothing called it: a caller reading `.charges` off the result would have got
+ * `undefined` at runtime with the type saying otherwise. The detail query is
+ * invalidated below, so the rest of the voucher comes back the honest way.
+ */
+export interface AddLandedCostChargeResult {
+  voucherId: number;
+  chargeTotalCents: string;
+}
+
 export interface LandedCostApplyResult {
   voucherId: number;
   status: "APPLIED";
@@ -161,21 +184,10 @@ export function useCreateLandedCostVoucher() {
 
 export function useAddLandedCostCharge() {
   const qc = useQueryClient();
-  return useIdempotentMutation<
-    LandedCostVoucherDetail,
-    Error,
-    {
-      voucherId: number;
-      chargeType: LandedCostChargeType;
-      description: string;
-      amountCents: number;
-      vendorId?: number;
-      reference?: string;
-    }
-  >({
+  return useIdempotentMutation<AddLandedCostChargeResult, Error, AddLandedCostChargeInput>({
     mutationKey: ["inventory", "landed-cost", "charge", "add"],
     mutationFn: ({ voucherId, ...charge }, idempotencyKey) =>
-      apiClient.post<LandedCostVoucherDetail>(
+      apiClient.post<AddLandedCostChargeResult>(
         `/inventory/landed-cost/${voucherId}/charges`,
         charge,
         { headers: { "Idempotency-Key": idempotencyKey } },
