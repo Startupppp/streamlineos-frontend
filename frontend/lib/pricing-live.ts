@@ -13,6 +13,7 @@
  */
 import { BACKEND_URL } from "./backend-url";
 import { PRICING_TIERS, type PricingTier } from "./pricing";
+import { formatMinor } from "./pricing-format";
 
 /**
  * Prices on the marketing page, from the same table that charges the card.
@@ -123,27 +124,10 @@ export function fetchDataResidency(country?: string): Promise<DataResidency | nu
   return publicGet<DataResidency>(`public/data-residency${query}`);
 }
 
-/**
- * Money for reading, which is a different job from money for charging.
- *
- * The backend renders invoice amounts without `Intl` on purpose -- an invoice
- * has to reproduce byte-identically in eighteen months, and `Intl` output moves
- * with the ICU version. This is a price on a web page: it is read once, by a
- * person, in their own conventions, and never has to reproduce. So `Intl` is
- * exactly right here and exactly wrong there.
- */
-export function formatMinor(minor: number, currency: string, locale = "en"): string {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: minor % 100 === 0 ? 0 : 2,
-    }).format(minor / 100);
-  } catch {
-    // An unknown currency code must still render a number rather than nothing.
-    return `${currency} ${(minor / 100).toLocaleString(locale)}`;
-  }
-}
+// `formatMinor` moved to ./pricing-format so a client component can have it
+// without dragging this file's server-only backend URL into the browser
+// bundle. Re-exported here so every existing importer is unaffected.
+export { formatMinor };
 
 /**
  * The live numbers, laid over the static tiers.

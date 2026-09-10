@@ -1,4 +1,4 @@
-import { formatMinor } from "@/lib/pricing-live";
+import { formatMinor } from "@/lib/pricing-format";
 
 /**
  * Rendering commission figures without ever doing arithmetic on them.
