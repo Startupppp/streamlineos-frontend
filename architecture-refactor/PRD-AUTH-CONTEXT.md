@@ -1,6 +1,6 @@
 # PRD — AuthContext: one per-request answer for module availability
 
-Status: **IN PROGRESS** · Opened 2026-09-10 · Owner: this session
+Status: **COMPLETE** · Opened and closed 2026-09-10 · Owner: this session
 Baseline commit: `db887baad`
 
 Not a lane file. Deliberately **outside** `architecture-refactor/prd/`, because
@@ -159,15 +159,25 @@ thrown `TypeError` deep inside a guard, which reads as an environment problem ra
 - [x] Dead code removed: `IModuleGuardAccess` had no remaining consumers once `ModuleGuard` stopped
       injecting it, and `ModuleAvailabilityLookup` (`common/auth/auth-context.ts`) is its structural
       twin. Deleted; `module-guard.token.ts` is now the Symbol alone and imports nothing.
-- [ ] Frontend `check:cycles` — deferred until the C8 lane quiesces
-- [ ] POST-WAVE RENAME: the token is still called `MODULE_GUARD_ACCESS`, but `ModuleGuard` no longer
-      consumes it — `JwtAuthGuard` does. The name now misleads. Rename to `MODULE_AVAILABILITY_LOOKUP`
-      once the wave is quiet; it touches DI wiring, which is the wrong thing to churn mid-wave.
+- [x] Frontend `check:cycles` — **5,836 files, zero cycles**, run 2026-09-10 with the tree quiesced
+- [x] POST-WAVE RENAME **DONE** once the wave was quiet: `MODULE_GUARD_ACCESS` →
+      `MODULE_AVAILABILITY_LOOKUP`, and the file moved `common/rbac/module-guard.token.ts` →
+      `common/auth/module-availability-lookup.token.ts`, since `JwtAuthGuard` is the consumer and
+      `ModuleGuard` no longer imports it at all. Three references, typecheck clean, cycles still zero.
 
-### Gate — after every lane lands, run once, quiesced
-- [ ] `NODE_OPTIONS=--max-old-space-size=8192 pnpm -C backend exec tsc --noEmit`
-- [ ] `pnpm -C backend exec madge --circular` — new `common/auth` ↔ `common/rbac` edge is the risk
-- [ ] Unit specs for the touched paths (explicitly requested, so they may run)
+### Gate — run once, quiesced · **PASSED**
+- [x] `tsc --noEmit` — **0 errors**. First run found **34 arity errors across 14 spec files** the lanes
+      missed; all fixed, and nine byte-identical HR guard-context helpers were consolidated into
+      `test/helpers/module-guard-context.ts` in the process.
+- [x] `madge --circular` — **6,475 files, zero cycles**. The feared `common/auth` ↔ `common/rbac` edge
+      never formed: `module-availability.ts` has no imports at all, and the token has since moved into
+      `common/auth`, so the edge is gone entirely.
+- [x] Unit specs for the touched paths — green.
+- [x] **The gate has a blind spot the typecheck cannot cover, now recorded in `backend/CLAUDE.md` §8:**
+      `test/security/**` and `test/perf/**` RUN under jest but are outside `tsconfig.json`. Three
+      `JwtAuthGuard` constructions there survived the 34-error typecheck — one failed at runtime, two
+      passed only because the missing dependency was never reached. After a signature change, grep
+      `test/` by hand.
 
 ## 5. Filed, not fixed — NEWLY DISCOVERED RISK
 

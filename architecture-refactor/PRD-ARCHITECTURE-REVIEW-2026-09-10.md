@@ -1,7 +1,27 @@
 # PRD — Architecture review 2026-09-10: org · login · access · RBAC · settings · module access · API cost
 
-Status: **OPEN** · Baseline commit `db887baad` · Source: architecture review run 2026-09-09/10
-Scope approved by the owner: **all eleven candidates**.
+Status: **COMPLETE** · Baseline commit `db887baad` · Source: architecture review run 2026-09-09/10
+Scope approved by the owner: **all eleven candidates**. All eleven are closed.
+
+## Outcome
+
+| | |
+|---|---|
+| **Built as specified** | C1 · C2 · C4 · C7 · C8 · C9 · C10 · C11 |
+| **Built differently, because the card was wrong** | C3 (blocker was false — nothing needed porting) · C6 (the backend half would have been a security regression) |
+| **Deliberately NOT built, on measurement** | C5 (both prohibitions target legitimate, load-bearing operations) · `useSettingsSectionForm` (deletion test fails) |
+
+**Gate at sign-off.** Backend: `tsc --noEmit` **0 errors** · `madge` **6,475 files, zero cycles** ·
+`check:route-classification` **3,654 handlers, 0 undeclared** · `check:permission-keys` **704/704 both
+directions** · full suite **2,196 / 2,201 suites, 18,985 tests**. Frontend: `tsc --noEmit` **0 errors** ·
+`madge` **5,836 files, zero cycles** · full suite **466 / 466 suites, 4,775 / 4,775 tests**. Lint **not
+run** — it was never requested. The 5 backend suites still red are itemised under "Found while running
+the gate"; none was caused by this program, two hold genuine security review items that were left red on
+purpose rather than silenced, and three are wall-clock AI timing suites that pass in isolation.
+
+**Seven lane verdicts were wrong and were corrected by hand** — the pattern is worth keeping: a lane
+that must not cross a file boundary will rationalise a duplicate, and a lane reading one file in
+isolation will call a facade's behaviour missing. Every correction is recorded inline below.
 
 Not a lane file. Deliberately **outside** `architecture-refactor/prd/`, because
 `frontend/scripts/check-prd-traceability.mjs` reads `architecture-refactor/prd/**` and fails an
@@ -23,10 +43,16 @@ Candidates are parallelised only where they share no file. The collisions that f
 | C6 ↔ C1 | `modules/access/access-policy.ts` vs the C1 spec lane asserting `moduleOf` | C6 waits until C1 is green |
 | C5 | 54 call sites, 30 resolvers | never a parallel lane — its own program |
 
-- **Wave 1 — RUNNING:** C4 · C3 · C8 · C11, alongside the tail of C1.
-- **Wave 2 — after wave 1 gate:** C6 · C7 · C10.
-- **Wave 3 — after wave 2 gate:** C2 · C9.
-- **Wave 4 — own program:** C5.
+- **Wave 1 — DONE:** C1 · C4 · C8 · C11 (C3 moved out: its blocker turned out to be false, and it was
+  finished by hand alongside wave 2).
+- **Wave 2 — DONE:** C6 · C7 · C10.
+- **Wave 3 — DONE:** C2 · C9.
+- **Wave 4 — CLOSED WITHOUT BUILDING:** C5, on measurement. See its section.
+
+Waves held: three agents at a time at most, each with an exclusive file list, and the gate run once per
+wave with the tree quiesced. Two collisions predicted in the table below were real (C7↔C8 on
+`hooks/api/access.ts`, C6↔C10 both under `features/settings/`) and were resolved by ownership rather
+than by serialising the whole wave.
 
 Gate runs ONCE per wave, quiesced. No agent runs `tsc`, a build, tests, madge, knip or git —
 measuring a tree while agents are editing it produces numbers that were never true.
@@ -49,14 +75,15 @@ measuring a tree while agents are editing it produces numbers that were never tr
 
 ---
 
-## C1 — One request-auth context · **IN PROGRESS**
+## C1 — One request-auth context · **DONE (wave 1)**
 
 Full decision record and lane checklist: **[PRD-AUTH-CONTEXT.md](PRD-AUTH-CONTEXT.md)**. Do not
 duplicate its todos here. Summary of what it closes: `module.guard.ts:46` and `authorize.ts:34`
 resolved module availability twice per request through resolvers that diverged in degrade mode. `[V]`
 
-- [ ] Complete every lane in `PRD-AUTH-CONTEXT.md`
-- [ ] Run its gate section (typecheck · madge · touched specs)
+- [x] Every lane in `PRD-AUTH-CONTEXT.md` complete
+- [x] Its gate section passed — and found **34 arity errors across 14 spec files** the lanes had missed,
+      plus the `test/security/**` typecheck blind spot that hid three more
 
 ---
 
@@ -157,19 +184,29 @@ What only `BranchesService` (the DEAD path) does:
       future review does not re-raise it as a missing behaviour.
 - [x] Port `invalidateAfterMutation` — **already present** at the facade; nothing to do.
 - [x] Wrap in a transaction — **not needed**; one write per mutation.
-- [ ] Re-run the caller evidence, then delete the three routes and three service methods
-- [ ] Delete the spec cases in `branches-tenant-isolation.spec.ts` that cover the deleted methods
-- [ ] Update `cache-invalidation-matrix.ts:126-139` to one writer per namespace
+- [x] Caller evidence re-run: the frontend calls only `GET /branches` (`hooks/api/branches.ts:21`) and the
+      org-hierarchy PATCH; no cron, worker, seed or script touches the mutations; the three dead service
+      methods had exactly one consumer each, the controller. Routes and methods deleted.
+- [x] `branches.service.ts` deleted outright. With its three write methods gone it was a pure
+      pass-through to `BranchesReadService`, which the controller now injects directly — the deletion
+      test answering "the complexity does not reappear anywhere".
+- [x] Its now-unused write DTOs went too (`dto/branches.schemas.ts`, plus `orgUnitRowSchema` and a local
+      `successSchema` that duplicated `common/openapi/response-envelopes`).
+- [x] Spec cases deleted: the `BranchesService` describe block covered only the dead `update`. The live
+      path keeps its own `org-hierarchy-branches-tenant-isolation.spec.ts`, so no coverage was lost.
+- [x] `cache-invalidation-matrix.ts` now names one writer per namespace.
 
 ### Separate finding — ghost permission keys: **RESOLVED, it was a search miss**
 - [x] `branch:create`, `branch:update` and `branch:delete` **do** exist in the backend catalog, at
       `backend/src/modules/rbac/permissions/shared.ts:407,413,419`. The lane looked for a `branch.ts`
       file and concluded absence from a filename; these keys live in `shared.ts` because they predate
       the per-module split. Not ghost keys, `useCan` works, no catalog action needed.
-- [ ] Consequence for the retirement, though: `branches.controller.ts` is the **only** file in the repo
-      that references those three keys. Retiring the three routes orphans all three catalog entries.
-      Decide then — delete the entries with the routes, or keep them if the live org-hierarchy branch
-      mutations should be regated onto them instead of whatever they currently use.
+- [x] Consequence, decided: the three keys are now referenced by nothing, because the live routes gate on
+      `settings:organization:manage` like every other hierarchy entity. **They are KEPT deliberately.**
+      `role_permission_grants` carries an FK to `permissions.name`, so removing a key an organisation may
+      already hold is a data migration, not a code deletion — and `backend/CLAUDE.md` §5 is explicit that
+      key strings never change, because a rename breaks every stored grant. `check:permission-keys`
+      passes 704/704 in both directions with them present.
 
 ---
 
