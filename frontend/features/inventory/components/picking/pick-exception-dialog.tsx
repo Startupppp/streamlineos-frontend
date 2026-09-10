@@ -164,6 +164,7 @@ export function PickExceptionDialog({
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder="Pick the bin you found them in…"
+                        ariaLabel="Where they actually were"
                       />
                     </FormControl>
                     <FormDescription>
@@ -191,6 +192,7 @@ export function PickExceptionDialog({
                         <ProductVariantCombobox
                           value={field.value ?? ""}
                           onChange={field.onChange}
+                          ariaLabel="Variant taken instead"
                         />
                       </FormControl>
                       <FormMessage />

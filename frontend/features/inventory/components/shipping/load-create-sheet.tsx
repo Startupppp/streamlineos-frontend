@@ -221,6 +221,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                           value={f.value}
                           onChange={f.onChange}
                           className="text-xs"
+                          ariaLabel={`Reference, member ${String(index + 1)}`}
                         />
                       </FormControl>
                       <FormMessage />

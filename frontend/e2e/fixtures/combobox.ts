@@ -3,42 +3,30 @@ import { expect, type Locator, type Page } from "@playwright/test";
 /**
  * Driving the inventory forms' entity pickers.
  *
- * These are not `<select>` elements, and — the part that decides how they have
- * to be addressed — they have no accessible name. `WarehouseSelect`,
- * `LocationSelect` and `ProductVariantCombobox` render a `role="combobox"`
- * trigger whose visible placeholder is CONTENT, and a combobox does not take
- * its name from content. The accessibility snapshot of the New Stock Adjustment
- * sheet reads:
+ * `WarehouseSelect`, `LocationSelect` and `ProductVariantCombobox` are not
+ * `<select>` elements — each renders a `role="combobox"` trigger over a Radix
+ * popover — so they are addressed by their accessible name, the `ariaLabel`
+ * every call site now passes.
  *
- *     - combobox: Select warehouse…             <- no name
- *     - combobox "Direction *": In (Add stock)  <- named, a Radix Select
+ * They previously had no name at all: a combobox does not take its name from
+ * content, so the visible placeholder ("Select warehouse…") was content and the
+ * trigger was anonymous, which is why this helper used to reach them through the
+ * `FormItem` wrapping their `FormLabel`. The name lookup is the better address
+ * for the reason that made the old one necessary — it asks for the thing a
+ * screen reader would ask for, so a regression in the name fails this suite
+ * rather than passing it on a DOM coincidence.
  *
- * so `getByRole("combobox", { name: "Warehouse" })` matches nothing. All three
- * components already accept an `ariaLabel` prop for exactly this and no call
- * site passes it; when that is fixed this helper collapses to a name lookup and
- * this comment goes with it.
- *
- * Until then they are scoped by their FormItem, which is the label the field
- * actually shows. Matching the trigger on its own text instead is a trap worth
- * naming: the placeholder is the thing that changes when a choice is made, so a
- * locator defined by it stops matching the moment it succeeds, and the
- * post-condition fails with "element(s) not found" — which reads as a broken
- * selector rather than as a working one.
+ * Matching a trigger on its own TEXT is still the trap, and it is why the
+ * post-conditions below assert the chosen option instead of re-finding the
+ * control: the placeholder is what changes when a choice is made, so a locator
+ * defined by it stops matching the moment it succeeds and fails with
+ * "element(s) not found" — which reads as a broken selector rather than a
+ * working one.
  */
 
-/**
- * The trigger for one picker, found by the visible label above it.
- *
- * `label` is anchored by the caller (`/^Location/`) because the same sheet can
- * hold "Location" and "Scrap Location", and a loose match would take whichever
- * came first.
- */
-function pickerFor(scope: Page | Locator, label: RegExp): Locator {
-  return scope
-    .locator('[data-slot="form-item"]')
-    .filter({ has: scope.page().getByText(label) })
-    .getByRole("combobox")
-    .first();
+/** The trigger for one picker, by its accessible name. */
+function pickerFor(scope: Page | Locator, name: string | RegExp): Locator {
+  return scope.getByRole("combobox", { name });
 }
 
 /**
@@ -47,8 +35,8 @@ function pickerFor(scope: Page | Locator, label: RegExp): Locator {
  * until the timeout — then reports a MISSING control rather than a slow one.
  * Waiting for enablement explicitly makes that its own, readable assertion.
  */
-async function openPicker(scope: Page | Locator, label: RegExp): Promise<Locator> {
-  const control = pickerFor(scope, label);
+async function openPicker(scope: Page | Locator, name: string | RegExp): Promise<Locator> {
+  const control = pickerFor(scope, name);
   await expect(control).toBeEnabled({ timeout: 20_000 });
   await control.click();
   return control;
@@ -56,15 +44,15 @@ async function openPicker(scope: Page | Locator, label: RegExp): Promise<Locator
 
 /** Options are portalled to the body, so they are addressed from the page. */
 function pageOf(scope: Page | Locator): Page {
-  return "page" in scope ? (scope.page() as Page) : (scope as Page);
+  return "page" in scope ? scope.page() : scope;
 }
 
 export async function chooseFromCombobox(
   scope: Page | Locator,
-  label: RegExp,
+  name: string | RegExp,
   option: string | RegExp,
 ): Promise<void> {
-  const control = await openPicker(scope, label);
+  const control = await openPicker(scope, name);
 
   const choice = pageOf(scope).getByRole("option", { name: option }).first();
   await expect(choice).toBeVisible({ timeout: 20_000 });
@@ -76,9 +64,9 @@ export async function chooseFromCombobox(
 /** The first option, for fields where which one is chosen does not matter. */
 export async function chooseFirstOption(
   scope: Page | Locator,
-  label: RegExp,
+  name: string | RegExp,
 ): Promise<string> {
-  const control = await openPicker(scope, label);
+  const control = await openPicker(scope, name);
 
   const first = pageOf(scope).getByRole("option").first();
   await expect(first).toBeVisible({ timeout: 20_000 });

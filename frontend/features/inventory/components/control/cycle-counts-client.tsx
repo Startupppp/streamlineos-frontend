@@ -130,6 +130,7 @@ function NewCycleCountSheet({
             <WarehouseSelect
               value={warehouseId}
               onChange={handleWarehouseChange}
+              ariaLabel="Warehouse"
             />
           </div>
 

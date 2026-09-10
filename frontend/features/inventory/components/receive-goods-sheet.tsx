@@ -335,6 +335,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
                 value={selectedWarehouseId > 0 ? String(selectedWarehouseId) : ""}
                 onChange={handleWarehouseChange}
                 activeOnly
+                ariaLabel="Warehouse"
               />
             </FormItem>
           ) : null}
@@ -350,6 +351,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
                     value={field.value != null && field.value > 0 ? String(field.value) : ""}
                     onChange={(v) => field.onChange(Number(v))}
                     activeOnly
+                    ariaLabel="Receive at Location"
                   />
                 </FormControl>
                 <FormMessage />

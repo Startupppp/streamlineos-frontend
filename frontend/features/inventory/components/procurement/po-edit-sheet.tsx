@@ -142,6 +142,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
                           value={field.value}
                           onChange={field.onChange}
                           activeOnly
+                          ariaLabel="Vendor"
                         />
                       </FormControl>
                       <FormMessage />

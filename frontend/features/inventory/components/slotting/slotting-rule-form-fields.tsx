@@ -244,7 +244,11 @@ export function SlottingRuleFormFields({ form }: SlottingRuleFormFieldsProps) {
             <FormItem>
               <FormLabel>Variant</FormLabel>
               <FormControl>
-                <ProductVariantCombobox value={field.value} onChange={field.onChange} />
+                <ProductVariantCombobox
+                  value={field.value}
+                  onChange={field.onChange}
+                  ariaLabel="Variant"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -12,12 +12,11 @@ interface ProductVariantComboboxProps {
   className?: string;
   activeOnly?: boolean;
   /**
-   * `role="combobox"` does not take its name from content, so the trigger's
-   * visible label is not an accessible name and axe reports `button-name`. The
-   * underlying `Combobox` has carried the escape hatch all along; this was the
-   * only thing between it and the callers.
+   * The trigger's accessible name — required, see `Combobox`'s own `ariaLabel`.
+   * Required rather than optional because every existing call site had simply
+   * omitted it, and an optional prop is reintroduced by omission.
    */
-  ariaLabel?: string;
+  ariaLabel: string;
 }
 
 export function ProductVariantCombobox({

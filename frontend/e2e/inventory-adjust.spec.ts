@@ -77,13 +77,15 @@ test.describe("inventory · adjust", () => {
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText("New Stock Adjustment")).toBeVisible();
 
-    // By name, because that is what the operator sees and what the combobox
-    // renders. Ids are database sequences: pinning them would make this spec
-    // pass on one database and fail everywhere else for a reason that is not
-    // the flow.
-    await chooseFromCombobox(sheet, /^Warehouse/, target.warehouseName);
-    await chooseFromCombobox(sheet, /^Location/, target.locationName);
-    await chooseFirstOption(sheet, /^Product Variant/);
+    // Each picker by its accessible name, each option by the name the operator
+    // sees. Ids are database sequences: pinning them would make this spec pass
+    // on one database and fail everywhere else for a reason that is not the
+    // flow. The names are exact strings rather than the anchored patterns this
+    // used to need — "Location" no longer also matches "Scrap Location", because
+    // the name is the field's own label and not the text of a wrapping div.
+    await chooseFromCombobox(sheet, "Warehouse", target.warehouseName);
+    await chooseFromCombobox(sheet, "Location", target.locationName);
+    await chooseFirstOption(sheet, "Product Variant");
 
     await sheet.getByLabel(/Quantity/).fill(String(ADJUST_QTY));
 

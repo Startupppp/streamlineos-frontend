@@ -150,6 +150,7 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
                       value={String(field.value ?? "")}
                       onChange={(v) => { field.onChange(Number(v)); resetField("locationId"); }}
                       activeOnly
+                      ariaLabel="Warehouse"
                     />
                   </FormControl>
                   <FormMessage />
@@ -168,6 +169,7 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
                       warehouseId={warehouseId}
                       value={String(field.value ?? "")}
                       onChange={(v) => field.onChange(Number(v))}
+                      ariaLabel="Location"
                     />
                   </FormControl>
                   <FormMessage />
@@ -186,6 +188,7 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
                       value={String(field.value ?? "")}
                       onChange={(v) => field.onChange(Number(v))}
                       activeOnly
+                      ariaLabel="Product Variant"
                     />
                   </FormControl>
                   <FormMessage />
@@ -270,6 +273,7 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
                         locationTypes={SCRAP_LOCATION_TYPES}
                         placeholder="Warehouse default scrap bin"
                         activeOnly
+                        ariaLabel="Scrap Location"
                       />
                     </FormControl>
                     <FormDescription>

@@ -158,6 +158,7 @@ const LineRow = memo(function LineRow({
                 value={field.value}
                 onChange={field.onChange}
                 className="text-xs"
+                ariaLabel={`Variant, line ${String(index + 1)}`}
               />
             )}
           />

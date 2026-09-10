@@ -201,6 +201,7 @@ export function TransferRecommendationsClient() {
           onChange={setVariantId}
           placeholder="Choose a SKU to plan…"
           className="min-w-0 flex-1 lg:max-w-md"
+          ariaLabel="Choose a SKU to plan"
         />
       }
     >
