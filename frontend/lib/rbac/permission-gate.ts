@@ -1,4 +1,13 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import type { AccessResponse } from "@/hooks/api/access-schema";
+
+// Neutral on purpose: the client gate and the server prefetch must answer identically.
+export function grantsPermission(
+  access: Pick<AccessResponse, "isOrgOwner" | "scopes"> | undefined,
+  permission: PermissionKey,
+): boolean {
+  return access ? access.isOrgOwner || permission in access.scopes : false;
+}
 
 /**
  * One read's permission, as three mutually exclusive answers rather than a

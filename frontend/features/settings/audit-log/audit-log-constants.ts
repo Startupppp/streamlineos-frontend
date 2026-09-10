@@ -1,3 +1,6 @@
+import type { SearchParamsReader } from "@/lib/list-pagination";
+import type { AuditLogFilters } from "@/hooks/api/audit-log";
+
 export const ACTION_COLORS: Record<string, string> = {
   "user.login": "bg-status-success-surface text-status-success-ink border-status-success-rule",
   "user.logout": "bg-muted text-muted-foreground border-border",
@@ -64,6 +67,28 @@ export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 export function isValidPageSize(n: number): n is PageSize {
   return PAGE_SIZE_OPTIONS.some((candidate) => candidate === n);
+}
+
+export const DEFAULT_AUDIT_LOG_PAGE_SIZE: PageSize = 15;
+
+export function readAuditLogPageSize(params: SearchParamsReader): PageSize {
+  const parsed = Number(params.get("size"));
+  return isValidPageSize(parsed) ? parsed : DEFAULT_AUDIT_LOG_PAGE_SIZE;
+}
+
+// The one place the audit-log URL becomes a query key, so the server prefetch and the page agree.
+export function readAuditLogFilters(params: SearchParamsReader): AuditLogFilters {
+  const action = params.get("action") || "all";
+  const targetType = params.get("target") || "all";
+  return {
+    cursor: undefined,
+    limit: readAuditLogPageSize(params),
+    action: action !== "all" ? action : undefined,
+    targetType: targetType !== "all" ? targetType : undefined,
+    dateFrom: params.get("from") || undefined,
+    dateTo: params.get("to") || undefined,
+    userSearch: params.get("user") || undefined,
+  };
 }
 
 export function formatActionLabel(action: string): string {

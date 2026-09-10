@@ -9,19 +9,12 @@ import { BillingPageSkeleton } from "@/features/billing/components/billing-page-
 import { PlanTab } from "@/features/billing/components/plan-tab";
 import { PaymentsTab } from "@/features/billing/components/payments-tab";
 import { BillingProfileTab } from "@/features/billing/components/billing-profile-tab";
-
-type BillingTab = "plan" | "payments" | "profile";
-
-const VALID_TABS: BillingTab[] = ["plan", "payments", "profile"];
-
-function resolveTab(raw: string | null): BillingTab {
-  return VALID_TABS.find((candidate) => candidate === raw) ?? "plan";
-}
+import { resolveBillingTab } from "@/features/billing/billing-tabs";
 
 function BillingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = resolveTab(searchParams.get("tab"));
+  const activeTab = resolveBillingTab(searchParams.get("tab"));
 
   const handleTabChange = useCallback(
     (tab: string) => {

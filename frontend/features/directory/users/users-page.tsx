@@ -32,9 +32,9 @@ import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   DEFAULT_PAGE_SIZE,
-  parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
+import { readUsersListState } from "./users-list-state";
 import { UserBulkActionsBar } from "./user-bulk-actions-bar";
 import {
   getUserBulkActionCopy,
@@ -45,24 +45,20 @@ import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
-const SORT_FIELDS = ["name", "joinedAt", "status"] as const;
-const SORT_DIRECTIONS = ["asc", "desc"] as const;
-const USER_STATUS_FILTERS = ["active", "suspended", "archived"] as const;
-
 export function UsersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
+  const listParams = readUsersListState(searchParams);
   const searchQuery = searchParams.get("search") ?? "";
   const status = searchParams.get("status") ?? "all";
   const role = searchParams.get("role") ?? "all";
   const departmentId = searchParams.get("departmentId") ?? "all";
   const branchId = searchParams.get("branchId") ?? "all";
-  const sortBy = SORT_FIELDS.find((candidate) => candidate === searchParams.get("sortBy")) ?? "joinedAt";
-  const sortOrder = SORT_DIRECTIONS.find((candidate) => candidate === searchParams.get("sortOrder")) ?? "desc";
-  const pageSize = parsePageSize(searchParams.get("size"));
+  const { sortBy, sortOrder } = listParams;
+  const pageSize = listParams.limit;
   const cursorResetKey = [
     searchQuery,
     status,
@@ -187,20 +183,7 @@ export function UsersPage() {
     isPlaceholderData,
     error,
     refetch,
-  } = useUsers(
-    {
-      cursor,
-      limit: pageSize,
-      search: searchQuery || undefined,
-      status: USER_STATUS_FILTERS.find((candidate) => candidate === status),
-      role: role !== "all" ? role : undefined,
-      departmentId: departmentId !== "all" ? departmentId : undefined,
-      branchId: branchId !== "all" ? branchId : undefined,
-      sortBy,
-      sortOrder,
-    },
-    { placeholderData: keepPreviousData },
-  );
+  } = useUsers({ ...listParams, cursor }, { placeholderData: keepPreviousData });
 
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();

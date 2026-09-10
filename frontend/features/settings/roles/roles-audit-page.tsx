@@ -13,20 +13,10 @@ import { useAuditLogs } from "@/hooks/api/audit-log";
 import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
 import { resolveImageUrl } from "@/lib/utils";
-
-const RBAC_ACTIONS = [
-  "role.changed",
-  "role.permissions.set",
-  "role.member.added",
-  "role.member.removed",
-  "role.assigned",
-  "role.unassigned",
-  "role.created",
-  "role.updated",
-  "role.deleted",
-  "permission.granted",
-  "permission.revoked",
-];
+import {
+  RBAC_AUDIT_INITIAL_FILTERS,
+  RBAC_AUDIT_PAGE_SIZE,
+} from "./roles-audit-constants";
 
 type ActionVariant = "default" | "secondary" | "outline" | "destructive";
 
@@ -43,8 +33,6 @@ const ACTION_META: Record<string, { label: string; variant: ActionVariant; Icon:
   "permission.granted": { label: "Permission Granted", variant: "default", Icon: ShieldCheck },
   "permission.revoked": { label: "Permission Revoked", variant: "destructive", Icon: ShieldX },
 };
-
-const PAGE_SIZE = 25;
 
 function resolveTargetLabel(log: AuditLogEntry): string | null {
   const meta = log.metadata;
@@ -172,7 +160,7 @@ function AuditContent() {
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const currentCursor = cursorHistory.at(-1);
 
-  const query = useAuditLogs({ cursor: currentCursor, limit: PAGE_SIZE, actions: RBAC_ACTIONS });
+  const query = useAuditLogs({ ...RBAC_AUDIT_INITIAL_FILTERS, cursor: currentCursor });
   const pagination = query.data?.pagination;
 
   const handleRetry = useCallback(() => {
@@ -214,7 +202,7 @@ function AuditContent() {
               isLoading={query.isLoading}
               emptyState={<AuditEmptyState />}
               className="flex-1 min-h-0"
-              pagination={{ pageSize: PAGE_SIZE }}
+              pagination={{ pageSize: RBAC_AUDIT_PAGE_SIZE }}
             />
             {(cursorHistory.length > 1 || pagination?.hasMore) && (
               <CursorPageControls

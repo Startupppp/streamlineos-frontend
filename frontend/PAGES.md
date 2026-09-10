@@ -17,7 +17,11 @@ Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtim
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.
 - **Never delete a row** — mark it `[x]` and append `[RETIRED path]` if a route is removed.
 
-**Generated:** 2026-08-30. **Total routes: 606.** Last updated: 2026-09-08 (task5/6 additions).
+**Generated:** 2026-08-30. **Total routes: 606.** Last updated: 2026-09-10 (C8 settings prefetch census).
+
+**C10 — settings form owner + residuals (2026-09-10).** The organization settings edit protocol (enter edit, cancel, re-seed from the server record, submit once, toast, exit on success, keep input on failure) existed in six hand-written copies and now has one owner, `features/settings/organization/use-organization-settings-form.ts`. Six sections migrated; four are exempt with a reason each, held executable in `org-settings-form-adoption.contract.test.ts`. Payload conversion stays local per section — no `getPayload` bag, which is the shape the wave-2 lane rejected. Two latent defects fell out: Cancel restored mount-time defaults (stale after any save), and no section re-seeded when the org record changed underneath. `jest features/settings` passes 23 suites / 221 tests. Rendered behaviour is not certified — no browser run.
+
+**C8 — settings prefetch census (2026-09-10).** All 23 `/settings/**` routes are now accounted for: 22 server-prefetch their initial reads behind the route's own permission gate and hydrate them through `HydrationBoundary`; `/settings/incoming-transfer` is classified NO PREFETCH NEEDED because its read declares `staleTime: 0` + `refetchOnMount: "always"`. The census is executable — `lib/prefetch/settings-prefetch-census.test.ts` enumerates the routes from disk, so a new settings page with neither a real prefetch nor a tested classification fails the suite. Measured with request-count assertions in `lib/prefetch/settings-hydration.test.tsx`: 20 first-mount reads removed, 1 deliberately retained.
 
 **PAGES2 count reconciliation (2026-08-30):**
 - Disk: 598 `page.tsx` files (confirmed via `find … | wc -l`).
@@ -893,14 +897,14 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 
 ## Settings (Global Administration)
 
-- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ✓ — S01 (2026-09-02): the sessions panel had loading/empty but no error branch, so a failed `GET /sessions` rendered "No active sessions found" — a false all-clear on a security surface. `ErrorState` + retry added; `revokedCount` typed at the hook instead of two `as` casts.
-- [ ] `/settings/users` · **Settings** · hooks: `→ features/settings/users` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
+- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ✓ — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAccountSettings` (`/sessions`, `/me/login-history?page=1&limit=5`, `/auth/mfa/status`); universal route, so the gate stays `enforceRouteAccess`. S01 (2026-09-02): the sessions panel had loading/empty but no error branch, so a failed `GET /sessions` rendered "No active sessions found" — a false all-clear on a security surface. `ErrorState` + retry added; `revokedCount` typed at the hook instead of two `as` casts.
+- [ ] `/settings/users` · **Settings** · hooks: `→ features/settings/users` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsUsers` (`/v2/users`, `/users/stats`); the initial key is derived from server `searchParams` through `readUsersListState`, shared with the page
 - [ ] `/settings/roles` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles` · §8: E ? D ? Perm ? States ?
-- [ ] `/settings/roles/audit` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/settings/roles/simulate` · **Settings** · hooks: `→ features/settings/roles` · §8: States ?
-- [ ] `/settings/modules` · **Settings** · hooks: `→ features/settings/modules` · §8: L ? E ? Perm ? States ?
-- [ ] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ✓ Perm ? States ? — S01 (2026-09-02): `mfaEnforced`, `allowedEmailDomains` and `ipAllowlist` were writable through both `PATCH /organization/settings` and `PATCH /organization/security` with different bounds and cache order; the security route is now the only writer, and the form's list bounds match the backend's 100-entry cap.
+- [ ] `/settings/roles/audit` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchRolesAudit` over `RBAC_AUDIT_INITIAL_FILTERS`
+- [ ] `/settings/roles/simulate` · **Settings** · hooks: `→ features/settings/roles` · §8: States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchRoleSimulation` (`/roles/simulate/candidates?limit=100`); the per-user simulate read stays client-side because it needs a selection
+- [ ] `/settings/modules` · **Settings** · hooks: `→ features/settings/modules` · §8: L ? E ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchOrgModules`; converted from a client page + `DashboardGate` to a server wrapper with `requirePermission("settings:manage")` over `features/settings/modules/modules-page.tsx`
+- [x] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ✓ Perm ? States ? — C10 residuals (2026-09-10): the edit/cancel/save protocol duplicated across six sections now has one owner, `useOrganizationSettingsForm`; branding 313 → 251, localization → 138, the page 165 → 80. Perm and States stay `?` — neither was verified in a browser. — S01 (2026-09-02): `mfaEnforced`, `allowedEmailDomains` and `ipAllowlist` were writable through both `PATCH /organization/settings` and `PATCH /organization/security` with different bounds and cache order; the security route is now the only writer, and the form's list bounds match the backend's 100-entry cap.
 - [ ] `/settings/organization/branches` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/settings/organization/business-units` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/organization/chart` · **Settings** · hooks: `→ features/settings/organization` · §8: States ?
@@ -909,13 +913,13 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 - [ ] `/settings/organization/locations` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/organization/structure` · **Settings** · hooks: `→ features/settings/organization` · §8: States ?
 - [ ] `/settings/organization/teams` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/settings/billing` · **Settings** · hooks: `→ features/settings/billing` · §8: E ? Perm ? States ? — platform billing page 1 of 2
-- [ ] `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` · §8: L ? C ? Perm ? States ? — platform billing page 2 of 2
+- [ ] `/settings/billing` · **Settings** · hooks: `→ features/settings/billing` · §8: E ? Perm ? States ? — platform billing page 1 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchBillingSettings(tab)` — the `?tab` param selects which reads are prefetched, and `/billing/seats` is skipped for a viewer without `billing:seats:view`
+- [ ] `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` · §8: L ? C ? Perm ? States ? — platform billing page 2 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAiCreditsSettings` (wallet, transactions, usage)
 - [ ] `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens` · §8: L ? C ? D ? Perm ? States ?
-- [ ] `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` · §8: L ? C ? D ? Perm ? States ?
-- [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ✓ D ? Perm ? States ? — S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
-- [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ?
+- [ ] `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` · §8: L ? C ? D ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsWebhooks`; the `?size` param feeds the initial key
+- [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsAuditLog` (list + actions + target types); the initial key comes from `readAuditLogFilters(searchParams)`, shared with the page
+- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ✓ D ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsDelegations` (received, given, discovery members); each list keys off its own `received*`/`granted*` params. S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
+- [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ? — C8 (2026-09-10): classified NO PREFETCH NEEDED. `useIncomingOrgTransfers` declares `staleTime: 0` + `refetchOnMount: "always"`, so a hydrated offer is re-read on first mount anyway; a stale accept/decline offer is the one thing this page must not show. Pinned by `lib/prefetch/settings-prefetch-census.test.ts`
 
 ---
 

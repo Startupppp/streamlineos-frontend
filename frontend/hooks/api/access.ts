@@ -14,9 +14,10 @@ import type {
   RbacDiscoveryMember,
 } from "@/hooks/api/access-schema";
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
-import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import {
   gated,
+  grantsPermission,
   permissionGate,
   type Gated,
   type PermissionGate,
@@ -75,8 +76,7 @@ export const useAccess = (
 
 export function usePermissionGate(permission: PermissionKey): PermissionGate {
   const { data } = useAccess();
-  const allowed = data ? data.isOrgOwner || permission in data.scopes : false;
-  return permissionGate(permission, allowed, data !== undefined);
+  return permissionGate(permission, grantsPermission(data, permission), data !== undefined);
 }
 
 export function useCan(permissionKey: PermissionKey): boolean {

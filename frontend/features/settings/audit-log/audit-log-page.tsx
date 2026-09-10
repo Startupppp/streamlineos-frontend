@@ -36,7 +36,12 @@ import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PAGE_SIZE_OPTIONS, type PageSize, isValidPageSize } from "./audit-log-constants";
+import {
+  DEFAULT_AUDIT_LOG_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+  readAuditLogFilters,
+  readAuditLogPageSize,
+} from "./audit-log-constants";
 import { LogDetailSheet } from "./log-detail-sheet";
 import { AUDIT_LOG_COLUMNS } from "./audit-log-columns";
 
@@ -49,8 +54,8 @@ export function AuditLogPage() {
   const [userSearch, setUserSearch] = useState(searchParams.get("user") ?? "");
   const [cursorStack, setCursorStack] = useState<string[]>([]);
 
-  const pageSizeParam = Number(searchParams.get("size"));
-  const pageSize: PageSize = isValidPageSize(pageSizeParam) ? pageSizeParam : 15;
+  const urlFilters = readAuditLogFilters(searchParams);
+  const pageSize = readAuditLogPageSize(searchParams);
   const actionFilter = searchParams.get("action") || "all";
   const targetTypeFilter = searchParams.get("target") || "all";
   const dateFrom = searchParams.get("from") || "";
@@ -84,12 +89,8 @@ export function AuditLogPage() {
   }, [debouncedUserSearch, searchParams, updateParams, resetCursor]);
 
   const { data, isLoading, isError, error, refetch } = useAuditLogs({
+    ...urlFilters,
     cursor: currentCursor,
-    limit: pageSize,
-    action: actionFilter !== "all" ? actionFilter : undefined,
-    targetType: targetTypeFilter !== "all" ? targetTypeFilter : undefined,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
     userSearch: debouncedUserSearch || undefined,
   });
 
@@ -130,7 +131,7 @@ export function AuditLogPage() {
 
   const handlePageSizeChange = useCallback(
     (size: number) => {
-      updateParams({ size: size === 15 ? null : String(size) });
+      updateParams({ size: size === DEFAULT_AUDIT_LOG_PAGE_SIZE ? null : String(size) });
       resetCursor();
     },
     [updateParams, resetCursor],
@@ -214,7 +215,7 @@ export function AuditLogPage() {
     />
   );
 
-  const pageSizeOption = PAGE_SIZE_OPTIONS.find((o) => o === pageSize) ?? 15;
+  const pageSizeOption = PAGE_SIZE_OPTIONS.find((o) => o === pageSize) ?? DEFAULT_AUDIT_LOG_PAGE_SIZE;
 
   return (
     <PageWrapper

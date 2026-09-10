@@ -7,13 +7,8 @@ import {
   type MutationFunctionContext,
 } from "@tanstack/react-query";
 import { useAccess, useCan } from "@/hooks/api/access";
-import type { AccessResponse } from "@/types/access";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-
-function grants(access: AccessResponse | undefined, permission: PermissionKey): boolean {
-  if (!access) return false;
-  return access.isOrgOwner || permission in access.scopes;
-}
 
 /**
  * Client-side mutation guard. The backend remains authoritative, but this
@@ -45,7 +40,7 @@ export function useAuthorizedMutation<
       if (!options.mutationFn) {
         throw new Error("Authorized mutation requires a mutation function");
       }
-      const granted = access ? allowed : grants((await refetch()).data, permission);
+      const granted = access ? allowed : grantsPermission((await refetch()).data, permission);
       if (!granted) {
         throw new Error(`Missing permission: ${permission}`);
       }

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
 import { useLoginHistory } from "@/hooks/api/auth";
+import { ACCOUNT_LOGIN_HISTORY_PARAMS } from "@/lib/settings-initial-reads";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -211,7 +212,7 @@ function SignInRow({ entry }: { entry: LoginEntry }) {
 }
 
 function RecentSignInsSection() {
-  const { data, isLoading, isError, error, refetch } = useLoginHistory({ page: 1, limit: 5 });
+  const { data, isLoading, isError, error, refetch } = useLoginHistory(ACCOUNT_LOGIN_HISTORY_PARAMS);
   const entries = data?.data ?? [];
 
   function handleRetry() {

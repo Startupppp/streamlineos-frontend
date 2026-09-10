@@ -10,10 +10,8 @@ import {
   useRolePermissionGrants,
 } from "@/hooks/api/roles";
 import { useSimulateAccess, useSimulationCandidates } from "./simulate";
-import {
-  normalizeOrgModulesResponse,
-  useOrgModules,
-} from "./org-modules";
+import { useOrgModules } from "./org-modules";
+import { normalizeOrgModulesResponse } from "./org-modules-normalize";
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options: unknown) => options),

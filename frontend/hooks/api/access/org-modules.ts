@@ -5,11 +5,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
-import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import type { AccessResponse } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { isRecord } from "@/lib/is-record";
+import {
+  normalizeOrgModulesResponse,
+  type OrgModule,
+} from "@/hooks/api/access/org-modules-normalize";
 
 /** Deferred so the sidebar, which imports this module, does not carry Zod. */
 const noContentContract = lazyContract(() =>
@@ -21,56 +24,7 @@ const orgModulesContract = lazyContract(() =>
   ),
 );
 
-export interface OrgModule {
-  moduleKey: string;
-  enabled: boolean;
-  core?: boolean;
-}
-
 const EMPTY_MODULES: string[] = [];
-
-function isOrgModule(value: unknown): value is OrgModule {
-  if (!isRecord(value)) return false;
-
-  return (
-    typeof value.moduleKey === "string" &&
-    value.moduleKey.trim().length > 0 &&
-    typeof value.enabled === "boolean" &&
-    (value.core === undefined || typeof value.core === "boolean")
-  );
-}
-
-/**
- * Keep the page insulated from response-envelope differences between API
- * deployments. The query cache itself is normalized, so optimistic updates
- * can always work with an array as well.
- */
-export function normalizeOrgModulesResponse(response: unknown): OrgModule[] {
-  let candidate = response;
-
-  for (let depth = 0; depth < 3; depth += 1) {
-    if (Array.isArray(candidate)) {
-      if (candidate.every(isOrgModule)) return candidate;
-      break;
-    }
-
-    if (!isRecord(candidate)) break;
-
-    if ("data" in candidate) {
-      candidate = candidate.data;
-      continue;
-    }
-    if ("modules" in candidate) {
-      candidate = candidate.modules;
-      continue;
-    }
-    break;
-  }
-
-  throw new Error(
-    "The server returned an invalid module configuration. Please try again.",
-  );
-}
 
 export function useEnabledModules(): string[] {
   const { data } = useAccess();

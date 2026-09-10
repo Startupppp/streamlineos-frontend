@@ -1,4 +1,4 @@
-import { parsePageSize } from "@/lib/list-pagination";
+import { parsePageSize, type SearchParamsReader } from "@/lib/list-pagination";
 
 export const DELEGATION_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const DEFAULT_DELEGATION_PAGE_SIZE = 20;
@@ -23,10 +23,6 @@ export const DELEGATION_URL_KEYS = {
   },
 } as const;
 
-interface SearchParamsReader {
-  get(name: string): string | null;
-}
-
 export function readDelegationListState(
   params: SearchParamsReader,
   kind: DelegationListKind,
@@ -40,17 +36,4 @@ export function readDelegationListState(
     ),
     search: params.get(keys.search)?.trim() ?? "",
   };
-}
-
-export function buildDelegationListUrl(
-  endpoint: string,
-  state: DelegationListState,
-  cursor?: string,
-): string {
-  const params = new URLSearchParams({
-    limit: String(state.limit),
-  });
-  if (cursor) params.set("cursor", cursor);
-  if (state.search) params.set("search", state.search);
-  return `${endpoint}?${params.toString()}`;
 }

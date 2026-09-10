@@ -43,6 +43,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  AI_CREDITS_USAGE_DAYS,
+  AI_CREDIT_TRANSACTION_LIMIT,
+} from "@/lib/settings-initial-reads";
 
 const AiCreditsDailyChart = dynamic(
   () =>
@@ -61,9 +65,9 @@ export function AiCreditsSettingsPage() {
   const verifyMutation = useVerifyAiCreditPurchase();
   const canPurchase = useCan("billing:ai-credits:purchase");
 
-  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(20);
+  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(AI_CREDIT_TRANSACTION_LIMIT);
   const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([undefined]);
-  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(30);
+  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(AI_CREDITS_USAGE_DAYS);
   const txnCursor = txnCursors.at(-1);
 
   const {

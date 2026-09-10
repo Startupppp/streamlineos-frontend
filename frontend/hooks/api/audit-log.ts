@@ -42,7 +42,7 @@ interface AuditLogListResponse {
   pagination: AuditLogPagination;
 }
 
-interface AuditLogFilters {
+export interface AuditLogFilters {
   cursor?: string;
   limit?: number;
   action?: string;

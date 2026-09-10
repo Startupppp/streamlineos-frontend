@@ -5,6 +5,10 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import {
+  delegationListParams,
+  type DelegationListParams,
+} from "@/hooks/api/delegations-request";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -45,12 +49,6 @@ export interface DelegationPage {
   };
 }
 
-export interface DelegationListParams {
-  limit: number;
-  search: string;
-  cursor?: string;
-}
-
 export interface GrantDelegationInput {
   delegateeId: string;
   permissions: string[];
@@ -62,17 +60,13 @@ export interface GrantDelegationInput {
 export function useReceivedDelegations(params: DelegationListParams) {
   return useGatedQuery<DelegationPage>("settings:rbac:manage", {
     queryKey: supportAndWorkflowsQueryKeys.delegations.received(params),
-    queryFn: ({ signal }) => {
-      const urlParams = new URLSearchParams({ limit: String(params.limit) });
-      if (params.cursor) urlParams.set("cursor", params.cursor);
-      if (params.search) urlParams.set("search", params.search);
-      return apiClient.get<DelegationPage>(
-        `/access/delegations?${urlParams.toString()}`,
-        undefined,
+    queryFn: ({ signal }) =>
+      apiClient.get<DelegationPage>(
+        "/access/delegations",
+        delegationListParams(params),
         signal,
         delegationsPageContract,
-      );
-    },
+      ),
     staleTime: 60_000,
   });
 }
@@ -80,17 +74,13 @@ export function useReceivedDelegations(params: DelegationListParams) {
 export function useGrantedDelegations(params: DelegationListParams) {
   return useGatedQuery<DelegationPage>("settings:rbac:manage", {
     queryKey: supportAndWorkflowsQueryKeys.delegations.given(params),
-    queryFn: ({ signal }) => {
-      const urlParams = new URLSearchParams({ limit: String(params.limit) });
-      if (params.cursor) urlParams.set("cursor", params.cursor);
-      if (params.search) urlParams.set("search", params.search);
-      return apiClient.get<DelegationPage>(
-        `/access/delegations/given?${urlParams.toString()}`,
-        undefined,
+    queryFn: ({ signal }) =>
+      apiClient.get<DelegationPage>(
+        "/access/delegations/given",
+        delegationListParams(params),
         signal,
         delegationsPageContract,
-      );
-    },
+      ),
     staleTime: 60_000,
   });
 }
