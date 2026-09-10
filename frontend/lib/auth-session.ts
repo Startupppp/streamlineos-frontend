@@ -5,24 +5,9 @@ import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { isRecord } from "@/lib/is-record";
+import { resolveSessionClaims } from "@/lib/auth-claims";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
-
-export function resolveSessionDisplayName(data: {
-  name?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string | null;
-}): string {
-  const displayName = data.name?.trim();
-  if (displayName) return displayName;
-  const full = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
-  if (full) return full;
-  const email = data.email?.trim();
-  if (!email) return "";
-  const local = email.split("@")[0]?.trim();
-  return local || email;
-}
 
 interface BackendJwtEntry {
   token: string;
@@ -114,7 +99,6 @@ export interface SessionData {
   image: string | null;
   role: string | null;
   isActive: boolean;
-  branchId: number | null;
   orgId: string | null;
   isOrgOwner: boolean;
   enabledModules: string[];
@@ -147,10 +131,7 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
   return null;
 }
 
-async function fetchSessionDataWithCache(
-  userId: string,
-  _orgId: string | null,
-): Promise<SessionData | null> {
+async function fetchSessionDataWithCache(userId: string): Promise<SessionData | null> {
   return fetchSessionData(userId);
 }
 
@@ -214,22 +195,11 @@ export function buildUserFromSessionData(
   sessionData: SessionData,
   extra?: { daysUntilExpiry?: number },
 ) {
+  const claims = resolveSessionClaims(sessionData, {});
   return {
     id: userId,
     email: sessionData.email,
-    name: resolveSessionDisplayName(sessionData),
-    image: sessionData.image,
-    role: sessionData.role ?? undefined,
-    isActive: sessionData.isActive,
-    orgId: sessionData.orgId ?? null,
-    isOrgOwner: sessionData.isOrgOwner,
-    branchId: sessionData.branchId ?? null,
-    plan: sessionData.plan ?? null,
-    enabledModules: sessionData.enabledModules,
-    orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt,
-    userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt,
-    organizationAccess: sessionData.organizationAccess,
-    suspendedOrganizationName: sessionData.suspendedOrganizationName,
+    ...claims,
     ...(extra?.daysUntilExpiry !== undefined
       ? { daysUntilExpiry: extra.daysUntilExpiry }
       : {}),
