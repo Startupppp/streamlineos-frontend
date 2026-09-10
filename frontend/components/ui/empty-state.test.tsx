@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { permissionGate } from "@/lib/rbac/permission-gate";
 import { EmptyState } from "./empty-state";
 
 jest.mock("next/link", () => {
@@ -81,5 +82,54 @@ describe("EmptyState — semantic structure", () => {
   it("shows the default illustration so the empty state is never a blank canvas", () => {
     render(<EmptyState title="No data" />);
     expect(screen.getByTestId("state-illustration")).toBeInTheDocument();
+  });
+});
+
+describe("EmptyState — announcement", () => {
+  it("announces an empty result, which is the answer the reader is waiting on", () => {
+    render(
+      <EmptyState
+        title="No pending approvals"
+        description="Nothing is waiting on you."
+      />,
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("No pending approvals");
+    expect(status).toHaveTextContent("Nothing is waiting on you.");
+  });
+
+  it("announces the compact variant on the same terms", () => {
+    render(<EmptyState title="No results" compact />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("No results");
+  });
+
+  it("still announces a refused read through the access branch", () => {
+    render(
+      <EmptyState
+        title="No pending approvals"
+        access={permissionGate("crm:autonomy:view", false, true)}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("Access Restricted");
+  });
+
+  it("announces an unresolved gate as emptiness rather than refusal", () => {
+    render(
+      <EmptyState
+        title="No pending approvals"
+        access={permissionGate("crm:autonomy:view", false, false)}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("No pending approvals");
+  });
+
+  it("exposes exactly one live region so the two branches never double-announce", () => {
+    render(<EmptyState title="No results" />);
+
+    expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 });
