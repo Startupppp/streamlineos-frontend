@@ -339,9 +339,7 @@ export const useAnnouncements = (
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  return useMutation({
+    return useMutation({
     mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
       apiClient.post<Announcement>("/dashboard/announcements", body),
@@ -353,9 +351,7 @@ export const useCreateAnnouncement = () => {
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  return useMutation({
+    return useMutation({
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),

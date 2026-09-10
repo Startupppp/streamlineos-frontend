@@ -1,23 +1,10 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  Notification,
-  UnreadCount,
-  NotificationListParams,
-  NotificationTemplate,
-  SetTemplateApprovalInput,
-  CreateTemplateInput,
-  UpdateTemplateInput,
-  TemplatePreviewResult,
-  Broadcast,
-  BroadcastListResponse,
-  CreateBroadcastInput,
-  UpdateBroadcastInput,
   NotificationPreferences,
   UpdatePreferencesInput,
   NotificationProvider,
@@ -34,7 +21,7 @@ import type {
   SuppressionRule,
   CreateSuppressionInput,
 } from "@/types/notifications";
-import { SHARED_UNREAD_PARAMS, toStringParams, useNotificationInboxInvalidation } from "./notifications-shared";
+import { useNotificationInboxInvalidation } from "./notifications-shared";
 
 export const useNotificationPreferences = (
   options?: Omit<UseQueryOptions<NotificationPreferences, Error>, "queryKey" | "queryFn">,
