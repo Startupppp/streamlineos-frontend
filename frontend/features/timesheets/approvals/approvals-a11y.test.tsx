@@ -178,6 +178,31 @@ describe("approvals accessibility", () => {
     expect(openedPeriods).toHaveLength(0);
   });
 
+  it("leaves a key pressed on the selection control to the control", async () => {
+    const user = userEvent.setup();
+    renderApprovals();
+
+    const [first] = screen.getAllByRole("checkbox", { name: "Select row" });
+    if (!first) throw new Error("no row checkbox");
+    first.focus();
+    await user.keyboard("{Enter}");
+
+    expect(openedPeriods).toHaveLength(0);
+  });
+
+  it("selects a row from the keyboard, the way a mouse already can", async () => {
+    const user = userEvent.setup();
+    renderApprovals();
+
+    const [first] = screen.getAllByRole("checkbox", { name: "Select row" });
+    if (!first) throw new Error("no row checkbox");
+    first.focus();
+    await user.keyboard(" ");
+
+    expect(screen.getAllByRole("checkbox", { name: "Select row" })[0]).toBeChecked();
+    expect(openedPeriods).toHaveLength(0);
+  });
+
   it("points the status tabs at a panel that actually exists", () => {
     renderApprovals();
 

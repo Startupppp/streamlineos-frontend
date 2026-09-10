@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   type ColumnDef,
   type SortingState,
@@ -95,6 +95,21 @@ export interface DataTableProps<T> {
    * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
    */
   mobileCard?: (row: T, index: number) => ReactNode;
+}
+
+/**
+ * A row claims Enter/Space only when the key landed on the row itself: a key
+ * pressed on a control inside it (the selection checkbox, a cell button)
+ * belongs to that control, and the row swallowing it leaves a keyboard-only
+ * user unable to reach the control at all.
+ */
+function rowActivation<T>(row: T, onRowClick: (row: T) => void) {
+  return (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onRowClick(row);
+  };
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
@@ -383,14 +398,7 @@ export function DataTable<T>({
                   tabIndex={onRowClick ? 0 : undefined}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   onKeyDown={
-                    onRowClick
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onRowClick(row.original);
-                          }
-                        }
-                      : undefined
+                    onRowClick ? rowActivation(row.original, onRowClick) : undefined
                   }
                   className={cn(
                     "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
@@ -467,14 +475,7 @@ export function DataTable<T>({
                     )}
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                     onKeyDown={
-                      onRowClick
-                        ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              onRowClick(row.original);
-                            }
-                          }
-                        : undefined
+                      onRowClick ? rowActivation(row.original, onRowClick) : undefined
                     }
                     tabIndex={onRowClick ? 0 : undefined}
                     data-state={row.getIsSelected() ? "selected" : undefined}
