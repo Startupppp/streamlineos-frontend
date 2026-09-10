@@ -33,6 +33,25 @@ export interface TicketRef {
   project: ProjectRef | null;
 }
 
+/**
+ * What `POST /timesheets/entries/from-attendance` answers.
+ *
+ * Five outcomes, and they are not degrees of the same thing — `enabled: false`
+ * means the organisation never turned the policy on, so nothing was read and
+ * nothing was written. Rendering that as "0 entries created" tells somebody
+ * their clock produced no hours, which is a different and wrong statement.
+ */
+export interface AttendanceDraftResult {
+  enabled: boolean;
+  segmentsFound: number;
+  entriesCreated: number;
+  /** Days that already had an entry. Not an error — the point of running twice. */
+  skippedExisting: number;
+  /** Days whose clock produced no usable hours. */
+  skippedEmpty: number;
+  periodIds: number[];
+}
+
 export interface TimesheetEntry {
   id: number;
   orgId: string;

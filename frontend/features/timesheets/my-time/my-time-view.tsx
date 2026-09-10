@@ -13,8 +13,10 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
+import type { AttendanceDraftResult } from "@/features/timesheets/types";
 import { missingOnSubmit } from "@/features/timesheets/settings/required-fields";
 import { IncompleteEntriesNotice } from "./incomplete-entries-notice";
+import { FillFromClockButton, FillFromClockNotice } from "./fill-from-clock";
 import { resolveWeekStart, useWeek } from "./use-week";
 import { TimerPanel } from "./timer-panel";
 import { WeekGrid } from "./week-grid";
@@ -34,6 +36,18 @@ export function MyTimeView() {
   );
 
   const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
+  /*
+   * The result is stored WITH the week it ran for, and rendered only while that
+   * week is still on screen.
+   *
+   * A summary saying "3 draft entries created" is about one week; left on screen
+   * after paging it attributes those rows to a week that never had them. Storing
+   * the week and comparing beats clearing in an effect — there is no moment where
+   * the stale summary is shown before an effect gets round to removing it.
+   */
+  const [draftResult, setDraftResult] = useState<{ week: string; result: AttendanceDraftResult } | null>(
+    null,
+  );
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
     { startDate: weekStart, endDate: weekEnd },
     true,
@@ -160,6 +174,12 @@ export function MyTimeView() {
         />
       </div>
 
+      <FillFromClockButton
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+        onResult={(result) => setDraftResult({ week: weekStart, result })}
+      />
+
       {canRecall ? (
         <LoadingButton
           variant="outline"
@@ -202,6 +222,10 @@ export function MyTimeView() {
         )}
 
         {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
+
+        <FillFromClockNotice
+          result={draftResult?.week === weekStart ? draftResult.result : null}
+        />
 
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
           <div role="alert" className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
