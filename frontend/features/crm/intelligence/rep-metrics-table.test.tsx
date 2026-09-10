@@ -1,9 +1,22 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type {
   RepCallMetrics,
   RepCallMetricsResponse,
 } from "@/types/crm/call-intelligence";
 import { RepMetricsTable } from "./rep-metrics-table";
+
+/**
+ * The table renders through the engine now, and `useTenantLayout` reads the
+ * signed-in tenant's arrangement — a session and a query client this test has no
+ * business standing up. Stubbed to the stock description, which is what these
+ * assertions are about: that `REP_CALL_METRICS_LAYOUT` as declared renders
+ * percentages rather than basis points, names rather than ids, and no sortable
+ * column at all. That the arrangement path leaves a description valid is
+ * `lib/renderer/registry.test.ts`'s job, for every layout at once.
+ */
+jest.mock("@/features/renderer/use-tenant-layout", () => ({
+  useTenantLayout: <T,>(layout: T): T => layout,
+}));
 
 /**
  * CRM-P2-05's table, tested for what it refuses to render.
@@ -58,6 +71,18 @@ const response = (
   },
 });
 
+/**
+ * The desktop table, which is where a positive assertion belongs.
+ *
+ * `RecordList` renders the table and the mobile card list from one description,
+ * and both are in the DOM at once — the breakpoint classes decide which is
+ * *visible*, and jsdom applies no stylesheet. A bare `getByText` therefore finds
+ * a rep's name twice, so what a positive assertion means is "the table shows
+ * this", and this scopes it. Negative assertions stay global on purpose: a user
+ * id must not appear in either rendering.
+ */
+const table = () => within(screen.getByRole("table"));
+
 describe("RepMetricsTable", () => {
   it("renders a rep's median metrics as percentages, not basis points", () => {
     render(
@@ -70,13 +95,13 @@ describe("RepMetricsTable", () => {
       />,
     );
 
-    expect(screen.getByText("Ana Reyes")).toBeInTheDocument();
+    expect(table().getByText("Ana Reyes")).toBeInTheDocument();
     // 4150 bps is 42% once rounded, and 41.5% is not a number a table column
     // should be jittering over.
-    expect(screen.getByText("42%")).toBeInTheDocument();
-    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(table().getByText("42%")).toBeInTheDocument();
+    expect(table().getByText("50%")).toBeInTheDocument();
     // 3000 bps of questions per turn is three per ten turns.
-    expect(screen.getByText("3.0")).toBeInTheDocument();
+    expect(table().getByText("3.0")).toBeInTheDocument();
   });
 
   it("never renders a user id, even when the name is missing", () => {
@@ -90,7 +115,7 @@ describe("RepMetricsTable", () => {
       />,
     );
 
-    expect(screen.getByText("Former member")).toBeInTheDocument();
+    expect(table().getByText("Former member")).toBeInTheDocument();
     expect(screen.queryByText("user-rep-a")).not.toBeInTheDocument();
   });
 
@@ -122,8 +147,8 @@ describe("RepMetricsTable", () => {
       />,
     );
 
-    expect(screen.getByText("Still private")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(table().getByText("Still private")).toBeInTheDocument();
+    expect(table().getByText("2")).toBeInTheDocument();
   });
 
   it("offers no sortable column, because a sorted talk ratio is a leaderboard", () => {

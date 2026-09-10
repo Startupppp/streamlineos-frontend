@@ -20,21 +20,28 @@ import path from "node:path";
  * without a ratchet nothing prevents the next feature there being hand-built
  * again while everybody assumes the engine is now the only way.
  *
- * That regression happened, and these numbers record it rather than hide it.
+ * That regression happened, and these numbers recorded it rather than hiding it.
  * Between 2026-09-09 and 2026-09-10 the phase 4/5 CRM tickets landed six record
- * surfaces the engine could have described, none of them run against this file:
+ * surfaces the engine could have described, none of them run against this file.
+ * All six have since been described and moved onto `RecordList`/`RecordForm`,
+ * which is what took `crm` from 8 to 2 — what is left there is the import plan's
+ * own two files and nothing from phase 4 or 5. Two of the six needed vocabulary
+ * the engine did not have, and it grew rather than exempting them: `series`, for
+ * a field whose value is a run of figures, and `RecordList`'s `footer`, for a
+ * keyset list's own load-more control.
  *
- *   features/crm/intelligence/rep-metrics-table.tsx      (per-rep call metrics)
- *   features/crm/nurture/nurture-enrollments-panel.tsx   (enrollment list)
- *   features/crm/nurture/nurture-sequences-page.tsx      (sequence list)
- *   features/crm/reports/activity/report-activity-page.tsx (run-log list)
- *   features/crm/segments/segments-page.tsx              (saved-segment list)
- *   features/crm/settings/mcp-token-dialog.tsx           (token create form)
+ * One surface named in that batch is still counted, and deliberately:
  *
- * plus `features/auth/components/passwordless-signin-form.tsx` in `auth`. An
- * aggregate is no excuse — `lib/renderer/crm/deal-aging-layout.ts` describes one
- * already. They are named here so the next batch has a work list instead of an
- * integer, and the numbers below may only fall from here.
+ *   features/auth/components/passwordless-signin-form.tsx  (email sign-in step)
+ *
+ * `frontend/CLAUDE.md` makes `/signin` and `/signup` immutable reference
+ * surfaces that the rest of the app conforms to, so rendering one of them
+ * through the engine is a decision above this file's pay grade — and it is debt
+ * rather than a decision, which is why it is counted here instead of being
+ * argued into `CRAFTED_BY_DESIGN`. `auth` therefore holds at 2, with
+ * `signup-form.tsx` beside it.
+ *
+ * The numbers below may only fall from here.
  */
 const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   // Arrived with main. Counted rather than exempted: it is a hand-written record
@@ -53,13 +60,13 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "users": 10,
   "sign": 8,
   "directory": 7,
-  "crm": 8,
   "surveys": 6,
   "wiki": 5,
   "landing": 4,
   "notifications": 4,
   "help-centre": 3,
   "chat": 2,
+  "crm": 2,
   "employee-onboarding": 2,
   "module-access": 2,
   "portal-access": 2,
@@ -203,8 +210,8 @@ describe("the renderer is becoming the only way a record surface exists", () => 
     const crm = handWrittenSurfaces().filter((file) => moduleOf(file) === "crm");
 
     // The module the engine was built for. What is left is the import plan's own
-    // two files and the six phase 4/5 surfaces named at the top of this file;
-    // the crafted ones are excluded rather than counted.
+    // two files -- `bulk-column-mapper.tsx` and `bulk-import-section.tsx` --
+    // and nothing else; the crafted ones are excluded rather than counted.
     expect(crm.length).toBeLessThanOrEqual(REMAINING_BY_MODULE.crm ?? 0);
   });
 });

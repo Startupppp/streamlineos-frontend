@@ -1,9 +1,12 @@
 "use client";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useMemo } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { REP_CALL_METRICS_LAYOUT } from "@/lib/renderer/crm/rep-call-metrics-layout";
 import type { RepCallMetrics, RepCallMetricsResponse } from "@/types/crm/call-intelligence";
-import { METRIC_UNKNOWN, formatBpsPercent, formatQuestionsPerTenTurns } from "./call-metric-format";
+import { formatBpsPercent, formatQuestionsPerTenTurns } from "./call-metric-format";
 import { RepTrendSparkline } from "./rep-trend-sparkline";
 
 interface RepMetricsTableProps {
@@ -14,26 +17,65 @@ interface RepMetricsTableProps {
   onPageChange: (page: number) => void;
 }
 
+/** A rep who has left is named in words. A coaching table never shows an id. */
+const FORMER_MEMBER = "Former member";
+
+/**
+ * One rep's row in the shape `REP_CALL_METRICS_LAYOUT` names.
+ *
+ * The mapping lives here rather than beside the description, and deliberately:
+ * the three ratios are formatted by `call-metric-format.ts`, which is this
+ * feature's module, and a layout under `lib/renderer/` importing from
+ * `features/` would point the dependency backwards. What the description owns is
+ * the shape; what this owns is reading the wire into it.
+ *
+ * A missing median is left empty rather than filled with the formatter's own em
+ * dash, so the engine renders its own — muted, like every other nothing in the
+ * table, instead of a plain dash that only looks the same in one theme. Printing
+ * `0%` would report a rep as having said nothing, which is the fabrication
+ * `transcript-metrics.ts` refuses to make on the way in.
+ */
+function repCallMetricsRecordFields(metrics: RepCallMetrics): Record<string, unknown> {
+  return {
+    repUserId: metrics.repUserId,
+    rep: metrics.repName ?? FORMER_MEMBER,
+    callsAnalysed: metrics.callsAnalysed,
+    talkRatio:
+      metrics.medianTalkRatioBps === null ? null : formatBpsPercent(metrics.medianTalkRatioBps),
+    questionRate:
+      metrics.medianQuestionRateBps === null
+        ? null
+        : formatQuestionsPerTenTurns(metrics.medianQuestionRateBps),
+    nextStep:
+      metrics.nextStepCommittedBps === null
+        ? null
+        : formatBpsPercent(metrics.nextStepCommittedBps),
+    talkRatioTrend: metrics.trend,
+    /*
+      Zero is an absence here, not a figure. There is no embargo to report, and
+      a "0" in that column reads as a claim about the rep's period.
+    */
+    embargoed: metrics.embargoed === 0 ? null : metrics.embargoed,
+  };
+}
+
 /**
  * CRM-P2-05's table: how each person's calls went, and which way they are going.
  *
- * Two decisions here are the ticket rather than styling.
+ * No table is written here. The columns, their labels, their alignment, the
+ * mobile card and — most importantly — the fact that **nothing is sortable** all
+ * come from `REP_CALL_METRICS_LAYOUT`, where the argument for that lives beside
+ * the fields it governs. The server returns rows in call-count order and the
+ * client renders that order; a sortable talk ratio is a league table, which is
+ * the thing `call-coaching.controller.ts` refuses to build.
  *
- * **The table is not sortable.** `DataTable` will sort client-side the moment a
- * column declares `sortable`, and a sortable talk-ratio column is a league
- * table — the thing `call-coaching.controller.ts` refuses to build, arrived at
- * through a prop. The server returns rows in call-count order, which says how
- * much of the window is about each person, and the client renders that order.
- *
- * **No column ever renders a raw id.** `repName` is null for somebody who has
- * left the organisation, and the fallback is the word "Former member" rather
- * than a UUID. A visible identifier in a coaching table is both a house rule and
- * a bad answer to "who is this row about".
- *
- * The `embargoed` column is here and not hidden. A manager reading "6 calls" for
- * a rep who made eight needs to know the other two are the rep's to see first;
- * without the column the median silently describes a period that is not the one
- * in the heading.
+ * The one thing the description cannot draw is the trend. It declares the field
+ * a `series` — a run of figures rather than one — and this supplies the drawing
+ * through `cells`, because the chart's meaning is domain the engine does not
+ * have: these are basis points, the buckets come from `meta.bucket`, and a
+ * bucket with no calls is a gap rather than a flat line, because a straight line
+ * across a quiet fortnight claims nothing changed rather than that nothing
+ * happened.
  */
 export function RepMetricsTable({
   response,
@@ -42,76 +84,39 @@ export function RepMetricsTable({
   pageSize,
   onPageChange,
 }: RepMetricsTableProps) {
-  const columns: DataTableColumn<RepCallMetrics>[] = [
-    {
-      key: "rep",
-      header: "Rep",
-      cell: (row) => (
-        <span className="truncate text-sm font-medium">
-          {row.repName ?? "Former member"}
-        </span>
-      ),
-    },
-    {
-      key: "calls",
-      header: "Calls",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => row.callsAnalysed,
-    },
-    {
-      key: "talkRatio",
-      header: "Talk ratio",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => formatBpsPercent(row.medianTalkRatioBps),
-    },
-    {
-      key: "questionRate",
-      header: "Questions / 10 turns",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => formatQuestionsPerTenTurns(row.medianQuestionRateBps),
-    },
-    {
-      key: "nextStep",
-      header: "Next step",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => formatBpsPercent(row.nextStepCommittedBps),
-    },
-    {
-      key: "trend",
-      header: "Talk ratio trend",
-      className: "w-32",
-      cell: (row) => (
-        <RepTrendSparkline
-          points={row.trend}
-          metric="talkRatio"
-          bucket={response.meta.bucket}
-          repLabel={row.repName ?? "Former member"}
-        />
-      ),
-    },
-    {
-      key: "embargoed",
-      header: "Still private",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) =>
-        row.embargoed === 0 ? (
-          <span className="text-muted-foreground">{METRIC_UNKNOWN}</span>
-        ) : (
-          row.embargoed
-        ),
-    },
-  ];
+  const layout = useTenantLayout(REP_CALL_METRICS_LAYOUT);
+
+  const rows = useMemo(
+    () => asRecordValues(response.data.map(repCallMetricsRecordFields)),
+    [response.data],
+  );
+
+  const cells = useMemo(
+    () => ({
+      talkRatioTrend: (row: RecordValue) => {
+        const metrics = response.data.find(
+          (candidate) => candidate.repUserId === row.repUserId,
+        );
+        if (!metrics) return null;
+        return (
+          <RepTrendSparkline
+            points={metrics.trend}
+            metric="talkRatio"
+            bucket={response.meta.bucket}
+            repLabel={metrics.repName ?? FORMER_MEMBER}
+          />
+        );
+      },
+    }),
+    [response.data, response.meta.bucket],
+  );
 
   return (
-    <DataTable
-      data={response.data}
-      columns={columns}
-      getRowKey={(row) => row.repUserId}
+    <RecordList
+      layout={layout}
+      rows={rows}
+      getRowKey={(row) => String(row.repUserId)}
+      cells={cells}
       isLoading={isLoading}
       className="flex-1 min-h-0"
       minWidth="820px"

@@ -5,15 +5,21 @@ import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  SEGMENT_LAYOUT,
+  segmentRecordFields,
+  withSegmentSources,
+} from "@/lib/renderer/crm/segment-layout";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -36,6 +42,13 @@ import { SegmentSheet } from "./segment-sheet";
  * render, and a page that quietly issues twenty-five aggregate queries to draw a
  * table is the kind of cost nobody sees until a tenant has a hundred segments.
  * Opening a row evaluates that segment, once, and reports its exact size.
+ *
+ * No table is written here. The columns, their labels, the description under the
+ * name and the mobile card all come from `SEGMENT_LAYOUT`; the source column
+ * takes its labels from `GET /crm/segments/sources` through `withSegmentSources`
+ * rather than from a lookup written beside the column, which is what stops a
+ * renamed source reading as a raw key. What is left on this page is the search,
+ * the two row controls and which sheet a row opens.
  *
  * Search filters the page in hand rather than the server, and that is a real
  * limitation stated rather than hidden: `GET /crm/segments` takes `limit` and
@@ -78,8 +91,14 @@ export function SegmentsPage() {
   const { data: editing } = useSegment(editId);
   const deleteSegment = useDeleteSegment();
 
+  const tenantLayout = useTenantLayout(SEGMENT_LAYOUT);
+  const layout = useMemo(
+    () => withSegmentSources(tenantLayout, sources ?? []),
+    [tenantLayout, sources],
+  );
+
   const query = debouncedSearch.trim().toLowerCase();
-  const rows = useMemo(() => {
+  const matches = useMemo(() => {
     const all = data ?? [];
     if (query === "") return all;
     return all.filter(
@@ -89,10 +108,13 @@ export function SegmentsPage() {
     );
   }, [data, query]);
 
-  const sourceLabel = useCallback(
-    (sourceKey: string) =>
-      (sources ?? []).find((candidate) => candidate.key === sourceKey)?.label ?? sourceKey,
-    [sources],
+  const rows = useMemo(() => asRecordValues(matches.map(segmentRecordFields)), [matches]);
+
+  /** The row that was clicked, as the summary the sheets take. */
+  const segmentFor = useCallback(
+    (row: RecordValue) =>
+      matches.find((candidate) => candidate.segmentId === row.segmentId) ?? null,
+    [matches],
   );
 
   const handleOpenCreate = useCallback(() => {
@@ -124,6 +146,11 @@ export function SegmentsPage() {
     setPage(1);
   }, []);
 
+  const handleRowClick = useCallback(
+    (row: RecordValue) => setMembersTarget(segmentFor(row)),
+    [segmentFor],
+  );
+
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteSegment.mutate(
@@ -141,73 +168,40 @@ export function SegmentsPage() {
     );
   }, [deleteSegment, deleteTarget]);
 
-  const columns = useMemo<DataTableColumn<SegmentSummary>[]>(
-    () => [
-      {
-        key: "name",
-        header: "Segment",
-        cell: (row) => (
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate font-medium">{row.name}</span>
-            {row.description ? (
-              <span className="truncate text-xs text-muted-foreground">{row.description}</span>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        key: "sourceKey",
-        header: "Of",
-        cell: (row) => sourceLabel(row.sourceKey),
-      },
-      {
-        key: "createdByName",
-        header: "Created by",
-        cell: (row) => row.createdByName ?? "—",
-      },
-      {
-        key: "updatedAt",
-        header: "Updated",
-        className: "font-mono tabular-nums",
-        cell: (row) => formatShortDate(row.updatedAt),
-      },
-      {
-        key: "actions",
-        header: "",
-        className: "w-32 text-right",
-        cell: (row) =>
-          canManage ? (
-            <div className="flex justify-end gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={`Edit ${row.name}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setEditId(row.segmentId);
-                  setSheetOpen(true);
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={`Delete ${row.name}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setDeleteTarget(row);
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          ) : null,
-      },
-    ],
-    [canManage, sourceLabel],
+  const rowActions = useCallback(
+    (row: RecordValue) => {
+      const name = String(row.name ?? "");
+      return (
+        <div className="flex justify-end gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Edit ${name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setEditId(String(row.segmentId));
+              setSheetOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Delete ${name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleteTarget(segmentFor(row));
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      );
+    },
+    [segmentFor],
   );
 
   const emptyState = (
@@ -237,7 +231,7 @@ export function SegmentsPage() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
-            placeholder="Search segments…"
+            placeholder={layout.list.searchPlaceholder}
             value={search}
             onValueChange={handleSearchChange}
             className="min-w-0 flex-1 lg:max-w-md"
@@ -270,14 +264,19 @@ export function SegmentsPage() {
           onRetry={handleRetry}
         />
       ) : isLoading ? (
-        <DataTableSkeleton rows={10} columns={columns.length} className="flex-1" />
+        <DataTableSkeleton
+          rows={10}
+          columns={layout.list.columns.length}
+          className="flex-1"
+        />
       ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.segmentId}
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={(row) => String(row.segmentId)}
           emptyState={emptyState}
-          onRowClick={setMembersTarget}
+          onRowClick={handleRowClick}
+          actions={canManage ? rowActions : undefined}
           minWidth="820px"
           className="flex-1 min-h-0"
           pagination={{

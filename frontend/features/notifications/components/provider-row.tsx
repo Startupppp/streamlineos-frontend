@@ -1,97 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus, FlaskConical, Server } from "lucide-react";
+import { useCallback } from "react";
+import { FlaskConical, Server } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   UserPenIcon,
   Trash2Icon,
 } from "@animateicons/react/lucide";
-import {
-  useNotificationProviders,
-  useCreateNotificationProvider,
-  useUpdateNotificationProvider,
-  useDeleteNotificationProvider,
-  useTestNotificationProvider,
-} from "@/hooks/api/notifications";
-import { useCan } from "@/hooks/api/access";
 import { formatRelativeTime } from "@/features/notifications/format-relative-time";
-import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,
-  NotificationChannel,
-  NotificationProviderName,
 } from "@/types/notifications";
-
-const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
-
-const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
-  { value: "SMTP", label: "SMTP" },
-  { value: "TWILIO", label: "Twilio" },
-  { value: "META_WHATSAPP", label: "Meta WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-  { value: "WEB_PUSH", label: "Web Push" },
-  { value: "INTERNAL", label: "Internal" },
-  { value: "SANDBOX", label: "Sandbox" },
-];
 
 function HealthDot({ status }: { status: string }) {
   return (

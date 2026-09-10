@@ -1,14 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  REPORT_RUN_LAYOUT,
+  reportRunRecordFields,
+} from "@/lib/renderer/crm/reports/report-run-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatRelativeTime } from "@/lib/date-utils";
 import { useReportDefinitions, useReportRuns } from "@/hooks/api/crm/reporting";
 import type { ReportRunLogEntry } from "@/types/crm/reporting";
 import { ReportRunSqlDialog } from "./report-run-sql-dialog";
@@ -28,12 +32,20 @@ const DEFINITION_LOOKUP_LIMIT = 100;
  * to review a run was to query the table directly, which is the thing an audit
  * surface exists to avoid.
  *
- * Nothing here shows an id. A run names its report and its runner, and a report
- * that has since been deleted says so rather than falling back to a UUID.
+ * No table is written here. The columns, their alignment, the absolute
+ * timestamp and the mobile card come from `REPORT_RUN_LAYOUT`, and so do the
+ * three answers this page gives where there is no name to print — an ad-hoc
+ * question, a deleted report, a run the system made on nobody's behalf. Nothing
+ * on this page shows an id, and the description is now what guarantees that
+ * rather than a cell that remembered to.
+ *
+ * What is left here is the pair of reads and which run the SQL dialog is about.
  */
 export function ReportActivityPage() {
   const [page, setPage] = useState(1);
   const [openRun, setOpenRun] = useState<ReportRunLogEntry | null>(null);
+
+  const layout = useTenantLayout(REPORT_RUN_LAYOUT);
 
   const runs = useReportRuns({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
   const definitions = useReportDefinitions({ limit: DEFINITION_LOOKUP_LIMIT, offset: 0 });
@@ -45,76 +57,39 @@ export function ReportActivityPage() {
     return map;
   }, [definitions.data]);
 
-  const rows = runs.data ?? [];
+  const entries = useMemo(() => runs.data ?? [], [runs.data]);
 
-  function describeReport(run: ReportRunLogEntry): string {
-    if (run.reportDefinitionId === null) return "Ad-hoc question";
-    return namesById.get(run.reportDefinitionId) ?? "A report that no longer exists";
-  }
+  const rows = useMemo(
+    () => asRecordValues(entries.map((run) => reportRunRecordFields(run, namesById))),
+    [entries, namesById],
+  );
 
-  function makeShowSqlHandler(run: ReportRunLogEntry) {
-    return () => setOpenRun(run);
+  function handleRetry() {
+    void runs.refetch();
   }
 
   function handleSqlDialogOpenChange(next: boolean) {
     if (!next) setOpenRun(null);
   }
 
-  function handleRetry() {
-    void runs.refetch();
-  }
-
-  const columns: DataTableColumn<ReportRunLogEntry>[] = [
-    {
-      key: "createdAt",
-      header: "When",
-      cell: (run) => (
-        <span className="whitespace-nowrap" title={run.createdAt}>
-          {formatRelativeTime(run.createdAt)}
-        </span>
-      ),
-    },
-    {
-      key: "report",
-      header: "Report",
-      cell: (run) => <span className="truncate">{describeReport(run)}</span>,
-    },
-    { key: "sourceKey", header: "Read", cell: (run) => run.sourceKey },
-    {
-      key: "ranBy",
-      header: "Ran by",
-      /*
-        A run with no user is a run the application made on somebody's behalf —
-        a schedule, or a background sweep. Saying that is more useful than
-        leaving the cell empty, and it is what a null actually means here.
-      */
-      cell: (run) => run.ranByName ?? (run.ranByUserId === null ? "The system" : "A former member"),
-    },
-    {
-      key: "rowCount",
-      header: "Rows",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (run) => (run.rowCount === null ? "—" : run.rowCount),
-    },
-    {
-      key: "durationMs",
-      header: "Took",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (run) => (run.durationMs === null ? "—" : `${run.durationMs}ms`),
-    },
-    {
-      key: "sql",
-      header: "",
-      className: "w-24",
-      cell: (run) => (
-        <Button variant="ghost" size="sm" className="h-7" onClick={makeShowSqlHandler(run)}>
+  /**
+   * The statement, which is the one thing about a run the description does not
+   * carry. `compiledSql` is the run's payload rather than a column — it is
+   * several lines long and belongs in the dialog — so the row hands back the
+   * entry it came from and the dialog reads it there.
+   */
+  const rowActions = useCallback(
+    (row: RecordValue) => {
+      const run = entries.find((candidate) => candidate.reportRunId === row.reportRunId);
+      if (!run) return null;
+      return (
+        <Button variant="ghost" size="sm" className="h-7" onClick={() => setOpenRun(run)}>
           Show SQL
         </Button>
-      ),
+      );
     },
-  ];
+    [entries],
+  );
 
   return (
     <PageWrapper
@@ -135,10 +110,11 @@ export function ReportActivityPage() {
           onRetry={handleRetry}
         />
       ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(run) => run.reportRunId}
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={(row) => String(row.reportRunId)}
+          actions={rowActions}
           isLoading={runs.isLoading}
           className="flex-1 min-h-0"
           minWidth="880px"
@@ -161,8 +137,8 @@ export function ReportActivityPage() {
               total would be claiming a number nobody sent.
             */
             total:
-              rows.length < PAGE_SIZE
-                ? (page - 1) * PAGE_SIZE + rows.length
+              entries.length < PAGE_SIZE
+                ? (page - 1) * PAGE_SIZE + entries.length
                 : page * PAGE_SIZE + 1,
             onPageChange: setPage,
           }}

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,18 +18,21 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  NURTURE_SEQUENCE_LAYOUT,
+  nurtureSequenceRecordFields,
+} from "@/lib/renderer/crm/nurture-layout";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useNurtureSequences } from "@/hooks/api/crm/nurture";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatShortDate } from "@/lib/date-utils";
 import {
   NURTURE_SEQUENCE_STATUSES,
   NURTURE_SEQUENCE_STATUS_LABELS,
   type NurtureSequenceStatus,
-  type NurtureSequenceSummary,
 } from "@/types/crm/nurture";
 import { CreateNurtureSequenceDialog } from "./create-nurture-sequence-dialog";
-import { NurtureSequenceStatusBadge } from "./nurture-status-badge";
 
 const ALL = "all";
 
@@ -42,7 +45,13 @@ function isSequenceStatus(value: string | null): value is NurtureSequenceStatus 
  *
  * Lifecycle lives on the record rather than here on purpose: pausing a sequence
  * stops the enrolments already inside it, not just new ones, so it is a decision
- * to take while looking at who is in it.
+ * to take while looking at who is in it. `NURTURE_SEQUENCE_LAYOUT` says the same
+ * thing by declaring `status` read-only.
+ *
+ * No table is written here. The columns, the status badge's tone, the
+ * description under the name and the mobile card all come from the description;
+ * what is left is the status filter, which is a query rather than a column, and
+ * the cursor the "show older" control advances.
  */
 export function NurtureSequencesPage() {
   const router = useRouter();
@@ -53,11 +62,21 @@ export function NurtureSequencesPage() {
   const canManage = useCan("crm:autonomy:manage");
   const [createOpen, setCreateOpen] = useState(false);
 
+  const layout = useTenantLayout(NURTURE_SEQUENCE_LAYOUT);
+
   const statusParam = searchParams.get("status");
   const status = isSequenceStatus(statusParam) ? statusParam : undefined;
 
   const sequences = useNurtureSequences(status ? { status } : {});
-  const rows = sequences.data?.pages.flatMap((page) => page.data) ?? [];
+  const rows = useMemo(
+    () =>
+      asRecordValues(
+        (sequences.data?.pages ?? [])
+          .flatMap((page) => page.data)
+          .map(nurtureSequenceRecordFields),
+      ),
+    [sequences.data?.pages],
+  );
 
   const handleStatusChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -66,41 +85,12 @@ export function NurtureSequencesPage() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const handleOpen = (row: NurtureSequenceSummary) =>
-    router.push(`/crm/autonomy/nurture/${row.nurtureSequenceId}`);
+  const handleOpen = useCallback(
+    (row: RecordValue) => router.push(`/crm/autonomy/nurture/${String(row.nurtureSequenceId)}`),
+    [router],
+  );
 
-  const columns: DataTableColumn<NurtureSequenceSummary>[] = [
-    {
-      key: "name",
-      header: "Sequence",
-      cell: (row) => (
-        <div className="min-w-0">
-          <p className="truncate font-medium">{row.name}</p>
-          {row.description ? (
-            <p className="line-clamp-1 text-micro text-muted-foreground">{row.description}</p>
-          ) : null}
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <NurtureSequenceStatusBadge status={row.status} />,
-    },
-    {
-      key: "stepCount",
-      header: "Steps",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => row.stepCount,
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      className: "tabular-nums",
-      cell: (row) => formatShortDate(row.createdAt),
-    },
-  ];
+  const handleCreate = useCallback(() => setCreateOpen(true), []);
 
   if (viewState === "denied")
     return (
@@ -126,7 +116,7 @@ export function NurtureSequencesPage() {
             iconClassName="mr-1.5"
             size="sm"
             className="w-full sm:w-auto"
-            onClick={() => setCreateOpen(true)}
+            onClick={handleCreate}
           >
             New sequence
           </AnimatedIconButton>
@@ -161,12 +151,16 @@ export function NurtureSequencesPage() {
           until rights arrive, and a disabled query reports `isLoading: false`,
           so without this the first paint says there are no sequences.
         */
-        <DataTableSkeleton rows={10} columns={columns.length} className="flex-1 min-h-0" />
+        <DataTableSkeleton
+          rows={10}
+          columns={layout.list.columns.length}
+          className="flex-1 min-h-0"
+        />
       ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.nurtureSequenceId}
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={(row) => String(row.nurtureSequenceId)}
           onRowClick={handleOpen}
           isLoading={false}
           className="flex-1 min-h-0"
@@ -197,7 +191,7 @@ export function NurtureSequencesPage() {
                   : "A sequence decides how long to leave a customer alone before considering the next message. Nothing sends until one is turned on."
               }
               {...(canManage && !status
-                ? { action: { label: "New sequence", onClick: () => setCreateOpen(true) } }
+                ? { action: { label: "New sequence", onClick: handleCreate } }
                 : {})}
             />
           }

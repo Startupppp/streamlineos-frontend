@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus, FlaskConical, Server } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useCallback } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -19,16 +15,6 @@ import {
   SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Form,
   FormControl,
@@ -47,26 +33,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
-  UserPenIcon,
-  Trash2Icon,
-} from "@animateicons/react/lucide";
-import {
-  useNotificationProviders,
   useCreateNotificationProvider,
   useUpdateNotificationProvider,
-  useDeleteNotificationProvider,
-  useTestNotificationProvider,
 } from "@/hooks/api/notifications";
-import { useCan } from "@/hooks/api/access";
-import { formatRelativeTime } from "@/features/notifications/format-relative-time";
 import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,

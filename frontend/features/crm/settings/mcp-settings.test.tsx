@@ -26,6 +26,17 @@ jest.mock("@/hooks/api/crm/mcp-agent-tokens", () => ({
   useSetCrmMcpAccess: () => mockSetMcpAccess(),
 }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+/**
+ * The token dialog this page mounts renders from a description now, and
+ * `useTenantLayout` reads the signed-in tenant's arrangement — a session and a
+ * query client this suite has no business standing up for assertions about who
+ * may revoke a credential. Stubbed to the stock description; that an
+ * arrangement leaves a description valid is `lib/renderer/registry.test.ts`'s
+ * job, for every layout at once.
+ */
+jest.mock("@/features/renderer/use-tenant-layout", () => ({
+  useTenantLayout: <T,>(layout: T): T => layout,
+}));
 
 const token = (over: Partial<AgentToken> = {}): AgentToken => ({
   id: 7,

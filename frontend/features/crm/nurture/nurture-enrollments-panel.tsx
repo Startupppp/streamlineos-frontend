@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, Gated } from "@/components/shared";
 import {
@@ -16,22 +16,25 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  NURTURE_ENROLLMENT_LAYOUT,
+  nurtureEnrollmentRecordFields,
+} from "@/lib/renderer/crm/nurture-layout";
 import {
   useNurtureEnrollments,
   useUnenrolFromNurtureSequence,
 } from "@/hooks/api/crm/nurture";
-import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   NURTURE_ENROLLMENT_STATUSES,
   NURTURE_ENROLLMENT_STATUS_LABELS,
-  NURTURE_EXIT_REASON_LABELS,
   type NurtureEnrollment,
   type NurtureEnrollmentStatus,
   type NurtureSequenceStatus,
 } from "@/types/crm/nurture";
 import { EnrolInNurtureDialog } from "./enrol-in-nurture-dialog";
-import { NurtureEnrollmentStatusBadge } from "./nurture-status-badge";
 
 const ALL = "all";
 
@@ -49,6 +52,12 @@ interface NurtureEnrollmentsPanelProps {
  * is enrolled in any more and one nobody was ever enrolled in look identical
  * from an active-only list, and the exit reasons are the whole point — `replied`
  * is the number this feature is judged on.
+ *
+ * No table is written here. The columns, the status tone, the alignment of the
+ * step count and the three ways a missing name is answered all come from
+ * `NURTURE_ENROLLMENT_LAYOUT`. What is left is the status filter, the cursor
+ * behind "show earlier", and the one control that changes an enrolment: stopping
+ * it.
  */
 export function NurtureEnrollmentsPanel({
   nurtureSequenceId,
@@ -60,13 +69,26 @@ export function NurtureEnrollmentsPanel({
   const [enrolOpen, setEnrolOpen] = useState(false);
   const [stopping, setStopping] = useState<NurtureEnrollment | null>(null);
 
+  const layout = useTenantLayout(NURTURE_ENROLLMENT_LAYOUT);
+
   const enrollments = useNurtureEnrollments(
     nurtureSequenceId,
     status ? { status } : {},
   );
   const unenrol = useUnenrolFromNurtureSequence();
 
-  const rows = enrollments.data?.pages.flatMap((page) => page.data) ?? [];
+  const enrolled = useMemo(
+    () => (enrollments.data?.pages ?? []).flatMap((page) => page.data),
+    [enrollments.data?.pages],
+  );
+  const rows = useMemo(
+    () =>
+      asRecordValues(
+        enrolled.map((enrollment) => nurtureEnrollmentRecordFields(enrollment, stepCount)),
+      ),
+    [enrolled, stepCount],
+  );
+
   const canEnrol = canManage && sequenceStatus === "active" && stepCount > 0;
 
   const handleStatusChange = (value: string) =>
@@ -89,87 +111,31 @@ export function NurtureEnrollmentsPanel({
     );
   };
 
-  const columns: DataTableColumn<NurtureEnrollment>[] = [
-    {
-      key: "party",
-      header: "Customer",
-      /*
-        The name comes with the row. It used to be looked up here — one directory
-        page for the panel plus a per-row fallback — which made a list of twenty
-        customers a fan-out of requests, and read "a customer you can't see" for
-        anybody outside the first hundred even though the reader could see them
-        perfectly well. `listEnrollments` resolves the whole page in one query
-        instead, the way the decision feed next door always did.
-      */
-      cell: (row) =>
-        row.partyName ? (
-          <span className="truncate font-medium">{row.partyName}</span>
-        ) : (
-          /* Null means the party is gone, not that it is unreadable. */
-          <span className="text-muted-foreground">A customer who has been removed</span>
-        ),
+  /**
+   * Stopping is the only thing anybody does to an enrolment, which is why it is
+   * a row control rather than a field: it is offered on a running enrolment, to
+   * somebody who may manage the cadence, and on nothing else.
+   */
+  const rowActions = useCallback(
+    (row: RecordValue) => {
+      const enrollment = enrolled.find(
+        (candidate) => candidate.nurtureEnrollmentId === row.nurtureEnrollmentId,
+      );
+      if (!enrollment || enrollment.status !== "active") return null;
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7"
+          onClick={() => setStopping(enrollment)}
+        >
+          Stop
+        </Button>
+      );
     },
-    {
-      key: "deal",
-      header: "Deal",
-      cell: (row) =>
-        row.dealId === null ? (
-          <span className="text-muted-foreground">No deal</span>
-        ) : (
-          <span className="truncate">{row.dealName ?? "A deal that has been removed"}</span>
-        ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <NurtureEnrollmentStatusBadge status={row.status} />,
-    },
-    {
-      key: "progress",
-      header: "Steps done",
-      className: "text-right font-mono tabular-nums",
-      headerClassName: "text-right",
-      cell: (row) => `${row.currentStep} / ${stepCount}`,
-    },
-    {
-      key: "enrolledAt",
-      header: "Enrolled",
-      className: "tabular-nums",
-      cell: (row) => formatShortDate(row.enrolledAt),
-    },
-    {
-      key: "outcome",
-      header: "Why it ended",
-      cell: (row) =>
-        row.exitReason ? (
-          <span>
-            {NURTURE_EXIT_REASON_LABELS[row.exitReason] ?? row.exitReason}
-            {row.exitedAt ? (
-              <span className="text-micro text-muted-foreground"> · {formatShortDate(row.exitedAt)}</span>
-            ) : null}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-20",
-      cell: (row) =>
-        canManage && row.status === "active" ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7"
-            onClick={() => setStopping(row)}
-          >
-            Stop
-          </Button>
-        ) : null,
-    },
-  ];
+    [enrolled],
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-gap-field">
@@ -216,7 +182,13 @@ export function NurtureEnrollmentsPanel({
         isError={enrollments.isError}
         isEmpty={rows.length === 0}
         className="flex-1"
-        loading={<DataTableSkeleton rows={6} columns={columns.length} className="flex-1 min-h-0" />}
+        loading={
+          <DataTableSkeleton
+            rows={6}
+            columns={layout.list.columns.length}
+            className="flex-1 min-h-0"
+          />
+        }
         error={
           <ErrorState
             className="flex-1"
@@ -238,10 +210,11 @@ export function NurtureEnrollmentsPanel({
           />
         }
       >
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.nurtureEnrollmentId}
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={(row) => String(row.nurtureEnrollmentId)}
+          actions={canManage ? rowActions : undefined}
           className="flex-1 min-h-0"
           minWidth="900px"
           pagination={{ pageSize: 25 }}

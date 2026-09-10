@@ -123,6 +123,14 @@ export function formatFieldText(
   value: unknown,
   display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
 ): string {
+  /*
+    A series has no text reading. Printing the figures would be a cell of
+    fourteen numbers, and summarising them would be the engine inventing a
+    verdict it has no units for. It is drawn, through `RecordList`'s `cells`, or
+    it renders as nothing — which is what a column nobody supplied a drawing for
+    honestly is.
+  */
+  if (field.kind === "series") return "";
   if (field.kind === "lines") return formatLines(field, value);
   if (field.kind === "date") return formatDate(value);
   if (field.kind === "dateTime") return formatDateTime(value);

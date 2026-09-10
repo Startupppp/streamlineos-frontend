@@ -33,7 +33,18 @@ export const CRM_MCP_SCOPE_GROUPS = [
 
 export type CrmMcpScopeGroup = (typeof CRM_MCP_SCOPE_GROUPS)[number]["value"];
 
-export function resolveCrmMcpScopes(value: CrmMcpScopeGroup): string[] {
+/**
+ * The permission keys a scope group grants.
+ *
+ * Takes a plain string rather than the narrowed union because the value now
+ * arrives from a generated form, where every control hands back a string. The
+ * description declares the same three groups as this file's own options and the
+ * generated resolver rejects anything else, so an unknown value cannot reach a
+ * submit -- but the fallback is real rather than defensive decoration, and it
+ * falls back to the *first* group deliberately. That is the narrowest one, so a
+ * value nobody recognised issues the least access rather than the most.
+ */
+export function resolveCrmMcpScopes(value: string): string[] {
   const group = CRM_MCP_SCOPE_GROUPS.find((candidate) => candidate.value === value);
   return group ? [...group.scopes] : [...CRM_MCP_SCOPE_GROUPS[0].scopes];
 }

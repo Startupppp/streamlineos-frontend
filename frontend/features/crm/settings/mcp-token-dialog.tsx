@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useMemo, useState } from "react";
 import { CopyIcon } from "@animateicons/react/lucide";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,79 +12,73 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  MCP_TOKEN_LAYOUT,
+  withMcpScopeGroups,
+} from "@/lib/renderer/crm/settings/mcp-token-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useCreateCrmAgentToken,
-} from "@/hooks/api/crm";
+import { useCreateCrmAgentToken } from "@/hooks/api/crm";
 import type { CreateAgentTokenResponse } from "@/types/projects";
-import {
-  CRM_MCP_EXPIRY_OPTIONS,
-  mcpTokenSchema,
-  type McpTokenFormValues,
-} from "./mcp-token-schema";
+import { requiredText, numberOr } from "./shared/record-payload";
 import { CRM_MCP_SCOPE_GROUPS, resolveCrmMcpScopes } from "./mcp-scopes";
 
 type DialogPhase = "form" | "reveal";
+
+/** Ninety days, matching the layout's middle expiry option. */
+const DEFAULT_EXPIRY_DAYS = 90;
 
 interface CrmMcpTokenDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CrmMcpTokenDialog({
-  open,
-  onOpenChange,
-}: CrmMcpTokenDialogProps) {
+/**
+ * Issuing an agent token, in two phases.
+ *
+ * The first is a generated form: three fields, described by `MCP_TOKEN_LAYOUT`,
+ * with the scope options and their explanations filled in from
+ * `mcp-scopes.ts` — which is where the groups live beside the permission keys
+ * they resolve to, so this screen carries no second copy of a security decision.
+ * The generated resolver validates the same description that rendered the
+ * controls, which is what retired the hand-written `mcp-token-schema.ts` beside
+ * it: two statements of what a token is could disagree, and one cannot.
+ *
+ * The second phase is not a record and is not described. The secret is shown
+ * once, is not recoverable, and the only thing to do with it is copy it — there
+ * is no field here, only a value and a warning.
+ */
+export function CrmMcpTokenDialog({ open, onOpenChange }: CrmMcpTokenDialogProps) {
   const [phase, setPhase] = useState<DialogPhase>("form");
   const [created, setCreated] = useState<CreateAgentTokenResponse | null>(null);
   const createToken = useCreateCrmAgentToken();
 
-  const form = useForm<McpTokenFormValues>({
-    resolver: zodResolver(mcpTokenSchema),
-    defaultValues: {
-      name: "",
-      scopeGroup: "relationship",
-      expiresInDays: "90",
-    },
-  });
+  const tenantLayout = useTenantLayout(MCP_TOKEN_LAYOUT);
+  const layout = useMemo(
+    () => withMcpScopeGroups(tenantLayout, CRM_MCP_SCOPE_GROUPS),
+    [tenantLayout],
+  );
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
       if (!next) {
-        form.reset();
         setCreated(null);
         setPhase("form");
       }
       onOpenChange(next);
     },
-    [form, onOpenChange],
+    [onOpenChange],
   );
 
   const handleSubmit = useCallback(
-    (values: McpTokenFormValues) => {
+    (values: RecordFormValues) => {
       createToken.mutate(
         {
-          name: values.name,
-          expiresInDays: Number(values.expiresInDays),
-          scopes: resolveCrmMcpScopes(values.scopeGroup),
+          name: requiredText(values, "name"),
+          expiresInDays: numberOr(values, "expiresInDays", DEFAULT_EXPIRY_DAYS),
+          scopes: resolveCrmMcpScopes(requiredText(values, "scopeGroup")),
         },
         {
           onSuccess: (response) => {
@@ -120,90 +112,21 @@ export function CrmMcpTokenDialog({
                 Scope this token to the CRM tools the agent should be allowed to use.
               </DialogDescription>
             </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Sales desk agent" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="scopeGroup"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Scope</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a CRM scope" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CRM_MCP_SCOPE_GROUPS.map((group) => (
-                            <SelectItem key={group.value} value={group.value}>
-                              {group.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        {
-                          CRM_MCP_SCOPE_GROUPS.find(
-                            (group) => group.value === field.value,
-                          )?.description
-                        }
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="expiresInDays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiry</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select expiry" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CRM_MCP_EXPIRY_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={handleDone}>
-                    Cancel
-                  </Button>
-                  <LoadingButton
-                    type="submit"
-                    isPending={createToken.isPending}
-                    loadingText="Creating"
-                  >
-                    Create token
-                  </LoadingButton>
-                </DialogFooter>
-              </form>
-            </Form>
+            {/*
+              Keyed on the dialog's own state so a closed and reopened dialog
+              starts blank rather than holding the last agent's name, which is
+              how the form used to be reset by hand.
+            */}
+            <RecordForm
+              key={open ? "open" : "closed"}
+              layout={layout}
+              mode="create"
+              initial={{ scopeGroup: "relationship", expiresInDays: String(DEFAULT_EXPIRY_DAYS) }}
+              onSubmit={handleSubmit}
+              onCancel={handleDone}
+              isSubmitting={createToken.isPending}
+              submitLabel="Create token"
+            />
           </>
         ) : (
           <>

@@ -30,7 +30,33 @@ export type FieldKind =
   | "boolean"
   | "longText"
   | "reference"
-  | "lines";
+  | "lines"
+  /*
+    A field whose value is a run of figures rather than one.
+
+    A rep's talk ratio across the reporting window is a real field of that
+    record -- it is what the row is about -- and until this existed a
+    description had no way to say so, which is why the one table that shows one
+    stayed hand-written after the CRM was migrated. Both alternatives were
+    worse: a `text` field whose value is secretly an array is a description
+    lying about its own shape, and dropping the column to migrate the screen
+    would be losing a feature to satisfy a count.
+
+    The engine deliberately does not draw it. What a chart of a series *means* --
+    that these are basis points, that the buckets are weeks, that a gap is a
+    fortnight nobody called anybody rather than a flat line -- is domain the
+    layout layer does not have and should not acquire; a sparkline drawn from
+    those numbers alone would join the line straight through the quiet week and
+    claim nothing changed. So the surface draws it through `RecordList`'s
+    `cells`, and the description owns everything around it: the header, the
+    width, the position, the mobile card, and whether the tenant sees the column
+    at all.
+
+    Read-only always. There is no control that types a series, and
+    `validateLayout` reports one that is not rather than letting a form render an
+    input over it.
+  */
+  | "series";
 
 /** Maps onto the status tokens from the design layer, never a raw colour. */
 export type FieldTone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -400,6 +426,16 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
     });
 
   for (const field of layout.fields) {
+    /*
+      There is no control that types a run of figures. A writable series would
+      render as a text input over an array, and submit "[object Object]".
+    */
+    if (field.kind === "series" && !field.readOnly)
+      problems.push({
+        where: `fields (${field.name})`,
+        message: "a series is not something anybody types, so it must be readOnly",
+      });
+
     if (field.sign !== undefined && !isNumericField(field))
       problems.push({
         where: `fields (${field.name})`,
@@ -466,6 +502,13 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
 
       if (line.kind === "lines")
         problems.push({ where, message: "a line cannot itself hold rows" });
+
+      /*
+        A repeating group is edited, and a series is not editable. A column that
+        can only be read has no business in a row somebody is filling in.
+      */
+      if (line.kind === "series")
+        problems.push({ where, message: "a line cannot hold a series, which is never editable" });
 
       /*
         A row is the same shape on every row. A conditional, create-only or
