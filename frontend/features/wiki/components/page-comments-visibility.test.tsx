@@ -1,4 +1,5 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
+import { expectNoAxeViolations } from "@/test-utils/axe";
 import PageCommentsSheet from "./page-comments-sheet";
 
 jest.mock("next-auth/react", () => ({
@@ -35,6 +36,7 @@ jest.mock("@/hooks/api/kb", () => ({
 
 const { useSession } = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react");
 const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access");
+const { useKbPageComments } = jest.requireMock<{ useKbPageComments: jest.Mock }>("@/hooks/api/kb");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -104,6 +106,27 @@ describe("PageCommentsSheet — comment action visibility", () => {
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
       expect(queryByRole("button", { name: /resolve/i })).toBeNull();
+    });
+
+    it("describes the discussion and names the compose, reply and editing fields", async () => {
+      const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+      expect(view.getByRole("dialog")).toHaveAccessibleDescription("Discuss this page and resolve feedback with your team.");
+      expect(view.getByRole("textbox", { name: "Write a comment" })).toBeInTheDocument();
+      fireEvent.click(view.getByRole("button", { name: "Reply" }));
+      expect(view.getByRole("textbox", { name: "Reply to comment" })).toBeInTheDocument();
+      fireEvent.click(view.getByRole("button", { name: "Edit" }));
+      expect(view.getByRole("textbox", { name: "Edit comment" })).toBeInTheDocument();
+      await expectNoAxeViolations(view.baseElement);
+    });
+
+    it("shows a failed read with retry instead of claiming the page has no comments", () => {
+      const refetch = jest.fn();
+      useKbPageComments.mockReturnValueOnce({ data: [], isLoading: false, isError: true, error: new Error("Connection lost"), refetch });
+      const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+      expect(view.queryByText("No comments yet")).not.toBeInTheDocument();
+      expect(view.getByRole("alert")).toHaveTextContent("Connection lost");
+      fireEvent.click(view.getByRole("button", { name: "Try again" }));
+      expect(refetch).toHaveBeenCalledTimes(1);
     });
   });
 

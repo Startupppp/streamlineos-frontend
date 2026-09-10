@@ -10,7 +10,8 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ErrorState } from "@/components/shared";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -110,6 +111,7 @@ function CommentRow({ comment, replies, pageId, onReply, currentUserId, canUpdat
           {editing ? (
             <div className="space-y-2">
               <Textarea
+                aria-label="Edit comment"
                 value={editText}
                 onChange={handleEditTextChange}
                 className="text-sm resize-none min-h-[60px]"
@@ -203,7 +205,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
-  const { data: comments = [], isLoading } = useKbPageComments(pageId);
+  const { data: comments = [], isLoading, isError, error, refetch } = useKbPageComments(pageId);
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
@@ -237,6 +239,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
     setNewContent(e.target.value);
   }
 
+  function handleRetryComments() {
+    void refetch();
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
@@ -245,9 +251,18 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             <KbMessageSquareIcon className="h-4 w-4" />
             Comments
           </SheetTitle>
+          <SheetDescription>Discuss this page and resolve feedback with your team.</SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
+            {isError && (
+              <ErrorState
+                title="Couldn't load comments"
+                description={getErrorMessage(error)}
+                onRetry={handleRetryComments}
+                compact
+              />
+            )}
             {isLoading && (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -261,7 +276,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 ))}
               </div>
             )}
-            {!isLoading && topLevel.length === 0 && resolved.length === 0 && (
+            {!isLoading && !isError && topLevel.length === 0 && resolved.length === 0 && (
               <EmptyState
                 title="No comments yet"
                 description="Be the first to add a comment."
@@ -318,6 +333,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             </div>
           )}
           <Textarea
+            aria-label={replyingTo ? "Reply to comment" : "Write a comment"}
             value={newContent}
             onChange={handleNewContentChange}
             placeholder="Write a comment…"

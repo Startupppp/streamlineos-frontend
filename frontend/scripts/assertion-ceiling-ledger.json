@@ -86,7 +86,7 @@
       "nonNull": 0
     },
     "components/automations/ai-node-config-forms.tsx": {
-      "as": 2,
+      "as": 1,
       "nonNull": 0
     },
     "components/automations/automation-builder-editor.tsx": {
