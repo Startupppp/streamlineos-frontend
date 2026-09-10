@@ -1,10 +1,22 @@
 "use client";
 
+import { useCallback } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { SlidersHorizontal } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useUpdateOrgSettings } from "@/hooks/api/organization";
+import type { OrgSettings } from "@/types/organization";
 import {
   OrgSettingsCard,
   OrgSettingsEditButton,
@@ -12,179 +24,168 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
-
-const CURRENCIES = [
-  { value: "USD", label: "USD — US Dollar" },
-  { value: "EUR", label: "EUR — Euro" },
-  { value: "INR", label: "INR — Indian Rupee" },
-  { value: "GBP", label: "GBP — British Pound" },
-  { value: "AED", label: "AED — UAE Dirham" },
-] as const;
-
-const TIMEZONES = [
-  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST, UTC+5:30)" },
-  { value: "UTC", label: "UTC" },
-  { value: "America/New_York", label: "America/New_York (EST/EDT)" },
-  { value: "America/Los_Angeles", label: "America/Los_Angeles (PST/PDT)" },
-  { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
-  { value: "Europe/London", label: "Europe/London (GMT/BST)" },
-  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
-  { value: "Asia/Dubai", label: "Asia/Dubai (GST, UTC+4)" },
-  { value: "Asia/Singapore", label: "Asia/Singapore (SGT, UTC+8)" },
-  { value: "Asia/Tokyo", label: "Asia/Tokyo (JST, UTC+9)" },
-  { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
-] as const;
-
-const MONTHS = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
-] as const;
-
-interface OrgConfigData {
-  timezone?: string | null;
-  currency?: string | null;
-  fiscalYearStart?: number | null;
-  directoryPublic?: boolean | null;
-}
+import { CURRENCIES, TIMEZONES } from "./org-localization-schema";
+import {
+  FISCAL_MONTH_OPTIONS,
+  fiscalMonthLabel,
+  orgConfigSchema,
+  toConfigValues,
+  type OrgConfigValues,
+} from "./org-config-schema";
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
 interface OrgConfigSectionProps {
-  org: OrgConfigData;
-  isEditingConfig: boolean;
-  timezone: string;
-  currency: string;
-  fiscalYearStart: string;
-  directoryPublic: boolean;
-  isUpdating: boolean;
-  onStartEdit: () => void;
-  onCancel: () => void;
-  onSave: () => void;
-  onTimezoneChange: (value: string) => void;
-  onCurrencyChange: (value: string) => void;
-  onFiscalYearStartChange: (value: string) => void;
-  onDirectoryPublicChange: (checked: boolean) => void;
+  org: OrgSettings;
+  canEdit: boolean;
 }
 
-export function OrgConfigSection({
-  org,
-  isEditingConfig,
-  timezone,
-  currency,
-  fiscalYearStart,
-  directoryPublic,
-  isUpdating,
-  onStartEdit,
-  onCancel,
-  onSave,
-  onTimezoneChange,
-  onCurrencyChange,
-  onFiscalYearStartChange,
-  onDirectoryPublicChange,
-}: OrgConfigSectionProps) {
-  const fiscalLabel =
-    MONTHS.find((m) => m.value === (org.fiscalYearStart ?? 4))?.label ?? "April";
+export function OrgConfigSection({ org, canEdit }: OrgConfigSectionProps) {
+  const mutation = useUpdateOrgSettings();
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(orgConfigSchema),
+      serverValues: toConfigValues(org),
+      mutation,
+      successMessage: "App configuration saved",
+    });
+
+  const handleSave = useCallback(
+    (values: OrgConfigValues) => {
+      save({
+        timezone: values.timezone,
+        currency: values.currency,
+        fiscalYearStart: Number(values.fiscalYearStart),
+        directoryPublic: values.directoryPublic,
+      });
+    },
+    [save],
+  );
 
   return (
     <OrgSettingsCard
       title="App Configuration"
       description="Currency, timezone, fiscal year, and directory visibility."
       icon={<SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-      action={!isEditingConfig ? <OrgSettingsEditButton onClick={onStartEdit} /> : undefined}
+      action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
-      {!isEditingConfig ? (
-        <div className="space-y-3">
-          <SettingsFieldGrid>
-            <SettingsField label="Timezone" value={org.timezone ?? "Asia/Kolkata"} />
-            <SettingsField label="Default currency" value={org.currency ?? "INR"} />
-            <SettingsField label="Fiscal year start" value={fiscalLabel} />
-            <SettingsField
-              label="Public employee directory"
-              value={org.directoryPublic ? "Enabled" : "Disabled"}
-            />
-          </SettingsFieldGrid>
-        </div>
+      {!isEditing ? (
+        <SettingsFieldGrid>
+          <SettingsField label="Timezone" value={org.timezone ?? "Asia/Kolkata"} />
+          <SettingsField label="Default currency" value={org.currency ?? "INR"} />
+          <SettingsField label="Fiscal year start" value={fiscalMonthLabel(org.fiscalYearStart)} />
+          <SettingsField
+            label="Public employee directory"
+            value={org.directoryPublic ? "Enabled" : "Disabled"}
+          />
+        </SettingsFieldGrid>
       ) : (
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-1">
-              <Label htmlFor="timezone" className="text-xs font-medium">Timezone</Label>
-              <Select value={timezone} onValueChange={onTimezoneChange}>
-                <SelectTrigger id="timezone" aria-label="Timezone">
-                  <SelectValue placeholder="Select timezone" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="timezone"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Timezone</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger aria-label="Timezone">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        {TIMEZONES.map((tz) => (
+                          <SelectItem key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Default currency</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger aria-label="Default currency">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fiscalYearStart"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Fiscal year start</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger aria-label="Fiscal year start month">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        {FISCAL_MONTH_OPTIONS.map((m) => (
+                          <SelectItem key={m.value} value={m.value}>
+                            {m.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="currency" className="text-xs font-medium">Default currency</Label>
-              <Select value={currency} onValueChange={onCurrencyChange}>
-                <SelectTrigger id="currency" aria-label="Default currency">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {CURRENCIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="fiscal-year" className="text-xs font-medium">Fiscal year start</Label>
-              <Select value={fiscalYearStart} onValueChange={onFiscalYearStartChange}>
-                <SelectTrigger id="fiscal-year" aria-label="Fiscal year start month">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m.value} value={String(m.value)}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 px-3 py-2.5">
-            <div className="min-w-0 space-y-0.5">
-              <Label className="text-sm font-medium">Public employee directory</Label>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Allow members to view the full employee directory. When off, only HR and admins can browse it.
-              </p>
-            </div>
-            <Switch
-              checked={directoryPublic}
-              onCheckedChange={onDirectoryPublicChange}
-              aria-label="Public employee directory"
-              className="shrink-0 mt-0.5"
+            <FormField
+              control={form.control}
+              name="directoryPublic"
+              render={({ field }) => (
+                <FormItem className="flex items-start justify-between gap-3 rounded-md border border-border/60 px-3 py-2.5">
+                  <div className="min-w-0 space-y-0.5">
+                    <Label className="text-sm font-medium">Public employee directory</Label>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Allow members to view the full employee directory. When off, only HR and admins can browse it.
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      aria-label="Public employee directory"
+                      className="shrink-0 mt-0.5"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
             />
-          </div>
 
-          <OrgSettingsFormActions onCancel={onCancel} isPending={isUpdating}>
-            <LoadingButton onClick={onSave} isPending={isUpdating} size="sm" loadingText="Saving…">
-              Save configuration
-            </LoadingButton>
-          </OrgSettingsFormActions>
-        </div>
+            <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving}>
+              <LoadingButton type="submit" isPending={isSaving} size="sm" loadingText="Saving…">
+                Save configuration
+              </LoadingButton>
+            </OrgSettingsFormActions>
+          </form>
+        </Form>
       )}
     </OrgSettingsCard>
   );

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Palette } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -14,42 +13,49 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   OrgSettingsCard,
   OrgSettingsEditButton,
   OrgSettingsFormActions,
-  SettingsField,
-  SettingsFieldGrid,
 } from "./org-settings-chrome";
 import { resolveImageUrl } from "@/lib/utils";
 import { HEX_COLOR, brandingSchema, type BrandingValues } from "./org-branding-schema";
-import { ColorSwatch, ColorField, UploadButton, EmailBrandingPreview } from "./org-branding-fields";
+import {
+  BrandingSummary,
+  ColorField,
+  UploadButton,
+  EmailBrandingPreview,
+} from "./org-branding-fields";
 import { useOrgBrandingUpload } from "./use-org-branding-upload";
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
 interface OrgBrandingSectionProps {
   org: OrgSettings;
   canEdit: boolean;
 }
 
-export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { mutate: updateOrg, isPending } = useUpdateOrgSettings();
+function toBrandingValues(org: OrgSettings): BrandingValues {
+  return {
+    logo: org.logo ?? "",
+    favicon: org.favicon ?? "",
+    primaryColor: org.primaryColor ?? "#0b1220",
+    secondaryColor: org.secondaryColor ?? "",
+    loginBgUrl: org.loginBgUrl ?? "",
+  };
+}
 
-  const form = useForm<BrandingValues>({
-    resolver: zodResolver(brandingSchema),
-    defaultValues: {
-      logo: org.logo ?? "",
-      favicon: org.favicon ?? "",
-      primaryColor: org.primaryColor ?? "#0b1220",
-      secondaryColor: org.secondaryColor ?? "",
-      loginBgUrl: org.loginBgUrl ?? "",
-    },
-  });
+export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
+  const mutation = useUpdateOrgSettings();
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(brandingSchema),
+      serverValues: toBrandingValues(org),
+      mutation,
+      successMessage: "Branding saved",
+    });
 
   const {
     logoInputRef,
@@ -62,42 +68,17 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
     handleClickFaviconInput,
   } = useOrgBrandingUpload(form);
 
-  const handleEdit = useCallback(() => {
-    form.reset({
-      logo: org.logo ?? "",
-      favicon: org.favicon ?? "",
-      primaryColor: org.primaryColor ?? "#0b1220",
-      secondaryColor: org.secondaryColor ?? "",
-      loginBgUrl: org.loginBgUrl ?? "",
-    });
-    setIsEditing(true);
-  }, [org, form]);
-
-  const handleCancel = useCallback(() => {
-    setIsEditing(false);
-    form.reset();
-  }, [form]);
-
   const handleSave = useCallback(
     (values: BrandingValues) => {
-      updateOrg(
-        {
-          logo: values.logo || null,
-          favicon: values.favicon || null,
-          primaryColor: HEX_COLOR.test(values.primaryColor ?? "") ? values.primaryColor : null,
-          secondaryColor: HEX_COLOR.test(values.secondaryColor ?? "") ? values.secondaryColor : null,
-          loginBgUrl: values.loginBgUrl || null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Branding saved");
-            setIsEditing(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+      save({
+        logo: values.logo || null,
+        favicon: values.favicon || null,
+        primaryColor: HEX_COLOR.test(values.primaryColor ?? "") ? values.primaryColor : null,
+        secondaryColor: HEX_COLOR.test(values.secondaryColor ?? "") ? values.secondaryColor : null,
+        loginBgUrl: values.loginBgUrl || null,
+      });
     },
-    [updateOrg],
+    [save],
   );
 
   const logoVal = form.watch("logo") ?? "";
@@ -113,50 +94,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (
-        <SettingsFieldGrid cols={2}>
-          <SettingsField label="Logo">
-            {org.logo ? (
-              <Image
-                src={resolveImageUrl(org.logo) ?? org.logo}
-                alt="Org logo"
-                width={160}
-                height={32}
-                className="h-8 w-auto rounded border border-border object-contain"
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">Not set</p>
-            )}
-          </SettingsField>
-          <SettingsField label="Favicon">
-            {org.favicon ? (
-              <Image
-                src={resolveImageUrl(org.favicon) ?? org.favicon}
-                alt="Favicon"
-                width={24}
-                height={24}
-                className="h-6 w-6 rounded border border-border object-contain"
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">Not set</p>
-            )}
-          </SettingsField>
-          <SettingsField label="Primary color">
-            <div className="flex items-center gap-2">
-              <ColorSwatch color={org.primaryColor} />
-              <p className="text-sm font-mono">
-                {org.primaryColor || <span className="text-muted-foreground font-sans">Not set</span>}
-              </p>
-            </div>
-          </SettingsField>
-          <SettingsField label="Secondary color">
-            <div className="flex items-center gap-2">
-              <ColorSwatch color={org.secondaryColor} />
-              <p className="text-sm font-mono">
-                {org.secondaryColor || <span className="text-muted-foreground font-sans">Not set</span>}
-              </p>
-            </div>
-          </SettingsField>
-        </SettingsFieldGrid>
+        <BrandingSummary org={org} />
       ) : (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
@@ -294,10 +232,10 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               secondaryColor={HEX_COLOR.test(secondaryVal) ? secondaryVal : undefined}
             />
 
-            <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
+            <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving}>
               <LoadingButton
                 type="submit"
-                isPending={isPending}
+                isPending={isSaving}
                 size="sm"
                 className="gap-1.5"
                 loadingText="Saving…"

@@ -7,9 +7,72 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { resolveImageUrl } from "@/lib/utils";
+import type { OrgSettings } from "@/types/organization";
 import { HEX_COLOR } from "./org-branding-schema";
+import { SettingsField, SettingsFieldGrid } from "./org-settings-chrome";
 
-export function ColorSwatch({ color }: { color: string | null | undefined }) {
+interface BrandingImageProps {
+  src: string | null | undefined;
+  alt: string;
+  width: number;
+  height: number;
+  className: string;
+}
+
+function BrandingImage({ src, alt, width, height, className }: BrandingImageProps) {
+  if (!src) return <p className="text-sm text-muted-foreground">Not set</p>;
+  return (
+    <Image
+      src={resolveImageUrl(src) ?? src}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+    />
+  );
+}
+
+function BrandingColor({ label, color }: { label: string; color: string | null | undefined }) {
+  return (
+    <SettingsField label={label}>
+      <div className="flex items-center gap-2">
+        <ColorSwatch color={color} />
+        <p className="text-sm font-mono">
+          {color || <span className="text-muted-foreground font-sans">Not set</span>}
+        </p>
+      </div>
+    </SettingsField>
+  );
+}
+
+export function BrandingSummary({ org }: { org: OrgSettings }) {
+  return (
+    <SettingsFieldGrid cols={2}>
+      <SettingsField label="Logo">
+        <BrandingImage
+          src={org.logo}
+          alt="Org logo"
+          width={160}
+          height={32}
+          className="h-8 w-auto rounded border border-border object-contain"
+        />
+      </SettingsField>
+      <SettingsField label="Favicon">
+        <BrandingImage
+          src={org.favicon}
+          alt="Favicon"
+          width={24}
+          height={24}
+          className="h-6 w-6 rounded border border-border object-contain"
+        />
+      </SettingsField>
+      <BrandingColor label="Primary color" color={org.primaryColor} />
+      <BrandingColor label="Secondary color" color={org.secondaryColor} />
+    </SettingsFieldGrid>
+  );
+}
+
+function ColorSwatch({ color }: { color: string | null | undefined }) {
   if (!color) return null;
   return (
     <span

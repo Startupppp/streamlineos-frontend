@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -15,10 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   OrgSettingsCard,
@@ -32,57 +29,41 @@ import {
   orgGeneralSchema,
   type OrgGeneralValues,
 } from "./org-profile-schema";
-
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
 interface OrgProfileSectionProps {
   org: OrgSettings;
   canEdit: boolean;
 }
 
+function toProfileValues(org: OrgSettings): OrgGeneralValues {
+  return {
+    name: org.name ?? "",
+    slug: org.slug ?? "",
+    legalName: org.legalName ?? "",
+    orgCode: org.orgCode ?? "",
+    industry: org.industry ?? "",
+    website: org.website ?? "",
+    registrationNumber: org.registrationNumber ?? "",
+    taxNumber: org.taxNumber ?? "",
+    supportEmail: org.supportEmail ?? "",
+    supportPhone: org.supportPhone ?? "",
+  };
+}
+
 export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { mutate: updateOrg, isPending } = useUpdateOrgSettings();
-
-  const form = useForm<OrgGeneralValues>({
-    resolver: zodResolver(orgGeneralSchema),
-    defaultValues: {
-      name: org.name ?? "",
-      slug: org.slug ?? "",
-      legalName: org.legalName ?? "",
-      orgCode: org.orgCode ?? "",
-      industry: org.industry ?? "",
-      website: org.website ?? "",
-      registrationNumber: org.registrationNumber ?? "",
-      taxNumber: org.taxNumber ?? "",
-      supportEmail: org.supportEmail ?? "",
-      supportPhone: org.supportPhone ?? "",
-    },
-  });
-
-  const handleEdit = useCallback(() => {
-    form.reset({
-      name: org.name ?? "",
-      slug: org.slug ?? "",
-      legalName: org.legalName ?? "",
-      orgCode: org.orgCode ?? "",
-      industry: org.industry ?? "",
-      website: org.website ?? "",
-      registrationNumber: org.registrationNumber ?? "",
-      taxNumber: org.taxNumber ?? "",
-      supportEmail: org.supportEmail ?? "",
-      supportPhone: org.supportPhone ?? "",
+  const mutation = useUpdateOrgSettings();
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(orgGeneralSchema),
+      serverValues: toProfileValues(org),
+      mutation,
+      successMessage: "Organization settings saved",
     });
-    setIsEditing(true);
-  }, [org, form]);
 
-  const handleCancel = useCallback(() => {
-    setIsEditing(false);
-    form.reset();
-  }, [form]);
-
-  const handleSave = useCallback((values: OrgGeneralValues) => {
-    updateOrg(
-      {
+  const handleSave = useCallback(
+    (values: OrgGeneralValues) => {
+      save({
         name: values.name,
         slug: values.slug || undefined,
         legalName: values.legalName || null,
@@ -93,16 +74,10 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
         taxNumber: values.taxNumber || null,
         supportEmail: values.supportEmail || null,
         supportPhone: values.supportPhone || null,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Organization settings saved");
-          setIsEditing(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [updateOrg]);
+      });
+    },
+    [save],
+  );
 
   return (
     <OrgSettingsCard
@@ -268,8 +243,8 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                 )}
               />
             </div>
-            <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
-              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+            <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving}>
+              <LoadingButton type="submit" isPending={isSaving} size="sm" className="gap-1.5" loadingText="Saving…">
                 Save changes
               </LoadingButton>
             </OrgSettingsFormActions>

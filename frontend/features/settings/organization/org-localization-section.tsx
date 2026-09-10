@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   OrgSettingsCard,
   OrgSettingsEditButton,
@@ -25,6 +22,7 @@ import {
   extractLocalizationSettings,
 } from "./org-localization-schema";
 import { LocalizationFormFields } from "./org-localization-form-fields";
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
 const FIELD_KEYS = [
   "timezone",
@@ -53,69 +51,45 @@ interface OrgLocalizationSectionProps {
   canEdit: boolean;
 }
 
-export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { mutate: updateOrg, isPending } = useUpdateOrgSettings();
-
+function toLocalizationValues(org: OrgSettings): LocalizationValues {
   const extracted = extractLocalizationSettings(org.settings);
+  return {
+    timezone: org.timezone ?? "Asia/Kolkata",
+    currency: toCurrencyCode(org.currency),
+    fiscalYearStart: org.fiscalYearStart ?? 4,
+    language: extracted.language,
+    dateFormat: extracted.dateFormat,
+    timeFormat: extracted.timeFormat,
+    numberFormat: extracted.numberFormat,
+    weekStartDay: extracted.weekStartDay,
+  };
+}
 
-  const form = useForm<LocalizationValues>({
-    resolver: zodResolver(localizationSchema),
-    defaultValues: {
-      timezone: org.timezone ?? "Asia/Kolkata",
-      currency: toCurrencyCode(org.currency),
-      fiscalYearStart: org.fiscalYearStart ?? 4,
-      language: extracted.language,
-      dateFormat: extracted.dateFormat,
-      timeFormat: extracted.timeFormat,
-      numberFormat: extracted.numberFormat,
-      weekStartDay: extracted.weekStartDay,
-    },
-  });
-
-  const handleEdit = useCallback(() => {
-    const ext = extractLocalizationSettings(org.settings);
-    form.reset({
-      timezone: org.timezone ?? "Asia/Kolkata",
-      currency: toCurrencyCode(org.currency),
-      fiscalYearStart: org.fiscalYearStart ?? 4,
-      language: ext.language,
-      dateFormat: ext.dateFormat,
-      timeFormat: ext.timeFormat,
-      numberFormat: ext.numberFormat,
-      weekStartDay: ext.weekStartDay,
+export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionProps) {
+  const mutation = useUpdateOrgSettings();
+  const extracted = extractLocalizationSettings(org.settings);
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(localizationSchema),
+      serverValues: toLocalizationValues(org),
+      mutation,
+      successMessage: "Localization settings saved",
     });
-    setIsEditing(true);
-  }, [org, form]);
-
-  const handleCancel = useCallback(() => {
-    setIsEditing(false);
-    form.reset();
-  }, [form]);
 
   const handleSave = useCallback(
     (values: LocalizationValues) => {
-      updateOrg(
-        {
-          timezone: values.timezone,
-          currency: values.currency,
-          fiscalYearStart: values.fiscalYearStart,
-          language: values.language,
-          dateFormat: values.dateFormat,
-          timeFormat: values.timeFormat,
-          numberFormat: values.numberFormat,
-          weekStartDay: values.weekStartDay,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Localization settings saved");
-            setIsEditing(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+      save({
+        timezone: values.timezone,
+        currency: values.currency,
+        fiscalYearStart: values.fiscalYearStart,
+        language: values.language,
+        dateFormat: values.dateFormat,
+        timeFormat: values.timeFormat,
+        numberFormat: values.numberFormat,
+        weekStartDay: values.weekStartDay,
+      });
     },
-    [updateOrg],
+    [save],
   );
 
   const displayValues: Record<keyof LocalizationValues, string> = {
@@ -146,10 +120,10 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
       ) : (
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
           <LocalizationFormFields form={form} />
-          <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
+          <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving}>
             <LoadingButton
               type="submit"
-              isPending={isPending}
+              isPending={isSaving}
               size="sm"
               className="gap-1.5"
               loadingText="Saving…"

@@ -1,56 +1,94 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useController, type UseFormReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   OrgSettingsCard,
   OrgSettingsEditButton,
   OrgSettingsFormActions,
 } from "./org-settings-chrome";
+import {
+  BUSINESS_DAYS,
+  businessHoursSchema,
+  mergeBusinessHours,
+  type BusinessDayKey,
+  type BusinessHoursValues,
+} from "./org-business-hours-schema";
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
-type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+type BusinessHoursForm = UseFormReturn<
+  BusinessHoursValues,
+  unknown,
+  BusinessHoursValues
+>;
 
-const DAYS: { key: DayKey; label: string; short: string }[] = [
-  { key: "monday", label: "Monday", short: "Mon" },
-  { key: "tuesday", label: "Tuesday", short: "Tue" },
-  { key: "wednesday", label: "Wednesday", short: "Wed" },
-  { key: "thursday", label: "Thursday", short: "Thu" },
-  { key: "friday", label: "Friday", short: "Fri" },
-  { key: "saturday", label: "Saturday", short: "Sat" },
-  { key: "sunday", label: "Sunday", short: "Sun" },
-];
+interface BusinessHoursDayRowProps {
+  form: BusinessHoursForm;
+  dayKey: BusinessDayKey;
+  short: string;
+}
 
-const DEFAULT_HOURS: Record<DayKey, { open: string; close: string; enabled: boolean }> = {
-  monday: { open: "09:00", close: "18:00", enabled: true },
-  tuesday: { open: "09:00", close: "18:00", enabled: true },
-  wednesday: { open: "09:00", close: "18:00", enabled: true },
-  thursday: { open: "09:00", close: "18:00", enabled: true },
-  friday: { open: "09:00", close: "18:00", enabled: true },
-  saturday: { open: "09:00", close: "14:00", enabled: false },
-  sunday: { open: "09:00", close: "14:00", enabled: false },
-};
+function BusinessHoursDayRow({ form, dayKey, short }: BusinessHoursDayRowProps) {
+  const { field: enabledField } = useController({
+    control: form.control,
+    name: `${dayKey}.enabled`,
+  });
+  const dayErrors = form.formState.errors[dayKey];
+  const timeError = dayErrors?.open?.message ?? dayErrors?.close?.message;
 
-function mergeHours(saved: OrgSettings["businessHours"]): Record<DayKey, { open: string; close: string; enabled: boolean }> {
-  const result = { ...DEFAULT_HOURS };
-  if (!saved) return result;
-  for (const day of DAYS) {
-    if (saved[day.key]) {
-      result[day.key] = {
-        open: saved[day.key].open ?? "09:00",
-        close: saved[day.key].close ?? "18:00",
-        enabled: saved[day.key].enabled ?? false,
-      };
-    }
+  function handleEnabledChange(checked: boolean | "indeterminate") {
+    enabledField.onChange(checked === true);
   }
-  return result;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 w-20 shrink-0">
+        <Checkbox
+          id={`bh-${dayKey}`}
+          checked={enabledField.value}
+          onCheckedChange={handleEnabledChange}
+          className="bg-card border-border"
+        />
+        <Label htmlFor={`bh-${dayKey}`} className="text-sm font-medium cursor-pointer">
+          {short}
+        </Label>
+      </div>
+      {enabledField.value ? (
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <Input
+            type="time"
+            aria-label={`${short} opening time`}
+            aria-invalid={!!dayErrors?.open}
+            className="w-[7.5rem] font-mono"
+            {...form.register(`${dayKey}.open`)}
+          />
+          <span className="text-muted-foreground text-xs">to</span>
+          <Input
+            type="time"
+            aria-label={`${short} closing time`}
+            aria-invalid={!!dayErrors?.close}
+            className="w-[7.5rem] font-mono"
+            {...form.register(`${dayKey}.close`)}
+          />
+          {timeError && (
+            <p role="alert" className="text-xs text-destructive">
+              {timeError}
+            </p>
+          )}
+        </div>
+      ) : (
+        <span className="text-xs text-muted-foreground">Closed</span>
+      )}
+    </div>
+  );
 }
 
 interface OrgBusinessHoursSectionProps {
@@ -59,44 +97,36 @@ interface OrgBusinessHoursSectionProps {
 }
 
 export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [hours, setHours] = useState<Record<DayKey, { open: string; close: string; enabled: boolean }>>(() => mergeHours(org.businessHours));
-  const { mutate: updateOrg, isPending } = useUpdateOrgSettings();
+  const mutation = useUpdateOrgSettings();
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(businessHoursSchema),
+      serverValues: mergeBusinessHours(org.businessHours),
+      mutation,
+      successMessage: "Business hours saved",
+    });
 
-  const handleEdit = useCallback(() => {
-    setHours(mergeHours(org.businessHours));
-    setIsEditing(true);
-  }, [org.businessHours]);
+  const handleSave = useCallback(
+    (values: BusinessHoursValues) => {
+      save({ businessHours: values });
+    },
+    [save],
+  );
 
-  const handleCancel = useCallback(() => {
-    setHours(mergeHours(org.businessHours));
-    setIsEditing(false);
-  }, [org.businessHours]);
-
-  const handleToggle = useCallback((day: DayKey, enabled: boolean) => {
-    setHours((prev) => ({ ...prev, [day]: { ...prev[day], enabled } }));
-  }, []);
-
-  const handleTimeChange = useCallback((day: DayKey, field: "open" | "close", value: string) => {
-    setHours((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
-  }, []);
-
-  const handleSave = useCallback(() => {
-    updateOrg(
-      { businessHours: hours },
-      {
-        onSuccess: () => {
-          toast.success("Business hours saved");
-          setIsEditing(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
+  function renderDayRow(day: (typeof BUSINESS_DAYS)[number]) {
+    return (
+      <BusinessHoursDayRow
+        key={day.key}
+        form={form}
+        dayKey={day.key}
+        short={day.short}
+      />
     );
-  }, [hours, updateOrg]);
+  }
 
-  const display = mergeHours(org.businessHours);
-  const activeDays = DAYS.filter((d) => display[d.key].enabled);
-  const closedDays = DAYS.filter((d) => !display[d.key].enabled);
+  const display = mergeBusinessHours(org.businessHours);
+  const activeDays = BUSINESS_DAYS.filter((d) => display[d.key].enabled);
+  const closedDays = BUSINESS_DAYS.filter((d) => !display[d.key].enabled);
 
   return (
     <OrgSettingsCard
@@ -128,38 +158,20 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {DAYS.map((d) => {
-            const h = hours[d.key];
-            return (
-              <div key={d.key} className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <div className="flex items-center gap-2 w-20 shrink-0">
-                  <Checkbox
-                    id={`bh-${d.key}`}
-                    checked={h.enabled}
-                    onCheckedChange={(checked) => handleToggle(d.key, !!checked)}
-                    className="bg-card border-border"
-                  />
-                  <Label htmlFor={`bh-${d.key}`} className="text-sm font-medium cursor-pointer">{d.short}</Label>
-                </div>
-                {h.enabled ? (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="w-[7.5rem] font-mono" />
-                    <span className="text-muted-foreground text-xs">to</span>
-                    <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="w-[7.5rem] font-mono" />
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">Closed</span>
-                )}
-              </div>
-            );
-          })}
-          <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending} className="pt-2">
-            <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="gap-1.5" loadingText="Saving…">
+        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-2">
+          {BUSINESS_DAYS.map(renderDayRow)}
+          <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving} className="pt-2">
+            <LoadingButton
+              type="submit"
+              size="sm"
+              isPending={isSaving}
+              className="gap-1.5"
+              loadingText="Saving…"
+            >
               Save hours
             </LoadingButton>
           </OrgSettingsFormActions>
-        </div>
+        </form>
       )}
     </OrgSettingsCard>
   );
