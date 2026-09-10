@@ -287,6 +287,9 @@ what a background caller is allowed to do.
 - [x] `madge --circular --extensions ts src` — **6,485 files, zero cycles**
 - [x] `test/` is inside `tsconfig.test.json`, so the §8 hand-grep blind spot did not apply this time — the arity breaks under `test/security/**` were reported by the typecheck itself
 - [x] Focused suites (auth · rbac · access · settings · payroll · me): **1,867 of 1,868 pass across 173 suites.** The single failure is `apply-scope-team.spec.ts`, which counts files containing `applyScope(` and expects more than 20; C5 has rewritten those call sites to `scopedRead`, so it reports 6. Not this lane's, and not repaired here
+- [x] Architecture gates, run once: **PASS** — `check:route-classification`, `check:permission-keys`, `check:module-di`, `check:authz-deny`, `check:namespace-coverage`, `check:module-gate`, `check:mock-surface`, `check:vacuous-assertions`, `check:import-direction`
+- [x] `check:file-sizes` — threading the context pushed `access.service.ts` to 515 lines. Rather than take an exception (one was removed from this very file in the 2026-08-31 cleanup), the two comment blocks the code had outgrown were retired: `readAccessTable` is `return read()` behind 22 lines arguing for a fallback that no longer exists, and the behaviour is pinned by `access-read-failure-throws.spec.ts`. **491 lines**, gate passes
+- [x] Two gates fail on the concurrent C5 lane, not this one: `check:scope-boundary` (74 `ScopedRead` violations, none in a file this lane touched) and `check:type-assertions` (4 entries in `tasks`, `clients`, `hr/directory`, `inventory`)
 - [x] Lint and the full suite: **not run**
 
 ### 6.4 Notes for the reviewer
