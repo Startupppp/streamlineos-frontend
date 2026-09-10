@@ -24,6 +24,7 @@ import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline
 import { ContactRelatedDeals } from "@/features/crm/contacts/detail/contact-related-deals";
 import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
+import { ContactConsentCard } from "@/features/crm/contacts/detail/contact-consent-card";
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-duplicate-banner";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
@@ -178,6 +179,7 @@ export default function ContactDetailPage({
             />
             <ContactStatsBar contactId={id} openDealsCount={contact.dealId != null ? 1 : 0} />
             <ContactRolesCard contactId={id} />
+            <ContactConsentCard contactId={id} />
           </div>
 
           <div className="flex min-w-0 flex-col gap-gap-toolbar lg:col-span-2">

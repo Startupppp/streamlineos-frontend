@@ -253,6 +253,17 @@ export const accessAndCrmQueryKeys = {
       [...base, "contactRoles", "list", contactId, params] as const,
   },
 
+  contactConsent: {
+    all: [...base, "contactConsent"] as const,
+    list: (contactId: number) => [...base, "contactConsent", "list", contactId] as const,
+    /*
+      The channel is in the key because the count is per channel: caching the
+      EMAIL count under a channel-less key would answer the SMS question with
+      the email number, which is the one mistake this registry exists to stop.
+    */
+    missing: (channel: string) => [...base, "contactConsent", "missing", channel] as const,
+  },
+
   customer360: {
     all: [...base, "customer360"] as const,
     company: (companyId: number) =>

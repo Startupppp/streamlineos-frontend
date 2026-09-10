@@ -23,3 +23,4 @@ export * from "./commission";
 export * from "./call-intelligence";
 export * from "./lifecycle";
 export * from "./mcp-agent-tokens";
+export * from "./consent";
