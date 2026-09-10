@@ -134,3 +134,26 @@ export function useDownloadSignEnvelopeFinalPdf(id: number) {
     mutationFn: () => apiClient.get<{ url: string }>(`/sign/envelopes/${id}/final-pdf`),
   });
 }
+
+/**
+ * The Certificate of Completion, which the API has always produced and nothing
+ * could fetch.
+ *
+ * `GET sign/envelopes/:id/certificate` sits beside `/final-pdf` on the same
+ * controller, and only `/final-pdf` had a caller. So the signed document was
+ * downloadable and the record of HOW it came to be signed -- the audit timeline,
+ * each signer's authentication method, the per-document SHA-256 hashes, and the
+ * statement that this is tamper evidence rather than a DSC or an Aadhaar eSign
+ * -- was reachable only by someone typing the URL. That is the artifact a
+ * counterparty asks for in a dispute, so producing it and not handing it over is
+ * the whole feature missing rather than a rough edge.
+ *
+ * A mutation and not a query, matching its sibling: it mints a short-lived
+ * signed URL, so caching it would hand back a link that has since expired.
+ */
+export function useDownloadSignEnvelopeCertificate(id: number) {
+  return useMutation({
+    mutationKey: ["signEnvelopes", "certificate", id],
+    mutationFn: () => apiClient.get<{ url: string }>(`/sign/envelopes/${id}/certificate`),
+  });
+}

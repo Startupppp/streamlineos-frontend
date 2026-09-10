@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ShieldCheck, Send, History, Download } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Send, History, Download, FileCheck } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useDownloadSignEnvelopeFinalPdf,
+  useDownloadSignEnvelopeCertificate,
   useResendSignEnvelope,
   useSendSignEnvelope,
   useSendSignEnvelopeReminder,
@@ -33,6 +34,7 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
   const sendReminder = useSendSignEnvelopeReminder(envelope.id);
   const voidEnvelope = useVoidSignEnvelope(envelope.id);
   const downloadFinalPdf = useDownloadSignEnvelopeFinalPdf(envelope.id);
+  const downloadCertificate = useDownloadSignEnvelopeCertificate(envelope.id);
   const saveAsTemplate = useSaveEnvelopeAsTemplate(envelope.id);
 
   const isDraft = envelope.status === "draft" || envelope.status === "ready_to_send";
@@ -92,6 +94,20 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
     }
   }
 
+  /*
+    Separate from the signed PDF on purpose. They answer different questions --
+    one is WHAT was agreed, the other is HOW it was signed and by whom -- and a
+    dispute asks for the second.
+  */
+  async function handleDownloadCertificate() {
+    try {
+      const result = await downloadCertificate.mutateAsync();
+      window.open(result.url, "_blank");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
   async function handleSaveAsTemplate() {
     const name = window.prompt("Template name:", `${envelope.title} template`);
     if (!name) return;
@@ -134,6 +150,12 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
           <Button variant="outline" size="sm" onClick={handleDownload}>
             <Download className="size-4" />
             Download signed PDF
+          </Button>
+        )}
+        {isCompleted && (
+          <Button variant="outline" size="sm" onClick={handleDownloadCertificate}>
+            <FileCheck className="size-4" />
+            Certificate
           </Button>
         )}
         <EnvelopeAiMenu envelopeId={envelope.id} />
