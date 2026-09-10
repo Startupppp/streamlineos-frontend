@@ -65,6 +65,21 @@ export interface GrnDetail extends GrnSummary {
   poster: { id: string; name: string | null } | null;
 }
 
+/**
+ * `limit`, not `pageSize`.
+ *
+ * The backend's `listGrnSchema` is `.strict()` and names the field `limit`, so
+ * `pageSize` was not ignored — it was refused, and every consumer of this hook
+ * rendered "Something went wrong · Unrecognized key: \"pageSize\"" instead of a
+ * list. The Receipts workbench could never show a receipt, the putaway
+ * workbench's "Raise a putaway" dialog could never offer a posted delivery to
+ * put away, and the landed-cost sheet could never offer a receipt to cost.
+ *
+ * Caught by `e2e/inventory-receive.spec.ts`, which posts a receipt through the
+ * UI and then looks for it on the screen that lists receipts. Nothing else
+ * could have caught it: the paginated shape typechecks either way, and no unit
+ * test asks the real endpoint what it accepts.
+ */
 type GrnFilters = {
   poId?: number;
   vendorId?: number;
@@ -72,7 +87,8 @@ type GrnFilters = {
   dateFrom?: string;
   dateTo?: string;
   page?: number;
-  pageSize?: number;
+  /** Capped at 100 by the server, which refuses anything larger. */
+  limit?: number;
 };
 
 /**
@@ -106,7 +122,7 @@ export function useGoodsReceipts(filters?: GrnFilters) {
         ...(filters?.dateFrom !== undefined ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo !== undefined ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
-        ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
+        ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
       }),
     staleTime: 2 * 60_000,
     enabled: canView,

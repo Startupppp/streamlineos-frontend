@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { apiOracle, type ApiOracle } from "./fixtures/api";
+import {
+  claimedPutawayTask,
+  postedReceipt,
+  seedTarget,
+  sentPurchaseOrder,
+  type ClaimedPutawayTask,
+} from "./fixtures/documents";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 
@@ -51,6 +58,26 @@ async function expectRfSurface(page: Page): Promise<void> {
 }
 
 /**
+ * The queue with its data in, not the skeleton that precedes it.
+ *
+ * `RfShell` is given a subtitle ONLY on the loaded branch — the loading, error
+ * and denied branches all pass a bare title — so "N waiting" is proof the three
+ * queries resolved and the list has rendered whatever it is going to render.
+ *
+ * This is not a nicety. Counting list items before that point returns 0 for a
+ * queue that has work, and the count-then-branch below would then wait for an
+ * empty state that is never coming; that is exactly how this file failed the
+ * first time the tenant had tasks in it.
+ */
+async function expectRfQueueLoaded(page: Page): Promise<void> {
+  await expectRfSurface(page);
+  await expect(
+    page.getByText(/^\d+ waiting$/),
+    "the RF queue never left its loading state",
+  ).toBeVisible({ timeout: 30_000 });
+}
+
+/**
  * WCAG 2.5.5 asks for 44x44 CSS px. A control an operator misses while wearing
  * a glove costs a rescan, so this is a usability floor rather than a checkbox.
  */
@@ -58,15 +85,36 @@ const MIN_TAP_TARGET = 44;
 
 const RF_ROUTES = ["/inventory/rf", "/inventory/rf/putaway", "/inventory/rf/pick"] as const;
 
+/** Units on the seeded receipt. Small enough to fit any bin with headroom. */
+const SEED_QTY = 4;
+
 test.use({ viewport: RF_VIEWPORT });
 
 test.describe("inventory · RF at 375", () => {
   test.skip(!hasTenantEnv(), SKIP_REASON);
 
   let api: ApiOracle;
+  let task: ClaimedPutawayTask;
 
   test.beforeAll(async () => {
+    // The seed is a chain of backend commands, and this machine runs several
+    // backends against one shared remote cache — a single list read here has
+    // been measured at ten seconds. The default budget is sized for a test, not
+    // for building the documents one needs, and when it ran out the failure
+    // pointed at a heading that had simply not been reached yet.
+    test.setTimeout(300_000);
     api = await apiOracle();
+
+    // The queue is measured with work in it, because an empty queue exercises
+    // one branch of one component and the geometry that stranded an operator is
+    // the geometry of a task ROW. The task is built through the backend's own
+    // commands — purchase order, receipt, putaway, claim — so the row on screen
+    // is a document the application produced rather than a fixture's idea of
+    // one.
+    const target = await seedTarget(api, SEED_QTY);
+    const po = await sentPurchaseOrder(api, target, SEED_QTY, "INV-20 RF queue");
+    const receipt = await postedReceipt(api, po, target, SEED_QTY);
+    task = await claimedPutawayTask(api, receipt.grnId);
   });
 
   test.afterAll(async () => {
@@ -174,7 +222,9 @@ test.describe("inventory · RF at 375", () => {
 
   test("every tap target on the queue is big enough for a thumb", async ({ page }) => {
     await page.goto("/inventory/rf");
-    await expectRfSurface(page);
+    // Loaded, not merely rendered: skeletons have no controls, so measuring
+    // them finds no offenders and reports a pass over an empty measurement.
+    await expectRfQueueLoaded(page);
 
     const small = await page.evaluate((min) => {
       const offenders: string[] = [];
@@ -199,7 +249,7 @@ test.describe("inventory · RF at 375", () => {
     page,
   }) => {
     await page.goto("/inventory/rf");
-    await expectRfSurface(page);
+    await expectRfQueueLoaded(page);
 
     // The desktop lists are a different audience's screen. This is the rendered
     // counterpart of the source-level rule in `rf-surface.test.ts`: a table
@@ -212,42 +262,48 @@ test.describe("inventory · RF at 375", () => {
 
     // One or the other, and never neither — a queue that renders no rows AND no
     // empty state is a blank screen an operator cannot act on or report.
+    //
+    // The count is read only after the queue has said how many it has, so the
+    // branch is decided on the rendered answer rather than on a race.
     const taskCount = await tasks.count();
     if (taskCount === 0) await expect(emptyState).toBeVisible();
     else await expect(tasks.first().getByRole("link")).toHaveAttribute("href", /\S/);
   });
 
   /**
-   * The RF flows themselves — receive, put away, pick — need work ASSIGNED to
-   * this operator, and that is the one thing these specs cannot create.
+   * The queue is a way IN to the work, not a list of it. This walks that step
+   * and nothing else: the seeded task is found on the queue by its own task
+   * number, tapped, and the runner it lands on is checked for being a runner.
    *
-   * A putaway task is produced by receiving a GRN against a purchase order; a
-   * pick list is produced by releasing a wave against a sales order. Both
-   * chains run through backend services this repo must not edit and, in this
-   * tenant, both tables are empty. So rather than assert something weaker and
-   * call the flow covered, the walk is attempted only when the queue actually
-   * has work and skips with the reason when it does not.
+   * Addressed by task number rather than as "the first row", which is the
+   * assertion that passes on somebody else's task. This tenant is shared, other
+   * suites raise waves and putaways in it, and a spec that taps whatever is on
+   * top proves only that SOME row navigates somewhere.
+   *
+   * The flows those runners drive — put away, pick — are walked to their ledger
+   * consequences in `inventory-rf-walks.spec.ts`.
    */
   test("an assigned task opens its own single-column runner", async ({ page }) => {
     await page.goto("/inventory/rf");
-    await expectRfSurface(page);
+    await expectRfQueueLoaded(page);
 
-    const firstTask = page.getByRole("listitem").first().getByRole("link");
-    test.skip(
-      (await page.getByRole("listitem").count()) === 0,
-      "The RF queue is empty: no putaway task or pick list is assigned to this operator. " +
-        "A putaway task comes from receiving a GRN against a purchase order, a pick list " +
-        "from releasing a wave against a sales order; both tables are empty in this tenant " +
-        "and neither can be created from the frontend repo.",
-    );
+    const row = page.getByRole("listitem").filter({ hasText: task.taskNumber });
+    await expect(
+      row,
+      `the seeded putaway task ${task.taskNumber} is not in this operator's RF queue`,
+    ).toHaveCount(1);
 
-    const href = await firstTask.getAttribute("href");
-    await firstTask.click();
-    await expect(page).toHaveURL(new RegExp(href!.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&")));
+    const link = row.getByRole("link");
+    await expect(link).toHaveAttribute("href", `/inventory/rf/putaway/${task.taskId}`);
+    await link.click();
 
-    // The runner is one screen for one thumb: a heading, a way back, and no
-    // sideways scroll.
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/inventory/rf/putaway/${task.taskId}$`));
+
+    // The runner is one screen for one thumb: the task's own number as the
+    // heading — not a generic "Put away", which is what the loading, denied and
+    // error branches render, so this also proves the task itself loaded — a way
+    // back, and no sideways scroll.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(task.taskNumber);
     await expect(page.getByLabel("Back to tasks")).toBeVisible();
 
     const overflow = await page.evaluate(() => ({

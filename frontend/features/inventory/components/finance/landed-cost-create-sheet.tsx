@@ -44,7 +44,7 @@ export function LandedCostCreateSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const create = useCreateLandedCostVoucher();
-  const { data: receipts, isLoading: receiptsLoading } = useGoodsReceipts({ pageSize: 100 });
+  const { data: receipts, isLoading: receiptsLoading } = useGoodsReceipts({ limit: 100 });
 
   function handleSubmit(values: CreateLandedCostVoucherFormOutput): void {
     create.mutate(

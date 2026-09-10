@@ -37,7 +37,7 @@ interface RaisePutawayDialogProps {
  */
 export function RaisePutawayDialog({ open, onOpenChange, onCreated }: RaisePutawayDialogProps) {
   const [grnId, setGrnId] = useState("");
-  const receipts = useGoodsReceipts({ status: "POSTED", pageSize: 50 });
+  const receipts = useGoodsReceipts({ status: "POSTED", limit: 50 });
   const createTask = useCreatePutawayTask();
 
   const rows = receipts.data?.items ?? [];

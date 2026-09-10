@@ -52,13 +52,42 @@ export async function chooseFromCombobox(
   name: string | RegExp,
   option: string | RegExp,
 ): Promise<void> {
+  await chooseFromComboboxBy(scope, name, option, option);
+}
+
+/**
+ * Choose an option by one piece of text and confirm the trigger settles on
+ * another.
+ *
+ * Needed because `getByRole("option", { name })` matches on a SUBSTRING of the
+ * accessible name, and warehouse bins are routinely named "Race bin" and "Race
+ * bin 2" — asking for the first silently selects either, and the post-condition
+ * passes because "Race bin 2" contains "Race bin". The wrong bin is then the
+ * one the goods are counted into, which is precisely the class of defect these
+ * specs exist to catch, so the picker must not be able to introduce it.
+ *
+ * The escape is each option's sublabel, which carries the location or SKU code
+ * and is unique where the name is not. The trigger renders only the primary
+ * label, so what is matched and what is then asserted are deliberately two
+ * different strings.
+ */
+export async function chooseFromComboboxBy(
+  scope: Page | Locator,
+  name: string | RegExp,
+  option: string | RegExp,
+  triggerShows: string | RegExp,
+): Promise<void> {
   const control = await openPicker(scope, name);
 
-  const choice = pageOf(scope).getByRole("option", { name: option }).first();
-  await expect(choice).toBeVisible({ timeout: 20_000 });
+  const choice = pageOf(scope).getByRole("option", { name: option });
+  await expect(
+    choice,
+    `"${String(option)}" must identify exactly one option; ` +
+      `matching several means the wrong one can be chosen without the trigger disagreeing`,
+  ).toHaveCount(1, { timeout: 20_000 });
   await choice.click();
 
-  await expect(control).toContainText(option);
+  await expect(control).toContainText(triggerShows);
 }
 
 /** The first option, for fields where which one is chosen does not matter. */

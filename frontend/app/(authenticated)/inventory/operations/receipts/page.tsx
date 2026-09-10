@@ -156,7 +156,7 @@ export default function ReceiptsPage() {
     dateFrom: resolvedDateFrom,
     dateTo: resolvedDateTo,
     page,
-    pageSize: 50,
+    limit: 50,
   });
 
   const items = query.data?.items ?? [];

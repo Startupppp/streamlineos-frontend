@@ -52,6 +52,19 @@ async function backendToken(): Promise<string> {
 
 export interface ApiOracle {
   get<T>(path: string, params?: Record<string, string | number>): Promise<T>;
+  /**
+   * The write half, used ONLY to build the documents a flow needs before it can
+   * be walked — a purchase order to receive against, a receipt to put away, a
+   * wave to pick. Never to perform the step under test: a spec that posts the
+   * command it is meant to be driving through the UI is asserting against
+   * itself.
+   *
+   * Seeding through the API rather than by SQL insert is the point. A row
+   * inserted by hand is one the domain would never have produced — wrong
+   * status, missing ledger, no number sequence — and a green test standing on
+   * it proves nothing about the application.
+   */
+  post<T>(path: string, body?: unknown): Promise<T>;
   dispose(): Promise<void>;
 }
 
@@ -63,17 +76,36 @@ export async function apiOracle(): Promise<ApiOracle> {
     extraHTTPHeaders: { Authorization: `Bearer ${token}` },
   });
 
+  function unwrap<T>(body: { success?: boolean; data?: T }): T {
+    // The backend wraps success responses as `{ success, data }`; a few
+    // endpoints return the payload bare. Unwrapping only the wrapped shape
+    // keeps both working.
+    return body?.success === true && "data" in body ? (body.data as T) : (body as T);
+  }
+
   return {
     async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
       const res = await ctx.get(path, { params });
       if (!res.ok()) {
         throw new Error(`${path} -> ${res.status()} ${await res.text()}`);
       }
-      const body = (await res.json()) as { success?: boolean; data?: T };
-      // The backend wraps success responses as `{ success, data }`; a few
-      // endpoints return the payload bare. Unwrapping only the wrapped shape
-      // keeps both working.
-      return body?.success === true && "data" in body ? (body.data as T) : (body as T);
+      return unwrap<T>(await res.json());
+    },
+    async post<T>(path: string, body?: unknown): Promise<T> {
+      const res = await ctx.post(path, {
+        data: body ?? {},
+        headers: {
+          // Not optional. `@Idempotent` and `@IdempotencyKey()` make this
+          // header REQUIRED, and its absence comes back as a 400 that reads
+          // like a body validation failure — which sends you looking at the
+          // payload for an hour.
+          "Idempotency-Key": crypto.randomUUID(),
+        },
+      });
+      if (!res.ok()) {
+        throw new Error(`POST ${path} -> ${res.status()} ${await res.text()}`);
+      }
+      return unwrap<T>(await res.json());
     },
     dispose: () => ctx.dispose(),
   };
@@ -225,6 +257,14 @@ export interface LedgerEntry {
   productVariantId: number;
   locationId: number;
   reason: string | null;
+  /**
+   * What the movement was posted FOR — `inv_grn`, `inv_stock_transfer`, and so
+   * on, with the document's own id. It is what turns "a receipt-shaped row
+   * exists" into "THIS receipt's row exists", which matters in a tenant several
+   * suites are writing to.
+   */
+  referenceType: string | null;
+  referenceId: string | null;
 }
 
 /** The most recent ledger rows for a grain, newest first. */
@@ -239,4 +279,71 @@ export async function recentLedger(
     limit,
   });
   return res.items ?? [];
+}
+
+/**
+ * The movement a named document posted at a named bin.
+ *
+ * Addressed by `referenceId` rather than by "the newest row of the right type",
+ * which is the assertion that quietly passes on somebody else's write: this
+ * tenant is shared, the adjust spec posts to the same variant, and "an
+ * ADJUSTMENT_IN exists" was already true before the click.
+ */
+export function movementFor(
+  ledger: LedgerEntry[],
+  match: { referenceType: string; referenceId: number; locationId: number; transactionType: string },
+): LedgerEntry | undefined {
+  return ledger.find(
+    (row) =>
+      row.referenceType === match.referenceType &&
+      row.referenceId === String(match.referenceId) &&
+      row.locationId === match.locationId &&
+      row.transactionType === match.transactionType,
+  );
+}
+
+/** How the ledger rows read, for a failure message somebody can act on. */
+export function describeLedger(ledger: LedgerEntry[]): string {
+  return JSON.stringify(
+    ledger.map((r) => [r.transactionType, r.locationId, r.quantityChange, r.referenceType, r.referenceId]),
+  );
+}
+
+export interface Reservation {
+  id: number;
+  sourceType: string;
+  sourceId: string;
+  sourceLineId: string | null;
+  productVariantId: number;
+  locationId: number | null;
+  reservedQty: string;
+  status: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
+}
+
+/**
+ * One order's reservation, in a given state.
+ *
+ * The endpoint filters by variant and status but not by source, and it imposes
+ * no ordering, so the row is found by paging rather than by trusting the first
+ * page — a tenant that has run this suite fifty times has fifty consumed
+ * reservations for the same variant, and "it was on page one last week" is not
+ * a contract.
+ */
+export async function reservationFor(
+  api: ApiOracle,
+  match: { variantId: number; soId: number; status: Reservation["status"] },
+  maxPages = 5,
+): Promise<Reservation | undefined> {
+  for (let page = 1; page <= maxPages; page += 1) {
+    const res = await api.get<{ items: Reservation[]; totalPages: number }>(
+      "/inventory/stock/reservations",
+      { variantId: match.variantId, status: match.status, page, limit: 100 },
+    );
+    const hit = (res.items ?? []).find(
+      (row) => row.sourceType === "inv_sales_order" && row.sourceId === String(match.soId),
+    );
+    if (hit) return hit;
+    if (page >= (res.totalPages ?? 1)) break;
+  }
+  return undefined;
 }
