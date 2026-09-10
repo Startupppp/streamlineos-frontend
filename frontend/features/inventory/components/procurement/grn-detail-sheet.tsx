@@ -1,13 +1,22 @@
 "use client";
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { LoadingState, ErrorState, NoPermissionState } from "@/components/shared";
+import {
+  LoadingState,
+  ErrorState,
+  NoPermissionState,
+} from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
-import { useGoodsReceipt, type GrnLine } from "@/hooks/api/inventory/operations";
+import {
+  useGoodsReceipt,
+  type GrnLine,
+} from "@/hooks/api/inventory/operations";
 import {
   GRN_DISCREPANCY_LABEL,
   GRN_QUALITY_BADGE,
@@ -19,6 +28,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { GrnLifecycleActions } from "./grn-lifecycle-actions";
+import { GrnEditDraftDialog } from "./grn-edit-draft-dialog";
 import { GrnPrintNoteButton } from "./grn-print-note-button";
 import { LABELS_PRINT_KEY } from "@/hooks/api/inventory/labels";
 
@@ -35,7 +45,9 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
   {
     key: "line",
     header: "PO line",
-    cell: (line) => <span className="font-mono text-dense">#{line.poLineId}</span>,
+    cell: (line) => (
+      <span className="font-mono text-dense">#{line.poLineId}</span>
+    ),
   },
   {
     key: "expected",
@@ -60,7 +72,8 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
         {/* The entered figure only earns a line when it differs from the base. */}
         {line.quantityEntered !== null && line.uomId !== null ? (
           <div className="text-micro text-muted-foreground">
-            {Number(line.quantityEntered).toFixed(2)} × {Number(line.uomFactor ?? 1).toFixed(2)}
+            {Number(line.quantityEntered).toFixed(2)} ×{" "}
+            {Number(line.uomFactor ?? 1).toFixed(2)}
           </div>
         ) : null}
       </>
@@ -73,7 +86,10 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       <>
         <Badge
           variant="outline"
-          className={cn("h-4 text-micro px-1.5 py-0", GRN_QUALITY_BADGE[line.qualityStatus])}
+          className={cn(
+            "h-4 text-micro px-1.5 py-0",
+            GRN_QUALITY_BADGE[line.qualityStatus],
+          )}
         >
           {GRN_QUALITY_LABEL[line.qualityStatus]}
         </Badge>
@@ -100,7 +116,8 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       if (line.lotNumber) {
         return (
           <div>
-            <span className="text-muted-foreground text-micro">LOT:</span> {line.lotNumber}
+            <span className="text-muted-foreground text-micro">LOT:</span>{" "}
+            {line.lotNumber}
             {line.expiryDate ? (
               <div className="text-micro text-muted-foreground">
                 Exp: {formatShortDate(line.expiryDate)}
@@ -113,9 +130,15 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
         return (
           <div>
             <span className="text-muted-foreground text-micro">S/N:</span>{" "}
-            {line.serials.slice(0, 3).map((s) => s.serialNumber).join(", ")}
+            {line.serials
+              .slice(0, 3)
+              .map((s) => s.serialNumber)
+              .join(", ")}
             {line.serials.length > 3 ? (
-              <span className="text-muted-foreground"> +{line.serials.length - 3} more</span>
+              <span className="text-muted-foreground">
+                {" "}
+                +{line.serials.length - 3} more
+              </span>
             ) : null}
           </div>
         );
@@ -133,7 +156,11 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
  * workbench: the counted quantities beside what the order owed, the discrepancy
  * the receiver noted, and the controls that move the document forward.
  */
-export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProps) {
+export function GrnDetailSheet({
+  grnId,
+  open,
+  onOpenChange,
+}: GrnDetailSheetProps) {
   const canView = useCan(READ_PERMISSION);
   const canReceive = useCan(RECEIVE_PERMISSION);
   // Printing is its own authority. A clerk who may not post a receipt may still
@@ -141,6 +168,7 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
   // vendor's prices on paper that leaves the building.
   const canPrint = useCan(LABELS_PRINT_KEY);
   const grnQuery = useGoodsReceipt(open ? grnId : 0);
+  const [editing, setEditing] = useState(false);
 
   function handleRefetchGrn(): void {
     void grnQuery.refetch();
@@ -150,83 +178,128 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
     onOpenChange(false);
   }
 
+  function handleEditOpen(): void {
+    setEditing(true);
+  }
+
   const grn = grnQuery.data;
 
   return (
-    <AppSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={grn ? `GRN ${grn.grnNumber}` : "Goods Receipt Note"}
-      description={grn ? `Received on ${formatShortDate(grn.receivedDate)}` : undefined}
-      footer={
-        grn ? (
-          <div className="flex w-full flex-col gap-2">
-            <GrnLifecycleActions
-              grnId={grn.id}
-              grnNumber={grn.grnNumber}
-              status={grn.status}
-              canReceive={canReceive}
-              onReversed={handleReversed}
-            />
-            {canPrint ? (
-              <GrnPrintNoteButton grnId={grn.id} grnNumber={grn.grnNumber} />
-            ) : null}
-          </div>
-        ) : undefined
-      }
-    >
-      {!canView ? <NoPermissionState permission={READ_PERMISSION} compact /> : null}
-      {canView && grnQuery.isLoading ? <LoadingState variant="form" /> : null}
-      {canView && grnQuery.error ? (
-        <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={handleRefetchGrn} />
-      ) : null}
-      {canView && grn ? (
-        <div className="space-y-4">
-          <Card className="p-4">
-            <dl className="grid grid-cols-2 gap-3 text-sm">
-              <dt className="text-muted-foreground">Status</dt>
-              <dd>
-                <Badge
-                  variant="outline"
-                  className={cn("h-5 px-2 py-0.5 text-micro", GRN_STATUS_BADGE[grn.status])}
-                >
-                  {GRN_STATUS_LABEL[grn.status]}
-                </Badge>
-              </dd>
-              <dt className="text-muted-foreground">Purchase order</dt>
-              <dd className="font-mono">{grn.purchaseOrder?.poNumber ?? "—"}</dd>
-              <dt className="text-muted-foreground">Vendor</dt>
-              <dd>{grn.purchaseOrder?.vendor?.name ?? "—"}</dd>
-              <dt className="text-muted-foreground">Received date</dt>
-              <dd className="font-mono tabular-nums">{formatShortDate(grn.receivedDate)}</dd>
-              {grn.postedAt ? (
-                <>
-                  <dt className="text-muted-foreground">Posted</dt>
-                  <dd className="font-mono tabular-nums">
-                    {formatShortDate(grn.postedAt)}
-                    {grn.poster?.name ? (
-                      <span className="ml-1 font-sans text-muted-foreground">by {grn.poster.name}</span>
-                    ) : null}
-                  </dd>
-                </>
+    <>
+      <AppSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={grn ? `GRN ${grn.grnNumber}` : "Goods Receipt Note"}
+        description={
+          grn ? `Received on ${formatShortDate(grn.receivedDate)}` : undefined
+        }
+        footer={
+          grn ? (
+            <div className="flex w-full flex-col gap-2">
+              <GrnLifecycleActions
+                grnId={grn.id}
+                grnNumber={grn.grnNumber}
+                status={grn.status}
+                canReceive={canReceive}
+                onReversed={handleReversed}
+              />
+              {/*
+              DRAFT and COUNTING are what `GrnService.EDITABLE` lists. Later
+              statuses have moved stock, and the correction for those is a
+              reversal rather than an edit.
+            */}
+              {canReceive &&
+              (grn.status === "DRAFT" || grn.status === "COUNTING") ? (
+                <Button variant="outline" size="sm" onClick={handleEditOpen}>
+                  Correct date or notes
+                </Button>
               ) : null}
-              {grn.notes ? (
-                <>
-                  <dt className="text-muted-foreground">Notes</dt>
-                  <dd>{grn.notes}</dd>
-                </>
+              {canPrint ? (
+                <GrnPrintNoteButton grnId={grn.id} grnNumber={grn.grnNumber} />
               ) : null}
-            </dl>
-          </Card>
-
-          <DataTable
-            data={grn.lines}
-            columns={grnLineColumns}
-            getRowKey={(line) => line.id}
-            minWidth="560px"
+            </div>
+          ) : undefined
+        }
+      >
+        {!canView ? (
+          <NoPermissionState permission={READ_PERMISSION} compact />
+        ) : null}
+        {canView && grnQuery.isLoading ? <LoadingState variant="form" /> : null}
+        {canView && grnQuery.error ? (
+          <ErrorState
+            description={getErrorMessage(grnQuery.error)}
+            onRetry={handleRefetchGrn}
           />
-        </div>
+        ) : null}
+        {canView && grn ? (
+          <div className="space-y-4">
+            <Card className="p-4">
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <dt className="text-muted-foreground">Status</dt>
+                <dd>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-5 px-2 py-0.5 text-micro",
+                      GRN_STATUS_BADGE[grn.status],
+                    )}
+                  >
+                    {GRN_STATUS_LABEL[grn.status]}
+                  </Badge>
+                </dd>
+                <dt className="text-muted-foreground">Purchase order</dt>
+                <dd className="font-mono">
+                  {grn.purchaseOrder?.poNumber ?? "—"}
+                </dd>
+                <dt className="text-muted-foreground">Vendor</dt>
+                <dd>{grn.purchaseOrder?.vendor?.name ?? "—"}</dd>
+                <dt className="text-muted-foreground">Received date</dt>
+                <dd className="font-mono tabular-nums">
+                  {formatShortDate(grn.receivedDate)}
+                </dd>
+                {grn.postedAt ? (
+                  <>
+                    <dt className="text-muted-foreground">Posted</dt>
+                    <dd className="font-mono tabular-nums">
+                      {formatShortDate(grn.postedAt)}
+                      {grn.poster?.name ? (
+                        <span className="ml-1 font-sans text-muted-foreground">
+                          by {grn.poster.name}
+                        </span>
+                      ) : null}
+                    </dd>
+                  </>
+                ) : null}
+                {grn.notes ? (
+                  <>
+                    <dt className="text-muted-foreground">Notes</dt>
+                    <dd>{grn.notes}</dd>
+                  </>
+                ) : null}
+              </dl>
+            </Card>
+
+            <DataTable
+              data={grn.lines}
+              columns={grnLineColumns}
+              getRowKey={(line) => line.id}
+              minWidth="560px"
+            />
+          </div>
+        ) : null}
+      </AppSheet>
+
+      {/* Sibling, not child: two Radix focus traps in one subtree fight. */}
+      {grn ? (
+        <GrnEditDraftDialog
+          open={editing}
+          onOpenChange={setEditing}
+          grnId={grn.id}
+          grnNumber={grn.grnNumber}
+          receivedDate={grn.receivedDate}
+          notes={grn.notes}
+        />
       ) : null}
-    </AppSheet>
+    </>
   );
 }
