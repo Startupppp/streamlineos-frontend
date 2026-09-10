@@ -194,7 +194,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       cell: (row) => <span className="font-mono text-xs text-muted-foreground">RISK-{row.riskNumber}</span>,
     },
     {
-      key: "title", header: "Title", sortable: true, sortValue: (r) => r.title,
+      key: "title", header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <TruncatedText text={row.title} className="font-medium text-foreground" />

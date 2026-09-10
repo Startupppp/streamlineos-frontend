@@ -53,16 +53,12 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
     cell: (row) => (
       <span className="truncate font-medium text-foreground">{row.clientName}</span>
     ),
-    sortable: true,
-    sortValue: (row) => row.clientName.toLowerCase(),
     className: "max-w-[220px]",
   },
   {
     key: "hours",
     header: "Hours",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.hours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.hours,
   },
   {
     key: "billableAmount",
@@ -111,8 +107,6 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
       ) : (
         <span className="text-muted-foreground">—</span>
       ),
-    sortable: true,
-    sortValue: (row) => row.missingRateHours,
   },
 ];
 

@@ -49,43 +49,31 @@ export default function AutomationPerformanceReportPage() {
       key: "ruleName",
       header: "Rule",
       cell: (row) => <span className="font-medium">{row.ruleName}</span>,
-      sortable: true,
-      sortValue: (row) => row.ruleName,
     },
     {
       key: "total",
       header: "Total Runs",
       cell: (row) => row.total,
-      sortable: true,
-      sortValue: (row) => row.total,
     },
     {
       key: "succeeded",
       header: "Succeeded",
       cell: (row) => row.succeeded,
-      sortable: true,
-      sortValue: (row) => row.succeeded,
     },
     {
       key: "failed",
       header: "Failed",
       cell: (row) => row.failed,
-      sortable: true,
-      sortValue: (row) => row.failed,
     },
     {
       key: "skipped",
       header: "Skipped",
       cell: (row) => row.skipped,
-      sortable: true,
-      sortValue: (row) => row.skipped,
     },
     {
       key: "successRate",
       header: "Success Rate",
       cell: (row) => <SuccessRateBar row={row} />,
-      sortable: true,
-      sortValue: successRatePct,
     },
   ];
 

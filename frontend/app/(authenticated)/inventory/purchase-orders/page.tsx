@@ -209,8 +209,6 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
         </Link>
       </div>
     ),
-    sortable: true,
-    sortValue: (po) => po.poNumber,
   },
   {
     key: "vendor",
@@ -243,8 +241,6 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     ),
     className: "text-right font-mono tabular-nums",
     headerClassName: "text-right",
-    sortable: true,
-    sortValue: (po) => Number(po.total),
   },
   {
     key: "status",

@@ -34,30 +34,22 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
         ) : null}
       </div>
     ),
-    sortable: true,
-    sortValue: (row) => memberLabel(row.name, row.email).toLowerCase(),
     className: "max-w-[220px]",
   },
   {
     key: "totalHours",
     header: "Total",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.totalHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.totalHours,
   },
   {
     key: "billableHours",
     header: "Billable",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.billableHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.billableHours,
   },
   {
     key: "nonBillableHours",
     header: "Non-billable",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.nonBillableHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.nonBillableHours,
   },
   {
     key: "billableUtilization",
@@ -65,8 +57,6 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
     cell: (row) => (
       <span className="tabular-nums font-medium">{formatReportPercent(row.billableUtilization)}</span>
     ),
-    sortable: true,
-    sortValue: (row) => row.billableUtilization,
   },
 ];
 

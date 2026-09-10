@@ -62,8 +62,6 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
         )}
       </div>
     ),
-    sortable: true,
-    sortValue: (s) => s.interviewerName ?? "",
   },
   {
     key: "assigned",
@@ -71,8 +69,6 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
     headerClassName: "text-center",
     className: "text-center",
     cell: (stat) => <span className="tabular-nums">{stat.totalAssigned}</span>,
-    sortable: true,
-    sortValue: (s) => s.totalAssigned,
   },
   {
     key: "submitted",
@@ -84,8 +80,6 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
         {stat.submitted}
       </span>
     ),
-    sortable: true,
-    sortValue: (s) => s.submitted,
   },
   {
     key: "pending",
@@ -100,16 +94,12 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
       ) : (
         <span className="text-muted-foreground">0</span>
       ),
-    sortable: true,
-    sortValue: (s) => s.pending,
   },
   {
     key: "avgSubmitTime",
     header: "Avg Submission Time",
     className: "w-52",
     cell: (stat) => <SpeedBar hours={stat.avgHoursToSubmit} />,
-    sortable: true,
-    sortValue: (s) => s.avgHoursToSubmit ?? 9999,
   },
   {
     key: "recommendations",

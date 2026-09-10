@@ -120,8 +120,6 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           <TruncatedText text={row.name} />
         </Link>
       ),
-      sortable: true,
-      sortValue: (row) => row.name,
     },
     {
       key: "type",

@@ -169,8 +169,6 @@ export function RatesTab() {
       {
         key: "priority",
         header: "Priority",
-        sortable: true,
-        sortValue: (row) => row.priority,
         cell: (row) => <span className="text-xs tabular-nums">{row.priority}</span>,
       },
       ...(canManage

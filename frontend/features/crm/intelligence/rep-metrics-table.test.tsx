@@ -10,8 +10,8 @@ import { RepMetricsTable } from "./rep-metrics-table";
  * signed-in tenant's arrangement — a session and a query client this test has no
  * business standing up. Stubbed to the stock description, which is what these
  * assertions are about: that `REP_CALL_METRICS_LAYOUT` as declared renders
- * percentages rather than basis points, names rather than ids, and no sortable
- * column at all. That the arrangement path leaves a description valid is
+ * percentages rather than basis points, names rather than ids, and no reorder
+ * control at all. That the arrangement path leaves a description valid is
  * `lib/renderer/registry.test.ts`'s job, for every layout at once.
  */
 jest.mock("@/features/renderer/use-tenant-layout", () => ({
@@ -151,7 +151,7 @@ describe("RepMetricsTable", () => {
     expect(table().getByText("2")).toBeInTheDocument();
   });
 
-  it("offers no sortable column, because a sorted talk ratio is a leaderboard", () => {
+  it("offers no way to reorder, because a sorted talk ratio is a leaderboard", () => {
     render(
       <RepMetricsTable
         response={response([rep()])}
@@ -163,10 +163,11 @@ describe("RepMetricsTable", () => {
     );
 
     /**
-     * `DataTable` renders a header as a button exactly when its column declares
-     * `sortable`. No button in the header row means no column does, which is the
-     * property this test exists to hold — one `sortable: true` added later turns
-     * a coaching table into a league table with no other visible change.
+     * `DataTable` renders a header as a button exactly for the keys the caller
+     * names in `sortState.fields`. No button in the header row means this table
+     * passes no `sortState`, which is the property this test exists to hold —
+     * one added later turns a coaching table into a league table with no other
+     * visible change.
      */
     const headers = screen.getAllByRole("columnheader");
     for (const header of headers)

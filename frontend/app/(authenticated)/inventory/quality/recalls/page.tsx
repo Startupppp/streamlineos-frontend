@@ -73,8 +73,6 @@ function RecallsPageInner() {
           {r.title}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => r.title,
     },
     {
       key: "severity",
@@ -109,8 +107,6 @@ function RecallsPageInner() {
       headerClassName: "w-[130px]",
       className: "text-muted-foreground",
       cell: (r) => format(new Date(r.createdAt), "dd MMM yyyy"),
-      sortable: true,
-      sortValue: (r) => r.createdAt,
     },
   ];
 

@@ -55,10 +55,6 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function statusSort(r: Release): number {
-  return r.status === "released" ? 0 : r.status === "draft" ? 1 : 2;
-}
-
 interface ReleasesPageProps {
   projectId: number;
 }
@@ -169,8 +165,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "name",
         header: "Name",
-        sortable: true,
-        sortValue: (r) => r.name,
         className: TABLE_TITLE_CELL,
         cell: (r) => (
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
@@ -182,8 +176,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "status",
         header: "Status",
-        sortable: true,
-        sortValue: statusSort,
         cell: (r) => {
           const cfg = STATUS_CONFIG[r.status];
           return (
@@ -199,8 +191,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "releaseDate",
         header: "Release Date",
-        sortable: true,
-        sortValue: (r) => r.releaseDate ?? "",
         cell: (r) =>
           r.releaseDate ? (
             <span className="text-xs tabular-nums text-muted-foreground">
@@ -213,8 +203,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "ticketCount",
         header: "Tickets",
-        sortable: true,
-        sortValue: (r) => r.ticketCount,
         cell: (r) => (
           <span className="text-xs tabular-nums text-muted-foreground">
             {r.ticketCount}

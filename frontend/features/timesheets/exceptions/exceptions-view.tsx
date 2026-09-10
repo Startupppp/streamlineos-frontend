@@ -161,8 +161,6 @@ export function ExceptionsView() {
             {EXCEPTION_SEVERITY_LABEL[row.severity]}
           </Badge>
         ),
-        sortable: true,
-        sortValue: (row) => row.severity,
       },
       {
         key: "rule",
@@ -172,8 +170,6 @@ export function ExceptionsView() {
             {EXCEPTION_RULE_LABEL[row.rule]}
           </span>
         ),
-        sortable: true,
-        sortValue: (row) => EXCEPTION_RULE_LABEL[row.rule],
       },
       {
         key: "message",
@@ -203,8 +199,6 @@ export function ExceptionsView() {
             )}
           </div>
         ),
-        sortable: true,
-        sortValue: (row) => row.user?.name ?? row.user?.email ?? "",
       },
       {
         key: "status",
@@ -231,8 +225,6 @@ export function ExceptionsView() {
           ) : (
             <span className="text-muted-foreground/30">—</span>
           ),
-        sortable: true,
-        sortValue: (row) => row.dueDate ?? "",
       },
       {
         key: "createdAt",
@@ -242,8 +234,6 @@ export function ExceptionsView() {
             {format(parseISO(row.createdAt), "MMM d, yyyy")}
           </span>
         ),
-        sortable: true,
-        sortValue: (row) => row.createdAt,
       },
       ...(canManage
         ? [

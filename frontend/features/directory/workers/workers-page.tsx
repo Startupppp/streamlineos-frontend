@@ -182,8 +182,6 @@ export function WorkersPage() {
     {
       key: "name",
       header: "Worker",
-      sortable: true,
-      sortValue: (r) => workerDisplayName(r),
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 flex-col">

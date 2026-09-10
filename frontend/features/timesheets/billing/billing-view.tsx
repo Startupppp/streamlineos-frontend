@@ -52,8 +52,6 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     cell: (row) => (
       <span className="font-mono tabular-nums text-right block">{row.totalHours.toFixed(1)}</span>
     ),
-    sortable: true,
-    sortValue: (r) => r.totalHours,
     className: "text-right",
     headerClassName: "text-right",
   },
@@ -78,8 +76,6 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
         {formatCurrencyForBilling(row.billableAmount, row.currency)}
       </span>
     ),
-    sortable: true,
-    sortValue: (r) => r.billableAmount,
     className: "text-right",
     headerClassName: "text-right",
   },

@@ -284,8 +284,6 @@ export function ReimbursementsPage() {
           {r.createdAt ? format(new Date(r.createdAt), "MMM d, yyyy") : "—"}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => r.createdAt ? new Date(r.createdAt).getTime() : 0,
     },
     {
       key: "status",
@@ -310,8 +308,6 @@ export function ReimbursementsPage() {
           ₹{Number(r.amount).toLocaleString("en-IN")}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => Number(r.amount),
     },
     {
       key: "actions",

@@ -188,8 +188,6 @@ export function PeopleDirectoryPage({
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => displayName(r),
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link

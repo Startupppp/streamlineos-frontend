@@ -43,8 +43,6 @@ const REVIEW_CYCLE_COLUMNS: DataTableColumn<ReviewCycle>[] = [
     key: "name",
     header: "Name",
     cell: (c) => <span className="text-sm font-medium text-foreground">{c.name}</span>,
-    sortable: true,
-    sortValue: (c) => c.name,
   },
   {
     key: "type",

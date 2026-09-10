@@ -64,10 +64,10 @@ export const PRODUCT_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search products…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "description" },
+      { field: "name", primary: true, subtitle: "description" },
       { field: "sku", width: "w-32 shrink-0" },
       { field: "category", width: "w-32 shrink-0" },
-      { field: "unitPrice", sortable: true, width: "w-32 shrink-0" },
+      { field: "unitPrice", width: "w-32 shrink-0" },
       { field: "taxRate", width: "w-24 shrink-0" },
       { field: "isActive", width: "w-24 shrink-0" },
     ],

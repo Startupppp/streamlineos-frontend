@@ -130,8 +130,6 @@ function buildPlanColumns(
       key: "name",
       header: "Name",
       cell: (plan) => <span className="text-sm font-medium">{plan.name}</span>,
-      sortable: true,
-      sortValue: (p) => p.name,
     },
     {
       key: "category",
@@ -158,8 +156,6 @@ function buildPlanColumns(
       key: "effectiveFrom",
       header: "Effective",
       cell: (plan) => <span className="text-xs">{plan.effectiveFrom}</span>,
-      sortable: true,
-      sortValue: (p) => p.effectiveFrom,
     },
     {
       key: "status",
@@ -235,8 +231,6 @@ function buildClaimColumns(
           ₹{(claim.amountCents / 100).toLocaleString("en-IN")}
         </span>
       ),
-      sortable: true,
-      sortValue: (c) => c.amountCents,
     },
     {
       key: "status",

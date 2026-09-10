@@ -133,15 +133,6 @@ export function RecordList({
         return {
           key: column.field,
           header: field.label,
-          sortable: column.sortable,
-          // Sorting compares the underlying value, never the formatted string:
-          // a localised date sorts alphabetically and lands in the wrong order.
-          sortValue: column.sortable
-            ? (row) => {
-                const value = row[column.field];
-                return typeof value === "number" ? value : String(value ?? "");
-              }
-            : undefined,
           className: cn(numeric && "text-right font-mono tabular-nums", column.width),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {

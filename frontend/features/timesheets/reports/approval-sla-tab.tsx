@@ -43,8 +43,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
         ) : null}
       </div>
     ),
-    sortable: true,
-    sortValue: (row) => memberLabel(row.name, row.email).toLowerCase(),
     className: "max-w-[220px]",
   },
   {
@@ -58,8 +56,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
       ) : (
         <span className="text-muted-foreground">—</span>
       ),
-    sortable: true,
-    sortValue: (row) => row.pendingCount,
   },
   {
     key: "avgDecisionHours",
@@ -69,8 +65,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
         {row.avgDecisionHours === null ? "—" : `${row.avgDecisionHours.toFixed(1)}h`}
       </span>
     ),
-    sortable: true,
-    sortValue: (row) => row.avgDecisionHours ?? -1,
   },
 ];
 

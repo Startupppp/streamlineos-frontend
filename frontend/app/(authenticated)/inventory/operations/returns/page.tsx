@@ -126,8 +126,6 @@ export default function ReturnsPage() {
       key: "returnNumber",
       header: "Return #",
       cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
-      sortable: true,
-      sortValue: (r) => r.returnNumber,
     },
     { key: "vendorName", header: "Vendor", cell: (r) => r.vendorName ?? "—" },
     {
@@ -200,8 +198,6 @@ export default function ReturnsPage() {
       key: "returnNumber",
       header: "Return #",
       cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
-      sortable: true,
-      sortValue: (r) => r.returnNumber,
     },
     { key: "customerName", header: "Customer", cell: (r) => r.customerName ?? "—" },
     {

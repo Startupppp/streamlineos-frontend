@@ -40,22 +40,16 @@ export default function QueuePerformanceReportPage() {
         ) : (
           <span className="font-medium">Unassigned</span>
         ),
-      sortable: true,
-      sortValue: (row) => row.queueName ?? "Unassigned",
     },
     {
       key: "ticketsHandled",
       header: "Tickets Handled",
       cell: (row) => row.ticketsHandled,
-      sortable: true,
-      sortValue: (row) => row.ticketsHandled,
     },
     {
       key: "openTickets",
       header: "Open",
       cell: (row) => row.openTickets,
-      sortable: true,
-      sortValue: (row) => row.openTickets,
     },
     {
       key: "avgResolutionMinutes",

@@ -143,12 +143,12 @@ export const AUDIT_ENTRY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search audit entries…",
     columns: [
-      { field: "actor", primary: true, sortable: true },
+      { field: "actor", primary: true },
       { field: "action", width: "w-36 shrink-0" },
       { field: "targetType", width: "w-24 shrink-0" },
       { field: "changes", width: "min-w-[220px] max-w-[360px] truncate" },
       { field: "ipAddress", width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-44 shrink-0" },
+      { field: "createdAt", width: "w-44 shrink-0" },
     ],
   },
   detail: {

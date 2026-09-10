@@ -60,8 +60,6 @@ export const CustomerTable = React.memo(function CustomerTable({
       {
         key: "name",
         header: "Name",
-        sortable: true,
-        sortValue: (c) => c.name,
         className: TABLE_TITLE_CELL,
         cell: (c) => (
           <div
@@ -123,8 +121,6 @@ export const CustomerTable = React.memo(function CustomerTable({
       cols.push({
         key: "size",
         header: "Size",
-        sortable: true,
-        sortValue: (c) => c.size ?? "",
         className: "w-[90px] hidden sm:table-cell",
         headerClassName: "hidden sm:table-cell",
         cell: (c) =>
@@ -155,8 +151,6 @@ export const CustomerTable = React.memo(function CustomerTable({
       cols.push({
         key: "status",
         header: "Status",
-        sortable: true,
-        sortValue: (c) => c.healthScore ?? -1,
         className: "w-[90px]",
         cell: (c) => {
           const { label, className } = healthScoreToStatus(c.healthScore);
@@ -191,8 +185,6 @@ export const CustomerTable = React.memo(function CustomerTable({
       cols.push({
         key: "domain",
         header: "Domain",
-        sortable: true,
-        sortValue: (c) => c.domain ?? "",
         className: "w-[130px] hidden lg:table-cell",
         headerClassName: "hidden lg:table-cell",
         cell: (c) =>

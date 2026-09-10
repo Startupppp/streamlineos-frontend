@@ -68,12 +68,12 @@ export const CLIENT_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search clients…",
     columns: [
-      { field: "clientName", primary: true, sortable: true, subtitle: "clientEmail" },
+      { field: "clientName", primary: true, subtitle: "clientEmail" },
       { field: "clientPhone", width: "w-40 shrink-0" },
       { field: "status", width: "w-36 shrink-0" },
       { field: "salesRepName", width: "w-40 shrink-0" },
-      { field: "investmentAmount", sortable: true, width: "w-32 shrink-0" },
-      { field: "investedAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "investmentAmount", width: "w-32 shrink-0" },
+      { field: "investedAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

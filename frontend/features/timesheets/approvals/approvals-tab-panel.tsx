@@ -82,8 +82,6 @@ function ApprovalsTable({
             )}
           </div>
         ),
-        sortable: true,
-        sortValue: (row) => row.user?.name ?? row.user?.email ?? "",
       },
       {
         key: "period",
@@ -94,8 +92,6 @@ function ApprovalsTable({
             {format(parseISO(row.periodEnd), "MMM d")}
           </span>
         ),
-        sortable: true,
-        sortValue: (row) => row.periodStart,
       },
       {
         key: "totalHours",
@@ -103,8 +99,6 @@ function ApprovalsTable({
         headerClassName: "text-right",
         className: "text-right tabular-nums",
         cell: (row) => `${parseFloat(row.totalHours).toFixed(1)}h`,
-        sortable: true,
-        sortValue: (row) => parseFloat(row.totalHours),
       },
       {
         key: "billableHours",
@@ -124,8 +118,6 @@ function ApprovalsTable({
           ) : (
             <span className="text-muted-foreground/30">—</span>
           ),
-        sortable: true,
-        sortValue: (row) => row.submittedAt ?? "",
       },
       {
         key: "status",

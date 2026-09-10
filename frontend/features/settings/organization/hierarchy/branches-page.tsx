@@ -192,8 +192,6 @@ export function OrgBranchesPage() {
       key: "name",
       header: "Name",
       cell: (branch) => <span className="font-medium">{branch.name}</span>,
-      sortable: true,
-      sortValue: (branch) => branch.name,
     },
     {
       key: "code",

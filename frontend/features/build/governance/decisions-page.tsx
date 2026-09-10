@@ -170,7 +170,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       cell: (row) => <span className="font-mono text-xs text-muted-foreground">DEC-{row.decisionNumber}</span>,
     },
     {
-      key: "title", header: "Title", sortable: true, sortValue: (d) => d.title,
+      key: "title", header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <TruncatedText text={row.title} className="font-medium text-foreground" />
@@ -189,7 +189,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       cell: (row) => <span className="text-dense text-muted-foreground">{memberName(row.ownerId)}</span>,
     },
     {
-      key: "decidedAt", header: "Decided", sortable: true, sortValue: (d) => d.decidedAt ?? "",
+      key: "decidedAt", header: "Decided",
       cell: (row) => (
         <span className="text-dense tabular-nums text-muted-foreground">
           {row.decidedAt ? row.decidedAt.slice(0, 10) : "—"}
@@ -197,7 +197,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       ),
     },
     {
-      key: "revisitAt", header: "Revisit", sortable: true, sortValue: (d) => d.revisitAt ?? "",
+      key: "revisitAt", header: "Revisit",
       cell: (row) => (
         <span className="text-dense tabular-nums text-muted-foreground">
           {row.revisitAt ? row.revisitAt.slice(0, 10) : "—"}

@@ -163,10 +163,10 @@ export const ASSIGNMENT_RULE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search assignment rules…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "assignmentType", width: "w-44 shrink-0" },
       { field: "conditions", width: "w-32 shrink-0" },
-      { field: "priority", sortable: true, width: "w-24 shrink-0" },
+      { field: "priority", width: "w-24 shrink-0" },
       { field: "isActive", width: "w-24 shrink-0" },
     ],
   },

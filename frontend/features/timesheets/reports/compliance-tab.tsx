@@ -28,8 +28,6 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
         ) : null}
       </div>
     ),
-    sortable: true,
-    sortValue: (row) => memberLabel(row.name, row.email).toLowerCase(),
     className: "max-w-[220px]",
   },
   {
@@ -40,15 +38,11 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
         {row.expectedHours === null ? "—" : formatReportHours(row.expectedHours)}
       </span>
     ),
-    sortable: true,
-    sortValue: (row) => row.expectedHours ?? -1,
   },
   {
     key: "actualHours",
     header: "Actual",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.actualHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.actualHours,
   },
   {
     key: "missingDays",
@@ -59,22 +53,16 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
       ) : (
         <span className="text-muted-foreground">0</span>
       ),
-    sortable: true,
-    sortValue: (row) => row.missingDays,
   },
   {
     key: "periodsSubmitted",
     header: "Submitted",
     cell: (row) => <span className="tabular-nums">{row.periodsSubmitted}</span>,
-    sortable: true,
-    sortValue: (row) => row.periodsSubmitted,
   },
   {
     key: "periodsApproved",
     header: "Approved",
     cell: (row) => <span className="tabular-nums">{row.periodsApproved}</span>,
-    sortable: true,
-    sortValue: (row) => row.periodsApproved,
   },
   {
     key: "periodsOverdue",
@@ -87,8 +75,6 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
       ) : (
         <span className="text-muted-foreground">—</span>
       ),
-    sortable: true,
-    sortValue: (row) => row.periodsOverdue,
   },
 ];
 

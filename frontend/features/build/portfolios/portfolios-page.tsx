@@ -215,8 +215,6 @@ export function PortfoliosPage() {
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link

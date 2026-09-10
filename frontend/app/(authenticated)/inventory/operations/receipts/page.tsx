@@ -26,8 +26,6 @@ const columns: DataTableColumn<GrnSummary>[] = [
     key: "grnNumber",
     header: "GRN #",
     cell: (g) => <span className="font-mono text-dense">{g.grnNumber}</span>,
-    sortable: true,
-    sortValue: (g) => g.grnNumber,
   },
   {
     key: "poNumber",
@@ -43,8 +41,6 @@ const columns: DataTableColumn<GrnSummary>[] = [
     key: "receivedDate",
     header: "Received Date",
     cell: (g) => <span className="font-mono tabular-nums">{formatDate(g.receivedDate)}</span>,
-    sortable: true,
-    sortValue: (g) => g.receivedDate,
   },
   {
     key: "notes",

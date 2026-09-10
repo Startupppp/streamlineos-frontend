@@ -46,8 +46,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       key: "productName",
       header: "Product",
       cell: (row) => <span className="font-medium">{row.productName}</span>,
-      sortable: true,
-      sortValue: (row) => row.productName,
     },
     {
       key: "variantSku",
@@ -60,8 +58,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => <span className="font-mono tabular-nums">{row.onHand}</span>,
-      sortable: true,
-      sortValue: (row) => row.onHand,
     },
     {
       key: "value",
@@ -71,8 +67,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       cell: (row) => (
         <span className="font-mono tabular-nums">${row.value.toFixed(2)}</span>
       ),
-      sortable: true,
-      sortValue: (row) => row.value,
     },
     {
       key: "lastMovement",
@@ -93,8 +87,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
           {row.daysSinceLastMovement ?? "Never moved"}
         </span>
       ),
-      sortable: true,
-      sortValue: (row) => row.daysSinceLastMovement ?? 99999,
     },
   ];
 }

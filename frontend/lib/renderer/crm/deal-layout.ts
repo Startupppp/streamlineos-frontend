@@ -72,13 +72,13 @@ export const DEAL_LAYOUT: RecordLayout = {
     searchPlaceholder: "Search deals…",
     columns: [
       { field: "reference", width: "w-28 shrink-0" },
-      { field: "name", primary: true, sortable: true, subtitle: "contactPerson" },
-      { field: "value", sortable: true, width: "w-32 shrink-0" },
+      { field: "name", primary: true, subtitle: "contactPerson" },
+      { field: "value", width: "w-32 shrink-0" },
       { field: "stage", width: "w-32 shrink-0" },
-      { field: "probability", sortable: true, width: "w-24 shrink-0" },
+      { field: "probability", width: "w-24 shrink-0" },
       { field: "assignedToName", width: "min-w-[140px]" },
-      { field: "expectedCloseDate", sortable: true, width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-28 shrink-0" },
+      { field: "expectedCloseDate", width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-28 shrink-0" },
     ],
   },
   detail: {

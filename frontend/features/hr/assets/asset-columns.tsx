@@ -33,8 +33,6 @@ export function buildAssetColumns(
           )}
         </div>
       ),
-      sortable: true,
-      sortValue: (a) => a.name,
     },
     {
       key: "type",
@@ -65,8 +63,6 @@ export function buildAssetColumns(
           </span>
         );
       },
-      sortable: true,
-      sortValue: (a) => a.status ?? "",
     },
     {
       key: "assignedTo",
@@ -100,8 +96,6 @@ export function buildAssetColumns(
       cell: (asset) => (
         <span className="text-sm font-medium">{fmtCost(asset.purchaseCost)}</span>
       ),
-      sortable: true,
-      sortValue: (a) => Number(a.purchaseCost ?? 0),
     },
     {
       key: "purchaseDate",
@@ -111,8 +105,6 @@ export function buildAssetColumns(
           {asset.purchaseDate ? format(new Date(asset.purchaseDate), "dd MMM yyyy") : "—"}
         </span>
       ),
-      sortable: true,
-      sortValue: (a) => a.purchaseDate ?? "",
     },
     ...(canManage ? [{
       key: "actions",

@@ -300,7 +300,6 @@ export interface ColumnSpec {
   readonly field: string;
   /** The column the mobile card titles itself with. */
   readonly primary?: boolean;
-  readonly sortable?: boolean;
   readonly width?: string;
   /**
    * A second, quieter line under the value — a legal name beneath a trading

@@ -11,14 +11,13 @@ import type { RecordLayout } from "../layout";
  * what those figures *mean* (basis points, weekly buckets, a gap where nobody
  * called anybody) is domain the engine does not have.
  *
- * **No column is sortable, and that is the ticket rather than an omission.**
- * `DataTable` sorts client-side the moment a column declares `sortable`, and a
- * sortable talk-ratio column is a league table — the thing
- * `call-coaching.controller.ts` refuses to build, arrived at through a prop. The
- * server returns rows in call-count order, which says how much of the window is
- * about each person, and the description carries that order through by declaring
- * nothing sortable. A single `sortable: true` added here later would turn a
- * coaching table into a league table with no other visible change.
+ * **No column can be reordered, and that is the ticket rather than an omission.**
+ * The server returns rows in call-count order, which says how much of the window
+ * is about each person, and the surface carries that order through. A sortable
+ * talk ratio is a league table — the thing `call-coaching.controller.ts` refuses
+ * to build, arrived at through a prop. `DataTable` can only sort what the
+ * endpoint names in `sortState.fields`, and this one names nothing, so the order
+ * is the API's to change and not a screen's.
  *
  * **No column ever renders a raw id.** `repName` is null for somebody who has
  * left, and `repCallMetricsRecordFields` answers that with the words "Former

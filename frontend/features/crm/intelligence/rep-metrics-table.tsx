@@ -62,12 +62,11 @@ function repCallMetricsRecordFields(metrics: RepCallMetrics): Record<string, unk
 /**
  * CRM-P2-05's table: how each person's calls went, and which way they are going.
  *
- * No table is written here. The columns, their labels, their alignment, the
- * mobile card and — most importantly — the fact that **nothing is sortable** all
- * come from `REP_CALL_METRICS_LAYOUT`, where the argument for that lives beside
- * the fields it governs. The server returns rows in call-count order and the
- * client renders that order; a sortable talk ratio is a league table, which is
- * the thing `call-coaching.controller.ts` refuses to build.
+ * No table is written here. The columns, their labels, their alignment and the
+ * mobile card all come from `REP_CALL_METRICS_LAYOUT`. The server returns rows
+ * in call-count order and the client renders that order — no `sortState` is
+ * passed, so no header offers to change it; a sortable talk ratio is a league
+ * table, which is the thing `call-coaching.controller.ts` refuses to build.
  *
  * The one thing the description cannot draw is the trend. It declares the field
  * a `series` — a run of figures rather than one — and this supplies the drawing

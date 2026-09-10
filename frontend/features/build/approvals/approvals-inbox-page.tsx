@@ -123,8 +123,6 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <TruncatedText text={row.title} className="font-medium text-foreground" />
       ),
-      sortable: true,
-      sortValue: (row) => row.title,
     },
     {
       key: "requester",
@@ -155,8 +153,6 @@ export function ApprovalsInboxPage() {
           </span>
         );
       },
-      sortable: true,
-      sortValue: (row) => row.dueAt ?? "",
     },
     {
       key: "status",

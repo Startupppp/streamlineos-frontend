@@ -8,7 +8,6 @@ import {
   type RowData,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -34,10 +33,14 @@ import {
 } from "@/components/ui/tooltip";
 
 declare module "@tanstack/react-table" {
+  /**
+   * Merging onto `ColumnMeta` requires this declaration's type parameters to
+   * match the library's by name (TS2428), and neither member needs them.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- see above
   interface ColumnMeta<TData extends RowData, TValue> {
     className?: string;
     headerClassName?: string;
-    sortValue?: (row: TData) => TValue;
   }
 }
 
@@ -45,10 +48,20 @@ export interface DataTableColumn<T> {
   key: string;
   header: string;
   cell: (row: T) => ReactNode;
-  sortable?: boolean;
-  sortValue?: (row: T) => string | number;
   className?: string;
   headerClassName?: string;
+}
+
+/**
+ * Sorting is the server's, and `fields` is the list of `key`s the endpoint
+ * actually accepts — a column outside it gets no control, so a header can never
+ * ask for an order the API will ignore.
+ */
+export interface DataTableSortState {
+  fields: readonly string[];
+  field: string | null;
+  direction: "asc" | "desc";
+  onChange: (field: string, direction: "asc" | "desc") => void;
 }
 
 type ClientPagination = { pageSize?: number; onPageSizeChange?: (pageSize: number) => void };
@@ -85,11 +98,7 @@ export interface DataTableProps<T> {
     placeholder?: string;
   };
   toolbar?: ReactNode;
-  sortState?: {
-    field: string | null;
-    direction: "asc" | "desc";
-    onChange: (field: string, direction: "asc" | "desc") => void;
-  };
+  sortState?: DataTableSortState;
   /**
    * Optional mobile card renderer. When provided, cards replace the table
    * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
@@ -170,8 +179,8 @@ export function DataTable<T>({
   sortState,
   mobileCard,
 }: DataTableProps<T>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const externalSorting: SortingState = sortState?.field
+  const sortFields = sortState?.fields;
+  const sorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
     : [];
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
@@ -234,37 +243,39 @@ export function DataTable<T>({
     }
 
     for (const col of columns) {
+      const sortable = sortFields?.includes(col.key) ?? false;
       defs.push({
         id: col.key,
         header: col.header,
         cell: ({ row }) => col.cell(row.original),
-        enableSorting: col.sortable ?? false,
-        sortingFn: col.sortValue
-          ? (rowA, rowB) => {
-              const a = col.sortValue!(rowA.original);
-              const b = col.sortValue!(rowB.original);
-              return a < b ? -1 : a > b ? 1 : 0;
-            }
-          : "auto",
+        enableSorting: sortable,
+        sortDescFirst: false,
+        // `getCanSort()` ends in `!!column.accessorFn`, so a display column can
+        // never be sortable however its flags read. The value is never used:
+        // the rows arrive in the server's order and are rendered in it.
+        accessorFn: sortable ? () => null : undefined,
         meta: { className: col.className, headerClassName: col.headerClassName },
       });
     }
 
     return defs;
-  }, [columns, selection]);
+  }, [columns, selection, sortFields]);
 
   const table = useReactTable<T>({
     data,
     columns: columnDefs,
     getRowId: (row, index) => String(getRowKey(row, index)),
     state: {
-      sorting: sortState ? externalSorting : sorting,
+      sorting,
       rowSelection,
       pagination: isServerPagination
         ? { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize }
         : { pageIndex: internalPage, pageSize: clientPageSize },
     },
-    manualSorting: sortState !== undefined,
+    manualSorting: true,
+    // Table-core drops the sort on the third click by default, which leaves no
+    // field to send and makes the header look broken.
+    enableSortingRemoval: false,
     manualPagination: isServerPagination,
     pageCount: isServerPagination
       ? Math.ceil(serverPag!.total / serverPag!.pageSize)
@@ -275,14 +286,10 @@ export function DataTable<T>({
         ? (row) => isRowSelectable(row.original)
         : true,
     onSortingChange: (updater) => {
-      const prev = sortState ? externalSorting : sorting;
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      if (sortState) {
-        const first = next[0];
-        if (first) sortState.onChange(first.id, first.desc ? "desc" : "asc");
-      } else {
-        setSorting(next);
-      }
+      if (!sortState) return;
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      const first = next[0];
+      if (first) sortState.onChange(first.id, first.desc ? "desc" : "asc");
     },
     onRowSelectionChange: (updater) => {
       const next =
@@ -307,7 +314,6 @@ export function DataTable<T>({
       }
     },
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: sortState ? undefined : getSortedRowModel(),
     getPaginationRowModel: isServerPagination ? undefined : getPaginationRowModel(),
   });
 

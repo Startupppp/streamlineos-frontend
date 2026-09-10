@@ -55,8 +55,6 @@ function buildTemplateColumns(
           )}
         </div>
       ),
-      sortable: true,
-      sortValue: (t) => t.name,
     },
     {
       key: "kind",

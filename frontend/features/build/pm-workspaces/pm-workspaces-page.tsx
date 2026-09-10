@@ -243,8 +243,6 @@ export function PmWorkspacesPage() {
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span className="flex min-w-0 items-center gap-2">
