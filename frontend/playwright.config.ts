@@ -99,6 +99,24 @@ export default defineConfig({
   retries: 0,
 
   /**
+   * 90s, against a default of 30. Not padding for flakiness: a flow spec here
+   * reads the tenant over HTTP to choose a bin with capacity, drives a form
+   * whose every picker is a separately-fetched list, posts a write, and then
+   * waits for the read model to catch up — on a laptop running several other
+   * agents' suites. At 30s the first of those steps consumed the budget and the
+   * failure pointed at a button that was simply never reached, which is the
+   * least informative place it could have pointed.
+   */
+  timeout: 90_000,
+
+  /**
+   * Individual assertions stay short. The long timeout above is for the test as
+   * a whole; a 5s-per-assertion default is what keeps a genuinely missing
+   * element from taking the full 90 to say so.
+   */
+  expect: { timeout: 10_000 },
+
+  /**
    * One worker. Each worker is a browser, and this machine is also running
    * several dev servers, a Postgres and other agents' suites. It is also the
    * honest setting for specs that mutate shared stock: two workers receiving
