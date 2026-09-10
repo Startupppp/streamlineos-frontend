@@ -67,9 +67,26 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * declares `crm:autonomy:view` and `crm:autonomy:manage` on every handler, and
  * a key of its own would need a catalogue entry in both repos plus a backfill
  * for every organisation that already exists.
+ *
+ * Updated 2026-09-10, for a route that landed without answering this tripwire.
+ *
+ * **Duplicates** (/parties/duplicates), a child of Parties, gated on
+ * `party:duplicates:view`. Added by `a15bd4a66` ("the merge UI onto the
+ * mechanism that can be undone"); the digest was not recomputed with it, so
+ * this test has been red ever since — which is the tripwire working, not
+ * failing. Recording it here rather than just recomputing the hash, because a
+ * digest updated without a reason is the same as no digest.
+ *
+ * Checked before accepting it, since three of the notes above are about exactly
+ * this and it is the only thing worth checking here: the nav key and the page
+ * agree. `app/(authenticated)/parties/duplicates/page.tsx:5` calls
+ * `requirePermission("party:duplicates:view")` — the same key, not a broader
+ * one — and the key has a catalogue entry in BOTH repos
+ * (`lib/rbac/permissions/party.ts:11` and the backend's `permissions/party.ts:47`),
+ * so `useCan` can answer it and the gate is real on both sides.
  */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "e54bd47a5989e4b770dac26ad5e4a4aa12ecdec205aa63328c9842b0f7eed1a6";
+  "61a4d7173218caedbe54b8cb85004f947a08a5a698c19ec671aab9225425d9af";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
