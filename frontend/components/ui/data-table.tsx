@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   type ColumnDef,
   type SortingState,
@@ -95,6 +95,53 @@ export interface DataTableProps<T> {
    * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
    */
   mobileCard?: (row: T, index: number) => ReactNode;
+}
+
+const INTERACTIVE_DESCENDANT_SELECTOR = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '[role="button"]',
+  '[role="checkbox"]',
+  '[role="combobox"]',
+  '[role="link"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="option"]',
+  '[role="radio"]',
+  '[role="switch"]',
+  '[role="tab"]',
+  '[role="textbox"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+/**
+ * The mouse path guards the row with `stopPropagation` on every interactive
+ * cell; the keyboard path has no twin, so an activation key over a descendant
+ * control reached the row handler and opened the row instead of working the
+ * control. Matching on the target rather than one known element keeps row
+ * action menus and links working, not just the selection checkbox.
+ */
+function isKeyFromInteractiveDescendant(event: KeyboardEvent<HTMLElement>): boolean {
+  const { target, currentTarget } = event;
+  if (!(target instanceof Element) || target === currentTarget) return false;
+  const interactive = target.closest(INTERACTIVE_DESCENDANT_SELECTOR);
+  return interactive !== null && interactive !== currentTarget;
+}
+
+function createRowActivationKeyHandler(activate: () => void) {
+  return function handleRowActivationKey(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (isKeyFromInteractiveDescendant(event)) return;
+    event.preventDefault();
+    activate();
+  };
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
@@ -384,12 +431,7 @@ export function DataTable<T>({
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   onKeyDown={
                     onRowClick
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onRowClick(row.original);
-                          }
-                        }
+                      ? createRowActivationKeyHandler(() => onRowClick(row.original))
                       : undefined
                   }
                   className={cn(
@@ -468,12 +510,7 @@ export function DataTable<T>({
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                     onKeyDown={
                       onRowClick
-                        ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              onRowClick(row.original);
-                            }
-                          }
+                        ? createRowActivationKeyHandler(() => onRowClick(row.original))
                         : undefined
                     }
                     tabIndex={onRowClick ? 0 : undefined}
