@@ -41,6 +41,7 @@ import {
   useTaxRegistrations,
 } from "@/hooks/api/accounting/ledger";
 import { EnableAccountingCard } from "./enable-accounting-card";
+import { ProvisioningNotice } from "./provisioning-notice";
 import { taxRegistrationSchema, type TaxRegistrationFormValues } from "./enable-accounting-schema";
 
 const TAX_REGIMES: ReadonlyArray<{ value: TaxRegistrationFormValues["regime"]; label: string }> = [
@@ -235,11 +236,20 @@ export function AccountingSetupClient() {
         title="Accounting setup"
         subtitle="Books, chart of accounts and tax rates in one step"
       >
-        {canManage ? (
-          <EnableAccountingCard onEnabled={handleEnabled} />
-        ) : (
-          <NoPermissionState permission="accounting:settings:manage" />
-        )}
+        <div className="space-y-4">
+          {/*
+            An org with the module on and no book is not the same as an org
+            that never asked for accounting, and this screen used to render
+            both identically — an invitation to set something up, with no hint
+            that postings were already being accepted and recorded nowhere.
+          */}
+          {status ? <ProvisioningNotice provisioning={status.provisioning} /> : null}
+          {canManage ? (
+            <EnableAccountingCard onEnabled={handleEnabled} />
+          ) : (
+            <NoPermissionState permission="accounting:settings:manage" />
+          )}
+        </div>
       </PageWrapper>
     );
   }
@@ -256,6 +266,7 @@ export function AccountingSetupClient() {
       }
     >
       <div className="space-y-6">
+        <ProvisioningNotice provisioning={status.provisioning} />
         <StatCardGrid cols={3}>
           <StatCard label="Accounts" value={status.accounts} tone="blue" />
           <StatCard label="Tax codes" value={status.taxCodes} tone="violet" />

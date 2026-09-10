@@ -311,6 +311,18 @@ export type AccountingProvisioning =
       missingRoles: GlSystemTag[];
       message: string;
     }
+  /**
+   * The books run out on a date. AP self-heals by creating the next year on
+   * demand; AR and the inventory bridge reject instead, so this warns 30 days
+   * before a tenant stops being able to receive goods.
+   */
+  | {
+      state: "fiscal_year_ending";
+      bookId: string;
+      endsOn: string;
+      daysRemaining: number;
+      message: string;
+    }
   | { state: "ready"; bookId: string };
 
 export interface AccountingSetupStatusDisabled {
