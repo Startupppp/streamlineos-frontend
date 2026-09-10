@@ -24,6 +24,7 @@ import { render } from "@testing-library/react";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { RequireModule } from "@/components/auth/require-module";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
+import { pendingQueryResult, successQueryResult } from "@/test-utils";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -123,9 +124,7 @@ describe("RequireModule — route gate loading behaviour", () => {
   });
 
   it("renders nothing while access data has not loaded", () => {
-    mockUseAccess.mockReturnValue({
-      data: undefined,
-    } as ReturnType<typeof useAccess>);
+    mockUseAccess.mockReturnValue(pendingQueryResult());
     mockUseModuleEnabled.mockReturnValue(true);
 
     const { container } = render(
@@ -138,14 +137,12 @@ describe("RequireModule — route gate loading behaviour", () => {
   });
 
   it("renders children when the module is enabled and data is loaded", () => {
-    mockUseAccess.mockReturnValue({
-      data: {
-        modules: { build: true },
-        isOrgOwner: false,
-        canManageOrganizationMembership: false,
-        scopes: {},
-      },
-    } as ReturnType<typeof useAccess>);
+    mockUseAccess.mockReturnValue(successQueryResult({
+      modules: { build: true },
+      isOrgOwner: false,
+      canManageOrganizationMembership: false,
+      scopes: {},
+    }));
     mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(
@@ -158,14 +155,12 @@ describe("RequireModule — route gate loading behaviour", () => {
   });
 
   it("renders the disabled state when the module is disabled and data is loaded", () => {
-    mockUseAccess.mockReturnValue({
-      data: {
-        modules: {},
-        isOrgOwner: false,
-        canManageOrganizationMembership: false,
-        scopes: {},
-      },
-    } as ReturnType<typeof useAccess>);
+    mockUseAccess.mockReturnValue(successQueryResult({
+      modules: {},
+      isOrgOwner: false,
+      canManageOrganizationMembership: false,
+      scopes: {},
+    }));
     mockUseModuleEnabled.mockReturnValue(false);
 
     const { queryByText } = render(
@@ -178,14 +173,12 @@ describe("RequireModule — route gate loading behaviour", () => {
   });
 
   it("renders children via the 'projects' alias when build is enabled", () => {
-    mockUseAccess.mockReturnValue({
-      data: {
-        modules: { build: true },
-        isOrgOwner: false,
-        canManageOrganizationMembership: false,
-        scopes: {},
-      },
-    } as ReturnType<typeof useAccess>);
+    mockUseAccess.mockReturnValue(successQueryResult({
+      modules: { build: true },
+      isOrgOwner: false,
+      canManageOrganizationMembership: false,
+      scopes: {},
+    }));
     mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(
@@ -198,14 +191,12 @@ describe("RequireModule — route gate loading behaviour", () => {
   });
 
   it("renders children via the 'finance' alias when accounting is enabled", () => {
-    mockUseAccess.mockReturnValue({
-      data: {
-        modules: { accounting: true },
-        isOrgOwner: false,
-        canManageOrganizationMembership: false,
-        scopes: {},
-      },
-    } as ReturnType<typeof useAccess>);
+    mockUseAccess.mockReturnValue(successQueryResult({
+      modules: { accounting: true },
+      isOrgOwner: false,
+      canManageOrganizationMembership: false,
+      scopes: {},
+    }));
     mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(

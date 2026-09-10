@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const SECTION_DIR = __dirname;
@@ -85,6 +85,6 @@ describe("organization settings sections have one form owner", () => {
     expect(usesSharedOwner("org-profile-section.tsx")).toBe(true);
     expect(usesSharedOwner("org-danger-zone-section.tsx")).toBe(false);
     expect(reimplementsProtocol("use-organization-settings-form.ts")).toBe(true);
-    expect(() => readFileSync(join(SECTION_DIR, "no-such-section.tsx"), "utf8")).toThrow();
+    expect(existsSync(join(SECTION_DIR, "no-such-section.tsx"))).toBe(false);
   });
 });

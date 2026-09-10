@@ -25,7 +25,7 @@ import { AutomationBuilderSheet } from "@/components/automations/automation-buil
 import {
   AutomationCardItem,
   ModuleDisabledCard,
-} from "@/features/shared/automations/module-automations-settings";
+} from "@/components/automations/automation-settings-cards";
 import { SupportAutomationRunsDialog } from "./support-automation-runs-dialog";
 import {
   useSupportAutomations,

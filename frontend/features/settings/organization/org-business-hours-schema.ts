@@ -31,7 +31,6 @@ export const businessHoursSchema = z.object({
 
 export type BusinessHoursValues = z.infer<typeof businessHoursSchema>;
 export type BusinessDayKey = keyof BusinessHoursValues;
-export type BusinessDayHours = BusinessHoursValues[BusinessDayKey];
 
 export const DEFAULT_BUSINESS_HOURS: BusinessHoursValues = {
   monday: { open: "09:00", close: "18:00", enabled: true },

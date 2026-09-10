@@ -110,7 +110,7 @@ describe("settings schema placement — vacuity proofs", () => {
   });
 
   it("BITE PROOF — the walk throws on an unreadable/nonexistent directory rather than returning a short list", () => {
-    expect(() => walkTsx("/nonexistent-settings-dir-abc-xyz-123")).toThrow();
+    expect(() => walkTsx("/nonexistent-settings-dir-abc-xyz-123")).toThrow("cannot read");
   });
 });
 

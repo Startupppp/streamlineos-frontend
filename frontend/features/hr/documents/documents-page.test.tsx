@@ -168,6 +168,12 @@ describe("DocumentsPage server-prefetch seam", () => {
     );
 
     expect(screen.getByText("Employment Contract.pdf")).toBeInTheDocument();
+    expect(apiClient.get).not.toHaveBeenCalledWith(
+      "/hr/documents",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
     expect(documentListCalls()).toEqual([]);
   });
 

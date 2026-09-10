@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -189,8 +189,8 @@ describe("branch options read seam", () => {
     });
 
     it("no frontend module imports the deleted hook or its schema", () => {
-      expect(() => readSource("hooks/api/branches.ts")).toThrow();
-      expect(() => readSource("hooks/api/branches-schema.ts")).toThrow();
+      expect(existsSync(join(FRONTEND_ROOT, "hooks/api/branches.ts"))).toBe(false);
+      expect(existsSync(join(FRONTEND_ROOT, "hooks/api/branches-schema.ts"))).toBe(false);
       expect(readSource("hooks/api/index.ts")).not.toContain('"./branches"');
     });
 

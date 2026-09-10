@@ -169,7 +169,7 @@ describe("useOrganizationSettingsForm", () => {
   it("ignores a second submit while the first is still in flight", async () => {
     let release: (value: { ok: true }) => void = () => undefined;
     const mutationFn = jest.fn(
-      () => new Promise<{ ok: true }>((resolve) => { release = resolve; }),
+      (_payload: TestPayload) => new Promise<{ ok: true }>((resolve) => { release = resolve; }),
     );
     const { result } = renderSettingsForm(mutationFn);
     act(() => result.current.handleEdit());
