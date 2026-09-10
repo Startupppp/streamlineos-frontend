@@ -1,6 +1,6 @@
 # Active delivery backlog
 
-Status: active 2026-09-10
+Status: active 2026-09-11
 
 This directory is the sole source of current pending work. The compact
 [`PRD-10-10-CODE-RELEASE-TODO.md`](../PRD-10-10-CODE-RELEASE-TODO.md) provides
@@ -11,9 +11,18 @@ implementation files. They do not commit, rewrite another lane, or run the share
 final-integration tasks. The coordinating agent owns cross-lane dependency changes,
 final gates, evidence reconciliation, and commits.
 
+Current accounting: nine audited tasks have completion evidence; 19 remain active
+across these eight lanes. This is a count of release/remediation tasks, **not** a
+percentage of product functionality. The frontend's final 489 suites / 5,136 tests,
+strict typecheck and production build pass. A conflicting legacy HR DELETE contract
+currently blocks final backend type/build acceptance. Database/provider probes,
+browser/performance evidence and accountable approvals also remain open. See the
+[integration record](overall-release.md#current-integration-evidence--2026-09-10),
+including its explicit inventory of all ten remaining test placeholders.
+
 | Parallel lane | Backlog | Current state | May start |
 | --- | --- | --- | --- |
-| Architecture and performance | [architecture.md](architecture.md) | HR pagination verified; mobile measurement blocked | When authenticated browser exists |
+| Architecture and performance | [architecture.md](architecture.md) | Pagination and benchmark repaired; size cleanup in final integration; mobile measurement blocked | Strict backend recheck, then authenticated browser |
 | Billing and payments | [billing-payments.md](billing-payments.md) | External proof only | When environment/approver exists |
 | Chat | [chat.md](chat.md) | Source fixes complete; database and final integration pending | When disposable database exists |
 | Build/PM | [build.md](build.md) | Cross-tab sync complete; browser and performance acceptance pending | When authenticated browser exists |
