@@ -117,6 +117,7 @@ export function EmptyState({
           : "h-full min-h-full w-full flex-1 py-12 px-6 rounded-xl border border-dashed border-border bg-card",
         className
       )}
+      role="status"
     >
       {visual ? (
         <div

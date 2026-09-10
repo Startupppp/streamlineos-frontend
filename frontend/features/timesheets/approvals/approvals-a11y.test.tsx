@@ -264,10 +264,13 @@ describe("approvals accessibility", () => {
     const user = userEvent.setup();
     renderApprovals([]);
 
+    const announced = screen.getByRole("status");
     expect(
-      screen.getByRole("heading", { name: "No timesheets" }),
+      within(announced).getByRole("heading", { name: "No timesheets" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("No timesheets awaiting approval.")).toBeInTheDocument();
+    expect(
+      within(announced).getByText("No timesheets awaiting approval."),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Rejected" }));
