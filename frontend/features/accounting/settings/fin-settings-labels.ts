@@ -19,4 +19,10 @@ export const PURPOSE_LABELS: Record<SystemAccountPurpose, string> = {
   ACCUM_DEPRECIATION: "Accumulated Depreciation",
   SALARY_EXPENSE: "Salary Expense",
   ASSET_DISPOSAL_GAIN_LOSS: "Asset Disposal Gain / Loss",
+  INVENTORY_ASSET: "Inventory Asset",
+  INVENTORY_COGS: "Inventory Cost of Goods Sold",
+  INVENTORY_GRNI: "Goods Received Not Invoiced",
+  INVENTORY_LANDED_COST_CLEARING: "Landed Cost Clearing",
+  INVENTORY_WRITE_OFF: "Inventory Write-Off",
+  INVENTORY_ADJUSTMENT_GAIN_LOSS: "Inventory Adjustment Gain / Loss",
 };

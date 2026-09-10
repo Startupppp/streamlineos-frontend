@@ -65,7 +65,14 @@ export type SystemAccountPurpose =
   | "DEPRECIATION_EXPENSE"
   | "ACCUM_DEPRECIATION"
   | "SALARY_EXPENSE"
-  | "ASSET_DISPOSAL_GAIN_LOSS";
+  | "ASSET_DISPOSAL_GAIN_LOSS"
+  // Held to the backend enum by features/accounting/settings/__tests__/system-account-purposes.test.ts
+  | "INVENTORY_ASSET"
+  | "INVENTORY_COGS"
+  | "INVENTORY_GRNI"
+  | "INVENTORY_LANDED_COST_CLEARING"
+  | "INVENTORY_WRITE_OFF"
+  | "INVENTORY_ADJUSTMENT_GAIN_LOSS";
 
 export interface SystemAccountMapping {
   purpose: SystemAccountPurpose;
