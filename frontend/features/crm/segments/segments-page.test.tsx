@@ -108,7 +108,7 @@ const stored: Segment = {
   name: "Textiles in Gujarat",
   description: "Industry and state",
   sourceKey: "parties",
-  criteria: { kind: "comparison", field: "industry", operator: "eq", value: "textiles" },
+  criteria: { kind: "compare", field: "industry", operator: "eq", value: "textiles" },
   createdByUserId: "user-1",
   createdAt: "2026-09-01T10:00:00.000Z",
   updatedAt: "2026-09-01T10:00:00.000Z",
