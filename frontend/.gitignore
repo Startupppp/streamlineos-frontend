@@ -21,6 +21,10 @@ package-lock.json
 
 # next.js
 /.next/
+# Any custom distDir. A dev server started with `distDir: ".next-buildmart"`
+# left 718MB of Turbopack output untracked here, and the repo gates exclude the
+# directory named exactly `.next`, so two of them went red over compiled chunks.
+/.next-*/
 /out/
 
 # production

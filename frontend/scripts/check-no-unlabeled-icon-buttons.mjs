@@ -4,11 +4,21 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const EXCLUDE_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", "scripts"]);
+
+/*
+  A build directory is any name starting with `.next`, not the one called
+  exactly `.next`. A dev server run with a custom `distDir` (`.next-buildmart`)
+  left its Turbopack output here and this walk read all of it: two gates went
+  red over compiled chunks and the rest merely scanned 718MB for nothing.
+*/
+function isBuildDir(name) {
+  return name.startsWith(".next");
+}
 const EXTENSIONS = new Set([".tsx", ".jsx"]);
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (EXCLUDE_DIRS.has(entry.name)) continue;
+    if ((EXCLUDE_DIRS.has(entry.name) || isBuildDir(entry.name))) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);

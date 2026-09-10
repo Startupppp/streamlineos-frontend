@@ -32,6 +32,16 @@ const SCRIPTS_RE = /^scripts\//;
 
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
+/*
+  A build directory is any name starting with `.next`, not the one called
+  exactly `.next`. A dev server run with a custom `distDir` (`.next-buildmart`)
+  left its Turbopack output here and this walk read all of it: two gates went
+  red over compiled chunks and the rest merely scanned 718MB for nothing.
+*/
+function isBuildDir(name) {
+  return name.startsWith(".next");
+}
+
 const BASELINE = { deadFiles: 0, deadExports: 0 };
 
 // Floors that detect a broken scan (knip returning nothing, or the graph walk
@@ -76,7 +86,7 @@ function* walkTs(dir) {
   let entries;
   try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
   for (const e of entries) {
-    if (SKIP_DIRS.has(e.name)) continue;
+    if ((SKIP_DIRS.has(e.name) || isBuildDir(e.name))) continue;
     const full = join(dir, e.name);
     if (e.isDirectory()) yield* walkTs(full);
     else if (/\.(ts|tsx)$/.test(e.name)) yield full;
