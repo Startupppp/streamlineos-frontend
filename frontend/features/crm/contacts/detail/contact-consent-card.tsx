@@ -28,11 +28,15 @@ interface ContactConsentCardProps {
  * there was no way to record consent, read it back, or answer an erasure
  * request from the product at all.
  *
- * Rows accumulate rather than overwrite, so the card shows the history newest
- * first with the current answer at the top of each channel. That ordering is the
- * feature: under DPDP the question at audit is not "are they opted in" but "what
- * were you told, when, and on what basis", and a card showing only the latest
- * value cannot answer it.
+ * What this shows is the CURRENT answer per channel, at most one row each:
+ * `uniq_crm_consent_org_contact_channel` permits one row per contact per channel
+ * and `record()` upserts onto it.
+ *
+ * It is deliberately not called a history, because the history is somewhere else
+ * and is not reachable. `record()` also appends to `crm_contact_consent_events`,
+ * an immutable trail that no service method and no route reads — so the product
+ * records the evidence a DPDP audit would ask for and has no way to produce it.
+ * Showing that trail needs a read endpoint first.
  */
 export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
   const layout = useTenantLayout(CONTACT_CONSENT_LAYOUT);
@@ -48,10 +52,11 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
   const sourceField = resolveField(layout, "source");
 
   /*
-   * Newest first, and grouped by nothing: a flat history is what an auditor
-   * reads. Sorting here rather than trusting the API's order, because the route
-   * does a bare select with no `orderBy` — the order it returns is whatever the
-   * planner chose, which is stable enough to look deliberate and is not.
+   * Newest first. Not to build a history — there is at most one row per channel
+   * — but because the route does a bare select with no `orderBy`, so the order
+   * it returns is whatever the planner chose, which is stable enough to look
+   * deliberate and is not. Five rows in a fixed order beats five in a drifting
+   * one.
    */
   const ordered = useMemo(
     () =>

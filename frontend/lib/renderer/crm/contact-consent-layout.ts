@@ -5,10 +5,16 @@ import type { RecordLayout } from "../layout";
  *
  * Consent is a record between a contact and a channel rather than a flag on the
  * contact: somebody may take email and refuse SMS, and the two carry different
- * legal bases and different expiry. The history matters as much as the current
- * answer — under DPDP and GDPR the question at audit is not "are they opted in"
- * but "what were you told, when, and on what basis", so rows accumulate rather
- * than overwrite and the card shows them newest first.
+ * legal bases and different expiry.
+ *
+ * THIS IS CURRENT STATE, NOT HISTORY, and an earlier version of this comment
+ * said otherwise. `uniq_crm_consent_org_contact_channel` allows exactly one row
+ * per contact per channel and `record()` upserts onto it, so there are at most
+ * five rows here and none of them is a past answer. The immutable trail lives in
+ * `crm_contact_consent_events`, which `record()` also writes — and which no
+ * service method and no route reads, so it cannot be shown here yet. Under DPDP
+ * the audit question is "what were you told, when, and on what basis", and that
+ * table is the only thing that can answer it.
  *
  * **`source` is declared with all six values and is `readOnly`, and that is a
  * decision rather than an oversight.** The API accepts only four of them from an
