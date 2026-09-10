@@ -45,7 +45,7 @@ it("requires confirmation before the desktop delete callback", async () => {
   render(<TicketDetailToolbar isMobile={false} rightPanelCollapsed={false} onExpandRightPanel={jest.fn()} onDelete={onDelete} isDeleting={false} />);
   await user.click(screen.getByRole("button", { name: "Delete ticket" }));
   expect(onDelete).not.toHaveBeenCalled();
-  await user.click(screen.getByRole("button", { name: "Delete", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Delete" }));
   expect(onDelete).toHaveBeenCalledTimes(1);
 });
 
@@ -58,6 +58,6 @@ it("opens the mobile overflow confirmation before deleting", async () => {
   await user.click(screen.getByRole("menuitem", { name: "Delete" }));
   expect(screen.getByRole("alertdialog")).toHaveTextContent("Delete Ticket");
   expect(onDelete).not.toHaveBeenCalled();
-  await user.click(screen.getByRole("button", { name: "Delete", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Delete" }));
   expect(onDelete).toHaveBeenCalledTimes(1);
 });

@@ -27,6 +27,18 @@ Scope: Run permission, scope, record authorization, tenant-relationship, migrati
 
 Completion: All executable checks pass at one recorded backend revision with zero actionable tenant findings.
 
+Source-prerequisite verification (2026-09-11): [the former tenant-integrity spec](../../backend/src/db/tenant-relationship-integrity.spec.ts) contained an always-null adapter and an early return. With deliberately unseeded `TENANT_A_ORG_ID`/`TENANT_B_ORG_ID`, it incorrectly reported 5/5 passes, including a purported `23503` database rejection. That path is removed. Ordinary execution now passes only four explicitly labeled unit design checks; requesting legacy live mode exits 1 before executing tests and directs the operator to `tenant-relationship-integrity.db.spec.ts`. No external database was contacted. Actual FK verification remains required against an approved disposable database and is not established by these unit results.
+
+The removed false-green registration lowered the vacuous-assertion `EARLY_RETURN` ratchet from 5 to 4. Removing its conditional suite lowered the test-suppression conditional ratchet from 20 to 19; corresponding records in `baselines/ratchets.json` match. Both gates passed after these reductions, without increasing any allowance. The three AI-project E2E TODO registrations were replaced with executable HTTP cases. Three further red cases proved partial, decimal and unsafe-integer IDs reached the service; the strict numeric guard now rejects them. The final isolated mocked HTTP suite passes 23/23, including 401/403 denials, the owner-independent 402 plan gate before LLM/service use, and unconfigured-LLM 503. Commit `40662d224`; full release aggregation belongs to REL-001.
+
+The dedicated real-FK probe is implemented in that commit but **has not run on a
+database**. It requires an explicitly approved disposable target and seven seeded
+tenant/project/ticket identifiers. It updates only the named child, proves a valid
+same-tenant EPIC control, requires the exact `fk_tickets_org_epic` / `23503` error
+inside a savepoint, always rolls back, then checks the original null-EPIC state.
+Guard/helper unit tests pass; selecting the DB suite without approval refuses
+before connection. This distinguishes a prepared probe from passed SQL acceptance.
+
 ## RBAC-002 — Capture deployed revocation and isolation proof
 Status: BLOCKED-EXTERNAL
 Maps to: PRD-C162, PRD-C185
@@ -37,6 +49,25 @@ Owner: security operator
 Scope: Exercise deployed role revocation, session invalidation, cross-tenant denial, and audit visibility.
 
 Completion: Deployed evidence records principals, tenant boundaries, timestamps, expected denials, and audit events without exposing secrets.
+
+## Completed: RBAC-005 — Honor the authorized payroll payee filter
+
+Scope: `InputsService.listInputs` permits an all-scope caller to request another
+payee, but its SQL substitutes the caller's membership instead of the requested
+user. Correct the filter while preserving the organization and own-scope predicates.
+
+Completion: A regression through the existing service interface inspects the
+parameterized SQL for the requested payee and tenant; own-scope cross-payee denial,
+membership denial and cursor binding remain covered and pass.
+
+Verified 2026-09-11, commit `e815466c8`: two SQL-predicate cases failed before the
+fix because the actual parameters contained the caller's membership instead of
+the requested user. The existing service interface now has nine passing cases,
+including all-scope payee selection, own-scope membership/tenant restrictions,
+missing-membership denial, and rejecting a cursor for another tenant, payee,
+scope or membership. The broader payroll selection passes four suites / 22 tests,
+including bounded attendance reimport and scoped cursor controls. No live payroll
+data was read or modified.
 
 ## RBAC-004 — Enforce Support automation ownership at every operation
 Status: FINAL-INTEGRATION

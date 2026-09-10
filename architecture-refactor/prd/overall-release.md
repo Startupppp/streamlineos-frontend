@@ -6,7 +6,7 @@ Run these tasks only after their dependencies land. The release coordinator owns
 Status: FINAL-INTEGRATION
 Maps to: PRD-C018, PRD-C190, PRD-C191
 Parallel group: 4
-Depends on: ARCH-002, CHAT-002, CHAT-003, BUILD-002, DOC-002, RBAC-001, RBAC-004
+Depends on: ARCH-002, ARCH-003, CHAT-002, CHAT-003, BUILD-002, DOC-002, RBAC-001, RBAC-004
 Owner: release coordinator
 
 Scope: Run backend and frontend typecheck/build, unit and focused integration suites, architecture gates, contracts, migrations, and dead-code checks at one recorded root/backend pair.
@@ -14,7 +14,7 @@ Scope: Run backend and frontend typecheck/build, unit and focused integration su
 Completion: A single release record captures revisions, commands, exit codes, totals, environment, and artifacts; all required checks are green.
 
 Completed lane prerequisites are linked from their owning lanes: ARCH-001, CHAT-001,
-CHAT-004, BUILD-001, DOC-001 and DOC-003. Only unresolved prerequisites appear above.
+CHAT-004, BUILD-001, DOC-001, DOC-003, RBAC-003, RBAC-005 and ARCH-004. Only unresolved prerequisites appear above.
 
 Current integration work (2026-09-10): the production build exposed three empty
 installed transitive package directories (`jsdom`, `keyv`, `rimraf`). A frozen-lockfile
