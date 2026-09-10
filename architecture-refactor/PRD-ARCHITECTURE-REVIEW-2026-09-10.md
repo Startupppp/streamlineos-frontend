@@ -219,6 +219,84 @@ What only `BranchesService` (the DEAD path) does:
       key strings never change, because a rename breaks every stored grant. `check:permission-keys`
       passes 704/704 in both directions with them present.
 
+### C3 deepened 2026-09-10 — the read seam, and the least-privilege trap in the card
+
+The mutation half closed above. This closes the read half, and **the card's instruction — "point the two
+dropdown reads at the hierarchy read" — could not be followed literally, because it is a privilege
+regression.** `branch:view` sits in `EMPLOYEE_SELF_SERVICE` (`permissions/role-defaults.ts:18`) and is
+merged at scope `all` *before any role is read* (`access-policy.ts:104-112,160`), so **every active member
+holds it**; `GET /org-hierarchy/branches` requires `settings:view`, which is administration. Repointing the
+two HR forms at it would have emptied the branch dropdown for every non-admin — and because both forms
+destructure only `data`, never `isLoading`/`error`, the denial renders as "No branches found" rather than
+an error. `[V]`
+
+**Built instead — a read-only adapter on the canonical owner, not a weakened administrative route.**
+
+- [x] `GET /org-hierarchy/branches/options`, `@RequirePermission("branch:view")`, on `OrgHierarchyController`.
+      Query schema is *derived*: `listQuerySchema.omit({ status: true })`, so a holder of `branch:view`
+      cannot widen the list to archived rows; `OrgHierarchyBranchesService.listOrgBranchOptions` pins
+      `status: "ACTIVE"`. The administrative list keeps `settings:view` untouched.
+- [x] **No parallel contract.** The route reuses `branchListResponseSchema`; the client reuses
+      `orgBranchListContract`. The canonical row is strictly *narrower* than what `/branches` already
+      served under the same key (which added `branchManager`/`branchHr` user objects, address, phone,
+      email, pincode) — so this is a narrowing, not a widening.
+- [x] Caller sweep re-run repo-wide (frontend, backend, jobs, scripts, tests, generated clients, runtime
+      string construction): exactly **two** production callers, both HR dropdowns. `GET /branches/:branchId`
+      and `branchDetailSchema` had **zero** callers of any kind.
+- [x] Both migrated: `use-announcement-form.ts` and `create-job-form/job-basics-sections.tsx` →
+      `useBranchOptions` (`hooks/api/org-hierarchy-branch-options.ts`), key
+      `hierarchy.branchOptions()` — under the `hierarchy.all` prefix every branch mutation already
+      invalidates, so cache invalidation needed no new writer.
+- [x] Legacy deleted: `modules/branches/` entirely (controller, read service, module, DTO, 2 specs) +
+      `app.module.ts` registration; frontend `hooks/api/branches.ts`, `branches-schema.ts`, the `Branch`
+      interface, the barrel line, the `branches` query-key factory. knip: **files=0 exports=0**.
+- [x] Regenerated `openapi.json` (both copies, byte-identical) and `api-contract-registry.json`. The
+      OpenAPI delta is exactly `-/branches`, `-/branches/{branchId}`, `+/org-hierarchy/branches/options`
+      (`permissioned`, `branch:view`, limit capped 100) with **zero** exposure changes elsewhere. The
+      registry's retained `/branches` rows are the **sunset ledger** and were deliberately left.
+- [x] `branch:view` is now referenced by the options route, so it stops being an orphan key. The three
+      ghost write keys stay KEPT for the FK reason recorded above.
+
+**Two orphans the sweep found that the card did not name.** `[V]`
+- [x] Deleting `BranchesReadService` orphaned the `branches:list` cache namespace — three
+      `invalidateForOrg` calls with zero readers. Removed, matrix entry removed, spec counts corrected
+      (its header was *already* stale at 108/35 against an asserted 107/36), orphaned prefix-map entry
+      removed. `check:cache-invalidation`: **1 → 0** documentation gaps.
+- [x] The `headMember` entry in `check-relation-key-reach.mjs` named the deleted file, and that gate
+      **fails on a stale baseline entry**, so it had to go in the same change.
+
+**Tests that bite.**
+- [x] `org-hierarchy-permission-fence.e2e-spec.ts` (**103 passed**): the new route added to the 401/403/
+      happy matrix, plus six that pin the trap — `branch:view` without any settings authority gets 200;
+      `settings:organization:manage` *without* `branch:view` gets 403; `branch:view` may **not** reach the
+      administrative list; a `status` query is rejected 400 rather than widening; `limit=500` clamps to 100.
+- [x] `org-hierarchy-branches-tenant-isolation.spec.ts` (**10 passed**): the ACTIVE pin proved on
+      *rendered* SQL via `PgDialect`, with a **negative control** showing the administrative list emits no
+      status predicate — so the pin cannot pass vacuously. Tenant scope and soft-delete exclusion re-asserted.
+- [x] `hooks/api/branch-options-seam.test.tsx` (**18 passed**): reverting either form to `useBranches`
+      fails; the hook gates on `branch:view` and never asks for `settings:*`; a denied gate sends zero
+      requests; signal + contract + no `status` param; and the contract rejects the retired bare-array
+      shape, the legacy `INACTIVE` status vocabulary, a missing `pageInfo`, and any row that lost a field
+      the job form autofills from.
+
+**Verification** — backend `tsc` **0**, frontend `tsc` **0**, `madge` **zero cycles**, knip **0/0**,
+`check:permission-binding` **2428 bindings all matching**, `openapi:check` **current**,
+`check:contract-vendor` **byte-identical**, `check:permission-catalog` **630 route-bound keys catalogued**,
+plus route-classification · permission-keys · route-duplicates · contract-registry · authz-deny ·
+cache-invalidation. Lint **not run** — not requested.
+
+**Two accepted behaviour changes, stated rather than smuggled.** The dropdowns now offer only ACTIVE
+branches (frontend §10: "parent selectors never offer archived/disabled/retired units"; the announcement
+form previously offered archived ones, since the legacy read mapped ARCHIVED → `INACTIVE` and did not
+filter). And the options read is capped at the platform's 100/page instead of the legacy flat 200; an org
+with >100 branches sees the first 100. The route accepts `search`/`cursor` when a form needs to page.
+
+**Pre-existing red, NOT from this work** (other sessions held uncommitted edits in the same tree):
+`check:relation-keys` fails on `modules/build/core/projects-tickets-read.query.ts:54,56` — a `columns: {}`
+site byte-identical to HEAD and unmodified by anyone; `check:response-contracts` on `hooks/api/delegations.ts`
+and the untracked `lib/prefetch/settings-admin.ts`; `check:test-typecheck` on two settings/access specs.
+None is in this change set.
+
 ---
 
 ## C4 — Wire Support automations to its module-owned adapter · **DONE (wave 1 + follow-up)**
@@ -453,6 +531,77 @@ prefetching, and no page double-fetches after hydration.
 - [x] The coupling test bites: removing `registerAfterCommit(work)` makes the bust run immediately and
       fails `not.toHaveBeenCalled()`; removing the bust entirely fails the post-drain assertion.
 
+
+### C9 deepened 2026-09-10 — a bust seam is not a mutation owner
+
+The wave-3 seam made the bust callable in one line; it did not make it **unforgettable**. Every caller
+still held the whole protocol — write the row, sync the structural role, bump the permission version,
+schedule the bust — and a new writer that skipped the last step compiled, passed every gate and left a
+revoked member reading as active for the 15-second TTL. Measured at backend HEAD `7d5c126df`: **19 direct
+`organization_members` writes across 12 production files, and 14 files importing a bust primitive.**
+
+- [x] NEW `common/org/membership-mutations.ts` (289 lines) — ten intention-revealing operations
+      (`createMembership`, `createMemberships`, `createOwnerMembership`, `allocateMembershipId`,
+      `changeRole`, `changeRoles`, `setLifecycleStatus`, `transferOrgOwnership`, `deleteMembership`,
+      `deleteMembershipsById`). Each owns the row write **and** the effects that write earns, so the
+      public interface is strictly smaller than the protocol it replaced.
+- [x] `withMembershipMutations(cache, run)` wraps the caller's OWN transaction call and drains the
+      recorded invalidation once, after it resolves. This is the mechanism choice that matters: putting
+      the bust inside the transaction callback would run it inline outside an ambient request context
+      (`runInTenantTransaction` builds a context with no `afterCommit` array), i.e. against a transaction
+      that may still roll back. Draining after the call preserves the exact point every caller busted from
+      before, and a rejected transaction drains nothing.
+- [x] `membership-bust.ts` keeps `scheduleMembershipBust`, `scheduleMembershipBustMany` and
+      `bustMembershipNowAndAfterCommit` as PRIVATE primitives and now exports four named operations
+      instead: `revokeMembershipAccessCaches`, `bustMembershipsAfterOrgTeardown`,
+      `bustMembershipAfterIdentityErasure`, `bustMembershipAfterOwnershipChange` — one per case where the
+      membership rows are written by a cascade, or outlive an erased identity.
+- [x] Revocation's deliberate immediate-plus-after-commit double, including the `userSession` key, is
+      preserved and now expressed by `revokeMembershipAccessCaches`;
+      `OrgMembershipAccessRevocation.invalidateMemberSessionCaches` delegates to it.
+- [x] Batching preserved and widened: the drain issues one `bustMembershipStatusCacheMany` for any
+      number of users, so bulk create / bulk role change / whole-org teardown are two Redis commands
+      regardless of member count. Proved at 250, 120 and 5,000 members.
+- [x] `bumpPermissionsVersion` behaviour unchanged at every site: folded into `setLifecycleStatus` and
+      `deleteMembership` (which is where the callers had it), reached through `syncStructuralRoleAssignment`
+      on the create/role paths, and left in the domain everywhere the domain owned an extra bump.
+- [x] The bespoke `assignStructuralRoles` in `bulk-onboarding-writes.ts` — a second implementation of
+      `syncStructuralRoleAssignments` — is deleted; `createMemberships` groups by role and calls the
+      canonical one. `employee-bulk-onboarding-query-count.spec.ts` still passes at its pinned count.
+- [x] Three duplicated copies of the `nextval(pg_get_serial_sequence('organization_members','id'))`
+      bootstrap allocation collapse into `allocateMembershipId`.
+
+**Gate:** NEW `check:membership-writes` (+ `:self-test`, `:list`), wired in `ci.yml`'s hermetic `gates`
+job. It rejects a Drizzle write, raw DML, a private-primitive import, or a hand-built `MembershipMutations`
+anywhere outside the owner, with six per-file write exemptions and three primitive exemptions, each
+carrying a reason. `check:gate-wiring` now reports **107 gates, all invoked by a reachable job**.
+
+**After:** direct writes outside the owner **19 → 0**; primitive import sites **14 → 0**.
+
+**Verification:** scoped `tsc --noEmit` over the 21 migrated files and their transitive graph **0 errors**;
+spec-scoped typecheck over the 10 affected specs **0 errors**; `madge --circular` **zero cycles** (6,480
+files); suites `common/org` 42, `organization` 515, `users` 66, `ownership` 57, `gdpr` 243,
+`hr/directory` (migrated specs) 27 — **all passing**; `check:membership-writes` **OK**;
+`namespace-coverage`, `cache-invalidation`, `cache-key-shapes`, `permission-keys`, `vacuous-assertions`,
+`fire-and-forget`, `module-di`, `transaction-callbacks`, `kebab-case`, `import-direction` **all PASS**.
+
+**The tests bite — proved by mutation, not by assertion count.** Five defects planted in the owner, each
+caught by `membership-mutations.spec.ts`: dropping the invalidation record (4 failures), dropping the row
+write (2), dropping the version bump (1), draining on a rejected transaction (1), and fanning the bulk
+drain out per user (3). Zero silent mutants.
+
+**One correction to a lane.** The users/ownership lane added `jest.mock(".../membership-bust")` to
+`user-ops-bulk-update.spec.ts` and `users-seat-limit.spec.ts`. Both specs pass without it — the mock was
+masking nothing and would have removed real invalidation coverage from two specs that exercise it. Removed.
+
+**Pre-existing red, NOT from this work** (other sessions hold uncommitted edits in the same tree):
+`hr-export-jobs.service.ts`, `leads/*`, `contacts/*` typecheck errors and 9 spec-typecheck errors all trace
+to an in-flight `AuthContextLookups` widening; `jwt-guard-revocation.spec.ts` fails on a stale `JwtAuthGuard`
+double; `org-hierarchy.controller.ts` grew 498 → 512 lines; `check:over-300` was already 392 against a
+baseline of 390 **at HEAD** — this work moves it by exactly 0 (no touched file crossed 300 in either
+direction). The one file-size row that WAS ours — `invitation-acceptance.service.ts`, 508 → 490 — has been
+removed from the exceptions ledger.
+
 ---
 
 ## C10 — Settings section shape: schemas out, one form module, missing tests · **DONE (wave 2)**
@@ -496,6 +645,71 @@ prefetching, and no page double-fetches after hydration.
       asserted on the page, and the guarded markup on the widened surface. The extraction itself was
       verified byte-for-byte identical, with the `makeXHandler(c)` closure factories replaced by real
       named handlers inside the child — exactly what the program-wide rule asks for.
+
+### C10 residuals closed 2026-09-10 — and the wave-2 deferral was REVERSED
+
+The wave-2 verdict above ("do not build `useSettingsSectionForm`") is left standing as the record of what
+was measured then. The owner re-scoped it in
+`claude-prompts/architecture-review-pending/07-c10-settings-form-module-and-residuals.md`, which requires
+the shared owner **and names the exact failure mode the wave-2 lane predicted** — "must delete meaningful
+protocol code rather than relocate it into `getPayload`, `onEverything`, or cast-heavy configuration".
+Built to that constraint as `features/settings/organization/use-organization-settings-form.ts`.
+
+**Where wave 2's measurement was wrong, and where it was right.**
+- Wrong on reach: it counted the 4 sections sharing `useUpdateOrgSettings`. The edit/cancel/save protocol
+  actually appears in **6** — the 4, plus `org-security-section.tsx` (a different mutation,
+  `useUpdateOrgSecurity`) and `org-config-section.tsx`, whose copy was **hoisted into the page** as 5
+  `useState`s, 6 handlers and 14 props, so a file-local scan could not see it.
+- Wrong on "3-5 line duplication": each copy is ~25 lines once the mutate/toast/exit/error block is
+  counted, and `org-business-hours-section.tsx` held a seventh `useState` variant with no schema at all.
+- **Right about `getPayload`.** That interface was not built. Payload conversion stays inline in each
+  section's own `handleSave`, which calls `save(payload)`. The hook takes 4 inputs
+  (`resolver`, `serverValues`, `mutation`, `successMessage`) and returns 6 members.
+
+**Deletion test, measured on production files only (`git diff HEAD --numstat`, tests excluded):**
++652 / −605 = **net +47**. Decomposed: `org-business-hours-schema.ts` (+66) and `org-config-schema.ts`
+(+28) are **new validation capability**, not the shared owner — business hours had no Zod schema and
+saved `""` from a cleared time input; config had none either. Excluding those two, the consolidation
+itself is **net −47** production lines, against a +94-line hook. The deletion test passes for the
+abstraction and the +94 is capability, not overhead.
+
+**Two latent defects the consolidation surfaced:**
+- `org-profile-section.tsx` and `org-branding-section.tsx` called bare `form.reset()` on Cancel, which
+  restores *mount-time* defaults. After one successful save, Cancel put back stale pre-save values.
+- No section re-seeded when the org record changed underneath. Now `values` + `resetOptions:
+  { keepDirtyValues: true }`, **bite-proved**: flipping `keepDirtyValues` to `false` fails the mid-edit
+  test with `Expected "My unsaved edit", Received "Someone else's rename"`.
+
+**Residuals:**
+- [x] `org-branding-section.tsx` 313 → **251** (under the 300 target) by extracting `BrandingSummary`
+      into `org-branding-fields.tsx`; `org-localization-section.tsx` 164 → **138**
+- [x] `organization-settings-page.tsx` 165 → **80** — the hoisted config state machine is gone
+- [x] Schema tests added: `create-org-token-schema` (26) · `create-user-token-schema` (20) ·
+      `cost-center-form-schema` (27) · `org-business-hours-schema` (11), plus 10 for the shared owner.
+      The token tests pin the scope difference in both directions — a ~180-day expiry is rejected by the
+      org schema (90-day CRM ceiling) and accepted by the user schema (1-year ceiling), same input value
+- [x] Settings `.tsx` inline schemas: **1**, `uploadKeyContract` in `settings-profile.tsx`, an
+      endpoint-only response contract. Classified in a one-line comment and allowlisted by
+      `features/settings/__tests__/settings-schema-placement.contract.test.ts`, which excludes test
+      fixtures, throws on an unreadable directory and fails on a stale allowlist entry
+- [x] Exemptions are executable, not prose: `org-settings-form-adoption.contract.test.ts` holds the four
+      non-migrated sections with a reason each (holiday calendar = collection CRUD · data & privacy =
+      presentation-only · incoming transfer and danger zone = ConfirmDialog surfaces) and fails if a new
+      section skips the owner or an exemption goes stale
+
+**Gate results 2026-09-10.** `tsc --noEmit` **0 errors** · `jest features/settings` **23 suites /
+221 tests, 0 failed** · `check-named-handlers` **PASS** (0 non-trivial inline closures in release scope) ·
+`check-file-sizes` **PASS** (5,323 judged) · `madge --circular` **zero cycles** over 5,988 files · zero
+casts / `any` / `@ts-ignore` in the changed files. **Lint not run, full suite not run, `next build` not
+run — none were requested. Rendered behaviour was NOT inspected in a browser.**
+
+**Two gates are red and neither is from this work**, proved by comparing HEAD blobs to the worktree for
+every changed file: `check:over-300` is 515 against baseline 513 because a **concurrent session** (C8,
+`05-c8-prefetch-all-settings-surfaces.md`) added three >300-line test files under `lib/prefetch/`
+(348 / 389 / 494); this work is the only thing that *removed* a file from that list. 515 − 3 + 1 = 513,
+the baseline exactly. `check:type-assertions` fails on a stale ledger entry for
+`components/automations/ai-node-config-forms.tsx`, a file nothing in this tree has modified.
+**The baseline was not moved and neither foreign file was touched.**
 
 ---
 
