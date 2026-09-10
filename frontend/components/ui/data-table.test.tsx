@@ -16,9 +16,11 @@ const ROWS: HarnessRow[] = [
 function Harness({
   onRowAction,
   withMobileCard = false,
+  withFocusStop = false,
 }: {
   onRowAction?: () => void;
   withMobileCard?: boolean;
+  withFocusStop?: boolean;
 }) {
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [openRow, setOpenRow] = useState<HarnessRow | null>(null);
@@ -37,9 +39,14 @@ function Harness({
       onRowAction?.();
     }
     return (
-      <button type="button" onClick={handleActionClick}>
-        {`Actions for ${row.name}`}
-      </button>
+      <>
+        {withFocusStop ? (
+          <span tabIndex={0}>{`Full name ${row.name}`}</span>
+        ) : null}
+        <button type="button" onClick={handleActionClick}>
+          {`Actions for ${row.name}`}
+        </button>
+      </>
     );
   }
 
@@ -158,6 +165,16 @@ describe("DataTable — keyboard activation on interactive row content", () => {
     await user.keyboard(" ");
 
     expect(onRowAction).toHaveBeenCalled();
+    expect(screen.queryByTestId("detail-sheet")).not.toBeInTheDocument();
+  });
+
+  it("does not activate the row from a focusable descendant such as a truncation tooltip trigger", () => {
+    render(<Harness withFocusStop />);
+    const focusStop = screen.getByText("Full name Ada Lovelace");
+
+    const notPrevented = fireEvent.keyDown(focusStop, { key: "Enter" });
+
+    expect(notPrevented).toBe(true);
     expect(screen.queryByTestId("detail-sheet")).not.toBeInTheDocument();
   });
 
