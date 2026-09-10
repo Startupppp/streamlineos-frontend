@@ -456,8 +456,22 @@ leave anything enforcing the rule, so five more survived and one new consumer ha
       declaration of the helper, and a hand-coded mapping — and asserts it scanned a real tree first,
       so an empty result cannot mean "read nothing". Both were proved to bite by appending a real
       parser to a real file and watching the named line fail, then reverting.
-- [ ] **Left open, out of scope:** `route-attribution.mjs`'s `MODULE_OWNERS` still mirrors
-      `MODULE_SLO_OWNERSHIP` by hand. Different table, different question — needs its own item.
+- [ ] **Left open — NEEDS A DECISION, not a refactor.** `route-attribution.mjs`'s `MODULE_OWNERS`
+      claims to mirror `MODULE_SLO_OWNERSHIP`. It does not: 16 entries against 21, and the two
+      **disagree on who gets paged**. `alert-p95.mjs` and `alert-seam-latency.mjs` both resolve the
+      owner through `resolveRouteAttribution`, so today —
+      - a breach on `/notifications/*` pages **communications-team**, because the namespace folds into
+        Home, while the notifications SLO is owned by **notifications-team**;
+      - a breach on `/tasks/*` reports **unattributable**, because `tasks` is absent from
+        `MODULE_OWNERS`, while the tasks SLO is owned by **delivery-team**.
+
+      Root cause is a third confusion of the same family this item is about: route attribution applies
+      the **administering** fold to a question that is neither entitlement nor administration but
+      *operational ownership*. `chat`/`mail`/`calendar` survive it only because Home and they share
+      `communications-team` by coincidence. Deliberately not fixed here — every repair changes who is
+      woken up at 3am, which is an on-call decision, not a cleanup. Reconciling it means either
+      deriving `MODULE_OWNERS` from `MODULE_SLO_OWNERSHIP` and dropping the fold for this question, or
+      declaring the fold correct and removing the two SLO owners it contradicts.
 
 ---
 

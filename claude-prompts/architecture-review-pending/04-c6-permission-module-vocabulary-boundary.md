@@ -54,6 +54,13 @@ Replacing backend runtime `namespaceOf()` calls with `administeringModuleOf()` w
 | `route-attribution --self-test` | 19/19 (was 14; added calendar, notifications, dashboard, auth, platform) |
 | `check-module-manifest.mjs` | passes; bites on injected drift |
 
-## Deliberately out of scope
+## Found here, left open — needs an on-call decision
 
-`route-attribution.mjs`'s `MODULE_OWNERS` still mirrors `MODULE_SLO_OWNERSHIP` in `slo-modules.ts` by hand. That is **SLO ownership**, a different table from the permission-module vocabulary, so it was left rather than widen this task. Worth its own item.
+`route-attribution.mjs`'s `MODULE_OWNERS` says it mirrors `MODULE_SLO_OWNERSHIP`. It does not — 16 entries against 21, and they **disagree on who gets paged**. `alert-p95.mjs` and `alert-seam-latency.mjs` both resolve the owner through `resolveRouteAttribution`, so today:
+
+- `/notifications/*` pages **communications-team** (the namespace folds into Home) while the notifications SLO is owned by **notifications-team**;
+- `/tasks/*` reports **unattributable** (`tasks` is absent from `MODULE_OWNERS`) while the tasks SLO is owned by **delivery-team**.
+
+Same family of confusion as this task: route attribution applies the **administering** fold to a question that is neither entitlement nor administration but *operational ownership*. `chat`/`mail`/`calendar` survive it only because Home shares `communications-team` with them by coincidence.
+
+Not fixed here on purpose — every repair changes who is woken at 3am. Two ways out: derive `MODULE_OWNERS` from `MODULE_SLO_OWNERSHIP` and drop the fold for this question, or declare the fold correct and delete the two SLO owners it contradicts.
