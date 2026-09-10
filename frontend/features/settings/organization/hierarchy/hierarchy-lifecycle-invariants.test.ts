@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const HIERARCHY_DIR = join(
@@ -15,12 +15,17 @@ const LIFECYCLE_PAGES = [
   "cost-centers-page.tsx",
 ];
 
+/**
+ * Follows every sibling component the page imports, so extracting a cell into its
+ * own file moves the markup without silencing the gate assertions below.
+ */
 function lifecycleSurface(fileName: string): string {
   const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
-  const columnSources = [
-    ...source.matchAll(/from "\.\/([a-z0-9-]+-columns)"/g),
-  ].map((match) => readFileSync(join(HIERARCHY_DIR, `${match[1]}.tsx`), "utf8"));
-  return [source, ...columnSources].join("\n");
+  const siblingSources = [...source.matchAll(/from "\.\/([a-z0-9-]+)"/g)]
+    .map((match) => join(HIERARCHY_DIR, `${match[1]}.tsx`))
+    .filter((path) => existsSync(path))
+    .map((path) => readFileSync(path, "utf8"));
+  return [source, ...siblingSources].join("\n");
 }
 
 describe("organization hierarchy lifecycle UI", () => {
@@ -61,16 +66,19 @@ describe("organization hierarchy lifecycle UI", () => {
   it.each(LIFECYCLE_PAGES)(
     "%s exposes hierarchy mutations only to organization managers",
     (fileName) => {
-      const source = lifecycleSurface(fileName);
+      const page = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
+      const surface = lifecycleSurface(fileName);
 
-      expect(source).toContain(
+      // The gate is resolved by the page; the row actions it guards may live in a sibling.
+      expect(page).toContain(
         'const canManage = useCan("settings:organization:manage");',
       );
-      expect(source).toMatch(
-        /canManage\s*\?\s*\(?\s*<div className="flex items-center gap-1">/,
+      expect(page).toMatch(/action=\{\s*canManage(\s*&&\s*[^?]*)?\s*\?/);
+      expect(surface).toMatch(
+        /canManage\s*\?\s*\(?\s*<div className="flex items-center gap-1">|if\s*\(!canManage\)\s*return null;/,
       );
-      expect(source).toMatch(/canManage\s*\?\s*\(?\s*<AnimatedIconButton/);
-      expect(source).toMatch(/action=\{\s*canManage(\s*&&\s*[^?]*)?\s*\?/);
+      expect(surface).toMatch(/canManage\s*\?\s*\(?\s*<AnimatedIconButton/);
+      expect(surface).toContain('<div className="flex items-center gap-1">');
     },
   );
 

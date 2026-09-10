@@ -25,6 +25,7 @@
 9. **Leave less code than you found.** Delete dead code and its files. No speculative abstractions.
 10. **Living rules.** Any rule I state mid-task goes into the right file immediately — shared here, side-specific in that side's file.
 11. **Git is orchestrator-only.** MAY `commit` verified work on the current branch between tasks. NEVER push/checkout/branch/merge/pull/fetch/reset/stash/rebase. Subagents run no git.
+12. **No cyclic dependencies.** Keep both frontend and backend import graphs acyclic. Do not use `forwardRef`, dynamic imports, barrels, duplicated types or pass-through wrappers to hide a cycle; move the shared contract to its proper neutral owner and verify zero cycles with the repository's dependency-cycle gate.
 
 ## 2. Stack
 
@@ -93,7 +94,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - **Never force types.** No `as X` / `as unknown as X`. Raw `db.execute(sql\`…\`)` rows are `Record<string, unknown>` — convert at the use site (`Number(row.count)`, `row?.field ?? fallback`). If a cast feels necessary, fix the source type or the projection.
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
-- **Named event handlers only.** **Single-statement `if`/`for` bodies omit braces.**
+- **Named handler functions inside components and pages.** Every JSX event or action callback must reference a named handler declared inside that component or page (`onClick={handleSave}`, `onSubmit={handleSubmit}`), never an inline arrow or anonymous function. Handlers coordinate the local UI event; reusable state, validation, data access and business behavior remain in the proper hook, service or module and are called by the handler. **Single-statement `if`/`for` bodies omit braces.**
 - **No comments in code.** Delete stray comments, commented-out code, `console.log`s. If something genuinely needs explaining, use **at most one single-line comment** — otherwise remove it.
 - Mentally test: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 

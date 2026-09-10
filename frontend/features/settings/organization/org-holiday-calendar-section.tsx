@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -38,14 +37,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { OrgSettingsCard } from "./org-settings-chrome";
-
-const addHolidaySchema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
-  recurring: z.boolean().optional(),
-});
-
-type AddHolidayValues = z.infer<typeof addHolidaySchema>;
+import { addHolidaySchema, type AddHolidayValues } from "./org-holiday-calendar-schema";
 
 interface OrgHolidayCalendarSectionProps {
   canEdit: boolean;

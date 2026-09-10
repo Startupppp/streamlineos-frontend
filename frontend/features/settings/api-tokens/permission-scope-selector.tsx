@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { administeringModuleOf } from "@/lib/rbac/administering-module";
 import { useGrantableUserApiTokenPermissions } from "@/hooks/api/user-api-tokens";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Input } from "@/components/ui/input";
@@ -26,15 +27,12 @@ const GROUP_LABELS: Readonly<Record<string, string>> = {
   ai: "AI",
   build: "Projects",
   crm: "CRM",
+  home: "Home",
   hr: "HR",
   kb: "Knowledge Base",
   self: "My Account",
   support: "Support",
 };
-
-function moduleOf(permissionKey: string): string {
-  return permissionKey.split(":")[0] ?? permissionKey;
-}
 
 export function PermissionScopeSelector({
   value,
@@ -60,7 +58,7 @@ export function PermissionScopeSelector({
 
     for (const permission of data ?? []) {
       if (term && !permission.name.toLowerCase().includes(term)) continue;
-      const moduleKey = moduleOf(permission.name);
+      const moduleKey = administeringModuleOf(permission.name);
       const bucket = byModule.get(moduleKey);
       const entry = {
         name: permission.name,

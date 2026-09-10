@@ -350,7 +350,7 @@ export function StandardActionConfigRenderer({
           <Input
             type="email"
             placeholder="Recipient email"
-            value={action.config.to}
+            value={Array.isArray(action.config.to) ? action.config.to.join(", ") : action.config.to}
             onChange={(e) => onChange({ to: e.target.value })}
           />
           <Input

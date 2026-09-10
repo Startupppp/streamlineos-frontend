@@ -156,3 +156,11 @@ export function formatEventDate(value: string | Date, timezone?: string | null):
   const zone = resolveTimeZone(timezone, readerTimeZone());
   return new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(date);
 }
+
+/** `YYYY-MM-DDTHH:mm` in the reader's own zone, for a `datetime-local` input default. */
+export function datetimeLocalAfterDays(days: number): string {
+  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}

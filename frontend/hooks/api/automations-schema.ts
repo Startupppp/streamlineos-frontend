@@ -4,7 +4,7 @@ import { AUTOMATION_TRIGGERS } from "@/lib/automations/automation-triggers";
 const wireDate = () => z.string();
 const nullableWireDate = () => z.string().nullable();
 
-const automationRunStatusEnum = z.enum(["success", "failed", "skipped"]);
+export const automationRunStatusEnum = z.enum(["success", "failed", "skipped"]);
 
 const automationActionTypeEnum = z.enum([
   "notify_roles", "notify_all", "email", "create_task", "webhook",
@@ -13,7 +13,7 @@ const automationActionTypeEnum = z.enum([
   "ai_routing_suggestion",
 ]);
 
-const automationConditionSchema = z.object({
+export const automationConditionSchema = z.object({
   field: z.string(),
   op: z.enum(["eq", "neq", "contains", "gt", "lt", "exists"]),
   value: z.union([z.string(), z.number(), z.boolean()]).optional(),
@@ -21,10 +21,10 @@ const automationConditionSchema = z.object({
 
 const aiActionConfigSchema = z.record(z.string(), z.unknown());
 
-const automationActionSchema = z.discriminatedUnion("type", [
+export const automationActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("notify_roles"), config: z.object({ roles: z.array(z.string()), title: z.string(), message: z.string(), link: z.string().optional() }) }),
   z.object({ type: z.literal("notify_all"), config: z.object({ title: z.string(), message: z.string(), link: z.string().optional() }) }),
-  z.object({ type: z.literal("email"), config: z.object({ to: z.string(), subject: z.string(), body: z.string() }) }),
+  z.object({ type: z.literal("email"), config: z.object({ to: z.union([z.string(), z.array(z.string())]), subject: z.string(), body: z.string() }) }),
   z.object({ type: z.literal("create_task"), config: z.object({ title: z.string(), assigneeId: z.string().optional(), dueInDays: z.number().optional() }) }),
   z.object({ type: z.literal("webhook"), config: z.object({ event: z.string() }) }),
   z.object({ type: z.literal("support_assign_ticket"), config: z.object({ assigneeId: z.string() }) }),
@@ -37,7 +37,7 @@ const automationActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("ai_routing_suggestion"), config: aiActionConfigSchema }),
 ]);
 
-const automationRuleListItemSchema = z.object({
+export const automationRuleListItemSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   description: z.string().nullable(),
@@ -69,7 +69,7 @@ export const automationContract = automationRuleSchema;
 
 export const automationDeleteContract = z.object({ success: z.literal(true) });
 
-const automationRunItemSchema = z.object({
+export const automationRunItemSchema = z.object({
   id: z.number().int(),
   triggerEvent: z.string(),
   status: automationRunStatusEnum,
@@ -81,7 +81,7 @@ const automationRunItemSchema = z.object({
 
 export const automationRunsContract = z.array(automationRunItemSchema);
 
-const automationActionResultSchema = z.object({
+export const automationActionResultSchema = z.object({
   type: automationActionTypeEnum,
   ok: z.boolean(),
   error: z.string().optional(),

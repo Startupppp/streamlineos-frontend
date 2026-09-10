@@ -32,6 +32,9 @@ import {
   useAutomations,
   useToggleAutomation,
   useDeleteAutomation,
+  useCreateAutomation,
+  useUpdateAutomation,
+  useTestAutomation,
   type AutomationRule,
   type AutomationTrigger,
 } from "@/hooks/api/automations";
@@ -71,7 +74,7 @@ function actionSummary(actions: AutomationRule["actions"]) {
     .join(", ");
 }
 
-function ModuleDisabledCard({ name }: { name: string }) {
+export function ModuleDisabledCard({ name }: { name: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[24dvh] gap-4 py-12">
       <Building2 className="h-9 w-9 text-muted-foreground/40" />
@@ -88,7 +91,7 @@ function ModuleDisabledCard({ name }: { name: string }) {
   );
 }
 
-function AutomationCard({
+export function AutomationCard({
   rule,
   onEdit,
   onDelete,
@@ -166,7 +169,7 @@ function AutomationCard({
   );
 }
 
-function AutomationCardItem({
+export function AutomationCardItem({
   rule,
   togglingId,
   onToggle,
@@ -211,6 +214,9 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const { data: automationsData, isLoading, isError, refetch } = useAutomations({ limit: 100 });
   const toggle = useToggleAutomation();
   const remove = useDeleteAutomation();
+  const create = useCreateAutomation();
+  const update = useUpdateAutomation();
+  const test = useTestAutomation();
   const enabledModules = useEnabledModules();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -326,6 +332,9 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
           onClose={handleCloseCreate}
           triggerOptions={triggerOptions}
           defaultTrigger={SECTION_DEFAULT_TRIGGER[sectionModule]}
+          create={create}
+          update={update}
+          test={test}
         />
       )}
       {editTarget && (
@@ -333,6 +342,9 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
           rule={editTarget}
           onClose={handleCloseEdit}
           triggerOptions={NON_CRM_TRIGGER_META}
+          create={create}
+          update={update}
+          test={test}
         />
       )}
       {runsTarget && (

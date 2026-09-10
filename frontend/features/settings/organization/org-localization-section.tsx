@@ -3,10 +3,7 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Globe } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
@@ -19,106 +16,15 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
-
-const TIMEZONES = [
-  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST, UTC+5:30)" },
-  { value: "UTC", label: "UTC" },
-  { value: "America/New_York", label: "America/New_York (EST/EDT)" },
-  { value: "America/Los_Angeles", label: "America/Los_Angeles (PST/PDT)" },
-  { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
-  { value: "Europe/London", label: "Europe/London (GMT/BST)" },
-  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
-  { value: "Asia/Dubai", label: "Asia/Dubai (GST, UTC+4)" },
-  { value: "Asia/Singapore", label: "Asia/Singapore (SGT, UTC+8)" },
-  { value: "Asia/Tokyo", label: "Asia/Tokyo (JST, UTC+9)" },
-  { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
-] as const;
-
-const CURRENCY_VALUES = ["USD", "EUR", "INR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY"] as const;
-
-const CURRENCIES: ReadonlyArray<{ value: typeof CURRENCY_VALUES[number]; label: string }> = [
-  { value: "USD", label: "USD — US Dollar" },
-  { value: "EUR", label: "EUR — Euro" },
-  { value: "INR", label: "INR — Indian Rupee" },
-  { value: "GBP", label: "GBP — British Pound" },
-  { value: "AED", label: "AED — UAE Dirham" },
-  { value: "SGD", label: "SGD — Singapore Dollar" },
-  { value: "AUD", label: "AUD — Australian Dollar" },
-  { value: "CAD", label: "CAD — Canadian Dollar" },
-  { value: "JPY", label: "JPY — Japanese Yen" },
-];
-
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] as const;
-
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "hi", label: "Hindi" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "es", label: "Spanish" },
-  { value: "pt", label: "Portuguese" },
-  { value: "ar", label: "Arabic" },
-  { value: "zh", label: "Chinese (Simplified)" },
-  { value: "ja", label: "Japanese" },
-] as const;
-
-const DATE_FORMATS = [
-  { value: "DD/MM/YYYY", label: "DD/MM/YYYY (31/12/2026)" },
-  { value: "MM/DD/YYYY", label: "MM/DD/YYYY (12/31/2026)" },
-  { value: "YYYY-MM-DD", label: "YYYY-MM-DD (2026-12-31)" },
-  { value: "DD-MMM-YYYY", label: "DD-MMM-YYYY (31-Dec-2026)" },
-] as const;
-
-const TIME_FORMATS = [
-  { value: "12h", label: "12-hour (2:30 PM)" },
-  { value: "24h", label: "24-hour (14:30)" },
-] as const;
-
-const NUMBER_FORMATS = [
-  { value: "1,234.56", label: "1,234.56 (comma thousands, period decimal)" },
-  { value: "1.234,56", label: "1.234,56 (period thousands, comma decimal)" },
-  { value: "1 234.56", label: "1 234.56 (space thousands, period decimal)" },
-] as const;
-
-const WEEK_START_DAYS = [
-  { value: "monday", label: "Monday" },
-  { value: "sunday", label: "Sunday" },
-  { value: "saturday", label: "Saturday" },
-] as const;
-
-const TIME_FORMAT_VALUES = ["12h", "24h"] as const;
-const WEEK_START_DAY_VALUES = ["monday", "sunday", "saturday"] as const;
-
-const localizationSchema = z.object({
-  timezone: z.string().min(1),
-  currency: z.enum(CURRENCY_VALUES),
-  fiscalYearStart: z.number().int().min(1).max(12),
-  language: z.string().min(1),
-  dateFormat: z.string().min(1),
-  timeFormat: z.enum(TIME_FORMAT_VALUES),
-  numberFormat: z.string().min(1),
-  weekStartDay: z.enum(WEEK_START_DAY_VALUES),
-});
-
-type LocalizationValues = z.infer<typeof localizationSchema>;
-
-function toCurrencyCode(value: string | null | undefined): typeof CURRENCY_VALUES[number] {
-  return CURRENCY_VALUES.find((c) => c === value) ?? "INR";
-}
-
-function extractSettings(settings: Record<string, unknown> | null | undefined) {
-  const timeFormat =
-    TIME_FORMAT_VALUES.find((candidate) => candidate === settings?.timeFormat) ?? "12h";
-  const weekStartDay =
-    WEEK_START_DAY_VALUES.find((candidate) => candidate === settings?.weekStartDay) ?? "monday";
-  return {
-    language: typeof settings?.language === "string" ? settings.language : "en",
-    dateFormat: typeof settings?.dateFormat === "string" ? settings.dateFormat : "DD/MM/YYYY",
-    timeFormat,
-    numberFormat: typeof settings?.numberFormat === "string" ? settings.numberFormat : "1,234.56",
-    weekStartDay,
-  };
-}
+import {
+  MONTHS,
+  LANGUAGES,
+  localizationSchema,
+  type LocalizationValues,
+  toCurrencyCode,
+  extractLocalizationSettings,
+} from "./org-localization-schema";
+import { LocalizationFormFields } from "./org-localization-form-fields";
 
 const FIELD_KEYS = [
   "timezone",
@@ -151,7 +57,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
   const [isEditing, setIsEditing] = useState(false);
   const { mutate: updateOrg, isPending } = useUpdateOrgSettings();
 
-  const extracted = extractSettings(org.settings);
+  const extracted = extractLocalizationSettings(org.settings);
 
   const form = useForm<LocalizationValues>({
     resolver: zodResolver(localizationSchema),
@@ -168,7 +74,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
   });
 
   const handleEdit = useCallback(() => {
-    const ext = extractSettings(org.settings);
+    const ext = extractLocalizationSettings(org.settings);
     form.reset({
       timezone: org.timezone ?? "Asia/Kolkata",
       currency: toCurrencyCode(org.currency),
@@ -187,45 +93,30 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     form.reset();
   }, [form]);
 
-  function handleCurrencySelected(value: string): void {
-    form.setValue("currency", toCurrencyCode(value));
-  }
-
-  function handleFiscalYearStartSelected(value: string): void {
-    form.setValue("fiscalYearStart", Number(value));
-  }
-
-  const handleTimeFormatChange = useCallback((value: string) => {
-    const next = TIME_FORMAT_VALUES.find((candidate) => candidate === value);
-    if (next) form.setValue("timeFormat", next);
-  }, [form]);
-
-  const handleWeekStartDayChange = useCallback((value: string) => {
-    const next = WEEK_START_DAY_VALUES.find((candidate) => candidate === value);
-    if (next) form.setValue("weekStartDay", next);
-  }, [form]);
-
-  const handleSave = useCallback((values: LocalizationValues) => {
-    updateOrg(
-      {
-        timezone: values.timezone,
-        currency: values.currency,
-        fiscalYearStart: values.fiscalYearStart,
-        language: values.language,
-        dateFormat: values.dateFormat,
-        timeFormat: values.timeFormat,
-        numberFormat: values.numberFormat,
-        weekStartDay: values.weekStartDay,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Localization settings saved");
-          setIsEditing(false);
+  const handleSave = useCallback(
+    (values: LocalizationValues) => {
+      updateOrg(
+        {
+          timezone: values.timezone,
+          currency: values.currency,
+          fiscalYearStart: values.fiscalYearStart,
+          language: values.language,
+          dateFormat: values.dateFormat,
+          timeFormat: values.timeFormat,
+          numberFormat: values.numberFormat,
+          weekStartDay: values.weekStartDay,
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [updateOrg]);
+        {
+          onSuccess: () => {
+            toast.success("Localization settings saved");
+            setIsEditing(false);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [updateOrg],
+  );
 
   const displayValues: Record<keyof LocalizationValues, string> = {
     timezone: org.timezone ?? "Asia/Kolkata",
@@ -235,8 +126,13 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     dateFormat: extracted.dateFormat,
     timeFormat: extracted.timeFormat === "12h" ? "12-hour (2:30 PM)" : "24-hour (14:30)",
     numberFormat: extracted.numberFormat,
-    weekStartDay: extracted.weekStartDay.charAt(0).toUpperCase() + extracted.weekStartDay.slice(1),
+    weekStartDay:
+      extracted.weekStartDay.charAt(0).toUpperCase() + extracted.weekStartDay.slice(1),
   };
+
+  function renderFieldRow(key: (typeof FIELD_KEYS)[number]) {
+    return <SettingsField key={key} label={FIELD_LABELS[key]} value={displayValues[key]} />;
+  }
 
   return (
     <OrgSettingsCard
@@ -246,89 +142,18 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (
-        <SettingsFieldGrid>
-          {FIELD_KEYS.map((key) => (
-            <SettingsField key={key} label={FIELD_LABELS[key]} value={displayValues[key]} />
-          ))}
-        </SettingsFieldGrid>
+        <SettingsFieldGrid>{FIELD_KEYS.map(renderFieldRow)}</SettingsFieldGrid>
       ) : (
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-timezone" className="text-xs font-medium">Timezone</Label>
-              <Select onValueChange={(v) => form.setValue("timezone", v)} value={form.watch("timezone")}>
-                <SelectTrigger id="org-localization-timezone"><SelectValue /></SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-currency" className="text-xs font-medium">Currency</Label>
-              <Select onValueChange={handleCurrencySelected} value={form.watch("currency")}>
-                <SelectTrigger id="org-localization-currency"><SelectValue /></SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-fiscal-year-start" className="text-xs font-medium">Fiscal year starts</Label>
-              <Select onValueChange={handleFiscalYearStartSelected} value={String(form.watch("fiscalYearStart"))}>
-                <SelectTrigger id="org-localization-fiscal-year-start"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-language" className="text-xs font-medium">Language</Label>
-              <Select onValueChange={(v) => form.setValue("language", v)} value={form.watch("language")}>
-                <SelectTrigger id="org-localization-language"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-date-format" className="text-xs font-medium">Date format</Label>
-              <Select onValueChange={(v) => form.setValue("dateFormat", v)} value={form.watch("dateFormat")}>
-                <SelectTrigger id="org-localization-date-format"><SelectValue /></SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {DATE_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-time-format" className="text-xs font-medium">Time format</Label>
-              <Select onValueChange={handleTimeFormatChange} value={form.watch("timeFormat")}>
-                <SelectTrigger id="org-localization-time-format"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-number-format" className="text-xs font-medium">Number format</Label>
-              <Select onValueChange={(v) => form.setValue("numberFormat", v)} value={form.watch("numberFormat")}>
-                <SelectTrigger id="org-localization-number-format"><SelectValue /></SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {NUMBER_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="org-localization-week-start-day" className="text-xs font-medium">Week starts on</Label>
-              <Select onValueChange={handleWeekStartDayChange} value={form.watch("weekStartDay")}>
-                <SelectTrigger id="org-localization-week-start-day"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <LocalizationFormFields form={form} />
           <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
-            <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+            <LoadingButton
+              type="submit"
+              isPending={isPending}
+              size="sm"
+              className="gap-1.5"
+              loadingText="Saving…"
+            >
               Save localization
             </LoadingButton>
           </OrgSettingsFormActions>

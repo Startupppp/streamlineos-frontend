@@ -35,6 +35,7 @@ import {
 } from "@/hooks/api/access/simulate";
 import { getInitials } from "@/lib/format-utils";
 import type { DataScope } from "@/types/access";
+import { administeringModuleOf } from "@/lib/rbac/administering-module";
 import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -44,11 +45,6 @@ const SCOPE_BADGE_VARIANT: Record<DataScope, "default" | "secondary" | "outline"
   own: "outline",
   none: "outline",
 };
-
-function moduleOf(key: string): string {
-  const idx = key.indexOf(":");
-  return idx === -1 ? key : key.slice(0, idx);
-}
 
 function resourceOf(key: string): string {
   const parts = key.split(":");
@@ -71,7 +67,7 @@ function SimulateContent() {
     if (!simulateQuery.data) return new Map<string, Array<{ key: string; scope: DataScope }>>();
     const map = new Map<string, Array<{ key: string; scope: DataScope }>>();
     for (const key of simulateQuery.data.permissions) {
-      const mod = moduleOf(key);
+      const mod = administeringModuleOf(key);
       const scope = simulateQuery.data.scopes[key] ?? "all";
       const list = map.get(mod) ?? [];
       list.push({ key, scope });

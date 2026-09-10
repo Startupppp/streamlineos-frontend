@@ -16,7 +16,7 @@ import {
 const BASELINE = {
   minimumSurfaces: 540,
   missingLoading: 0,
-  missingEmpty: 7,
+  missingEmpty: 8,
   missingError: 0,
   missingPermissionDenied: 0,
   filterEmptyConflation: 55,
@@ -24,12 +24,18 @@ const BASELINE = {
 
 /**
  * A count alone lets one surface lose its empty state while another gains one
- * and the ratchet never moves. These seven are the whole residue, and every one
+ * and the ratchet never moves. These eight are the whole residue, and every one
  * of them was read: none renders a server collection that can come back with
  * zero rows, so an EmptyState here would be decoration that never appears.
  * Adding a route to this list is the same weight as lowering a number.
+ *
+ * `/chat/settings` joined on 2026-09-10. It did not lose an empty state — it is
+ * a NEW surface from 1ae37cedf, which turned the page into a real form. It reads
+ * one settings object through `useChatOrgSettings` and already renders loading
+ * and read-error states; there is no collection behind it to come back empty.
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
+  "/chat/settings",
   "/crm/import",
   "/hr/recruitment/sla",
   "/inventory/operations",

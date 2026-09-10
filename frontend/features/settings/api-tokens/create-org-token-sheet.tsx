@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import {
   useCreateApiToken,
@@ -33,32 +32,11 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { TokenExpiresAtField } from "./token-expires-at-field";
-
-const orgTokenFormSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  description: z.string().trim().max(500).optional(),
-  expiresAt: z
-    .string()
-    .min(1, "Expiration is required")
-    .refine((value) => new Date(value).getTime() > Date.now(), {
-      message: "Expiration must be in the future",
-    })
-    .refine(
-      (value) =>
-        new Date(value).getTime() <=
-        Date.now() + 90 * 24 * 60 * 60 * 1000,
-      { message: "CRM API keys cannot exceed 90 days" },
-    ),
-});
-
-function defaultExpiry(days: number): string {
-  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
-}
-
-type OrgTokenFormValues = z.infer<typeof orgTokenFormSchema>;
+import { datetimeLocalAfterDays } from "@/lib/date-utils";
+import {
+  orgTokenFormSchema,
+  type OrgTokenFormValues,
+} from "./create-org-token-schema";
 
 interface CreateOrgTokenSheetProps {
   open: boolean;
@@ -78,7 +56,7 @@ export function CreateOrgTokenSheet({
     defaultValues: {
       name: "",
       description: "",
-      expiresAt: defaultExpiry(30),
+      expiresAt: datetimeLocalAfterDays(30),
     },
   });
 

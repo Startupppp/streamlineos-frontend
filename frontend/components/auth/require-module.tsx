@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { matchesOrgModule, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { useAccess, useModuleEnabled } from "@/hooks/api/access";
+import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import { getModuleCatalogEntry } from "@/lib/module-catalog";
 
 interface RequireModuleProps {
@@ -35,10 +35,10 @@ function ModuleDisabledState({ module }: { module: string }) {
 }
 
 export function RequireModule({ module, children }: RequireModuleProps) {
-  const enabledModules = useEnabledModules();
-  const isEnabled = matchesOrgModule(enabledModules, module);
+  const { data } = useAccess();
+  const isEnabled = useModuleEnabled(module);
 
+  if (!data) return null;
   if (!isEnabled) return <ModuleDisabledState module={module} />;
-
   return <>{children}</>;
 }

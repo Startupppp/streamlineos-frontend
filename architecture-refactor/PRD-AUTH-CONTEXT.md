@@ -85,8 +85,12 @@ still extends it, because `search.service.ts` uses its two module members.
       `getEarnings`, `getDeductions`, `getReimbursements`, `getTax`, `getBankPayout`, `getVariance`)
 - [x] `modules/payroll/insights/journal.controller.ts` — `getJournal`
 - [x] `modules/payroll/insights/journal-outbox.controller.ts` — `exportCsv`
-- [ ] GATE FOLLOW-UP: those 10 handlers now take both `@CurrentUser() u` and `@AuthCtx() authCtx`. Check
-      whether `u` went unused in any of them — `noUnusedParameters` is OFF, so tsc will not report it.
+- [x] GATE FOLLOW-UP CLEARED: those handlers take both `@CurrentUser() u` and `@AuthCtx() authCtx`, and
+      `noUnusedParameters` is OFF so tsc would not have reported a dangling one. Counted by hand:
+      `reports.controller.ts` has **10** `u.orgId` reads for 10 handlers, `journal-outbox.controller.ts`
+      **9** for 9, `journal.controller.ts` **1** for 1. Every `u` is still load-bearing — it carries the
+      tenant into the service call, while `authCtx` carries only the export authorization. No parameter
+      to remove.
 
 ### Lane B — detached callers · DONE
 - [x] `modules/hr/import/hr-export-jobs.service.ts` — `createAuthContext(context, this.access)` at :233,
@@ -97,10 +101,21 @@ still extends it, because `search.service.ts` uses its two module members.
       calls `authorize()` and builds no `CurrentUserContext`; it calls `resolveUserPermissions` only.
       The signature change does not reach it. It remains in scope for the §5 risk.
 
-### Lane C1 — access specs
-- [ ] `modules/access/authorize.spec.ts` — ~30 call sites
-- [ ] `modules/access/c4-production-wiring.spec.ts:151` — plus `new ModuleGuard(...)` arity
-- [ ] NEW `common/auth/auth-context.spec.ts` — memo called once, normalisation, detached use
+### Lane C1 — access specs · DONE
+- [x] `modules/access/authorize.spec.ts` — ~24 call sites. `makeResolver` collapsed from 7 params to
+      `{ scopeFor }`; a new `ctxFor(actor, options)` helper carries availability. Three tests were
+      reinterpreted and the lane named them: the plan-lock probe now fires from `ctxFor`'s lookup
+      rather than authorize's internals (**load-bearing** — an unconditional `onPlanLockedRead` would
+      make it pass trivially), the user-deny ordering moved into the lookup preserving deny-before-org,
+      and the BOLA orgId capture moved from `getModuleState` to `scopeFor`.
+- [x] `modules/access/c4-production-wiring.spec.ts` — `new ModuleGuard(reflector)` arity fixed; the
+      request mock now carries `authContext`, without which `ModuleGuard` short-circuits on
+      `!authContext` and proves nothing. Two stale assertions removed (`getModuleState` called,
+      `getModuleMap` not called). Wiring regex widened to match `moduleAvailable(`.
+- [x] **The assertion that proves the refactor**: one shared context across `ModuleGuard.canActivate`
+      and `authorize()` for the same module invokes the lookup **exactly once**.
+- [x] NEW `common/auth/auth-context.spec.ts` — five tests: same key once, distinct keys once each,
+      `"HR"`/`"hr"`/`" hr "` share one entry, `actor` identity, rejecting lookup propagates.
 
 ### Lane C2 — remaining specs · DONE, but **three of its verdicts were wrong and were corrected by hand**
 - [x] `modules/settings/settings-route-gates.spec.ts` — agent said "no change needed, `PermissionGuard`
@@ -132,6 +147,22 @@ thrown `TypeError` deep inside a guard, which reads as an environment problem ra
 - [x] One brief line number was wrong: the hand-built actor is at `hr-export-jobs.service.ts:224-232`,
       not `:223-231` — it shifted when Lane B inserted `createAuthContext` at :233. The other four
       citations verified correct.
+
+### Import graph — CHECKED
+- [x] `pnpm -C backend check:cycles` (`madge --circular --extensions ts src`) — **6,475 files, zero
+      cycles, exit 0**, run 2026-09-10 after the core seam and lanes A/B/C1/C2/D landed.
+- [x] Why it is acyclic by construction, not by luck: `common/rbac/module-availability.ts` has **no
+      imports at all** (leaf), and `common/auth/backend-claims.ts` never imports `rbac`. So the two new
+      edges — `auth/auth-context.ts → rbac/module-availability.ts` (type only) and
+      `auth/jwt-auth.guard.ts → rbac/module-guard.token.ts` (runtime Symbol) — both terminate in leaves.
+      `common/rbac/module.guard.ts` no longer imports `module-guard.token.ts` at all.
+- [x] Dead code removed: `IModuleGuardAccess` had no remaining consumers once `ModuleGuard` stopped
+      injecting it, and `ModuleAvailabilityLookup` (`common/auth/auth-context.ts`) is its structural
+      twin. Deleted; `module-guard.token.ts` is now the Symbol alone and imports nothing.
+- [ ] Frontend `check:cycles` — deferred until the C8 lane quiesces
+- [ ] POST-WAVE RENAME: the token is still called `MODULE_GUARD_ACCESS`, but `ModuleGuard` no longer
+      consumes it — `JwtAuthGuard` does. The name now misleads. Rename to `MODULE_AVAILABILITY_LOOKUP`
+      once the wave is quiet; it touches DI wiring, which is the wrong thing to churn mid-wave.
 
 ### Gate — after every lane lands, run once, quiesced
 - [ ] `NODE_OPTIONS=--max-old-space-size=8192 pnpm -C backend exec tsc --noEmit`

@@ -6,7 +6,16 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { z } from "zod";
 import type { AutomationTrigger } from "@/lib/automations/automation-triggers";
+import type {
+  automationActionResultSchema,
+  automationActionSchema,
+  automationConditionSchema,
+  automationRuleListItemSchema,
+  automationRunItemSchema,
+  automationRunStatusEnum,
+} from "@/hooks/api/automations-schema";
 
 const automationListContract = lazyContract(() =>
   import("@/hooks/api/automations-schema").then((m) => m.automationListContract),
@@ -30,62 +39,19 @@ function assertPermission(allowed: boolean): void {
 
 export type { AutomationTrigger };
 
-export type AutomationConditionOp = "eq" | "neq" | "contains" | "gt" | "lt" | "exists";
+export type AutomationCondition = z.infer<typeof automationConditionSchema>;
+export type AutomationConditionOp = AutomationCondition["op"];
 
-export interface AutomationCondition {
-  field: string;
-  op: AutomationConditionOp;
-  value?: string | number | boolean;
-}
-
-export type AutomationAction =
-  | { type: "notify_roles"; config: { roles: string[]; title: string; message: string; link?: string } }
-  | { type: "notify_all"; config: { title: string; message: string; link?: string } }
-  | { type: "email"; config: { to: string; subject: string; body: string } }
-  | { type: "create_task"; config: { title: string; assigneeId?: string; dueInDays?: number } }
-  | { type: "webhook"; config: { event: string } }
-  | { type: "support_assign_ticket"; config: { assigneeId: string } }
-  | { type: "support_set_priority"; config: { priority: string } }
-  | { type: "support_add_tag"; config: { tagId: number } }
-  | { type: "support_internal_note"; config: { body: string } }
-  | { type: "ai_classify"; config: Record<string, unknown> }
-  | { type: "ai_summarize"; config: Record<string, unknown> }
-  | { type: "ai_extract"; config: Record<string, unknown> }
-  | { type: "ai_routing_suggestion"; config: Record<string, unknown> };
-
+export type AutomationAction = z.infer<typeof automationActionSchema>;
 export type AutomationActionType = AutomationAction["type"];
 
-export interface AutomationRule {
-  id: number;
-  name: string;
-  description: string | null;
-  triggerEvent: AutomationTrigger;
-  conditions: AutomationCondition[];
-  actions: AutomationAction[];
-  isEnabled: boolean;
-  runCount: number;
-  lastRunAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AutomationRule = z.infer<typeof automationRuleListItemSchema>;
 
-export type AutomationRunStatus = "success" | "failed" | "skipped";
+export type AutomationRunStatus = z.infer<typeof automationRunStatusEnum>;
 
-interface AutomationRun {
-  id: number;
-  triggerEvent: string;
-  status: AutomationRunStatus;
-  payload: Record<string, unknown> | null;
-  result: Record<string, unknown> | null;
-  error: string | null;
-  createdAt: string;
-}
+type AutomationRun = z.infer<typeof automationRunItemSchema>;
 
-interface AutomationActionResult {
-  type: AutomationActionType;
-  ok: boolean;
-  error?: string;
-}
+type AutomationActionResult = z.infer<typeof automationActionResultSchema>;
 
 export interface AutomationTestResult {
   runId: number;
