@@ -35,7 +35,7 @@ jest.mock("@/hooks/api/inventory/transit", () => ({
 }));
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [{ id: 7, name: "Gachibowli DC", code: "GDC" }] }),
+  useWarehouses: () => ({ data: [{ id: 7, name: "North DC", code: "GDC" }] }),
 }));
 
 function row(overrides: Partial<StrandedTransitRow> = {}): StrandedTransitRow {
@@ -123,7 +123,7 @@ describe("in-transit queue", () => {
 
     expect(screen.getByText("OPC 53 Grade Cement 50kg")).toBeInTheDocument();
     expect(screen.getByText("TRF-0041")).toBeInTheDocument();
-    expect(screen.getByText("Gachibowli DC")).toBeInTheDocument();
+    expect(screen.getByText("North DC")).toBeInTheDocument();
     // The line id, the variant id and the warehouse id are all in the row and
     // none of them is a thing to show an operator.
     expect(screen.queryByText("88")).not.toBeInTheDocument();

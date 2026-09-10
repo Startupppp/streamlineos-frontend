@@ -1,5 +1,5 @@
 /**
- * B1/B2 — the properties of the Buildmart surfaces that a screenshot cannot pin.
+ * The properties of the materials-pack surfaces that a screenshot cannot pin.
  *
  * These are deliberately narrow: they check the rules that reading the rendered
  * page cannot confirm — that status is never carried by colour alone, that the

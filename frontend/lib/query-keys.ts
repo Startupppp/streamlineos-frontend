@@ -30,7 +30,7 @@ import { inventoryReportBuilderQueryKeys } from "./query-keys/inventory-report-b
 import { inventoryAiReviewQueryKeys } from "./query-keys/inventory-ai-review";
 import { inventoryOutboxQueryKeys } from "./query-keys/inventory-outbox";
 import { inventoryOpsMetricsQueryKeys } from "./query-keys/inventory-ops-metrics";
-import { inventoryBuildmartQueryKeys } from "./query-keys/inventory-buildmart";
+import { inventoryMaterialsQueryKeys } from "./query-keys/inventory-materials";
 import { usersAndCommerceQueryKeys } from "./query-keys/users-and-commerce";
 import { payrollQueryKeys } from "./query-keys/payroll";
 import { growthAndSignQueryKeys } from "./query-keys/growth-and-sign";
@@ -69,7 +69,7 @@ export const queryKeys = {
   ...inventoryAiReviewQueryKeys,
   ...inventoryOutboxQueryKeys,
   ...inventoryOpsMetricsQueryKeys,
-  ...inventoryBuildmartQueryKeys,
+  ...inventoryMaterialsQueryKeys,
   ...usersAndCommerceQueryKeys,
   ...payrollQueryKeys,
   ...growthAndSignQueryKeys,

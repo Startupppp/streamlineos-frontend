@@ -86,7 +86,7 @@ function mockException(over: Partial<PickExceptionSummary> = {}): PickExceptionS
     locationCode: "A-1",
     foundLocationCode: null,
     warehouseId: 7,
-    warehouseName: "Gachibowli DC",
+    warehouseName: "North DC",
     blocksWave: true,
     ...over,
   };

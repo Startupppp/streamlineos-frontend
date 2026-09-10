@@ -33,12 +33,12 @@ type Values = z.input<typeof schema>;
 type Output = z.output<typeof schema>;
 
 /**
- * B1 — "Add Material" on a site.
+ * "Add Material" on a site.
  *
  * The store list is ordered so the ones serving this site's own zone come first:
- * a Gachibowli site is nearly always served from Gachibowli, and making somebody
- * scan a list of four to find it is the small friction that gets a line raised
- * against the wrong store.
+ * a site is nearly always served from a facility in its own zone, and making
+ * somebody scan the whole list to find it is the small friction that gets a
+ * line raised against the wrong store.
  */
 export function RequirementAddSheet({
   projectId,

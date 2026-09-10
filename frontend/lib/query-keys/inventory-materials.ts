@@ -13,7 +13,7 @@ import { queryKeyBase as base, trimKey as k } from "./base";
  * stored params object and never matches — making every no-argument invalidate
  * a silent no-op, which reads as "the list did not refresh after I saved".
  */
-export const inventoryBuildmartQueryKeys = {
+export const inventoryMaterialsQueryKeys = {
   inventoryOpsBoard: {
     all: [...base, "inventoryOpsBoard"] as const,
     summary: [...base, "inventoryOpsBoard", "summary"] as const,

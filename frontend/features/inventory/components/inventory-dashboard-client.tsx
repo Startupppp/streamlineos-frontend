@@ -31,8 +31,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { RecentMovementsTable } from "./inventory-recent-movements";
-import { NeedsAttentionBoard } from "./buildmart/needs-attention-board";
-import { OperationalPositionCard } from "./buildmart/operational-position-card";
+import { NeedsAttentionBoard } from "./materials/needs-attention-board";
+import { OperationalPositionCard } from "./materials/operational-position-card";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 import { InventoryAiBriefCard } from "./inventory-ai-brief-card";
 

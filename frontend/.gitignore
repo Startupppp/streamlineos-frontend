@@ -77,7 +77,7 @@ docs/superpowers/
 .env*
 
 # A second local dev server writes here (NEXT_DIST_DIR); never committed.
-.next-buildmart
+.next-local
 
 # Build-check output from a second dist dir; never committed.
 .next-build-check

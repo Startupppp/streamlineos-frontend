@@ -30,7 +30,7 @@ jest.mock("@/hooks/api/inventory/projects", () => ({
 }));
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [{ id: 3, name: "Gachibowli DC" }] }),
+  useWarehouses: () => ({ data: [{ id: 3, name: "North DC" }] }),
 }));
 
 const requirement: ProjectRequirement = {
@@ -54,9 +54,9 @@ const requirement: ProjectRequirement = {
   dimensionLabel: null,
   imageUrl: null,
   leadTimeDays: null,
-  warehouseName: "Gachibowli DC",
+  warehouseName: "North DC",
   warehouseCode: "GCH",
-  warehouseZone: "Gachibowli",
+  warehouseZone: "NORTH",
   coverage: {
     requirementId: 21,
     requiredQty: 120,

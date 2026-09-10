@@ -15,7 +15,7 @@ import { ProductCostingCardFields } from "@/features/inventory/components/produc
 import { ProductPricingFields } from "@/features/inventory/components/product-pricing-fields";
 import { ProductUomCardFields } from "@/features/inventory/components/product-uom-card-fields";
 import { ProductReorderCardFields } from "@/features/inventory/components/product-reorder-card-fields";
-import { ProductMaterialFields } from "@/features/inventory/components/buildmart/product-material-fields";
+import { ProductMaterialFields } from "@/features/inventory/components/materials/product-material-fields";
 import {
   productSchema,
   type ProductFormValues,

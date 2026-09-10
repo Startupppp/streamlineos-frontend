@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ProjectDetailClient } from "@/features/inventory/components/buildmart/project-detail-client";
+import { ProjectDetailClient } from "@/features/inventory/components/materials/project-detail-client";
 
 export default async function ProjectDetailPage({
   params,
