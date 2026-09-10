@@ -46,6 +46,16 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 
 Identify from the real codebase: module · entities · existing schema, APIs, cache keys, RBAC keys/guards, components, services, hooks · a simpler alternative. Audit across architecture · DB · API · cache · backend · frontend · UI/UX · security · performance · product completeness → implement → validate.
 
+### Reuse existing symbols before creating anything
+
+- Before adding a type, interface, function, class, component, hook, schema, DTO, constant, enum, utility, service, query key or configuration object, search both repositories for the same name, purpose, shape and behavior. Use `rg` for declarations, exports and call sites; do not decide from the current folder alone.
+- If an existing symbol already provides the required contract, import and use it. Do not copy it, rename a copy, wrap it with a pass-through helper, create a second local version, or duplicate its shape inline.
+- If the reusable symbol is in the wrong file, move the original symbol to the proper owning module or a neutral shared file, update every import and call site, and delete the old definition. Preserve one implementation and one source of truth.
+- If two existing symbols perform the same job, consolidate them into the best-owned implementation and remove the duplicate after all consumers are migrated. Keep separate symbols only when their domain meaning or behavior is materially different; document that difference in their names and tests.
+- Derive types from the source contract whenever possible: `z.infer` from Zod schemas, Drizzle inferred row/insert types from tables, and indexed/access types from existing models. Never create a parallel interface that can drift.
+- Create a new file only when no existing file owns the responsibility and adding the symbol to the correct cohesive module would make that module less clear. File-size limits do not justify duplicate helpers, one-symbol wrapper files, re-export shells or artificial fragmentation.
+- In the final review, search again for the new symbol's purpose and confirm there is one canonical definition, all consumers use it, obsolete definitions/files are removed, and the import graph remains acyclic.
+
 **Architecture re-review is a delta audit.** Read `architecture-refactor/PRD-IN-SCOPE.md` §27, verify prior findings against current source, and classify them as VERIFIED DONE, REGRESSED, STILL PENDING or NEW. A verified fix appears once under DONE and is not reintroduced as pending without current regression evidence.
 
 ## 5. Frontend ↔ Backend Boundary

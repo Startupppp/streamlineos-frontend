@@ -201,3 +201,30 @@ Do not infer pending work from this file. A criterion may map to zero, one or se
 - **PRD-C193** — Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
 - **PRD-C194** — No unresolved production/compliance P0/P1 finding remains.
 - **PRD-C195** — Release authority records commit, environment, evidence, accepted residual risks and date.
+
+---
+
+## Post-certification delta checklist
+
+Post-certification work is added only as one of four change classes: REGRESSION, NEW REQUIREMENT, NEWLY DISCOVERED RISK, PRODUCTION EVIDENCE. Each entry names the affected commit, reproduction/evidence, severity, owner and the concrete failure prevented. Do not create new PRD-C identifiers; the highest is PRD-C195 and the registry does not renumber.
+
+---
+
+### NEWLY DISCOVERED RISK — 2026-09-10
+
+**Affected commit:** `db887baad` (baseline before AuthContext refactor)
+
+**Finding:** `AccessPermissionResolver.getMembershipAccessState` (`modules/access/access-permission.resolver.ts:356-383`) queries `organizationMembers` alone and treats `status === "ACTIVE"` as active. It never checks `users.isActive`, `users.deletedAt`, or organization lifecycle — unlike `MembershipStateService.resolve` (`common/auth/membership-state.service.ts:81-139`), which joins all three.
+
+In-request paths are covered: `JwtAuthGuard` checks liveness before the permission resolver is reached, so only background callers that never pass a guard are exposed. Two such callers exist:
+
+- `HrExportWorkerService` (`modules/hr/import/hr-export-jobs.service.ts:224-233`) — `setInterval` poll; builds a hand-built `CurrentUserContext` from `organizationMembers` data without checking `users.isActive` or `users.deletedAt`.
+- `workflow-runner.service.ts:264` — reached from a `@Public()` cron controller (`WorkflowsCronController`) that authenticates by cron secret only; calls `resolveUserPermissions` for a stored `triggeredBy` user without a prior liveness check.
+
+**Concrete failure prevented:** A deactivated or deleted user's queued export or scheduled workflow continues to resolve permissions as if the account were live, allowing the job to complete and return data it should no longer be able to access.
+
+**Severity:** P2 — authorization gap in background workers only; all in-request paths are protected by `JwtAuthGuard`.
+
+**Owner:** auth-context refactor lane (see `architecture-refactor/PRD-AUTH-CONTEXT.md §5`). Needs its own audit; not folded into the AuthContext change.
+
+**Accountable criterion: PRD-C082** — "Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam." The gap is that background-worker permission resolution omits the user-liveness seam that `MembershipStateService.resolve` provides and that `JwtAuthGuard` enforces for in-request paths.
