@@ -12,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import type {
   AccountLedger,
   AccountNode,
+  AccountSystemTagMapping,
   AccountingBook,
   AccountingPeriod,
   AccountingSetupStatus,
@@ -163,6 +164,46 @@ export function usePostableAccounts(options?: QueryOpts<PostableAccount[]>) {
     staleTime: SLOW_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * Every system role and the account filling it.
+ *
+ * Roles change about as often as a chart of accounts does, which is to say
+ * almost never, so this is catalog-stale rather than list-stale.
+ */
+export function useAccountMappings(options?: QueryOpts<AccountSystemTagMapping[]>) {
+  const canRead = useCan("accounting:accounts:read");
+  return useQuery<AccountSystemTagMapping[], Error>({
+    queryKey: queryKeys.accountingLedger.accountMappings(),
+    queryFn: () => apiClient.get<AccountSystemTagMapping[]>("/accounting/accounts/mappings"),
+    staleTime: CATALOG_STALE,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * Move a role onto a different account.
+ *
+ * `PATCH /accounting/accounts/:id/system-tag` has existed since the kernel
+ * landed and had no caller anywhere in this app, so the only way to map a role
+ * was to seed it from the chart template and never change your mind.
+ *
+ * Invalidates the whole ledger namespace rather than the two obvious keys: the
+ * server releases the role from whichever account held it before, so an account
+ * this call never names also changed.
+ */
+export function useSetAccountSystemTag() {
+  const queryClient = useQueryClient();
+  return useMutation<AccountNode, Error, { accountId: string; systemTag: GlSystemTag | null }>({
+    mutationKey: ["accounting", "accounts", "system-tag"],
+    mutationFn: ({ accountId, systemTag }) =>
+      apiClient.patch<AccountNode>(`/accounting/accounts/${accountId}/system-tag`, { systemTag }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+    },
   });
 }
 

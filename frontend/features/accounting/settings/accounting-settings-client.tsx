@@ -9,6 +9,7 @@ import {
   useTaxRegistrations,
 } from "@/hooks/api/accounting/ledger";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { AccountMappingsCard } from "./account-mappings-card";
 import { BookDetailsCard } from "./book-details-card";
 import { CurrenciesCard } from "./currencies-card";
 import { FxConverterCard } from "./fx-converter-card";
@@ -44,6 +45,7 @@ export function AccountingSettingsClient() {
             isLoading={book.isLoading}
             taxRegistrationCount={registrations.data?.length ?? 0}
           />
+          <AccountMappingsCard enabled={Boolean(book.data)} />
           <CurrenciesCard currencies={currencies.data} isLoading={currencies.isLoading} />
           <FxRatesCard baseCurrency={baseCurrency} />
           <FxConverterCard baseCurrency={baseCurrency} />

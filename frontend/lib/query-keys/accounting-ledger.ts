@@ -14,6 +14,7 @@ export const accountingLedgerQueryKeys = {
 
     accounts: (params?: Record<string, unknown>) => [...root, "accounts", params] as const,
     accountsPostable: () => [...root, "accounts", "postable"] as const,
+    accountMappings: () => [...root, "accounts", "mappings"] as const,
     account: (accountId: string) => [...root, "account", accountId] as const,
     accountLedger: (accountId: string, params?: Record<string, unknown>) =>
       [...root, "account", accountId, "ledger", params] as const,
