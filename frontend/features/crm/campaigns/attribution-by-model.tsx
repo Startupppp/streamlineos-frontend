@@ -14,9 +14,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useAttributionByModel } from "@/hooks/api/crm/campaigns";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { ATTRIBUTION_MODELS, type AttributionModel } from "@/types/crm/campaigns";
 
 /**
@@ -49,7 +50,16 @@ export function AttributionByModel() {
 
   const display = useOrgDisplay();
   const report = useAttributionByModel(model, halfLifeDays);
-  const money = (minor: number) => formatMoney(minor, display.currency);
+  const money = (minor: number) => formatMinorMoney(minor, display.currency);
+
+  function handleModelChange(value: string) {
+    const next = ATTRIBUTION_MODELS.find((candidate) => candidate === value);
+    if (next) setModel(next);
+  }
+
+  function handleHalfLifeChange(value: string) {
+    setHalfLifeDays(Number(value));
+  }
 
   return (
     <Card>
@@ -61,7 +71,7 @@ export function AttributionByModel() {
         </CardDescription>
 
         <div className="mt-3 flex flex-wrap items-center gap-gap-field">
-          <Select value={model} onValueChange={(v) => setModel(v as AttributionModel)}>
+          <Select value={model} onValueChange={handleModelChange}>
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
@@ -76,10 +86,7 @@ export function AttributionByModel() {
 
           {/* Only time_decay reads it, so offering it elsewhere would imply it matters. */}
           {model === "time_decay" ? (
-            <Select
-              value={String(halfLifeDays)}
-              onValueChange={(v) => setHalfLifeDays(Number(v))}
-            >
+            <Select value={String(halfLifeDays)} onValueChange={handleHalfLifeChange}>
               <SelectTrigger className="w-44">
                 <SelectValue />
               </SelectTrigger>
@@ -162,8 +169,13 @@ export function AttributionByModel() {
                 <TableBody>
                   {report.data.campaigns.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-                        No touches on any won deal in this window.
+                      <TableCell colSpan={4} className="p-0">
+                        <EmptyState
+                          compact
+                          title="Nothing to attribute yet"
+                          description="No touches on any won deal in this window."
+                          className="border-0 bg-transparent"
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (

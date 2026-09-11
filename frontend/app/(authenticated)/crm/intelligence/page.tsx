@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState, NoPermissionState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCanState } from "@/hooks/api/access";
 import { useCoachingDigest } from "@/hooks/api/crm/call-intelligence";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -90,6 +91,13 @@ export default function CallIntelligencePage() {
             title="Couldn't load the coaching digest"
             description={getErrorMessage(digest.error)}
             onRetry={() => void digest.refetch()}
+          />
+        ) : digest.data && digest.data.data.cohort === 0 ? (
+          <EmptyState
+            illustrationPreset="report"
+            title="No calls analysed in this window"
+            description="A call joins the digest once somebody runs its analysis. Widen the window, or open a call and analyse it."
+            className="flex-1 min-h-0"
           />
         ) : digest.data ? (
           <CoachingDigestView response={digest.data} />

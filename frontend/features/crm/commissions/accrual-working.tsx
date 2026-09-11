@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useCallback } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -48,10 +49,11 @@ export function AccrualWorking({ accrual, locale }: AccrualWorkingProps) {
 
   if (accrual.deals.length === 0)
     return (
-      <p className="px-1 py-8 text-center text-sm text-muted-foreground">
-        Nothing has accrued in this period yet. A deal contributes here when it is
-        closed-won and its earning has been calculated.
-      </p>
+      <EmptyState
+        compact
+        title="Nothing has accrued in this period yet"
+        description="A deal contributes here when it is closed-won and its earning has been calculated."
+      />
     );
 
   return (

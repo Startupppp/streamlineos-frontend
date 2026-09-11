@@ -17,11 +17,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ErrorState, NoPermissionState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCanState } from "@/hooks/api/access";
 import { useCustomerLifecycles } from "@/hooks/api/crm/lifecycle";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { LifecycleRiskBand } from "@/types/crm/lifecycle";
+import type { ListLifecyclesParams } from "@/types/crm/lifecycle";
 import {
   RISK_LABEL,
   RISK_TONE,
@@ -42,16 +43,19 @@ export function RenewalsView() {
   const [filter, setFilter] = useState<RenewalFilter>("upcoming");
   const display = useOrgDisplay();
 
-  const params = useMemo(() => {
+  const params = useMemo<ListLifecyclesParams>(() => {
     if (filter === "upcoming")
-      return { status: "active" as const, renewingWithinDays: 90, order: "renewal" as const, limit: 100 };
+      return { status: "active", renewingWithinDays: 90, order: "renewal", limit: 100 };
     if (filter === "risk")
-      return { status: "active" as const, band: "at-risk" as LifecycleRiskBand, order: "risk" as const, limit: 100 };
-    return { order: "renewal" as const, limit: 100 };
+      return { status: "active", band: "at-risk", order: "risk", limit: 100 };
+    return { order: "renewal", limit: 100 };
   }, [filter]);
 
   const lifecycles = useCustomerLifecycles(params);
-  const handleFilter = useCallback((value: string) => setFilter(value as RenewalFilter), []);
+  const handleFilter = useCallback((value: string) => {
+    const next = FILTERS.find((entry) => entry.value === value);
+    if (next) setFilter(next.value);
+  }, []);
 
   if (useCanState("crm:lifecycle:view") === "denied")
     return <NoPermissionState permission="crm:lifecycle:view" />;
@@ -84,9 +88,12 @@ export function RenewalsView() {
           onRetry={() => void lifecycles.refetch()}
         />
       ) : rows.length === 0 ? (
-        <p className="px-1 py-12 text-center text-sm text-muted-foreground">
-          No renewals match this view.
-        </p>
+        <EmptyState
+          illustrationPreset="report"
+          title="No renewals in this view"
+          description="No renewals match this view."
+          className="flex-1 min-h-0"
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table className="min-w-[860px]">

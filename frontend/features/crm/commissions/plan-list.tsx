@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -27,11 +28,11 @@ interface PlanListProps {
 export function PlanList({ plans, locale }: PlanListProps) {
   if (plans.length === 0)
     return (
-      <p className="px-1 py-8 text-center text-sm text-muted-foreground">
-        No commission plans yet. A plan defines the tiers, accelerators and caps a
-        rep is paid under, and is versioned by date so a change is never
-        retroactive.
-      </p>
+      <EmptyState
+        compact
+        title="No commission plans yet"
+        description="A plan defines the tiers, accelerators and caps a rep is paid under, and is versioned by date so a change is never retroactive."
+      />
     );
 
   return (

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -87,14 +88,11 @@ export function EarningsLedger({ earnings, locale }: EarningsLedgerProps) {
        * nothing, which is a different and much worse statement than "nobody has
        * worked this out yet".
        */
-      <div className="px-1 py-8 text-center">
-        <p className="text-sm text-muted-foreground">No earnings recorded yet.</p>
-        <p className="mt-1 text-micro text-muted-foreground">
-          Commission is worked out per deal when somebody runs the calculation — there
-          is no scheduled run, so an empty ledger means it has not been done, not that
-          nothing was earned.
-        </p>
-      </div>
+      <EmptyState
+        compact
+        title="No earnings recorded yet"
+        description="Commission is worked out per deal when somebody runs the calculation — there is no scheduled run, so an empty ledger means it has not been done, not that nothing was earned."
+      />
     );
 
   return (

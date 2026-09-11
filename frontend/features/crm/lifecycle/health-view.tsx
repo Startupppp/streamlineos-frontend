@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ErrorState, NoPermissionState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useCustomerHealthRoster,
@@ -24,7 +25,6 @@ import {
 } from "@/hooks/api/crm/lifecycle";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { CustomerHealthBand } from "@/types/crm/lifecycle";
 import { HEALTH_LABEL, HEALTH_TONE, formatBps, formatDate } from "./lifecycle-format";
 
 type HealthFilter = "critical" | "at_risk" | "healthy" | "unscored";
@@ -46,10 +46,13 @@ export function HealthView() {
   const health = useCustomerHealthRoster(
     filter === "unscored"
       ? { unscored: true, limit: 100 }
-      : { band: filter as CustomerHealthBand, limit: 100 },
+      : { band: filter, limit: 100 },
   );
 
-  const handleFilter = useCallback((value: string) => setFilter(value as HealthFilter), []);
+  const handleFilter = useCallback((value: string) => {
+    const next = FILTERS.find((entry) => entry.value === value);
+    if (next) setFilter(next.value);
+  }, []);
   const handleRecompute = useCallback(
     (partyId: string) => {
       setPendingPartyId(partyId);
@@ -98,9 +101,12 @@ export function HealthView() {
           onRetry={() => void health.refetch()}
         />
       ) : rows.length === 0 ? (
-        <p className="px-1 py-12 text-center text-sm text-muted-foreground">
-          No customers match this health view.
-        </p>
+        <EmptyState
+          illustrationPreset="team"
+          title="No customers in this band"
+          description="No customers match this health view."
+          className="flex-1 min-h-0"
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table className="min-w-[780px]">
