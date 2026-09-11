@@ -585,13 +585,24 @@ multi-segment param guards and 3 were real**. The honest remaining figure was ne
       reports zero multi-field request/query schemas declared inline. See §10.
 - [x] **`organization.controller.ts` split** — 537 lines and seven concerns became five controllers on the
       same route prefix, with all 31 handler-level decorator sets proven identical.
+- [x] **`DependencyMode = "retire"` removed** (owner-authorised 2026-09-11, `279f6eb72`). Hierarchy is
+      archive-only, `assertCanRetire()` had zero callers, and no frontend or contract consumer sent
+      `mode=retire` — it was left over from the deleted hard-delete and move routes. Gone: the type, the
+      method, the `mode` parameter through four services, the query schema and its `@Query` binding, and
+      **36 now-provably-false `strict` branches**. Proven, not reviewed: the SQL archive mode renders
+      across all six kinds × both legal-entity flags was snapshotted before and diffs **byte-identical**
+      after, and the oracle was bitten to show it can fail. Those branches decide whether an archive is
+      *blocked*, so a wrongly-collapsed one would have silently let a blocked archive through.
+      ⚠ The only caller the default jest run could not see was a `*.db.spec.ts` (excluded from that run) —
+      **typecheck was the only gate that caught it**.
 
 ### Still open — deliberately
 
-- [ ] **Deny-blindness (ledger 2b)** — not fixed, per D19. Recorded as a decision, not an oversight.
-- [ ] **`DependencyMode = "retire"`** is now unreachable from production but still accepted by
-      `GET /org-hierarchy/dependencies/:kind/:id?mode=retire`, with two specs asserting it. Removing it is
-      a capability deletion this PRD did not authorise.
+- **Deny-blindness (ledger 2b)** — will-not-fix, per D19. Repointing `assertModuleEnabled` at the
+  actor-bound resolver would deny an admin who is personally denied module X the right to administer
+  module X *for other people* — a privilege regression, not a fix. A decision, not an oversight.
+**`DependencyMode = "retire"` is CLOSED** — moved to the section above; the owner authorised the removal
+on 2026-09-11 and it shipped in `279f6eb72`.
 
 ### Correction to this document
 
