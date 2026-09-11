@@ -74,17 +74,12 @@ const EXPORT_VERDICTS = new Map([
 
   ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "WIRE", reason: "member self-service expense stats component exists but not imported by the HR expenses page; add to features/employee-self-service or features/hr/expenses page" }],
 
-  ["hooks/api/accounting/banking.ts:useBankImports", { verdict: "WIRE", reason: "bank-imports list not wired; features/accounting/banking/components/bank-import-client.tsx uses create but not list; add useBankImports to that component" }],
-
   ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "WIRE", reason: "per-module checklist detail view not wired; backend GET /onboarding/module-checklists/{moduleKey} exists; add to features/dashboard/module-setup-banners.tsx or a new module-checklist page" }],
   ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "WIRE", reason: "skip-checklist-item action not wired to any UI; backend POST /onboarding/module-checklists/{moduleKey}/items/{itemKey}/skip exists" }],
   ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "WIRE", reason: "restart-module-checklist action not wired; backend POST /onboarding/module-checklists/{moduleKey}/restart exists" }],
 
   ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "WIRE", reason: "subject delete action not wired; features/party/subjects/subjects-page.tsx has list + create/edit but no delete row-action" }],
 
-
-  ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "WIRE", reason: "collections activities list not wired to any accounting feature page; add to features/accounting/sales/ar-collections view" }],
-  ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "WIRE", reason: "vendor payments list not wired; add to features/accounting/purchases/ap-payment-runs view" }],
 
   ["hooks/api/build/teams.ts:useProjectTeamMembers", { verdict: "WIRE", reason: "team members list not wired; features/build/teams/team-home-page.tsx exists but members sub-section not built; backend GET /build/teams/{teamId}/members exists" }],
 
