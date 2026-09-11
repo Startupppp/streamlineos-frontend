@@ -64,7 +64,11 @@ describe("ConsentGapNotice", () => {
     renderNotice();
 
     await waitFor(() =>
-      expect(mockedGet).toHaveBeenCalledWith("/crm/consent/missing", { channel: "EMAIL" }),
+      expect(mockedGet).toHaveBeenCalledWith(
+        "/crm/consent/missing",
+        { channel: "EMAIL" },
+        expect.anything(),
+      ),
     );
   });
 

@@ -11,8 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { RecordForm, renderFieldValue, resolveField, type RecordFormValues } from "@/components/renderer";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
-import { CONTACT_CONSENT_LAYOUT } from "@/lib/renderer/crm/contact-consent-layout";
-import { useContactConsent, useRecordConsent, type ContactConsentRow } from "@/hooks/api/crm";
+import {
+  CONSENT_CHANNELS,
+  CONSENT_LEGAL_BASES,
+  CONSENT_STATUSES,
+  CONTACT_CONSENT_LAYOUT,
+} from "@/lib/renderer/crm/contact-consent-layout";
+import { useContactConsent, useRecordConsent } from "@/hooks/api/crm";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ContactConsentHistory } from "./contact-consent-history";
@@ -77,20 +82,23 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
 
   const handleSubmit = useCallback(
     (values: RecordFormValues) => {
-      if (!values.channel || !values.status) {
+      const channel = CONSENT_CHANNELS.find((candidate) => candidate === values.channel);
+      const status = CONSENT_STATUSES.find((candidate) => candidate === values.status);
+      if (!channel || !status) {
         toast.error("Choose a channel and whether they opted in.");
         return;
       }
+      const legalBasis = CONSENT_LEGAL_BASES.find(
+        (candidate) => candidate === values.legalBasis,
+      );
       record.mutate(
         {
           contactId,
           input: {
-            channel: values.channel as ContactConsentRow["channel"],
-            status: values.status as ContactConsentRow["status"],
+            channel,
+            status,
             /* Optional on the API; an empty control means "not stated", not an empty string. */
-            legalBasis: values.legalBasis
-              ? (values.legalBasis as NonNullable<ContactConsentRow["legalBasis"]>)
-              : undefined,
+            legalBasis,
             sourceDetail: values.sourceDetail || undefined,
             /* Empty means "does not lapse", which is a value and not a gap. */
             expiresAt: values.expiresAt || null,

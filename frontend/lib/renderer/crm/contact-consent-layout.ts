@@ -135,3 +135,14 @@ export const CONTACT_CONSENT_LAYOUT: RecordLayout = {
 /** The channels a compliance count can be taken for, in the order the card shows them. */
 export const CONSENT_CHANNELS = ["EMAIL", "SMS", "WHATSAPP", "PHONE", "POST"] as const;
 export type ConsentChannel = (typeof CONSENT_CHANNELS)[number];
+
+export const CONSENT_STATUSES = ["OPTED_IN", "OPTED_OUT", "UNKNOWN"] as const;
+export type ConsentStatus = (typeof CONSENT_STATUSES)[number];
+
+export const CONSENT_LEGAL_BASES = [
+  "CONSENT",
+  "CONTRACT",
+  "LEGITIMATE_INTEREST",
+  "LEGAL_OBLIGATION",
+] as const;
+export type ConsentLegalBasis = (typeof CONSENT_LEGAL_BASES)[number];

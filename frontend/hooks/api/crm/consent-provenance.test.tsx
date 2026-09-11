@@ -8,7 +8,10 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { scopes: {}, isOrgOwner: true }, refetch: jest.fn() }),
+}));
 
 const mockedPost = apiClient.post as jest.Mock;
 
