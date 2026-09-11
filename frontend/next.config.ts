@@ -62,10 +62,17 @@ const nextConfig: NextConfig = {
    * `.next` exactly as before.
    */
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  turbopack: {},
+  webpack(config, { dev }) {
+    if (!dev) config.cache = false;
+    return config;
+  },
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   typescript: { ignoreBuildErrors: true },
   experimental: {
+    webpackBuildWorker: true,
+    webpackMemoryOptimizations: true,
     optimizePackageImports,
     serverActions: {
       allowedOrigins: [

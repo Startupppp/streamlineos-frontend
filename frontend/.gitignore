@@ -104,3 +104,6 @@ docs/superpowers/
 # Local browser and Web Vitals run outputs
 .browser-*-results.json
 .vitals-capture-*.json
+
+.vercel
+.env*
