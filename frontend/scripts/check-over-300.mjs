@@ -4,7 +4,9 @@
  * must not increase beyond the baseline set on 2026-08-31.
  *
  * Scans: all *.ts and *.tsx under the project root, excluding:
- *   node_modules, .next, feedbucket-widget (a separate bundled widget),
+ *   node_modules, every .next* build directory (.next, .next-e2e — gitignored
+ *   generated output, not code anyone wrote), feedbucket-widget (a separate
+ *   bundled widget),
  *   *.spec.ts, *.spec.tsx, *.d.ts, scripts/ (gate scripts themselves).
  *
  * Passes when actual count <= BASELINE. Fails when it increases.
@@ -33,6 +35,17 @@ const EXCLUDED_DIRS = new Set([
   "public",
 ]);
 
+/**
+ * Next writes generated types under a build directory per mode — `.next` for
+ * dev/build, `.next-e2e` for the e2e harness — and both are gitignored. Naming
+ * only `.next` let `.next-e2e/dev/types/validator.ts` into the count at **6,082
+ * lines**, so the ratchet was partly measuring whether anyone had run the e2e
+ * harness lately. Matched by prefix so a future mode directory cannot reopen it.
+ */
+function isExcludedDir(name) {
+  return EXCLUDED_DIRS.has(name) || name.startsWith(".next");
+}
+
 function collectFiles(dir, files = []) {
   let entries;
   try {
@@ -41,7 +54,7 @@ function collectFiles(dir, files = []) {
     return files;
   }
   for (const entry of entries) {
-    if (EXCLUDED_DIRS.has(entry)) continue;
+    if (isExcludedDir(entry)) continue;
     const full = join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
@@ -88,6 +101,9 @@ function runSelfTests() {
     return count === 3;
   })());
   assert("EXCLUDED_DIRS excludes node_modules", EXCLUDED_DIRS.has("node_modules"));
+  assert("isExcludedDir excludes .next", isExcludedDir(".next"));
+  assert("isExcludedDir excludes .next-e2e", isExcludedDir(".next-e2e"));
+  assert("isExcludedDir keeps a real directory", isExcludedDir("features") === false);
   assert("EXCLUDED_DIRS excludes feedbucket-widget", EXCLUDED_DIRS.has("feedbucket-widget"));
 
   if (failed > 0) {
