@@ -60,13 +60,6 @@ export const recallPlanSchema = z
 
 export type RecallPlanFormValues = z.infer<typeof recallPlanSchema>;
 
-export const recallDetailsSchema = z.object({
-  title: z.string().min(1, "Required"),
-  description: z.string().default(""),
-});
-
-export type RecallDetailsFormValues = z.infer<typeof recallDetailsSchema>;
-
 /** The form's answer, in the shape the simulate and execute endpoints take. */
 export function toSelection(values: RecallPlanFormValues): RecallSelection {
   const window = {

@@ -18,16 +18,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface StockSummaryParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface ReorderReportParams {
-  page?: number;
-  limit?: number;
-}
-
 export interface MovementsParams {
   warehouseId?: number;
   transactionType?: string;

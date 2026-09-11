@@ -37,8 +37,6 @@ export type {
   StockSummaryRow,
   ReorderReportRow,
   MovementReportRow,
-  StockSummaryParams,
-  ReorderReportParams,
   SlowMovingParams,
   ExpiryReportParams,
 } from "./reports-types";

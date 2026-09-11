@@ -52,8 +52,3 @@ export function locationsUnder(
   }
   return collected;
 }
-
-/** A lookup by id over any list that carries one, built once per render. */
-export function byId<T extends { id: number }>(rows: readonly T[]): Map<number, T> {
-  return new Map(rows.map((row) => [row.id, row]));
-}

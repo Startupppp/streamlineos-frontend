@@ -37,29 +37,6 @@ export function useCreateProject() {
   });
 }
 
-export function useUpdateProject(projectId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<ProjectDetail, Error, Partial<CreateProjectInput>>("inventory:projects:manage", {
-    mutationKey: ["inventory", "project", "update", projectId],
-    mutationFn: (data) => apiClient.patch<ProjectDetail>(`/inventory/projects/${projectId}`, data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventoryProjects.detail(projectId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventoryProjects.listAll });
-    },
-  });
-}
-
-export function useArchiveProject() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<{ id: number }, Error, number>("inventory:projects:manage", {
-    mutationKey: ["inventory", "project", "archive"],
-    mutationFn: (projectId) => apiClient.delete<{ id: number }>(`/inventory/projects/${projectId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventoryProjects.listAll });
-    },
-  });
-}
-
 export interface AddRequirementInput {
   projectId: number;
   productVariantId: number;

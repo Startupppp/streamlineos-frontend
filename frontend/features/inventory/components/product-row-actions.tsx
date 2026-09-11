@@ -65,37 +65,6 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function StockBadge({ qty }: { qty: number }) {
-  if (qty <= 0) {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-danger-rule text-status-danger-ink bg-status-danger-surface"
-      >
-        Out
-      </Badge>
-    );
-  }
-  if (qty < 10) {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
-      >
-        {qty} low
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-success-rule text-status-success-ink bg-status-success-surface"
-    >
-      {qty}
-    </Badge>
-  );
-}
-
 export function TrackingBadge({
   method,
 }: {

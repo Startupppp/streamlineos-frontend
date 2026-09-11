@@ -67,19 +67,6 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   });
 }
 
-export function useVendorPurchaseOrders(vendorId: number) {
-  const canView = useCan("inventory:purchase-orders:read");
-  return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
-    queryKey: queryKeys.inventory.purchaseOrders({ vendorId }),
-    queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
-        vendorId: String(vendorId),
-      }, signal),
-    staleTime: 2 * 60_000,
-    enabled: canView && vendorId > 0,
-  });
-}
-
 export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PurchaseOrder, Error>({
