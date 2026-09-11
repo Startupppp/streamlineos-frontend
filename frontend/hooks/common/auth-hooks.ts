@@ -226,12 +226,22 @@ export function useSessionClaimsRefresh(): SessionClaimsRefresh {
   return useCallback(
     (data?: unknown) => {
       clearBackendTokenCache();
-      return Promise.race([
-        update(data).catch(() => null),
-        new Promise<null>((resolve) => {
-          setTimeout(() => resolve(null), CLAIM_REFRESH_TIMEOUT_MS);
-        }),
-      ]);
+      return new Promise<Session | null>((resolve) => {
+        const timeout = setTimeout(
+          () => resolve(null),
+          CLAIM_REFRESH_TIMEOUT_MS,
+        );
+        void update(data).then(
+          (session) => {
+            clearTimeout(timeout);
+            resolve(session);
+          },
+          () => {
+            clearTimeout(timeout);
+            resolve(null);
+          },
+        );
+      });
     },
     [update],
   );

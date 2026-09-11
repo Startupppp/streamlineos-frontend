@@ -34,3 +34,9 @@ including its explicit inventory of all ten remaining test placeholders.
 Statuses are `READY`, `BLOCKED-EXTERNAL`, and `FINAL-INTEGRATION`. A task is removed
 only after its completion evidence is linked from the lane file. Historical reports
 are evidence, not backlogs.
+
+Completed remediation plans are intentionally not kept beside this backlog.
+Their execution checklists contained stale unchecked boxes after verification,
+which made them unsafe for agent task discovery. Durable decisions and
+verification evidence remain in `adr/`, `decisions/`, and
+`final-refactor/evidence/`.

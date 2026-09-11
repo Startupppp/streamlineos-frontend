@@ -1,3 +1,5 @@
+"use client";
+
 import {
   APP_THEME_MODE_STORAGE_KEY,
   APP_THEME_STORAGE_KEY,

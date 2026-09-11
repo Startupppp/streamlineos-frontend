@@ -30,6 +30,7 @@ export function useAccessVersionSync(): void {
   const version = data?.version;
   const seenVersion = useRef<number | undefined>(undefined);
   const isSyncing = useRef(false);
+  const pendingVersion = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (version === undefined) return;
@@ -38,20 +39,30 @@ export function useAccessVersionSync(): void {
       return;
     }
     if (seenVersion.current === version) return;
+    pendingVersion.current = version;
     if (isSyncing.current) return;
-    seenVersion.current = version;
-    isSyncing.current = true;
 
-    queryClient.removeQueries({
-      type: "inactive",
-      predicate: isOutsideAccessNamespace,
-    });
-    void queryClient.invalidateQueries({
-      refetchType: "active",
-      predicate: isOutsideAccessNamespace,
-    });
-    void refreshSessionClaims().finally(() => {
+    const syncPendingVersions = async () => {
+      isSyncing.current = true;
+      while (pendingVersion.current !== undefined) {
+        const nextVersion = pendingVersion.current;
+        pendingVersion.current = undefined;
+        if (seenVersion.current === nextVersion) continue;
+        seenVersion.current = nextVersion;
+
+        queryClient.removeQueries({
+          type: "inactive",
+          predicate: isOutsideAccessNamespace,
+        });
+        void queryClient.invalidateQueries({
+          refetchType: "active",
+          predicate: isOutsideAccessNamespace,
+        });
+        await refreshSessionClaims();
+      }
       isSyncing.current = false;
-    });
+    };
+
+    void syncPendingVersions();
   }, [version, queryClient, refreshSessionClaims]);
 }

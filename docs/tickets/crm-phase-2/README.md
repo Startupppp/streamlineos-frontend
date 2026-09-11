@@ -1,11 +1,12 @@
 # CRM Phase 2 — pending work
 
-Source: `streamlineos-frontend/docs/specs/2026-08-24-crm-phase-2-widening-prd.md`
+Source: [`docs/specs/2026-08-24-crm-phase-2-widening-prd.md`](../../specs/2026-08-24-crm-phase-2-widening-prd.md)
 
 This is the single working list for the remaining CRM Phase 2 work. Closed
 tickets 01–06 and 12–24 were removed after verification. The seven former
 ticket files were merged here so completed work does not continue consuming
-context. All items below remain open.
+context. All items below remain open. This README is the only active CRM Phase
+2 task file.
 
 ## Current status
 

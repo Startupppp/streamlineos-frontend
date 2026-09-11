@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
@@ -92,6 +92,37 @@ describe("the app cache and the session claims follow the backend permission ver
     rerender();
     expect(invalidate).toHaveBeenCalledTimes(1);
     expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+  });
+
+  it("queues a newer version that arrives while claims are refreshing", async () => {
+    let finishFirstRefresh: ((value: null) => void) | undefined;
+    mockRefreshSessionClaims
+      .mockImplementationOnce(
+        () =>
+          new Promise<null>((resolve) => {
+            finishFirstRefresh = resolve;
+          }),
+      )
+      .mockResolvedValue(null);
+    mockUseAccess.mockReturnValue({ data: { version: 7 } });
+    const { rerender } = renderHook(() => useAccessVersionSync(), {
+      wrapper: wrapperFor(client),
+    });
+
+    mockUseAccess.mockReturnValue({ data: { version: 8 } });
+    rerender();
+    mockUseAccess.mockReturnValue({ data: { version: 9 } });
+    rerender();
+
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      finishFirstRefresh?.(null);
+      await Promise.resolve();
+    });
+
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2);
+    expect(remove).toHaveBeenCalledTimes(2);
+    expect(invalidate).toHaveBeenCalledTimes(2);
   });
 });
 

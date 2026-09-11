@@ -225,6 +225,6 @@ In-request paths are covered: `JwtAuthGuard` checks liveness before the permissi
 
 **Severity:** P2 — authorization gap in background workers only; all in-request paths are protected by `JwtAuthGuard`.
 
-**Owner:** auth-context refactor lane (see `architecture-refactor/PRD-AUTH-CONTEXT.md §5`). Needs its own audit; not folded into the AuthContext change.
+**Owner:** active release backlog (`architecture-refactor/prd/README.md`). Needs its own audit; not folded into the completed AuthContext change.
 
 **Accountable criterion: PRD-C082** — "Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam." The gap is that background-worker permission resolution omits the user-liveness seam that `MembershipStateService.resolve` provides and that `JwtAuthGuard` enforces for in-request paths.
