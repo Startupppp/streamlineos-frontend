@@ -81,12 +81,18 @@ export const growthAndSignQueryKeys = {
     versionInForce: (planId: string, on: string) =>
       [...base, "crmCommission", "plan", planId, "version-in-force", on] as const,
     earnings: (params?: Record<string, unknown>) =>
-      [...base, "crmCommission", "earnings", params] as const,
+      params === undefined
+        ? ([...base, "crmCommission", "earnings"] as const)
+        : ([...base, "crmCommission", "earnings", params] as const),
     /** The period accrual and its decomposition are one cache entry per period. */
     accrual: (params?: Record<string, unknown>) =>
-      [...base, "crmCommission", "accrual", params] as const,
+      params === undefined
+        ? ([...base, "crmCommission", "accrual"] as const)
+        : ([...base, "crmCommission", "accrual", params] as const),
     accrualCurve: (params?: Record<string, unknown>) =>
-      [...base, "crmCommission", "accrual", "curve", params] as const,
+      params === undefined
+        ? ([...base, "crmCommission", "accrual", "curve"] as const)
+        : ([...base, "crmCommission", "accrual", "curve", params] as const),
     accrualByDeal: (dealId: string) =>
       [...base, "crmCommission", "accrual", "by-deal", dealId] as const,
     earningBreakdown: (earningId: string) =>

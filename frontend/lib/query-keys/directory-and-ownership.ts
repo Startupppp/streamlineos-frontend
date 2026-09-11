@@ -50,9 +50,13 @@ export const directoryAndOwnershipQueryKeys = {
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
     duplicates: (params?: Record<string, unknown>) =>
-      [...base, "party", "duplicates", params] as const,
+      params === undefined
+        ? ([...base, "party", "duplicates"] as const)
+        : ([...base, "party", "duplicates", params] as const),
     merges: (params?: Record<string, unknown>) =>
-      [...base, "party", "merges", params] as const,
+      params === undefined
+        ? ([...base, "party", "merges"] as const)
+        : ([...base, "party", "merges", params] as const),
     subjectTypes: [...base, "party", "subject-types"] as const,
     subjects: (params?: QueryKeyParams) =>
       params === undefined
