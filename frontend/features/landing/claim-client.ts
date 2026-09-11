@@ -8,6 +8,8 @@
  * nobody asked for.
  */
 
+import { claimResponseBodySchema, type ClaimResponseBody } from "./claim-client-schema";
+
 const GENERIC_ERROR = "Couldn't set up your workspace. Please try again.";
 
 export interface ClaimValues {
@@ -40,11 +42,12 @@ export async function claimInvitation(values: ClaimValues): Promise<ClaimResult>
     return { ok: false, error: GENERIC_ERROR };
   }
 
-  let body: { data?: { email?: string; reference?: string }; message?: string } = {};
+  let body: ClaimResponseBody = {};
   try {
-    body = (await res.json()) as typeof body;
+    const parsed = claimResponseBodySchema.safeParse(await res.json());
+    if (parsed.success) body = parsed.data;
   } catch {
-    // A body that will not parse is not a reason to lose the status code.
+    body = {};
   }
 
   if (!res.ok) {
