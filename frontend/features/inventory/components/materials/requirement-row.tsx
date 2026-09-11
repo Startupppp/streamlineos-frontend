@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { AppDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDecimal } from "@/lib/format-utils";
+import { resolveImageUrl } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useReleaseRequirement, useReserveRequirement } from "@/hooks/api/inventory/projects";
 import type { ProjectRequirement } from "@/hooks/api/inventory/projects";
@@ -44,6 +45,14 @@ export function RequirementRow({
   const reserved = c?.reservedQty ?? 0;
   const [qty, setQty] = useState(String(shortfall));
 
+  const imageSrc = resolveImageUrl(requirement.imageUrl);
+  const quantities: ReadonlyArray<{ label: string; value: number }> = [
+    { label: "Required", value: Number(requirement.requiredQty) },
+    { label: "Reserved", value: reserved },
+    { label: "Delivered", value: Number(requirement.fulfilledQty) },
+    { label: "Short", value: shortfall },
+  ];
+
   const canCover = available >= shortfall && shortfall > 0;
   const reserveBlockedReason =
     shortfall <= 0
@@ -56,9 +65,9 @@ export function RequirementRow({
     <li className="list-none rounded-lg border border-border p-3">
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
-          {requirement.imageUrl ? (
+          {imageSrc ? (
             <Image
-              src={requirement.imageUrl}
+              src={imageSrc}
               alt={`${requirement.productName}, ${requirement.variantSku}`}
               width={40}
               height={40}
@@ -91,15 +100,10 @@ export function RequirementRow({
         </div>
 
         <dl className="grid shrink-0 grid-cols-4 gap-x-4 text-right">
-          {[
-            ["Required", requirement.requiredQty],
-            ["Reserved", reserved],
-            ["Delivered", requirement.fulfilledQty],
-            ["Short", shortfall],
-          ].map(([label, value]) => (
-            <div key={label as string}>
+          {quantities.map(({ label, value }) => (
+            <div key={label}>
               <dt className="text-micro text-muted-foreground">{label}</dt>
-              <dd className="text-sm font-medium tabular-nums text-foreground">{formatDecimal(Number(value), 2)}</dd>
+              <dd className="text-sm font-medium tabular-nums text-foreground">{formatDecimal(value, 2)}</dd>
             </div>
           ))}
         </dl>

@@ -7,6 +7,7 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 import { useAccess, useCan } from "@/hooks/api/access";
+import { isRecord } from "@/lib/is-record";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { randomId } from "@/lib/random-id";
@@ -121,10 +122,9 @@ export function useAuthorizedIdempotentMutation<TData, TError = Error, TVariable
  */
 function stableStringify(value: unknown): string {
   return JSON.stringify(value, (_key, val: unknown) => {
-    if (val === null || typeof val !== "object" || Array.isArray(val)) return val;
-    const record = val as Record<string, unknown>;
+    if (!isRecord(val)) return val;
     const sorted: Record<string, unknown> = {};
-    for (const name of Object.keys(record).sort()) sorted[name] = record[name];
+    for (const name of Object.keys(val).sort()) sorted[name] = val[name];
     return sorted;
   });
 }

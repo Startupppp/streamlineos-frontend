@@ -37,6 +37,10 @@ import { fromMinorUnits } from "./landed-cost-schema";
 
 const ALL = "__all__";
 
+function isLandedCostStatus(value: string): value is LandedCostStatus {
+  return value === "DRAFT" || value === "APPLIED";
+}
+
 /**
  * Landed cost, which existed only on the backend.
  *
@@ -65,7 +69,7 @@ export function LandedCostClient() {
   const rows = useMemo(() => data?.items ?? [], [data]);
 
   function handleStatusChange(next: string): void {
-    setStatus(next === ALL ? undefined : (next as LandedCostStatus));
+    setStatus(isLandedCostStatus(next) ? next : undefined);
     setPage(1);
   }
 

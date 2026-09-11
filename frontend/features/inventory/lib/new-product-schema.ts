@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { MaterialFamily } from "@/types/inventory";
 
 export const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
 export const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
@@ -173,6 +174,15 @@ export const MATERIAL_FAMILIES = [
   { value: "FALSE_CEILING", label: "False ceiling" },
   { value: "LIGHTING", label: "Lighting" },
   { value: "OTHER", label: "Other" },
-] as const;
+] as const satisfies ReadonlyArray<{ value: MaterialFamily; label: string }>;
+
+/**
+ * The form field is a free string, because a `<Select>` hands back one. This is
+ * what turns it back into a family the catalogue knows before it is sent, so an
+ * unrecognised value is dropped rather than asserted onto the create payload.
+ */
+export function isMaterialFamily(value: string): value is MaterialFamily {
+  return MATERIAL_FAMILIES.some((family) => family.value === value);
+}
 
 export type ProductFormValues = z.infer<typeof productSchema>;

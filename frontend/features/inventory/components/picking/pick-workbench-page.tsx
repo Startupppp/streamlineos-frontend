@@ -67,7 +67,7 @@ function isAssignment(value: string | null): value is PickWaveAssignment {
 }
 
 function isStatus(value: string | null): value is PickWaveStatus {
-  return STATUSES.includes(value as PickWaveStatus);
+  return STATUSES.some((status) => status === value);
 }
 
 /**
@@ -88,7 +88,7 @@ function isView(value: string | null): value is WorkbenchView {
 }
 
 function isExceptionStatus(value: string | null): value is PickExceptionStatus {
-  return EXCEPTION_STATUSES.includes(value as PickExceptionStatus);
+  return EXCEPTION_STATUSES.some((status) => status === value);
 }
 
 function isOwnership(value: string | null): value is PickExceptionOwnership {

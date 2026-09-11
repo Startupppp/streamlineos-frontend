@@ -103,18 +103,48 @@ export interface AtRiskRequirement extends RequirementCoverage {
   status: RequirementStatus;
 }
 
-export type RawCoverage = Record<keyof RequirementCoverage, string | number | boolean | null>;
+export interface RawCoverage {
+  requirementId: string | number;
+  requiredQty: string | number | null;
+  reservedQty: string | number | null;
+  fulfilledQty: string | number | null;
+  shortfallQty: string | number | null;
+  availableQty: string | number | null;
+  atRisk: boolean | string | null;
+  riskReason: string | null;
+}
 
-export function toCoverage(c: RawCoverage | null): RequirementCoverage | null {
-  if (!c) return null;
+export interface RawAtRiskRequirement {
+  id: string | number;
+  projectId: string | number;
+  projectCode: string | null;
+  projectName: string | null;
+  projectZone: string | null;
+  productName: string | null;
+  variantSku: string | null;
+  requiredBy: string | null;
+  status: RequirementStatus;
+  coverage: RawCoverage;
+}
+
+function toRiskReason(value: string | null): RiskReason {
+  if (value === "SHORT_AND_DUE" || value === "SHORT_NO_STOCK") return value;
+  return null;
+}
+
+export function coverageOf(c: RawCoverage): RequirementCoverage {
   return {
     requirementId: Number(c.requirementId),
-    requiredQty: num(c.requiredQty as string),
-    reservedQty: num(c.reservedQty as string),
-    fulfilledQty: num(c.fulfilledQty as string),
-    shortfallQty: num(c.shortfallQty as string),
-    availableQty: num(c.availableQty as string),
+    requiredQty: num(c.requiredQty),
+    reservedQty: num(c.reservedQty),
+    fulfilledQty: num(c.fulfilledQty),
+    shortfallQty: num(c.shortfallQty),
+    availableQty: num(c.availableQty),
     atRisk: Boolean(c.atRisk),
-    riskReason: (c.riskReason as RiskReason) ?? null,
+    riskReason: toRiskReason(c.riskReason),
   };
+}
+
+export function toCoverage(c: RawCoverage | null): RequirementCoverage | null {
+  return c ? coverageOf(c) : null;
 }

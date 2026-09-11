@@ -61,6 +61,10 @@ const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EX
 
 const SCRAP_LOCATION_TYPES = ["SCRAP"] as const;
 
+function isAdjustmentReason(value: string): value is AdjustmentReason {
+  return REASONS.some((reason) => reason === value);
+}
+
 interface CreateAdjustmentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,9 +88,9 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
   // rather than leaving the operator to discover the rule from a form error.
   const handleReasonChange = useCallback(
     (value: string) => {
-      const next = value as AdjustmentReason;
-      setValue("reason", next, { shouldValidate: true });
-      if (isWriteOffReason(next)) setValue("adjustmentType", "OUT", { shouldValidate: true });
+      if (!isAdjustmentReason(value)) return;
+      setValue("reason", value, { shouldValidate: true });
+      if (isWriteOffReason(value)) setValue("adjustmentType", "OUT", { shouldValidate: true });
       else setValue("scrapLocationId", undefined);
     },
     [setValue],

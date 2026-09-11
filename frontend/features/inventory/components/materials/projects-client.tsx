@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, ArrowRight, CalendarClock, HardHat, MapPin, Search } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, MapPin, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +27,11 @@ const ZONE_LABEL: Record<string, string> = {
   HYD_WEST: "West",
 };
 
-const STATUSES: ProjectStatus[] = ["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
+const STATUSES: readonly ProjectStatus[] = ["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
+
+function isProjectStatus(value: string): value is ProjectStatus {
+  return STATUSES.some((status) => status === value);
+}
 
 function ProjectCard({ p, index }: { p: ReturnType<typeof useProjects>["data"] extends { items: (infer T)[] } | undefined ? T : never; index: number }) {
   const { fadeUp } = useMotionVariants();
@@ -142,6 +146,10 @@ export function ProjectsClient() {
   const { data, isLoading, error, refetch } = useProjects(filters);
   const showRiskFirst = params.get("risk") === "at-risk";
 
+  function handleStatusChange(value: string): void {
+    setStatus(isProjectStatus(value) ? value : "ALL");
+  }
+
   if (!canRead)
     return (
       <PageWrapper title="Construction Projects" subtitle="What each site needs, and whether it is covered.">
@@ -173,7 +181,7 @@ export function ProjectsClient() {
               className="h-9 pl-8"
             />
           </div>
-          <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus | "ALL")}>
+          <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-9 w-full sm:w-[150px]" aria-label="Filter by stage">
               <SelectValue />
             </SelectTrigger>
@@ -247,6 +255,3 @@ export function ProjectsClient() {
     </PageWrapper>
   );
 }
-
-/** Icon re-exported so the sidebar entry and this page cannot drift apart. */
-export const ProjectsIcon = HardHat;

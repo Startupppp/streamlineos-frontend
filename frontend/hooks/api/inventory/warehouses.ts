@@ -51,6 +51,7 @@ export interface Warehouse {
   country: string | null;
   isDefault: boolean;
   isActive: boolean;
+  zone: string | null;
   branchId: number | null;
   managerUserId: string | null;
   createdBy: string;

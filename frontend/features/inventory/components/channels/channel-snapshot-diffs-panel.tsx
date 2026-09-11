@@ -32,6 +32,10 @@ const ALL = "__all__";
 
 type PendingResolution = { diff: ChannelSnapshotDiff; action: "accept" | "dismiss" } | null;
 
+function isSnapshotDiffStatus(value: string): value is SnapshotDiffStatus {
+  return value === "OPEN" || value === "ACCEPTED" || value === "DISMISSED";
+}
+
 /**
  * What the marketplace thinks it holds, against what the ledger says.
  *
@@ -65,7 +69,7 @@ export function ChannelSnapshotDiffsPanel({
   const adjustmentAllowed = data?.snapshotPolicy === "ALLOW_ADJUSTMENT";
 
   function handleStatusChange(next: string): void {
-    setStatus(next === ALL ? undefined : (next as SnapshotDiffStatus));
+    setStatus(isSnapshotDiffStatus(next) ? next : undefined);
   }
 
   function handleResolve(note: string): void {

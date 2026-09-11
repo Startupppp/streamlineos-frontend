@@ -57,7 +57,7 @@ function isAssignment(value: string | null): value is PutawayAssignment {
 }
 
 function isStatus(value: string | null): value is PutawayTaskStatus {
-  return STATUSES.includes(value as PutawayTaskStatus);
+  return STATUSES.some((status) => status === value);
 }
 
 /**

@@ -25,6 +25,10 @@ interface PayoutUploadSheetProps {
   onOpenChange: (v: boolean) => void;
 }
 
+function isProvider(value: string): value is QuickCommerceProvider {
+  return value === "BLINKIT" || value === "INSTAMART" || value === "ZEPTO";
+}
+
 interface ParsedPayoutLine {
   providerPoNumber?: string;
   providerSku?: string;
@@ -49,6 +53,10 @@ export function PayoutUploadSheet({ open, onOpenChange }: PayoutUploadSheetProps
   const [payoutRef, setPayoutRef] = useState("");
   const [settledOn, setSettledOn] = useState("");
   const [csv, setCsv] = useState("");
+
+  function handleProviderChange(value: string): void {
+    if (isProvider(value)) setProvider(value);
+  }
 
   const handleUpload = useCallback(() => {
     if (payoutRef.trim() === "") {
@@ -105,10 +113,7 @@ export function PayoutUploadSheet({ open, onOpenChange }: PayoutUploadSheetProps
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="payout-provider">Platform</Label>
-            <Select
-              value={provider}
-              onValueChange={(v) => setProvider(v as QuickCommerceProvider)}
-            >
+            <Select value={provider} onValueChange={handleProviderChange}>
               <SelectTrigger id="payout-provider">
                 <SelectValue />
               </SelectTrigger>

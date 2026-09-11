@@ -15,7 +15,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
 import { useImportPreview, useImportJobs } from "@/hooks/api/inventory/admin";
 import type { ImportPreviewResult } from "@/hooks/api/inventory/admin";
-import type { StagedImportType } from "@/hooks/api/inventory/staged-import";
 import { ImportTypeStep, type ImportType } from "./import-type-step";
 import { ImportPreviewStep } from "./import-preview-step";
 import { StagedImportRunner } from "./staged-import-runner";
@@ -247,7 +246,7 @@ export function ImportClient() {
                   {step === "running" && selectedType && file && (
                     <StagedImportRunner
                       file={file}
-                      importType={selectedType as StagedImportType}
+                      importType={selectedType}
                       onDone={handleReset}
                     />
                   )}

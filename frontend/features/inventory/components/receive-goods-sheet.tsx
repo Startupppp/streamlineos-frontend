@@ -213,9 +213,9 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     for (const [position, { line, meta }] of counted.entries()) {
       const isSerial = meta?.trackingMethod === "SERIAL";
       const serials = isSerial ? splitSerials(line.serialNumbers) : undefined;
-      if (isSerial && serials!.length !== Math.round(Number(line.quantityReceived))) {
+      if (serials !== undefined && serials.length !== Math.round(Number(line.quantityReceived))) {
         toast.error(
-          `Serial count mismatch on line ${position + 1}: ${serials!.length} entered, ${Math.round(Number(line.quantityReceived))} expected`,
+          `Serial count mismatch on line ${position + 1}: ${serials.length} entered, ${Math.round(Number(line.quantityReceived))} expected`,
         );
         return null;
       }

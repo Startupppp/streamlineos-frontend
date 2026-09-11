@@ -22,6 +22,19 @@ import {
 } from "@/hooks/api/inventory/ai-review";
 import { AnomalyCard } from "./anomaly-card";
 
+type AnomalyStatus = NonNullable<InvAnomalyFilters["status"]>;
+type AnomalySeverity = NonNullable<InvAnomalyFilters["severity"]>;
+
+const ALL_SEVERITIES = "all";
+
+function isStatus(value: string): value is AnomalyStatus {
+  return value === "NEW" || value === "ACKNOWLEDGED" || value === "DISMISSED";
+}
+
+function isSeverity(value: string): value is AnomalySeverity {
+  return value === "high" || value === "medium" || value === "low";
+}
+
 /**
  * F3 — the anomaly queue.
  *
@@ -47,15 +60,23 @@ import { AnomalyCard } from "./anomaly-card";
 export function AnomalyQueuePanel() {
   const canRead = useCan("inventory:ai:read");
   const canManage = useCan("inventory:ai:manage");
-  const [status, setStatus] = useState<NonNullable<InvAnomalyFilters["status"]>>("NEW");
-  const [severity, setSeverity] = useState<string>("all");
+  const [status, setStatus] = useState<AnomalyStatus>("NEW");
+  const [severity, setSeverity] = useState<AnomalySeverity | typeof ALL_SEVERITIES>(ALL_SEVERITIES);
 
   const filters: InvAnomalyFilters = {
     status,
-    ...(severity === "all" ? {} : { severity: severity as "high" | "medium" | "low" }),
+    ...(severity === ALL_SEVERITIES ? {} : { severity }),
   };
   const { data, isLoading, error, refetch } = useInventoryAnomalies(filters);
   const review = useReviewInventoryAnomaly();
+
+  function handleSeverityChange(value: string): void {
+    setSeverity(isSeverity(value) ? value : ALL_SEVERITIES);
+  }
+
+  function handleStatusChange(value: string): void {
+    if (isStatus(value)) setStatus(value);
+  }
 
   if (!canRead) {
     return (
@@ -76,23 +97,18 @@ export function AnomalyQueuePanel() {
         </CardTitle>
         <CardAction>
           <div className="flex items-center gap-2">
-            <Select value={severity} onValueChange={setSeverity}>
+            <Select value={severity} onValueChange={handleSeverityChange}>
               <SelectTrigger size="sm" className="w-32" aria-label="Filter by severity">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All severities</SelectItem>
+                <SelectItem value={ALL_SEVERITIES}>All severities</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              value={status}
-              onValueChange={(value) =>
-                setStatus(value as NonNullable<InvAnomalyFilters["status"]>)
-              }
-            >
+            <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger size="sm" className="w-36" aria-label="Filter by status">
                 <SelectValue />
               </SelectTrigger>

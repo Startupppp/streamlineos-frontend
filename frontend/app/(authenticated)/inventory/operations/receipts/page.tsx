@@ -27,10 +27,10 @@ import type { GrnSummary } from "@/hooks/api/inventory/operations";
 
 const RECEIPTS_PERMISSION = "inventory:purchase-orders:read";
 
-const STATUS_OPTIONS: GrnStatus[] = ["DRAFT", "COUNTING", "QUALITY_REVIEW", "POSTED", "CANCELLED"];
+const STATUS_OPTIONS: readonly GrnStatus[] = ["DRAFT", "COUNTING", "QUALITY_REVIEW", "POSTED", "CANCELLED"];
 
 function isGrnStatus(value: string): value is GrnStatus {
-  return (STATUS_OPTIONS as string[]).includes(value);
+  return STATUS_OPTIONS.some((status) => status === value);
 }
 
 function isDateString(value: string | null): value is string {

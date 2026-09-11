@@ -34,6 +34,10 @@ import { GlReconciliationNotes } from "./gl-reconciliation-notes";
 
 const ALL = "__all__";
 
+function isGlReconStatus(value: string): value is GlReconStatus {
+  return GL_RECON_STATUSES.some((status) => status === value);
+}
+
 /**
  * Stock movements against the journal entries they should have produced.
  *
@@ -70,7 +74,7 @@ export function GlReconciliationClient() {
   }
 
   function handleStatusChange(next: string): void {
-    setStatus(next === ALL ? undefined : (next as GlReconStatus));
+    setStatus(isGlReconStatus(next) ? next : undefined);
     setPage(1);
   }
 

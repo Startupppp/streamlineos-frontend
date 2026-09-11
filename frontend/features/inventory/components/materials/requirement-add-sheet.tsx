@@ -58,8 +58,8 @@ export function RequirementAddSheet({
     const list = warehouses ?? [];
     if (!projectZone) return list;
     return [...list].sort((a, b) => {
-      const az = (a as { zone?: string | null }).zone === projectZone ? 0 : 1;
-      const bz = (b as { zone?: string | null }).zone === projectZone ? 0 : 1;
+      const az = a.zone === projectZone ? 0 : 1;
+      const bz = b.zone === projectZone ? 0 : 1;
       return az - bz || a.name.localeCompare(b.name);
     });
   }, [warehouses, projectZone]);

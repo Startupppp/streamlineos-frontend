@@ -10,7 +10,7 @@ import {
   NewProductForm,
   type ProductFormValues,
 } from "@/features/inventory/components/new-product-form";
-import type { MaterialFamily } from "@/types/inventory";
+import { isMaterialFamily } from "@/features/inventory/lib/new-product-schema";
 
 export default function NewProductPage() {
   const canCreate = useCan("inventory:products:create");
@@ -19,6 +19,7 @@ export default function NewProductPage() {
 
   async function onSubmit(values: ProductFormValues): Promise<void> {
     const trimmedSku = values.sku.trim();
+    const materialFamily = values.materialFamily;
     const product = await createMutation.mutateAsync({
       name: values.name,
       ...(trimmedSku ? { sku: trimmedSku } : {}),
@@ -45,7 +46,7 @@ export default function NewProductPage() {
       ...(values.finish ? { finish: values.finish } : {}),
       ...(values.colour ? { colour: values.colour } : {}),
       ...(values.dimensionLabel ? { dimensionLabel: values.dimensionLabel } : {}),
-      ...(values.materialFamily ? { materialFamily: values.materialFamily as MaterialFamily } : {}),
+      ...(materialFamily && isMaterialFamily(materialFamily) ? { materialFamily } : {}),
       ...(values.packSize ? { packSize: values.packSize } : {}),
       ...(values.supplierCode ? { supplierCode: values.supplierCode } : {}),
       ...(values.leadTimeDays ? { leadTimeDays: Number(values.leadTimeDays) } : {}),

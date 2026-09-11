@@ -37,6 +37,10 @@ const VIEW_LABEL: Record<StrandedTransitView, string> = {
   STRANDED: "Needs a decision",
 };
 
+function isTransitView(value: string): value is StrandedTransitView {
+  return value === "ANY" || value === "STRANDED";
+}
+
 /**
  * Goods on a van, and goods a short receipt left behind.
  *
@@ -82,7 +86,8 @@ export function TransitClient() {
   );
 
   function handleViewChange(next: string): void {
-    setView(next as StrandedTransitView);
+    if (!isTransitView(next)) return;
+    setView(next);
     setPage(1);
   }
 

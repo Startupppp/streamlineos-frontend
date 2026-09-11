@@ -39,6 +39,10 @@ const VERDICT_LABEL: Readonly<Record<AllocationOverrideVerdict, string>> = {
   SHELF_LIFE: "Below shelf life",
 };
 
+function isVerdict(value: string): value is AllocationOverrideVerdict {
+  return value === "NEAR_EXPIRY" || value === "SHELF_LIFE";
+}
+
 /**
  * The register of expiry rules somebody set aside, and why.
  *
@@ -54,14 +58,16 @@ const VERDICT_LABEL: Readonly<Record<AllocationOverrideVerdict, string>> = {
  */
 export function AllocationOverridesClient() {
   const canView = useCan(ALLOCATION_OVERRIDE_READ);
-  const [verdict, setVerdict] = useState<string>(ALL_VERDICTS);
+  const [verdict, setVerdict] = useState<AllocationOverrideVerdict | typeof ALL_VERDICTS>(
+    ALL_VERDICTS,
+  );
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
   const { cursor, pageNumber, hasPrevious, goNext, goPrevious, reset } = useCursorPagination();
 
   const query = useAllocationOverrides({
-    ...(verdict === ALL_VERDICTS ? {} : { verdict: verdict as AllocationOverrideVerdict }),
+    ...(verdict === ALL_VERDICTS ? {} : { verdict }),
     ...(fromDate ? { fromDate } : {}),
     ...(toDate ? { toDate } : {}),
     ...(cursor !== undefined ? { cursor } : {}),
@@ -72,7 +78,7 @@ export function AllocationOverridesClient() {
   const hasFilters = verdict !== ALL_VERDICTS || !!fromDate || !!toDate;
 
   function handleVerdictChange(next: string): void {
-    setVerdict(next);
+    setVerdict(isVerdict(next) ? next : ALL_VERDICTS);
     reset();
   }
 
