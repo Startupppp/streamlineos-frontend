@@ -2,28 +2,28 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type {
+  CostingVariants,
+  InventoryPeriod,
+  ValuationGrain,
+  ValuationReport,
+} from "@/hooks/api/inventory/valuation-schema";
 
-type CostingMethod = "FIFO" | "LIFO" | "WEIGHTED_AVG" | "STANDARD";
+export type {
+  ValuationReport,
+  ValuationRow,
+  CostingVariant,
+} from "@/hooks/api/inventory/valuation-schema";
 
-export interface ValuationRow {
-  variantId: number;
-  variantSku: string;
-  productName: string;
-  costingMethod: CostingMethod;
-  onHandQty: number;
-  unitCostBasis: number;
-  totalValue: number;
-  warehouseId: number | null;
-  warehouseName: string | null;
-}
-
-interface ValuationSummary {
-  totalValue: number;
-  byMethod: { method: CostingMethod; value: number }[];
-  rows: ValuationRow[];
-}
+const valuationReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationReportContract),
+);
+const costingVariantsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.costingVariantsContract),
+);
 
 /**
  * Every quantity and money figure on the valuation evidence endpoints leaves
@@ -54,28 +54,12 @@ export interface ValuationLayer {
   remainingValueAsAt: string;
 }
 
-/** The date a figure is quoted as at, and the accounting period holding it. */
-export interface ValuationGrain {
-  asOfDate: string;
-  live: boolean;
-  period: InventoryPeriod | null;
-}
-
 interface ValuationLayersResponse {
   grain: ValuationGrain;
   items: ValuationLayer[];
   total: number;
   page: number;
   totalPages: number;
-}
-
-export interface InventoryPeriod {
-  /** A `gl_periods` id: valuation reads the default book's accounting periods. */
-  periodId: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  status: string;
 }
 
 /**
@@ -131,46 +115,43 @@ export interface ValuationConsumptionsParams {
   limit?: number;
 }
 
-export interface CostingProductRow {
-  variantId: number;
-  variantSku: string;
-  productName: string;
-  costingMethod: CostingMethod;
-  standardCost: number | null;
-  averageCost: number | null;
-  onHandQty: number;
-  isLocked: boolean;
-}
-
-interface CostingListResponse {
-  items: CostingProductRow[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
 interface ValuationReportParams {
   [key: string]: unknown;
   warehouseId?: number;
   categoryId?: number;
+  asOfDate?: string;
+  periodId?: string;
+  page?: number;
+  limit?: number;
 }
 
 interface CostingParams {
   [key: string]: unknown;
-  search?: string;
+  activeOnly?: boolean;
   page?: number;
+  limit?: number;
 }
 
 export function useValuationReport(params?: ValuationReportParams) {
   const canView = useCan("inventory:valuation:read");
-  return useQuery<ValuationSummary, Error>({
+  return useQuery<ValuationReport, Error>({
     queryKey: queryKeys.inventory.valuationReport(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ValuationSummary>("/inventory/reports/valuation", {
-        ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-        ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
-      }, signal),
+      apiClient.get(
+        "/inventory/reports/valuation",
+        {
+          warehouseId: params?.warehouseId,
+          categoryId: params?.categoryId,
+          asOfDate: params?.asOfDate,
+          periodId: params?.periodId,
+          page: params?.page,
+          limit: params?.limit,
+        },
+        signal,
+        valuationReportContract,
+      ),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }
@@ -241,13 +222,19 @@ export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
  */
 export function useCostingProducts(params?: CostingParams) {
   const canView = useCan("inventory:products:read");
-  return useQuery<CostingListResponse, Error>({
+  return useQuery<CostingVariants, Error>({
     queryKey: queryKeys.inventory.costingProducts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CostingListResponse>("/inventory/products/variants", {
-        ...(params?.search ? { search: params.search } : {}),
-        ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal),
+      apiClient.get(
+        "/inventory/products/variants",
+        {
+          activeOnly: params?.activeOnly === undefined ? undefined : String(params.activeOnly),
+          page: params?.page,
+          limit: params?.limit,
+        },
+        signal,
+        costingVariantsContract,
+      ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

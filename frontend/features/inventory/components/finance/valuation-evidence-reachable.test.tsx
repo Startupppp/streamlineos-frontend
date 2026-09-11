@@ -11,6 +11,11 @@ import { ValuationClient } from "./valuation-client";
  * so a valuation figure could be opened but a cost of goods sold figure could
  * not: nothing on screen said which layer an issue drew from, or at what cost.
  *
+ * The valuation table above it read a contract the backend does not send either:
+ * a flat `rows` array of numeric minor units, against a response carrying
+ * `items` of `numeric(18,4)` decimal strings in the organisation's own
+ * currency. The mock below is the service's own projection.
+ *
  * The same sheet's Layers tab was reading a contract the backend does not send.
  * It asked for `id` / `qty` / `remainingQty` / `receivedAt` against a response
  * carrying `layerId` / `quantity` / `remainingQuantityAsAt` / `createdAt`, and
@@ -41,21 +46,28 @@ jest.mock("@/hooks/api/inventory/valuation", () => ({
   useValuationReport: () => ({
     ...idle,
     data: {
-      totalValue: 987600,
-      byMethod: [{ method: "FIFO", value: 987600 }],
-      rows: [
+      grain: { asOfDate: "2026-09-10", live: true, period: null },
+      items: [
         {
-          variantId: 7,
+          productVariantId: 7,
           variantSku: "SKU-7",
+          variantName: "2.5mm reel",
+          productId: 3,
           productName: "Copper wire 2.5mm",
           costingMethod: "FIFO",
-          onHandQty: 40,
-          unitCostBasis: 2469,
-          totalValue: 987600,
-          warehouseId: 1,
-          warehouseName: "Pune DC",
+          onHand: "40.0000",
+          value: "9876.0000",
+          fifoValue: "9876.0000",
+          standardCost: "0",
+          unitCostBasis: "246.9000",
+          layerCount: 2,
         },
       ],
+      totalValue: "9876.0000",
+      totalOnHand: "40.0000",
+      total: 1,
+      page: 1,
+      totalPages: 1,
     },
   }),
   useValuationLayers: () => ({
