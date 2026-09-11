@@ -61,7 +61,9 @@ export const accessAndCrmQueryKeys = {
     autonomyClassStops: () => [...base, "crm", "autonomy", "class-stops"] as const,
     autonomyRepairPolicies: () => [...base, "crm", "autonomy", "repair-policies"] as const,
     autonomyRepairs: (filters?: Record<string, unknown>) =>
-      [...base, "crm", "autonomy", "repairs", filters] as const,
+      filters === undefined
+        ? ([...base, "crm", "autonomy", "repairs"] as const)
+        : ([...base, "crm", "autonomy", "repairs", filters] as const),
     autonomyRepairMeasure: (days: number) =>
       [...base, "crm", "autonomy", "repair-measure", days] as const,
     autonomyScoreboard: (days: number) =>
@@ -225,9 +227,13 @@ export const accessAndCrmQueryKeys = {
   crmLifecycle: {
     all: [...base, "crmLifecycle"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "crmLifecycle", "list", params] as const,
+      params === undefined
+        ? ([...base, "crmLifecycle", "list"] as const)
+        : ([...base, "crmLifecycle", "list", params] as const),
     healthRoster: (params?: Record<string, unknown>) =>
-      [...base, "crmLifecycle", "healthRoster", params] as const,
+      params === undefined
+        ? ([...base, "crmLifecycle", "healthRoster"] as const)
+        : ([...base, "crmLifecycle", "healthRoster", params] as const),
   },
 
   crmOrganizations: {
@@ -319,7 +325,9 @@ export const accessAndCrmQueryKeys = {
   dealCompetitorSuggestions: {
     all: [...base, "dealCompetitorSuggestions"] as const,
     list: (dealId: number, status?: string) =>
-      [...base, "dealCompetitorSuggestions", "list", dealId, status] as const,
+      status === undefined
+        ? ([...base, "dealCompetitorSuggestions", "list", dealId] as const)
+        : ([...base, "dealCompetitorSuggestions", "list", dealId, status] as const),
   },
 
   salesTeamCapacity: {
