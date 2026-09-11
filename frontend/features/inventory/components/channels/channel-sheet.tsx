@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -33,17 +32,11 @@ import {
   type Channel,
 } from "@/hooks/api/inventory/channels";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const channelSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  channelType: z.enum(["INTERNAL", "SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"]),
-  status: z.enum(["ACTIVE", "PAUSED"]),
-  safetyBuffer: z.string(),
-  publishThreshold: z.string(),
-  warehouseIds: z.array(z.number()),
-});
-
-type ChannelFormValues = z.infer<typeof channelSchema>;
+import {
+  channelSchema,
+  optionalDecimal,
+  type ChannelFormValues,
+} from "./channel-schema";
 
 interface ChannelSheetProps {
   open: boolean;
@@ -112,8 +105,8 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
   }
 
   async function onSubmit(values: ChannelFormValues): Promise<void> {
-    const safetyBuffer = values.safetyBuffer ? Number(values.safetyBuffer) : undefined;
-    const publishThreshold = values.publishThreshold ? Number(values.publishThreshold) : undefined;
+    const safetyBuffer = optionalDecimal(values.safetyBuffer);
+    const publishThreshold = optionalDecimal(values.publishThreshold);
 
     try {
       if (isEdit) {
@@ -130,7 +123,6 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
         await createMutation.mutateAsync({
           name: values.name.trim(),
           channelType: values.channelType,
-          status: values.status,
           safetyBuffer,
           publishThreshold,
           warehouseIds: values.warehouseIds,
@@ -218,27 +210,29 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="PAUSED">Paused</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {isEdit && (
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="PAUSED">Paused</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <FormField
@@ -246,9 +240,9 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
               name="safetyBuffer"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Safety buffer (%)</FormLabel>
+                  <FormLabel>Safety buffer (units)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max="100" placeholder="0" {...field} />
+                    <Input inputMode="decimal" placeholder="0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -261,7 +255,7 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
                 <FormItem>
                   <FormLabel>Publish threshold (units)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" placeholder="0" {...field} />
+                    <Input inputMode="decimal" placeholder="0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

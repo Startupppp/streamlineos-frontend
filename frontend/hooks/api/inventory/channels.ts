@@ -56,17 +56,16 @@ export interface ThreePlConnection {
 interface CreateChannelInput {
   name: string;
   channelType: ChannelType;
-  safetyBuffer?: number;
-  publishThreshold?: number;
+  safetyBuffer?: string;
+  publishThreshold?: string;
   warehouseIds?: number[];
-  status?: ChannelStatus;
 }
 
 interface UpdateChannelInput {
   channelId: number;
   name?: string;
-  safetyBuffer?: number;
-  publishThreshold?: number;
+  safetyBuffer?: string;
+  publishThreshold?: string;
   warehouseIds?: number[];
   status?: ChannelStatus;
 }
@@ -243,16 +242,20 @@ export interface ChannelSnapshotDiffsResult {
   snapshotPolicy: string;
 }
 
+type ChannelSnapshotDiffFilters = {
+  [key: string]: unknown;
+  status?: SnapshotDiffStatus;
+  page?: number;
+  limit?: number;
+};
+
 export function useChannelSnapshotDiffs(
   channelId: number | null,
-  filters?: { status?: SnapshotDiffStatus; page?: number; limit?: number },
+  filters?: ChannelSnapshotDiffFilters,
 ) {
   const canManage = useCan("inventory:channels:manage");
   return useQuery<ChannelSnapshotDiffsResult, Error>({
-    queryKey: queryKeys.inventoryChannelSnapshots.diffs(
-      channelId ?? 0,
-      filters as Record<string, unknown>,
-    ),
+    queryKey: queryKeys.inventoryChannelSnapshots.diffs(channelId ?? 0, filters),
     queryFn: ({ signal }) =>
       apiClient.get<ChannelSnapshotDiffsResult>(
         `/inventory/channels/${channelId ?? 0}/snapshot-differences`,
