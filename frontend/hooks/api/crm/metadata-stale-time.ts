@@ -1,0 +1,1 @@
+export const CRM_METADATA_STALE_TIME = 5 * 60_000;
