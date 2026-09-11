@@ -17,7 +17,10 @@ let mockUpdatePending = false;
 let mockStatus: "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED" = "DRAFT";
 let mockCan: Record<string, boolean> = {};
 
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan[key] ?? false }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockCan[key] ?? false,
+  useAccess: () => ({ data: { isOrgOwner: false }, refetch: () => Promise.resolve({ data: undefined }) }),
+}));
 
 jest.mock("@/hooks/api/inventory/operations", () => ({
   ...jest.requireActual("@/hooks/api/inventory/operations"),
