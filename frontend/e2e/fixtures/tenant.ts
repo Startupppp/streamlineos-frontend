@@ -37,15 +37,21 @@ export const SKIP_REASON =
   `org_modules row enabling "inventory", and BACKEND_JWT_SECRET / ` +
   `INTERNAL_API_SECRET byte-matching that backend's.`;
 
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(SKIP_REASON);
+  return value;
+}
+
 export function tenantEnv(): TenantEnv {
   const missing = missingTenantEnv();
   if (missing.length > 0) throw new Error(SKIP_REASON);
 
   return {
     user: {
-      orgId: process.env.E2E_ORG_ID as string,
-      userId: process.env.E2E_USER_ID as string,
-      email: process.env.E2E_USER_EMAIL as string,
+      orgId: requiredEnv("E2E_ORG_ID"),
+      userId: requiredEnv("E2E_USER_ID"),
+      email: requiredEnv("E2E_USER_EMAIL"),
       isOrgOwner: process.env.E2E_USER_IS_OWNER !== "0",
     },
     apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500",

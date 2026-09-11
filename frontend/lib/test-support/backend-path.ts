@@ -77,8 +77,9 @@ function pairedSibling(root: string, relative: string): string | null {
  */
 export function backendPath(relative: string): string {
   const root = frontendRoot();
+  const paired = pairedSibling(root, relative);
   const candidates = [
-    ...(pairedSibling(root, relative) === null ? [] : [pairedSibling(root, relative)!]),
+    ...(paired === null ? [] : [paired]),
     ...LAYOUTS.map(([frontendDir, backendDir]) =>
       path.resolve(
         root,
@@ -89,7 +90,8 @@ export function backendPath(relative: string): string {
     ),
   ];
 
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;
+  const [first] = candidates;
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? first;
 }
 
 /** Whether the backend repository is reachable at all, for a guard assertion. */

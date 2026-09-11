@@ -95,13 +95,9 @@ function extractMessage(error: unknown, depth = 0): string {
 const VALIDATION_ISSUE_LIMIT = 3;
 
 function isValidationIssue(value: unknown): value is { path?: unknown; message: string } {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    "message" in value &&
-    typeof (value as { message: unknown }).message === "string" &&
-    !!(value as { message: string }).message.trim()
-  );
+  if (!value || typeof value !== "object" || !("message" in value)) return false;
+  const { message } = value;
+  return typeof message === "string" && message.trim().length > 0;
 }
 
 function describeIssue(issue: { path?: unknown; message: string }): string {
@@ -114,7 +110,7 @@ function describeIssue(issue: { path?: unknown; message: string }): string {
 
 function validationDetail(error: unknown): string {
   if (!error || typeof error !== "object" || !("details" in error)) return "";
-  const details = (error as { details: unknown }).details;
+  const { details } = error;
   if (!Array.isArray(details)) return "";
 
   const issues = details.filter(isValidationIssue).map(describeIssue).filter(Boolean);
