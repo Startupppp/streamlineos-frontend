@@ -53,12 +53,56 @@ function isCheckable(key) {
   return PERMISSION_SHAPE.test(key);
 }
 
+/**
+ * The source with its comments blanked out, strings left intact.
+ *
+ * Navigation files explain their gates in prose, and the prose names the keys a
+ * route deliberately does NOT use ("`accounting:read` and not `accounting:view`:
+ * no route enforces the latter"). Scanning comments reported those as live gates,
+ * which is the check failing on exactly the note that records its own last fix.
+ * A `//` inside a string (a URL) is kept; only real comments go.
+ */
+export function stripComments(source) {
+  let out = "";
+  let quote = null;
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+    const next = source[i + 1];
+    if (quote) {
+      out += ch;
+      if (ch === "\\") { out += next ?? ""; i += 1; }
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { quote = ch; out += ch; continue; }
+    if (ch === "/" && next === "/") {
+      while (i < source.length && source[i] !== "\n") i += 1;
+      out += "\n";
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      i += 2;
+      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) {
+        if (source[i] === "\n") out += "\n";
+        i += 1;
+      }
+      i += 1;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+export function keysIn(source) {
+  return [...stripComments(source).matchAll(LITERAL)].map((match) => match[1]);
+}
+
 function collectSourceKeys(files) {
   const found = new Map();
   for (const file of files) {
     const source = readFileSync(file, "utf8");
-    for (const match of source.matchAll(LITERAL)) {
-      const key = match[1];
+    for (const key of keysIn(source)) {
       if (!found.has(key)) found.set(key, file.slice(FRONTEND_ROOT.length).split("\\").join("/"));
     }
   }
@@ -107,6 +151,15 @@ function runSelfTest() {
     {
       description: "a key backed by an endpoint is not reported",
       passes: !ghosts.some(([k]) => k === "hr:employees:view"),
+    },
+    {
+      description: "a key named only in a comment is not collected as a gate",
+      passes: (() => {
+        const keys = keysIn(
+          "// `hr:employees:export` is not used here\n/* nor \"build:tickets:edit\" */\nconst gate = \"hr:employees:view\"; const url = \"https://x.test/a\";",
+        );
+        return keys.length === 1 && keys[0] === "hr:employees:view";
+      })(),
     },
     {
       description: "a broken source walk refuses to report a pass",
