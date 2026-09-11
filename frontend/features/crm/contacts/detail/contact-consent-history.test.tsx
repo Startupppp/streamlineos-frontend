@@ -96,7 +96,9 @@ function keysOfBlock(source: string, start: string, end: string): string[] {
  * be approximately right.
  */
 describe("the event contract matches the API's projection", () => {
-  const relative = "src/modules/crm/consent/crm-consent.service.ts";
+  // The query left the service when it split (backend c18c0edd2); the service
+  // method now delegates to `readConsentEvents`.
+  const relative = "src/modules/crm/consent/lib/crm-consent-reads.ts";
 
   it("can see the backend at all", () => {
     /*
@@ -108,12 +110,11 @@ describe("the event contract matches the API's projection", () => {
   });
 
   it("declares exactly the fields the service projects", () => {
-    const service = readFileSync(backendPath(relative), "utf8");
-    const projected = keysOfBlock(
-      service,
-      "async listConsentEvents(orgId: string, contactId: number, limit: number) {",
-      ".from(crmContactConsentEvents)",
-    );
+    const reads = readFileSync(backendPath(relative), "utf8");
+    // From the function to its projection: the parameter list sits between the
+    // two, and `keysOfBlock` would read `db:` and `limit:` as projected fields.
+    const service = reads.slice(reads.indexOf("export async function readConsentEvents("));
+    const projected = keysOfBlock(service, ".select({", ".from(crmContactConsentEvents)");
 
     const hook = readFileSync(join(__dirname, "../../../../hooks/api/crm/consent.ts"), "utf8");
     const declared = keysOfBlock(hook, "export interface ContactConsentEvent {", "\n}");

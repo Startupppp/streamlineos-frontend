@@ -179,7 +179,8 @@ describe("the mapping surface matches the API it reads", () => {
       would still render — but every switch and lookup keyed on the tag would
       silently miss it, and a future role would be invisible here with no error.
     */
-    const relative = "src/db/schema/accounting/gl-kernel.ts";
+    // The enum left gl-kernel.ts when the schema split (backend c8022e61f).
+    const relative = "src/db/schema/accounting/gl-enums.ts";
     expect(backendReachable(relative)).toBe(true);
     const schema = readFileSync(backendPath(relative), "utf8");
     const block = schema.slice(

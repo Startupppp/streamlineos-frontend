@@ -26,7 +26,8 @@ import { CRM_MCP_SCOPE_GROUPS, resolveCrmMcpScopes, scopeLabel } from "../mcp-sc
  * `existsSync` assertion below is deliberate — a cross-repo guard that skips
  * when it cannot find its target is how five of these went vacuous before.
  */
-const SERVICE_FILE = backendPath("src/modules/crm/mcp/crm-mcp.service.ts");
+/** The catalogue left `crm-mcp.service.ts` when that file split (backend 4af74594c). */
+const SERVICE_FILE = backendPath("src/modules/crm/mcp/lib/crm-mcp-tool-catalogue.ts");
 
 /** Every `requiredPermission` in the backend's MCP tool catalogue. */
 function toolPermissions(source: string): Set<string> {
