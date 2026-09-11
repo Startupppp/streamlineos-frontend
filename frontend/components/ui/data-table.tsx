@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
   useTransition,
-  type KeyboardEvent,
 } from "react";
 import {
   type ColumnDef,
@@ -40,84 +39,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
+import { createRowActivationKeyHandler, propagationShield } from "@/lib/keyboard-activation";
+import { readSortKey, selectionRowLabel } from "./data-table-row";
 
 export type { DataTableColumn, DataTableProps };
-
-const INTERACTIVE_DESCENDANT_SELECTOR = [
-  "a[href]",
-  "button",
-  "input",
-  "select",
-  "textarea",
-  "summary",
-  '[contenteditable=""]',
-  '[contenteditable="true"]',
-  '[role="button"]',
-  '[role="checkbox"]',
-  '[role="combobox"]',
-  '[role="link"]',
-  '[role="menuitem"]',
-  '[role="menuitemcheckbox"]',
-  '[role="menuitemradio"]',
-  '[role="option"]',
-  '[role="radio"]',
-  '[role="switch"]',
-  '[role="tab"]',
-  '[role="textbox"]',
-  '[tabindex]:not([tabindex="-1"])',
-].join(",");
-
-/**
- * The mouse path guards the row with `stopPropagation` on every interactive
- * cell; the keyboard path has no twin, so an activation key over a descendant
- * control reached the row handler and opened the row instead of working the
- * control. Matching on the target rather than one known element keeps row
- * action menus and links working, not just the selection checkbox.
- */
-function isKeyFromInteractiveDescendant(event: KeyboardEvent<HTMLElement>): boolean {
-  const { target, currentTarget } = event;
-  if (!(target instanceof Element) || target === currentTarget) return false;
-  const interactive = target.closest(INTERACTIVE_DESCENDANT_SELECTOR);
-  return interactive !== null && interactive !== currentTarget;
-}
-
-function createRowActivationKeyHandler(activate: () => void) {
-  return function handleRowActivationKey(event: KeyboardEvent<HTMLElement>) {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    if (isKeyFromInteractiveDescendant(event)) return;
-    event.preventDefault();
-    activate();
-  };
-}
-
-function stopRowEvent(event: React.MouseEvent | React.KeyboardEvent): void {
-  event.stopPropagation();
-}
-
-/**
- * A row checkbox announced as "Select row" is indistinguishable from every
- * other one in the table, so a screen-reader user has nothing to confirm which
- * row they just selected. `selection.getRowLabel` supplies the row's own
- * subject; the generic wording survives only where a call site has not given
- * one yet, and `design-system-control-names.contract` counts those.
- */
-function selectionRowLabel(rowLabel: string | undefined): string {
-  const trimmed = rowLabel?.trim();
-  return trimmed ? `Select ${trimmed}` : "Select row";
-}
-
-function readSortKey(row: unknown, key: string): string | number | boolean | null {
-  if (row === null || typeof row !== "object") return null;
-  const value: unknown = Reflect.get(row, key);
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-  return null;
-}
 
 export function DataTable<T>({
   data,
@@ -201,8 +126,8 @@ export function DataTable<T>({
               <TooltipTrigger asChild>
                 <span
                   className="inline-flex cursor-not-allowed"
-                  onClick={stopRowEvent}
-                  onKeyDown={stopRowEvent}
+                  onClick={propagationShield.onClick}
+                  onKeyDown={propagationShield.onKeyDown}
                 >
                   <Checkbox
                     checked={false}
