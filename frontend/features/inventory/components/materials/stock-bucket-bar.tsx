@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatDecimal } from "@/lib/format-utils";
 
 /**
  * B2 — the seven buckets, shown separately and never added up for the reader.
@@ -43,8 +44,6 @@ const BUCKETS: Bucket[] = [
   { key: "damaged", label: "Damaged", hint: "Blocked in a bin pending a write-off or a return to the supplier." },
   { key: "quarantined", label: "Quarantined", hint: "Held pending a quality decision. Nothing can be promised from it." },
 ];
-
-const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
 export function StockBucketBar({ buckets, dense = false }: { buckets: StockBuckets; dense?: boolean }) {
   return (
@@ -87,7 +86,7 @@ export function StockBucketBar({ buckets, dense = false }: { buckets: StockBucke
                     : "text-base font-medium text-foreground"
                 }`}
               >
-                {nf.format(buckets[b.key])}
+                {formatDecimal(buckets[b.key], 2)}
               </dd>
             </div>
           </Fragment>

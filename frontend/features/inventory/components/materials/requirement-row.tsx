@@ -8,13 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDecimal } from "@/lib/format-utils";
 import { useCan } from "@/hooks/api/access";
 import { useReleaseRequirement, useReserveRequirement } from "@/hooks/api/inventory/projects";
 import type { ProjectRequirement } from "@/hooks/api/inventory/projects";
 import { AtRiskBadge, RequirementStatusBadge } from "./requirement-status";
 import { RequirementEditSheet } from "./requirement-edit-sheet";
-
-const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
 /**
  * B1 — one material line, and the two things anybody does to it.
@@ -50,7 +49,7 @@ export function RequirementRow({
     shortfall <= 0
       ? "This line is already fully reserved or delivered."
       : !canCover
-        ? `Only ${nf.format(available)} is available${requirement.warehouseName ? ` at ${requirement.warehouseName}` : ""}, and ${nf.format(shortfall)} is still needed. Transfer stock in first.`
+        ? `Only ${formatDecimal(available, 2)} is available${requirement.warehouseName ? ` at ${requirement.warehouseName}` : ""}, and ${formatDecimal(shortfall, 2)} is still needed. Transfer stock in first.`
         : null;
 
   return (
@@ -100,7 +99,7 @@ export function RequirementRow({
           ].map(([label, value]) => (
             <div key={label as string}>
               <dt className="text-micro text-muted-foreground">{label}</dt>
-              <dd className="text-sm font-medium tabular-nums text-foreground">{nf.format(Number(value))}</dd>
+              <dd className="text-sm font-medium tabular-nums text-foreground">{formatDecimal(Number(value), 2)}</dd>
             </div>
           ))}
         </dl>
@@ -149,7 +148,7 @@ export function RequirementRow({
         open={reserveOpen}
         onOpenChange={setReserveOpen}
         title="Reserve stock for this site"
-        description={`Holding material takes it out of what anybody else can be promised. ${nf.format(available)} is available${requirement.warehouseName ? ` at ${requirement.warehouseName}` : ""}.`}
+        description={`Holding material takes it out of what anybody else can be promised. ${formatDecimal(available, 2)} is available${requirement.warehouseName ? ` at ${requirement.warehouseName}` : ""}.`}
         footer={
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setReserveOpen(false)}>
@@ -164,7 +163,7 @@ export function RequirementRow({
                   { projectId, requirementId: requirement.id, qty },
                   {
                     onSuccess: () => {
-                      toast.success(`Reserved ${nf.format(Number(qty))} for ${requirement.productName}`);
+                      toast.success(`Reserved ${formatDecimal(Number(qty), 2)} for ${requirement.productName}`);
                       setReserveOpen(false);
                     },
                     onError: (err) => toast.error(getErrorMessage(err)),
@@ -189,7 +188,7 @@ export function RequirementRow({
           aria-describedby={`qty-help-${requirement.id}`}
         />
         <p id={`qty-help-${requirement.id}`} className="mt-1.5 text-dense text-muted-foreground">
-          Up to {nf.format(shortfall)} — the amount still outstanding on this line.
+          Up to {formatDecimal(shortfall, 2)} — the amount still outstanding on this line.
         </p>
       </AppDialog>
 
@@ -197,7 +196,7 @@ export function RequirementRow({
         open={releaseOpen}
         onOpenChange={setReleaseOpen}
         title="Release this reservation"
-        description={`${nf.format(reserved)} will go back into available stock and can be promised to anybody else.`}
+        description={`${formatDecimal(reserved, 2)} will go back into available stock and can be promised to anybody else.`}
         footer={
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setReleaseOpen(false)}>

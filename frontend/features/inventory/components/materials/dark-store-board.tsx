@@ -9,16 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { DEFAULT_MONEY_DISPLAY, formatDecimal, formatMoneyRounded } from "@/lib/format-utils";
 import { useCan } from "@/hooks/api/access";
 import { useDarkStores, type DarkStoreRow } from "@/hooks/api/inventory/ops-board";
 import { StockBucketBar } from "./stock-bucket-bar";
-
-const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 
 function StoreCard({ store, index }: { store: DarkStoreRow; index: number }) {
   const { fadeUp } = useMotionVariants();
@@ -78,8 +72,8 @@ function StoreCard({ store, index }: { store: DarkStoreRow; index: number }) {
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
             <p className="text-dense text-muted-foreground">
-              <span className="tabular-nums font-medium text-foreground">{nf.format(store.skuCount)}</span> SKUs ·{" "}
-              <span className="tabular-nums font-medium text-foreground">{inr.format(store.stockValue)}</span> at cost
+              <span className="tabular-nums font-medium text-foreground">{formatDecimal(store.skuCount, 0)}</span> SKUs ·{" "}
+              <span className="tabular-nums font-medium text-foreground">{formatMoneyRounded(store.stockValue, DEFAULT_MONEY_DISPLAY, 0)}</span> at cost
             </p>
             {store.outOfStockSkus > 0 ? (
               <Link

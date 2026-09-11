@@ -7,13 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { useOpsSummary } from "@/hooks/api/inventory/ops-board";
+import { DEFAULT_MONEY_DISPLAY, formatMoneyRounded } from "@/lib/format-utils";
 import { StockBucketBar } from "./stock-bucket-bar";
-
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 
 /**
  * B2 — "what do we have, and how much of it can we actually promise".
@@ -82,7 +77,7 @@ export function OperationalPositionCard() {
               </span>
               <span aria-hidden="true">·</span>
               <span>
-                <span className="tabular-nums font-medium text-foreground">{inr.format(data.stockValue)}</span> at cost
+                <span className="tabular-nums font-medium text-foreground">{formatMoneyRounded(data.stockValue, DEFAULT_MONEY_DISPLAY, 0)}</span> at cost
               </span>
             </p>
           </div>

@@ -1,4 +1,7 @@
-const QUANTITY_FORMAT = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 4 });
+import { formatDecimal } from "@/lib/format-utils";
+
+const QUANTITY_LOCALE = "en-IN";
+const QUANTITY_FRACTION_DIGITS = 4;
 
 /**
  * Quantities arrive from the forecast engine as exact `numeric(18,4)` decimal
@@ -11,12 +14,12 @@ export function formatQuantity(value: number | string): string {
   // (ES2023). TypeScript types that parameter as a numeric *literal*, which no
   // runtime string can satisfy, so the assertion narrows to what the runtime
   // actually takes rather than pretending the string is a number.
-  return QUANTITY_FORMAT.format(value as `${number}`);
+  return formatDecimal(value as `${number}`, QUANTITY_FRACTION_DIGITS, QUANTITY_LOCALE);
 }
 
 export function formatSignedQuantity(value: number): string {
   if (value === 0) return "0";
-  return `${value > 0 ? "+" : "−"}${QUANTITY_FORMAT.format(Math.abs(value))}`;
+  return `${value > 0 ? "+" : "−"}${formatDecimal(Math.abs(value), QUANTITY_FRACTION_DIGITS, QUANTITY_LOCALE)}`;
 }
 
 export function formatServiceLevel(value: number): string {

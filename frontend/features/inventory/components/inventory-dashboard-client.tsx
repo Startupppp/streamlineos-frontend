@@ -30,6 +30,7 @@ import {
 } from "@/hooks/api/inventory/reports";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { DEFAULT_MONEY_DISPLAY, formatMoneyRounded } from "@/lib/format-utils";
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { NeedsAttentionBoard } from "./materials/needs-attention-board";
 import { OperationalPositionCard } from "./materials/operational-position-card";
@@ -58,11 +59,9 @@ function AddProductLink() {
  * There are no minor units anywhere in this number's path, so there is nothing
  * to divide by.
  */
-const STOCK_VALUE_FORMAT = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+function formatStockValue(stockValue: number): string {
+  return formatMoneyRounded(stockValue, DEFAULT_MONEY_DISPLAY, 0);
+}
 
 const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
@@ -376,7 +375,7 @@ export function InventoryDashboardClient() {
             />
             <StatCard
               label="Stock Value"
-              value={STOCK_VALUE_FORMAT.format(stockValue)}
+              value={formatStockValue(stockValue)}
               icon={DollarSign}
               tone="blue"
             />

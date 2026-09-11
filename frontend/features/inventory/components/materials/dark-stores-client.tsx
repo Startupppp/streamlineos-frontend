@@ -8,15 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { useOpsSummary } from "@/hooks/api/inventory/ops-board";
+import { DEFAULT_MONEY_DISPLAY, formatDecimal, formatMoneyRounded } from "@/lib/format-utils";
 import { DarkStoreBoard } from "./dark-store-board";
 import { StockBucketBar } from "./stock-bucket-bar";
-
-const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 
 /**
  * B2 — the zone board.
@@ -72,14 +66,14 @@ export function DarkStoresClient() {
               <StatCard label="Zones served" value={data.facilities.zones} icon={MapPinned} tone="violet" />
               <StatCard
                 label="SKUs stocked"
-                value={nf.format(data.skuCount)}
+                value={formatDecimal(data.skuCount, 0)}
                 icon={Boxes}
                 tone="emerald"
                 href="/inventory/stock"
               />
               <StatCard
                 label="Stock value at cost"
-                value={inr.format(data.stockValue)}
+                value={formatMoneyRounded(data.stockValue, DEFAULT_MONEY_DISPLAY, 0)}
                 icon={IndianRupee}
                 tone="blue"
                 hint="At weighted-average cost"
