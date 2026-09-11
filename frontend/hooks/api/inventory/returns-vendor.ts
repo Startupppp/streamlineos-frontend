@@ -6,7 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import {
-  VENDOR_RETURNS_PERMISSION,
   returnListParams,
   type ApproveReturnInput,
   type CancelReturnInput,
@@ -77,13 +76,14 @@ export function useVendorReturns(
   filters?: ReturnFilters,
   options?: ListOptions<PaginatedResponse<VendorReturnSummary>>,
 ) {
-  const canView = useCan(VENDOR_RETURNS_PERMISSION);
+  const canView = useCan("inventory:vendor-returns:manage");
   return useQuery<PaginatedResponse<VendorReturnSummary>, Error>({
     queryKey: queryKeys.inventory.vendorReturns(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<VendorReturnSummary>>(
         "/inventory/vendor-returns",
         returnListParams(filters),
+        signal,
       ),
     staleTime: 30_000,
     ...options,
@@ -91,16 +91,6 @@ export function useVendorReturns(
     // the permission gate, and declaring it before would let a caller's `false`
     // be overwritten.
     enabled: canView && (options?.enabled ?? true),
-  });
-}
-
-export function useVendorReturn(returnId: number | null) {
-  const canView = useCan(VENDOR_RETURNS_PERMISSION);
-  return useQuery<VendorReturnSummary, Error>({
-    queryKey: queryKeys.inventory.vendorReturn(returnId ?? 0),
-    queryFn: () => apiClient.get<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}`),
-    staleTime: 30_000,
-    enabled: canView && returnId !== null,
   });
 }
 

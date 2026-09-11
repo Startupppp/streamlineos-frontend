@@ -91,8 +91,8 @@ export function useOpsSummary() {
   const canView = useCan("inventory:stock:read");
   return useQuery<OpsSummary, Error>({
     queryKey: queryKeys.inventoryOpsBoard.summary,
-    queryFn: async () => {
-      const r = await apiClient.get<RawSummary>("/inventory/ops/summary");
+    queryFn: async ({ signal }) => {
+      const r = await apiClient.get<RawSummary>("/inventory/ops/summary", undefined, signal);
       return {
         quantities: {
           onHand: num(r.quantities.onHand),
@@ -118,7 +118,12 @@ export function useAttentionBoard() {
   const canView = useCan("inventory:stock:read");
   return useQuery<{ items: AttentionItem[]; generatedAt: string }, Error>({
     queryKey: queryKeys.inventoryOpsBoard.attention,
-    queryFn: () => apiClient.get<{ items: AttentionItem[]; generatedAt: string }>("/inventory/ops/attention"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ items: AttentionItem[]; generatedAt: string }>(
+        "/inventory/ops/attention",
+        undefined,
+        signal,
+      ),
     staleTime: BOARD_STALE_MS,
     enabled: canView,
   });
@@ -128,8 +133,8 @@ export function useDarkStores() {
   const canView = useCan("inventory:stock:read");
   return useQuery<DarkStoreRow[], Error>({
     queryKey: queryKeys.inventoryOpsBoard.zones,
-    queryFn: async () => {
-      const rows = await apiClient.get<RawDarkStore[]>("/inventory/ops/zones");
+    queryFn: async ({ signal }) => {
+      const rows = await apiClient.get<RawDarkStore[]>("/inventory/ops/zones", undefined, signal);
       return rows.map((r) => ({
         ...r,
         onHand: num(r.onHand),

@@ -76,6 +76,7 @@ export interface StrandedTransitResult {
 }
 
 export interface StrandedTransitFilters {
+  [key: string]: unknown;
   warehouseId?: number;
   view?: StrandedTransitView;
   page?: number;
@@ -123,8 +124,8 @@ function toStrandedRow(row: RawStrandedTransitRow): StrandedTransitRow {
 export function useStrandedTransit(filters?: StrandedTransitFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StrandedTransitResult, Error>({
-    queryKey: queryKeys.inventoryTransit.stranded(filters as Record<string, unknown>),
-    queryFn: async () => {
+    queryKey: queryKeys.inventoryTransit.stranded(filters),
+    queryFn: async ({ signal }) => {
       const params: Record<string, string> = {};
       if (filters?.warehouseId) params.warehouseId = String(filters.warehouseId);
       if (filters?.view) params.view = filters.view;
@@ -135,7 +136,7 @@ export function useStrandedTransit(filters?: StrandedTransitFilters) {
         total: number;
         page: number;
         totalPages: number;
-      }>("/inventory/stock/transit/stranded", params);
+      }>("/inventory/stock/transit/stranded", params, signal);
       return {
         items: raw.items.map(toStrandedRow),
         total: raw.total,

@@ -65,11 +65,11 @@ export function useThroughputMetrics(
   const canView = useCan(THROUGHPUT_READ_KEY);
   return useQuery<ThroughputMetrics, Error>({
     queryKey: queryKeys.inventoryOps.throughput({ from: window.from, to: window.to }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ThroughputMetrics>("/inventory/reports/throughput", {
         from: window.from,
         to: window.to,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -139,11 +139,11 @@ export function useWorkAging(
       warehouseId: query.warehouseId,
       asOf: query.asOf,
     }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WorkAging>("/inventory/reports/work-aging", {
         warehouseId: query.warehouseId,
         asOf: query.asOf,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

@@ -15,7 +15,6 @@ import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-muta
  */
 export type QuickCommerceProvider = "BLINKIT" | "INSTAMART" | "ZEPTO";
 export type PlatformPoStatus = "RECEIVED" | "REJECTED" | "ACCEPTED" | "CANCELLED";
-export type AsnStatus = "DRAFT" | "CONFIRMED" | "IN_TRANSIT" | "ARRIVED" | "CLOSED" | "CANCELLED";
 
 export interface PlatformPoSummary {
   id: number;
@@ -47,20 +46,6 @@ export interface PlatformPoDetail extends PlatformPoSummary {
   warehouseId: number | null;
   currency: string;
   lines: PlatformPoLine[];
-}
-
-export interface AsnSummary {
-  id: number;
-  asnNumber: string;
-  poId: number;
-  platformPoId: number | null;
-  warehouseId: number | null;
-  status: AsnStatus;
-  carrierName: string | null;
-  appointmentStart: string | null;
-  appointmentEnd: string | null;
-  expectedArrival: string | null;
-  createdAt: string;
 }
 
 export interface FillRateLine {
@@ -101,12 +86,6 @@ export interface FillRateReport {
   }>;
 }
 
-interface IngestPlatformPoInput {
-  provider: QuickCommerceProvider;
-  payload: unknown;
-  warehouseId?: number;
-}
-
 interface AcceptPlatformPoInput {
   platformPoId: number;
   vendorId: number;
@@ -122,11 +101,11 @@ export function usePlatformPurchaseOrders(filters?: {
   const canView = useCan("inventory:channels:manage");
   return useQuery<PlatformPoSummary[], Error>({
     queryKey: queryKeys.inventory.platformPurchaseOrders(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PlatformPoSummary[]>("/inventory/quick-commerce/purchase-orders", {
         ...(filters?.provider ? { provider: filters.provider } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -136,22 +115,14 @@ export function usePlatformPurchaseOrder(platformPoId: number | null) {
   const canView = useCan("inventory:channels:manage");
   return useQuery<PlatformPoDetail, Error>({
     queryKey: queryKeys.inventory.platformPurchaseOrder(platformPoId ?? 0),
-    queryFn: () =>
-      apiClient.get<PlatformPoDetail>(`/inventory/quick-commerce/purchase-orders/${platformPoId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PlatformPoDetail>(
+        `/inventory/quick-commerce/purchase-orders/${platformPoId}`,
+        undefined,
+        signal,
+      ),
     enabled: canView && (platformPoId ?? 0) > 0,
     staleTime: 30_000,
-  });
-}
-
-export function useIngestPlatformPo() {
-  const qc = useQueryClient();
-  return useIdempotentMutation<PlatformPoDetail, Error, IngestPlatformPoInput>({
-    mutationKey: ["inventory", "quick-commerce", "ingest"],
-    mutationFn: (data, idempotencyKey) =>
-      apiClient.post<PlatformPoDetail>("/inventory/quick-commerce/purchase-orders/ingest", data, { headers: { "Idempotency-Key": idempotencyKey } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.platformPurchaseOrdersList });
-    },
   });
 }
 
@@ -175,28 +146,14 @@ export function useAcceptPlatformPo() {
   });
 }
 
-export function useAsns(filters?: { poId?: number; status?: AsnStatus }) {
-  const canView = useCan("inventory:purchase-orders:read");
-  return useQuery<AsnSummary[], Error>({
-    queryKey: queryKeys.inventory.asns(filters),
-    queryFn: () =>
-      apiClient.get<AsnSummary[]>("/inventory/quick-commerce/asns", {
-        ...(filters?.poId ? { poId: String(filters.poId) } : {}),
-        ...(filters?.status ? { status: filters.status } : {}),
-      }),
-    enabled: canView,
-    staleTime: 30_000,
-  });
-}
-
 export function useFillRate(platformPoId: number | null) {
   const canView = useCan("inventory:reports:read");
   return useQuery<FillRateReport, Error>({
     queryKey: queryKeys.inventory.platformFillRate(platformPoId ?? 0),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<FillRateReport>("/inventory/quick-commerce/fill-rate", {
         platformPoId: String(platformPoId ?? 0),
-      }),
+      }, signal),
     enabled: canView && (platformPoId ?? 0) > 0,
     staleTime: 30_000,
   });

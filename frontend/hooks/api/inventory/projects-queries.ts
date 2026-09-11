@@ -4,19 +4,19 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import { num, toCoverage } from "./projects-types";
+import { coverageOf, num, toCoverage } from "./projects-types";
 import type {
   AtRiskRequirement,
   ProjectDetail,
   ProjectListItem,
   ProjectRequirement,
   ProjectStatus,
+  RawAtRiskRequirement,
   RawCoverage,
-  RequirementCoverage,
-  RequirementStatus,
 } from "./projects-types";
 
 export interface ProjectFilters {
+  [key: string]: unknown;
   status?: ProjectStatus;
   zone?: string;
   search?: string;
@@ -28,8 +28,8 @@ export interface ProjectFilters {
 export function useProjects(filters?: ProjectFilters) {
   const canView = useCan("inventory:projects:read");
   return useQuery<{ items: ProjectListItem[]; total: number; page: number; totalPages: number }, Error>({
-    queryKey: queryKeys.inventoryProjects.list(filters as Record<string, unknown>),
-    queryFn: () => {
+    queryKey: queryKeys.inventoryProjects.list(filters),
+    queryFn: ({ signal }) => {
       const params: Record<string, string | undefined> = {};
       if (filters?.status) params.status = filters.status;
       if (filters?.zone) params.zone = filters.zone;
@@ -40,6 +40,7 @@ export function useProjects(filters?: ProjectFilters) {
       return apiClient.get<{ items: ProjectListItem[]; total: number; page: number; totalPages: number }>(
         "/inventory/projects",
         params,
+        signal,
       );
     },
     // Keeping the previous page on screen while the next loads is what stops a
@@ -54,12 +55,12 @@ export function useProject(projectId: number) {
   const canView = useCan("inventory:projects:read");
   return useQuery<ProjectDetail | null, Error>({
     queryKey: queryKeys.inventoryProjects.detail(projectId),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const r = await apiClient.get<(Omit<ProjectDetail, "requirements"> & {
         requirements: (Omit<ProjectRequirement, "requiredQty" | "fulfilledQty" | "coverage"> & {
           requiredQty: string; fulfilledQty: string; coverage: RawCoverage | null;
         })[];
-      }) | null>(`/inventory/projects/${projectId}`);
+      }) | null>(`/inventory/projects/${projectId}`, undefined, signal);
       if (!r) return null;
       return {
         ...r,
@@ -80,22 +81,23 @@ export function useAtRiskRequirements(limit = 25) {
   const canView = useCan("inventory:projects:read");
   return useQuery<AtRiskRequirement[], Error>({
     queryKey: queryKeys.inventoryProjects.atRisk,
-    queryFn: async () => {
-      const rows = await apiClient.get<(Record<string, unknown> & { coverage: RawCoverage })[]>(
+    queryFn: async ({ signal }) => {
+      const rows = await apiClient.get<RawAtRiskRequirement[]>(
         "/inventory/projects/at-risk",
         { limit: String(limit) },
+        signal,
       );
       return rows.map((r) => ({
-        ...(toCoverage(r.coverage) as RequirementCoverage),
+        ...coverageOf(r.coverage),
         id: Number(r.id),
         projectId: Number(r.projectId),
-        projectCode: String(r.projectCode ?? ""),
-        projectName: String(r.projectName ?? ""),
-        projectZone: (r.projectZone as string | null) ?? null,
-        productName: String(r.productName ?? ""),
-        variantSku: String(r.variantSku ?? ""),
-        requiredBy: (r.requiredBy as string | null) ?? null,
-        status: r.status as RequirementStatus,
+        projectCode: r.projectCode ?? "",
+        projectName: r.projectName ?? "",
+        projectZone: r.projectZone,
+        productName: r.productName ?? "",
+        variantSku: r.variantSku ?? "",
+        requiredBy: r.requiredBy,
+        status: r.status,
       }));
     },
     staleTime: 60_000,

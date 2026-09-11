@@ -67,7 +67,7 @@ export function useAllocationOverrides(filters?: AllocationOverrideFilters) {
   const canView = useCan(ALLOCATION_OVERRIDE_READ);
   return useQuery<AllocationOverridesPage, Error>({
     queryKey: queryKeys.inventory.allocationOverrides(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AllocationOverridesPage>("/inventory/traceability/allocation-overrides", {
         ...(filters?.lotId !== undefined ? { lotId: String(filters.lotId) } : {}),
         ...(filters?.clientId !== undefined ? { clientId: String(filters.clientId) } : {}),
@@ -80,7 +80,7 @@ export function useAllocationOverrides(filters?: AllocationOverrideFilters) {
         ...(filters?.toDate !== undefined ? { toDate: filters.toDate } : {}),
         ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
         ...(filters?.cursor !== undefined ? { cursor: filters.cursor } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView,

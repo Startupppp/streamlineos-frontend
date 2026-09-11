@@ -118,7 +118,7 @@ export function useDriftWatchlist(params?: DriftWatchlistParams) {
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<DriftWatchlistResponse, Error>({
     queryKey: queryKeys.inventoryPlanning.driftWatchlist(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DriftWatchlistResponse>("/inventory/replenishment/drift", {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.maeRatioThreshold !== undefined
@@ -127,7 +127,7 @@ export function useDriftWatchlist(params?: DriftWatchlistParams) {
         ...(params?.breachingOnly ? { breachingOnly: "true" } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canRead,
   });
@@ -141,10 +141,10 @@ export function useDriftDetail(
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<DriftDetail, Error>({
     queryKey: queryKeys.inventoryPlanning.driftDetail(productVariantId ?? 0, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DriftDetail>(`/inventory/replenishment/drift/${productVariantId}`, {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canRead && productVariantId !== null && (options?.enabled ?? true),

@@ -92,6 +92,7 @@ export interface GlReconPeriod {
 }
 
 export interface GlReconFilters {
+  [key: string]: unknown;
   periodId?: string;
   fromDate?: string;
   toDate?: string;
@@ -104,8 +105,8 @@ export interface GlReconFilters {
 export function useGlReconciliation(filters?: GlReconFilters) {
   const canView = useCan("inventory:reports:read");
   return useQuery<GlReconReport, Error>({
-    queryKey: queryKeys.inventoryGlRecon.report(filters as Record<string, unknown>),
-    queryFn: () => {
+    queryKey: queryKeys.inventoryGlRecon.report(filters),
+    queryFn: ({ signal }) => {
       const params: Record<string, string> = {};
       if (filters?.periodId) params.periodId = String(filters.periodId);
       if (filters?.fromDate) params.fromDate = filters.fromDate;
@@ -114,7 +115,7 @@ export function useGlReconciliation(filters?: GlReconFilters) {
       if (filters?.status) params.status = filters.status;
       if (filters?.page) params.page = String(filters.page);
       if (filters?.limit) params.limit = String(filters.limit);
-      return apiClient.get<GlReconReport>("/inventory/reconciliation/gl", params);
+      return apiClient.get<GlReconReport>("/inventory/reconciliation/gl", params, signal);
     },
     // A period-scoped comparison over a ledger that is still being written to.
     staleTime: 2 * 60_000,
@@ -126,9 +127,11 @@ export function useGlReconPeriods() {
   const canView = useCan("inventory:reports:read");
   return useQuery<{ installed: boolean; items: GlReconPeriod[] }, Error>({
     queryKey: queryKeys.inventoryGlRecon.periods,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ installed: boolean; items: GlReconPeriod[] }>(
         "/inventory/reconciliation/gl/periods",
+        undefined,
+        signal,
       ),
     staleTime: 30 * 60_000,
     enabled: canView,

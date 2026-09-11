@@ -101,7 +101,7 @@ export function useLotGenealogy(
   const hasAnchor = params.lotId !== undefined || params.serialId !== undefined;
   return useQuery<GenealogyGraph, Error>({
     queryKey: queryKeys.genealogy.graph(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<GenealogyGraph>("/inventory/traceability/genealogy", {
         lotId: params.lotId,
         serialId: params.serialId,
@@ -110,7 +110,7 @@ export function useLotGenealogy(
         maxNodes: params.maxNodes,
         maxFanout: params.maxFanout,
         includeReversed: params.includeReversed === true ? "true" : undefined,
-      }),
+      }, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && hasAnchor && (options?.enabled ?? true),

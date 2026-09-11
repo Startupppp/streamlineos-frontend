@@ -50,11 +50,11 @@ export function useVariantChannelPools(productVariantId: number | null, warehous
   const canView = useCan("inventory:stock:read");
   return useQuery<ChannelPool[], Error>({
     queryKey: queryKeys.inventory.channelPoolsByVariant(productVariantId ?? 0, warehouseId ?? null),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ChannelPool[]>("/inventory/channels/pools/by-variant", {
         productVariantId: String(productVariantId ?? 0),
         ...(warehouseId != null ? { warehouseId: String(warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView && (productVariantId ?? 0) > 0,
     staleTime: 30_000,
   });
@@ -71,12 +71,12 @@ export function useChannelPoolAvailability(
       options?.warehouseId ?? null,
       options?.forChannelId ?? null,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ChannelAvailability>("/inventory/channels/pools/availability", {
         productVariantId: String(productVariantId ?? 0),
         ...(options?.warehouseId != null ? { warehouseId: String(options.warehouseId) } : {}),
         ...(options?.forChannelId != null ? { forChannelId: String(options.forChannelId) } : {}),
-      }),
+      }, signal),
     enabled: canView && (productVariantId ?? 0) > 0,
     staleTime: 30_000,
   });
@@ -86,7 +86,12 @@ export function useChannelPools(channelId: number | null) {
   const canManage = useCan("inventory:channels:manage");
   return useQuery<ChannelPool[], Error>({
     queryKey: queryKeys.inventory.channelPools(channelId ?? 0),
-    queryFn: () => apiClient.get<ChannelPool[]>(`/inventory/channels/pools/channel/${channelId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ChannelPool[]>(
+        `/inventory/channels/pools/channel/${channelId}`,
+        undefined,
+        signal,
+      ),
     enabled: canManage && (channelId ?? 0) > 0,
     staleTime: 30_000,
   });

@@ -44,7 +44,7 @@ export function useInventoryAuditEvents(filters?: InventoryAuditEventFilters) {
   const canView = useCan("inventory:audit:read");
   return useQuery<InventoryAuditEventsPage, Error>({
     queryKey: queryKeys.inventory.auditEvents(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InventoryAuditEventsPage>("/inventory/audit-events", {
         ...(filters?.resourceType !== undefined ? { resourceType: filters.resourceType } : {}),
         ...(filters?.resourceId !== undefined ? { resourceId: filters.resourceId } : {}),
@@ -54,7 +54,7 @@ export function useInventoryAuditEvents(filters?: InventoryAuditEventFilters) {
         ...(filters?.toDate !== undefined ? { toDate: filters.toDate } : {}),
         ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
         ...(filters?.cursor !== undefined ? { cursor: filters.cursor } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView,

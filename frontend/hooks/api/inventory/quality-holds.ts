@@ -61,12 +61,12 @@ export function useQualityHolds(params?: QualityHoldsParams) {
   const canView = useCan("inventory:quality:read");
   return useQuery<HoldListResponse, Error>({
     queryKey: queryKeys.inventory.qualityHolds(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HoldListResponse>("/inventory/quality/holds", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -76,7 +76,8 @@ export function useQualityHold(holdId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<QualityHold, Error>({
     queryKey: queryKeys.inventory.qualityHold(holdId),
-    queryFn: () => apiClient.get<QualityHold>(`/inventory/quality/holds/${holdId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<QualityHold>(`/inventory/quality/holds/${holdId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && holdId > 0,
   });

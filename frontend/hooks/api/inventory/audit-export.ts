@@ -61,8 +61,8 @@ export function useAuditExportJobs(params?: { page?: number; limit?: number }) {
     { items: AuditExportJob[]; total: number; page: number; totalPages: number },
     Error
   >({
-    queryKey: queryKeys.inventoryAuditExport.jobs(params as Record<string, unknown>),
-    queryFn: () =>
+    queryKey: queryKeys.inventoryAuditExport.jobs(params),
+    queryFn: ({ signal }) =>
       apiClient.get<{
         items: AuditExportJob[];
         total: number;
@@ -71,21 +71,11 @@ export function useAuditExportJobs(params?: { page?: number; limit?: number }) {
       }>("/inventory/audit-export/jobs", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     // A job settles asynchronously, so the list is the progress indicator.
     staleTime: 0,
     refetchInterval: 10_000,
     enabled: canExport,
-  });
-}
-
-export function useAuditExportJob(jobId: number | null) {
-  const canExport = useCan("inventory:audit:export");
-  return useQuery<AuditExportJob, Error>({
-    queryKey: queryKeys.inventoryAuditExport.job(jobId ?? 0),
-    queryFn: () => apiClient.get<AuditExportJob>(`/inventory/audit-export/jobs/${jobId ?? 0}`),
-    staleTime: 0,
-    enabled: canExport && jobId !== null,
   });
 }
 
@@ -112,9 +102,11 @@ export function useVerifyAuditExport(jobId: number | null, enabled: boolean) {
   const canExport = useCan("inventory:audit:export");
   return useQuery<AuditExportVerification, Error>({
     queryKey: queryKeys.inventoryAuditExport.verification(jobId ?? 0),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AuditExportVerification>(
         `/inventory/audit-export/jobs/${jobId ?? 0}/verify`,
+        undefined,
+        signal,
       ),
     staleTime: 0,
     gcTime: 0,

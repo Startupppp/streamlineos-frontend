@@ -70,9 +70,11 @@ export function useTransferPlan(
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<TransferPlan, Error>({
     queryKey: queryKeys.inventoryPlanning.transferPlan(productVariantId ?? 0),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TransferPlan>(
         `/inventory/replenishment/transfer-recommendations/${productVariantId}`,
+        undefined,
+        signal,
       ),
     staleTime: 60_000,
     ...options,

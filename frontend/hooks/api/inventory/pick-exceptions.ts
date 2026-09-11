@@ -7,7 +7,6 @@ import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import {
-  EXCEPTION_REVIEW_KEY,
   type PickExceptionOwnership,
   type PickExceptionReason,
   type PickExceptionResolution,
@@ -86,7 +85,7 @@ export function usePickExceptions(
   filters?: PickExceptionFilters,
   options?: QueryOptions<PickExceptionListResponse>,
 ) {
-  const canReview = useCan(EXCEPTION_REVIEW_KEY);
+  const canReview = useCan("inventory:picking:review");
   const params = {
     page: filters?.page ?? 1,
     limit: filters?.limit ?? 25,
@@ -98,7 +97,7 @@ export function usePickExceptions(
 
   return useQuery<PickExceptionListResponse, Error>({
     queryKey: queryKeys.picking.exceptions(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PickExceptionListResponse>("/inventory/picking/exceptions", {
         page: String(params.page),
         limit: String(params.limit),
@@ -106,7 +105,7 @@ export function usePickExceptions(
         ...(params.status ? { status: params.status } : {}),
         ...(params.reason ? { reason: params.reason } : {}),
         ...(params.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-      }),
+      }, signal),
     staleTime: 15_000,
     ...options,
     enabled: canReview && (options?.enabled ?? true),

@@ -68,14 +68,14 @@ export function useQualityInspections(filters?: InspectionFilters) {
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionListResponse, Error>({
     queryKey: queryKeys.inventory.qualityInspections(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InspectionListResponse>("/inventory/quality/inspections", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.source ? { source: filters.source } : {}),
         ...(filters?.variantId ? { variantId: String(filters.variantId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -85,8 +85,12 @@ export function useQualityInspection(inspectionId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionDetail, Error>({
     queryKey: queryKeys.inventory.qualityInspection(inspectionId),
-    queryFn: () =>
-      apiClient.get<InspectionDetail>(`/inventory/quality/inspections/${inspectionId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<InspectionDetail>(
+        `/inventory/quality/inspections/${inspectionId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 60_000,
     enabled: canView && inspectionId > 0,
   });

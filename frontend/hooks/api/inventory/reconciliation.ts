@@ -59,12 +59,12 @@ export function useReconciliationReport(params?: ReconciliationParams) {
   const canReconcile = useCan("inventory:stock:reconcile");
   return useQuery<ReconciliationReport, Error>({
     queryKey: queryKeys.inventory.reconciliation({ ...params }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ReconciliationReport>("/inventory/stock/reconciliation", {
         warehouseId: params?.warehouseId,
         productVariantId: params?.productVariantId,
         limit: params?.limit,
-      }),
+      }, signal),
     // Drift is a point-in-time comparison against a moving ledger, so a cached
     // answer is worse than no answer — the operator has to know when it was taken.
     staleTime: 0,
