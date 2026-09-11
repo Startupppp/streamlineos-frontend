@@ -1,9 +1,8 @@
 "use client";
 
 import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -92,17 +91,19 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
-  const isOrgOwner =
-    access?.isOrgOwner === true;
+  const isOrgOwner = access?.isOrgOwner === true;
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const pathname = usePathname();
+  const params = useParams();
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
+  const rawProjectId = params?.projectId;
   const activeProjectId = useMemo(() => {
-    const match = /^\/build\/(\d+)(?:\/|$)/.exec(pathname ?? "");
-    return match ? match[1] : null;
-  }, [pathname]);
+    if (activeProduct !== "build") return null;
+    const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
+    return typeof value === "string" && /^\d+$/.test(value) ? value : null;
+  }, [activeProduct, rawProjectId]);
 
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
@@ -126,8 +127,8 @@ export function AppSidebar({
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
-      const match = flattenNavRoutes(group.routes).some(
-        (route) => isNavRouteActive(route, pathname),
+      const match = flattenNavRoutes(group.routes).some((route) =>
+        isNavRouteActive(route, pathname),
       );
       if (match) return group.label;
     }

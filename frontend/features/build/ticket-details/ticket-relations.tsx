@@ -246,7 +246,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                           priority: t.priority,
                           points: t.points,
                           ticketNumber: t.ticketNumber,
-                          assigneeId: t.assigneeId,
+                          assigneeId: t.assignee?.id ?? null,
                           projectId: t.projectId ?? projectId,
                           project: t.project,
                           assignee: t.assignee,

@@ -202,7 +202,7 @@ const ticketRelationRelatedTicketSchema = z.object({
   priority: z.string().nullable(),
   type: z.string().nullable(),
   points: z.number().nullable(),
-  assigneeId: z.string().nullable(),
+  assigneeMembershipId: z.number().int().nullable(),
   projectId: z.number().int().nullable(),
   assignee: z.object({
     id: z.string(),

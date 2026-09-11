@@ -9,6 +9,8 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TicketLabel, CreateLabelInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import type { z } from "zod";
+import type { ticketRelationListContract as ticketRelationListContractDef } from "@/hooks/api/build/build-tickets-schema";
 
 
 const successLazy = lazyContract(() =>
@@ -166,35 +168,9 @@ export function useAddAttachment(
   });
 }
 
-export type WorkItemRelationType = "blocks" | "blocked_by" | "duplicate_of" | "relates_to";
-
-export interface TicketRelationRelatedTicket {
-  id: number;
-  title: string;
-  ticketNumber: number | null;
-  status: string | null;
-  priority: string | null;
-  type: string | null;
-  points: number | null;
-  assigneeId: string | null;
-  projectId: number | null;
-  assignee: {
-    id: string;
-    name: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    image: string | null;
-  } | null;
-  project: { key: string | null } | null;
-}
-
-export interface TicketRelation {
-  id: number;
-  relationType: WorkItemRelationType;
-  relatedTicket: TicketRelationRelatedTicket | null;
-  direction: "outgoing" | "incoming";
-}
+export type TicketRelation = z.infer<typeof ticketRelationListContractDef>[number];
+export type TicketRelationRelatedTicket = NonNullable<TicketRelation["relatedTicket"]>;
+export type WorkItemRelationType = TicketRelation["relationType"];
 
 export function useTicketRelations(ticketId: number, projectId: number) {
   const canView = useCan("build:tickets:view");
