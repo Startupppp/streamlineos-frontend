@@ -5,7 +5,7 @@ import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import type { SupplierDelayBriefing } from "@/hooks/api/inv-ai-explain";
-import type { ScorecardRate } from "@/types/inventory";
+import type { ScorecardRate } from "@/types/inventory-vendor-performance";
 
 interface VendorAiActionsProps {
   vendorId: number;

@@ -9,7 +9,7 @@ import {
   useVariantChannelPools,
 } from "@/hooks/api/inventory/channel-pools";
 import { cn } from "@/lib/utils";
-import type { StockAvailabilityByWarehouse } from "@/types/inventory";
+import type { StockAvailabilityByWarehouse } from "@/types/inventory-availability";
 
 interface AvailabilityPopoverProps {
   open: boolean;

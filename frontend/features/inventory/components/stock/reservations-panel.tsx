@@ -33,7 +33,7 @@ import {
   RESERVATION_STATUS_LABEL,
   type ReservationStatus,
 } from "@/features/inventory/lib";
-import type { StockReservationStatus } from "@/types/inventory";
+import type { StockReservationStatus } from "@/types/inventory-availability";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";

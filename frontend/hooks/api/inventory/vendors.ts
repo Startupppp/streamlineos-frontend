@@ -14,9 +14,11 @@ import type {
   InventoryVendor,
   CreateVendorInput,
   UpdateVendorInput,
+} from "@/types/inventory";
+import type {
   VendorScorecard,
   VendorDeliveriesResponse,
-} from "@/types/inventory";
+} from "@/types/inventory-vendor-performance";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 type VendorFilters = {

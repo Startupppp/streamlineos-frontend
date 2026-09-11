@@ -4,7 +4,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockAvailability } from "@/types/inventory";
+import type { StockAvailability } from "@/types/inventory-availability";
 
 export type TransactionType =
   | "PURCHASE"

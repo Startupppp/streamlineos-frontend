@@ -9,7 +9,7 @@ import { formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import type { ScorecardRate, VendorScorecard } from "@/types/inventory";
+import type { ScorecardRate, VendorScorecard } from "@/types/inventory-vendor-performance";
 
 interface VendorScorecardPanelProps {
   scorecard: VendorScorecard | undefined;

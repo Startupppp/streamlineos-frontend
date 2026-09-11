@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockReservation, StockReservationStatus } from "@/types/inventory";
+import type { StockReservation, StockReservationStatus } from "@/types/inventory-availability";
 
 interface ReservationsFilters {
   sourceType?: string;

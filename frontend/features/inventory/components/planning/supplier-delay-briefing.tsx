@@ -13,7 +13,7 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoneyCompact } from "@/lib/format-utils";
-import type { ScorecardRate } from "@/types/inventory";
+import type { ScorecardRate } from "@/types/inventory-vendor-performance";
 import {
   useSupplierDelayBriefing,
   type SupplierDelayVendor,

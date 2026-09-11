@@ -12,7 +12,7 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { VendorDelivery } from "@/types/inventory";
+import type { VendorDelivery } from "@/types/inventory-vendor-performance";
 
 interface VendorDeliveriesTableProps {
   vendorId: number;
