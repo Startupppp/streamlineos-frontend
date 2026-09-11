@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test as base, type Page, type TestDetails } from "@playwright/test";
 import {
   apiOracle,
   describeLedger,
@@ -92,56 +92,89 @@ async function confirmStep(page: Page, quantity: string): Promise<void> {
   await page.getByRole("button", { name: "Confirm" }).click();
 }
 
-test.describe("inventory · RF walks", () => {
-  test.skip(!hasTenantEnv(), SKIP_REASON);
+/**
+ * The oracle, the documents and the session, as fixtures rather than as hooks.
+ *
+ * `api` is worker-scoped, so one authenticated API context is built per worker
+ * and disposed when that worker ends. `seeded` builds the work in that same
+ * scope and carries its own budget, which is not tidiness: a dozen sequential
+ * API calls inside a test spend the TEST's budget, and under `next dev` the
+ * first visit to a route also pays for compiling it — the two together exhausted
+ * 90 seconds and the failure pointed at a heading that had simply not been
+ * reached.
+ *
+ * The documents are built through the backend's own commands, in the order the
+ * warehouse does it: a purchase order that was sent, a receipt that posted
+ * against it, and the putaway that receipt raised — claimed, because the RF
+ * queue asks for work assigned to this operator and an unclaimed task is
+ * somebody else's.
+ */
+const test = base.extend<
+  { signedIn: void },
+  {
+    api: ApiOracle;
+    seeded: { target: SeedTarget; task: ClaimedPutawayTask; wave: ClaimedPickWave };
+  }
+>({
+  api: [
+    async ({}, use) => {
+      const api = await apiOracle();
+      await use(api);
+      await api.dispose();
+    },
+    { scope: "worker" },
+  ],
+  seeded: [
+    async ({ api }, use) => {
+      const target = await seedTarget(api, PUTAWAY_QTY);
+      const po = await sentPurchaseOrder(api, target, PUTAWAY_QTY, "INV-20 putaway walk");
+      const receipt = await postedReceipt(api, po, target, PUTAWAY_QTY);
+      const task = await claimedPutawayTask(api, receipt.grnId);
+      const wave = await claimedPickWave(api, target, PICK_QTY);
+      await use({ target, task, wave });
+    },
+    { scope: "worker", auto: true, timeout: 300_000 },
+  ],
+  signedIn: [
+    async ({ context, baseURL }, use) => {
+      if (!baseURL)
+        throw new Error(
+          "No baseURL. The session cookie is scoped to its hostname, so it cannot be minted without one.",
+        );
+      await signIn(context, tenantEnv().user, baseURL);
+      await use();
+    },
+    { auto: true },
+  ],
+});
 
-  let api: ApiOracle;
-  let target: SeedTarget;
-  let task: ClaimedPutawayTask;
-  let wave: ClaimedPickWave;
+/**
+ * Runtime-selected, because whether this suite can run is a property of the
+ * environment rather than of the code: with no seeded tenant there is nothing
+ * for it to assert against. The reason rides along as an annotation so a skipped
+ * run still says which variables are missing.
+ */
+const HAS_TENANT = hasTenantEnv();
 
-  test.beforeAll(async () => {
-    // The seed is a chain of backend commands, and this machine runs several
-    // backends against one shared remote cache — a single list read here has
-    // been measured at ten seconds. The default budget is sized for a test, not
-    // for building the documents one needs, and when it ran out the failure
-    // pointed at a heading that had simply not been reached yet.
-    test.setTimeout(300_000);
-    api = await apiOracle();
-    target = await seedTarget(api, PUTAWAY_QTY);
+const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
+  HAS_TENANT ? test.describe : test.describe.skip;
 
-    // Built through the backend's own commands, in the order the warehouse does
-    // it: a purchase order that was sent, a receipt that posted against it, and
-    // the putaway that receipt raised — claimed, because the RF queue asks for
-    // work assigned to this operator and an unclaimed task is somebody else's.
-    //
-    // In `beforeAll` rather than in the test, and that is not tidiness. A dozen
-    // sequential API calls inside a test spend the TEST's budget, and under
-    // `next dev` the first visit to a route also pays for compiling it — the two
-    // together exhausted 90 seconds and the failure pointed at a heading that
-    // had simply not been reached.
-    const po = await sentPurchaseOrder(api, target, PUTAWAY_QTY, "INV-20 putaway walk");
-    const receipt = await postedReceipt(api, po, target, PUTAWAY_QTY);
-    task = await claimedPutawayTask(api, receipt.grnId);
+const TENANT_DETAILS: TestDetails = HAS_TENANT
+  ? {}
+  : { annotation: { type: "skip", description: SKIP_REASON } };
 
-    wave = await claimedPickWave(api, target, PICK_QTY);
-  });
-
-  test.afterAll(async () => {
-    await api?.dispose();
-  });
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    // `next dev` compiles a route the first time it is asked for, and these are
-    // the first specs to visit the RF runners. That compile lands inside
-    // whichever test gets there first, so the budget has to cover it.
-    test.setTimeout(180_000);
-    await signIn(context, tenantEnv().user, baseURL as string);
-  });
+describeWithTenant("inventory · RF walks", TENANT_DETAILS, () => {
+  // `next dev` compiles a route the first time it is asked for, and these are
+  // the first specs to visit the RF runners. That compile lands inside whichever
+  // test gets there first, so the budget has to cover it.
+  test.describe.configure({ timeout: 180_000 });
 
   test("putting a receipt away moves the stock off the dock and onto the shelf", async ({
     page,
+    api,
+    seeded,
   }) => {
+    const { target, task } = seeded;
     const destinationId = task.line.to_location_id ?? task.line.suggestions[0]?.locationId;
     const destinationCode = task.line.to_location_code ?? task.line.suggestions[0]?.code;
     expect(destinationId, "the seeded task has no destination bin").toBeTruthy();
@@ -244,7 +277,10 @@ test.describe("inventory · RF walks", () => {
 
   test("picking a wave line consumes the order's reservation at the bin on screen", async ({
     page,
+    api,
+    seeded,
   }) => {
+    const { target, wave } = seeded;
     const binId = wave.line.location_id!;
 
     // Held before the walk, and this is where a pick differs from an adjustment:

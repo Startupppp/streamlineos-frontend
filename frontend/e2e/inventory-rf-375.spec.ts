@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test as base, type Page, type TestDetails } from "@playwright/test";
 import { apiOracle, type ApiOracle } from "./fixtures/api";
 import {
   claimedPutawayTask,
@@ -88,43 +88,72 @@ const RF_ROUTES = ["/inventory/rf", "/inventory/rf/putaway", "/inventory/rf/pick
 /** Units on the seeded receipt. Small enough to fit any bin with headroom. */
 const SEED_QTY = 4;
 
+/**
+ * The oracle, the seeded task and the session, as fixtures rather than as hooks.
+ *
+ * `api` is worker-scoped, so one authenticated API context is built per worker
+ * and disposed when that worker ends. `task` carries its own budget: the seed is
+ * a chain of backend commands, and this machine runs several backends against
+ * one shared remote cache — a single list read here has been measured at ten
+ * seconds, which is more than a test's default budget is sized for.
+ *
+ * `auto`, because the queue is measured with work in it: an empty queue
+ * exercises one branch of one component, and the geometry that stranded an
+ * operator is the geometry of a task ROW. Every test in this file therefore
+ * waits for the task, not only the one that opens it. It is built through the
+ * backend's own commands — purchase order, receipt, putaway, claim — so the row
+ * on screen is a document the application produced rather than a fixture's idea
+ * of one.
+ */
+const test = base.extend<{ signedIn: void }, { api: ApiOracle; task: ClaimedPutawayTask }>({
+  api: [
+    async ({}, use) => {
+      const api = await apiOracle();
+      await use(api);
+      await api.dispose();
+    },
+    { scope: "worker" },
+  ],
+  task: [
+    async ({ api }, use) => {
+      const target = await seedTarget(api, SEED_QTY);
+      const po = await sentPurchaseOrder(api, target, SEED_QTY, "INV-20 RF queue");
+      const receipt = await postedReceipt(api, po, target, SEED_QTY);
+      await use(await claimedPutawayTask(api, receipt.grnId));
+    },
+    { scope: "worker", auto: true, timeout: 300_000 },
+  ],
+  signedIn: [
+    async ({ context, baseURL }, use) => {
+      if (!baseURL)
+        throw new Error(
+          "No baseURL. The session cookie is scoped to its hostname, so it cannot be minted without one.",
+        );
+      await signIn(context, tenantEnv().user, baseURL);
+      await use();
+    },
+    { auto: true },
+  ],
+});
+
+/**
+ * Runtime-selected, because whether this suite can run is a property of the
+ * environment rather than of the code: with no seeded tenant there is nothing
+ * for it to assert against. The reason rides along as an annotation so a skipped
+ * run still says which variables are missing.
+ */
+const HAS_TENANT = hasTenantEnv();
+
+const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
+  HAS_TENANT ? test.describe : test.describe.skip;
+
+const TENANT_DETAILS: TestDetails = HAS_TENANT
+  ? {}
+  : { annotation: { type: "skip", description: SKIP_REASON } };
+
 test.use({ viewport: RF_VIEWPORT });
 
-test.describe("inventory · RF at 375", () => {
-  test.skip(!hasTenantEnv(), SKIP_REASON);
-
-  let api: ApiOracle;
-  let task: ClaimedPutawayTask;
-
-  test.beforeAll(async () => {
-    // The seed is a chain of backend commands, and this machine runs several
-    // backends against one shared remote cache — a single list read here has
-    // been measured at ten seconds. The default budget is sized for a test, not
-    // for building the documents one needs, and when it ran out the failure
-    // pointed at a heading that had simply not been reached yet.
-    test.setTimeout(300_000);
-    api = await apiOracle();
-
-    // The queue is measured with work in it, because an empty queue exercises
-    // one branch of one component and the geometry that stranded an operator is
-    // the geometry of a task ROW. The task is built through the backend's own
-    // commands — purchase order, receipt, putaway, claim — so the row on screen
-    // is a document the application produced rather than a fixture's idea of
-    // one.
-    const target = await seedTarget(api, SEED_QTY);
-    const po = await sentPurchaseOrder(api, target, SEED_QTY, "INV-20 RF queue");
-    const receipt = await postedReceipt(api, po, target, SEED_QTY);
-    task = await claimedPutawayTask(api, receipt.grnId);
-  });
-
-  test.afterAll(async () => {
-    await api?.dispose();
-  });
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    await signIn(context, tenantEnv().user, baseURL as string);
-  });
-
+describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
   test("the viewport under test really is 375 wide", async ({ page }) => {
     // Anti-vacuity. Every geometric assertion below is only meaningful at this
     // width, and a `test.use` that silently stopped applying would turn the
@@ -283,7 +312,7 @@ test.describe("inventory · RF at 375", () => {
    * The flows those runners drive — put away, pick — are walked to their ledger
    * consequences in `inventory-rf-walks.spec.ts`.
    */
-  test("an assigned task opens its own single-column runner", async ({ page }) => {
+  test("an assigned task opens its own single-column runner", async ({ page, task }) => {
     await page.goto("/inventory/rf");
     await expectRfQueueLoaded(page);
 

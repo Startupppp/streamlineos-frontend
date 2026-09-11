@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test as base, type TestDetails } from "@playwright/test";
 import {
   apiOracle,
   describeLedger,
@@ -42,43 +42,79 @@ interface ReceiveRequest {
   lines: Array<{ poLineId: number; quantityReceived: string; qualityStatus: string }>;
 }
 
-test.describe("inventory · receive against a purchase order", () => {
-  test.skip(!hasTenantEnv(), SKIP_REASON);
+/**
+ * The oracle, the documents and the session, as fixtures rather than as hooks.
+ *
+ * `api` is worker-scoped, so one authenticated API context is built per worker
+ * and disposed when that worker ends. `seeded` builds the order in that same
+ * worker scope and carries its own budget: the seed is a chain of backend
+ * commands, and this machine runs several backends against one shared remote
+ * cache — a single list read here has been measured at ten seconds. Spending the
+ * TEST's budget on creating the vendor, the order and then approving and sending
+ * it leaves the failure pointing at a heading that was never reached rather than
+ * at the screen under test. `auto` because the order must exist before the
+ * screen that receives against it is opened, whichever test opens it first.
+ */
+const test = base.extend<
+  { signedIn: void },
+  { api: ApiOracle; seeded: { target: SeedTarget; po: PurchaseOrderRow } }
+>({
+  api: [
+    async ({}, use) => {
+      const api = await apiOracle();
+      await use(api);
+      await api.dispose();
+    },
+    { scope: "worker" },
+  ],
+  seeded: [
+    async ({ api }, use) => {
+      const target = await seedTarget(api, RECEIVE_QTY);
+      const po = await sentPurchaseOrder(api, target, RECEIVE_QTY, "INV-21 receive leg");
+      await use({ target, po });
+    },
+    { scope: "worker", auto: true, timeout: 300_000 },
+  ],
+  signedIn: [
+    async ({ context, baseURL }, use) => {
+      if (!baseURL)
+        throw new Error(
+          "No baseURL. The session cookie is scoped to its hostname, so it cannot be minted without one.",
+        );
+      await signIn(context, tenantEnv().user, baseURL);
+      await use();
+    },
+    { auto: true },
+  ],
+});
 
-  let api: ApiOracle;
-  let target: SeedTarget;
-  let po: PurchaseOrderRow;
+/**
+ * Runtime-selected, because whether this suite can run is a property of the
+ * environment rather than of the code: with no seeded tenant there is nothing
+ * for it to assert against. The reason rides along as an annotation so a skipped
+ * run still says which variables are missing.
+ */
+const HAS_TENANT = hasTenantEnv();
 
-  test.beforeAll(async () => {
-    // The seed is a chain of backend commands, and this machine runs several
-    // backends against one shared remote cache — a single list read here has
-    // been measured at ten seconds. The default budget is sized for a test, not
-    // for building the documents one needs, and when it ran out the failure
-    // pointed at a heading that had simply not been reached yet.
-    test.setTimeout(300_000);
-    api = await apiOracle();
-    target = await seedTarget(api, RECEIVE_QTY);
+const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
+  HAS_TENANT ? test.describe : test.describe.skip;
 
-    // Seeded here rather than in the test: creating the vendor, the order and
-    // then approving and sending it is several sequential round trips, and
-    // spending the test's own budget on them leaves the failure pointing at a
-    // heading that was never reached rather than at the screen under test.
-    po = await sentPurchaseOrder(api, target, RECEIVE_QTY, "INV-21 receive leg");
-  });
+const TENANT_DETAILS: TestDetails = HAS_TENANT
+  ? {}
+  : { annotation: { type: "skip", description: SKIP_REASON } };
 
-  test.afterAll(async () => {
-    await api?.dispose();
-  });
+describeWithTenant("inventory · receive against a purchase order", TENANT_DETAILS, () => {
+  // `next dev` compiles a route the first time it is asked for, and the
+  // purchase-order detail page is a heavy one. That compile lands inside the
+  // test, so the budget has to cover it.
+  test.describe.configure({ timeout: 180_000 });
 
-  test.beforeEach(async ({ context, baseURL }) => {
-    // `next dev` compiles a route the first time it is asked for, and the
-    // purchase-order detail page is a heavy one. That compile lands inside this
-    // test, so the budget has to cover it.
-    test.setTimeout(180_000);
-    await signIn(context, tenantEnv().user, baseURL as string);
-  });
-
-  test("counting a delivery in posts it to stock, and the ledger agrees", async ({ page }) => {
+  test("counting a delivery in posts it to stock, and the ledger agrees", async ({
+    page,
+    api,
+    seeded,
+  }) => {
+    const { target, po } = seeded;
     const poLineId = po.lines[0]!.id;
 
     await page.goto(`/inventory/purchase-orders/${po.id}`);

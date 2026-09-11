@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test as base, type Locator, type Page, type TestDetails } from "@playwright/test";
 import {
   apiOracle,
   describeLedger,
@@ -103,50 +103,81 @@ function transferMovements(
   };
 }
 
-test.describe("inventory · stock transfer", () => {
-  test.skip(!hasTenantEnv(), SKIP_REASON);
+/**
+ * The oracle, the stocked bins and the session, as fixtures rather than as
+ * hooks.
+ *
+ * `api` is worker-scoped, so one authenticated API context is built per worker
+ * and disposed when that worker ends. `seeded` stocks the source bin through the
+ * real receiving chain, so the quantity being moved is one this suite put there
+ * and the arithmetic in the test does not depend on what any other suite left
+ * behind. It carries its own budget because it is several sequential round trips
+ * against a shared remote cache — a single list read here has been measured at
+ * ten seconds — and the test's own budget is for the four screens it drives.
+ */
+const test = base.extend<
+  { signedIn: void },
+  { api: ApiOracle; seeded: { target: SeedTarget; destination: WarehouseLocation | undefined } }
+>({
+  api: [
+    async ({}, use) => {
+      const api = await apiOracle();
+      await use(api);
+      await api.dispose();
+    },
+    { scope: "worker" },
+  ],
+  seeded: [
+    async ({ api }, use) => {
+      const target = await seedTarget(api, STOCKED_QTY);
+      const po = await sentPurchaseOrder(api, target, STOCKED_QTY, "INV-21 transfer leg");
+      await postedReceipt(api, po, target, STOCKED_QTY);
+      const destination = (
+        await binsWithHeadroom(api, target.warehouseId, TRANSFER_QTY, [target.bin.id])
+      )[0];
+      await use({ target, destination });
+    },
+    { scope: "worker", auto: true, timeout: 300_000 },
+  ],
+  signedIn: [
+    async ({ context, baseURL }, use) => {
+      if (!baseURL)
+        throw new Error(
+          "No baseURL. The session cookie is scoped to its hostname, so it cannot be minted without one.",
+        );
+      await signIn(context, tenantEnv().user, baseURL);
+      await use();
+    },
+    { auto: true },
+  ],
+});
 
-  let api: ApiOracle;
-  let target: SeedTarget;
-  let destination: WarehouseLocation | undefined;
+/**
+ * Runtime-selected, because whether this suite can run is a property of the
+ * environment rather than of the code: with no seeded tenant there is nothing
+ * for it to assert against. The reason rides along as an annotation so a skipped
+ * run still says which variables are missing.
+ */
+const HAS_TENANT = hasTenantEnv();
 
-  test.beforeAll(async () => {
-    // The seed is a chain of backend commands, and this machine runs several
-    // backends against one shared remote cache — a single list read here has
-    // been measured at ten seconds. The default budget is sized for a test, not
-    // for building the documents one needs, and when it ran out the failure
-    // pointed at a heading that had simply not been reached yet.
-    test.setTimeout(300_000);
-    api = await apiOracle();
-    target = await seedTarget(api, STOCKED_QTY);
+const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
+  HAS_TENANT ? test.describe : test.describe.skip;
 
-    // Stock the source bin through the real receiving chain, so the quantity
-    // being moved is one this suite put there and the arithmetic below does not
-    // depend on what any other suite left behind. In `beforeAll` because it is
-    // several sequential round trips and the test's budget is for the four
-    // screens it drives.
-    const po = await sentPurchaseOrder(api, target, STOCKED_QTY, "INV-21 transfer leg");
-    await postedReceipt(api, po, target, STOCKED_QTY);
+const TENANT_DETAILS: TestDetails = HAS_TENANT
+  ? {}
+  : { annotation: { type: "skip", description: SKIP_REASON } };
 
-    destination = (
-      await binsWithHeadroom(api, target.warehouseId, TRANSFER_QTY, [target.bin.id])
-    )[0];
-  });
-
-  test.afterAll(async () => {
-    await api?.dispose();
-  });
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    // Four screens, three commands and a `next dev` compile of each route on
-    // first visit. The default budget covers the click, not the compile.
-    test.setTimeout(180_000);
-    await signIn(context, tenantEnv().user, baseURL as string);
-  });
+describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
+  // Four screens, three commands and a `next dev` compile of each route on first
+  // visit. The default budget covers the click, not the compile.
+  test.describe.configure({ timeout: 180_000 });
 
   test("a transfer walks the stock from one bin to another and the ledger follows", async ({
     page,
+    api,
+    seeded,
   }) => {
+    const { target, destination } = seeded;
     expect(
       destination,
       `no second bin in warehouse ${target.warehouseId} can accept ${TRANSFER_QTY} units, ` +

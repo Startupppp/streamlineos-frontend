@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test as base, type TestDetails } from "@playwright/test";
 import {
   apiOracle,
   findLocationWithHeadroom,
@@ -44,25 +44,56 @@ interface AdjustmentRequest {
   }>;
 }
 
-test.describe("inventory · adjust", () => {
-  test.skip(!hasTenantEnv(), SKIP_REASON);
+/**
+ * The oracle and the session, as fixtures rather than as hooks.
+ *
+ * `api` is worker-scoped, so one authenticated API context is built per worker
+ * and disposed when that worker ends — the lifetime a `beforeAll`/`afterAll`
+ * pair was standing in for, without the pair. `signedIn` is an auto fixture, so
+ * every test in this file gets a browser context carrying a real session cookie
+ * before it opens a page.
+ */
+const test = base.extend<{ signedIn: void }, { api: ApiOracle }>({
+  api: [
+    async ({}, use) => {
+      const api = await apiOracle();
+      await use(api);
+      await api.dispose();
+    },
+    { scope: "worker" },
+  ],
+  signedIn: [
+    async ({ context, baseURL }, use) => {
+      if (!baseURL)
+        throw new Error(
+          "No baseURL. The session cookie is scoped to its hostname, so it cannot be minted without one.",
+        );
+      await signIn(context, tenantEnv().user, baseURL);
+      await use();
+    },
+    { auto: true },
+  ],
+});
 
-  let api: ApiOracle;
+/**
+ * Runtime-selected, because whether this suite can run is a property of the
+ * environment rather than of the code: with no seeded tenant there is nothing
+ * for it to assert against. The reason rides along as an annotation so a skipped
+ * run still says which variables are missing.
+ */
+const HAS_TENANT = hasTenantEnv();
 
-  test.beforeAll(async () => {
-    api = await apiOracle();
-  });
+const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
+  HAS_TENANT ? test.describe : test.describe.skip;
 
-  test.afterAll(async () => {
-    await api?.dispose();
-  });
+const TENANT_DETAILS: TestDetails = HAS_TENANT
+  ? {}
+  : { annotation: { type: "skip", description: SKIP_REASON } };
 
-  test.beforeEach(async ({ context, baseURL }) => {
-    await signIn(context, tenantEnv().user, baseURL as string);
-  });
-
+describeWithTenant("inventory · adjust", TENANT_DETAILS, () => {
   test("an adjustment moves on-hand by the quantity entered, and the ledger agrees", async ({
     page,
+    api,
   }) => {
     // Where to put the stock is decided before the UI is touched, and decided
     // on capacity rather than on list order. Bins carry a cap and the backend
