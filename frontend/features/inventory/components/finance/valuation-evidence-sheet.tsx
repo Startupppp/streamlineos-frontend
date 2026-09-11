@@ -57,7 +57,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
   const periodsQuery = useValuationPeriods();
   const consumptionsQuery = useValuationConsumptions({
     variantId,
-    ...(periodId === ALL_PERIODS ? {} : { periodId: Number(periodId) }),
+    ...(periodId === ALL_PERIODS ? {} : { periodId }),
     page: consumptionPage,
     limit: PAGE_SIZE,
   });

@@ -38,7 +38,8 @@ export interface GlReconRow {
   hasCost: boolean;
   accountCodes: string[];
   missingAccountCodes: string[];
-  journalEntryId: number | null;
+  /** A kernel (`gl_journals`) id, which is a uuid string. */
+  journalEntryId: string | null;
   journalEntryNumber: string | null;
   journalEntryDate: string | null;
   journalStatus: string | null;
@@ -60,13 +61,13 @@ export interface GlReconSummary {
 
 export interface GlReconReport {
   generatedAt: string;
-  window: { fromDate: string; toDate: string; period: { id: number; name: string } | null };
+  window: { fromDate: string; toDate: string; period: GlReconPeriod | null };
   accounting: { journalsInstalled: boolean; note: string | null };
   rules: Array<{ sourceType: string; sourceEvent: string; label: string; accountCodes: string[] }>;
   summary: GlReconSummary;
   unpostedByDesign: Array<{ sourceType: string; movementCount: number; movementValue: string }>;
   orphanJournals: Array<{
-    journalEntryId: number;
+    journalEntryId: string;
     journalEntryNumber: string;
     journalEntryDate: string;
     sourceType: string;
@@ -82,7 +83,8 @@ export interface GlReconReport {
 }
 
 export interface GlReconPeriod {
-  periodId: number;
+  /** A `gl_periods` id: the reconciliation reads the default book's periods. */
+  periodId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -90,7 +92,7 @@ export interface GlReconPeriod {
 }
 
 export interface GlReconFilters {
-  periodId?: number;
+  periodId?: string;
   fromDate?: string;
   toDate?: string;
   warehouseId?: number;

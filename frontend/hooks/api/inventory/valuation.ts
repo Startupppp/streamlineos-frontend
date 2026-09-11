@@ -70,7 +70,8 @@ interface ValuationLayersResponse {
 }
 
 export interface InventoryPeriod {
-  periodId: number;
+  /** A `gl_periods` id: valuation reads the default book's accounting periods. */
+  periodId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -123,7 +124,7 @@ export interface ValuationConsumptionsParams {
   variantId?: number;
   layerId?: number;
   stockTransactionId?: number;
-  periodId?: number;
+  periodId?: string;
   fromDate?: string;
   toDate?: string;
   page?: number;

@@ -97,7 +97,7 @@ jest.mock("@/hooks/api/inventory/valuation", () => ({
       installed: true,
       items: [
         {
-          periodId: 3,
+          periodId: "0b8f6a52-4c1e-4b8e-9d6f-2a7c3e5f1a90",
           name: "September 2026",
           startDate: "2026-09-01",
           endDate: "2026-09-30",

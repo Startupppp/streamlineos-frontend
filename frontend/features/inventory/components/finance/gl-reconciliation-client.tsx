@@ -45,7 +45,7 @@ export function GlReconciliationClient() {
   const canView = useCan("inventory:reports:read");
   const money = useOrgDisplay();
 
-  const [periodId, setPeriodId] = useState<number | undefined>(undefined);
+  const [periodId, setPeriodId] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<GlReconStatus | undefined>(undefined);
   const [warehouseId, setWarehouseId] = useState<number | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -65,7 +65,7 @@ export function GlReconciliationClient() {
   const filtersActive = periodId !== undefined || status !== undefined || warehouseId !== undefined;
 
   function handlePeriodChange(next: string): void {
-    setPeriodId(next === ALL ? undefined : Number(next));
+    setPeriodId(next === ALL ? undefined : next);
     setPage(1);
   }
 
