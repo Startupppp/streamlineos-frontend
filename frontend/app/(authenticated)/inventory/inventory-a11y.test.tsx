@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { axeViolationIds, expectNoAxeViolations } from "@/test-utils/axe";
+import { expectNoAxeViolations } from "@/test-utils/axe";
+import { renderWithProviders } from "@/test-utils";
 import { atViewport } from "@/test-utils/viewport";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 /**
  * T18 — inventory's accessibility and success states, proved by rendering.
@@ -94,44 +94,16 @@ const A11Y_COVERED_SHARED: ReadonlyArray<{ file: string; reason: string }> = [
 ];
 
 /**
- * Known accessibility debt, named rather than absorbed.
+ * The `heading-order` debt this file used to carry is gone.
  *
- * axe finds exactly one rule on these six surfaces — `heading-order` — and its
- * cause is not inventory's. `PageWrapper` renders the page `<h1>`, `RfShell`
- * renders the handheld's, and then `EmptyState` (`components/ui/empty-state.tsx`
- * :151), `ErrorState` (`components/shared/error-state.tsx`:45) and
- * `NoPermissionState` (`components/shared/no-permission-state.tsx`:38) each open
- * with an `<h3>`. `CardTitle` is a `<div>`, so nothing sits between: the reader
- * jumps h1 → h3 and the h2 level is missing, which is what somebody navigating
- * by heading level lands on.
- *
- * It is not fixed here on purpose. Those three components have 853 importers
- * across every module; retagging them is a repo-wide product decision that wants
- * verifying against all of them, not a side effect of an inventory ticket — and
- * this branch has another session pushing to it. So it is recorded, bounded and
- * escalated instead.
- *
- * **This is a debt list, not an exemption list.** `expectOnlyKnownDebtAtBothEnds`
- * asserts the violation set *equals* the entry, so the day those three files
- * move to `<h2>` every one of these tests goes red and the entry has to be
- * deleted. An exemption that cannot outlive its cause.
- *
- * Note which surfaces are *not* here: `the inventory empty state is accessible`
- * mounts `InventoryEmptyState` on its own and passes clean. The components are
- * not individually wrong — the composition is, and only a mounted page shows it.
- * That is the argument for mounting pages rather than components.
+ * `EmptyState`, `ErrorState` and `NoPermissionState` each opened with an `<h3>`
+ * under `PageWrapper`'s or `RfShell`'s `<h1>`, so axe reported `heading-order`
+ * on six of the surfaces below and the list that recorded it said it must be
+ * deleted the day those three components moved to `<h2>`. They have: all six
+ * surfaces now assert a clean run through `expectAccessibleAtBothEnds`, the same
+ * helper every other surface in this file uses, so a reintroduced level skip
+ * fails here rather than being absorbed by an exemption.
  */
-const KNOWN_AXE_DEBT: ReadonlyArray<{ surface: string; rule: string; owner: string }> = [
-  { surface: "inventory (loaded)", rule: "heading-order", owner: "components/ui/empty-state.tsx — h3 under PageWrapper's h1" },
-  { surface: "inventory (empty)", rule: "heading-order", owner: "components/ui/empty-state.tsx — h3 under PageWrapper's h1" },
-  { surface: "inventory (denied)", rule: "heading-order", owner: "components/shared/no-permission-state.tsx — h3 under PageWrapper's h1" },
-  { surface: "inventory/rf (denied)", rule: "heading-order", owner: "components/shared/no-permission-state.tsx — h3 under RfShell's h1" },
-  { surface: "inventory/rf/pick (empty)", rule: "heading-order", owner: "components/ui/empty-state.tsx — h3 under RfShell's h1" },
-  { surface: "inventory/rf error boundary", rule: "heading-order", owner: "components/shared/error-state.tsx — h3 under RfShell's h1" },
-];
-
-/** Every debt entry names the same rule; a second rule is a new decision, not a rollover. */
-const HEADING_ORDER_DEBT = ["heading-order"];
 
 // ---------------------------------------------------------------------------
 // The data layer, stubbed. What is under test is the rendered tree, not where
@@ -333,19 +305,6 @@ beforeEach(() => {
 });
 
 /**
- * The providers the real tree has above every inventory page.
- *
- * `TooltipProvider` is mounted once in `components/providers/query-provider.tsx`
- * and `PageWrapper` renders a `Tooltip` under it. Mounting a page without it
- * throws before axe sees anything, so this is not a convenience — it is the
- * difference between testing the app's tree and testing a fragment that cannot
- * exist. `product-switcher-menu.test.tsx` wraps for the same reason.
- */
-function inProviders(ui: ReactElement): ReactElement {
-  return <TooltipProvider>{ui}</TooltipProvider>;
-}
-
-/**
  * How many times axe has actually run in this file.
  *
  * Counted at runtime, and checked in `afterAll`, because a *static* count is
@@ -358,54 +317,33 @@ function inProviders(ui: ReactElement): ReactElement {
 let axeRunCount = 0;
 
 /**
- * Runs axe at both ends of the responsive range.
+ * Runs axe at both ends of the responsive range, under the providers the real
+ * tree has above every inventory page.
  *
- * Both, not one: `atViewport` swaps `matchMedia`, so a component that renders a
- * different tree on a narrow screen — a sheet instead of a dialog, a stacked
- * card instead of a row — is a *different* tree for axe to judge, and passing at
- * 1280px says nothing about the one a phone gets. It remains a claim about
- * markup, never about layout.
+ * Both ends, not one: `atViewport` swaps `matchMedia`, so a component that
+ * renders a different tree on a narrow screen — a sheet instead of a dialog, a
+ * stacked card instead of a row — is a *different* tree for axe to judge, and
+ * passing at 1280px says nothing about the one a phone gets. It remains a claim
+ * about markup, never about layout.
+ *
+ * `renderWithProviders` rather than a bare `render`, and that is not a
+ * convenience: `components/providers/query-provider.tsx` mounts both a
+ * `QueryClientProvider` and a `TooltipProvider` above every one of these
+ * screens. `PageWrapper` renders a `Tooltip`, and the module error boundary
+ * resets queries through `useQueryClient` on retry — so a mount without either
+ * provider throws before axe sees anything, which is the difference between
+ * testing the app's tree and testing a fragment that cannot exist.
  */
 async function expectAccessibleAtBothEnds(ui: ReactElement): Promise<void> {
-  const desktop = render(inProviders(ui));
+  const desktop = renderWithProviders(ui);
   await expectNoAxeViolations(desktop.baseElement);
   axeRunCount++;
   desktop.unmount();
 
   const restore = atViewport("mobile");
   try {
-    const mobile = render(inProviders(ui));
+    const mobile = renderWithProviders(ui);
     await expectNoAxeViolations(mobile.baseElement);
-    axeRunCount++;
-    mobile.unmount();
-  } finally {
-    restore();
-  }
-}
-
-/**
- * The same run for a surface carrying named debt from a component inventory
- * does not own — see `KNOWN_AXE_DEBT`.
- *
- * `toEqual`, not "contains": a seventh violating node fails, a violation of any
- * other rule fails, and a debt entry whose violation has been fixed fails too.
- * That last one is deliberate — it is what stops this list becoming a permanent
- * exemption, because the day `components/ui/empty-state.tsx` and its two
- * siblings move from `h3` to `h2` this file goes red until the entry is deleted.
- */
-async function expectOnlyKnownDebtAtBothEnds(
-  ui: ReactElement,
-  debt: ReadonlyArray<string>,
-): Promise<void> {
-  const desktop = render(inProviders(ui));
-  expect(await axeViolationIds(desktop.baseElement)).toEqual([...debt]);
-  axeRunCount++;
-  desktop.unmount();
-
-  const restore = atViewport("mobile");
-  try {
-    const mobile = render(inProviders(ui));
-    expect(await axeViolationIds(mobile.baseElement)).toEqual([...debt]);
     axeRunCount++;
     mobile.unmount();
   } finally {
@@ -420,28 +358,20 @@ describe("T18 a11y — the inventory route surfaces", () => {
     // like an accessible module.
     expect(A11Y_COVERED_ROUTES.length).toBeGreaterThanOrEqual(6);
     expect(A11Y_COVERED_SHARED.length).toBeGreaterThanOrEqual(5);
-
-    // The debt list is bounded by hand and must stay that shape: six surfaces,
-    // one rule. A seventh entry, or a second rule id, is somebody widening an
-    // exemption rather than recording the one that exists — and it should cost
-    // an edit to this line, not pass unnoticed.
-    expect(KNOWN_AXE_DEBT).toHaveLength(6);
-    expect([...new Set(KNOWN_AXE_DEBT.map(({ rule }) => rule))]).toEqual(HEADING_ORDER_DEBT);
-    for (const { owner } of KNOWN_AXE_DEBT) expect(owner.length).toBeGreaterThan(30);
   });
 
   it("inventory — the module landing page, loaded", async () => {
-    await expectOnlyKnownDebtAtBothEnds(<InventoryDashboardPage />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<InventoryDashboardPage />);
   });
 
   it("inventory — the onboarding empty state", async () => {
     inventoryDashboard.mockReturnValue(EMPTY_DASHBOARD);
-    await expectOnlyKnownDebtAtBothEnds(<InventoryDashboardPage />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<InventoryDashboardPage />);
   });
 
   it("inventory — the denied state, which is not the empty one", async () => {
     useCan.mockReturnValue(false);
-    await expectOnlyKnownDebtAtBothEnds(<InventoryDashboardPage />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<InventoryDashboardPage />);
   });
 
   it("inventory/rf — the handheld task queue", async () => {
@@ -450,7 +380,7 @@ describe("T18 a11y — the inventory route surfaces", () => {
 
   it("inventory/rf — the handheld queue, denied", async () => {
     rfQueue.mockReturnValue({ ...LOADED_QUEUE, isDenied: true, tasks: [] });
-    await expectOnlyKnownDebtAtBothEnds(<RfQueuePage />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<RfQueuePage />);
   });
 
   it("inventory/rf/pick — the picker's queue", async () => {
@@ -462,7 +392,7 @@ describe("T18 a11y — the inventory route surfaces", () => {
       ...LOADED_QUEUE,
       tasks: MIXED_QUEUE.filter((task) => task.kind !== "PICK"),
     });
-    await expectOnlyKnownDebtAtBothEnds(<RfPickQueuePage />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<RfPickQueuePage />);
   });
 
   it("inventory/rf/putaway — the receiver's queue", async () => {
@@ -486,7 +416,7 @@ describe("T18 a11y — the shared surfaces every inventory route renders", () =>
   });
 
   it("the RF error boundary renders and is accessible", async () => {
-    await expectOnlyKnownDebtAtBothEnds(<RfError {...boundaryProps} />, HEADING_ORDER_DEBT);
+    await expectAccessibleAtBothEnds(<RfError {...boundaryProps} />);
   });
 
   it("the inventory empty state is accessible", async () => {
@@ -523,14 +453,14 @@ describe("T18 a11y — the shared surfaces every inventory route renders", () =>
  */
 describe("T18 success — a loaded inventory surface shows its data", () => {
   it("the landing page shows the totals rather than a skeleton", () => {
-    render(inProviders(<InventoryDashboardPage />));
+    renderWithProviders(<InventoryDashboardPage />);
     expect(screen.getByText("Total SKUs")).toBeInTheDocument();
     expect(screen.getByText("412")).toBeInTheDocument();
     expect(screen.queryByText(/set up your inventory/i)).not.toBeInTheDocument();
   });
 
   it("the handheld queue shows one tappable task per row", () => {
-    render(inProviders(<RfQueuePage />));
+    renderWithProviders(<RfQueuePage />);
     const list = screen.getByRole("list");
     expect(screen.getAllByRole("listitem").length).toBeGreaterThanOrEqual(3);
     expect(list).toBeInTheDocument();
@@ -539,13 +469,13 @@ describe("T18 success — a loaded inventory surface shows its data", () => {
   });
 
   it("the pick runner shows the line it wants picked", () => {
-    render(inProviders(<RfPickPage />));
+    renderWithProviders(<RfPickPage />);
     expect(screen.getByText("A-01-01")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /confirm/i })).toBeInTheDocument();
   });
 
   it("the putaway runner shows the location it wants the stock in", () => {
-    render(inProviders(<RfPutawayPage />));
+    renderWithProviders(<RfPutawayPage />);
     expect(screen.getByText("A-01-01")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /confirm/i })).toBeInTheDocument();
   });
@@ -554,7 +484,7 @@ describe("T18 success — a loaded inventory surface shows its data", () => {
     // Without this, "shows its data" could be satisfied by a screen that shows
     // the same thing whatever comes back.
     inventoryDashboard.mockReturnValue(EMPTY_DASHBOARD);
-    render(inProviders(<InventoryDashboardPage />));
+    renderWithProviders(<InventoryDashboardPage />);
     expect(screen.queryByText("Total SKUs")).not.toBeInTheDocument();
     expect(screen.getByText(/set up your inventory/i)).toBeInTheDocument();
   });

@@ -134,24 +134,24 @@ describe("the surfaces the audit added, at every breakpoint", () => {
   });
 
   /**
-   * One named debt, which these pages did not introduce and must not absorb.
+   * The `heading-order` debt these pages carried is gone.
    *
-   * `EmptyState` renders its title as an `<h3>`. Under `PageWrapper`'s `<h1>`
-   * that skips a level, so axe reports `heading-order` on every list page in the
-   * product that renders an empty state — not only these three. Asserting the
-   * exact list rather than disabling the rule means a new violation still fails
-   * here, an extra violating node still fails here, and the day `EmptyState`
-   * moves to `<h2>` this expectation fails too and comes back down to empty.
+   * `EmptyState` rendered its title as an `<h3>` under `PageWrapper`'s `<h1>`,
+   * which skips a level, so axe reported `heading-order` on every list page in
+   * the product that rendered an empty state — not only these three. It now
+   * opens with an `<h2>`, so the expectation is the empty list it always said it
+   * would come back down to, and the exact-list assertion still fails on any new
+   * violation and on any extra violating node.
    */
   it.each(SURFACES.map((surface) => [surface.name, surface] as const))(
-    "%s carries no accessibility violation at 375 beyond the shared empty-state heading level",
+    "%s carries no accessibility violation at 375",
     async (_name, surface) => {
       const restore = atViewport("mobile");
       try {
         const { container } = renderWithProviders(
           <TooltipProvider>{surface.render()}</TooltipProvider>,
         );
-        expect(await axeViolationIds(container)).toEqual(["heading-order"]);
+        expect(await axeViolationIds(container)).toEqual([]);
       } finally {
         restore();
       }
