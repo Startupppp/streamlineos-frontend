@@ -9,6 +9,7 @@ import { EmptyTransferIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState, AppSheet, NoPermissionState } from "@/components/shared";
 import { LoadCreateSheet } from "@/features/inventory/components/shipping/load-create-sheet";
@@ -75,9 +76,9 @@ function LoadsPageInner() {
 
   const columns: DataTableColumn<Load>[] = [
     {
-      key: "id",
+      key: "loadNumber",
       header: "Load",
-      cell: (l) => l.name ?? (formatShortDate(l.createdAt) || "—"),
+      cell: (l) => <span className="font-mono font-semibold text-foreground">{l.loadNumber}</span>,
     },
     {
       key: "status",
@@ -92,11 +93,18 @@ function LoadsPageInner() {
       ),
     },
     {
-      key: "members",
-      header: "Members",
+      key: "destination",
+      header: "Destination",
       cell: (l) => (
-        <span className="tabular-nums">{l.members?.length ?? 0}</span>
+        <TruncatedText text={l.destination ?? "—"} className="text-muted-foreground" />
       ),
+    },
+    {
+      key: "vehicleRef",
+      header: "Vehicle",
+      headerClassName: "hidden md:table-cell",
+      className: "text-muted-foreground hidden md:table-cell",
+      cell: (l) => <>{l.vehicleRef ?? "—"}</>,
     },
     {
       key: "createdAt",
@@ -170,7 +178,7 @@ function LoadsPageInner() {
       <AppSheet
         open={detailOpen}
         onOpenChange={handleDetailClose}
-        title={selectedLoad?.name ?? (selectedId ? `Load #${selectedId}` : "Load Details")}
+        title={selectedLoad ? `Load ${selectedLoad.loadNumber}` : "Load Details"}
         description={selectedLoad ? `Status: ${LOAD_STATUS_LABEL[selectedLoad.status]}` : undefined}
       >
         {selectedId !== null && (

@@ -26,11 +26,8 @@ import {
 } from "@/hooks/api/inventory/shipping";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatCalendarDate, formatShortDate } from "@/lib/date-utils";
+import { LoadLinesList } from "./load-lines-list";
 
 export interface LoadDetailPanelProps {
   loadId: number;
@@ -143,41 +140,42 @@ export function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
     <>
       <div className="space-y-5">
         <div className="flex items-center gap-2">
+          <span className="text-sm font-mono font-semibold">{load.loadNumber}</span>
           <Badge
             variant="outline"
             className={cn("h-4 text-micro px-1.5 py-0 border", LOAD_STATUS_BADGE[load.status])}
           >
             {LOAD_STATUS_LABEL[load.status]}
           </Badge>
-          <span className="text-xs text-muted-foreground">{formatDate(load.createdAt)}</span>
+          <span className="text-xs text-muted-foreground">{formatShortDate(load.createdAt)}</span>
         </div>
 
-        {load.name && (
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Name</p>
-            <p className="text-sm font-medium">{load.name}</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Destination</p>
+            <p className="text-sm font-medium">{load.destination ?? "—"}</p>
           </div>
-        )}
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Vehicle</p>
+            <p className="text-sm font-medium">{load.vehicleRef ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Dispatched</p>
+            <p className="text-sm font-medium">
+              {load.dispatchDate ? formatCalendarDate(load.dispatchDate) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Arrived</p>
+            <p className="text-sm font-medium">
+              {load.arrivalDate ? formatCalendarDate(load.arrivalDate) : "—"}
+            </p>
+          </div>
+        </div>
 
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Members ({load.members?.length ?? 0})</p>
-          {load.members && load.members.length > 0 ? (
-            <div className="divide-y divide-border rounded-lg border">
-              {load.members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between px-3 py-2">
-                  <div>
-                    <span className="text-xs text-muted-foreground">{member.type}</span>
-                    <span className="ml-2 text-sm font-mono">#{member.referenceId}</span>
-                  </div>
-                  {member.status && (
-                    <span className="text-xs text-muted-foreground">{member.status}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">No members</p>
-          )}
+          <p className="text-xs text-muted-foreground mb-2">On this load ({load.lines.length})</p>
+          <LoadLinesList lines={load.lines} />
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">

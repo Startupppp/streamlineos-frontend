@@ -38,6 +38,7 @@ interface ShipmentLine {
 export interface Shipment {
   id: number;
   orgId: string;
+  shipmentNumber: string;
   status: ShipmentStatus;
   soId?: number | null;
   warehouseId?: number | null;

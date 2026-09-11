@@ -2,37 +2,40 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { LoadStatus } from "@/features/inventory/lib";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import type {
+  CreateLoadInput,
+  Load,
+  LoadDetail,
+} from "@/hooks/api/inventory/shipping-loads-schema";
 
-interface LoadMember {
-  id: number;
-  type: "SHIPMENT" | "TRANSFER";
-  referenceId: number;
-  status?: string | null;
-}
+export type { Load, LoadDetail, CreateLoadInput } from "@/hooks/api/inventory/shipping-loads-schema";
 
-export interface Load {
-  id: number;
-  orgId: string;
-  name?: string | null;
-  status: LoadStatus;
-  members?: LoadMember[];
-  createdAt: string;
-  updatedAt: string;
-}
+const loadListContract = lazyContract(() =>
+  import("@/hooks/api/inventory/shipping-loads-schema").then((m) => m.loadListContract),
+);
+const loadDetailContract = lazyContract(() =>
+  import("@/hooks/api/inventory/shipping-loads-schema").then((m) => m.loadDetailContract),
+);
+const loadContract = lazyContract(() =>
+  import("@/hooks/api/inventory/shipping-loads-schema").then((m) => m.loadContractSingle),
+);
 
-type LoadListResponse = {
+interface LoadListResponse {
   items: Load[];
   total: number;
   page: number;
   totalPages: number;
-};
+}
 
 interface LoadsQueryParams {
   [key: string]: unknown;
+  status?: LoadStatus;
+  carrierId?: number;
   page?: number;
   limit?: number;
 }
@@ -41,11 +44,18 @@ export function useLoads(params?: LoadsQueryParams) {
   const canView = useCan("inventory:loads:manage");
   return useQuery<LoadListResponse, Error>({
     queryKey: queryKeys.inventory.loads(params),
-    queryFn: () =>
-      apiClient.get<LoadListResponse>("/inventory/loads", {
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/inventory/loads",
+        {
+          status: params?.status,
+          carrierId: params?.carrierId,
+          page: params?.page,
+          limit: params?.limit,
+        },
+        signal,
+        loadListContract,
+      ),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -53,9 +63,10 @@ export function useLoads(params?: LoadsQueryParams) {
 
 export function useLoad(loadId: number) {
   const canView = useCan("inventory:loads:manage");
-  return useQuery<Load, Error>({
+  return useQuery<LoadDetail, Error>({
     queryKey: queryKeys.inventory.load(loadId),
-    queryFn: () => apiClient.get<Load>(`/inventory/loads/${loadId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/inventory/loads/${loadId}`, undefined, signal, loadDetailContract),
     enabled: canView && loadId > 0,
     staleTime: 60_000,
   });
@@ -63,13 +74,15 @@ export function useLoad(loadId: number) {
 
 export function useCreateLoad() {
   const qc = useQueryClient();
-  return useIdempotentMutation<
-    Load,
-    Error,
-    { name?: string; members: { type: "SHIPMENT" | "TRANSFER"; referenceId: number }[] }
-  >({
+  return useAuthorizedIdempotentMutation<Load, Error, CreateLoadInput>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "create"],
-    mutationFn: (data, idempotencyKey) => apiClient.post<Load>("/inventory/loads", data, { headers: { "Idempotency-Key": idempotencyKey } }),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post(
+        "/inventory/loads",
+        data,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        loadContract,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
@@ -78,39 +91,54 @@ export function useCreateLoad() {
 
 export function useDispatchLoad() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Load, Error, number>({
+  return useAuthorizedIdempotentMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "dispatch"],
     mutationFn: (loadId, idempotencyKey) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post(
+        `/inventory/loads/${loadId}/dispatch`,
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        loadContract,
+      ),
     onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
   });
 }
 
 export function useCloseLoad() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Load, Error, number>({
+  return useAuthorizedIdempotentMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "close"],
     mutationFn: (loadId, idempotencyKey) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post(
+        `/inventory/loads/${loadId}/close`,
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        loadContract,
+      ),
     onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
   });
 }
 
 export function useCancelLoad() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Load, Error, number>({
+  return useAuthorizedIdempotentMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "cancel"],
     mutationFn: (loadId, idempotencyKey) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post(
+        `/inventory/loads/${loadId}/cancel`,
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        loadContract,
+      ),
     onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
   });
 }
