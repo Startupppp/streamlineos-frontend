@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { GitMerge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Contact } from "@/types/crm";
-import type { PartyMergePair } from "@/features/party/duplicates/party-merge-dialog";
+import type { PartyMergePair } from "@/components/party-merge/party-merge-dialog";
 
 export interface ContactMergeSelection {
   readonly selectedIds: ReadonlySet<number>;

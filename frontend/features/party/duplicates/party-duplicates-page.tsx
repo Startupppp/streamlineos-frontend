@@ -20,9 +20,9 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { PartyDuplicateCandidate } from "@/types/party/merges";
-import { DuplicatePartyCard } from "./duplicate-pair-card";
+import { DuplicatePartyCard } from "@/components/party-merge/duplicate-pair-card";
 import { MergeHistoryPanel } from "./merge-history-panel";
-import { PartyMergeDialog } from "./party-merge-dialog";
+import { PartyMergeDialog } from "@/components/party-merge/party-merge-dialog";
 
 const PAGE_SIZE = 10;
 

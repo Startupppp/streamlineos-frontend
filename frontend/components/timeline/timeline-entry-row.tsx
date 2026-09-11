@@ -15,8 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { CallAnalysisPanel } from "@/features/crm/intelligence/call-analysis-panel";
-import { callIntelligenceHref } from "@/features/crm/intelligence/call-intelligence-href";
+import { CallAnalysisPanel } from "@/components/call-intelligence/call-analysis-panel";
+import { callIntelligenceHref } from "@/components/call-intelligence/call-intelligence-href";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatTime } from "@/lib/format-utils";
 import { formatShortDate } from "@/lib/date-utils";

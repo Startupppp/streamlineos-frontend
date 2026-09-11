@@ -9,7 +9,7 @@ import type {
   CallExemplarsResponse,
   ExemplarMetric,
 } from "@/types/crm/call-intelligence";
-import { callIntelligenceHref } from "./call-intelligence-href";
+import { callIntelligenceHref } from "@/components/call-intelligence/call-intelligence-href";
 import { METRIC_UNKNOWN, formatBpsPercent, formatQuestionsPerTenTurns } from "./call-metric-format";
 
 interface BestCallExemplarsProps {

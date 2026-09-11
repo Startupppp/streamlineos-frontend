@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { NoPermissionState } from "@/components/shared";
-import { CallAnalysisPanel } from "@/features/crm/intelligence/call-analysis-panel";
+import { CallAnalysisPanel } from "@/components/call-intelligence/call-analysis-panel";
 import { CallParticipantsCard } from "@/features/crm/intelligence/call-participants-card";
 import { useCanState } from "@/hooks/api/access";
 import { useCallAnalysis } from "@/hooks/api/crm/call-intelligence";

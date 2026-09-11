@@ -22,7 +22,7 @@ describe("call intelligence deep link", () => {
      * amount of type-checking notices a page that was moved or renamed — the
      * only thing that does is looking.
      */
-    const root = join(__dirname, "..", "..", "..");
+    const root = process.cwd();
     expect(existsSync(join(root, CALL_INTELLIGENCE_ROUTE, "page.tsx"))).toBe(true);
   });
 

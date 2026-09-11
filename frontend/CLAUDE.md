@@ -370,6 +370,8 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Board skeletons | `KanbanBoardSkeleton`, `KanbanColumnSkeleton` — `components/ui/kanban-skeleton.tsx` |
 | Rich surface (HR + Administration) | `RichPanel`, `RichPageContent`, `RichHero`, `RichQuickAction`, `RichIconWell` — `components/shared/rich-surface.tsx` (re-exported `Hr*` from `features/hr/shared/hr-ui.tsx`) |
 | AI | `AiActionsMenu`, `AiUsageChip` — `components/ai/` |
+| Party merge (duplicates) | `PartyMergeDialog`, `DuplicatePartyCard` — `components/party-merge/` (CRM contacts and the party duplicates page both open it) |
+| Call intelligence | `CallAnalysisPanel`, `callIntelligenceHref` — `components/call-intelligence/` (the shared timeline row and the CRM intelligence surfaces) |
 | API · errors · keys | `apiClient`, `ApiError`, `isApiError`, `getApiErrorCode` — `lib/api-client.ts` · `getErrorMessage` — `lib/get-error-message.ts` · `queryKeys` — `lib/query-keys.ts` |
 | Access | `useAccess`, `useCan`, `useModuleEnabled`, `usePermissionCatalog` — `hooks/api/access.ts` · `useOrgDisplay` — `hooks/api/org-display.ts` · `<RequireModule module="…">` — `components/auth/require-module.tsx` · `requirePermission` — `lib/rbac/require-permission.ts` |
 | Design tokens | `STATUS_TONES`, `statusToneClasses`, `typeScaleClass`, `densityAttribute`, `DENSITY_MODES` — `lib/design-tokens/index.ts` (values in `globals.css`; live gallery at `/design-system`, dev only) |

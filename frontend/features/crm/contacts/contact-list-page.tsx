@@ -34,7 +34,7 @@ import {
   ContactSelectionBar,
   useContactMergeSelection,
 } from "./contact-merge-selection";
-import { PartyMergeDialog } from "@/features/party/duplicates/party-merge-dialog";
+import { PartyMergeDialog } from "@/components/party-merge/party-merge-dialog";
 import {
   ContactActionsMenu,
   useEnrichContact,
