@@ -174,7 +174,7 @@ export function useRetryDelivery(endpointId: number) {
       apiClient.post<{ success: boolean }>(
         `/webhooks/${endpointId}/logs/${logId}/retry`,
         {},
-        undefined
+        undefined,
         webhookRetryContract,
       ),
     onSuccess: () =>
