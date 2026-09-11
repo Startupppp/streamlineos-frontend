@@ -219,24 +219,6 @@ const UNGATED_HELD_BACK = new Map();
 
 const DELIBERATE = new Map([
   [
-    "hooks/api/accounting/expenses.ts::useTeamExpenses::GET /hr/expenses/page-data",
-    {
-      hookKey: "accounting:reimbursements:read",
-      routeKey: "hr:expenses:view",
-      reason:
-        "The accounting reimbursement surface reads an HR-owned route. Loosening the hook to hr:expenses:view would put the accounting screen in front of Sales Representatives and Recruiters, who hold that key; tightening the route would take the HR expenses page away from them. Neither is a client fix — accounting needs its own endpoint, which is the accounting rewrite's territory (feat/accounting-module). Today only the org owner holds accounting:reimbursements:read and the owner also passes hr:expenses:view, so nothing is broken until a custom role is granted one and not the other.",
-    },
-  ],
-  [
-    "hooks/api/accounting/expenses.ts::usePendingForBatch::GET /hr/expenses/page-data",
-    {
-      hookKey: "accounting:reimbursements:manage",
-      routeKey: "hr:expenses:view",
-      reason:
-        "Same cross-module read as useTeamExpenses: the reimbursement batch builder pulls pending rows from the HR expenses page-data route. The fix is an accounting-owned endpoint, not a client key change — see the useTeamExpenses entry above for the full reasoning and the population it affects.",
-    },
-  ],
-  [
     "hooks/api/payroll/reports.ts::useExportPayrollReport::GET /payroll/reports/*",
     {
       hookKey: "payroll:reports:export",
