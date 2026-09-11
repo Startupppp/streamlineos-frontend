@@ -9,6 +9,7 @@ import { CheckCircle2, CircleDashed, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
@@ -35,11 +36,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
-import {
-  useAccountingSetupStatus,
-  useAddTaxRegistration,
-  useTaxRegistrations,
-} from "@/hooks/api/accounting/ledger";
+import { useAccountingSetupStatus, useTaxRegistrations } from "@/hooks/api/accounting/ledger";
+import { useAddTaxRegistration } from "@/hooks/api/accounting/ledger-mutations";
 import { EnableAccountingCard } from "./enable-accounting-card";
 import { ProvisioningNotice } from "./provisioning-notice";
 import { taxRegistrationSchema, type TaxRegistrationFormValues } from "./enable-accounting-schema";
@@ -114,7 +112,14 @@ function TaxRegistrationCard() {
               </li>
             ))}
           </ul>
-        ) : null}
+        ) : (
+          <EmptyState
+            compact
+            className="min-h-[16vh] border-0 bg-transparent"
+            title="No registrations on file"
+            description="Add the number below and invoices start showing the right tax."
+          />
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

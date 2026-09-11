@@ -7,21 +7,21 @@ import { Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney, parseMoneyInput } from "@/lib/accounting/money";
+import { formatMinorMoney, parseMoneyInput } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
+import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import {
-  useAccountingBook,
   usePostOpeningBalances,
-  usePostableAccounts,
   usePreviewOpeningBalances,
-  type OpeningBalanceLineInput,
-} from "@/hooks/api/accounting/ledger";
+} from "@/hooks/api/accounting/ledger-mutations";
+import type { OpeningBalanceLineInput } from "@/types/accounting-kernel";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -158,38 +158,48 @@ export function OpeningBalancesClient() {
             <CardDescription>Leave an account blank if it had nothing on it.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="h-10 px-4 text-left font-medium text-muted-foreground">Account</th>
-                    <th className="h-10 px-4 text-right font-medium text-muted-foreground">
-                      Balance ({currency})
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((account) => (
-                    <tr key={account.id} className="border-b hover:bg-muted/50">
-                      <td className="px-4 py-2">
-                        <span className="font-mono text-muted-foreground">{account.code}</span>
-                        <span className="ml-2">{account.name}</span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <Input
-                          inputMode="decimal"
-                          placeholder="0.00"
-                          value={amounts[account.id] ?? ""}
-                          onChange={(event) => handleAmountChange(account.id, event.target.value)}
-                          className="ml-auto max-w-40 text-right font-mono tabular-nums"
-                          aria-label={`Opening balance for ${account.name}`}
-                        />
-                      </td>
+            {accounts.length === 0 ? (
+              <EmptyState
+                compact
+                className="min-h-[24vh] border-0 bg-transparent"
+                title="No accounts to open balances on"
+                description="Your chart of accounts has no postable accounts yet, so there is nothing to enter here."
+                action={{ label: "Set up accounting", href: "/accounting/setup" }}
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Account</th>
+                      <th className="h-10 px-4 text-right font-medium text-muted-foreground">
+                        Balance ({currency})
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {accounts.map((account) => (
+                      <tr key={account.id} className="border-b hover:bg-muted/50">
+                        <td className="px-4 py-2">
+                          <span className="font-mono text-muted-foreground">{account.code}</span>
+                          <span className="ml-2">{account.name}</span>
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <Input
+                            inputMode="decimal"
+                            placeholder="0.00"
+                            value={amounts[account.id] ?? ""}
+                            onChange={(event) => handleAmountChange(account.id, event.target.value)}
+                            className="ml-auto max-w-40 text-right font-mono tabular-nums"
+                            aria-label={`Opening balance for ${account.name}`}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -198,16 +208,16 @@ export function OpeningBalancesClient() {
             <div className="flex flex-wrap gap-6 font-mono tabular-nums">
               <div>
                 <p className="text-dense text-muted-foreground">Owned</p>
-                <p className="text-lg font-semibold">{formatMoney(totals.debit, currency)}</p>
+                <p className="text-lg font-semibold">{formatMinorMoney(totals.debit, currency)}</p>
               </div>
               <div>
                 <p className="text-dense text-muted-foreground">Owed</p>
-                <p className="text-lg font-semibold">{formatMoney(totals.credit, currency)}</p>
+                <p className="text-lg font-semibold">{formatMinorMoney(totals.credit, currency)}</p>
               </div>
               <div>
                 <p className="text-dense text-muted-foreground">Goes to earnings</p>
                 <p className="text-lg font-semibold">
-                  {formatMoney(Math.abs(totals.difference), currency)}
+                  {formatMinorMoney(Math.abs(totals.difference), currency)}
                 </p>
               </div>
             </div>
@@ -246,7 +256,7 @@ export function OpeningBalancesClient() {
               <p>
                 {preview.data.differenceMinor === 0
                   ? "Your figures already balance, so nothing goes to earnings."
-                  : `${formatMoney(Math.abs(preview.data.differenceMinor), preview.data.currency)} goes to account ${preview.data.balancingAccountCode} as accumulated earnings.`}
+                  : `${formatMinorMoney(Math.abs(preview.data.differenceMinor), preview.data.currency)} goes to account ${preview.data.balancingAccountCode} as accumulated earnings.`}
               </p>
               {preview.data.alreadyPosted ? (
                 <p className="font-medium text-status-warning-ink">
