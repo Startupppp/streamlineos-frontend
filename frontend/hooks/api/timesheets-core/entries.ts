@@ -103,8 +103,8 @@ export function useDraftEntriesFromAttendance() {
       apiClient.post<AttendanceDraftResult>("/timesheets/entries/from-attendance", range),
     onSuccess: (result) => {
       if (result.entriesCreated > 0) {
-        void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-        void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+        void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+        void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
       }
     },
     onError: (error) => toast.error(getErrorMessage(error)),

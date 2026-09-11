@@ -133,6 +133,8 @@ export const growthAndSignQueryKeys = {
       [...base, "signEnvelopes", "detail", envelopeId] as const,
     audit: (envelopeId: number) =>
       [...base, "signEnvelopes", "audit", envelopeId] as const,
+    certificate: (envelopeId: number) =>
+      [...base, "signEnvelopes", "certificate", envelopeId] as const,
   },
 
   signDocuments: {
