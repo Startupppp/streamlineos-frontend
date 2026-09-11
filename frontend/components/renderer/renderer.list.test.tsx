@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
-import { validateLayout, type RecordLayout } from "@/lib/renderer/layout";
+import { type RecordLayout } from "@/lib/renderer/layout";
+import { validateLayout } from "@/lib/renderer/layout-validation";
 import { RecordList } from "./record-list";
 import { ShellVariantProvider } from "@/components/layout/shell-variant-context";
 

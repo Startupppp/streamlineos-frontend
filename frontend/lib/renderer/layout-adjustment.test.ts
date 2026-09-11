@@ -1,4 +1,5 @@
-import { validateLayout, type RecordLayout } from "./layout";
+import { type RecordLayout } from "./layout";
+import { validateLayout } from "./layout-validation";
 import {
   applyAdjustment,
   hidableFields,

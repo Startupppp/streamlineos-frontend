@@ -1,5 +1,5 @@
 import { subjectLayout, subjectRecord } from "./subject-layout";
-import { validateLayout } from "./layout";
+import { validateLayout } from "./layout-validation";
 import type { SubjectType } from "@/types/party/subjects";
 
 /**

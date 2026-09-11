@@ -1,5 +1,5 @@
 import { RECORD_LAYOUTS, layoutByKey } from "./registry";
-import { validateLayout } from "./layout";
+import { validateLayout } from "./layout-validation";
 import { applyAdjustment, hidableFields } from "./layout-adjustment";
 import { formFields, schemaForLayout } from "./layout-schema";
 import { proposeFromFill } from "./layout-proposal";
