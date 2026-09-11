@@ -33,7 +33,8 @@ export function resolveWizardGate(
 
   if (!isOrgOwner && !session.userOnboardingCompletedAt && userId) {
     const onboardingDone = Boolean(
-      cookieStore.get(gateCookieName("onboarding-done", userId))?.value,
+      cookieStore.get(gateCookieName("onboarding-done", `${userId}--${orgId}`))
+        ?.value,
     );
     if (!onboardingDone) return "/employee-onboarding";
   }

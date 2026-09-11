@@ -102,7 +102,14 @@ export const myOnboardingDocsContract = z.object({
   }),
 });
 
+export const onboardingDocsSummaryStatusCountsContract = z.object({
+  PENDING: z.number().int(),
+  IN_PROGRESS: z.number().int(),
+  APPROVED: z.number().int(),
+});
+
 export const onboardingDocsSummaryContract = z.object({
+  statusCounts: onboardingDocsSummaryStatusCountsContract,
   data: z.array(
     z.object({
       userId: z.string(),

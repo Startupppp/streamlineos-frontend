@@ -152,7 +152,6 @@ function OrganizationSwitcher({
   const isSidebar = variant === "sidebar";
   const isLabelHidden = isSidebar && iconOnly;
   const workspaceName = activeOrg?.name ?? "Organization";
-  const hasMultipleOrgs = (organizations?.length ?? 0) > 1;
 
   const panelProps = {
     canLeave,
@@ -193,35 +192,6 @@ function OrganizationSwitcher({
       )}
     </>
   );
-
-  if (!hasMultipleOrgs) {
-    const staticIdentity = (
-      <div
-        className={identityClassName}
-        title={workspaceName}
-        aria-label={`Organization: ${workspaceName}`}
-      >
-        {identityContent}
-      </div>
-    );
-
-    if (isLabelHidden) {
-      return (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>{staticIdentity}</TooltipTrigger>
-          <TooltipContent
-            side="right"
-            sideOffset={10}
-            className="text-xs font-medium"
-          >
-            {workspaceName}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return staticIdentity;
-  }
 
   const triggerButton = (
     <button

@@ -146,8 +146,6 @@ export const useUnreadNotificationCount = (
     queryFn: ({ signal }) =>
       apiClient.get<UnreadCount>("/notifications/unread-count", undefined, signal, notificationCountLazy),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),

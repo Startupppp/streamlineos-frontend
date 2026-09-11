@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePendingApprovals } from "@/hooks/api/dashboard";
 import { useChatUnreadTotal } from "@/hooks/api/chat-core-read";
 import { useUnreadNotificationCount } from "@/hooks/api/notifications-inbox";
+import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import {
   getNavGroupsForProduct,
   getProductFromPathname,
@@ -90,10 +91,7 @@ export function AppSidebar({
   projectNavTreeSlot,
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
-  const { data: access } = useAccess({
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false,
-  });
+  const { data: access } = useAccess();
   const isOrgOwner =
     access?.isOrgOwner === true;
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
@@ -120,6 +118,11 @@ export function AppSidebar({
       enabledModules,
     );
   }, [activeProduct, effectiveRole, scopes, enabledModules]);
+
+  const firstBuildGroup = useMemo(
+    () => navGroups.find((group) => group.product === "build") ?? null,
+    [navGroups],
+  );
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
@@ -181,6 +184,7 @@ export function AppSidebar({
 
   const { data: pendingApprovalsData } = usePendingApprovals({
     enabled: canApproveLeaves && isHrModuleEnabled && !!session?.user,
+    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
   });
   const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
@@ -191,7 +195,10 @@ export function AppSidebar({
   );
   const unreadChatCount = chatUnread?.total ?? 0;
 
-  const { data: notifData } = useUnreadNotificationCount();
+  const { data: notifData } = useUnreadNotificationCount({
+    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+  });
   const unreadNotifCount = notifData?.count ?? 0;
 
   useEffect(() => {
@@ -252,9 +259,8 @@ export function AppSidebar({
                     onNavigate={onNavigate}
                     accent={accent}
                   />
-                  {activeProduct === "build" &&
-                  activeProjectId &&
-                  group.label === "Build" &&
+                  {activeProjectId &&
+                  group === firstBuildGroup &&
                   projectNavTreeSlot
                     ? projectNavTreeSlot({
                         projectId: activeProjectId,

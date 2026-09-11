@@ -1,4 +1,4 @@
-const GATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+const GATE_COOKIE_MAX_AGE = 5 * 60;
 
 export type GateCookieBase = "org-setup-done" | "onboarding-done";
 

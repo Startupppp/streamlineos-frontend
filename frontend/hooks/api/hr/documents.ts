@@ -147,40 +147,25 @@ export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
 
 interface OnboardingDocsSummaryTotals {
   pagination: { total: number };
+  statusCounts: { PENDING: number; IN_PROGRESS: number; APPROVED: number };
 }
 
 export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
   const canOnboarding = useCan("hr:onboarding:manage");
-  const enabled = canOnboarding && (options?.enabled ?? true);
-
-  const totalQuery = useQuery({
+  const summaryQuery = useQuery({
     queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary({ limit: 1 }),
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
       }, signal, onboardingDocsSummaryLazy),
     staleTime: 2 * 60_000,
-    enabled,
-  });
-  const approvedQuery = useQuery({
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
-    queryFn: ({ signal }) =>
-      apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
-        limit: 1,
-        status: "APPROVED",
-      }, signal, onboardingDocsSummaryLazy),
-    staleTime: 2 * 60_000,
-    enabled,
+    enabled: canOnboarding && (options?.enabled ?? true),
   });
 
-  const total = totalQuery.data?.pagination.total;
-  const approved = approvedQuery.data?.pagination.total;
+  const counts = summaryQuery.data?.statusCounts;
 
   return {
-    missingCount:
-      total !== undefined && approved !== undefined
-        ? Math.max(total - approved, 0)
-        : undefined,
-    isLoading: totalQuery.isLoading || approvedQuery.isLoading,
+    missingCount: counts ? counts.PENDING + counts.IN_PROGRESS : undefined,
+    isLoading: summaryQuery.isLoading,
   };
 }

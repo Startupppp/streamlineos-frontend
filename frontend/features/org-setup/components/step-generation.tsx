@@ -126,8 +126,10 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   async function navigateToPostSetup(destination: string) {
-    if (!orgCreatedResult || isContinuing) return;
+    if (!orgCreatedResult || isContinuing || apiDoneRef.current) return;
     setIsContinuing(true);
+    apiDoneRef.current = true;
+    stopAnimation();
     const orgResult = orgCreatedResult;
     try {
       clearBackendTokenCache();
@@ -143,6 +145,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       sessionStorage.setItem(SETUP_DONE_KEY, "1");
       window.location.replace(destination);
     } catch (err) {
+      apiDoneRef.current = false;
       toast.error(getErrorMessage(err));
       setIsContinuing(false);
     }

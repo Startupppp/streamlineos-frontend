@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
+import { ProjectNavTreeSkeleton } from "@/features/build/sidebar/project-nav-tree-skeleton";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 import type { ShellVariant } from "@/lib/shell-variant";
 
@@ -13,7 +14,7 @@ const ProjectNavTree = dynamic(
     import("@/features/build/sidebar/project-nav-tree").then(
       (m) => m.ProjectNavTree,
     ),
-  { ssr: false },
+  { ssr: false, loading: () => <ProjectNavTreeSkeleton /> },
 );
 
 const NotificationBell = dynamic(

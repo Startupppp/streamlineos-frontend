@@ -299,8 +299,6 @@ export const usePendingApprovals = (
     queryKey: collaborationQueryKeys.dashboard.pendingApprovals(),
     queryFn: ({ signal }) => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals", undefined, signal, pendingApprovalsContract),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchIntervalInBackground: false,
     ...restOptions,
     enabled: !!orgId && canApprove && (enabledOption ?? true),
   });

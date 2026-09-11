@@ -132,7 +132,7 @@ export function setAutoSignOutSuppressed(value: boolean): void {
   autoSignOutSuppressed = value;
 }
 
-async function getBackendToken(): Promise<string | null> {
+export async function getBackendToken(): Promise<string | null> {
   if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
   if (fetchingTokenPromise) return fetchingTokenPromise;

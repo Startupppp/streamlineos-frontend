@@ -212,7 +212,7 @@ export function StepReview({
       await submitOnboarding();
       await completeOnboardingGate(
         "onboarding-done",
-        session?.user?.id ?? "",
+        `${session?.user?.id ?? ""}--${session?.orgId ?? ""}`,
         refreshSessionClaims,
       );
       setShowCelebration(true);

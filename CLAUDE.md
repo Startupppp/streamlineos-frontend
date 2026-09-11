@@ -95,7 +95,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
 - **Named handler functions inside components and pages.** Every JSX event or action callback must reference a named handler declared inside that component or page (`onClick={handleSave}`, `onSubmit={handleSubmit}`), never an inline arrow or anonymous function. Handlers coordinate the local UI event; reusable state, validation, data access and business behavior remain in the proper hook, service or module and are called by the handler. **Single-statement `if`/`for` bodies omit braces.**
-- **No comments in code.** Delete stray comments, commented-out code, `console.log`s. If something genuinely needs explaining, use **at most one single-line comment** — otherwise remove it.
+- **No comments in code — none.** Delete stray comments, commented-out code, `console.log`s. Never add a comment; if something needs explaining, put it in a name, a test, or the PRD. Migration `.sql` headers follow their neighbours and are the only exception.
 - Mentally test: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 
 ## 7. Structure & Naming (both repos)
