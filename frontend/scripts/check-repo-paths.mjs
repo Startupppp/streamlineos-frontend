@@ -13,7 +13,7 @@
  */
 
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SCRIPT_DIR = fileURLToPath(new URL(".", import.meta.url));
@@ -24,8 +24,22 @@ function isBackendRoot(candidate) {
   return existsSync(join(candidate, MARKER));
 }
 
-function candidateRoots() {
+function pairedWorktreeRoots() {
   const roots = [];
+  const suffix = "-frontend";
+  let dir = SCRIPT_DIR;
+  for (let depth = 0; depth < 8; depth++) {
+    const name = basename(dir);
+    if (name.endsWith(suffix)) roots.push(join(dirname(dir), `${name.slice(0, -suffix.length)}-backend`));
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return roots;
+}
+
+function candidateRoots() {
+  const roots = pairedWorktreeRoots();
   let dir = SCRIPT_DIR;
   for (let depth = 0; depth < 8; depth++) {
     for (const name of SIBLING_NAMES) roots.push(join(dir, name));
