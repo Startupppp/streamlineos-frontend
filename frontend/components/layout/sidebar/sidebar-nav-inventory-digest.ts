@@ -6,6 +6,20 @@
  * says what is hashed. When the digest moves on purpose, recompute it here and
  * add a note saying which route or permission changed and why.
  */
+// Moved 2026-09-12 by the origin/main merge into the inventory integration
+// lane (3cf6d3a8e). No inventory or CRM route or permission changed; the graph
+// moved because main's navigation work landed beside them:
+//   * Accounting > Settings gained "Automations"
+//     (/accounting/settings/automations, on settings:automations:view), a page
+//     the merged tree serves.
+//   * The Support group asks for support:tickets:view and its dashboard for
+//     dashboard:support:view, where both had borrowed build:tickets:view.
+//   * The Git integration entry moved off settings:manage onto
+//     integrations:git:view.
+//   * The Workflows group now names module "workflows", and Variables, Secrets
+//     and Access moved to /workflows/settings/* (module configuration lives in
+//     /<module>/settings/*).
+//   * Chat's inactivePrefixes no longer lists /chat/moderation.
 // Moved 2026-09-05 by T09: two inventory navigation changes, both of them the
 // nav half of a URL that answered 404.
 //   * The Reports parent moved from /inventory/reports/stock-summary to
@@ -305,4 +319,4 @@
  * (route-conformance §8).
  */
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "58389e61ae9aee791752bb56e1ddd6acf1508fcda0b147bd76dd83844b118416";
+  "ca94134d34f0545cfc42f0fbf591a6cabb660073caecae0f04a365a9165c42db";
