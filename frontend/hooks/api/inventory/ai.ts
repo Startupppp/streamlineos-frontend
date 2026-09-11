@@ -27,7 +27,7 @@ interface UpdateInsightInput {
 }
 
 export function useInventoryInsights(params?: InsightsParams) {
-  const canView = useCan("inventory:ai:read");
+  const canView = useCan("inventory:reports:read");
   return useQuery<InsightsPaginatedResponse, Error>({
     queryKey: queryKeys.inventory.aiInsights(params),
     queryFn: ({ signal }) =>
