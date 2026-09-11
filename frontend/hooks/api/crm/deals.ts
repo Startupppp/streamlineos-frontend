@@ -16,15 +16,8 @@ import type {
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
-  DealCompetitor,
-  CreateDealCompetitorInput,
   DealHealth,
-  ForecastSnapshot,
-  CaptureForecastSnapshotInput,
   PatchNextStepInput,
-  DealStakeholder,
-  CreateStakeholderInput,
-  OverrideForecastInput,
 } from "@/types/crm";
 import type { DealStageTransition } from "@/types/crm/stage-transitions";
 
@@ -36,34 +29,10 @@ export type {
   WinLossAnalysis,
 };
 
-interface DealApproval {
-  id: number;
-  dealId: number;
-  dealName: string | null;
-  dealValue: string | null;
-  requesterName: string | null;
-  requestedStage: string;
-  status: string;
-  rejectionReason: string | null;
-  createdAt: string | null;
-  resolvedAt: string | null;
-}
-
-interface AgingDeal {
-  id: number;
-  name: string;
-  value: string | null;
-  stage: string;
-  daysInStage: number;
-  createdAt: string;
-  updatedAt: string;
-  assigneeName: string | null;
-}
-
-interface AgingResponse {
-  summary: { total: number; stale: number; critical: number };
-  deals: AgingDeal[];
-}
+export { useDealApprovals, useDealAging, useResolveDealApproval } from "./deal-approvals";
+export { useForecastSnapshots, useCaptureForecastSnapshot, useOverrideForecast } from "./deal-forecast";
+export { useDealCompetitors, useAddDealCompetitor, useDeleteDealCompetitor } from "./deal-competitors";
+export { useStakeholders, useCreateStakeholder, useDeleteStakeholder } from "./deal-stakeholders";
 
 export function useDeals(filters?: DealFilters) {
   return useGatedQuery("crm:deals:read", {
@@ -234,89 +203,6 @@ export function useWinLossAnalysis() {
   });
 }
 
-export function useDealApprovals(params?: { status?: string }) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useDealAging() {
-  return useGatedQuery<AgingResponse>("crm:deals:read", {
-    queryKey: queryKeys.deals.aging(),
-    queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
-    staleTime: 305_000,
-    refetchInterval: 300_000,
-  });
-}
-
-export function useResolveDealApproval() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "approvals", "resolve"] as const,
-    mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
-      apiClient.post("/deals/approvals", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.approvals() });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
-    },
-  });
-}
-
-export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
-  return useGatedQuery("crm:deals:forecast", {
-    queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCaptureForecastSnapshot() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "forecast", "captureSnapshot"] as const,
-    mutationFn: (input: CaptureForecastSnapshotInput) =>
-      apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
-    },
-  });
-}
-
-export function useDealCompetitors(dealId: number) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.competitors(dealId),
-    queryFn: () => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`),
-    staleTime: 2 * 60_000,
-    enabled: dealId > 0,
-  });
-}
-
-export function useAddDealCompetitor(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "competitors", "create", dealId] as const,
-    mutationFn: (input: CreateDealCompetitorInput) =>
-      apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
-    },
-  });
-}
-
-export function useDeleteDealCompetitor(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "competitors", "delete", dealId] as const,
-    mutationFn: (competitorId: string) =>
-      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
-    },
-  });
-}
-
 export function useDealHealth(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.health(dealId),
@@ -334,67 +220,6 @@ export function usePatchNextStep(dealId: number) {
       apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
-    },
-  });
-}
-
-export function useStakeholders(dealId: number) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.stakeholders(dealId),
-    queryFn: () => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`),
-    staleTime: 2 * 60_000,
-    enabled: dealId > 0,
-  });
-}
-
-export function useCreateStakeholder(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "stakeholders", "create", dealId] as const,
-    mutationFn: (input: CreateStakeholderInput) =>
-      apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input),
-    onMutate: async () => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-    },
-  });
-}
-
-export function useDeleteStakeholder(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "stakeholders", "delete", dealId] as const,
-    mutationFn: (stakeholderId: string) =>
-      apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`),
-    onMutate: async (stakeholderId) => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-      const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));
-      qc.setQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId), (old) =>
-        old ? old.filter((s) => s.id !== stakeholderId) : old,
-      );
-      return { snapshot };
-    },
-    onError: (_, _vars, context) => {
-      if (context?.snapshot) {
-        qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-    },
-  });
-}
-
-export function useOverrideForecast() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "forecast", "override"] as const,
-    mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
-      apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },
   });
 }
