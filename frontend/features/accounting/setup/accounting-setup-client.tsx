@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccountingSetupStatus,
@@ -194,7 +194,7 @@ export function AccountingSetupClient() {
   const statusQuery = useAccountingSetupStatus();
 
   function handleEnabled(): void {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+    void queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
   }
 
   if (!canRead) {

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
 import { useCan } from "@/hooks/api/access";
 import { PARTIES_READ, useParties } from "@/hooks/api/accounting/parties";
 import type { PartyDetail } from "@/types/accounting-ar";
@@ -39,7 +39,7 @@ export function usePartyNames(partyIds: readonly string[]): PartyNameResolver {
 
   const details = useQueries({
     queries: missing.map((partyId) => ({
-      queryKey: queryKeys.accountingAr.party(partyId),
+      queryKey: accountingArQueryKeys.accountingAr.party(partyId),
       queryFn: () => apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`),
       staleTime: ENTITY_STALE,
       enabled: canRead,

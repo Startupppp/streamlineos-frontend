@@ -8,7 +8,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
 import { useCan } from "@/hooks/api/access";
 import type {
   CreatePartyInput,
@@ -44,7 +44,7 @@ function partiesParams(query: ListPartiesQuery): Record<string, unknown> {
 export function useParties(query: ListPartiesQuery = {}, options?: QueryOpts<PartyPage>) {
   const canRead = useCan(PARTIES_READ);
   return useQuery<PartyPage, Error>({
-    queryKey: queryKeys.accountingAr.parties(partiesParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.parties(partiesParams(query)),
     queryFn: () => apiClient.get<PartyPage>("/accounting/parties", partiesParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
@@ -56,7 +56,7 @@ export function useParties(query: ListPartiesQuery = {}, options?: QueryOpts<Par
 export function useParty(partyId: string, options?: QueryOpts<PartyDetail>) {
   const canRead = useCan(PARTIES_READ);
   return useQuery<PartyDetail, Error>({
-    queryKey: queryKeys.accountingAr.party(partyId),
+    queryKey: accountingArQueryKeys.accountingAr.party(partyId),
     queryFn: () => apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -70,7 +70,7 @@ export function usePartyTaxRegistrations(
 ) {
   const canRead = useCan(PARTIES_READ);
   return useQuery<PartyTaxRegistration[], Error>({
-    queryKey: queryKeys.accountingAr.partyTaxRegistrations(partyId),
+    queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(partyId),
     queryFn: () =>
       apiClient.get<PartyTaxRegistration[]>(`/accounting/parties/${partyId}/tax-registrations`),
     staleTime: ENTITY_STALE,
@@ -85,7 +85,7 @@ export function useCreateParty() {
     mutationKey: ["accounting", "parties", "create"],
     mutationFn: (input) => apiClient.post<PartyDetail>("/accounting/parties", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -97,8 +97,8 @@ export function useUpdateParty() {
     mutationFn: ({ partyId, input }) =>
       apiClient.patch<PartyDetail>(`/accounting/parties/${partyId}`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.party(variables.partyId) });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "parties"] });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
+      queryClient.invalidateQueries({ queryKey: [...accountingArQueryKeys.accountingAr.all, "parties"] });
     },
   });
 }
@@ -109,8 +109,8 @@ export function useDeleteParty() {
     mutationKey: ["accounting", "parties", "delete"],
     mutationFn: (partyId) => apiClient.delete<DeletedResult>(`/accounting/parties/${partyId}`),
     onSuccess: (_data, partyId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.party(partyId) });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "parties"] });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(partyId) });
+      queryClient.invalidateQueries({ queryKey: [...accountingArQueryKeys.accountingAr.all, "parties"] });
     },
   });
 }
@@ -130,9 +130,9 @@ export function useAddPartyTaxRegistration() {
       ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
+        queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.party(variables.partyId) });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
     },
   });
 }
@@ -147,9 +147,9 @@ export function useRemovePartyTaxRegistration() {
       ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
+        queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.party(variables.partyId) });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
     },
   });
 }

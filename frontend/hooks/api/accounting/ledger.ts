@@ -7,7 +7,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
 import type {
   AccountLedger,
@@ -95,7 +95,7 @@ export interface PostJournalInput {
 export function useAccountingSetupStatus(options?: QueryOpts<AccountingSetupStatus>) {
   const canRead = useCan("accounting:settings:read");
   return useQuery<AccountingSetupStatus, Error>({
-    queryKey: queryKeys.accountingLedger.setupStatus(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.setupStatus(),
     queryFn: () => apiClient.get<AccountingSetupStatus>("/accounting/setup/status"),
     staleTime: SESSION_STALE,
     ...options,
@@ -106,7 +106,7 @@ export function useAccountingSetupStatus(options?: QueryOpts<AccountingSetupStat
 export function useLocalizationPacks(options?: QueryOpts<LocalizationPackSummary[]>) {
   const canRead = useCan("accounting:settings:read");
   return useQuery<LocalizationPackSummary[], Error>({
-    queryKey: queryKeys.accountingLedger.packs(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.packs(),
     queryFn: () => apiClient.get<LocalizationPackSummary[]>("/accounting/packs"),
     staleTime: CATALOG_STALE,
     ...options,
@@ -117,7 +117,7 @@ export function useLocalizationPacks(options?: QueryOpts<LocalizationPackSummary
 export function useAccountingBook(options?: QueryOpts<AccountingBook>) {
   const canRead = useCan("accounting:read");
   return useQuery<AccountingBook, Error>({
-    queryKey: queryKeys.accountingLedger.book(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.book(),
     queryFn: () => apiClient.get<AccountingBook>("/accounting/book"),
     staleTime: SESSION_STALE,
     retry: false,
@@ -133,7 +133,7 @@ export function useEnableAccounting() {
     mutationFn: (input) =>
       apiClient.post<EnableAccountingResult>("/accounting/setup/enable", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -144,7 +144,7 @@ export function useChartOfAccounts(
 ) {
   const canRead = useCan("accounting:accounts:read");
   return useQuery<AccountNode[], Error>({
-    queryKey: queryKeys.accountingLedger.accounts(params),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.accounts(params),
     queryFn: () =>
       apiClient.get<AccountNode[]>(
         "/accounting/accounts",
@@ -159,7 +159,7 @@ export function useChartOfAccounts(
 export function usePostableAccounts(options?: QueryOpts<PostableAccount[]>) {
   const canRead = useCan("accounting:accounts:read");
   return useQuery<PostableAccount[], Error>({
-    queryKey: queryKeys.accountingLedger.accountsPostable(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.accountsPostable(),
     queryFn: () => apiClient.get<PostableAccount[]>("/accounting/accounts/postable"),
     staleTime: SLOW_LIST_STALE,
     ...options,
@@ -176,7 +176,7 @@ export function usePostableAccounts(options?: QueryOpts<PostableAccount[]>) {
 export function useAccountMappings(options?: QueryOpts<AccountSystemTagMapping[]>) {
   const canRead = useCan("accounting:accounts:read");
   return useQuery<AccountSystemTagMapping[], Error>({
-    queryKey: queryKeys.accountingLedger.accountMappings(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.accountMappings(),
     queryFn: () => apiClient.get<AccountSystemTagMapping[]>("/accounting/accounts/mappings"),
     staleTime: CATALOG_STALE,
     ...options,
@@ -202,7 +202,7 @@ export function useSetAccountSystemTag() {
     mutationFn: ({ accountId, systemTag }) =>
       apiClient.patch<AccountNode>(`/accounting/accounts/${accountId}/system-tag`, { systemTag }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -213,7 +213,7 @@ export function useCreateAccount() {
     mutationKey: ["accounting", "accounts", "create"],
     mutationFn: (input) => apiClient.post<AccountNode>("/accounting/accounts", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -225,11 +225,11 @@ export function useUpdateAccount() {
     mutationFn: ({ accountId, input }) =>
       apiClient.patch<AccountNode>(`/accounting/accounts/${accountId}`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.accounts() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.accounts() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingLedger.account(variables.accountId),
+        queryKey: accountingLedgerQueryKeys.accountingLedger.account(variables.accountId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.accountsPostable() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.accountsPostable() });
     },
   });
 }
@@ -243,7 +243,7 @@ export function useArchiveAccount() {
         `/accounting/accounts/${accountId}`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -251,7 +251,7 @@ export function useArchiveAccount() {
 export function useFiscalYears(options?: QueryOpts<FiscalYear[]>) {
   const canRead = useCan("accounting:periods:read");
   return useQuery<FiscalYear[], Error>({
-    queryKey: queryKeys.accountingLedger.fiscalYears(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.fiscalYears(),
     queryFn: () => apiClient.get<FiscalYear[]>("/accounting/fiscal-years"),
     staleTime: SLOW_LIST_STALE,
     ...options,
@@ -265,7 +265,7 @@ export function useAccountingPeriods(
 ) {
   const canRead = useCan("accounting:periods:read");
   return useQuery<AccountingPeriod[], Error>({
-    queryKey: queryKeys.accountingLedger.periods(params),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.periods(params),
     queryFn: () =>
       apiClient.get<AccountingPeriod[]>(
         "/accounting/periods",
@@ -284,7 +284,7 @@ export function useLockPeriod() {
     mutationFn: ({ periodId, reason }) =>
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/lock`, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.periods() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.periods() });
     },
   });
 }
@@ -296,7 +296,7 @@ export function useUnlockPeriod() {
     mutationFn: ({ periodId, reason }) =>
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/unlock`, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.periods() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.periods() });
     },
   });
 }
@@ -307,8 +307,8 @@ export function useOpenNextFiscalYear() {
     mutationKey: ["accounting", "fiscalYears", "openNext"],
     mutationFn: () => apiClient.post<FiscalYear>("/accounting/fiscal-years/open-next", {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.fiscalYears() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.periods() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.fiscalYears() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.periods() });
     },
   });
 }
@@ -316,7 +316,7 @@ export function useOpenNextFiscalYear() {
 export function useJournal(journalId: string, options?: QueryOpts<Journal>) {
   const canRead = useCan("accounting:journal:read");
   return useQuery<Journal, Error>({
-    queryKey: queryKeys.accountingLedger.journal(journalId),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.journal(journalId),
     queryFn: () => apiClient.get<Journal>(`/accounting/journals/${journalId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -330,7 +330,7 @@ export function usePostJournal() {
     mutationKey: ["accounting", "journals", "post"],
     mutationFn: (input) => apiClient.post<Journal>("/accounting/journals/post", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -346,7 +346,7 @@ export function useReverseJournal() {
     mutationFn: ({ journalId, ...body }) =>
       apiClient.post<Journal>(`/accounting/journals/${journalId}/reverse`, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -354,7 +354,7 @@ export function useReverseJournal() {
 export function useTrialBalance(asOf: string, options?: QueryOpts<TrialBalanceReport>) {
   const canRead = useCan("accounting:reports:read");
   return useQuery<TrialBalanceReport, Error>({
-    queryKey: queryKeys.accountingLedger.trialBalance(asOf),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.trialBalance(asOf),
     queryFn: () =>
       apiClient.get<TrialBalanceReport>("/accounting/trial-balance", { asOf }),
     staleTime: ENTITY_STALE,
@@ -383,7 +383,7 @@ export function useAccountLedger(
     ...(params.pageSize ? { pageSize: params.pageSize } : {}),
   };
   return useQuery<AccountLedger, Error>({
-    queryKey: queryKeys.accountingLedger.accountLedger(accountId, search),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.accountLedger(accountId, search),
     // Params are the SECOND positional argument; `{ params }` would serialise to
     // `?params=[object Object]` and every accounting endpoint is `.strict()`.
     queryFn: () =>
@@ -398,7 +398,7 @@ export function useAccountLedger(
 export function useCurrencies(options?: QueryOpts<Currency[]>) {
   const canRead = useCan("accounting:read");
   return useQuery<Currency[], Error>({
-    queryKey: queryKeys.accountingLedger.currencies(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.currencies(),
     queryFn: () => apiClient.get<Currency[]>("/accounting/currencies"),
     staleTime: CATALOG_STALE,
     ...options,
@@ -409,7 +409,7 @@ export function useCurrencies(options?: QueryOpts<Currency[]>) {
 export function useBookCurrencies(options?: QueryOpts<BookCurrency[]>) {
   const canRead = useCan("accounting:read");
   return useQuery<BookCurrency[], Error>({
-    queryKey: queryKeys.accountingLedger.bookCurrencies(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.bookCurrencies(),
     queryFn: () => apiClient.get<BookCurrency[]>("/accounting/book-currencies"),
     staleTime: SESSION_STALE,
     ...options,
@@ -423,7 +423,7 @@ export function useFxRates(
 ) {
   const canRead = useCan("accounting:read");
   return useQuery<FxRate[], Error>({
-    queryKey: queryKeys.accountingLedger.fxRates(params),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.fxRates(params),
     // Undefined rather than `{}` so a strict endpoint sees no unknown keys.
     queryFn: () =>
       apiClient.get<FxRate[]>(
@@ -446,7 +446,7 @@ export function useUpsertFxRate() {
     mutationKey: ["accounting", "fxRates", "upsert"],
     mutationFn: (input) => apiClient.post<FxRate>("/accounting/fx-rates", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.fxRates() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.fxRates() });
     },
   });
 }
@@ -499,7 +499,7 @@ export function usePostOpeningBalances() {
     mutationKey: ["accounting", "openingBalances", "post"],
     mutationFn: (input) => apiClient.post<Journal>("/accounting/setup/opening-balances", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
     },
   });
 }
@@ -507,7 +507,7 @@ export function usePostOpeningBalances() {
 export function useTaxRegistrations(options?: QueryOpts<TaxRegistration[]>) {
   const canRead = useCan("accounting:settings:read");
   return useQuery<TaxRegistration[], Error>({
-    queryKey: queryKeys.accountingLedger.taxRegistrations(),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.taxRegistrations(),
     queryFn: () => apiClient.get<TaxRegistration[]>("/accounting/setup/tax-registrations"),
     staleTime: SESSION_STALE,
     ...options,
@@ -526,8 +526,8 @@ export function useAddTaxRegistration() {
     mutationFn: (input) =>
       apiClient.post<TaxRegistration>("/accounting/setup/tax-registrations", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.taxRegistrations() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingLedger.setupStatus() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.taxRegistrations() });
+      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.setupStatus() });
     },
   });
 }

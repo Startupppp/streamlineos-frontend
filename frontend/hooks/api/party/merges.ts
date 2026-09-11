@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, newIdempotencyKey } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   MergePartiesInput,
@@ -38,7 +40,7 @@ export function usePartyDuplicates(params: PartyDuplicatesParams = {}) {
   const query = { page, limit, status };
 
   return useGatedQuery("party:duplicates:view", {
-    queryKey: queryKeys.party.duplicates(query),
+    queryKey: directoryAndOwnershipQueryKeys.party.duplicates(query),
     queryFn: () => apiClient.get<PartyDuplicatesPage>("/party/duplicates", query),
     // A queue a person works through: fast-changing enough that a stale page
     // means merging a pair somebody else just resolved.
@@ -57,7 +59,7 @@ export function usePartyMerges(params: PartyMergesParams = {}) {
   const query = { page, limit, includeReverted };
 
   return useGatedQuery("party:merges:manage", {
-    queryKey: queryKeys.party.merges(query),
+    queryKey: directoryAndOwnershipQueryKeys.party.merges(query),
     queryFn: () => apiClient.get<PartyMergesPage>("/party/merges", query),
     staleTime: 30_000,
   });
@@ -72,11 +74,11 @@ export function usePartyMerges(params: PartyMergesParams = {}) {
  * the merged-away duplicate on whichever CRM screen the user came from.
  */
 function invalidateMergeSurfaces(qc: ReturnType<typeof useQueryClient>) {
-  void qc.invalidateQueries({ queryKey: queryKeys.party.all });
-  void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
-  void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
-  void qc.invalidateQueries({ queryKey: queryKeys.clients.all });
-  void qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+  void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
+  void qc.invalidateQueries({ queryKey: customerWorkQueryKeys.contacts.all });
+  void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.crmOrganizations.all });
+  void qc.invalidateQueries({ queryKey: customerWorkQueryKeys.clients.all });
+  void qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
 }
 
 export function useMergeParties() {
@@ -121,7 +123,7 @@ export function useDismissPartyDuplicate() {
     mutationFn: (candidateId: string) =>
       apiClient.delete<{ dismissed: boolean }>(`/party/duplicates/${candidateId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
     },
   });
 }
