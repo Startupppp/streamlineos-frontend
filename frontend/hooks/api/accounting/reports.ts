@@ -1,9 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { accountingReportsQueryKeys } from "@/lib/query-keys/accounting-reports";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   AgingParams,
   AgingReport,
@@ -22,6 +24,10 @@ import type {
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 const REPORT_STALE = 60 * 1000;
+
+const taxSummaryContract = lazyContract(() =>
+  import("@/hooks/api/accounting/reports-schema").then((m) => m.taxSummaryReportContract),
+);
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
 
@@ -44,8 +50,8 @@ export function useTrialBalanceReport(
   const search = reportParams(params);
   return useQuery<TrialBalanceStatement, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.trialBalance(search),
-    queryFn: () =>
-      apiClient.get<TrialBalanceStatement>("/accounting/reports/trial-balance", search),
+    queryFn: ({ signal }) =>
+      apiClient.get<TrialBalanceStatement>("/accounting/reports/trial-balance", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -60,7 +66,8 @@ export function useProfitLossReport(
   const search = reportParams(params);
   return useQuery<ProfitLossReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.profitLoss(search),
-    queryFn: () => apiClient.get<ProfitLossReport>("/accounting/reports/pnl", search),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProfitLossReport>("/accounting/reports/pnl", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
@@ -75,8 +82,8 @@ export function useBalanceSheetReport(
   const search = reportParams(params);
   return useQuery<BalanceSheetReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.balanceSheet(search),
-    queryFn: () =>
-      apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", search),
+    queryFn: ({ signal }) =>
+      apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -91,7 +98,8 @@ export function useCashFlowReport(
   const search = reportParams(params);
   return useQuery<CashFlowReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.cashFlow(search),
-    queryFn: () => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", search),
+    queryFn: ({ signal }) =>
+      apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
@@ -103,7 +111,7 @@ export function useAgingReport(params: AgingParams, options?: QueryOpts<AgingRep
   const search = reportParams(params);
   return useQuery<AgingReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.aging(search),
-    queryFn: () => apiClient.get<AgingReport>("/accounting/reports/aging", search),
+    queryFn: ({ signal }) => apiClient.get<AgingReport>("/accounting/reports/aging", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -118,8 +126,13 @@ export function useTaxSummaryReport(
   const search = reportParams(params);
   return useQuery<TaxSummaryReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.taxSummary(search),
-    queryFn: () =>
-      apiClient.get<TaxSummaryReport>("/accounting/reports/tax-summary", search),
+    queryFn: ({ signal }) =>
+      apiClient.get<TaxSummaryReport>(
+        "/accounting/reports/tax-summary",
+        search,
+        signal,
+        taxSummaryContract,
+      ),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
@@ -133,7 +146,7 @@ export interface ExportReportInput {
 }
 
 export function useExportReport() {
-  return useMutation<void, Error, ExportReportInput>({
+  return useAuthorizedMutation<void, Error, ExportReportInput>("accounting:reports:export", {
     mutationKey: ["accounting", "reports", "export"],
     mutationFn: async ({ report, params, filename }) => {
       const blob = await apiClient.download(

@@ -120,3 +120,60 @@ export const cashRunwayContract = z.object({
   runwayMonths: z.number().nullable(),
   projectedMonths: z.array(z.object({ month: z.string(), projectedBalance: z.string() })),
 });
+
+const taxGlRoleContract = z.enum([
+  "output_payable",
+  "input_recoverable",
+  "reverse_charge_output",
+  "reverse_charge_input",
+  "blocked_input",
+  "withheld",
+]);
+
+const taxSummaryCurrencyTotalsContract = z.object({
+  currency: z.string(),
+  taxableMinor: z.number(),
+  taxMinor: z.number(),
+  outputTaxMinor: z.number(),
+  recoverableInputTaxMinor: z.number(),
+  blockedInputTaxMinor: z.number(),
+  withheldTaxMinor: z.number(),
+  netPayableMinor: z.number(),
+});
+
+export const taxSummaryReportContract = z.object({
+  reportKey: z.literal("tax_summary"),
+  title: z.string(),
+  labelMode: z.enum(["founder", "accountant"]),
+  bookId: z.string(),
+  currency: z.string(),
+  from: z.string(),
+  to: z.string(),
+  rows: z.array(
+    z.object({
+      glRole: taxGlRoleContract,
+      glRoleLabel: z.string(),
+      component: z.string(),
+      jurisdiction: z.string(),
+      rateBp: z.number(),
+      currency: z.string(),
+      taxableMinor: z.number(),
+      taxMinor: z.number(),
+      documentCount: z.number(),
+    }),
+  ),
+  byRole: z.array(
+    z.object({
+      glRole: taxGlRoleContract,
+      label: z.string(),
+      taxableMinor: z.number(),
+      taxMinor: z.number(),
+    }),
+  ),
+  byComponent: z.array(
+    z.object({ component: z.string(), taxableMinor: z.number(), taxMinor: z.number() }),
+  ),
+  byCurrency: z.array(taxSummaryCurrencyTotalsContract),
+  totals: taxSummaryCurrencyTotalsContract,
+  notes: z.array(z.string()),
+});
