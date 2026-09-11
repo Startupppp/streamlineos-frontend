@@ -2,53 +2,31 @@
 
 import { use, useState, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, Pencil, ExternalLink, BookOpen } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { ChevronLeft, Pencil, BookOpen } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { EntityFormDialog, LoadingState, ErrorState } from "@/components/shared";
+import { LoadingState, ErrorState } from "@/components/shared";
 
 import {
   useAccounts,
   useJournal,
-  useUpdateAccount,
 } from "@/hooks/api/accounting";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
-  AccountType,
-  Account,
   JournalEntry,
   JournalEntryStatus,
 } from "@/types/accounting";
-import { editAccountSchema, type EditAccountValues } from "./account-schema";
 import { formatShortDate } from "@/lib/date-utils";
+import { EditAccountDialog } from "@/features/accounting/edit-account-dialog";
+import { AccountSummaryCard } from "@/features/accounting/account-summary-card";
 
 interface AccountDetailPageProps {
   params: Promise<{ accountId: string }>;
 }
-
-const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
-  ASSET: "border-primary/30 text-foreground bg-primary/5",
-  LIABILITY: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
-  EQUITY: "border-status-info-rule text-status-info-ink bg-status-info-surface",
-  INCOME: "border-status-success-rule text-status-success-ink bg-status-success-surface",
-  EXPENSE: "border-status-danger-rule text-status-danger-ink bg-status-danger-surface",
-};
 
 const STATUS_VARIANT: Record<
   JournalEntryStatus,
@@ -59,110 +37,6 @@ const STATUS_VARIANT: Record<
   VOID: "destructive",
   PENDING_APPROVAL: "secondary",
 };
-
-interface EditAccountDialogProps {
-  account: Account;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function EditAccountDialog({
-  account,
-  open,
-  onOpenChange,
-}: EditAccountDialogProps) {
-  const update = useUpdateAccount(account.id);
-
-  const defaultValues: EditAccountValues = {
-    name: account.name,
-    description: account.description ?? "",
-    isActive: account.isActive,
-  };
-
-  async function handleSubmit(values: EditAccountValues): Promise<void> {
-    try {
-      await update.mutateAsync({
-        name: values.name,
-        description: values.description ? values.description : undefined,
-        isActive: values.isActive,
-      });
-      toast.success("Account updated");
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  return (
-    <EntityFormDialog<EditAccountValues>
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Edit account"
-      resolver={zodResolver(editAccountSchema)}
-      defaultValues={defaultValues}
-      onSubmit={handleSubmit}
-      isSubmitting={update.isPending}
-      submitLabel="Save changes"
-      resetOnOpen
-    >
-      {(form) => (
-        <>
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Account name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    rows={3}
-                    placeholder="Optional notes about this account"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-                <div>
-                  <FormLabel className="text-sm font-medium">Active</FormLabel>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Inactive accounts are hidden from transaction forms.
-                  </p>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </>
-      )}
-    </EntityFormDialog>
-  );
-}
 
 export default function AccountDetailPage({ params }: AccountDetailPageProps) {
   const canUpdateAccount = useCan("accounting:accounts:update");
@@ -298,82 +172,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
           </div>
         ) : (
           <>
-            <Card>
-              <CardContent className="p-5 space-y-4">
-                <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
-                  <div className="min-w-0">
-                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                      Code
-                    </p>
-                    <p className="mt-1.5 text-sm font-mono text-foreground">
-                      {account.code}
-                    </p>
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                      Type
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className={`mt-1.5 ${TYPE_BADGE_CLASSES[account.accountType]}`}
-                    >
-                      {account.accountType}
-                    </Badge>
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                      Status
-                    </p>
-                    <Badge
-                      variant={account.isActive ? "default" : "secondary"}
-                      className="mt-1.5"
-                    >
-                      {account.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-
-                  {parentAccount && (
-                    <div className="min-w-0">
-                      <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                        Parent account
-                      </p>
-                      <Link
-                        href={`/accounting/coa/${parentAccount.id}`}
-                        className="mt-1.5 flex items-center gap-1 text-sm text-primary hover:underline"
-                      >
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {parentAccount.code}
-                        </span>
-                        <span>{parentAccount.name}</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  )}
-
-                  <div className="min-w-0">
-                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                      Created
-                    </p>
-                    <p className="mt-1.5 text-sm text-foreground">
-                      {formatShortDate(account.createdAt)}
-                    </p>
-                  </div>
-                </div>
-
-                {account.description && (
-                  <div className="pt-4 border-t border-border/60">
-                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
-                      Description
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                      {account.description}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AccountSummaryCard account={account} parentAccount={parentAccount} />
 
             <Card>
               <CardHeader className="px-5 py-4 pb-0">
