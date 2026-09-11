@@ -525,6 +525,7 @@ multi-segment param guards and 3 were real**. The honest remaining figure was ne
 | backend `tsc --noEmit` (build) | **0 errors** |
 | backend `tsc --noEmit` (test config) | **0 errors** |
 | frontend `tsc --noEmit` | **0 errors** |
+| **backend full suite** | **2,217 suites passed, 0 failed** (1 skipped, 19,233 tests) |
 | `madge --circular` backend (`src` + `test`) | **zero cycles**, 6,681 files |
 | `madge --circular` frontend | **zero cycles**, 6,025 files |
 | `openapi:check` | current — **3,654 operations**, 3,649 with a zod contract, 3,654 exposure-stamped |
