@@ -14,6 +14,8 @@
 import { BACKEND_URL } from "./backend-url";
 import { PRICING_TIERS, type PricingTier } from "./pricing";
 import { formatMinor } from "./pricing-format";
+import type { ResponseContract } from "./api-envelope";
+import { dataResidencyContract, publicPricingContract } from "./pricing-live-schema";
 
 /**
  * Prices on the marketing page, from the same table that charges the card.
@@ -89,11 +91,19 @@ export interface DataResidency {
  * correct response to a failure is the same: use the static table. Throwing
  * would make each of them write that out.
  */
-async function publicGet<T>(path: string, timeoutMs = 2500): Promise<T | null> {
+async function publicGet<T>(
+  path: string,
+  params: Record<string, string | undefined>,
+  contract: ResponseContract<T>,
+  timeoutMs = 2500,
+): Promise<T | null> {
+  const url = new URL(`${BACKEND_URL}/${path}`);
+  for (const [key, value] of Object.entries(params))
+    if (value !== undefined) url.searchParams.set(key, value);
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeoutMs);
   try {
-    const response = await fetch(`${BACKEND_URL}/${path}`, {
+    const response = await fetch(url.toString(), {
       signal: abort.signal,
       // Prices change rarely and a marketing page is read constantly; a minute
       // is short enough that a price change is live before anyone notices and
@@ -103,10 +113,9 @@ async function publicGet<T>(path: string, timeoutMs = 2500): Promise<T | null> {
     if (!response.ok) return null;
     const body: unknown = await response.json();
     // The platform envelopes public responses as `{ success, data }`.
-    if (body && typeof body === "object" && "data" in body) {
-      return (body as { data: T }).data;
-    }
-    return body as T;
+    const payload = body && typeof body === "object" && "data" in body ? body.data : body;
+    const parsed = contract.safeParse(payload);
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   } finally {
@@ -115,13 +124,11 @@ async function publicGet<T>(path: string, timeoutMs = 2500): Promise<T | null> {
 }
 
 export function fetchPublicPricing(currency?: string): Promise<PublicPricing | null> {
-  const query = currency ? `?currency=${encodeURIComponent(currency)}` : "";
-  return publicGet<PublicPricing>(`public/pricing${query}`);
+  return publicGet<PublicPricing>("public/pricing", { currency }, publicPricingContract);
 }
 
 export function fetchDataResidency(country?: string): Promise<DataResidency | null> {
-  const query = country ? `?country=${encodeURIComponent(country)}` : "";
-  return publicGet<DataResidency>(`public/data-residency${query}`);
+  return publicGet<DataResidency>("public/data-residency", { country }, dataResidencyContract);
 }
 
 // `formatMinor` moved to ./pricing-format so a client component can have it
