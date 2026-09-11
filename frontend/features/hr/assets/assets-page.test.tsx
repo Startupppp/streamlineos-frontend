@@ -30,6 +30,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
 }));
@@ -117,12 +118,12 @@ const asset: Asset = {
 const seededAssets = {
   data: [asset],
   counts: { total: 1, available: 1, assigned: 0, maintenance: 0, retired: 0 },
-  pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
 function makeHydratedState() {
   const seed = new QueryClient();
-  seed.setQueryData(queryKeys.hr.assets({ page: 1, limit: 20 }), seededAssets);
+  seed.setQueryData(queryKeys.hr.assets({ limit: 20 }), seededAssets);
   return dehydrate(seed);
 }
 
@@ -155,6 +156,8 @@ describe("AssetsPage server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/hr/assets",
       expect.anything(),
+      expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -170,6 +173,8 @@ describe("AssetsPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/assets",
+      expect.anything(),
+      expect.anything(),
       expect.anything(),
     );
   });

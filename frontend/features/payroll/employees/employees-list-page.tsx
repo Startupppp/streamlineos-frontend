@@ -75,6 +75,13 @@ export function EmployeesListPage() {
     updateParams({ page: String(val) });
   }
 
+  function handleClearFilters() {
+    updateParams({ search: "", workerType: "all", status: "all", page: "1" });
+  }
+
+  const filtersActive =
+    search.trim() !== "" || workerType !== "all" || status !== "all";
+
   const { data, isLoading, isError, error, refetch } = useEmployeeProfiles({
     page,
     limit: 20,
@@ -233,7 +240,7 @@ export function EmployeesListPage() {
             mode: "server",
             page,
             pageSize: 20,
-            total: data?.total ?? 0,
+            total: data?.pagination ? (data.pagination.hasMore ? (page * 20) + 1 : (page - 1) * 20 + data.data.length) : 0,
             onPageChange: handlePageChange,
           }}
           mobileCard={(row) => {
@@ -264,7 +271,16 @@ export function EmployeesListPage() {
             <EmptyState
               illustration={<EmptyPersonIllustration />}
               title="No salary profiles"
-              description={workforceLabel.emptyDescription}
+              description={
+                filtersActive ? undefined : workforceLabel.emptyDescription
+              }
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={
+                canUpdate && !filtersActive
+                  ? { label: "Add salary", onClick: handleAddOpen }
+                  : undefined
+              }
             />
           }
         />

@@ -1,4 +1,4 @@
-import { redact } from "./redact";
+import { redactRecord } from "./redact";
 
 export interface FrontendContext {
   orgId?: string;
@@ -65,7 +65,7 @@ export function reportError(error: unknown, extra?: Record<string, unknown>): vo
     active.report({
       error,
       context: { ...session, url: currentUrl() },
-      ...(extra !== undefined ? { extra: redact(extra) as Record<string, unknown> } : {}),
+      ...(extra !== undefined ? { extra: redactRecord(extra) } : {}),
     });
   } catch {
     // Deliberately swallowed: see above.

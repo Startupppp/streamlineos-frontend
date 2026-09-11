@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useBurnoutFlags } from "@/hooks/api/hr/safety";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -11,7 +13,11 @@ import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 export function BurnoutFlagsList() {
-  const { data, isLoading } = useBurnoutFlags();
+  const { data, isLoading, isError, error, refetch } = useBurnoutFlags();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const userIds = useMemo(
     () => [...new Set((data ?? []).map((f) => f.userId))],
@@ -41,6 +47,13 @@ export function BurnoutFlagsList() {
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load burnout signals"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : !data?.length ? (
         <p className="text-xs text-muted-foreground text-center py-6">
           No burnout signals detected

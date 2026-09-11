@@ -1,21 +1,27 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { supportChannelContract as supportChannelContractType } from "@/hooks/api/support/support-channel-schema";
+
+const supportChannelListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.supportChannelListContract),
+);
+const supportChannelContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.supportChannelContract),
+);
+const channelSuccessContract = lazyContract(() =>
+  import("@/hooks/api/support/support-channel-schema").then((m) => m.channelSuccessContract),
+);
 
 export type SupportChannelType = "email" | "chat" | "whatsapp" | "sms";
 
-export interface SupportChannel {
-  id: number;
-  orgId: string;
-  type: string;
-  name: string;
-  config: Record<string, unknown>;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SupportChannel = z.infer<typeof supportChannelContractType>;
 
 export interface CreateSupportChannelInput {
   type: SupportChannelType;
@@ -31,38 +37,38 @@ export interface UpdateSupportChannelInput {
 }
 
 export function useSupportChannels() {
-  return useQuery({
-    queryKey: queryKeys.supportChannels.list(),
-    queryFn: () => apiClient.get<SupportChannel[]>("/support/channels"),
+  return useGatedQuery("support:channels:manage", {
+    queryKey: supportAndWorkflowsQueryKeys.supportChannels.list(),
+    queryFn: ({ signal }) => apiClient.get("/support/channels", undefined, signal, supportChannelListContract),
     staleTime: 60_000,
   });
 }
 
 export function useCreateSupportChannel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:channels:manage", {
     mutationKey: ["support", "channels", "create"],
     mutationFn: (input: CreateSupportChannelInput) =>
-      apiClient.post<SupportChannel>("/support/channels", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+      apiClient.post("/support/channels", input, undefined, supportChannelContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }
 
 export function useUpdateSupportChannel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:channels:manage", {
     mutationKey: ["support", "channels", "update"],
     mutationFn: ({ id, ...input }: UpdateSupportChannelInput & { id: number }) =>
-      apiClient.patch<SupportChannel>(`/support/channels/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+      apiClient.patch(`/support/channels/${id}`, input, undefined, supportChannelContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }
 
 export function useDeleteSupportChannel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:channels:manage", {
     mutationKey: ["support", "channels", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/channels/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/channels/${id}`, undefined, undefined, channelSuccessContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }

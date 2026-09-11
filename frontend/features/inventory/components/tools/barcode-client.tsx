@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { NoPermissionState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses, typeScaleClass } from "@/lib/design-tokens";

@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   DealForecastScore,
@@ -16,20 +18,23 @@ import type {
   OverrideForecastInput,
 } from "@/types/crm";
 
+const dealForecastSnapshotsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotsContract));
+const dealForecastSnapshotLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotContract));
+
 export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
   return useGatedQuery("crm:deals:forecast", {
     queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>, signal, dealForecastSnapshotsLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCaptureForecastSnapshot() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:forecast", {
     mutationKey: ["deals", "forecast", "captureSnapshot"] as const,
     mutationFn: (input: CaptureForecastSnapshotInput) =>
-      apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input),
+      apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input, undefined, dealForecastSnapshotLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },
@@ -38,10 +43,10 @@ export function useCaptureForecastSnapshot() {
 
 export function useOverrideForecast() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:manage", {
     mutationKey: ["deals", "forecast", "override"] as const,
     mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
-      apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data),
+      apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data, undefined, dealForecastSnapshotLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },

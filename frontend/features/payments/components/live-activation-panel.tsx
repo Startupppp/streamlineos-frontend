@@ -17,15 +17,43 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePaymentReadiness, useActivateLivePayments } from "@/hooks/api/payments";
+import { useCan } from "@/hooks/api/access";
 
 const CONFIRM_PHRASE = "ACTIVATE LIVE";
 
 export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
-  const { data: readiness } = usePaymentReadiness(providerKey);
+  const canActivate = useCan("payments:live:activate");
+  const {
+    data: readiness,
+    isError: readinessFailed,
+    error: readinessError,
+    refetch: refetchReadiness,
+  } = usePaymentReadiness(providerKey);
   const activate = useActivateLivePayments(providerKey);
   const [confirmText, setConfirmText] = useState("");
+
+  function handleRetryReadiness() {
+    void refetchReadiness();
+  }
+
+  if (!canActivate) return null;
+
+  // Readiness is the gate on this panel's own button. A failed read must not
+  // disappear the panel: silence there is indistinguishable from "this
+  // provider cannot go live", and the operator has no way to tell.
+  if (readinessFailed) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load live readiness"
+        description={getErrorMessage(readinessError)}
+        onRetry={handleRetryReadiness}
+      />
+    );
+  }
 
   if (!readiness) return null;
 

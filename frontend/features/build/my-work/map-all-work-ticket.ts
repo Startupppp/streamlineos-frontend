@@ -25,7 +25,7 @@ export function mapAllWorkTicketToKanban(t: AllWorkTicket): KanbanTicket {
     dueDate: t.dueDate ?? null,
     startDate: t.startDate ?? null,
     updatedAt: t.updatedAt != null ? String(t.updatedAt) : null,
-    sequenceId: t.sequenceId ?? null,
+    sequenceId: null,
     assignee: t.assignee
       ? {
           id: t.assignee.id,
@@ -47,6 +47,7 @@ export function buildTicketMetaMap(
 ): Map<number, AllWorkTicketMeta> {
   const map = new Map<number, AllWorkTicketMeta>();
   for (const t of tickets) {
+    if (t.projectId === null || t.projectKey === null) continue;
     map.set(t.id, {
       id: t.id,
       projectId: t.projectId,

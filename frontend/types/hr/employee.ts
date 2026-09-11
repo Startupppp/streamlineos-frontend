@@ -1,4 +1,4 @@
-export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED";
+export type AssetStatus = string;
 export type DocumentType =
   | "CONTRACT"
   | "CERTIFICATE"
@@ -45,12 +45,35 @@ export interface Pagination {
 }
 
 export interface PaginatedEmployees {
-  data: Employee[];
+  data: EmployeeListItem[];
   pagination: Pagination;
 }
 
+/**
+ * `GET /hr/employees` projects thirteen columns. It does not select `email` as
+ * non-null, nor `departmentId`, `bio`, `phone` or any of the four social URLs,
+ * so a list row cannot be typed as a whole `Employee`.
+ */
+export type EmployeeListItem = Pick<
+  Employee,
+  | "id"
+  | "name"
+  | "firstName"
+  | "lastName"
+  | "role"
+  | "designation"
+  | "employeeId"
+  | "image"
+  | "isActive"
+  | "joiningDate"
+  | "reportingTo"
+> & {
+  email: string;
+  department: { id: string; name: string } | null;
+};
+
 export interface EmployeeCursorPage {
-  data: Employee[];
+  data: EmployeeListItem[];
   pageInfo: {
     limit: number;
     hasMore: boolean;
@@ -124,7 +147,8 @@ export interface Document {
 export interface WorkLog {
   id: number;
   orgId: string;
-  userId: string | null;
+  userMembershipId: number | null;
+  userId?: string | null;
   ticketId: number | null;
   date: string;
   hours: string | null;
@@ -132,10 +156,28 @@ export interface WorkLog {
   imageUrl: string | null;
   workLink: string | null;
   status: string | null;
-  approvedBy: string | null;
+  approvedByMembershipId: number | null;
+  approvedBy?: string | null;
   approvedAt: Date | string | null;
   rejectionReason: string | null;
   isBillable: boolean | null;
+  payrollStatus: string;
+  payrollExportId: number | null;
+  projectId: number | null;
+  timesheetPeriodId: number | null;
+  timerSessionId: number | null;
+  billingType: string;
+  billRate: string | null;
+  costRate: string | null;
+  currency: string | null;
+  rateSource: string | null;
+  invoicingStatus: string;
+  submittedAt: Date | string | null;
+  lockedAt: Date | string | null;
+  lockedByMembershipId: number | null;
+  voidedAt: Date | string | null;
+  voidReason: string | null;
+  source: string;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   ticket?: {

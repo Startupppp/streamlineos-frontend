@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ManagedProduct,
@@ -10,6 +11,18 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const managedProductPageContract = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductPageContract),
+);
+const managedProductRowContract = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface ListManagedProductsParams {
   cursor?: string;
@@ -25,11 +38,11 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
   if (params?.status) queryParams["status"] = params.status;
 
   return useQuery<ManagedProductsPage>({
-    queryKey: queryKeys.projects.managedProducts.list(
+    queryKey: buildWorkQueryKeys.projects.managedProducts.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: () =>
-      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams, signal, managedProductPageContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -38,9 +51,9 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
 export function useManagedProduct(managedProductId: number) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ManagedProduct>({
-    queryKey: queryKeys.projects.managedProducts.detail(managedProductId),
-    queryFn: () =>
-      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`),
+    queryKey: buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
   });
@@ -48,19 +61,19 @@ export function useManagedProduct(managedProductId: number) {
 
 export function useCreateManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:managed-products:create", {
     mutationKey: ["projects", "managed-products", "create"],
     mutationFn: (data: CreateManagedProductInput) =>
-      apiClient.post<ManagedProduct>("/build/managed-products", data),
+      apiClient.post<ManagedProduct>("/build/managed-products", data, undefined, managedProductRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.managedProducts.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
     },
   });
 }
 
 export function useUpdateManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:managed-products:update", {
     mutationKey: ["projects", "managed-products", "update"],
     mutationFn: ({
       managedProductId,
@@ -69,11 +82,13 @@ export function useUpdateManagedProduct() {
       apiClient.patch<ManagedProduct>(
         `/build/managed-products/${managedProductId}`,
         data,
+        undefined,
+        managedProductRowContract,
       ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.managedProducts.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.managedProducts.detail(vars.managedProductId),
+        queryKey: buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
       });
     },
   });
@@ -81,12 +96,12 @@ export function useUpdateManagedProduct() {
 
 export function useDeleteManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:managed-products:delete", {
     mutationKey: ["projects", "managed-products", "delete"],
     mutationFn: (managedProductId: number) =>
-      apiClient.delete<void>(`/build/managed-products/${managedProductId}`),
+      apiClient.delete<void>(`/build/managed-products/${managedProductId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.managedProducts.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
     },
   });
 }

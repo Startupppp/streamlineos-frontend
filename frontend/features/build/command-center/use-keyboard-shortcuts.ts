@@ -14,7 +14,8 @@ export function useKeyboardShortcuts(
     let timer: ReturnType<typeof setTimeout>;
 
     function handleKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
       if (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||

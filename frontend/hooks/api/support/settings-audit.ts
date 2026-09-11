@@ -1,8 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportSettingsAuditLogListC = lazyContract(() =>
+  import("./support-settings-schema").then((m) => m.supportSettingsAuditLogListContract),
+);
 
 export type SettingsAuditEntityType =
   | "sla_policy"
@@ -28,12 +33,12 @@ export interface SettingsAuditLogEntry {
 }
 
 export function useSettingsAuditLog(entityType?: SettingsAuditEntityType) {
-  return useQuery({
-    queryKey: queryKeys.supportSettingsAuditLog.list(entityType),
-    queryFn: () =>
+  return useGatedQuery("support:settings:manage", {
+    queryKey: supportAndWorkflowsQueryKeys.supportSettingsAuditLog.list(entityType),
+    queryFn: ({ signal }) =>
       apiClient.get<SettingsAuditLogEntry[]>(
         "/support/settings/audit-log",
-        entityType ? { entityType } : undefined,
+        entityType ? { entityType } : undefined, signal, supportSettingsAuditLogListC,
       ),
     staleTime: 30_000,
   });

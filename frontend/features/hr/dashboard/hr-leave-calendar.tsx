@@ -134,7 +134,7 @@ export function HrLeaveCalendar() {
 
       {data && data.length > 0 && (
         <div className="px-4 py-2 border-t border-border/60">
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-micro">
             {data.length} {data.length === 1 ? "leave" : "leaves"}
           </Badge>
         </div>

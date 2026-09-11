@@ -25,13 +25,14 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollTemplates, usePayrollPolicyCurrent, useDeleteTemplate } from "@/hooks/api/payroll";
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
-import type { TemplateRow } from "@/types/payroll/setup";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 import { toast } from "sonner";
 
 const CATEGORIES = [
@@ -60,16 +61,16 @@ export function TemplatesPageContent() {
   const complexity = searchParams.get("complexity") ?? "all";
 
   const [searchInput, setSearchInput] = useState<string>(search);
-  const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
-  const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
-  const [deleteTemplate, setDeleteTemplate] = useState<TemplateRow | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<PayrollTemplate | null>(null);
+  const [duplicateTemplate, setDuplicateTemplate] = useState<PayrollTemplate | null>(null);
+  const [deleteTemplate, setDeleteTemplate] = useState<PayrollTemplate | null>(null);
 
   const debouncedSearchInput = useDebouncedValue(searchInput, 300);
 
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCountry = policyData?.policy?.country;
 
-  const { data, isLoading, isError, refetch } = usePayrollTemplates({
+  const { data, isLoading, isError, error, refetch } = usePayrollTemplates({
     search: debouncedSearchInput.trim() || undefined,
     category: category === "all" ? undefined : category,
     complexity: complexity === "all" ? undefined : complexity,
@@ -106,7 +107,7 @@ export function TemplatesPageContent() {
   }, [updateUrl]);
 
   const handleUseInSetup = useCallback(
-    (template: TemplateRow) => {
+    (template: PayrollTemplate) => {
       if (template.key) {
         router.push(`/payroll/setup?template=${template.key}`);
       } else {
@@ -116,15 +117,15 @@ export function TemplatesPageContent() {
     [router],
   );
 
-  const handlePreviewOpen = useCallback((t: TemplateRow) => {
+  const handlePreviewOpen = useCallback((t: PayrollTemplate) => {
     setPreviewTemplate(t);
   }, []);
 
-  const handleDuplicateOpen = useCallback((t: TemplateRow) => {
+  const handleDuplicateOpen = useCallback((t: PayrollTemplate) => {
     setDuplicateTemplate(t);
   }, []);
 
-  const handleDeleteOpen = useCallback((t: TemplateRow) => {
+  const handleDeleteOpen = useCallback((t: PayrollTemplate) => {
     setDeleteTemplate(t);
   }, []);
 
@@ -161,7 +162,12 @@ export function TemplatesPageContent() {
   }, [refetch]);
 
   const templates = data?.items ?? [];
-  const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
+  const filtersActive = !!(
+    searchInput.trim() ||
+    search ||
+    category !== "all" ||
+    complexity !== "all"
+  );
 
   const filters = (
     <>
@@ -201,10 +207,11 @@ export function TemplatesPageContent() {
         filters={filters}
       >
         {isError ? (
-          <EmptyState
-            title="Failed to load templates"
-            description="There was an error fetching payroll templates."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load templates"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
           />
         ) : isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -221,17 +228,13 @@ export function TemplatesPageContent() {
           </div>
         ) : templates.length === 0 ? (
           <EmptyState
-            title="No templates found"
+            className="flex-1"
+            title="No templates yet"
             description={
-              hasActiveFilters
-                ? "Try adjusting your filters."
-                : "No payroll templates are available yet."
+              filtersActive ? undefined : "No payroll templates are available yet."
             }
-            action={
-              hasActiveFilters
-                ? { label: "Clear filters", onClick: handleClearFilters }
-                : undefined
-            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

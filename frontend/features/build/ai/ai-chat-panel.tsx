@@ -1,16 +1,14 @@
 ﻿"use client";
 
 import { useState, useCallback, useEffect, useRef, memo } from "react";
-import { RotateCcw } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
 import { motion, useReducedMotion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
+import { AiFailureBody } from "@/components/ai";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TEXT_BODY } from "@/lib/text-overflow";
@@ -322,20 +320,8 @@ export function AiChatPanel({
                 ) : null}
 
                 {mutation.isError ? (
-                  <div className="flex items-start justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-2.5">
-                    <p className="flex-1 text-label leading-snug text-destructive">
-                      {getErrorMessage(mutation.error)}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSubmit}
-                      className="h-7 shrink-0 gap-1.5 text-xs"
-                      aria-label="Retry question"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      Retry
-                    </Button>
+                  <div className="rounded-xl border border-border bg-card px-3.5 py-2.5">
+                    <AiFailureBody error={mutation.error} onRetry={handleSubmit} />
                   </div>
                 ) : null}
 

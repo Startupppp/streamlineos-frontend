@@ -29,10 +29,10 @@ import {
   useUnmuteChannel,
 } from "@/hooks/api";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getInitials } from "@/lib/format-utils";
 
 const CloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -57,6 +57,14 @@ const UnpinButton = React.forwardRef<
     </button>
   );
 });
+
+const MUTE_OPTIONS = [
+  { label: "15 minutes", value: "15m" },
+  { label: "1 hour", value: "1h" },
+  { label: "8 hours", value: "8h" },
+  { label: "24 hours", value: "24h" },
+  { label: "Forever", value: "forever" },
+] as const;
 
 export function ChannelInfoPanel({
   channelId,
@@ -106,6 +114,18 @@ export function ChannelInfoPanel({
       toast.error(getErrorMessage(error));
     }
   }, [unarchiveChannel, channelId]);
+
+  function unpinMessageHandler(messageId: number): () => void {
+    return function handleUnpinMessage(): void {
+      unpinMessage.mutate({ channelId, messageId });
+    };
+  }
+
+  function muteChannelHandler(duration: string): () => void {
+    return function handleMuteChannel(): void {
+      muteChannel.mutate({ channelId, duration });
+    };
+  }
 
   const isAdmin = channel?.members?.some(
     (m) => m.user?.id === currentUserId && m.role === "ADMIN",
@@ -178,12 +198,7 @@ export function ChannelInfoPanel({
                       </p>
                     </div>
                     <UnpinButton
-                      onClick={() =>
-                        unpinMessage.mutate({
-                          channelId,
-                          messageId: pin.messageId,
-                        })
-                      }
+                      onClick={unpinMessageHandler(pin.messageId)}
                       className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
                       title="Unpin"
                       aria-label="Unpin message"
@@ -212,13 +227,6 @@ export function ChannelInfoPanel({
                 mutedUntil !== null &&
                 mutedUntil !== undefined &&
                 new Date(mutedUntil) > new Date();
-              const MUTE_OPTIONS = [
-                { label: "15 minutes", value: "15m" },
-                { label: "1 hour", value: "1h" },
-                { label: "8 hours", value: "8h" },
-                { label: "24 hours", value: "24h" },
-                { label: "Forever", value: "forever" },
-              ];
               return (
                 <div className="mt-4 pt-4 border-t border-border/30">
                   <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
@@ -255,12 +263,7 @@ export function ChannelInfoPanel({
                       {MUTE_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
-                          onClick={() =>
-                            muteChannel.mutate({
-                              channelId,
-                              duration: opt.value,
-                            })
-                          }
+                          onClick={muteChannelHandler(opt.value)}
                           disabled={muteChannel.isPending}
                           className="inline-flex h-8 items-center justify-center px-2 rounded-lg border border-border/50 text-dense font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
                         >

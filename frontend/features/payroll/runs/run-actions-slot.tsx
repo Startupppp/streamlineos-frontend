@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog,
@@ -33,15 +33,14 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
 
   const generateMutation = useGenerateRun();
   const recalcMutation = useRecalculateRun();
+  const handleError = useRunConflictHandler(run.id);
 
   function handleGenerate() {
     generateMutation.mutate(run.id, {
       onSuccess: () => {
         toast.success("Payroll generated successfully");
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-      },
+      onError: handleError,
     });
   }
 
@@ -51,8 +50,8 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
         toast.success("Payroll recalculated");
         setShowRecalcConfirm(false);
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
+      onError: (err: unknown) => {
+        handleError(err);
         setShowRecalcConfirm(false);
       },
     });

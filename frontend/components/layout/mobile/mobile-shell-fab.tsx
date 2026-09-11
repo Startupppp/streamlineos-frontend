@@ -1,54 +1,44 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import {
-  EllipsisIcon,
-  MenuIcon,
-  SearchIcon,
-  UserIcon,
-} from "@animateicons/react/lucide";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
-import { useAskOs } from "@/components/assistant/ask-os-context";
-import { useCommandPalette } from "@/features/command-palette";
+import { useCallback, useState, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
+import dynamic from "next/dynamic";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-} from "@/components/ui/drawer";
-import { UserAvatarMenu } from "../header/user-avatar-menu";
 import { cn } from "@/lib/utils";
 import { useMobileShellFabPosition } from "./use-mobile-shell-fab-position";
+
+const FabPanelBody = dynamic(
+  () =>
+    import("./mobile-shell-fab-panel").then((m) => ({
+      default: m.FabPanelBody,
+    })),
+  { ssr: false, loading: FabDrawerSkeleton },
+);
+
+function FabDrawerSkeleton() {
+  return (
+    <div
+      className="flex flex-row items-stretch justify-around gap-1 px-2 pb-2 pt-1"
+      aria-hidden="true"
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="flex flex-1 flex-col items-center justify-center gap-1 py-3"
+        >
+          <div className="size-9 rounded-lg bg-muted" />
+          <div className="h-3 w-10 rounded bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface MobileShellFabProps {
   onOpenMobileMenu: () => void;
   showAboveBottomNav: boolean;
   className?: string;
-}
-
-function FabMenuRow({
-  label,
-  onClick,
-  icon,
-}: {
-  label: string;
-  onClick: () => void;
-  icon: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg py-3 text-foreground transition-colors hover:bg-muted"
-    >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-        {icon}
-      </span>
-      <span className="max-w-full truncate px-1 text-micro font-medium leading-tight">
-        {label}
-      </span>
-    </button>
-  );
 }
 
 export function MobileShellFab({
@@ -57,12 +47,28 @@ export function MobileShellFab({
   className,
 }: MobileShellFabProps) {
   const [fabOpen, setFabOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();
-  const { setPaletteOpen } = useCommandPalette();
+  const [bodyReady, setBodyReady] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!fabOpen || bodyReady) return;
+    const id = requestAnimationFrame(() => setBodyReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [fabOpen, bodyReady]);
+
+  useEffect(() => {
+    if (!fabOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFabOpen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [fabOpen]);
+
+  const handleClose = useCallback(() => setFabOpen(false), []);
 
   const handleToggleFab = useCallback(() => {
-    setFabOpen((open) => !open);
+    flushSync(() => setFabOpen((open) => !open));
   }, []);
 
   const {
@@ -77,39 +83,15 @@ export function MobileShellFab({
     bottomObstructionPx: showAboveBottomNav ? 76 : 0,
   });
 
-  const handleCloseFab = useCallback(() => {
-    setFabOpen(false);
-  }, []);
-
-  const handleAskOs = useCallback(() => {
-    handleCloseFab();
-    toggleAskOs();
-  }, [handleCloseFab, toggleAskOs]);
-
-  const handleMenu = useCallback(() => {
-    handleCloseFab();
-    onOpenMobileMenu();
-  }, [handleCloseFab, onOpenMobileMenu]);
-
-  const handleSearch = useCallback(() => {
-    handleCloseFab();
-    setPaletteOpen(true);
-  }, [handleCloseFab, setPaletteOpen]);
-
-  const handleProfile = useCallback(() => {
-    handleCloseFab();
-    setProfileOpen(true);
-  }, [handleCloseFab]);
-
   const handleFabClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       if (consumeSuppressClick()) {
         event.preventDefault();
         return;
       }
-      handleToggleFab();
+      flushSync(() => setFabOpen((open) => !open));
     },
-    [consumeSuppressClick, handleToggleFab],
+    [consumeSuppressClick],
   );
 
   return (
@@ -141,41 +123,44 @@ export function MobileShellFab({
         />
       </div>
 
-      <Drawer open={fabOpen} onOpenChange={setFabOpen} modal>
-        <DrawerContent className="z-[70] gap-0 rounded-t-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <DrawerTitle className="sr-only">Quick actions</DrawerTitle>
-          <div className="flex flex-row items-stretch justify-around gap-1 px-2 pb-2 pt-1">
-            <FabMenuRow
-              label="Search"
-              onClick={handleSearch}
-              icon={<SearchIcon size={18} />}
-            />
-            <FabMenuRow
-              label={askOsOpen ? "Close Ask OS" : "Ask OS"}
-              onClick={handleAskOs}
-              icon={
-                <AnimatedLogo size={20} gradient className="rounded-full" />
-              }
-            />
-            <FabMenuRow
-              label="Menu"
-              onClick={handleMenu}
-              icon={<MenuIcon size={18} />}
-            />
-            <FabMenuRow
-              label="Profile"
-              onClick={handleProfile}
-              icon={<UserIcon size={18} />}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      <UserAvatarMenu
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        hideTrigger
+      <button
+        type="button"
+        aria-label="Close quick actions"
+        inert={fabOpen ? undefined : true}
+        onClick={handleClose}
+        className={cn(
+          "fixed inset-0 z-[65] bg-black/50 md:hidden",
+          "transition-opacity duration-200",
+          fabOpen ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
       />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick actions"
+        ref={sheetRef}
+        inert={fabOpen ? undefined : true}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-[70] md:hidden",
+          "rounded-t-xl border-t border-border bg-background",
+          "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+          "transition-transform duration-200 ease-out",
+          fabOpen ? "translate-y-0" : "translate-y-full",
+        )}
+        tabIndex={-1}
+      >
+        <div className="mx-auto mt-4 mb-1 h-2 w-32 rounded-full bg-muted" />
+        <p className="sr-only">Quick actions</p>
+        {bodyReady ? (
+          <FabPanelBody
+            onClose={handleClose}
+            onOpenMobileMenu={onOpenMobileMenu}
+          />
+        ) : (
+          <FabDrawerSkeleton />
+        )}
+      </div>
     </>
   );
 }

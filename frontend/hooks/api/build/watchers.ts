@@ -4,8 +4,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { lazyContract } from "@/lib/api-envelope";
 import type { TicketWatcher } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+/** Deferred: `hooks/api/index.ts` re-exports this, and the schema pulls Zod. */
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+const watchersContract = lazyContract(() =>
+  import("@/hooks/api/watchers-schema").then((m) => m.buildTicketWatchersContract),
+);
 
 export function useWatchers(
   projectId: number,
@@ -14,10 +28,13 @@ export function useWatchers(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<TicketWatcher[]>({
-    queryKey: queryKeys.projects.watchers(ticketId),
-    queryFn: () =>
+    queryKey: buildWorkQueryKeys.projects.watchers(ticketId),
+    queryFn: ({ signal }) =>
       apiClient.get<TicketWatcher[]>(
-        `/build/${projectId}/tickets/${ticketId}/watchers`
+        `/build/${projectId}/tickets/${ticketId}/watchers`,
+        undefined,
+        signal,
+        watchersContract,
       ),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
@@ -27,28 +44,34 @@ export function useWatchers(
 
 export function useToggleWatch(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "toggle"],
-    mutationFn: ({
+    mutationFn: async ({
       ticketId,
       watching,
     }: {
       ticketId: number;
       watching: boolean;
-    }) => {
+    }): Promise<void> => {
       if (watching) {
-        return apiClient.delete<{ success: boolean }>(
-          `/build/${projectId}/tickets/${ticketId}/watchers`
+        await apiClient.delete<void>(
+          `/build/${projectId}/tickets/${ticketId}/watchers`,
+          undefined,
+          undefined,
+          noContentLazy,
         );
+        return;
       }
-      return apiClient.post<{ success: boolean }>(
+      await apiClient.post<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
-        {}
+        {},
+        undefined,
+        successLazy,
       );
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.watchers(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.watchers(variables.ticketId),
       });
     },
   });
@@ -56,7 +79,7 @@ export function useToggleWatch(projectId: number) {
 
 export function useAddWatcher(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "add"],
     mutationFn: ({
       ticketId,
@@ -67,11 +90,13 @@ export function useAddWatcher(projectId: number) {
     }) =>
       apiClient.post<{ success: boolean }>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
-        { userId }
+        { userId },
+        undefined,
+        successLazy,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.watchers(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.watchers(variables.ticketId),
       });
     },
   });

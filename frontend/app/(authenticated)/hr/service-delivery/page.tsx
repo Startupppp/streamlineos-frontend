@@ -5,6 +5,8 @@ import { AlertTriangle, Info, LifeBuoy, Shield, Briefcase } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -68,12 +70,24 @@ function ItemRow({ item }: { item: ServiceDeliveryItem }) {
 export default function ServiceDeliveryPage() {
   const canOps = useCan("hr:cases:view");
   const canMy = useCan("hr:helpdesk:view");
-  const { data: ops, isLoading: opsLoading } = useServiceDeliveryOpsInbox(canOps);
-  const { data: mine, isLoading: myLoading } = useServiceDeliveryMyItems(canMy && !canOps);
+  const {
+    data: ops,
+    isLoading: opsLoading,
+    error: opsError,
+    refetch: refetchOps,
+  } = useServiceDeliveryOpsInbox(canOps);
+  const {
+    data: mine,
+    isLoading: myLoading,
+    error: myError,
+    refetch: refetchMine,
+  } = useServiceDeliveryMyItems(canMy && !canOps);
 
   const showOps = canOps;
   const data = showOps ? ops : mine;
   const isLoading = showOps ? opsLoading : myLoading;
+  const error = showOps ? opsError : myError;
+  const refetch = showOps ? refetchOps : refetchMine;
   const items = data?.items ?? [];
 
   return (
@@ -133,6 +147,11 @@ export default function ServiceDeliveryPage() {
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
+        ) : error ? (
+          <ErrorState
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
         ) : items.length === 0 ? (
           <EmptyState
             title="Nothing open"

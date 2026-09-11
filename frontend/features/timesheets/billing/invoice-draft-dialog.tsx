@@ -16,7 +16,7 @@ import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
 import { generateBillingNarrative } from "@/hooks/api/timesheets-core/ai";
 import { useCan } from "@/hooks/api/access";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 interface InvoiceDraftDialogProps {
   open: boolean;
@@ -61,12 +61,12 @@ export function InvoiceDraftDialog({
         description: "Draft a client-facing summary of the billable work",
         surface: "sheet",
         disabledReason: groups.length === 0 ? "No billable work in range" : undefined,
-        run: async () => {
+        run: async (signal, onToken) => {
           const res = await generateBillingNarrative({
             projectId: projectId ?? undefined,
             startDate,
             endDate,
-          });
+          }, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
       },

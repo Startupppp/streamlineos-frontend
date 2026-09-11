@@ -10,6 +10,7 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ interface JobErrorsSheetProps {
 }
 
 export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProps) {
-  const { data: detail, isLoading } = useHrImportJob(open ? jobId : null);
+  const { data: detail, isLoading, isError, error, refetch } = useHrImportJob(open ? jobId : null);
   const job = detail?.job;
   const rollback = useRollbackImportJob();
   const errorRows: ErrorRow[] = (job?.errors ?? []).map((e, i) => ({ ...e, _idx: i }));
@@ -56,6 +57,10 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
     );
   }, [rollback, job, onOpenChange]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
@@ -73,6 +78,15 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
                 <Skeleton key={i} className="h-10 w-full rounded-lg" />
               ))}
             </div>
+          )}
+
+          {isError && (
+            <ErrorState
+              title="Couldn't load this import"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+              compact
+            />
           )}
 
           {job && (

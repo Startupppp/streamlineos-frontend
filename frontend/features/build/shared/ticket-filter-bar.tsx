@@ -2,8 +2,11 @@
 
 import {
   useMemo,
+  useState,
+  useCallback,
   type ReactNode,
 } from "react";
+import dynamic from "next/dynamic";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,11 +21,19 @@ import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { FilterChip } from "@/features/shared/list-view";
-import { FilterCommandMenu } from "./filter-command-menu";
-import type { StatusFilterOption } from "@/features/shared/list-view";
+import { FilterChip } from "@/components/list-view/filter-chip";
+import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
+import type { StatusFilterOption } from "@/components/list-view/filter-types";
 import { buildStatusConfig } from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
+
+const FilterCommandMenu = dynamic(
+  () =>
+    import("./filter-command-menu").then((m) => ({
+      default: m.FilterCommandMenu,
+    })),
+  { ssr: false },
+);
 
 interface Member {
   id: string;
@@ -88,6 +99,9 @@ export function TicketFilterBar({
   trailing,
   mobileSearchFirst = false,
 }: TicketFilterBarProps) {
+  const [filterMounted, setFilterMounted] = useState(false);
+  const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
+
   const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } =
     useAnimatedIcon();
   const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
@@ -217,32 +231,41 @@ export function TicketFilterBar({
     </div>
   );
 
+  const filterMenuProps = {
+    activeFilterCount,
+    statusItems,
+    statusConfig,
+    members: members ?? [],
+    labels,
+    cycles,
+    sprints: sprints ?? [],
+    projectOptions,
+    showTypeFilter,
+    showSprintFilter,
+    showAssigneeFilter,
+    filterState,
+    onToggleStatus: handleToggleStatus,
+    onTogglePriority: handleTogglePriority,
+    onToggleType: handleToggleType,
+    onToggleAssignee: handleToggleAssignee,
+    onToggleLabel: handleToggleLabel,
+    onToggleCycle: handleToggleCycle,
+    onToggleSprint: handleToggleSprint,
+    onToggleProject: handleToggleProject,
+    onDueDateFromChange: handleDueDateFromChange,
+    onDueDateToChange: handleDueDateToChange,
+  };
+
   const filterActions = (
     <>
-      <FilterCommandMenu
-        activeFilterCount={activeFilterCount}
-        statusItems={statusItems}
-        statusConfig={statusConfig}
-        members={members ?? []}
-        labels={labels}
-        cycles={cycles}
-        sprints={sprints ?? []}
-        projectOptions={projectOptions}
-        showTypeFilter={showTypeFilter}
-        showSprintFilter={showSprintFilter}
-        showAssigneeFilter={showAssigneeFilter}
-        filterState={filterState}
-        onToggleStatus={handleToggleStatus}
-        onTogglePriority={handleTogglePriority}
-        onToggleType={handleToggleType}
-        onToggleAssignee={handleToggleAssignee}
-        onToggleLabel={handleToggleLabel}
-        onToggleCycle={handleToggleCycle}
-        onToggleSprint={handleToggleSprint}
-        onToggleProject={handleToggleProject}
-        onDueDateFromChange={handleDueDateFromChange}
-        onDueDateToChange={handleDueDateToChange}
-      />
+      {filterMounted ? (
+        <FilterCommandMenu {...filterMenuProps} defaultOpen />
+      ) : (
+        <FilterTriggerButton
+          activeFilterCount={activeFilterCount}
+          onClick={handleFilterOpen}
+        />
+      )}
 
       {showDoneToggle &&
         onHideCompletedChange !== undefined &&

@@ -13,6 +13,10 @@ interface OverviewTabProps {
   tickets: Parameters<typeof EmployeeTicketsList>[0]["tickets"];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function OverviewTab({ employeeId, skillsList, projects, tickets }: OverviewTabProps) {
   return (
     <div className="space-y-4 pb-4">
@@ -62,11 +66,11 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
                 name: String(p["name"] ?? ""),
                 role: p["role"] != null ? String(p["role"]) : null,
                 description: p["description"] != null ? String(p["description"]) : null,
-                stats: p["stats"] != null
+                stats: isRecord(p.stats)
                   ? {
-                      todo: Number((p["stats"] as Record<string, unknown>)["todo"] ?? 0),
-                      inProgress: Number((p["stats"] as Record<string, unknown>)["inProgress"] ?? 0),
-                      done: Number((p["stats"] as Record<string, unknown>)["done"] ?? 0),
+                      todo: Number(p.stats.todo ?? 0),
+                      inProgress: Number(p.stats.inProgress ?? 0),
+                      done: Number(p.stats.done ?? 0),
                     }
                   : undefined,
               }))}

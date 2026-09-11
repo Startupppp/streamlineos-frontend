@@ -1,33 +1,38 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Sparkles, CalendarDays, ClipboardList, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { useState, useCallback, useMemo } from "react";
+import { Sparkles, CalendarDays, AlertCircle, StopCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
-import { AiCitationChips } from "@/components/ai/ai-citation-chips";
+import { AiFailureBody } from "@/components/ai/ai-failure-body";
+import { classifyAiError, isRetryableAiFailure } from "@/components/ai/ai-error-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import { CalendarConnectInline } from "@/features/calendar/calendar-connect-inline";
 import { useCan } from "@/hooks/api/access";
+import { useAiTextStream } from "@/hooks/api/ai-text-stream";
+import { streamMeetingPrep, type AgendaCitation } from "@/hooks/api/meetings-ai";
 import { useCalendarConnections } from "./use-calendar-connections";
-import {
-  useMeetingPrep,
-  type MeetingPrepResult,
-} from "@/hooks/api/meetings-ai";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { MeetingPrepAgendaBody, MeetingPrepAgendaDetails } from "./meeting-prep-agenda";
+import { parseMeetingAgendaStream, hasAgendaContent } from "./meeting-prep-stream-parse";
 
 interface MeetingPrepPanelProps {
   eventId: string;
   eventTitle: string;
 }
 
+type PrepState =
+  | { status: "idle" }
+  | { status: "streaming"; text: string }
+  | { status: "cancelled"; text: string }
+  | { status: "done"; text: string }
+  | { status: "failed"; error: unknown };
+
 function PrepSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="status" aria-live="polite" aria-busy>
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-5/6" />
@@ -36,6 +41,14 @@ function PrepSkeleton() {
   );
 }
 
+/**
+ * The agenda streams. The panel still renders the four structured affordances
+ * the user had before — agenda prose, key topics, suggested duration and
+ * preparation notes — but reconstructs them from the text received so far
+ * (`parseMeetingAgendaStream`) instead of waiting for a whole buffered record.
+ * Stopping keeps everything that arrived, and the citations come off
+ * `x-ai-sources` before the first token so a stopped agenda still cites.
+ */
 export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps) {
   const canUse = useCan("calendar:ai:use");
   const { data: connections = [] } = useCalendarConnections();
@@ -43,26 +56,49 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
 
   const [includeCrm, setIncludeCrm] = useState(false);
   const [includeProject, setIncludeProject] = useState(false);
-  const [result, setResult] = useState<MeetingPrepResult | null>(null);
+  const [state, setState] = useState<PrepState>({ status: "idle" });
+  const [citations, setCitations] = useState<AgendaCitation[]>([]);
 
-  const { mutate: runPrep, isPending } = useMeetingPrep();
+  const { run, stop, isStreaming } = useAiTextStream();
+
+  const streamedText = "text" in state ? state.text : "";
+  const sections = useMemo(() => parseMeetingAgendaStream(streamedText), [streamedText]);
 
   const handleDraftAgenda = useCallback(() => {
-    runPrep(
-      {
+    setState({ status: "streaming", text: "" });
+    setCitations([]);
+
+    const appendToken = (token: string) => {
+      setState((prev) =>
+        prev.status === "streaming" ? { status: "streaming", text: prev.text + token } : prev,
+      );
+    };
+
+    void run((signal) =>
+      streamMeetingPrep({
         eventId,
         includeCrmContext: includeCrm,
         includeProjectContext: includeProject,
-      },
-      {
-        onSuccess: (data) => setResult(data),
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [runPrep, eventId, includeCrm, includeProject]);
+        onToken: appendToken,
+        onSources: setCitations,
+        signal,
+      }),
+    )
+      .then((outcome) => {
+        if (outcome.status === "busy") return;
+        setState({
+          status: outcome.status === "cancelled" ? "cancelled" : "done",
+          text: outcome.text,
+        });
+      })
+      .catch((error: unknown) => {
+        setState({ status: "failed", error });
+      });
+  }, [run, eventId, includeCrm, includeProject]);
 
   const handleDiscard = useCallback(() => {
-    setResult(null);
+    setState({ status: "idle" });
+    setCitations([]);
   }, []);
 
   const handleToggleCrm = useCallback(() => {
@@ -73,9 +109,18 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
     setIncludeProject((prev) => !prev);
   }, []);
 
-  if (!canUse) {
-    return <AiPermissionDenied />;
-  }
+  if (!canUse) return <AiPermissionDenied />;
+
+  /**
+   * Exhausted credits and a revoked permission do not get a dispatch control.
+   * `AiFailureBody` already renders the affordance that can help — the top-up
+   * link, or the denial reason — and a "Try again" beside it would spend another
+   * click on a call that cannot succeed.
+   */
+  const canDispatch =
+    state.status !== "failed" || isRetryableAiFailure(classifyAiError(state.error).status);
+  const showForm = (state.status === "idle" || state.status === "failed") && canDispatch;
+  const showAgenda = state.status !== "idle" && state.status !== "failed";
 
   return (
     <div className="space-y-4">
@@ -87,7 +132,10 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
       {!hasConnectedCalendar && (
         <div className="rounded-lg border border-border bg-muted/30 p-3">
           <div className="flex items-start gap-2 mb-2">
-            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" aria-hidden />
+            <AlertCircle
+              className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0"
+              aria-hidden
+            />
             <p className="text-xs text-muted-foreground">
               Connect Google Calendar or Outlook to include external event context.
             </p>
@@ -96,7 +144,11 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
         </div>
       )}
 
-      {!result && (
+      {state.status === "failed" && (
+        <AiFailureBody error={state.error} onRetry={handleDraftAgenda} />
+      )}
+
+      {showForm && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
@@ -129,97 +181,65 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
             </div>
           </div>
 
-          {isPending ? (
-            <PrepSkeleton />
-          ) : (
-            <LoadingButton
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleDraftAgenda}
+            className="w-full h-8 text-xs gap-1.5"
+          >
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Draft Agenda
+          </Button>
+        </div>
+      )}
+
+      {showAgenda && (
+        <div className="space-y-3">
+          {state.status === "cancelled" && (
+            <Badge variant="outline" className="gap-1 text-micro h-5 px-1.5">
+              <StopCircle className="h-3 w-3" aria-hidden />
+              Stopped — partial agenda kept
+            </Badge>
+          )}
+
+          <AiDraftCard
+            title="Meeting Agenda"
+            citations={citations.map((c) => ({ id: c.id, title: c.title, snippet: c.snippet }))}
+            citationsPending={isStreaming && citations.length === 0}
+            onDiscard={handleDiscard}
+          >
+            {hasAgendaContent(sections) ? (
+              <MeetingPrepAgendaBody sections={sections} isStreaming={isStreaming} />
+            ) : (
+              <PrepSkeleton />
+            )}
+          </AiDraftCard>
+
+          {isStreaming ? (
+            <Button
+              type="button"
+              variant="outline"
               size="sm"
-              isPending={isPending}
-              loadingText="Drafting agenda…"
+              onClick={stop}
+              className="w-full h-8 text-xs gap-1.5"
+            >
+              <StopCircle className="h-3.5 w-3.5" aria-hidden />
+              Stop
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={handleDraftAgenda}
               className="w-full h-8 text-xs gap-1.5"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Draft Agenda
-            </LoadingButton>
-          )}
-        </div>
-      )}
-
-      {result && (
-        <div className="space-y-3">
-          <AiDraftCard
-            title="Meeting Agenda"
-            citations={result.agenda.citations.map((c) => ({
-              id: c.id,
-              title: c.title,
-              snippet: c.snippet,
-            }))}
-            onDiscard={handleDiscard}
-          >
-            <div className="space-y-2">
-              <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">
-                {result.agenda.agenda}
-              </p>
-              {result.agenda.preparationNotes && (
-                <>
-                  <Separator />
-                  <div className="flex items-start gap-1.5">
-                    <ClipboardList className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {result.agenda.preparationNotes}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </AiDraftCard>
-
-          {result.agenda.keyTopics.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Key topics
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {result.agenda.keyTopics.map((topic) => (
-                  <Badge key={topic} variant="secondary" className="text-micro h-5 px-1.5">
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+              Run again
+            </Button>
           )}
 
-          {result.agenda.suggestedDuration && (
-            <p className="text-xs text-muted-foreground">
-              Suggested duration: <span className="font-medium text-foreground">{result.agenda.suggestedDuration}</span>
-            </p>
-          )}
-
-          {result.agenda.citations.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sources</p>
-              <AiCitationChips
-                citations={result.agenda.citations.map((c) => ({
-                  id: c.id,
-                  title: c.title,
-                  snippet: c.snippet,
-                }))}
-              />
-            </div>
-          )}
-
-          {!result.connectedIntegrations && (
-            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-              <div className="flex items-start gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" aria-hidden />
-                <p className="text-xs text-muted-foreground">
-                  Connect Google Calendar or Outlook to include external event context.
-                </p>
-              </div>
-              <CalendarConnectInline />
-            </div>
-          )}
+          <MeetingPrepAgendaDetails sections={sections} />
         </div>
       )}
     </div>

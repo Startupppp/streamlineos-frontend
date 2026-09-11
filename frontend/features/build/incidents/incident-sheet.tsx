@@ -50,7 +50,7 @@ import {
 } from "@/hooks/api/build/incidents";
 import { useProject } from "@/hooks/api/build/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type {
   Incident,
   IncidentSeverity,
@@ -138,14 +138,17 @@ export function IncidentSheet({
     defaultValues: DEFAULT_VALUES,
   });
 
+  const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
+  const INCIDENT_STATUSES = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const;
+
   useEffect(() => {
     if (!open) return;
     if (editIncident) {
       form.reset({
         title: editIncident.title,
         description: editIncident.description ?? "",
-        severity: editIncident.severity,
-        status: editIncident.status,
+        severity: INCIDENT_SEVERITIES.find((v) => v === editIncident.severity) ?? "medium",
+        status: INCIDENT_STATUSES.find((v) => v === editIncident.status) ?? "detected",
         impact: editIncident.impact ?? "",
         ownerId: editIncident.ownerId ?? "",
         detectedAt: toLocalDt(editIncident.detectedAt),

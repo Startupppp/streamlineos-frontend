@@ -88,8 +88,7 @@ export type HrTemplateListItem = Omit<HrTemplate, "content">;
 export interface TemplateListResponse {
   data: HrTemplateListItem[];
   total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface TemplateVariable {

@@ -3,11 +3,8 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubCardProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubCardProps } from "@/hooks/api/hr/hub-types";
 import { SkeletonRows, ErrorRetry, AvatarInitials } from "./today-card";
 
 export function OutTodayCard({

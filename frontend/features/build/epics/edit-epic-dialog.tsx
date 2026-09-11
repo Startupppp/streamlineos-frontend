@@ -24,9 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUpdateTicket } from "@/hooks/api/build";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
@@ -58,6 +59,15 @@ interface EditEpicDialogProps {
   };
   projectId: number;
   trigger?: ReactNode;
+  /**
+   * Controlled mode, for a caller that opens this from a menu item. Without it
+   * the caller has to render a trigger, and a caller with no visible trigger to
+   * offer ends up rendering a hidden proxy button — which the sheet then
+   * restores focus to on close, stranding a keyboard user on an element that is
+   * not there.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
@@ -75,16 +85,29 @@ const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
   DONE: "Done",
 };
 
-export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditEpicDialog({
+  epic,
+  projectId,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: EditEpicDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : uncontrolledOpen;
   const queryClient = useQueryClient();
+
+  const setOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
 
   const handleOpen = () => setOpen(true);
 
   const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
       toast.success("Epic updated");
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
       setOpen(false);
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -109,8 +132,8 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
 
   return (
     <>
-      {trigger ? (
-        <span onClick={handleOpen} role="button" tabIndex={0}>
+      {controlled ? null : trigger ? (
+        <span {...activationProps(handleOpen)}>
           {trigger}
         </span>
       ) : (

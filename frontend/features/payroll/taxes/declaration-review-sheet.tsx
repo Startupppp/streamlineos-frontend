@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useApproveDeclaration, useRejectDeclaration } from "@/hooks/api/payroll/tax-admin";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
+import type { TaxDeclarationListItem } from "@/hooks/api/payroll/tax-schema";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 interface SectionRow {
@@ -33,14 +33,14 @@ interface SectionRow {
   value: number;
 }
 
-function getSections(d: TaxDeclarationAdmin): SectionRow[] {
+function getSections(d: TaxDeclarationListItem): SectionRow[] {
   return [
-    { label: "HRA", value: d.hra },
-    { label: "LTA", value: d.lta },
-    { label: "Section 80C", value: d.section80c },
-    { label: "Section 80D", value: d.section80d },
-    { label: "Section 80G", value: d.section80g },
-    { label: "Home Loan Interest", value: d.homeLoanInterest },
+    { label: "HRA", value: parseFloat(d.hra) },
+    { label: "LTA", value: parseFloat(d.lta) },
+    { label: "Section 80C", value: parseFloat(d.section80c) },
+    { label: "Section 80D", value: parseFloat(d.section80d) },
+    { label: "Section 80G", value: parseFloat(d.section80g) },
+    { label: "Home Loan Interest", value: parseFloat(d.homeLoanInterest) },
   ];
 }
 
@@ -56,7 +56,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 interface DeclarationReviewSheetProps {
-  declaration: TaxDeclarationAdmin;
+  declaration: TaxDeclarationListItem;
   onClose: () => void;
 }
 

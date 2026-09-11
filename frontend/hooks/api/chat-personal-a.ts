@@ -1,28 +1,34 @@
 "use client";
 
-import {
-  useQueryClient,
-  useInfiniteQuery,
-} from "@tanstack/react-query";
+import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+const chatSavedMessagesContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSavedMessagesContract),
+);
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type {
-  SavedMessagesPage,
-} from "@/types/chat";
+import type { SavedMessagesPage } from "@/types/chat";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useSavedMessages() {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
-    queryKey: queryKeys.chat.savedMessages(),
-    queryFn: ({ pageParam }) =>
+    queryKey: collaborationQueryKeys.chat.savedMessages(),
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<SavedMessagesPage>(
         "/chat/saved",
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        chatSavedMessagesContract,
       ),
     getNextPageParam: (last) => last.nextCursor,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     staleTime: 60_000,
     enabled: canRead,
   });
@@ -33,10 +39,10 @@ export function useSaveMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "save"],
     mutationFn: (messageId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
+      apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.savedMessages(),
+        queryKey: collaborationQueryKeys.chat.savedMessages(),
       });
     },
   });
@@ -47,10 +53,10 @@ export function useUnsaveMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "unsave"],
     mutationFn: (messageId: number) =>
-      apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
+      apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.savedMessages(),
+        queryKey: collaborationQueryKeys.chat.savedMessages(),
       });
     },
   });

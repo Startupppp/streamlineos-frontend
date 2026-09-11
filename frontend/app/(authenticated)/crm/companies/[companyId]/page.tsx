@@ -36,8 +36,8 @@ import { AccountTimeline } from "@/features/crm/companies/detail/account-timelin
 import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
 import { CompanySheet } from "@/features/crm/companies/company-sheet";
-import { RecordDetail, RecordList, asRecordValue, asRecordValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordDetail, RecordList, asRecordValue, asRecordValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
@@ -47,7 +47,8 @@ import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 /** How this panel frames a lead: who they are, where they are, and how they arrived. */
 const RELATED_LEAD_COLUMNS = ["name", "email", "status", "priority", "source"] as const;

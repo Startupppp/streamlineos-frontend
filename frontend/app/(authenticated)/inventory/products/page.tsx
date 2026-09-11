@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ProductStatusBadge } from "@/features/inventory/components/product-status-badge";
@@ -38,7 +39,6 @@ import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-draw
 import {
   formatPrice,
   StatusBadge,
-  StockBadge,
   TrackingBadge,
 } from "@/features/inventory/components/product-row-actions";
 import type { InventoryProduct } from "@/types/inventory";
@@ -226,13 +226,6 @@ function ProductsPageInner() {
         headerClassName: "w-[120px] text-right",
         className: "text-right font-mono tabular-nums font-medium",
         cell: (p) => formatPrice(p.sellingPrice),
-      },
-      {
-        key: "stock",
-        header: "Stock",
-        headerClassName: "w-[90px] text-right",
-        className: "text-right",
-        cell: (p) => <StockBadge qty={p.totalStock ?? 0} />,
       },
       {
         key: "status",

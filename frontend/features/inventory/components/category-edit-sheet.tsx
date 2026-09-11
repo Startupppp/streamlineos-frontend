@@ -32,7 +32,6 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { useUpdateCategory } from "@/hooks/api/inventory";
-import type { InventoryCategory } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const NO_PARENT = "none";
@@ -58,9 +57,16 @@ const editCategorySchema = z.object({
 
 type EditCategoryFormValues = z.infer<typeof editCategorySchema>;
 
+interface CategoryItem {
+  id: number;
+  name: string;
+  parentCategoryId: number | null;
+  description: string | null;
+}
+
 interface CategoryEditSheetProps {
-  category: InventoryCategory;
-  categories: InventoryCategory[];
+  category: CategoryItem;
+  categories: CategoryItem[];
   open: boolean;
   onClose: () => void;
 }

@@ -43,6 +43,13 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
     onSave(field.id, localValue || null);
   }, [field.id, localValue, onSave]);
 
+  const handleCheckboxChange = useCallback(
+    (checked: boolean) => {
+      onSave(field.id, String(checked));
+    },
+    [field.id, onSave],
+  );
+
   const handleDateChange = useCallback(
     (value: string) => {
       setLocalValue(value);
@@ -62,7 +69,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
     return (
       <Switch
         checked={currentValue === "true"}
-        onCheckedChange={(checked) => onSave(field.id, String(checked))}
+        onCheckedChange={handleCheckboxChange}
         className="h-4 w-7"
       />
     );

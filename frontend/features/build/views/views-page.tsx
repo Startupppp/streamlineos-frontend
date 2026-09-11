@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 interface PageProps {
@@ -35,7 +36,13 @@ export function ViewsPage({ params }: PageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
 
-  const { data: views, isLoading } = useViews(projectId);
+  const {
+    data: views,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useViews(projectId);
   const togglePinMutation = useUpdateView();
   const deleteMutation = useDeleteView();
 
@@ -72,6 +79,10 @@ export function ViewsPage({ params }: PageProps) {
     [deleteMutation, projectId],
   );
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCreated = useCallback(() => {}, []);
 
@@ -87,6 +98,21 @@ export function ViewsPage({ params }: PageProps) {
               <Skeleton key={i} className="h-14 w-full rounded-xl" />
             ))}
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Views" subtitle="Saved filters and layouts for this project">
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load views"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

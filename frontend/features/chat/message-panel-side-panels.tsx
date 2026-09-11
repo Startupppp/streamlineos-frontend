@@ -1,11 +1,34 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { SavedMessagesPanel } from "./saved-messages-panel";
-import { SharedFilesPanel } from "./shared-files-panel";
-import { ForwardMessageDialog } from "./forward-message-dialog";
+import { ChatOverlayFallback, ChatPanelFallback } from "./chat-lazy-fallbacks";
 import type { ForwardableMessage } from "./forward-message-dialog";
+
+const SavedMessagesPanel = dynamic(
+  () =>
+    import("./saved-messages-panel").then((m) => ({
+      default: m.SavedMessagesPanel,
+    })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading saved messages" /> },
+);
+
+const SharedFilesPanel = dynamic(
+  () =>
+    import("./shared-files-panel").then((m) => ({
+      default: m.SharedFilesPanel,
+    })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading shared files" /> },
+);
+
+const ForwardMessageDialog = dynamic(
+  () =>
+    import("./forward-message-dialog").then((m) => ({
+      default: m.ForwardMessageDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading forward message" /> },
+);
 
 type SidePanelsProps = {
   channelId: number;
@@ -84,13 +107,15 @@ export function MessagePanelSidePanels({
         </Sheet>
       )}
 
-      <ForwardMessageDialog
-        message={forwardMessage}
-        open={Boolean(forwardMessage)}
-        onOpenChange={(open) => {
-          if (!open) setForwardMessage(null);
-        }}
-      />
+      {forwardMessage !== null && (
+        <ForwardMessageDialog
+          message={forwardMessage}
+          open
+          onOpenChange={(open) => {
+            if (!open) setForwardMessage(null);
+          }}
+        />
+      )}
     </>
   );
 }

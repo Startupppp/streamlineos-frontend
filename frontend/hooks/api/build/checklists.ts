@@ -1,9 +1,28 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type { Checklist, ChecklistItem } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const checklistListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistListContract),
+);
+const checklistRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistRowContract),
+);
+const checklistItemLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistItemContract),
+);
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 function checklistKeys(projectId: number, ticketId: number) {
   return ["projects", projectId, "tickets", ticketId, "checklists"] as const;
@@ -13,9 +32,9 @@ export function useChecklists(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<Checklist[]>({
     queryKey: checklistKeys(projectId, ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Checklist[]>(
-        `/build/${projectId}/tickets/${ticketId}/checklists`,
+        `/build/${projectId}/tickets/${ticketId}/checklists`, undefined, signal, checklistListLazy,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
@@ -24,7 +43,7 @@ export function useChecklists(projectId: number, ticketId: number) {
 
 export function useCreateChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -37,6 +56,8 @@ export function useCreateChecklist(projectId: number, ticketId: number) {
       apiClient.post<Checklist>(
         `/build/${projectId}/tickets/${ticketId}/checklists`,
         { title },
+        undefined,
+        checklistRowLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -45,7 +66,7 @@ export function useCreateChecklist(projectId: number, ticketId: number) {
 
 export function useUpdateChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -64,6 +85,8 @@ export function useUpdateChecklist(projectId: number, ticketId: number) {
       apiClient.patch<Checklist>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}`,
         { title },
+        undefined,
+        checklistRowLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -72,7 +95,7 @@ export function useUpdateChecklist(projectId: number, ticketId: number) {
 
 export function useDeleteChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -82,8 +105,11 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
       "delete",
     ],
     mutationFn: (checklistId: number) =>
-      apiClient.delete(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}`,
+        undefined,
+        undefined,
+        noContentLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -92,7 +118,7 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
 
 export function useCreateChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -113,6 +139,8 @@ export function useCreateChecklistItem(projectId: number, ticketId: number) {
       apiClient.post<ChecklistItem>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items`,
         { text, order },
+        undefined,
+        checklistItemLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -121,7 +149,7 @@ export function useCreateChecklistItem(projectId: number, ticketId: number) {
 
 export function useUpdateChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -144,6 +172,8 @@ export function useUpdateChecklistItem(projectId: number, ticketId: number) {
       apiClient.patch<ChecklistItem>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items/${itemId}`,
         data,
+        undefined,
+        checklistItemLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),
@@ -152,7 +182,7 @@ export function useUpdateChecklistItem(projectId: number, ticketId: number) {
 
 export function useDeleteChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -168,8 +198,11 @@ export function useDeleteChecklistItem(projectId: number, ticketId: number) {
       checklistId: number;
       itemId: number;
     }) =>
-      apiClient.delete(
+      apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/checklists/${checklistId}/items/${itemId}`,
+        undefined,
+        undefined,
+        noContentLazy,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: checklistKeys(projectId, ticketId) }),

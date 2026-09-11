@@ -1,0 +1,83 @@
+# Which alert self-tests actually run where — measured from the files, not asserted.
+# run 2026-09-03T16:26:34Z  backend SHA=138709f35befcd558c86ab04f65edf8344f6a545
+
+== A. Scripts under src/scripts with a working --self-test ==
+  alert-cell-recovery.mjs
+  alert-dead-delivery.mjs
+  alert-dead-outbox.mjs
+  alert-dispatch.mjs
+  alert-job-queue-age.mjs
+  alert-p95.mjs
+  alert-pool-saturation.mjs
+  alert-queue-age.mjs
+  alert-retention-dead-man.mjs
+  alert-seam-latency.mjs
+  alert-sig-failures.mjs
+  alert-tenant-cost.mjs
+  alert-tenant-ctx-errors.mjs
+  alert-workflow-stranded.mjs
+  check-alert-ack.mjs
+  route-attribution.mjs
+  TOTAL: 16
+
+== B. Covered by `npm run check:alert-system` (its ALERT_SCRIPTS array) ==
+  route-attribution.mjs
+  alert-dead-outbox.mjs
+  alert-dead-delivery.mjs
+  alert-sig-failures.mjs
+  alert-tenant-ctx-errors.mjs
+  alert-p95.mjs
+  alert-seam-latency.mjs
+  alert-pool-saturation.mjs
+  alert-tenant-cost.mjs
+  alert-queue-age.mjs
+  alert-job-queue-age.mjs
+  alert-dispatch.mjs
+  alert-cell-recovery.mjs
+  check-alert-ack.mjs
+  TOTAL: 14
+
+== C. In A but NOT in B — invisible to the aggregate gate ==
+  alert-retention-dead-man.mjs
+  alert-workflow-stranded.mjs
+
+== D. Alert steps in .github/workflows/ci.yml ==
+  - name: Alert self-tests
+  pnpm alert:queue-age:self-test
+  pnpm alert:job-queue-age:self-test
+  pnpm alert:pool-saturation:self-test
+  pnpm alert:tenant-cost:self-test
+  pnpm alert:dispatch:self-test
+  pnpm failure-drill:self-test
+  - name: Alert system registry
+  run: pnpm check:alert-system
+  - name: Alert acknowledgement gate (self-test; live half needs an operator drill)
+  run: pnpm check:alert-ack:self-test
+
+== E. Alert steps in .github/workflows/alerts.yml (scheduled) ==
+  pnpm alert:dead-delivery:self-test
+  pnpm alert:dead-outbox:self-test
+  pnpm alert:dispatch:self-test
+  pnpm alert:p95:self-test
+  pnpm alert:seam-latency:self-test
+  pnpm alert:sig-failures:self-test
+  pnpm alert:tenant-ctx-errors:self-test
+  pnpm alert:test-event
+
+== F. Conclusion ==
+  ci.yml runs check:alert-system (14 scripts) + 5 explicit self-tests + check:alert-ack:self-test.
+  Two self-testable detectors are covered by NEITHER check:alert-system NOR any CI workflow:
+    - alert-workflow-stranded.mjs   (npm script exists: alert:workflow-stranded:self-test)
+    - alert-retention-dead-man.mjs  (NO npm script exists for it at all)
+  Both were run by hand for this evidence bundle and both pass — see 01-self-tests.txt and
+  03-gate-coverage-gap.txt. Adding them to check-alert-system.mjs's ALERT_SCRIPTS array would
+  close the gap; that edit is outside this agent's write scope.
+
+  ci.yml is HONEST about the live half. Its own comment reads:
+  # Self-test only, and this one can never be more. The live check exits 2
+  # without ALERT_WEBHOOK_URL *and* a nonce a human typed back from the alert
+  # channel -- proof that a person received the page, which no CI job can
+  # fabricate. Its seven-case self-test is hermetic and does run.
+  - name: Alert acknowledgement gate (self-test; live half needs an operator drill)
+  if: ${{ !cancelled() }}
+  run: pnpm check:alert-ack:self-test

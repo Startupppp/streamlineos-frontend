@@ -15,7 +15,10 @@ export type MailComposeValues = z.infer<typeof mailComposeSchema>;
 
 export const mailReplySchema = z.object({
   accountId: z.number({ error: "Select a sending account" }),
-  to: z.array(emailString).min(1, "At least one recipient is required"),
+  to: z
+    .array(emailString)
+    .min(1, "At least one recipient is required")
+    .max(1, "A reply goes to one address — add the rest as Cc"),
   cc: z.array(emailString).optional(),
   bodyHtml: z.string().min(1, "Message body is required"),
   messageId: z.string(),
@@ -23,3 +26,15 @@ export const mailReplySchema = z.object({
 });
 
 export type MailReplyValues = z.infer<typeof mailReplySchema>;
+
+export type MailComposeMode =
+  | { type: "compose" }
+  | {
+      type: "reply";
+      messageId: string;
+      threadId?: string;
+      toEmail: string;
+      subject: string;
+      accountId: number;
+      prefillBody?: string;
+    };

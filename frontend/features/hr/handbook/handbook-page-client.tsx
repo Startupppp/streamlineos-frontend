@@ -15,7 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { Plus, AlertTriangle, RefreshCw } from "lucide-react";
@@ -138,7 +138,7 @@ export function HandbookPageClient() {
       }
       try {
         const result = await uploadFile.mutateAsync({ file: selectedFile, folder: "handbook" });
-        resolvedDocumentUrl = result.url;
+        resolvedDocumentUrl = result.key;
       } catch (e) {
         toast.error(getErrorMessage(e));
         return;

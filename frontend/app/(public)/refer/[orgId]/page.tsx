@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Share2 } from "lucide-react";
 
@@ -14,9 +15,13 @@ type Props = { params: Promise<{ orgId: string }> };
 
 interface RegisterResponse {
   referralToken: string;
-  name: string;
+  name: string | null;
   orgName: string;
 }
+
+const publicReferrerRegisterContract = lazyContract(() =>
+  import("@/lib/public-schema").then((m) => m.publicReferrerRegisterContract),
+);
 
 export default function ExternalReferrerRegisterPage({ params }: Props) {
   const { orgId } = use(params);
@@ -41,7 +46,7 @@ export default function ExternalReferrerRegisterPage({ params }: Props) {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-      });
+      }, undefined, publicReferrerRegisterContract);
       router.replace(`/refer/link/${result.referralToken}`);
     } catch (e) {
       setError(getErrorMessage(e) || "Something went wrong. Please try again.");

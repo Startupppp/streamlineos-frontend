@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
 import { useCreateIssue, useUpdateIssue } from "@/hooks/api/crm/issues";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {

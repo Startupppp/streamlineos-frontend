@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { cn } from "@/lib/utils";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 interface CursorPageControlsProps {
   page: number;
@@ -58,7 +59,7 @@ export function CursorPageControls({
         {pageSize !== undefined && onPageSizeChange ? (
           <Select
             value={String(pageSize)}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
+            onValueChange={numericSelectChange(onPageSizeChange)}
           >
             <SelectTrigger className="h-8 w-[5.25rem]" aria-label="Rows per page">
               <SelectValue />

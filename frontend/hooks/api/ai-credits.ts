@@ -3,115 +3,58 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import {
+  aiCreditsUsageContract,
+  aiCreditsWalletContract,
+  aiCreditTransactionsPageContract,
+  autoTopUpResponseContract,
+  purchaseAiCreditsContract,
+  type AiCreditPack,
+  type AiCreditsUsage,
+  type AiCreditsWallet,
+  type AiCreditTransactionsPage,
+} from "@/hooks/api/ai-credits-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export interface AiCreditPack {
-  id: number;
-  name: string;
-  credits: number;
-  bonusCredits: number;
-  priceInPaise: number;
-  isActive: boolean;
-}
-
-export interface AiCreditTransaction {
-  id: number;
-  type: "PURCHASE" | "USAGE" | "REFUND" | "PLAN_GRANT" | "EXPIRY";
-  amount: number;
-  balanceAfter: number;
-  feature: string | null;
-  model: string | null;
-  promptTokens: number | null;
-  completionTokens: number | null;
-  totalTokens: number | null;
-  costUsd: number | null;
-  createdAt: string;
-}
-
-export interface AiCreditsUsageTotals {
-  requests: number;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageByFeature {
-  feature: string;
-  requests: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageByModel {
-  model: string;
-  requests: number;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageDaily {
-  date: string;
-  requests: number;
-  totalTokens: number;
-  credits: number;
-}
-
-export interface AiCreditsUsage {
-  totals: AiCreditsUsageTotals;
-  byFeature: AiCreditsUsageByFeature[];
-  byModel: AiCreditsUsageByModel[];
-  daily: AiCreditsUsageDaily[];
-}
-
-export interface AiCreditsWallet {
-  wallet: {
-    id: number;
-    orgId: string;
-    balance: number;
-    lifetimeGranted: number;
-    lifetimeConsumed: number;
-    autoTopUpEnabled: boolean;
-    autoTopUpPackId: number | null;
-    autoTopUpThreshold: number | null;
-  };
-  recentTransactions: AiCreditTransaction[];
-  packs: AiCreditPack[];
-}
+export type {
+  AiCreditPack,
+  AiCreditTransaction,
+  AiCreditTransactionsPage,
+  AiCreditsUsage,
+  AiCreditsUsageByFeature,
+  AiCreditsUsageByModel,
+  AiCreditsUsageDaily,
+  AiCreditsWallet,
+} from "@/hooks/api/ai-credits-schema";
 
 export function useAiCreditsWallet() {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsWallet>({
-    queryKey: queryKeys.billing.aiCredits(),
-    queryFn: () => apiClient.get<AiCreditsWallet>("/billing/ai-credits"),
+    queryKey: growthAndSignQueryKeys.billing.aiCredits(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/billing/ai-credits", undefined, signal, aiCreditsWalletContract),
     staleTime: 300_000,
     enabled: canView,
   });
 }
 
-export interface AiCreditTransactionsPage {
-  items: AiCreditTransaction[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-export function useAiCreditTransactions(page: number, limit: number) {
+export function useAiCreditTransactions(params: { cursor?: string; limit: number }) {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditTransactionsPage>({
-    queryKey: queryKeys.billing.aiCreditTransactions({ page, limit }),
-    queryFn: () =>
-      apiClient.get<AiCreditTransactionsPage>("/billing/ai-credits/transactions", {
-        page: String(page),
-        limit: String(limit),
-      }),
+    queryKey: growthAndSignQueryKeys.billing.aiCreditTransactions(params),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/billing/ai-credits/transactions",
+        {
+          ...(params.cursor ? { cursor: params.cursor } : {}),
+          limit: String(params.limit),
+        },
+        signal,
+        aiCreditTransactionsPageContract,
+      ),
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -120,15 +63,15 @@ export function useAiCreditTransactions(page: number, limit: number) {
 
 export function useConfigureAutoTopUp() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "auto-topup"],
     mutationFn: (data: {
       enabled: boolean;
       packId?: number;
       threshold?: number;
-    }) => apiClient.post("/billing/ai-credits/auto-topup", data),
+    }) => apiClient.post("/billing/ai-credits/auto-topup", data, undefined, autoTopUpResponseContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.billing.aiCredits() });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
       toast.success("Auto top-up settings saved");
     },
     onError: (e: unknown) => toast.error(getErrorMessage(e)),
@@ -151,14 +94,14 @@ export interface PurchaseAiPackResult {
 
 export function usePurchaseAiCredits() {
   const qc = useQueryClient();
-  return useMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>({
+  return useAuthorizedMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "purchase"],
     mutationFn: (data) =>
-      apiClient.post<PurchaseAiPackOrder | PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+      apiClient.post("/billing/ai-credits/purchase", data, undefined, purchaseAiCreditsContract),
     onSuccess: (result) => {
       if ("balance" in result) {
-        void qc.invalidateQueries({ queryKey: queryKeys.billing.aiCredits() });
-        void qc.invalidateQueries({ queryKey: queryKeys.billing.all });
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.all });
         toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
       }
     },
@@ -171,11 +114,14 @@ export type AiCreditsUsageDays = 7 | 30 | 90;
 export function useAiCreditsUsage(days: AiCreditsUsageDays) {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsUsage>({
-    queryKey: queryKeys.billing.aiCreditsUsage(days),
-    queryFn: () =>
-      apiClient.get<AiCreditsUsage>("/billing/ai-credits/usage", {
-        days: String(days),
-      }),
+    queryKey: growthAndSignQueryKeys.billing.aiCreditsUsage(days),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/billing/ai-credits/usage",
+        { days: String(days) },
+        signal,
+        aiCreditsUsageContract,
+      ),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -184,18 +130,20 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
 
 export function useVerifyAiCreditPurchase() {
   const qc = useQueryClient();
-  return useMutation<
-    PurchaseAiPackResult,
+  return useAuthorizedMutation<
+    PurchaseAiPackOrder | PurchaseAiPackResult,
     Error,
     { packId: number; orderId: string; paymentId: string; signature: string }
-  >({
+  >("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "verify"],
     mutationFn: (data) =>
-      apiClient.post<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+      apiClient.post("/billing/ai-credits/purchase", data, undefined, purchaseAiCreditsContract),
     onSuccess: (result) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.billing.aiCredits() });
-      void qc.invalidateQueries({ queryKey: queryKeys.billing.all });
-      toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+      if ("balance" in result) {
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
+        void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.all });
+        toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+      }
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

@@ -44,7 +44,7 @@ export function CrmStageSelect({
           </SelectItem>
         )}
         {stages.map((stage) => {
-          const { dotClass } = getCrmTokenClasses(stage.color);
+          const { dotClass } = getCrmTokenClasses(stage.color ?? "");
           return (
             <SelectItem key={stage.id} value={stage.key} className="text-xs">
               <span className="flex items-center gap-1.5">

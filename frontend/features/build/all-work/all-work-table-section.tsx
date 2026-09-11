@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL_SOLID } from "@/components/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -105,7 +105,11 @@ export function AllWorkTableSection({
         columns={tableColumns}
         getRowKey={(row) => row.id}
         onRowClick={(row) => onTicketClick(row.id)}
-        selection={{ selected: tableSelection, onChange: onSelectionChange }}
+        selection={{
+          selected: tableSelection,
+          onChange: onSelectionChange,
+          getRowLabel: (row) => row.title,
+        }}
         minWidth="640px"
         className={cn(PM_PANEL_SOLID, "overflow-hidden")}
       />

@@ -1,6 +1,6 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell } from "@/features/build/shared/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome";
 
 export default function ManagedProductDetailLoading() {
   return (

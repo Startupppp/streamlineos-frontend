@@ -4,30 +4,42 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type {
   LoginHistoryResponse,
   UpdateUserMembershipPayload,
   UserMembership,
 } from "./types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const loginHistoryContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.loginHistoryContract),
+);
+const userMembershipContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userMembershipContract),
+);
+const userSuccessContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSuccessContract),
+);
 
 export const useUserLoginHistory = (
   userId: string,
-  params?: { page?: number; limit?: number; success?: boolean },
+  params?: { cursor?: string; limit?: number; success?: boolean },
   options?: Omit<UseQueryOptions<LoginHistoryResponse, Error>, "queryKey" | "queryFn">,
 ) => {
   const canManage = useCan("settings:organization:manage");
   return useQuery<LoginHistoryResponse, Error>({
-    queryKey: queryKeys.users.loginHistory(
+    queryKey: usersAndCommerceQueryKeys.users.loginHistory(
       userId,
-      params as Record<string, unknown> | undefined,
+      params,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryResponse>(`/users/${userId}/login-history`, {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.success !== undefined ? { success: String(params.success) } : {}),
-      }),
+      }, signal, loginHistoryContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -40,8 +52,8 @@ export const useUserMembership = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserMembership, Error>({
-    queryKey: queryKeys.users.membership(userId),
-    queryFn: () => apiClient.get<UserMembership>(`/users/${userId}/membership`),
+    queryKey: usersAndCommerceQueryKeys.users.membership(userId),
+    queryFn: ({ signal }) => apiClient.get<UserMembership>(`/users/${userId}/membership`, undefined, signal, userMembershipContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -50,18 +62,18 @@ export const useUserMembership = (
 
 export const useUpdateUserMembership = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     { userId: string; data: UpdateUserMembershipPayload }
-  >({
+  >("settings:organization:manage", {
     mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
-      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data, undefined, userSuccessContract),
     onSuccess: (_, { userId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.membership(userId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.membership(userId) });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
     },
   });
 };

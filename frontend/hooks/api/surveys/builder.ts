@@ -1,9 +1,29 @@
 "use client";
+import type { z } from "zod";
+import type { surveyQuestionRowContract } from "./survey-builder-schema";
+import type { surveySectionRowContract } from "./survey-builder-schema";
+import type { surveyBuilderSnapshotContract } from "./survey-builder-schema";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const surveyBuilderSnapshotC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.surveyBuilderSnapshotContract),
+);
+const surveySectionRowC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.surveySectionRowContract),
+);
+const surveyQuestionRowC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.surveyQuestionRowContract),
+);
+const builderSuccessC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.builderSuccessContract),
+);
 
 export interface SurveyBuilderChoice {
   id: number;
@@ -15,29 +35,13 @@ export interface SurveyBuilderChoice {
   isCorrect: boolean;
 }
 
-export interface SurveyBuilderQuestion {
-  id: number;
-  questionKey: string;
-  variableName: string | null;
-  type: SurveyQuestionType;
-  title: string;
-  description: string | null;
-  required: boolean;
-  settings: Record<string, unknown>;
-  validation: Record<string, unknown>;
-  scoring: Record<string, unknown>;
-  sortOrder: number;
-  choices: SurveyBuilderChoice[];
-}
+export type SurveyBuilderQuestion = z.infer<typeof surveyQuestionRowContract>;
 
-export interface SurveyBuilderSection {
-  id: number;
-  title: string;
-  description: string | null;
-  sortOrder: number;
-  settings: Record<string, unknown>;
-  questions: SurveyBuilderQuestion[];
-}
+export type SurveyBuilderSection = z.infer<typeof surveySectionRowContract>;
+
+export type SurveyBuilderViewSection = z.infer<typeof surveyBuilderSnapshotContract>["sections"][number];
+
+export type SurveyBuilderViewQuestion = SurveyBuilderViewSection["questions"][number];
 
 export interface SurveyBuilderLogicRule {
   id: number;
@@ -48,10 +52,7 @@ export interface SurveyBuilderLogicRule {
   sortOrder: number;
 }
 
-export interface SurveyBuilderData {
-  sections: SurveyBuilderSection[];
-  logicRules: SurveyBuilderLogicRule[];
-}
+export type SurveyBuilderData = z.infer<typeof surveyBuilderSnapshotContract>;
 
 export interface ChoiceInput {
   choiceKey: string;
@@ -92,13 +93,13 @@ export interface ReorderInput {
 
 function useInvalidateBuilder(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.builder(surveyId) });
+  return () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.builder(surveyId) });
 }
 
 export function useSurveyBuilder(surveyId: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.surveys.builder(surveyId ?? -1),
-    queryFn: () => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`),
+  return useGatedQuery("surveys:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.builder(surveyId ?? -1),
+    queryFn: ({ signal }) => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`, undefined, signal, surveyBuilderSnapshotC),
     enabled: typeof surveyId === "number",
     staleTime: 10_000,
   });
@@ -106,75 +107,75 @@ export function useSurveyBuilder(surveyId: number | undefined) {
 
 export function useCreateSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "create", surveyId] as const,
-    mutationFn: (input: CreateSectionInput) => apiClient.post<SurveyBuilderSection>(`/surveys/${surveyId}/sections`, input),
+    mutationFn: (input: CreateSectionInput) => apiClient.post<SurveyBuilderSection>(`/surveys/${surveyId}/sections`, input, undefined, surveySectionRowC),
     onSuccess: invalidate,
   });
 }
 
 export function usePatchSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "patch", surveyId] as const,
     mutationFn: ({ sectionId, input }: { sectionId: number; input: PatchSectionInput }) =>
-      apiClient.patch<SurveyBuilderSection>(`/surveys/${surveyId}/sections/${sectionId}`, input),
+      apiClient.patch<SurveyBuilderSection>(`/surveys/${surveyId}/sections/${sectionId}`, input, undefined, surveySectionRowC),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "delete", surveyId] as const,
-    mutationFn: (sectionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/sections/${sectionId}`),
+    mutationFn: (sectionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/sections/${sectionId}`, undefined, undefined, builderSuccessC),
     onSuccess: invalidate,
   });
 }
 
 export function useCreateQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "create", surveyId] as const,
-    mutationFn: (input: CreateQuestionInput) => apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions`, input),
+    mutationFn: (input: CreateQuestionInput) => apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions`, input, undefined, surveyQuestionRowC),
     onSuccess: invalidate,
   });
 }
 
 export function usePatchQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "patch", surveyId] as const,
     mutationFn: ({ questionId, input }: { questionId: number; input: PatchQuestionInput }) =>
-      apiClient.patch<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}`, input),
+      apiClient.patch<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}`, input, undefined, surveyQuestionRowC),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "delete", surveyId] as const,
-    mutationFn: (questionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/questions/${questionId}`),
+    mutationFn: (questionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/questions/${questionId}`, undefined, undefined, builderSuccessC),
     onSuccess: invalidate,
   });
 }
 
 export function useDuplicateQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "duplicate", surveyId] as const,
     mutationFn: (questionId: number) =>
-      apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}/duplicate`),
+      apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}/duplicate`, undefined, undefined, surveyQuestionRowC),
     onSuccess: invalidate,
   });
 }
 
 export function useReorderBuilder(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "reorder", surveyId] as const,
-    mutationFn: (input: ReorderInput) => apiClient.patch<{ success: boolean }>(`/surveys/${surveyId}/reorder`, input),
+    mutationFn: (input: ReorderInput) => apiClient.patch<{ success: boolean }>(`/surveys/${surveyId}/reorder`, input, undefined, builderSuccessC),
     onSuccess: invalidate,
   });
 }

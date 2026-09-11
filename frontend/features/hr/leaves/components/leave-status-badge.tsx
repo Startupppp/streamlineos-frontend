@@ -28,18 +28,25 @@ const leaveStatusConfig: Record<
   },
 };
 
+const LEAVE_STATUS_FALLBACK = {
+  label: "Pending",
+  className:
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  icon: Clock,
+};
+
 export function LeaveStatusBadge({ status }: { status: string }) {
-  const c = leaveStatusConfig[status] ?? leaveStatusConfig.PENDING;
-  const Icon = c!.icon;
+  const c = leaveStatusConfig[status] ?? LEAVE_STATUS_FALLBACK;
+  const Icon = c.icon;
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
-        c!.className,
+        c.className,
       )}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
-      {c!.label}
+      {c.label}
     </span>
   );
 }

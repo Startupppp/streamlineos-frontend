@@ -12,8 +12,8 @@ import {
   CommandGroup,
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
-import type { KbPageSearchResult } from "@/hooks/api/kb/pages";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -26,7 +26,8 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const debouncedQ = useDebouncedValue(inputValue.trim(), 300);
-  const { data: results = [], isFetching } = useKbPagesSearch(debouncedQ);
+  const { data: page, isFetching } = useKbPagesSearch(debouncedQ);
+  const results = page?.items ?? [];
   const resultsRef = useRef<KbPageSearchResult[]>([]);
   resultsRef.current = results;
 
@@ -90,6 +91,11 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
                 </div>
               </CommandItem>
             ))}
+            {page?.hasMore && (
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                Showing the top {page.limit} matches — keep typing to narrow the search.
+              </div>
+            )}
           </CommandGroup>
         )}
         {debouncedQ.length === 0 && (

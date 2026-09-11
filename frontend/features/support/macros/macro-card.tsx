@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import type { SupportMacro } from "@/hooks/api/support/macros";
-import { VISIBILITY_LABELS } from "./macro-constants";
+import { isMacroVisibility, VISIBILITY_LABELS } from "./macro-constants";
 
 interface MacroCardProps {
   macro: SupportMacro;
@@ -47,7 +47,7 @@ export function MacroCard({
                 </Badge>
               ) : null}
               <Badge variant="outline" className="text-micro">
-                {VISIBILITY_LABELS[macro.visibility]}
+                {isMacroVisibility(macro.visibility) ? VISIBILITY_LABELS[macro.visibility] : macro.visibility}
               </Badge>
             </div>
             <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-xs text-muted-foreground">

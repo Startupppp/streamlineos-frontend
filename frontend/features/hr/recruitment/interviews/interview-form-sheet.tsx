@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
 import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarMemberLookup } from "@/hooks/api/calendar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,7 @@ export function InterviewFormSheet({
 }: InterviewFormSheetProps) {
   const { data: allCandidates } = useCandidates();
   const { data: jobPostings } = useJobPostings({ status: "OPEN" });
-  const { data: orgMembers } = useCalendarOrgMembers();
+  const { data: orgMembers } = useCalendarMemberLookup();
   const scheduleInterview = useScheduleInterview();
 
   const [candidatePickerOpen, setCandidatePickerOpen] = useState(false);

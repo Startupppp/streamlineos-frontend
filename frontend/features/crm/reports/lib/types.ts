@@ -25,7 +25,7 @@ export interface LeadSourceReport {
   total: number;
 }
 
-export function formatCurrency(value: number): string {
+export function formatCompactInr(value: number): string {
   if (value >= 10_00_000) return `₹${(value / 10_00_000).toFixed(1)}L`;
   if (value >= 1_000) return `₹${(value / 1_000).toFixed(0)}K`;
   return `₹${value.toLocaleString("en-IN")}`;

@@ -119,9 +119,9 @@ export function MyTimeView() {
         key: "summarize-period",
         label: "Summarize this timesheet",
         description: "Narrate hours by project, billable ratio, and notable patterns",
-        run: async () => {
-          const res = await fetchTimesheetPeriodSummary(periodId);
-          return { text: res.narration };
+        run: async (signal, onToken) => {
+          const res = await fetchTimesheetPeriodSummary(periodId, { signal, onToken });
+          return { text: res.narration, aiUsage: res.aiUsage };
         },
       },
     ];

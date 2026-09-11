@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  useDeleteInvoice,
   useInvoice,
   useUpdateInvoice,
+  useVoidInvoice,
 } from "@/hooks/api/invoice";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { InvoiceStatus } from "@/types/invoice";
+import type { PatchableInvoiceStatus } from "@/types/invoice";
 import { InvoiceDetailActions } from "./invoice-detail-actions";
 import { InvoiceDetailContent } from "./invoice-detail-content";
 import { downloadInvoicePdf } from "./invoice-detail-pdf";
@@ -24,19 +24,19 @@ interface InvoiceDetailProps {
 }
 
 export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
-  const router = useRouter();
   const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId);
   const updateInvoice = useUpdateInvoice();
-  const deleteInvoice = useDeleteInvoice();
+  const voidInvoice = useVoidInvoice();
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const handleStatusUpdate = useCallback(
-    (status: InvoiceStatus) => {
+    (status: PatchableInvoiceStatus) => {
       updateInvoice.mutate(
         { id: invoiceId, status },
         {
-          onSuccess: () => toast.success(`Invoice marked as ${status.toLowerCase()}`),
+          onSuccess: () =>
+            toast.success(`Invoice marked as ${status.toLowerCase()}`),
           onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
@@ -44,15 +44,13 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     [invoiceId, updateInvoice],
   );
 
-  const handleDelete = useCallback(() => {
-    deleteInvoice.mutate(invoiceId, {
-      onSuccess: () => {
-        toast.success("Invoice deleted");
-        router.push("/billing/invoices");
-      },
+  const handleVoid = useCallback(() => {
+    voidInvoice.mutate(invoiceId, {
+      onSuccess: () =>
+        toast.success("Invoice voided and its journal entry reversed"),
       onError: (error) => toast.error(getErrorMessage(error)),
     });
-  }, [deleteInvoice, invoiceId, router]);
+  }, [invoiceId, voidInvoice]);
 
   const handleDownload = useCallback(() => {
     if (!invoice) return;
@@ -67,39 +65,61 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
   if (isLoading) return <InvoiceDetailSkeleton />;
 
-  if (error || !invoice) {
+  if (error) {
     return (
       <PageWrapper title="Invoice" backHref="/billing/invoices">
         <ErrorState
-          title={error ? "Failed to load invoice" : "Invoice not found"}
-          description={error ? getErrorMessage(error) : "The invoice you are looking for does not exist."}
-          onRetry={error ? handleRetry : undefined}
+          title="Failed to load invoice"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <PageWrapper title="Invoice" backHref="/billing/invoices">
+        <EmptyState
+          illustrationPreset="documents"
+          title="Invoice not found"
+          description="This invoice no longer exists, or it was never issued to your organization."
+          action={{ label: "Back to invoices", href: "/billing/invoices" }}
         />
       </PageWrapper>
     );
   }
 
   const badge = invoiceStatusBadge[invoice.status];
-  const totalPaid = invoice.payments?.reduce((total, payment) => total + Number(payment.amount), 0) ?? 0;
+  const totalPaid =
+    invoice.payments?.reduce(
+      (total, payment) => total + Number(payment.amount),
+      0,
+    ) ?? 0;
   const outstanding = Number(invoice.total) - totalPaid;
 
   return (
     <PageWrapper
       title={invoice.invoiceNumber}
       subtitle={invoice.client?.name ?? "No client"}
-      badge={<span className={`inline-flex rounded-full border px-2 py-0.5 text-dense font-medium ${badge.className}`}>{badge.label}</span>}
+      badge={
+        <span
+          className={`inline-flex rounded-full border px-2 py-0.5 text-dense font-medium ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      }
       backHref="/billing/invoices"
       actions={
         <InvoiceDetailActions
           invoice={invoice}
           outstanding={outstanding}
-          isUpdating={updateInvoice.isPending}
-          isDeleting={deleteInvoice.isPending}
+          isUpdating={updateInvoice.isPending || voidInvoice.isPending}
           onEdit={() => setEditOpen(true)}
           onRecordPayment={() => setPaymentOpen(true)}
           onStatusUpdate={handleStatusUpdate}
+          onVoid={handleVoid}
           onDownload={handleDownload}
-          onDelete={handleDelete}
         />
       }
     >
@@ -111,7 +131,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
         onEditOpenChange={setEditOpen}
         onRecordPayment={() => setPaymentOpen(true)}
       />
-      <RecordPaymentDialog open={paymentOpen} invoiceId={invoiceId} outstanding={outstanding} onOpenChange={setPaymentOpen} />
+      <RecordPaymentDialog
+        open={paymentOpen}
+        invoiceId={invoiceId}
+        outstanding={outstanding}
+        onOpenChange={setPaymentOpen}
+      />
     </PageWrapper>
   );
 }

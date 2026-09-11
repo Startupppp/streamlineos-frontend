@@ -74,7 +74,7 @@ export function LinkParentDialog({
 
   const { data, isLoading } = useCrmOrganizations({
     search: search || undefined,
-    limit: 30,
+    pageSize: 30,
   });
   const updateMutation = useUpdateCrmOrganization();
 

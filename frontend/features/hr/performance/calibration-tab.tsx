@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { calibrationEntrySchema } from "./calibration-schema";
 import { zodFieldErrors } from "./zod-field-errors";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
@@ -39,26 +40,29 @@ export function CalibrationTab() {
   }, [membersData]);
 
   const resolveMemberName = useCallback(
-    (userId: string) => {
-      const member = memberById.get(userId);
-      return member ? getUserDisplayName(member) : userId;
+    (employeeId: string) => {
+      const member = memberById.get(employeeId);
+      return member ? getUserDisplayName(member) : employeeId;
     },
     [memberById],
   );
 
-  function handleChange(employeeId: string, field: "preRating" | "postRating" | "note", value: string) {
-    setEditingEntry((prev) => {
-      const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
-      return { ...prev, [employeeId]: { ...current, [field]: value } };
-    });
-    setRowErrors((prev) => {
-      const current = prev[employeeId];
-      if (!current) return prev;
-      const nextRow = { ...current };
-      delete nextRow[field];
-      return { ...prev, [employeeId]: nextRow };
-    });
-  }
+  const handleChange = useCallback(
+    (employeeId: string, field: "preRating" | "postRating" | "note", value: string) => {
+      setEditingEntry((prev) => {
+        const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
+        return { ...prev, [employeeId]: { ...current, [field]: value } };
+      });
+      setRowErrors((prev) => {
+        const current = prev[employeeId];
+        if (!current) return prev;
+        const nextRow = { ...current };
+        delete nextRow[field];
+        return { ...prev, [employeeId]: nextRow };
+      });
+    },
+    [],
+  );
 
   const handleSave = useCallback(async (employeeId: string) => {
     const row = entries.find((e) => e.employeeId === employeeId);
@@ -181,12 +185,12 @@ export function CalibrationTab() {
         </LoadingButton>
       ),
     },
-  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave]);
+  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave, handleChange]);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Select value={String(selectedCycleId)} onValueChange={(v) => setSelectedCycleId(Number(v))}>
+        <Select value={String(selectedCycleId)} onValueChange={numericSelectChange(setSelectedCycleId)}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Select review cycle" />
           </SelectTrigger>

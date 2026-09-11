@@ -16,7 +16,9 @@ export function ExecutiveKpiWidget() {
   if (error) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-        <p className="flex-1 text-sm text-destructive">{getErrorMessage(error)}</p>
+        <p role="alert" className="flex-1 text-sm text-destructive">
+          {getErrorMessage(error)}
+        </p>
         <Button variant="ghost" size="sm" onClick={handleRetry} className="shrink-0">
           <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
           Retry
@@ -25,7 +27,7 @@ export function ExecutiveKpiWidget() {
     );
   }
 
-  const skeletonCount = hasCrmAccess ? 4 : 2;
+  const skeletonCount = hasCrmAccess ? 4 : 1;
 
   if (isLoading || !data) {
     return <StatCardGridSkeleton cols={4} count={skeletonCount} />;
@@ -47,32 +49,34 @@ export function ExecutiveKpiWidget() {
         color="gold"
         index={0}
       />
-      <StatCard
-        label="Conversion Rate"
-        value={`${data.conversionRate}%`}
-        icon={Target}
-        color="purple"
-        index={1}
-        href={hasCrmAccess ? "/crm/leads" : undefined}
-      />
-      {hasCrmAccess && (
-        <>
-          <StatCard
-            label="MRR (Won)"
-            value={fmt(data.mrr)}
-            icon={IndianRupee}
-            color="gold"
-            index={2}
-          />
-          <StatCard
-            label="Pipeline Value"
-            value={fmt(data.pipelineValue)}
-            icon={TrendingUp}
-            color="blue"
-            index={3}
-            href="/crm/deals"
-          />
-        </>
+      {data.conversionRate !== undefined && (
+        <StatCard
+          label="Conversion Rate"
+          value={`${data.conversionRate}%`}
+          icon={Target}
+          color="purple"
+          index={1}
+          href="/crm/leads"
+        />
+      )}
+      {data.mrr !== undefined && (
+        <StatCard
+          label="MRR (Won)"
+          value={fmt(data.mrr)}
+          icon={IndianRupee}
+          color="gold"
+          index={2}
+        />
+      )}
+      {data.pipelineValue !== undefined && (
+        <StatCard
+          label="Pipeline Value"
+          value={fmt(data.pipelineValue)}
+          icon={TrendingUp}
+          color="blue"
+          index={3}
+          href="/crm/deals"
+        />
       )}
     </StatCardGrid>
   );

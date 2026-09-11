@@ -32,7 +32,8 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -47,7 +48,7 @@ import {
 import {
   useListFilterParams,
   type ListFilterSpec,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 import { useCan } from "@/hooks/api/access";
 

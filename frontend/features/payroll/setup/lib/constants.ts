@@ -1,3 +1,5 @@
+import type { ToggleKey } from "@/types/payroll/setup";
+
 export const TOGGLE_GROUPS = [
   {
     id: "statutory",
@@ -46,7 +48,12 @@ export const TOGGLE_GROUPS = [
       "essAllowLoanRequests", "essAllowTaxDeclarations", "essAllowReimbursements",
     ],
   },
-] as const;
+] as const satisfies readonly {
+  id: string;
+  label: string;
+  description: string;
+  keys: readonly ToggleKey[];
+}[];
 
 export const RISKY_TOGGLES = new Set([
   "pf", "esi", "professionalTax", "tds", "gratuity", "lwf",

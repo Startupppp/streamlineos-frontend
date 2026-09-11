@@ -24,10 +24,8 @@ import {
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
+import { useUploadOnboardingDoc } from "@/hooks/api/hr/document-review";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 
 interface UploadDocSheetProps {
   open: boolean;
@@ -40,24 +38,6 @@ interface UploadDocSheetProps {
 interface DocTypeOption {
   id: number;
   name: string;
-}
-
-function useUploadOnboardingDoc(selfUpload: boolean) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "onboarding-documents", selfUpload ? "self-upload" : "admin-upload"],
-    mutationFn: (data: {
-      documentTypeId: number;
-      fileUrl: string;
-      fileName: string;
-      fileSize?: number;
-      mimeType?: string;
-      targetUserId?: string;
-    }) => apiClient.post(selfUpload ? "/hr/onboarding-docs/me" : "/hr/onboarding-docs", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
-    },
-  });
 }
 
 export function UploadDocSheet({

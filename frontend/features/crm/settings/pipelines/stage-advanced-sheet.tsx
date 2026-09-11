@@ -48,13 +48,13 @@ export function StageAdvancedSheet({
     defaultValues: stage
       ? {
           label: stage.label,
-          color: stage.color,
+          color: stage.color ?? "",
           probability: String(stage.probability),
           stageType: stage.stageType,
           slaHours: stage.slaHours != null ? String(stage.slaHours) : "",
           requiresApproval: stage.requiresApproval,
           isTerminal: stage.isTerminal,
-          requiredFields: stage.requiredFields,
+          requiredFields: stage.requiredFields ?? [],
           allowedNextStageKeys: stage.allowedNextStageKeys ?? [],
         }
       : {
@@ -240,7 +240,7 @@ export function StageAdvancedSheet({
                           onChange={(e) => handleToggleAllowedKey(s.key, e.target.checked)}
                           className="rounded border-border"
                         />
-                        <span className={cn("size-2 rounded-full shrink-0", getCrmTokenClasses(s.color).dotClass)} />
+                        <span className={cn("size-2 rounded-full shrink-0", getCrmTokenClasses(s.color ?? "").dotClass)} />
                         {s.label}
                       </label>
                     );

@@ -12,7 +12,19 @@ import {
 } from "date-fns";
 import type { PayPeriod } from "../types";
 
-export type PeriodPreset = "this-period" | "last-period" | "this-month" | "last-month" | "custom";
+export const PERIOD_PRESETS = [
+  "this-period",
+  "last-period",
+  "this-month",
+  "last-month",
+  "custom",
+] as const;
+
+export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
+
+export function resolvePeriodPreset(raw: string | null): PeriodPreset {
+  return PERIOD_PRESETS.find((candidate) => candidate === raw) ?? "this-period";
+}
 
 function getBiweeklyBlock(date: Date): { from: Date; to: Date } {
   const yearStart = startOfYear(date);

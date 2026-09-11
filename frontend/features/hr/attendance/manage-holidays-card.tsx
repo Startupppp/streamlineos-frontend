@@ -192,7 +192,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
             Company Holidays
           </CardTitle>
           <Select value={String(selectedYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[100px]" aria-label="Holiday year">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

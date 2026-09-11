@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Radio, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   useEmergencyEvent,
@@ -27,18 +30,50 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
   const [respondStatus, setRespondStatus] = useState<"safe" | "need_help" | null>(null);
   const [broadcastMsg, setBroadcastMsg] = useState("");
 
-  const { data: event, isLoading } = useEmergencyEvent(eventId);
+  const { data: event, isLoading, isError, error, refetch } = useEmergencyEvent(eventId);
   const { data: status } = useEmergencyEventStatus(eventId);
   const broadcast = useBroadcastEmergency(eventId);
   const respond = useRespondToEmergency(eventId);
   const update = useUpdateEmergencyEvent(eventId);
 
-  if (isLoading || !event) {
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isLoading) {
     return (
       <div className="animate-pulse p-8 space-y-3">
         <div className="h-5 bg-muted rounded w-1/3" />
         <div className="h-4 bg-muted rounded w-2/3" />
       </div>
+    );
+  }
+
+  if (isError || !event) {
+    return (
+      <PageWrapper
+        title="Emergency event"
+        leading={
+          <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2">
+            ← Back
+          </Button>
+        }
+      >
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load this emergency event"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <EmptyState
+            illustrationPreset="alert"
+            title="Event not found"
+            description="This emergency event no longer exists."
+          />
+        )}
+      </PageWrapper>
     );
   }
 

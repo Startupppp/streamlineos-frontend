@@ -1,8 +1,24 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const surveyOverviewC = lazyContract(() =>
+  import("./survey-analytics-schema").then((m) => m.surveyOverviewContract),
+);
+const surveyQuestionAnalyticsC = lazyContract(() =>
+  import("./survey-analytics-schema").then((m) => m.surveyQuestionAnalyticsContract),
+);
+const surveyResponseListC = lazyContract(() =>
+  import("./survey-analytics-schema").then((m) => m.surveyResponseListContract),
+);
+const surveyResponseDetailC = lazyContract(() =>
+  import("./survey-analytics-schema").then((m) => m.surveyResponseDetailContract),
+);
 
 export interface SurveyAnalyticsOverview {
   totalResponses: number;
@@ -64,35 +80,36 @@ export interface ListResponsesParams {
 }
 
 export function useAnalyticsOverview(surveyId: number) {
-  return useQuery({
-    queryKey: queryKeys.surveys.analyticsOverview(surveyId),
-    queryFn: () => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`),
+  return useGatedQuery("surveys:analytics:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.analyticsOverview(surveyId),
+    queryFn: ({ signal }) => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`, undefined, signal, surveyOverviewC),
     staleTime: 15_000,
   });
 }
 
 export function useQuestionAnalytics(surveyId: number) {
-  return useQuery({
-    queryKey: queryKeys.surveys.analyticsQuestions(surveyId),
-    queryFn: () => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`),
+  return useGatedQuery("surveys:analytics:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.analyticsQuestions(surveyId),
+    queryFn: ({ signal }) => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`, undefined, signal, surveyQuestionAnalyticsC),
     staleTime: 15_000,
   });
 }
 
 export function useSurveyResponses(surveyId: number, params?: ListResponsesParams) {
-  return useQuery({
-    queryKey: queryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyResponseSession[]>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>),
+  return useGatedQuery("surveys:responses:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.responses(surveyId, params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyResponseSession>>(`/surveys/${surveyId}/responses`, params, signal, surveyResponseListC)).items,
     staleTime: 15_000,
   });
 }
 
 export function useSurveyResponse(surveyId: number, sessionId: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.surveys.response(surveyId, sessionId ?? -1),
-    queryFn: () =>
+  return useGatedQuery("surveys:responses:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.response(surveyId, sessionId ?? -1),
+    queryFn: ({ signal }) =>
       apiClient.get<{ session: SurveyResponseSession; answers: SurveyResponseAnswer[] }>(
-        `/surveys/${surveyId}/responses/${sessionId}`,
+        `/surveys/${surveyId}/responses/${sessionId}`, undefined, signal, surveyResponseDetailC,
       ),
     enabled: typeof sessionId === "number",
     staleTime: 15_000,

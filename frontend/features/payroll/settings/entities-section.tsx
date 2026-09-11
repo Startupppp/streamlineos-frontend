@@ -16,6 +16,7 @@ import {
   useEntityContext,
 } from "@/hooks/api/payroll/entities";
 import { cn } from "@/lib/utils";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 const MATURITY_STYLE: Record<string, string> = {
   production_baseline:
@@ -94,13 +95,13 @@ export function EntitiesSection() {
             <label className="text-dense font-medium text-muted-foreground">Entity</label>
             <Select
               value={entityId != null ? String(entityId) : undefined}
-              onValueChange={(v) => setSelectedId(Number(v))}
+              onValueChange={numericSelectChange(setSelectedId)}
             >
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Select entity" />
               </SelectTrigger>
               <SelectContent>
-                {entities!.map((e) => (
+                {(entities ?? []).map((e) => (
                   <SelectItem key={e.id} value={String(e.id)}>
                     {e.legalName} ({e.countryCode})
                   </SelectItem>

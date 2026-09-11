@@ -119,6 +119,23 @@ interface Props {
   isPending?: boolean;
 }
 
+/**
+ * A team key is uppercase alphanumerics only. The rule belongs beside the
+ * schema that enforces it, not inside a JSX prop where the field and the
+ * validator can drift apart.
+ */
+function toTeamKey(raw: string): string {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function teamKeyChange(
+  onChange: (value: string) => void,
+): (event: React.ChangeEvent<HTMLInputElement>) => void {
+  return function handleTeamKeyChange(event) {
+    onChange(toTeamKey(event.target.value));
+  };
+}
+
 export function TeamFormSheet({
   open,
   onOpenChange,
@@ -250,9 +267,7 @@ export function TeamFormSheet({
                     {...field}
                     placeholder="ENG"
                     disabled={mode === "edit"}
-                    onChange={(e) =>
-                      field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-                    }
+                    onChange={teamKeyChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

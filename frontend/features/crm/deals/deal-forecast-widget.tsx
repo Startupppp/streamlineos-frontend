@@ -50,10 +50,11 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
 
       total += weighted;
 
-      if (!stageMap[deal.stage]) stageMap[deal.stage] = { raw: 0, weighted: 0, count: 0 };
-      stageMap[deal.stage]!.raw += raw;
-      stageMap[deal.stage]!.weighted += weighted;
-      stageMap[deal.stage]!.count++;
+      const stageTotals = stageMap[deal.stage] ?? { raw: 0, weighted: 0, count: 0 };
+      stageTotals.raw += raw;
+      stageTotals.weighted += weighted;
+      stageTotals.count++;
+      stageMap[deal.stage] = stageTotals;
 
       if (deal.expectedCloseDate) {
         const closeDate = new Date(deal.expectedCloseDate);
@@ -64,11 +65,11 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
     }
 
     const stageOrder = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON"];
-    const stageBreakdown = Object.keys(stageMap)
-      .map((stage) => ({
+    const stageBreakdown = Object.entries(stageMap)
+      .map(([stage, totals]) => ({
         stage,
         probability: STAGE_PROBABILITIES[stage] ?? 0,
-        ...stageMap[stage]!,
+        ...totals,
       }))
       .sort((a, b) => {
         const ai = stageOrder.indexOf(a.stage);

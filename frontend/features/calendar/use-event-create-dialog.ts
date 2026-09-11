@@ -7,7 +7,7 @@ import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
   useUpsertOccurrenceException,
-  useCalendarOrgMembers,
+  useCalendarMemberLookup,
   useEventAttendees,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
@@ -16,6 +16,7 @@ import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { describeEventConflicts } from "./event-conflict-notice";
 import {
   getDateTimeError,
   isValidUrl,
@@ -37,6 +38,7 @@ interface UseEventCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
   event?: CalendarListItem | null;
+  rrule?: string | null;
 }
 
 export function useEventCreateDialog({
@@ -44,6 +46,7 @@ export function useEventCreateDialog({
   onOpenChange,
   defaultSlot,
   event,
+  rrule,
 }: UseEventCreateDialogProps) {
   const isEdit = !!event;
   const editNumericId = useMemo(
@@ -51,10 +54,10 @@ export function useEventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot),
+    isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot),
   );
   const [showEndDate, setShowEndDate] = useState(() =>
-    needsEndDateField(isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot)),
+    needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
@@ -64,13 +67,13 @@ export function useEventCreateDialog({
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const upsertOccurrenceException = useUpsertOccurrenceException();
-  const { data: members = [] } = useCalendarOrgMembers();
+  const { data: members = [] } = useCalendarMemberLookup();
   const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
 
   useEffect(() => {
     if (!open) return;
-    const base = isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot);
+    const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
     setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
@@ -222,7 +225,7 @@ export function useEventCreateDialog({
     const result = buildEventPayload({ form, showEndDate, linkedTicket, existingEntityId, isEdit });
     if (result.error !== null) { toast.error(result.error); return; }
 
-    if (isEdit && event?.rrule) {
+    if (isEdit && rrule) {
       seriesScope.openWithPayload(result.payload);
       return;
     }
@@ -236,15 +239,19 @@ export function useEventCreateDialog({
         toast.success("Event updated");
       } else {
         const res = await createEvent.mutateAsync(result.payload);
-        if (res.syncError) toast.warning(`Event created, but calendar sync failed: ${res.syncError}`);
-        else if (res.meetingUrl) toast.success("Event created — meeting link added");
+        if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
+        // The server scans for overlapping occurrences and approved leave on every
+        // create; before this the result was discarded and a double-booking read
+        // as plain success. A second toast so a sync failure is not displaced.
+        const conflictNotice = describeEventConflicts(res);
+        if (conflictNotice) toast.warning(`Event created, but ${conflictNotice}.`);
       }
       handleClose();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope]);
+  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 

@@ -1,14 +1,18 @@
 "use client";
 
+import { useCallback } from "react";
 import { Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssTotalRewards } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 export function EssTotalRewardsSection() {
-  const { data, isLoading } = useEssTotalRewards();
+  const { data, isLoading, isError, error, refetch } = useEssTotalRewards();
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
     return (
@@ -22,6 +26,19 @@ export function EssTotalRewardsSection() {
           </div>
           <Skeleton className="min-h-0 w-full flex-1 rounded-xl" />
         </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section id="total-rewards" className="flex min-h-0 w-full flex-1 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load your total rewards"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       </section>
     );
   }

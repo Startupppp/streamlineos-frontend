@@ -1,7 +1,7 @@
-import type { RiskProbability, RiskImpact } from "@/types/projects";
 
-const PROB_IDX: Record<RiskProbability, number> = { low: 1, medium: 2, high: 3 };
-const IMPACT_IDX: Record<RiskImpact, number> = { low: 1, medium: 2, high: 3 };
+
+const PROB_IDX: Record<string, number> = { low: 1, medium: 2, high: 3 };
+const IMPACT_IDX: Record<string, number> = { low: 1, medium: 2, high: 3 };
 
 export interface RiskSeverityResult {
   label: "Low" | "Medium" | "High" | "Critical";
@@ -10,8 +10,8 @@ export interface RiskSeverityResult {
 }
 
 export function getRiskSeverity(
-  probability: RiskProbability,
-  impact: RiskImpact,
+  probability: string,
+  impact: string,
 ): RiskSeverityResult {
   const score = PROB_IDX[probability] * IMPACT_IDX[impact];
   if (score <= 2) return { label: "Low", className: "bg-muted text-foreground border-border", score };

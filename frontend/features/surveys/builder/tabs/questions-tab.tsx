@@ -17,7 +17,7 @@ import {
   useDeleteQuestion,
   useDuplicateQuestion,
   useReorderBuilder,
-  type SurveyBuilderQuestion,
+  type SurveyBuilderViewQuestion,
 } from "@/hooks/api/surveys/builder";
 import { SectionCard } from "../questions/section-card";
 import { QuestionEditorSheet } from "../questions/question-editor-sheet";
@@ -34,7 +34,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorSectionId, setEditorSectionId] = useState<number | null>(null);
-  const [editorQuestion, setEditorQuestion] = useState<SurveyBuilderQuestion | null>(null);
+  const [editorQuestion, setEditorQuestion] = useState<SurveyBuilderViewQuestion | null>(null);
 
   if (isLoading) {
     return (
@@ -119,7 +119,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     setEditorOpen(true);
   }
 
-  function openEditQuestion(question: SurveyBuilderQuestion) {
+  function openEditQuestion(question: SurveyBuilderViewQuestion) {
     setEditorSectionId(null);
     setEditorQuestion(question);
     setEditorOpen(true);

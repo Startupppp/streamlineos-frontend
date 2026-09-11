@@ -2,9 +2,6 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -13,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -22,26 +19,12 @@ import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-interface FnfSettlement {
-  id: number;
-  userId: string;
-  basicDues: string | null;
-  leaveEncashment: string | null;
-  bonusDue: string | null;
-  deductions: string | null;
-  loanRecovery: string | null;
-  netPayable: string | null;
-  status: string | null;
-  notes: string | null;
-  createdAt: string | null;
-  user?: { name: string | null; email: string } | null;
-}
-
-const fnfKeys = {
-  all: [...queryKeys.hr.all, "fnf"] as const,
-  list: () => [...fnfKeys.all, "list"] as const,
-};
+import {
+  useFnfSettlements,
+  useCreateFnfSettlement,
+  useCompleteFnfSettlement,
+  type FnfSettlement,
+} from "@/hooks/api/hr/fnf";
 
 function fnfStatusBadgeClass(status: string | null): string {
   if (status === "PAID") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
@@ -169,30 +152,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
 }
 
 export function FnfPageClient() {
-  const qc = useQueryClient();
-  const { data: items, isLoading, isError, refetch } = useQuery({
-    queryKey: fnfKeys.list(),
-    queryFn: () => apiClient.get<FnfSettlement[]>("/hr/fnf"),
-  });
+  const { data: items, isLoading, isError, refetch } = useFnfSettlements();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const create = useMutation({
-    mutationFn: (data: {
-      userId: string;
-      basicDues?: number;
-      leaveEncashment?: number;
-      bonusDue?: number;
-      deductions?: number;
-      loanRecovery?: number;
-      notes?: string;
-    }) => apiClient.post<FnfSettlement>("/hr/fnf", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
-  });
-
-  const complete = useMutation({
-    mutationFn: (id: number) => apiClient.patch<{ success: boolean }>(`/hr/fnf/${id}`, { status: "PAID" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
-  });
+  const create = useCreateFnfSettlement();
+  const complete = useCompleteFnfSettlement();
 
   const [sheetOpen, setSheetOpen] = useState(false);
 

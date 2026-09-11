@@ -1,21 +1,67 @@
 "use client";
 
+import { useState, useEffect, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { LeaveBalanceWidget } from "@/features/dashboard/hr-widgets";
-import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
-import { PayrollWidget } from "@/features/dashboard/payroll-widget";
-import { ExpensesWidget } from "@/features/dashboard/expenses-widget";
-import { RecruitmentWidget } from "@/features/dashboard/recruitment-widget";
-import { AlertsWidget } from "@/features/dashboard/alerts-widget";
-import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
-import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { HomeSectionBoundary } from "./home-section-boundary";
-
+const LeaveBalanceWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.LeaveBalanceWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const MyAttendanceWidget = dynamic(
+  () =>
+    import("@/features/dashboard/my-attendance-widget").then((m) => ({
+      default: m.MyAttendanceWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const PayrollWidget = dynamic(
+  () =>
+    import("@/features/dashboard/payroll-widget").then((m) => ({
+      default: m.PayrollWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const AlertsWidget = dynamic(
+  () =>
+    import("@/features/dashboard/alerts-widget").then((m) => ({
+      default: m.AlertsWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const MyTasksWidget = dynamic(
+  () =>
+    import("@/components/dashboard/my-tasks-widget").then((m) => ({
+      default: m.MyTasksWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const TimesheetWidget = dynamic(
+  () =>
+    import("@/components/dashboard/timesheet-widget").then((m) => ({
+      default: m.TimesheetWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const AnnouncementsWidget = dynamic(
+  () =>
+    import("@/components/dashboard/announcements-widget").then((m) => ({
+      default: m.AnnouncementsWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const UpcomingEventsWidget = dynamic(
+  () =>
+    import("@/components/dashboard/upcoming-events-widget").then((m) => ({
+      default: m.UpcomingEventsWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
 const BusinessPulseWidget = dynamic(
   () =>
     import("@/components/dashboard/project-health-widget").then((m) => ({
@@ -29,6 +75,7 @@ export interface HomeWidgetGridProps {
   hrEnabled: boolean;
   canViewExecutive: boolean;
   canSelfAttendance: boolean;
+  expensesSlot?: ReactNode;
 }
 
 export function HomeWidgetGrid({
@@ -36,8 +83,16 @@ export function HomeWidgetGrid({
   hrEnabled,
   canViewExecutive,
   canSelfAttendance,
+  expensesSlot,
 }: HomeWidgetGridProps) {
   const { fadeUp } = useMotionVariants();
+
+  const [batch2Ready, setBatch2Ready] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setBatch2Ready(true), 0);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <motion.div
       variants={fadeUp}
@@ -69,25 +124,26 @@ export function HomeWidgetGrid({
       <HomeSectionBoundary sectionLabel="Upcoming events">
         <UpcomingEventsWidget />
       </HomeSectionBoundary>
-      {canViewExecutive ? (
+      {batch2Ready && canViewExecutive ? (
         <HomeSectionBoundary sectionLabel="Business pulse">
           <BusinessPulseWidget />
         </HomeSectionBoundary>
       ) : null}
-      {hrEnabled && canSelfAttendance ? (
+      {batch2Ready && hrEnabled && canSelfAttendance ? (
         <HomeSectionBoundary sectionLabel="My attendance">
           <MyAttendanceWidget />
         </HomeSectionBoundary>
       ) : null}
-      <HomeSectionBoundary sectionLabel="Payroll">
-        <PayrollWidget />
-      </HomeSectionBoundary>
-      <HomeSectionBoundary sectionLabel="Expenses">
-        <ExpensesWidget />
-      </HomeSectionBoundary>
-      <HomeSectionBoundary sectionLabel="Recruitment">
-        <RecruitmentWidget />
-      </HomeSectionBoundary>
+      {batch2Ready ? (
+        <HomeSectionBoundary sectionLabel="Payroll">
+          <PayrollWidget />
+        </HomeSectionBoundary>
+      ) : null}
+      {batch2Ready && expensesSlot ? (
+        <HomeSectionBoundary sectionLabel="Expenses">
+          {expensesSlot}
+        </HomeSectionBoundary>
+      ) : null}
     </motion.div>
   );
 }

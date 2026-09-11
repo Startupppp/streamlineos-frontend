@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bookmark, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -12,8 +13,10 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
-import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
+import { formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
+import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import type { SavedMessage } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 const UnsaveButton = React.forwardRef<
   HTMLButtonElement,
@@ -37,7 +40,7 @@ function SavedMessageCard({
   onUnsave: (messageId: number) => void;
   onJump: (channelId: number) => void;
   resolveUserName: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {
@@ -110,13 +113,13 @@ export function SavedMessagesPanel({
   onClose: () => void;
   onJumpToChannel: (channelId: number) => void;
 }) {
-  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
+  const { data, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
     (
-      userId: string,
+      userId: string | null,
       embedded?: { name?: string | null; email?: string | null } | null,
     ) => resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],
@@ -135,7 +138,14 @@ export function SavedMessagesPanel({
     }
   }, [unsave]);
 
-  const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);
+  const total = items.length;
+  const renderWindow = usePanelRenderWindow(total, hasNextPage === true, fetchNextPage);
+  const visibleItems = useMemo(
+    () => items.slice(0, renderWindow.visibleCount),
+    [items, renderWindow.visibleCount],
+  );
+
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
@@ -149,7 +159,8 @@ export function SavedMessagesPanel({
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="space-y-2 p-3">
+          <div className="space-y-2 p-3" aria-busy="true">
+            <span role="status" className="sr-only">Loading saved messages…</span>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-2.5 p-2">
                 <Skeleton className="h-8 w-8 rounded-full shrink-0" />
@@ -162,15 +173,13 @@ export function SavedMessagesPanel({
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <h4 className="text-label font-semibold mb-1">Could not load saved messages</h4>
-            <button
-              onClick={() => void refetch()}
-              className="text-dense text-primary hover:underline mt-1"
-            >
-              Try again
-            </button>
-          </div>
+          <ErrorState
+            compact
+            className="m-3"
+            title="Couldn't load saved messages"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="h-12 w-12 rounded-xl bg-status-warning-surface flex items-center justify-center mb-3">
@@ -184,23 +193,32 @@ export function SavedMessagesPanel({
           </div>
         ) : (
           <div>
-            {items.map(item => (
-              <SavedMessageCard
-                key={item.id}
-                item={item}
-                onUnsave={handleUnsave}
-                onJump={onJumpToChannel}
-                resolveUserName={resolveUserName}
-              />
-            ))}
-            {hasNextPage && (
+            <div role="list" aria-label="Saved messages">
+              {visibleItems.map((item, index) => (
+                <div
+                  key={item.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={hasNextPage ? -1 : total}
+                >
+                  <SavedMessageCard
+                    item={item}
+                    onUnsave={handleUnsave}
+                    onJump={onJumpToChannel}
+                    resolveUserName={resolveUserName}
+                  />
+                </div>
+              ))}
+            </div>
+            {renderWindow.hasMore && (
               <div className="flex justify-center py-3">
                 <button
-                  onClick={handleLoadMore}
+                  type="button"
+                  onClick={renderWindow.onLoadMore}
                   disabled={isFetchingNextPage}
                   className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
-                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                  {panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load more")}
                 </button>
               </div>
             )}

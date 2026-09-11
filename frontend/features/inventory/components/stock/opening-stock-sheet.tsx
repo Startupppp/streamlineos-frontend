@@ -1,262 +1,29 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
-import { z } from "zod";
+import { useCallback, useMemo } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
 import { useOpeningStock } from "@/hooks/api/inventory/stock";
 import { useProductVariants } from "@/hooks/api/inventory/products";
-import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const lineSchema = z.object({
-  variantId: z.string().min(1, "Select a product variant."),
-  warehouseId: z.string().min(1, "Select a warehouse."),
-  locationId: z.string().min(1, "Select a location."),
-  qty: z
-    .string()
-    .min(1, "Quantity must be greater than 0.")
-    .refine((v) => {
-      const n = Number(v);
-      return !isNaN(n) && n > 0;
-    }, "Quantity must be greater than 0."),
-  unitCost: z
-    .string()
-    .refine((v) => {
-      if (v === "" || v === undefined) return true;
-      const n = Number(v);
-      return !isNaN(n) && n >= 0;
-    }, "Unit cost must be 0 or greater."),
-});
-
-const formSchema = z
-  .object({
-    lines: z
-      .array(lineSchema)
-      .min(1, "Add at least one stock line.")
-      .superRefine((lines, ctx) => {
-        const seen = new Set<string>();
-        lines.forEach((l, i) => {
-          const key = `${l.variantId}:${l.locationId}`;
-          if (seen.has(key)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: "Duplicate variant/location combination.",
-              path: [i, "variantId"],
-            });
-          } else {
-            seen.add(key);
-          }
-        });
-      }),
-    notes: z.string().max(500).optional(),
-  });
-
-type FormValues = z.infer<typeof formSchema>;
-
-function defaultLine() {
-  return { variantId: "", warehouseId: "", locationId: "", qty: "", unitCost: "" };
-}
+import { formSchema, defaultLine, type FormValues } from "./opening-stock-schema";
+import { LineRow } from "./opening-stock-line-row";
 
 interface OpeningStockSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
-
-interface LineRowProps {
-  index: number;
-  control: ReturnType<typeof useForm<FormValues>>["control"];
-  register: ReturnType<typeof useForm<FormValues>>["register"];
-  watch: ReturnType<typeof useForm<FormValues>>["watch"];
-  setValue: ReturnType<typeof useForm<FormValues>>["setValue"];
-  errors: ReturnType<typeof useForm<FormValues>>["formState"]["errors"];
-  onRemove: (index: number) => void;
-  canRemove: boolean;
-  warehouses: { id: number; name: string }[];
-}
-
-const LineRow = memo(function LineRow({
-  index,
-  control,
-  register,
-  watch,
-  setValue,
-  errors,
-  onRemove,
-  canRemove,
-  warehouses,
-}: LineRowProps) {
-  const warehouseId = watch(`lines.${index}.warehouseId`);
-  const { data: locations = [] } = useLocations(Number(warehouseId) || 0);
-
-  const lineErrors = errors.lines?.[index];
-
-  const handleWarehouseChange = useCallback(
-    (val: string) => {
-      setValue(`lines.${index}.warehouseId`, val, { shouldValidate: true });
-      setValue(`lines.${index}.locationId`, "", { shouldValidate: false });
-    },
-    [index, setValue],
-  );
-
-  const handleLocationChange = useCallback(
-    (val: string) => {
-      setValue(`lines.${index}.locationId`, val, { shouldValidate: true });
-    },
-    [index, setValue],
-  );
-
-  const handleRemove = useCallback(() => onRemove(index), [index, onRemove]);
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-muted-foreground">Line {index + 1}</span>
-        {canRemove && (
-          <AnimatedIconButton
-            type="button"
-            icon={Trash2Icon}
-            iconSize={14}
-            iconClassName="mr-1"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleRemove}
-          >
-            Remove
-          </AnimatedIconButton>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 space-y-1">
-          <Label className="text-xs text-muted-foreground">Variant <span className="text-destructive">*</span></Label>
-          <Controller
-            control={control}
-            name={`lines.${index}.variantId`}
-            render={({ field }) => (
-              <ProductVariantCombobox
-                value={field.value}
-                onChange={field.onChange}
-                className="text-xs"
-                ariaLabel={`Variant, line ${String(index + 1)}`}
-              />
-            )}
-          />
-          {lineErrors?.variantId && (
-            <p className="text-xs text-destructive">{lineErrors.variantId.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Warehouse <span className="text-destructive">*</span></Label>
-          <Controller
-            control={control}
-            name={`lines.${index}.warehouseId`}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={handleWarehouseChange}>
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Select warehouse…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((w) => (
-                    <SelectItem key={w.id} value={String(w.id)}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {lineErrors?.warehouseId && (
-            <p className="text-xs text-destructive">{lineErrors.warehouseId.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Location <span className="text-destructive">*</span></Label>
-          <Controller
-            control={control}
-            name={`lines.${index}.locationId`}
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={handleLocationChange}
-                disabled={!warehouseId}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder={!warehouseId ? "Select warehouse first" : "Select location…"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((l) => (
-                    <SelectItem key={l.id} value={String(l.id)}>
-                      {l.name} ({l.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {lineErrors?.locationId && (
-            <p className="text-xs text-destructive">{lineErrors.locationId.message}</p>
-          )}
-          {!warehouseId && !lineErrors?.locationId && (
-            <p className="text-xs text-muted-foreground">Select a warehouse first.</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Quantity <span className="text-destructive">*</span></Label>
-          <Input
-            type="number"
-            min="0.0001"
-            step="any"
-            placeholder="Enter quantity"
-            className="text-xs"
-            {...register(`lines.${index}.qty`)}
-          />
-          {lineErrors?.qty && (
-            <p className="text-xs text-destructive">{lineErrors.qty.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Unit Cost (optional)</Label>
-          <Input
-            type="number"
-            min="0"
-            step="any"
-            placeholder="0.00"
-            className="text-xs"
-            {...register(`lines.${index}.unitCost`)}
-          />
-          {lineErrors?.unitCost && (
-            <p className="text-xs text-destructive">{lineErrors.unitCost.message}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-});
 
 export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps) {
   const { data: variants = [], isLoading: variantsLoading } = useProductVariants({ activeOnly: true });

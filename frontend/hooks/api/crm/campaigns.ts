@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -11,6 +11,23 @@ import type {
   AttributionByModelReport,
   AttributionModel,
 } from "@/types/crm/campaigns";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const campaignLazy = lazyContract(() => import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignContract));
+
+const campaignsListLazy = lazyContract(() =>
+  import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignsListContract),
+);
+const campaignRoiLazy = lazyContract(() =>
+  import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignRoiContract),
+);
+const campaignLeadsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignLeadsContract),
+);
+const campaignAttributionLazy = lazyContract(() =>
+  import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignAttributionListContract),
+);
 
 interface CampaignListParams {
   page?: number;
@@ -41,17 +58,17 @@ export function useCampaigns(params?: CampaignListParams) {
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.list(p),
-    queryFn: () => apiClient.get<PaginatedCampaigns>("/crm/campaigns", p),
+    queryFn: ({ signal }) => apiClient.get<PaginatedCampaigns>("/crm/campaigns", p, signal, campaignsListLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "create"] as const,
     mutationFn: (input: CreateCampaignInput) =>
-      apiClient.post<CrmCampaign>("/crm/campaigns", input),
+      apiClient.post<CrmCampaign>("/crm/campaigns", input, undefined, campaignLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
     },
@@ -60,10 +77,10 @@ export function useCreateCampaign() {
 
 export function useUpdateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateCampaignInput) =>
-      apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data),
+      apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data, undefined, campaignLazy),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.detail(variables.id) });
@@ -74,7 +91,7 @@ export function useUpdateCampaign() {
 export function useCampaignRoi(campaignId: number) {
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.roi(campaignId),
-    queryFn: () => apiClient.get<CampaignRoi>(`/crm/campaigns/${campaignId}/roi`),
+    queryFn: ({ signal }) => apiClient.get<CampaignRoi>(`/crm/campaigns/${campaignId}/roi`, undefined, signal, campaignRoiLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -86,7 +103,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
-    queryFn: () => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p),
+    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; hasMore: boolean; nextCursor: string | null; total?: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal, campaignLeadsLazy),
     staleTime: 60_000,
   });
 }
@@ -105,9 +122,11 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 export function useAttributionByModel(model: AttributionModel, halfLifeDays: number) {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attributionByModel(model, halfLifeDays),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AttributionByModelReport>(
         `/crm/campaigns/attribution/by-model?model=${model}&halfLifeDays=${halfLifeDays}`,
+        undefined,
+        signal,
       ),
     staleTime: 5 * 60_000,
   });
@@ -116,7 +135,7 @@ export function useAttributionByModel(model: AttributionModel, halfLifeDays: num
 export function useFirstTouchAttribution() {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("first-touch"),
-    queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/first-touch"),
+    queryFn: ({ signal }) => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/first-touch", undefined, signal, campaignAttributionLazy),
     staleTime: 5 * 60_000,
   });
 }
@@ -124,7 +143,7 @@ export function useFirstTouchAttribution() {
 export function useLastTouchAttribution() {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("last-touch"),
-    queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/last-touch"),
+    queryFn: ({ signal }) => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/last-touch", undefined, signal, campaignAttributionLazy),
     staleTime: 5 * 60_000,
   });
 }

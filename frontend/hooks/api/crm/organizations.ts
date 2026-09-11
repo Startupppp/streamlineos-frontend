@@ -17,14 +17,30 @@ import type {
   RelatedLead,
   MergeOrgsInput,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const crmOrgsListLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.crmOrgsListContract));
+const crmOrgDetailLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.crmOrgDetailContract));
+const crmOrgLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.crmOrgContract));
+const orgHierarchyLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgHierarchyNodeSchema));
+const orgRollupLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgRollupContract));
+const orgTimelineLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgTimelineContract));
+const orgRelatedLeadsLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgRelatedLeadsContract));
+const orgMergeResultLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.orgMergeResultContract));
+const deleteOrgLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.deleteOrgContract));
+const crmPeopleSlugsLazy = lazyContract(() => import("@/hooks/api/crm/organizations-schema").then((m) => m.crmPeopleSlugsContract));
+
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useGatedQuery<PaginatedCrmOrganizations>("crm:organizations:view", {
-    queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryKey: queryKeys.crmOrganizations.list(filters),
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>(
         "/crm/organizations",
-        filters as Record<string, unknown>
+        filters,
+        signal,
+        crmOrgsListLazy,
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -35,12 +51,11 @@ export function useCrmOrganizationsForPicker(search?: string) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
-        page: 1,
-        limit: 100,
+        pageSize: 100,
         search: search ?? undefined,
-      }),
+      }, signal, crmOrgsListLazy),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -51,7 +66,7 @@ export function useCrmOrganizationDetail(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.detail(id),
-    queryFn: () => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`),
+    queryFn: ({ signal }) => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`, undefined, signal, crmOrgDetailLazy),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -59,10 +74,10 @@ export function useCrmOrganizationDetail(id: number) {
 
 export function useCreateCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "create"] as const,
     mutationFn: (input: CreateCrmOrganizationInput) =>
-      apiClient.post<CrmOrganization>("/crm/organizations", input),
+      apiClient.post<CrmOrganization>("/crm/organizations", input, undefined, crmOrgLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
     },
@@ -71,10 +86,10 @@ export function useCreateCrmOrganization() {
 
 export function useUpdateCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "update"] as const,
     mutationFn: ({ id, ...input }: UpdateCrmOrganizationInput & { id: number }) =>
-      apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
+      apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input, undefined, crmOrgLazy),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.detail(variables.id) });
@@ -84,10 +99,10 @@ export function useUpdateCrmOrganization() {
 
 export function useDeleteCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "delete"] as const,
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/organizations/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/organizations/${id}`, undefined, undefined, deleteOrgLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
     },
@@ -98,7 +113,7 @@ export function useCrmOrgHierarchy(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.hierarchy(id),
-    queryFn: () => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`),
+    queryFn: ({ signal }) => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`, undefined, signal, orgHierarchyLazy),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -108,7 +123,7 @@ export function useCrmOrgRollup(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.rollup(id),
-    queryFn: () => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`),
+    queryFn: ({ signal }) => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`, undefined, signal, orgRollupLazy),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -118,7 +133,7 @@ export function useCrmOrgTimeline(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.timeline(id),
-    queryFn: () => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`),
+    queryFn: ({ signal }) => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`, undefined, signal, orgTimelineLazy),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -128,7 +143,7 @@ export function useCrmOrgRelatedLeads(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.relatedLeads(id),
-    queryFn: () => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`),
+    queryFn: ({ signal }) => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`, undefined, signal, orgRelatedLeadsLazy),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -138,7 +153,7 @@ export function useCrmPeopleSlugs() {
   const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.crm.peopleSlugs(),
-    queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs", undefined, signal, crmPeopleSlugsLazy),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -154,10 +169,10 @@ export interface MergeOrgsResult {
 
 export function useMergeCrmOrganizations() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:merge", {
     mutationKey: ["crmOrganizations", "merge"] as const,
     mutationFn: (input: MergeOrgsInput) =>
-      apiClient.post<MergeOrgsResult>("/crm/organizations/merge", input),
+      apiClient.post<MergeOrgsResult>("/crm/organizations/merge", input, undefined, orgMergeResultLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.duplicates() });

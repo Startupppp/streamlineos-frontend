@@ -1,8 +1,25 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportOverviewC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.supportOverviewContract),
+);
+const agentPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.agentPerformanceListContract),
+);
+const queuePerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.queuePerformanceListContract),
+);
+const channelPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.channelPerformanceListContract),
+);
+const automationPerformanceListC = lazyContract(() =>
+  import("./support-report-schema").then((m) => m.automationPerformanceListContract),
+);
 
 export interface SupportReportFilters {
   dateFrom?: string;
@@ -27,7 +44,7 @@ export interface SupportOverviewReport {
 }
 
 export interface AgentPerformanceRow {
-  agentId: string;
+  agentId: string | null;
   ticketsHandled: number;
   ticketsResolved: number;
   avgFirstResponseMinutes: number | null;
@@ -50,7 +67,7 @@ export interface ChannelPerformanceRow {
 }
 
 export interface AutomationPerformanceRow {
-  ruleId: number;
+  ruleId: number | null;
   ruleName: string;
   total: number;
   succeeded: number;
@@ -65,57 +82,57 @@ function toQueryParams(filters?: SupportReportFilters): Record<string, unknown> 
 }
 
 export function useSupportOverviewReport(filters?: SupportReportFilters) {
-  return useQuery({
-    queryKey: queryKeys.supportReports.overview(toQueryParams(filters)),
-    queryFn: () =>
-      apiClient.get<SupportOverviewReport>("/support/reports/overview", toQueryParams(filters)),
+  return useGatedQuery("support:reports:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportReports.overview(toQueryParams(filters)),
+    queryFn: ({ signal }) =>
+      apiClient.get<SupportOverviewReport>("/support/reports/overview", toQueryParams(filters), signal, supportOverviewC),
     staleTime: 60_000,
   });
 }
 
 export function useAgentPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
-    queryKey: queryKeys.supportReports.agentPerformance(toQueryParams(filters)),
-    queryFn: () =>
+  return useGatedQuery("support:reports:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportReports.agentPerformance(toQueryParams(filters)),
+    queryFn: ({ signal }) =>
       apiClient.get<AgentPerformanceRow[]>(
         "/support/reports/agent-performance",
-        toQueryParams(filters),
+        toQueryParams(filters), signal, agentPerformanceListC,
       ),
     staleTime: 60_000,
   });
 }
 
 export function useQueuePerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
-    queryKey: queryKeys.supportReports.queuePerformance(toQueryParams(filters)),
-    queryFn: () =>
+  return useGatedQuery("support:reports:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportReports.queuePerformance(toQueryParams(filters)),
+    queryFn: ({ signal }) =>
       apiClient.get<QueuePerformanceRow[]>(
         "/support/reports/queue-performance",
-        toQueryParams(filters),
+        toQueryParams(filters), signal, queuePerformanceListC,
       ),
     staleTime: 60_000,
   });
 }
 
 export function useChannelPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
-    queryKey: queryKeys.supportReports.channelPerformance(toQueryParams(filters)),
-    queryFn: () =>
+  return useGatedQuery("support:reports:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportReports.channelPerformance(toQueryParams(filters)),
+    queryFn: ({ signal }) =>
       apiClient.get<ChannelPerformanceRow[]>(
         "/support/reports/channel-performance",
-        toQueryParams(filters),
+        toQueryParams(filters), signal, channelPerformanceListC,
       ),
     staleTime: 60_000,
   });
 }
 
 export function useAutomationPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
-    queryKey: queryKeys.supportReports.automationPerformance(toQueryParams(filters)),
-    queryFn: () =>
+  return useGatedQuery("support:reports:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportReports.automationPerformance(toQueryParams(filters)),
+    queryFn: ({ signal }) =>
       apiClient.get<AutomationPerformanceRow[]>(
         "/support/reports/automation-performance",
-        toQueryParams(filters),
+        toQueryParams(filters), signal, automationPerformanceListC,
       ),
     staleTime: 60_000,
   });

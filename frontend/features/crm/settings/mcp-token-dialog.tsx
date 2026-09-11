@@ -13,15 +13,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   MCP_TOKEN_LAYOUT,
   withMcpScopeGroups,
 } from "@/lib/renderer/crm/settings/mcp-token-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCrmAgentToken } from "@/hooks/api/crm";
-import type { CreateAgentTokenResponse } from "@/types/projects";
+import type { CreateAgentTokenResponse } from "@/types/projects/agent-tokens";
 import { requiredText, numberOr } from "./shared/record-payload";
 import { CRM_MCP_SCOPE_GROUPS, resolveCrmMcpScopes } from "./mcp-scopes";
 

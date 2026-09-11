@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
+import { ActivityTimeline } from "@/components/timeline/activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import { DealAiInsightsCard } from "./deal-ai-insights-card";
 import { DealHealthChip } from "./deal-health-chip";
@@ -167,17 +167,19 @@ export function DealSidebarCards({
           <CardTitle className="text-base">Key Dates</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {keyDates
-            .filter((d) => d.value)
-            .map((d) => (
+          {keyDates.map((d) => {
+            const value = d.value;
+            if (!value) return null;
+            return (
               <div
                 key={d.label}
                 className="flex items-center justify-between text-sm"
               >
                 <span className="text-muted-foreground">{d.label}</span>
-                <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
+                <span>{new Date(value).toLocaleDateString("en-IN")}</span>
               </div>
-            ))}
+            );
+          })}
         </CardContent>
       </Card>
 

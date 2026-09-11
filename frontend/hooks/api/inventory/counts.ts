@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 /**
  * The exact keys the counts controllers carry.
@@ -129,8 +130,8 @@ export function useCycleCounts(
   const canView = useCan(COUNT_READ_KEY);
   return useQuery<CycleCountListResponse, Error>({
     queryKey: queryKeys.inventory.cycleCounts(toApiParams(params)),
-    queryFn: () =>
-      apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params), signal),
     staleTime: 2 * 60_000,
     // Reading the list needs COUNT_READ_KEY; a caller may hold that and still
     // have no business being offered the work, which is what `enabled` is for.
@@ -142,7 +143,7 @@ export function useCycleCount(id: number) {
   const canView = useCan(COUNT_READ_KEY);
   return useQuery<CycleCount, Error>({
     queryKey: queryKeys.inventory.cycleCount(id),
-    queryFn: () => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`),
+    queryFn: ({ signal }) => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -150,7 +151,7 @@ export function useCycleCount(id: number) {
 
 export function useCreateCycleCount() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CycleCount, Error, CreateCycleCountInput>({
+  return useAuthorizedIdempotentMutation<CycleCount, Error, CreateCycleCountInput>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "create"],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post<CycleCount>("/inventory/cycle-counts", data, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -162,7 +163,7 @@ export function useCreateCycleCount() {
 
 export function useStartCycleCount() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CycleCount, Error, number>({
+  return useAuthorizedIdempotentMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "start"],
     mutationFn: (countId, idempotencyKey) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -175,7 +176,7 @@ export function useStartCycleCount() {
 
 export function useUpdateCycleCountLines() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, { countId: number } & UpdateLinesPayload>({
+  return useAuthorizedMutation<CycleCount, Error, { countId: number } & UpdateLinesPayload>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "updateLines"],
     mutationFn: ({ countId, lines }) =>
       apiClient.patch<CycleCount>(`/inventory/cycle-counts/${countId}/lines`, { lines }),
@@ -187,7 +188,7 @@ export function useUpdateCycleCountLines() {
 
 export function useReviewCycleCount() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CycleCount, Error, number>({
+  return useAuthorizedIdempotentMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "review"],
     mutationFn: (countId, idempotencyKey) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -200,7 +201,7 @@ export function useReviewCycleCount() {
 
 export function usePostCycleCount() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CycleCount, Error, number>({
+  return useAuthorizedIdempotentMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "post"],
     mutationFn: (countId, idempotencyKey) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -215,7 +216,7 @@ export function usePostCycleCount() {
 
 export function useCancelCycleCount() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CycleCount, Error, number>({
+  return useAuthorizedIdempotentMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "cancel"],
     mutationFn: (countId, idempotencyKey) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -230,8 +231,8 @@ export function usePhysicalAudits(params?: CountsParams) {
   const canView = useCan(COUNT_READ_KEY);
   return useQuery<PhysicalAuditListResponse, Error>({
     queryKey: queryKeys.inventory.physicalAudits(toApiParams(params)),
-    queryFn: () =>
-      apiClient.get<PhysicalAuditListResponse>("/inventory/physical-audits", toApiParams(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<PhysicalAuditListResponse>("/inventory/physical-audits", toApiParams(params), signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -241,7 +242,7 @@ export function usePhysicalAudit(id: number) {
   const canView = useCan(COUNT_READ_KEY);
   return useQuery<PhysicalAudit, Error>({
     queryKey: queryKeys.inventory.physicalAudit(id),
-    queryFn: () => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`),
+    queryFn: ({ signal }) => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -249,7 +250,7 @@ export function usePhysicalAudit(id: number) {
 
 export function useCreatePhysicalAudit() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>({
+  return useAuthorizedIdempotentMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "create"],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post<PhysicalAudit>("/inventory/physical-audits", data, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -261,7 +262,7 @@ export function useCreatePhysicalAudit() {
 
 export function useStartPhysicalAudit() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedIdempotentMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "start"],
     mutationFn: (auditId, idempotencyKey) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -274,7 +275,7 @@ export function useStartPhysicalAudit() {
 
 export function useUpdatePhysicalAuditLines() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, { auditId: number } & UpdateLinesPayload>({
+  return useAuthorizedMutation<PhysicalAudit, Error, { auditId: number } & UpdateLinesPayload>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "updateLines"],
     mutationFn: ({ auditId, lines }) =>
       apiClient.patch<PhysicalAudit>(`/inventory/physical-audits/${auditId}/lines`, { lines }),
@@ -286,7 +287,7 @@ export function useUpdatePhysicalAuditLines() {
 
 export function useReviewPhysicalAudit() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedIdempotentMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "review"],
     mutationFn: (auditId, idempotencyKey) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -299,7 +300,7 @@ export function useReviewPhysicalAudit() {
 
 export function usePostPhysicalAudit() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedIdempotentMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "post"],
     mutationFn: (auditId, idempotencyKey) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -314,7 +315,7 @@ export function usePostPhysicalAudit() {
 
 export function useCancelPhysicalAudit() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedIdempotentMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "cancel"],
     mutationFn: (auditId, idempotencyKey) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }),

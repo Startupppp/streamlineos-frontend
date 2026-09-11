@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -12,14 +12,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  AiActionResultBody,
-  type AiActionResult,
-  type AiActionResultState,
-} from "@/components/ai";
+import { AiActionResultBody, type AiActionResult } from "@/components/ai";
+import { useAiPopoverAction } from "@/components/ai/use-ai-popover-action";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-client";
 import type { ProjectSummaryResult } from "@/types/projects/ai";
 
 interface ProjectAiMenuProps {
@@ -40,41 +35,19 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [state, setState] = useState<AiActionResultState>({ status: "loading" });
 
-  const runSummary = useCallback(async () => {
-    setSheetOpen(true);
-    setState({ status: "loading" });
-    try {
-      const data = await summaryMutation.mutateAsync(undefined);
-      const result = formatSummary(data);
-      setState({ status: "ready", result, aiUsage: result.aiUsage });
-    } catch (error) {
-      if (isApiError(error) && error.status === 402) {
-        setState({ status: "quota" });
-      } else if (isApiError(error) && error.status === 403) {
-        setState({ status: "denied", reason: getErrorMessage(error) });
-      } else {
-        setState({ status: "error", message: getErrorMessage(error) });
-      }
-    }
-  }, [summaryMutation]);
+  const summary = useAiPopoverAction({
+    run: useCallback(
+      async (signal?: AbortSignal): Promise<AiActionResult> =>
+        formatSummary(await summaryMutation.mutateAsync({ signal })),
+      [summaryMutation],
+    ),
+  });
 
   const handleSummarizeClick = useCallback(() => {
-    void runSummary();
-  }, [runSummary]);
-
-  const handleRetry = useCallback(() => {
-    void runSummary();
-  }, [runSummary]);
-
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    setSheetOpen(open);
-    if (!open) {
-      setState({ status: "loading" });
-    }
-  }, []);
+    if (summary.isPending) return;
+    void summary.execute();
+  }, [summary]);
 
   if (!canUseAI) return null;
 
@@ -85,7 +58,7 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
         variant="outline"
         size="sm"
         onClick={handleSummarizeClick}
-        isPending={summaryMutation.isPending}
+        isPending={summary.isPending}
         loadingText="Summarizing…"
         className="h-8 gap-1.5 text-xs"
         {...hoverHandlers}
@@ -94,7 +67,7 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
         Summarize
       </LoadingButton>
 
-      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
+      <Sheet open={summary.open} onOpenChange={summary.handleOpenChange}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
             <SheetTitle className="text-base font-semibold">Health summary</SheetTitle>
@@ -103,7 +76,11 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
             </SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-            <AiActionResultBody state={state} onRetry={handleRetry} />
+            <AiActionResultBody
+              state={summary.state}
+              onRetry={summary.retry}
+              onCancel={summary.cancel}
+            />
           </div>
         </SheetContent>
       </Sheet>

@@ -26,6 +26,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateResearchBrief } from "@/hooks/api/kb/research-briefs";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 
+function selectSpaceId(
+  onChange: (spaceId: number | undefined) => void,
+): (value: string) => void {
+  return function handleSpaceSelected(value) {
+    onChange(value === "all" ? undefined : Number(value));
+  };
+}
+
 export function KbResearchBriefForm() {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
@@ -78,7 +86,7 @@ export function KbResearchBriefForm() {
               <FormItem className="w-[160px]">
                 <FormLabel className="text-xs">Space (optional)</FormLabel>
                 <Select
-                  onValueChange={(v) => field.onChange(v === "all" ? undefined : Number(v))}
+                  onValueChange={selectSpaceId(field.onChange)}
                   value={field.value ? String(field.value) : "all"}
                 >
                   <FormControl>

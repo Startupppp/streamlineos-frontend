@@ -1,13 +1,24 @@
 import Ably from "ably";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type AblyAuthCallback = NonNullable<Ably.ClientOptions["authCallback"]>;
 
-function tokenAuthCallback(path: string): AblyAuthCallback {
+const ablyTokenRequestContract = lazyContract(() =>
+  import("@/lib/ably-token-schema").then((m) => m.ablyTokenRequestContract),
+);
+
+/**
+ * The fetch is a thunk rather than a path so each route stays a literal at its
+ * own call site — a path threaded through a parameter is invisible to every
+ * route rule in `check:response-contracts` and `check:gated-reads`.
+ */
+function tokenAuthCallback(
+  fetchTokenRequest: () => Promise<Ably.TokenRequest>,
+): AblyAuthCallback {
   return (_, callback) => {
-    apiClient
-      .get<Ably.TokenRequest>(path)
+    fetchTokenRequest()
       .then((tokenRequest) => callback(null, tokenRequest))
       .catch((error: unknown) => callback(getErrorMessage(error), null));
   };
@@ -18,7 +29,14 @@ let client: Ably.Realtime | null = null;
 export function getAblyClient(): Ably.Realtime {
   if (!client) {
     client = new Ably.Realtime({
-      authCallback: tokenAuthCallback("/chat/ably-token"),
+      authCallback: tokenAuthCallback(() =>
+        apiClient.get<Ably.TokenRequest>(
+          "/chat/ably-token",
+          undefined,
+          undefined,
+          ablyTokenRequestContract,
+        ),
+      ),
       autoConnect: false,
     });
   }
@@ -30,7 +48,14 @@ let supportClient: Ably.Realtime | null = null;
 export function getSupportAblyClient(): Ably.Realtime {
   if (!supportClient) {
     supportClient = new Ably.Realtime({
-      authCallback: tokenAuthCallback("/support/ably-token"),
+      authCallback: tokenAuthCallback(() =>
+        apiClient.get<Ably.TokenRequest>(
+          "/support/ably-token",
+          undefined,
+          undefined,
+          ablyTokenRequestContract,
+        ),
+      ),
       autoConnect: false,
     });
   }

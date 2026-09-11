@@ -30,12 +30,15 @@ import {
   CATEGORY_NAME_MAX,
   CATEGORY_DESC_MAX,
 } from "@/features/inventory/lib/category-schema";
-import type { InventoryCategory } from "@/types/inventory";
-
 const NO_PARENT = "none";
 
+interface CategoryItem {
+  id: number;
+  name: string;
+}
+
 interface CategoryCreateFormProps {
-  categories: InventoryCategory[];
+  categories: CategoryItem[];
   onSuccess: () => void;
 }
 

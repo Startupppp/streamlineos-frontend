@@ -58,7 +58,7 @@ export function SettingsPageContent() {
       <div className="flex flex-col gap-4">
         <PolicyProfileSection policy={data.policy} />
         <ToggleSettingsSection policy={data.policy} activeVersion={data.activeVersion} />
-        {data.activeVersion?.toggles.multiCurrency && (
+        {!!(data.activeVersion?.toggles["multiCurrency"]) && (
           <FxRatesSection policy={data.policy} activeVersion={data.activeVersion} />
         )}
         <VersionHistorySection policyId={data.policy.id} />

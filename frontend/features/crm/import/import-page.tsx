@@ -47,7 +47,7 @@ export function CrmImportPage() {
    * thing a dialog could never do.
    */
   const requested = searchParams.get("entity");
-  const active = tabs.some((tab) => tab.id === requested) ? requested! : tabs[0]?.id;
+  const active = tabs.find((tab) => tab.id === requested)?.id ?? tabs[0]?.id;
 
   const handleTabChange = useCallback(
     (value: string) => {

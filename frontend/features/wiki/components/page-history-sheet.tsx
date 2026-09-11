@@ -26,9 +26,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
-import type { KbPageVersion } from "@/hooks/api/kb/pages";
-import { pageHistoryHref } from "@/features/wiki/lib/knowledge-routes";
+import type { KbPageVersion } from "@/hooks/api/kb/page-types";
+import { pageHistoryHref } from "@/lib/knowledge-routes";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const PlateDocumentEditor = dynamic(
@@ -45,7 +46,8 @@ interface PageHistorySheetProps {
 export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHistorySheetProps) {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
-  const { data: versions = [], isLoading } = useKbPageVersions(pageId);
+  const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersions(pageId);
+  const versions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
     pageId,
     selectedVersion ?? 0
@@ -85,6 +87,10 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
 
   function handleBackToList() {
     setSelectedVersion(null);
+  }
+
+  function handleLoadMore() {
+    void fetchNextPage();
   }
 
   return (
@@ -145,6 +151,18 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                       </div>
                     </button>
                   ))}
+                  {hasNextPage && (
+                    <LoadingButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLoadMore}
+                      isPending={isFetchingNextPage}
+                      loadingText="Loading…"
+                      className="w-full text-xs h-8 text-muted-foreground"
+                    >
+                      Load more versions
+                    </LoadingButton>
+                  )}
                 </div>
             </SheetBody>
             <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">
@@ -178,9 +196,9 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
             <SheetBody className="px-6 py-4">
               {detailLoading ? (
                 <Skeleton className="h-64 w-full" />
-              ) : hasContent ? (
+              ) : hasContent && versionDetail ? (
                 <PlateDocumentEditor
-                  value={versionDetail!.content}
+                  value={versionDetail.content}
                   contentKey={`${pageId}-v${selectedVersion}`}
                   editable={false}
                 />

@@ -108,7 +108,14 @@ export function EmailChipsInput({
     }
   }, [inputValue, addEmail]);
 
-  const handleContainerClick = useCallback(() => {
+  /**
+   * A press on the shell's own padding forwards focus to the text box. It is a
+   * pointer affordance, not an activation: the text box is already in the tab
+   * order, so there is no keyboard equivalent to provide. Guarded on the shell
+   * itself so a press on a chip or its remove button is left alone.
+   */
+  const handleShellPointerDown = useCallback((event: React.PointerEvent) => {
+    if (event.target !== event.currentTarget) return;
     inputRef.current?.focus();
   }, []);
 
@@ -121,7 +128,7 @@ export function EmailChipsInput({
           : "border-input focus-within:ring-1 focus-within:ring-ring",
         disabled && "opacity-50 cursor-not-allowed",
       )}
-      onClick={handleContainerClick}
+      onPointerDown={handleShellPointerDown}
       role="group"
     >
       {value.map((email) => (

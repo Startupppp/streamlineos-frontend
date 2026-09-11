@@ -13,9 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import {
   useAskAI,
   useAiConversations,
@@ -27,17 +25,18 @@ import {
   type AskAiHistoryMessage,
   type AskAiHistoryPage,
 } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import { type PersonaId } from "@/features/ai-summaries/components/persona-chip-strip";
+import { type PersonaId } from "./persona-chip-strip";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
 import { AskOsChatView } from "./ask-os-chat-view";
 import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
+import { AskOsLauncher } from "./ask-os-launcher";
 
 const CONTEXT_WINDOW = 24;
 interface Draft {
@@ -49,10 +48,10 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
-  const { open, setOpen, toggle } = useAskOs();
+  const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
@@ -68,7 +67,8 @@ export function GlobalAskOs() {
   const previousScrollHeightRef = useRef(0);
   const loadingOlderRef = useRef(false);
   const isNearBottomRef = useRef(true);
-  const assistantBufferRef = useRef("");
+  const sendingRef = useRef(false);
+  const lastSentRef = useRef<string | null>(null);
   const temporaryIdRef = useRef(0);
   const { sendMessage, stop, isStreaming } = useAskAI();
   const createConversation = useCreateAiConversation();
@@ -79,7 +79,7 @@ export function GlobalAskOs() {
     hasNextPage: conversationHasNext,
     isFetchingNextPage: isFetchingNextConversations,
     fetchNextPage: fetchNextConversations,
-  } = useAiConversations(view === "conversations");
+  } = useAiConversations(open && view === "conversations");
   const {
     data: messageData,
     isLoading,
@@ -182,11 +182,12 @@ export function GlobalAskOs() {
   const send = useCallback(
     async (override?: string) => {
       const text = (override ?? input).trim();
-      if (!text || isStreaming) return;
+      if (!text || isStreaming || sendingRef.current) return;
+      sendingRef.current = true;
+      lastSentRef.current = text;
       setInput("");
-      setErrorMessage(null);
+      setFailure(null);
       isNearBottomRef.current = true;
-      assistantBufferRef.current = "";
       let conversationId = activeConversationId;
       if (conversationId === null) {
         try {
@@ -196,7 +197,8 @@ export function GlobalAskOs() {
           conversationId = conversation.id;
           setActiveConversationId(conversation.id);
         } catch (error) {
-          setErrorMessage(getErrorMessage(error));
+          sendingRef.current = false;
+          setFailure(classifyAiError(error));
           return;
         }
       }
@@ -208,10 +210,9 @@ export function GlobalAskOs() {
       ];
       setDraft({ user: text, assistant: "" });
       try {
-        await sendMessage(
+        const outcome = await sendMessage(
           context,
           (token) => {
-            assistantBufferRef.current += token;
             setDraft((previous) =>
               previous
                 ? { ...previous, assistant: previous.assistant + token }
@@ -221,6 +222,16 @@ export function GlobalAskOs() {
           conversationId,
           selectedPersona ?? undefined,
         );
+        if (outcome.status === "busy") {
+          setDraft(null);
+          return;
+        }
+        if (outcome.status === "cancelled" && outcome.text.length === 0) {
+          setDraft(null);
+          setFailure({ status: "cancelled" });
+          return;
+        }
+        if (outcome.status === "cancelled") setFailure({ status: "cancelled" });
         const userMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "user",
@@ -230,11 +241,11 @@ export function GlobalAskOs() {
         const assistantMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "assistant",
-          content: assistantBufferRef.current,
+          content: outcome.text,
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
-          queryKeys.aiChat.conversationMessages(conversationId),
+          collaborationQueryKeys.aiChat.conversationMessages(conversationId),
           (previous) => {
             if (!previous || previous.pages.length === 0)
               return {
@@ -264,12 +275,14 @@ export function GlobalAskOs() {
           },
         );
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.aiChat.conversations(),
+          queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
         setDraft(null);
       } catch (error) {
-        setErrorMessage(getErrorMessage(error));
+        setFailure(classifyAiError(error));
         setDraft(null);
+      } finally {
+        sendingRef.current = false;
       }
     },
     [
@@ -283,6 +296,10 @@ export function GlobalAskOs() {
       sendMessage,
     ],
   );
+  const handleRetrySend = useCallback(() => {
+    const last = lastSentRef.current;
+    if (last) void send(last);
+  }, [send]);
   function handleScroll() {
     const element = scrollRef.current;
     if (!element) return;
@@ -325,6 +342,9 @@ export function GlobalAskOs() {
   function handleSelectConversation(id: number) {
     setActiveConversationId(id);
     setView("chat");
+  }
+  function handleRenameConversation(id: number, title: string) {
+    renameConversation.mutate({ id, title });
   }
   function handleDeleteActive() {
     if (
@@ -400,9 +420,7 @@ export function GlobalAskOs() {
                       onLoadMore={() => void fetchNextConversations()}
                       onSelect={handleSelectConversation}
                       onNewChat={handleNewChat}
-                      onRename={(id, title) =>
-                        renameConversation.mutate({ id, title })
-                      }
+                      onRename={handleRenameConversation}
                       onDelete={handleDeleteConversation}
                       search={convSearch}
                       onSearchChange={setConvSearch}
@@ -421,7 +439,8 @@ export function GlobalAskOs() {
                     <AskOsChatView
                       atBottom={atBottom}
                       draft={draft}
-                      errorMessage={errorMessage}
+                      failure={failure}
+                      onRetry={handleRetrySend}
                       hasNextPage={hasNextPage}
                       isFetchingNextPage={isFetchingNextPage}
                       isLoading={isLoading}
@@ -452,28 +471,7 @@ export function GlobalAskOs() {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button
-        type="button"
-        onClick={toggle}
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={panelTransition}
-        whileTap={reduce ? undefined : { scale: 0.98 }}
-        aria-expanded={open}
-        aria-label={
-          open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"
-        }
-        className={`hidden md:flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
-      >
-        <AnimatedLogo size={13} gradient />
-        <span className="flex-1 text-left text-micro font-semibold leading-none tracking-wide">
-          ASK OS
-        </span>
-        <ChevronDown
-          className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          aria-hidden
-        />
-      </motion.button>
+      <AskOsLauncher />
     </div>,
     document.body,
   );

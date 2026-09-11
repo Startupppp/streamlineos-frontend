@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CursorPage<T> {
   data: T[];
@@ -119,53 +123,53 @@ export interface HelpdeskListParams {
 }
 
 const keys = {
-  all: ["streamlineos", "hr", "helpdesk"] as const,
-  list: (params?: HelpdeskListParams) => ["streamlineos", "hr", "helpdesk", "list", params] as const,
-  detail: (id: number) => ["streamlineos", "hr", "helpdesk", "detail", id] as const,
-  routing: () => ["streamlineos", "hr", "helpdesk", "routing"] as const,
-  suggest: (q: string) => ["streamlineos", "hr", "helpdesk", "suggest", q] as const,
+  all: [...queryKeyBase, "hr", "helpdesk"] as const,
+  list: (params?: HelpdeskListParams) => [...queryKeyBase, "hr", "helpdesk", "list", params] as const,
+  detail: (id: number) => [...queryKeyBase, "hr", "helpdesk", "detail", id] as const,
+  routing: () => [...queryKeyBase, "hr", "helpdesk", "routing"] as const,
+  suggest: (q: string) => [...queryKeyBase, "hr", "helpdesk", "suggest", q] as const,
 };
 
 export function useHelpdeskTickets(params?: HelpdeskListParams) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: keys.list(params),
-    queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketListContract))),
     staleTime: 60_000,
     enabled: canHelpdesk,
   });
 }
 
 export function useHelpdeskTicket(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:view", {
     queryKey: keys.detail(ticketId),
-    queryFn: () => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
     staleTime: 30_000,
   });
 }
 
 export function useHelpdeskSuggest(query: string) {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:view", {
     queryKey: keys.suggest(query),
-    queryFn: () => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }),
+    queryFn: ({ signal }) => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskSuggestContract))),
     enabled: query.length >= 2,
     staleTime: 5 * 60_000,
   });
 }
 
 export function useHelpdeskRoutingRules() {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:manage", {
     queryKey: keys.routing(),
-    queryFn: () => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing"),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing", undefined, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskRoutingListContract))),
     staleTime: 5 * 60_000,
   });
 }
 
 export function useCreateHelpdeskTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:create", {
     mutationKey: ["hr", "helpdesk", "create"],
-    mutationFn: (data: CreateTicketInput) => apiClient.post<HelpdeskTicket>("/hr/helpdesk", data),
+    mutationFn: (data: CreateTicketInput) => apiClient.post<HelpdeskTicket>("/hr/helpdesk", data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.all });
     },
@@ -174,10 +178,10 @@ export function useCreateHelpdeskTicket() {
 
 export function useUpdateHelpdeskTicket(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:manage", {
     mutationKey: ["hr", "helpdesk", "update", ticketId],
     mutationFn: (data: UpdateTicketInput) =>
-      apiClient.patch<HelpdeskTicket>(`/hr/helpdesk/${ticketId}`, data),
+      apiClient.patch<HelpdeskTicket>(`/hr/helpdesk/${ticketId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
       void qc.invalidateQueries({ queryKey: keys.all });
@@ -187,10 +191,10 @@ export function useUpdateHelpdeskTicket(ticketId: number) {
 
 export function useAddHelpdeskComment(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:view", {
     mutationKey: ["hr", "helpdesk", "comment", ticketId],
     mutationFn: (data: { body: string }) =>
-      apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data),
+      apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskCommentSingleContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
     },
@@ -199,10 +203,10 @@ export function useAddHelpdeskComment(ticketId: number) {
 
 export function useDeleteHelpdeskRouting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:manage", {
     mutationKey: ["hr", "helpdesk", "routing", "delete"],
     mutationFn: (ruleId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`),
+      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.routing() });
     },

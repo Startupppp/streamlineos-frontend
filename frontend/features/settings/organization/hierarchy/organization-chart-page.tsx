@@ -47,7 +47,7 @@ function assertNever(value: never): never {
 
 interface TreeItemProps {
   name: string;
-  code: string;
+  code: string | null;
   type: NodeType;
   status: string;
   childCount: number;
@@ -196,13 +196,13 @@ function RootNode({ node }: { node: OrgTreeRoot }) {
 }
 
 function matchTeam(t: OrgTreeTeam, lower: string): OrgTreeTeam | null {
-  return t.name.toLowerCase().includes(lower) || t.code.toLowerCase().includes(lower)
+  return t.name.toLowerCase().includes(lower) || (t.code ?? "").toLowerCase().includes(lower)
     ? t
     : null;
 }
 
 function matchDept(d: OrgTreeDepartment, lower: string): OrgTreeDepartment | null {
-  if (d.name.toLowerCase().includes(lower) || d.code.toLowerCase().includes(lower)) {
+  if (d.name.toLowerCase().includes(lower) || (d.code ?? "").toLowerCase().includes(lower)) {
     return { ...d, children: d.children };
   }
   const teams = d.children
@@ -213,7 +213,7 @@ function matchDept(d: OrgTreeDepartment, lower: string): OrgTreeDepartment | nul
 }
 
 function matchBranch(b: OrgTreeBranch, lower: string): OrgTreeBranch | null {
-  if (b.name.toLowerCase().includes(lower) || b.code.toLowerCase().includes(lower)) {
+  if (b.name.toLowerCase().includes(lower) || (b.code ?? "").toLowerCase().includes(lower)) {
     return { ...b, children: b.children };
   }
   const depts = b.children
@@ -227,7 +227,7 @@ function matchBusinessUnit(
   bu: OrgTreeBusinessUnit,
   lower: string,
 ): OrgTreeBusinessUnit | null {
-  if (bu.name.toLowerCase().includes(lower) || bu.code.toLowerCase().includes(lower)) {
+  if (bu.name.toLowerCase().includes(lower) || (bu.code ?? "").toLowerCase().includes(lower)) {
     return { ...bu, children: bu.children };
   }
   const branches = bu.children

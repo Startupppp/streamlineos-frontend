@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -32,9 +32,9 @@ import {
 } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { EmptyClientsIllustration } from "@/components/illustrations";
-import { RecordList, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CLIENT_LAYOUT } from "@/lib/renderer/crm/client-layout";
 import { useClientAccounts } from "@/hooks/api/crm/clients";
 import { useOrgDisplay } from "@/hooks/api/org-display";

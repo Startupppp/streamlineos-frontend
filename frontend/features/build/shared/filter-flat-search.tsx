@@ -9,7 +9,12 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { DatePicker } from "@/components/ui/date-picker";
+import dynamic from "next/dynamic";
+
+const DatePicker = dynamic(
+  () => import("@/components/ui/date-picker").then((m) => ({ default: m.DatePicker })),
+  { ssr: false, loading: () => null },
+);
 import { Check, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -141,6 +146,11 @@ export function FilterFlatSearch({
 }: FilterFlatSearchProps) {
   const hasDateFilter = Boolean(dueDateFrom || dueDateTo);
   const q = search.toLowerCase();
+  const assigneeOptions: { id: string; displayName: string; member: Member | null }[] = [
+    { id: "@me", displayName: "Me (dynamic)", member: null },
+    { id: "__unassigned__", displayName: "Unassigned", member: null },
+    ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
+  ];
 
   const showDates =
     "dates".includes(q) ||
@@ -196,7 +206,7 @@ export function FilterFlatSearch({
         <CommandSeparator />
 
         <CommandGroup heading="Priority">
-          {(PRIORITIES as readonly string[])
+          {PRIORITIES
             .filter((p) => {
               const label = p.charAt(0) + p.slice(1).toLowerCase();
               return p.toLowerCase().includes(q) || label.toLowerCase().includes(q) || "priority".includes(q);
@@ -224,7 +234,7 @@ export function FilterFlatSearch({
           <>
             <CommandSeparator />
             <CommandGroup heading="Type">
-              {(TYPES as readonly string[])
+              {TYPES
                 .filter((t) => {
                   const label = t.charAt(0) + t.slice(1).toLowerCase();
                   return t.toLowerCase().includes(q) || label.toLowerCase().includes(q) || "type".includes(q);
@@ -254,11 +264,7 @@ export function FilterFlatSearch({
           <>
             <CommandSeparator />
             <CommandGroup heading="Assignee">
-              {[
-                { id: "@me", displayName: "Me (dynamic)", member: null as Member | null },
-                { id: "__unassigned__", displayName: "Unassigned", member: null as Member | null },
-                ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
-              ]
+              {assigneeOptions
                 .filter(({ displayName }) =>
                   displayName.toLowerCase().includes(q) || "assignee".includes(q),
                 )

@@ -155,14 +155,14 @@ export function useOnboardingWizard(): OnboardingWizardState {
   const bankPrefill = useMemo((): BankDraft => {
     if (!bankDetails) return EMPTY_BANK_DRAFT;
     return {
-      countryCode: bankDetails.countryCode,
-      accountHolder: bankDetails.accountHolder,
-      bankName: bankDetails.bankName,
-      accountNumber: bankDetails.accountNumber,
-      routingCode: bankDetails.routingCode,
-      iban: bankDetails.iban,
-      swift: bankDetails.swift,
-      statutory: bankDetails.statutory,
+      countryCode: bankDetails.countryCode ?? EMPTY_BANK_DRAFT.countryCode,
+      accountHolder: bankDetails.accountHolder ?? "",
+      bankName: bankDetails.bankName ?? "",
+      accountNumber: bankDetails.accountNumber ?? "",
+      routingCode: bankDetails.routingCode ?? "",
+      iban: bankDetails.iban ?? "",
+      swift: bankDetails.swift ?? "",
+      statutory: bankDetails.statutory ?? {},
     };
   }, [bankDetails]);
 

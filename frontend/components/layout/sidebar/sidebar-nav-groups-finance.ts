@@ -23,6 +23,7 @@ import {
   Truck,
   Users,
   Wallet,
+  Workflow,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -272,6 +273,12 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             href: "/accounting/settings",
             exact: true,
             requiredPermission: "accounting:settings:read",
+          },
+          {
+            label: "Automations",
+            icon: Workflow,
+            href: "/accounting/settings/automations",
+            requiredPermission: "settings:automations:view",
           },
           {
             label: "Payment providers",

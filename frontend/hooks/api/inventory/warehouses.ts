@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { WarehouseStockResult } from "@/types/inventory";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export type LocationType =
   | "ZONE"
@@ -130,7 +131,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     queryKey: hasActiveFilters
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
-    queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -141,7 +142,7 @@ export function useWarehouse(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<Warehouse, Error>({
     queryKey: queryKeys.inventory.warehouse(warehouseId),
-    queryFn: () => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`),
+    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -151,8 +152,8 @@ export function useLocations(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<WarehouseLocation[], Error>({
     queryKey: queryKeys.inventory.locations(warehouseId),
-    queryFn: () =>
-      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`),
+    queryFn: ({ signal }) =>
+      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -160,7 +161,7 @@ export function useLocations(warehouseId: number) {
 
 export function useCreateWarehouse() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Warehouse, Error, CreateWarehouseInput>({
+  return useAuthorizedIdempotentMutation<Warehouse, Error, CreateWarehouseInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "create"],
     mutationFn: (data, idempotencyKey) => apiClient.post<Warehouse>("/inventory/warehouses", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -171,7 +172,7 @@ export function useCreateWarehouse() {
 
 export function useCreateLocation() {
   const qc = useQueryClient();
-  return useIdempotentMutation<WarehouseLocation, Error, CreateLocationInput>({
+  return useAuthorizedIdempotentMutation<WarehouseLocation, Error, CreateLocationInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "locations", "create"],
     mutationFn: ({ warehouseId, ...data }, idempotencyKey) =>
       apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -193,7 +194,7 @@ export function useCreateLocation() {
  */
 export function useUpdateLocation() {
   const qc = useQueryClient();
-  return useMutation<WarehouseLocation, Error, UpdateLocationInput>({
+  return useAuthorizedMutation<WarehouseLocation, Error, UpdateLocationInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "locations", "update"],
     mutationFn: ({ warehouseId, locationId, ...data }) =>
       apiClient.patch<WarehouseLocation>(
@@ -209,12 +210,12 @@ export function useUpdateLocation() {
 
 export function useSetDefaultWarehouse() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Warehouse,
     Error,
     { warehouseId: number },
     { previous: Warehouse[] | undefined }
-  >({
+  >("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
       apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
@@ -245,11 +246,11 @@ export function useWarehouseStock(
   const canView = useCan("inventory:stock:read");
   return useQuery<WarehouseStockResult, Error>({
     queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
-      }),
+      }, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 60_000,
   });
@@ -302,11 +303,11 @@ export function useWarehouseAssignees(
   const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
   return useQuery<WarehouseAssigneePage, Error>({
     queryKey: warehouseAssigneesKey(warehouseId, filters.page, filters.limit),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WarehouseAssigneePage>(`/inventory/warehouses/${warehouseId}/users`, {
         page: filters.page,
         limit: filters.limit,
-      }),
+      }, signal),
     enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -321,10 +322,10 @@ export function useAssignableWarehouseUsers(
   const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
   return useQuery<AssignableWarehouseUser[], Error>({
     queryKey: assignableWarehouseUsersKey(warehouseId, search),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AssignableWarehouseUser[]>(
         `/inventory/warehouses/${warehouseId}/assignable-users`,
-        search ? { q: search } : undefined,
+        search ? { q: search } : undefined, signal,
       ),
     enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
     staleTime: 30_000,
@@ -346,7 +347,7 @@ function useWarehouseAssignmentInvalidation(warehouseId: number) {
 
 export function useGrantWarehouseUser(warehouseId: number) {
   const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
-  return useMutation<{ granted: boolean }, Error, { userId: string }>({
+  return useAuthorizedMutation<{ granted: boolean }, Error, { userId: string }>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "grant-user", warehouseId],
     mutationFn: (data) =>
       apiClient.post<{ granted: boolean }>(`/inventory/warehouses/${warehouseId}/users`, data),
@@ -356,7 +357,7 @@ export function useGrantWarehouseUser(warehouseId: number) {
 
 export function useRevokeWarehouseUser(warehouseId: number) {
   const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
-  return useMutation<{ revoked: true }, Error, { userId: string }>({
+  return useAuthorizedMutation<{ revoked: true }, Error, { userId: string }>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "revoke-user", warehouseId],
     mutationFn: ({ userId }) =>
       apiClient.delete<{ revoked: true }>(

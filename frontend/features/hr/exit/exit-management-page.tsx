@@ -3,21 +3,18 @@
 import DOMPurify from "isomorphic-dompurify";
 
 import { useState, useCallback } from "react";
-import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useResignations,
-  useHrReviewResignation,
-  useFinalReviewResignation,
-  useWithdrawResignation,
-  type Resignation,
-} from "@/hooks/api/hr";
+import { useResignations, type Resignation } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+
+const exitLetterContract = lazyContract(() =>
+  import("@/features/hr/exit/exit-management-schema").then((m) => m.exitLetterContract),
+);
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -25,21 +22,22 @@ import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
-import { RejectRemarksSheet, type RejectDialogState } from "@/features/hr/exit/reject-remarks-sheet";
+import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
+import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
+
+const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
   const { data: session } = useSession();
-  const [page, setPage] = useState(1);
-  const { data: resignationData, isLoading, isError, refetch } = useResignations({ page, limit: 20 });
+  const pager = useCursorPager();
+  const { data: resignationData, isLoading, isError, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
   const pagination = resignationData?.pagination;
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const hrReview = useHrReviewResignation();
-  const finalReview = useFinalReviewResignation();
-  const withdrawResignation = useWithdrawResignation();
+  const review = useResignationReview();
 
   const userId = session?.user?.id;
   const isAdmin = useCan("hr:exit:manage");
@@ -47,17 +45,12 @@ export function ExitManagementPage() {
   const canApproveExit = useCan("hr:exit:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [hrApproveId, setHrApproveId] = useState<number | null>(null);
-  const [finalApproveId, setFinalApproveId] = useState<number | null>(null);
-  const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
-  const [rejectRemarksOpen, setRejectRemarksOpen] = useState(false);
-  const [withdrawId, setWithdrawId] = useState<number | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const hasActiveResignation =
     resignations?.some(
       (r: Resignation) =>
-        r.userId === userId && ["SUBMITTED", "PENDING_HR", "HR_APPROVED"].includes(r.status ?? ""),
+        r.userId === userId && ACTIVE_RESIGNATION_STATUSES.includes(r.status ?? ""),
     ) ?? false;
 
   const toggleExpand = useCallback((id: number) => {
@@ -71,7 +64,7 @@ export function ExitManagementPage() {
 
   const handleViewLetter = useCallback(async (id: number) => {
     try {
-      const data = await apiClient.get<{ html: string }>(`/hr/exit/${id}/letter`);
+      const data = await apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract);
       const win = window.open("", "_blank");
       if (!win) {
         toast.error("Popup blocked — please allow popups to view the letter.");
@@ -86,88 +79,11 @@ export function ExitManagementPage() {
     }
   }, []);
 
-  const handleHrApprove = useCallback(() => {
-    if (!hrApproveId) return;
-    hrReview.mutate(
-      { id: hrApproveId, action: "approve" },
-      {
-        onSuccess: () => {
-          toast.success("Resignation approved by HR");
-          setHrApproveId(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [hrApproveId, hrReview]);
-
-  const handleFinalApprove = useCallback(() => {
-    if (!finalApproveId) return;
-    finalReview.mutate(
-      { id: finalApproveId, action: "approve" },
-      {
-        onSuccess: () => {
-          toast.success("Resignation approved by FINAL");
-          setFinalApproveId(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [finalApproveId, finalReview]);
-
-  const handleOpenRejectDialog = useCallback((id: number, type: "hr" | "final") => {
-    setRejectDialog({ id, type });
-    setRejectRemarksOpen(true);
-  }, []);
-
-  const handleWithdraw = useCallback(() => {
-    if (!withdrawId) return;
-    withdrawResignation.mutate(
-      { id: withdrawId },
-      {
-        onSuccess: () => {
-          toast.success("Resignation withdrawn");
-          setWithdrawId(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [withdrawId, withdrawResignation]);
-
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+  function handleNextPage() {
+    pager.goNext(pagination?.nextCursor);
   }
-
-  const handleHrApproveClose = useCallback((open: boolean) => {
-    if (!open) setHrApproveId(null);
-  }, []);
-
-  const handleFinalApproveClose = useCallback((open: boolean) => {
-    if (!open) setFinalApproveId(null);
-  }, []);
-
-  const handleRejectRemarksOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) setRejectDialog(null);
-      setRejectRemarksOpen(open);
-    },
-    [],
-  );
-
-  const handleWithdrawClose = useCallback((open: boolean) => {
-    if (!open) setWithdrawId(null);
-  }, []);
-
-  const handleHrReject = useCallback(
-    (id: number) => handleOpenRejectDialog(id, "hr"),
-    [handleOpenRejectDialog],
-  );
-
-  const handleFinalReject = useCallback(
-    (id: number) => handleOpenRejectDialog(id, "final"),
-    [handleOpenRejectDialog],
-  );
 
   if (isLoading) {
     return (
@@ -245,63 +161,29 @@ export function ExitManagementPage() {
               canApproveExit={canApproveExit}
               userId={userId}
               onToggleExpand={toggleExpand}
-              onHrApprove={setHrApproveId}
-              onHrReject={handleHrReject}
-              onFinalApprove={setFinalApproveId}
-              onFinalReject={handleFinalReject}
-              onWithdraw={setWithdrawId}
+              onHrApprove={review.requestHrApprove}
+              onHrReject={review.requestHrReject}
+              onFinalApprove={review.requestFinalApprove}
+              onFinalReject={review.requestFinalReject}
+              onWithdraw={review.requestWithdraw}
               onViewLetter={handleViewLetter}
             />
           ))}
-          {pagination && pagination.totalPages > 1 && (
+          {pagination && (pagination.hasMore || pager.hasPrevious) && (
             <TablePagination
-              page={page}
-              pageSize={pagination.limit}
-              total={pagination.total}
-              onPageChange={handlePageChange}
+              mode="cursor"
+              rowCount={resignations.length}
+              hasMore={pagination.hasMore}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNextPage}
+              onPrevious={pager.goPrevious}
             />
           )}
         </div>
       )}
 
       <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
-
-      <ConfirmSheet
-        open={hrApproveId !== null}
-        onOpenChange={handleHrApproveClose}
-        title="Approve Resignation (HR)"
-        description="Are you sure you want to approve this resignation? It will be forwarded to the FINAL for final approval."
-        confirmLabel="Approve"
-        onConfirm={handleHrApprove}
-        isPending={hrReview.isPending}
-      />
-
-      <ConfirmSheet
-        open={finalApproveId !== null}
-        onOpenChange={handleFinalApproveClose}
-        title="Approve Resignation (FINAL)"
-        description="Are you sure you want to give final approval for this resignation?"
-        confirmLabel="Approve"
-        onConfirm={handleFinalApprove}
-        isPending={finalReview.isPending}
-      />
-
-      <RejectRemarksSheet
-        open={rejectRemarksOpen}
-        rejectDialog={rejectDialog}
-        onOpenChange={handleRejectRemarksOpenChange}
-      />
-
-      <ConfirmSheet
-        open={withdrawId !== null}
-        onOpenChange={handleWithdrawClose}
-        title="Withdraw Resignation"
-        description="Are you sure you want to withdraw your resignation? This action cannot be undone."
-        confirmLabel="Withdraw"
-        destructive
-        onConfirm={handleWithdraw}
-        isPending={withdrawResignation.isPending}
-      />
+      <ResignationReviewSheets review={review} />
     </PageWrapper>
   );
 }

@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import { publicApplicationStatusContract } from "@/lib/public-schema";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicApplicationStatus } from "@/lib/public-fetch";
+
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -20,7 +22,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 
 export default async function ApplicationStatusPage({ params }: Props) {
   const { token } = await params;
-  const data = await publicGetNoStore<PublicApplicationStatus>(`/public/application-status/${token}`);
+  const data = await publicGetNoStore<PublicApplicationStatus>(`/public/application-status/${token}`, undefined, publicApplicationStatusContract);
   if (!data) return notFound();
 
   const config = STATUS_CONFIG[data.status] ?? { label: data.status, variant: "secondary" as const, description: "" };
@@ -58,7 +60,7 @@ export default async function ApplicationStatusPage({ params }: Props) {
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-lg border px-3 py-2.5">
                 <p className="text-muted-foreground mb-0.5">Applied On</p>
-                <p className="font-medium">{format(new Date(data.appliedAt), "dd MMM yyyy")}</p>
+                <p className="font-medium">{data.appliedAt ? format(new Date(data.appliedAt), "dd MMM yyyy") : "—"}</p>
               </div>
               <div className="rounded-lg border px-3 py-2.5">
                 <p className="text-muted-foreground mb-0.5">Last Updated</p>

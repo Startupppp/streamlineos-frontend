@@ -1,7 +1,15 @@
 import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
-import { ApiError, apiErrorFromResponse, parseApiResponse } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
+import {
+  ApiError,
+  apiErrorFromResponse,
+  parseApiResponse,
+  resolveContract,
+  type ContractSource,
+  type ResponseContract,
+} from "@/lib/api-envelope";
 import { newCorrelationId, noteCorrelationId } from "./observability";
-import { randomId } from "./random-id";
+import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -9,11 +17,45 @@ if (!process.env.NEXT_PUBLIC_API_URL)
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 const REQUEST_TIMEOUT_MS = 30_000;
 
-function makeRequestSignal(external?: AbortSignal): AbortSignal {
-  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+/**
+ * `AbortSignal.any` is Chrome 116 / Safari 17.4 / Firefox 124. Falling back to
+ * the timeout alone dropped the caller's signal, which made every cancel in the
+ * app a silent no-op on an older browser — the request ran to completion after
+ * the user pressed Stop, and on an AI surface it kept spending credits. Linking
+ * by hand keeps both sources, and forwarding `reason` preserves the
+ * `TimeoutError` that the catch below branches on.
+ */
+function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  for (const source of sources) {
+    if (source.aborted) {
+      controller.abort(source.reason);
+      return controller.signal;
+    }
+    source.addEventListener("abort", () => controller.abort(source.reason), {
+      once: true,
+    });
+  }
+  return controller.signal;
+}
+
+function makeRequestSignal(external?: AbortSignal, timeoutMs?: number): AbortSignal {
+  const timeout = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS);
   if (!external) return timeout;
   if (typeof AbortSignal.any === "function") return AbortSignal.any([timeout, external]);
-  return timeout;
+  return linkAbortSignals([timeout, external]);
+}
+
+export interface AuthedFetchOptions {
+  /**
+   * Overrides the ordinary request timeout, which is a deadline this client
+   * imposes on the SERVER's work. A streamed AI answer is bounded by the
+   * backend's own deadline — 120 s for chat, 60 s for the other stream routes —
+   * so the 30 s every other call gets aborts a paid stream the server is still
+   * producing. The surface renders that as a cancellation nobody asked for, and
+   * the retry it invites reserves and spends a second time.
+   */
+  timeoutMs?: number;
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -46,8 +88,9 @@ async function redirectForOrganizationAccessError(res: Response): Promise<void> 
     return;
 
   try {
-    const body = (await res.clone().json()) as { code?: unknown };
+    const body: unknown = await res.clone().json();
     if (
+      !isRecord(body) ||
       typeof body.code !== "string" ||
       !ORGANIZATION_ACCESS_ERROR_CODES.has(body.code)
     )
@@ -73,8 +116,9 @@ function readTokenExpiry(token: string): number | null {
   if (!payload) return null;
   try {
     const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    const claims = JSON.parse(json) as { exp?: unknown };
-    return typeof claims.exp === "number" ? claims.exp * 1000 : null;
+    const claims: unknown = JSON.parse(json);
+    if (!isRecord(claims) || typeof claims.exp !== "number") return null;
+    return claims.exp * 1000;
   } catch {
     return null;
   }
@@ -89,7 +133,7 @@ export function setAutoSignOutSuppressed(value: boolean): void {
   autoSignOutSuppressed = value;
 }
 
-async function getBackendToken(): Promise<string | null> {
+export async function getBackendToken(): Promise<string | null> {
   if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
   if (fetchingTokenPromise) return fetchingTokenPromise;
@@ -97,11 +141,13 @@ async function getBackendToken(): Promise<string | null> {
     try {
       const res = await fetch("/api/auth/session", { credentials: "include" });
       if (!res.ok) return null;
-      const data = (await res.json()) as { backendJwt?: string };
-      if (!data.backendJwt) return null;
-      const expiresAt = readTokenExpiry(data.backendJwt);
-      cachedToken = expiresAt === null ? null : { value: data.backendJwt, expiresAt };
-      return data.backendJwt;
+      const data: unknown = await res.json();
+      if (!isRecord(data) || typeof data.backendJwt !== "string" || !data.backendJwt)
+        return null;
+      const backendJwt = data.backendJwt;
+      const expiresAt = readTokenExpiry(backendJwt);
+      cachedToken = expiresAt === null ? null : { value: backendJwt, expiresAt };
+      return backendJwt;
     } catch {
       return null;
     } finally {
@@ -122,28 +168,29 @@ function requestHost(url: string): string {
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**
- * Exported because a caller that needs a key stable across *retries* has to
+ * Re-exported because a caller that needs a key stable across *retries* has to
  * mint it once, outside the request. The per-fetch key below is minted inside
  * `authedFetch`, so a retried mutation would carry a new one and replay
  * nothing — which is fine for a request that is cheap to repeat and wrong for
- * one that spends money or holds a message.
- *
- * The same UUID `authedFetch` mints, from `randomId`, which does not depend
- * on a secure context.
+ * one that spends money or holds a message. The key itself lives in
+ * `lib/idempotency-key`; `hooks/common/use-idempotent-operation.ts` is the hook form.
  */
-export function newIdempotencyKey(): string {
-  return randomId();
-}
+export { newIdempotencyKey };
 
 export async function authedFetch(
   url: string,
   init: RequestInit,
   path: string,
   signal?: AbortSignal,
+  options?: AuthedFetchOptions,
 ): Promise<Response> {
+  // `init.signal` is destructured out rather than left to be shadowed by the
+  // `signal:` written after the spread below — a caller that passed one had it
+  // silently overwritten, which is what made `useAskAI`'s stop() a no-op.
+  const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
-  const combinedSignal = makeRequestSignal(signal);
+  const combinedSignal = makeRequestSignal(signal ?? initSignal ?? undefined, options?.timeoutMs);
 
   // One id per request, sent to the API and remembered here, so a browser error
   // report and the server-side logs for the same call can be joined up.
@@ -154,8 +201,11 @@ export async function authedFetch(
   }
 
   if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
-    if (!headers.has("Idempotency-Key"))
-      headers.set("Idempotency-Key", randomId());
+    // Last resort only: an @Idempotent route 400s without the header, and the
+    // error reads like a body validation failure. A caller that can be retried
+    // supplies its own key — see hooks/common/use-idempotent-operation.ts.
+    if (!headers.has(IDEMPOTENCY_HEADER))
+      headers.set(IDEMPOTENCY_HEADER, newIdempotencyKey());
   }
 
   if (!isPublic) {
@@ -164,14 +214,14 @@ export async function authedFetch(
   }
 
   try {
-    let res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
+    let res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
 
     if (!isPublic && res.status === 401) {
       cachedToken = null;
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
+        res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
       }
       if (
         res.status === 401 &&
@@ -206,7 +256,19 @@ export async function authedFetch(
   }
 }
 
-export function buildUrl(path: string, params?: object): string {
+type NoAbortSignal = {
+  readonly aborted?: never;
+  readonly addEventListener?: never;
+  readonly throwIfAborted?: never;
+};
+
+// The union keeps fresh object literals, interfaces and Record shapes assignable
+// while making `apiClient.get(url, signal)` — signal in the params slot — a compile error.
+export type QueryParams =
+  | ({ readonly [key: string]: unknown } & NoAbortSignal)
+  | (object & NoAbortSignal);
+
+export function buildUrl(path: string, params?: QueryParams): string {
   const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const entries: Array<[string, unknown]> = Object.entries(params);
@@ -222,21 +284,47 @@ export {
   ApiError,
   isApiError,
   getApiErrorCode,
-  parseApiResponse,
 } from "@/lib/api-envelope";
 
+/**
+ * Starts a lazy contract downloading in PARALLEL with the request instead of
+ * after it, so deferring the schema module costs the read nothing it would not
+ * already have paid — the chunk and the response race, and the body is parsed
+ * when both have landed.
+ *
+ * The `catch` is a no-op on purpose: it keeps a failed chunk download from
+ * becoming an unhandled rejection when the request itself throws first. The
+ * awaited read at each call site is still the one that reports the failure.
+ */
+function beginContract<T>(
+  contract?: ContractSource<T>,
+): Promise<ResponseContract<T> | undefined> {
+  const pending = resolveContract(contract);
+  void pending.catch(() => undefined);
+  return pending;
+}
+
+/**
+ * Pass `contract` and the response body is validated at runtime, so a backend
+ * rename fails the read instead of arriving as an undefined field. Omit it and
+ * the body is cast unchecked — see `assertUnchecked` in `lib/api-envelope.ts`.
+ * A `ContractSource` may be the schema itself or a `lazyContract` thunk that
+ * loads it; both parse, and the thunk keeps Zod out of the importer's chunk.
+ */
 async function get<T>(
   url: string,
-  params?: object,
+  params?: QueryParams,
   signal?: AbortSignal,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
     url,
     signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 export interface RequestConfig {
@@ -248,7 +336,9 @@ async function post<T>(
   url: string,
   data?: unknown,
   config?: RequestConfig,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url),
     {
@@ -262,7 +352,7 @@ async function post<T>(
     url,
     config?.signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 function toRequestConfig(config?: AbortSignal | RequestConfig): RequestConfig {
@@ -275,7 +365,9 @@ async function mutate<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const resolved = toRequestConfig(config);
   const res = await authedFetch(
     buildUrl(url),
@@ -290,40 +382,50 @@ async function mutate<T>(
     url,
     resolved.signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 async function put<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ContractSource<T>,
 ): Promise<T> {
-  return mutate<T>("PUT", url, data, config);
+  return mutate<T>("PUT", url, data, config, contract);
 }
 
 async function patch<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ContractSource<T>,
 ): Promise<T> {
-  return mutate<T>("PATCH", url, data, config);
+  return mutate<T>("PATCH", url, data, config, contract);
 }
 
 async function del<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ContractSource<T>,
 ): Promise<T> {
-  return mutate<T>("DELETE", url, data, config);
+  return mutate<T>("DELETE", url, data, config, contract);
 }
 
-async function upload<T>(url: string, formData: FormData): Promise<T> {
+async function upload<T>(
+  url: string,
+  formData: FormData,
+  contract?: ContractSource<T>,
+  config?: RequestConfig,
+): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url),
-    { method: "POST", body: formData },
+    { method: "POST", headers: config?.headers, body: formData },
     url,
+    config?.signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 export interface DownloadConfig {
@@ -340,7 +442,7 @@ export interface DownloadConfig {
 
 async function download(
   url: string,
-  params?: object,
+  params?: QueryParams,
   config?: DownloadConfig,
 ): Promise<Blob> {
   const method = config?.method ?? "GET";
@@ -376,6 +478,3 @@ export const apiClient = {
   download,
 } as const;
 
-export type ApiResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };

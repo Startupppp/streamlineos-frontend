@@ -2,14 +2,15 @@
 
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
+import { lazyContract } from '@/lib/api-envelope';
+import { IDEMPOTENCY_HEADER, newIdempotencyKey } from '@/lib/idempotency-key';
 
-export interface UploadedKbMedia {
-  url: string;
-  key: string;
-  size: number;
-  mimeType: string;
-  name: string;
-}
+const kbMediaUploadContract = lazyContract(() =>
+  import('@/hooks/api/kb/kb-import-schema').then((m) => m.kbMediaUploadContract),
+);
+import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
+
+export type UploadedKbMedia = UploadedEditorMedia;
 
 const IMAGE_MAX = 10 * 1024 * 1024;
 const VIDEO_MAX = 100 * 1024 * 1024;
@@ -64,6 +65,36 @@ function getValidationError(file: File): string | null {
   return `Unsupported file type: ${file.type || 'unknown'}`;
 }
 
+/**
+ * One idempotency key per FILE, not per attempt, released only on success.
+ *
+ * `POST /kb/media` is `@Idempotent`. `api-client` mints a fallback key per HTTP call so
+ * the route never 400s, but a key minted per attempt is a request id wearing the wrong
+ * name and makes the backend's replay inert: every retry uploads a second R2 object under
+ * a fresh storage key (the `(org_id, file_key)` conflict target can never match a retry),
+ * and for a document against a page it pays for a second extract and embed batch. Both
+ * call sites — the editor's drop handler and the cover picker — are user-retryable after a
+ * timeout, which is exactly the case the fence exists for.
+ *
+ * `use-idempotent-operation.ts` is the hook form of this and cannot be used here:
+ * `uploadKbMedia` is a plain function called from an editor callback, not a component. The
+ * key is therefore held module-scoped against the file's own identity, which is stable
+ * across retries of the same upload and different for a different file.
+ */
+const mediaUploadKeys = new Map<string, string>();
+
+function uploadSignature(file: File, pageId?: number): string {
+  return `${pageId ?? ''}:${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+}
+
+function idempotencyKeyFor(signature: string): string {
+  const existing = mediaUploadKeys.get(signature);
+  if (existing !== undefined) return existing;
+  const minted = newIdempotencyKey();
+  mediaUploadKeys.set(signature, minted);
+  return minted;
+}
+
 export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedKbMedia> {
   const error = getValidationError(file);
   if (error) {
@@ -73,5 +104,11 @@ export async function uploadKbMedia(file: File, pageId?: number): Promise<Upload
   const fd = new FormData();
   fd.append('file', file);
   if (pageId != null) fd.append('pageId', String(pageId));
-  return apiClient.upload<UploadedKbMedia>('/kb/media', fd);
+
+  const signature = uploadSignature(file, pageId);
+  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, kbMediaUploadContract, {
+    headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
+  });
+  mediaUploadKeys.delete(signature);
+  return uploaded;
 }

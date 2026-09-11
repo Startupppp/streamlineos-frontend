@@ -1,7 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import type { ShellVariant } from "@/lib/shell-variant";
 import { Search, CalendarDays, MessageSquare } from "lucide-react";
 import {
   Tooltip,
@@ -17,14 +18,7 @@ import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
-
-const NotificationBell = dynamic(
-  () =>
-    import("@/features/notifications/notification-bell").then(
-      (m) => m.NotificationBell,
-    ),
-  { ssr: false },
-);
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 
 function SearchButton() {
   function handleClick() {
@@ -82,17 +76,24 @@ function HeaderIconLink({
   );
 }
 
+function NotificationBellPlaceholder() {
+  return <div className="size-8 rounded-lg shrink-0" aria-hidden="true" />;
+}
+
 function DesktopHeader({
   isSidebarCollapsed,
   onToggleSidebar,
   showSidebarToggle,
   hideAdminChrome = false,
+  notificationBellSlot,
 }: {
   isSidebarCollapsed: boolean;
   onToggleSidebar?: () => void;
   showSidebarToggle: boolean;
   hideAdminChrome?: boolean;
+  notificationBellSlot?: ReactNode;
 }) {
+  const afterLoad = useAfterLoad();
   const showLabels = !isSidebarCollapsed || !showSidebarToggle;
 
   return (
@@ -136,7 +137,7 @@ function DesktopHeader({
           <MessageSquare className="h-4 w-4" />
         </HeaderIconLink>
 
-        <NotificationBell />
+        {afterLoad ? (notificationBellSlot ?? null) : <NotificationBellPlaceholder />}
 
         {!hideAdminChrome && (
           <>
@@ -153,7 +154,8 @@ function DesktopHeader({
   );
 }
 
-function MobileHeader({ hidden }: { hidden?: boolean }) {
+function MobileHeader({ hidden, notificationBellSlot }: { hidden?: boolean; notificationBellSlot?: ReactNode }) {
+  const afterLoad = useAfterLoad();
   return (
     <div
       className={cn(
@@ -170,7 +172,7 @@ function MobileHeader({ hidden }: { hidden?: boolean }) {
           id="mobile-header-checklist-slot"
           className="relative inline-flex items-center"
         />
-        <NotificationBell />
+        {afterLoad ? (notificationBellSlot ?? null) : <NotificationBellPlaceholder />}
       </div>
     </div>
   );
@@ -182,26 +184,33 @@ export function GlobalHeader({
   showSidebarToggle = true,
   mobileNavOpen = false,
   hideAdminChrome = false,
+  shellVariant = "desktop",
+  notificationBellSlot,
 }: {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   showSidebarToggle?: boolean;
   mobileNavOpen?: boolean;
   hideAdminChrome?: boolean;
+  shellVariant?: ShellVariant;
+  notificationBellSlot?: ReactNode;
 }) {
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
-        <div className="hidden md:block h-full">
-          <DesktopHeader
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={onToggleSidebar}
-            showSidebarToggle={showSidebarToggle}
-            hideAdminChrome={hideAdminChrome}
-          />
-        </div>
-        <div className="md:hidden h-full">
-          <MobileHeader hidden={mobileNavOpen} />
+        {shellVariant === "desktop" && (
+          <div className="hidden md:block h-full">
+            <DesktopHeader
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={onToggleSidebar}
+              showSidebarToggle={showSidebarToggle}
+              hideAdminChrome={hideAdminChrome}
+              notificationBellSlot={notificationBellSlot}
+            />
+          </div>
+        )}
+        <div className={shellVariant === "desktop" ? "md:hidden h-full" : "h-full"}>
+          <MobileHeader hidden={mobileNavOpen} notificationBellSlot={notificationBellSlot} />
         </div>
       </TooltipProvider>
     </header>

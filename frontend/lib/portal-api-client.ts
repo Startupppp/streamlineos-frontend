@@ -1,3 +1,5 @@
+import { withCorrelation } from "@/lib/observability/with-correlation";
+import { isRecord } from "@/lib/is-record";
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -11,14 +13,53 @@ export function getPortalToken(): string | null {
   return window.localStorage.getItem(PORTAL_TOKEN_KEY);
 }
 
+const tokenListeners = new Set<() => void>();
+
+function notifyPortalTokenChanged(): void {
+  for (const listener of [...tokenListeners]) listener();
+}
+
+/**
+ * The portal has no session, so nothing else tells the cache that the subject
+ * changed. `(portal)` is one layout across the invitation page and the board,
+ * so accepting a second client's invitation in the same browser previously kept
+ * the first client's QueryClient — and `queryKeys.portal.projects()` carries no
+ * subject dimension, so customer B read customer A's project list out of cache.
+ */
+export function subscribePortalToken(listener: () => void): () => void {
+  tokenListeners.add(listener);
+  if (typeof window !== "undefined") window.addEventListener("storage", listener);
+  return () => {
+    tokenListeners.delete(listener);
+    if (typeof window !== "undefined") window.removeEventListener("storage", listener);
+  };
+}
+
+export const PORTAL_ANONYMOUS_SCOPE = "portal:anonymous";
+
+/**
+ * A short, stable digest of the bearer token — enough to key one client's cache
+ * apart from another's, and not the token itself sitting in a cache key.
+ */
+export function portalTokenScope(): string {
+  const token = getPortalToken();
+  if (!token) return PORTAL_ANONYMOUS_SCOPE;
+  let hash = 5381;
+  for (let i = 0; i < token.length; i += 1)
+    hash = (Math.imul(hash, 33) + token.charCodeAt(i)) | 0;
+  return `portal:${(hash >>> 0).toString(36)}`;
+}
+
 export function setPortalToken(token: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(PORTAL_TOKEN_KEY, token);
+  notifyPortalTokenChanged();
 }
 
 export function clearPortalToken(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(PORTAL_TOKEN_KEY);
+  notifyPortalTokenChanged();
 }
 
 export class PortalApiError extends Error {
@@ -57,31 +98,27 @@ async function parsePortalResponse<T>(res: Response): Promise<T> {
     let code: string | undefined;
     let details: unknown;
     try {
-      const body = (await res.json()) as Record<string, unknown>;
-      if (typeof body?.message === "string" && body.message) {
-        message = body.message;
-      } else if (Array.isArray(body?.message) && body.message.length > 0) {
-        message = (body.message as unknown[])
-          .filter((m): m is string => typeof m === "string")
-          .join(", ");
-      } else if (typeof body?.error === "string" && body.error) {
-        message = body.error;
+      const body: unknown = await res.json();
+      if (isRecord(body)) {
+        if (typeof body.message === "string" && body.message) {
+          message = body.message;
+        } else if (Array.isArray(body.message) && body.message.length > 0) {
+          const parts: unknown[] = body.message;
+          message = parts
+            .filter((m): m is string => typeof m === "string")
+            .join(", ");
+        } else if (typeof body.error === "string" && body.error) {
+          message = body.error;
+        }
+        if (typeof body.code === "string") code = body.code;
+        if ("details" in body) details = body.details;
       }
-      if (typeof body?.code === "string") code = body.code;
-      if ("details" in body) details = body.details;
     } catch {}
     throw new PortalApiError(message, res.status, code, details);
   }
   if (res.status === 204) return undefined as T;
-  const body = (await res.json()) as Record<string, unknown>;
-  if (
-    body !== null &&
-    typeof body === "object" &&
-    body.success === true &&
-    "data" in body
-  ) {
-    return body.data as T;
-  }
+  const body: unknown = await res.json();
+  if (isRecord(body) && body.success === true && "data" in body) return body.data as T;
   return body as T;
 }
 
@@ -90,7 +127,7 @@ async function portalFetch(
   init: RequestInit,
   authenticated = true,
 ): Promise<Response> {
-  const headers = new Headers(init.headers);
+  const headers = withCorrelation(new Headers(init.headers));
   if (authenticated) {
     const token = getPortalToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -110,7 +147,9 @@ async function portalFetch(
   if (authenticated && res.status === 401) {
     clearPortalToken();
     if (typeof window !== "undefined") {
-      window.location.href = "/portal/accept-invitation?reason=expired";
+      // The invitation page lives in the `(portal)` route group, which adds no URL segment.
+      // `/portal/accept-invitation` resolved into the authenticated staff area instead.
+      window.location.href = "/accept-invitation?reason=expired";
     }
     throw new PortalApiError(
       "Your portal session has expired. Please use your invitation link.",

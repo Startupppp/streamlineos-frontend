@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import {
   useAnnouncements,
-  useCreateAnnouncement,
   useDeleteAnnouncement,
   type Announcement,
 } from "@/hooks/api/dashboard";
@@ -20,6 +18,14 @@ import { Megaphone, X, Pin, Plus, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+const AnnouncementCreateForm = dynamic(
+  () =>
+    import("./announcement-create-form").then((m) => ({
+      default: m.AnnouncementCreateForm,
+    })),
+  { ssr: false },
+);
 
 interface AnnouncementItemProps {
   ann: Announcement;
@@ -84,44 +90,14 @@ export function AnnouncementsWidget() {
   const isAdmin = useCan("settings:manage");
 
   const { data, isLoading, error, refetch } = useAnnouncements();
-  const createMutation = useCreateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
 
   const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [isPinned, setIsPinned] = useState(false);
 
   const handleRetry = () => void refetch();
   const handleToggleForm = () => setShowForm((v) => !v);
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setTitle(e.target.value);
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-    setContent(e.target.value);
-  const handlePinnedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setIsPinned(e.target.checked);
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setTitle("");
-    setContent("");
-  };
-
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim()) return;
-    createMutation.mutate(
-      { title: title.trim(), content: content.trim(), isPinned },
-      {
-        onSuccess: () => {
-          setTitle("");
-          setContent("");
-          setIsPinned(false);
-          setShowForm(false);
-          toast.success("Announcement posted");
-        },
-        onError: () => toast.error("Failed to post announcement"),
-      },
-    );
-  };
+  const handleFormCancel = () => setShowForm(false);
+  const handleFormSuccess = () => setShowForm(false);
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate(id, {
@@ -155,59 +131,11 @@ export function AnnouncementsWidget() {
         )}
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden space-y-3">
-        {showForm && isAdmin && (
-          <div className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
-            <Input
-              placeholder="Title"
-              value={title}
-              onChange={handleTitleChange}
-              maxLength={200}
-              className="text-sm bg-transparent border-status-warning-rule focus-visible:ring-status-warning-rule"
-              aria-label="Announcement title"
-            />
-            <Textarea
-              placeholder="Write an announcement..."
-              value={content}
-              onChange={handleContentChange}
-              className="text-sm min-h-[72px] resize-none bg-transparent border-status-warning-rule focus-visible:ring-status-warning-rule"
-              aria-label="Announcement content"
-            />
-            <div className="flex items-center justify-between gap-2">
-              <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isPinned}
-                  onChange={handlePinnedChange}
-                  className="rounded border-status-warning-rule text-status-warning-ink focus:ring-status-warning-rule"
-                  aria-label="Pin this announcement"
-                />
-                <span className="text-xs text-status-warning-ink">
-                  Pin
-                </span>
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 text-xs"
-                  onClick={handleCancelForm}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  className="px-3 text-xs bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
-                  onClick={handleSubmit}
-                  disabled={
-                    createMutation.isPending || !title.trim() || !content.trim()
-                  }
-                  aria-label="Post announcement"
-                >
-                  {createMutation.isPending ? "Posting..." : "Post"}
-                </Button>
-              </div>
-            </div>
-          </div>
+        {isAdmin && showForm && (
+          <AnnouncementCreateForm
+            onCancel={handleFormCancel}
+            onSuccess={handleFormSuccess}
+          />
         )}
 
         {isLoading ? (
@@ -221,7 +149,9 @@ export function AnnouncementsWidget() {
           </div>
         ) : error ? (
           <div className="space-y-2">
-            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            <p role="alert" className="text-sm text-destructive">
+              {getErrorMessage(error)}
+            </p>
             <button
               type="button"
               onClick={handleRetry}

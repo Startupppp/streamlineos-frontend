@@ -2,9 +2,20 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const listPipsC = lazyContract(() =>
+  import("@/hooks/api/hr/pip-schema").then((m) => m.listPipsContract),
+);
+const createPipC = lazyContract(() =>
+  import("@/hooks/api/hr/pip-schema").then((m) => m.createPipContract),
+);
+const updatePipC = lazyContract(() =>
+  import("@/hooks/api/hr/pip-schema").then((m) => m.updatePipContract),
+);
 
 export interface PIP {
   id: number;
@@ -15,7 +26,7 @@ export interface PIP {
   objectives: { objective: string; metric: string; deadline: string }[] | null;
   startDate: string;
   endDate: string;
-  status: "ACTIVE" | "EXTENDED" | "COMPLETED" | "TERMINATED" | null;
+  status: string | null;
   outcome: string | null;
   notes: string | null;
   createdAt: Date | string | null;
@@ -24,12 +35,12 @@ export interface PIP {
   hrRep?: { id: string; name: string | null } | null;
 }
 
-const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
+const pipKeys = { all: [...humanResourcesQueryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
 
 export function usePIPs() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery({ queryKey: pipKeys.list(), queryFn: () => apiClient.get<PIP[]>("/hr/performance/pip"), staleTime: 2 * 60_000, enabled: canView && hrEnabled });
+  return useQuery({ queryKey: pipKeys.list(), queryFn: ({ signal }) => apiClient.get<PIP[]>("/hr/performance/pip", undefined, signal, listPipsC), staleTime: 2 * 60_000, enabled: canView && hrEnabled });
 }
 
 export function useCreatePIP() {
@@ -37,7 +48,7 @@ export function useCreatePIP() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "pip", "create"],
     mutationFn: (data: { userId: string; hrRepId?: string; reason: string; objectives: { objective: string; metric: string; deadline: string }[]; startDate: string; endDate: string; notes?: string }) =>
-      apiClient.post<PIP>("/hr/performance/pip", data),
+      apiClient.post<PIP>("/hr/performance/pip", data, undefined, createPipC),
     onSuccess: () => qc.invalidateQueries({ queryKey: pipKeys.list() }),
   });
 }
@@ -47,7 +58,7 @@ export function useUpdatePIP() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "pip", "update"],
     mutationFn: ({ id, ...data }: { id: number; status?: string; outcome?: string; notes?: string; reason?: string; objectives?: { objective: string; metric: string; deadline: string }[]; endDate?: string; hrRepId?: string | null }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/performance/pip/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/performance/pip/${id}`, data, undefined, updatePipC),
     onSuccess: () => qc.invalidateQueries({ queryKey: pipKeys.list() }),
   });
 }

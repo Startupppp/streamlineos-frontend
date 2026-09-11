@@ -1,36 +1,59 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+"use client";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+
+const requisitionsListC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.requisitionsListContract),
+);
+const createRequisitionC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.createRequisitionContract),
+);
+const submitRequisitionC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.submitRequisitionContract),
+);
+const approveRequisitionC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.approveRequisitionContract),
+);
+const rejectRequisitionC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.rejectRequisitionContract),
+);
+const createJobFromRequisitionC = lazyContract(() =>
+  import("@/hooks/api/hr/requisitions-schema").then((m) => m.createJobFromRequisitionContract),
+);
 
 export interface JobRequisition {
   id: number;
   orgId: string;
   title: string;
-  department?: string;
-  location?: string;
+  department?: string | null;
+  location?: string | null;
   headcount: number;
   budgetMin?: string;
   budgetMax?: string;
-  hiringManagerId?: string;
-  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  type: "FULL_TIME" | "PART_TIME" | "CONTRACT";
-  status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PUBLISHED" | "CLOSED" | "REJECTED";
+  hiringManagerId?: string | null;
+  priority: string;
+  type: string;
+  status: string;
   requestedBy: string;
-  approverId?: string;
-  approvedAt?: string;
-  rejectionReason?: string;
-  justification?: string;
-  targetDate?: string;
-  linkedJobId?: number;
+  approverId?: string | null;
+  approvedAt?: string | null;
+  rejectionReason?: string | null;
+  justification?: string | null;
+  targetDate?: string | null;
+  linkedJobId?: number | null;
   createdAt: string;
 }
 
 export function useJobRequisitions(status?: string) {
   const canRequisitions = useCan("hr:requisitions:view");
   return useQuery<JobRequisition[]>({
-    queryKey: queryKeys.hr.requisitions(status),
-    queryFn: () => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined),
+    queryKey: humanResourcesQueryKeys.hr.requisitions(status),
+    queryFn: ({ signal }) => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined, signal, requisitionsListC),
     staleTime: 60_000,
     enabled: canRequisitions,
   });
@@ -38,50 +61,50 @@ export function useJobRequisitions(status?: string) {
 
 export function useCreateJobRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create"],
     mutationFn: (data: Omit<JobRequisition, "id" | "orgId" | "requestedBy" | "status" | "createdAt">) =>
-      apiClient.post<JobRequisition>("/hr/recruitment/requisitions", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.requisitions() }),
+      apiClient.post<JobRequisition>("/hr/recruitment/requisitions", data, undefined, createRequisitionC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useSubmitRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "submit"],
     mutationFn: (id: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/submit`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.requisitions() }),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/submit`, undefined, undefined, submitRequisitionC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useApproveRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "approve"],
     mutationFn: (id: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/approve`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.requisitions() }),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/approve`, undefined, undefined, approveRequisitionC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useRejectRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.requisitions() }),
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }, undefined, rejectRequisitionC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useCreateJobFromRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create-job"],
     mutationFn: (id: number) =>
-      apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${id}/create-job`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.requisitions() }),
+      apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${id}/create-job`, undefined, undefined, createJobFromRequisitionC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }

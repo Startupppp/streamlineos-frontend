@@ -43,6 +43,8 @@ export function SettingsHealthCard() {
     setAlertOpen(false);
   }
 
+  const failedJobs = health ? health.failedImportJobs + health.failedExportJobs : 0;
+
   return (
     <>
       <Card>
@@ -59,33 +61,33 @@ export function SettingsHealthCard() {
           ) : health ? (
             <StatCardGrid cols={2}>
               <StatCard
-                label="Reconciliation Sample"
-                value={health.reconciliationSampleResult ?? "—"}
+                label="Reconciliation Status"
+                value={health.ledgerReconciliation.status}
                 icon={Activity}
                 tone="blue"
               />
               <StatCard
                 label="Expired Reservations"
-                value={health.expiredReservationsCount}
+                value={health.activeExpiredReservations}
                 icon={Clock}
                 tone="amber"
                 hint={
-                  health.expiredReservationsCount > 0
+                  health.activeExpiredReservations > 0
                     ? "These reservations have passed their expiry"
                     : undefined
                 }
               />
               <StatCard
                 label="Failed Jobs"
-                value={health.failedJobsCount}
+                value={failedJobs}
                 icon={Server}
-                tone={health.failedJobsCount > 0 ? "red" : "default"}
+                tone={failedJobs > 0 ? "red" : "default"}
               />
               <StatCard
                 label="Failed Webhooks"
-                value={health.failedWebhooksCount}
+                value={health.failedWebhookEvents}
                 icon={Webhook}
-                tone={health.failedWebhooksCount > 0 ? "red" : "default"}
+                tone={health.failedWebhookEvents > 0 ? "red" : "default"}
               />
             </StatCardGrid>
           ) : null}

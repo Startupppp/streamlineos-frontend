@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -91,14 +93,36 @@ export function ContingentPageContent() {
   const [endContractId, setEndContractId] = useState<number | null>(null);
   const [convertContractId, setConvertContractId] = useState<number | null>(null);
 
-  const { data, isLoading } = useContracts();
+  const { data, isLoading, isError, error, refetch } = useContracts();
   const endContract = useEndContract();
   const convert = useConvertToEmployee();
+
+  function handleConfirmEndContract() {
+    if (!endContractId) return;
+    endContract.mutate({ contractId: endContractId }, { onSuccess: handleEndContractDone });
+  }
+
+  function handleEndContractDone() {
+    setEndContractId(null);
+  }
+
+  function handleConfirmConvertContract() {
+    if (!convertContractId) return;
+    convert.mutate({ contractId: convertContractId }, { onSuccess: handleConvertContractDone });
+  }
+
+  function handleConvertContractDone() {
+    setConvertContractId(null);
+  }
 
   const handleOpenEdit = useCallback((contract: HrContract) => {
     setEditingContract(contract);
     setSheetOpen(true);
   }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -113,6 +137,13 @@ export function ContingentPageContent() {
     >
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load contracts"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : (data?.data ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="team"
@@ -179,14 +210,7 @@ export function ContingentPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => {
-                if (endContractId) {
-                  endContract.mutate({ contractId: endContractId }, { onSuccess: () => setEndContractId(null) });
-                }
-              }}
-            >
+            <AlertDialogAction variant="destructive" onClick={handleConfirmEndContract}>
               End contract
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -204,13 +228,7 @@ export function ContingentPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (convertContractId) {
-                  convert.mutate({ contractId: convertContractId }, { onSuccess: () => setConvertContractId(null) });
-                }
-              }}
-            >
+            <AlertDialogAction onClick={handleConfirmConvertContract}>
               Convert to employee
             </AlertDialogAction>
           </AlertDialogFooter>

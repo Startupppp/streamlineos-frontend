@@ -10,14 +10,16 @@ import {
   useChatOrgUsers, useToggleReaction, useChatPins, usePinMessage,
   useUnpinMessage, useSavedMessages, useSaveMessage, useUnsaveMessage,
 } from "@/hooks/api/chat";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
+import { useAblyConnection } from "./use-ably-connection";
 import { getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { useChatScroll } from "./use-chat-scroll";
+import { resolveMessageWindowStart } from "./message-render-window";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
@@ -26,6 +28,7 @@ import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
+import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -50,6 +53,12 @@ export function useMessagePanelData({
   const {
     data: messagesData,
     isLoading,
+    // A 500 or a 403 on the history read used to reach the list as `isLoading
+    // false, messages []`, which the timeline rendered as an ordinary empty
+    // channel. The verdict has to travel with the data.
+    isError: messagesError,
+    error: messagesErrorValue,
+    refetch: refetchMessages,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -69,6 +78,7 @@ export function useMessagePanelData({
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  const { isConnected: ablySocketConnected } = useAblyConnection();
   useHuddleRealtime(channelId);
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
@@ -125,7 +135,7 @@ export function useMessagePanelData({
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
-    (userId: string, embedded?: { name?: string | null; email?: string | null } | null) =>
+    (userId: string | null, embedded?: { name?: string | null; email?: string | null } | null) =>
       resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],
   );
@@ -161,6 +171,10 @@ export function useMessagePanelData({
         try {
           await sendMessage.mutateAsync({
             channelId,
+            // Minted when the message was queued, so two `online` events — or a
+            // reconnect that races the send — replay the winner rather than
+            // inserting the message twice.
+            clientKey: msg.clientKey,
             content: msg.content,
             replyToId: msg.replyToId,
             attachments: msg.attachments,
@@ -202,15 +216,23 @@ export function useMessagePanelData({
     });
   }, [messagesData]);
 
-  const { data: polledMessages } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
+  const [renderPages, setRenderPages] = useState(1);
+  useEffect(() => {
+    setRenderPages(1);
+  }, [channelId]);
+
+  // Gated on the realtime verdict alone. `messages.length > 0` used to be the
+  // second half, which switched the fallback off for exactly the channel that
+  // needs it most — one whose first message never arrived.
+  const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected);
 
   useEffect(() => {
-    if (polledMessages && polledMessages.length > 0) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(channelId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    if (pollResult && pollResult.messages.length > 0) {
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.messages(channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
-  }, [polledMessages, channelId, queryClient]);
+  }, [pollResult, channelId, queryClient]);
 
   useEffect(() => {
     if (channelId > 0 && markReadCalledRef.current !== channelId) {
@@ -314,10 +336,10 @@ export function useMessagePanelData({
   );
 
   const otherMember =
-    channel?.type === "DIRECT" ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user : null;
+    channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
     channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? "Chat");
-  const memberCount = channel?.members?.length ?? 0;
+  const memberCount = channel?.memberCount ?? channel?.members?.length ?? 0;
   const isOtherOnline = channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
 
   const replyCountMap = useMemo(() => {
@@ -338,25 +360,54 @@ export function useMessagePanelData({
     startHuddle.mutate(channelId);
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
+  const firstUnreadIndex = useMemo(() => {
+    const currentMember = findOwnMember(channel?.members, currentUserId);
+    const lastReadAt = currentMember?.lastReadAt;
+    if (!lastReadAt) return -1;
+    const lastReadTime = new Date(lastReadAt).getTime();
+    return messages.findIndex(
+      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime,
+    );
+  }, [messages, channel, currentUserId]);
+
+  const firstUnreadMessageId =
+    firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
+
+  const windowStart = resolveMessageWindowStart(
+    messages.length,
+    renderPages,
+    firstUnreadIndex,
+  );
+  const renderedMessages = useMemo(
+    () => (windowStart === 0 ? messages : messages.slice(windowStart)),
+    [messages, windowStart],
+  );
+  const hasOlderHeld = windowStart > 0;
+
+  const handleLoadOlder = useCallback(() => {
+    if (hasOlderHeld) {
+      setRenderPages((p) => p + 1);
+      return;
+    }
+    void fetchNextPage();
+  }, [hasOlderHeld, fetchNextPage]);
+
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
     let currentDate = "";
-    for (const msg of messages) {
+    for (const msg of renderedMessages) {
       const d = msg.createdAt ? new Date(msg.createdAt) : new Date();
       const dateStr = getDateLabel(d);
-      if (dateStr !== currentDate) { currentDate = dateStr; groups.push({ date: dateStr, messages: [] }); }
-      groups[groups.length - 1]!.messages.push(msg);
+      let group = groups[groups.length - 1];
+      if (!group || dateStr !== currentDate) {
+        currentDate = dateStr;
+        group = { date: dateStr, messages: [] };
+        groups.push(group);
+      }
+      group.messages.push(msg);
     }
     return groups;
-  }, [messages]);
-
-  const firstUnreadMessageId = useMemo(() => {
-    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
-    const lastReadAt = currentMember?.lastReadAt;
-    if (!lastReadAt) return undefined;
-    const lastReadTime = new Date(lastReadAt).getTime();
-    return messages.find((m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime)?.id;
-  }, [messages, channel, currentUserId]);
+  }, [renderedMessages]);
 
   const handleStartEdit = useCallback((msg: Message) => {
     setEditingMessage(msg);
@@ -380,15 +431,20 @@ export function useMessagePanelData({
     inputRef.current?.focus();
   }, [setReplyTo, inputRef]);
 
+  const handleRetryMessages = useCallback(() => {
+    void refetchMessages();
+  }, [refetchMessages]);
+
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
+      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },
     thread: { messageId: threadMessageId, channelId, currentUserId, onClose: handleCloseThread },
     sidePanels: { channelId, isChatMobile, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
     isOnline,
+    isReconnecting: isOnline && !ablySocketConnected,
   };
 }

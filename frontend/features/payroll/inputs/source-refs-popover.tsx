@@ -9,12 +9,24 @@ interface SourceRef {
   id: number | string;
 }
 
+function isSourceRef(v: unknown): v is SourceRef {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "table" in v &&
+    "id" in v &&
+    typeof v.table === "string"
+  );
+}
+
 interface SourceRefsPopoverProps {
-  refs: SourceRef[] | null | undefined;
+  refs: unknown;
 }
 
 export function SourceRefsPopover({ refs }: SourceRefsPopoverProps) {
-  if (!refs || refs.length === 0) return null;
+  if (!Array.isArray(refs) || refs.length === 0) return null;
+  const rows = refs.filter(isSourceRef);
+  if (rows.length === 0) return null;
 
   return (
     <Popover>
@@ -27,7 +39,7 @@ export function SourceRefsPopover({ refs }: SourceRefsPopoverProps) {
       <PopoverContent className="w-72 p-3" align="end">
         <p className="text-xs font-medium text-muted-foreground mb-2">Source records</p>
         <div className="space-y-1">
-          {refs.map((ref, i) => (
+          {rows.map((ref, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <span className="font-mono text-muted-foreground">{ref.table}</span>
               <span className="font-mono text-foreground">#{String(ref.id)}</span>

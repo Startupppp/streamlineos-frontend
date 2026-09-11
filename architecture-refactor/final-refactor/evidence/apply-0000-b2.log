@@ -1,0 +1,11 @@
+0000_light_vance_astro: applying 4456 statements with lock_timeout=120s...
+  progress: 500/4456 statements at 49s
+  progress: 1000/4456 statements at 99s
+  progress: 1500/4456 statements at 149s
+  progress: 2000/4456 statements at 195s
+  progress: 2500/4456 statements at 241s
+  progress: 3000/4456 statements at 288s
+  progress: 3500/4456 statements at 335s
+  progress: 4000/4456 statements at 381s
+0000_light_vance_astro: APPLIED 4456 statements in 423s
+Public tables after 0000: 749

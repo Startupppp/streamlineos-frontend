@@ -1,31 +1,4 @@
-export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-export type PayrollApprovalRow = {
-  id: number;
-  runId: number;
-  orgId: string;
-  stage: number;
-  stageName: string;
-  requiredPermission: string;
-  status: ApprovalStatus;
-  actedBy: string | null;
-  actedAt: string | null;
-  comment: string | null;
-  createdAt: string;
-  isCurrentUserApprover?: boolean;
-  approverName?: string | null;
-};
-
-export type SubmitApprovalResult = {
-  autoApproved: boolean;
-  runStatus: string;
-  stagesCreated?: number;
-};
-
-export type ApproveStageResult = {
-  success: boolean;
-  runStatus: string;
-};
 
 export type BankBatchStatus =
   | "DRAFT"

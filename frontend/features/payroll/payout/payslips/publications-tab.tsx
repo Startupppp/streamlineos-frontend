@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Download, CheckCircle2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
@@ -31,7 +31,8 @@ import { usePayrollRuns, useRunPublications, usePublishPayslips, downloadPayslip
 
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
-import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
+import type { PublicationStatus } from "@/types/payroll";
+import type { PublicationItem } from "@/hooks/api/payroll/publications-schema";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 import { formatMonth } from "@/features/payroll/shared";
 import { formatShortDate } from "@/lib/date-utils";
@@ -125,7 +126,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const { data: publications, isLoading: pubsLoading } = useRunPublications(activeRunId);
 
   const userIds = useMemo(
-    () => [...new Set((publications ?? []).map((p) => p.userId))],
+    () => [...new Set((publications?.items ?? []).map((p) => p.userId).filter((id): id is string => id !== null))],
     [publications],
   );
   const { data: membersData } = useOrgMembersByIds(userIds);
@@ -142,7 +143,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
     setSelectedRunId(Number(value));
   }
 
-  async function handleDownload(publicationId: number) {
+  const handleDownload = useCallback(async (publicationId: number) => {
     setDownloadingIds((prev) => new Set([...prev, publicationId]));
     try {
       await downloadPayslipPdf(publicationId);
@@ -155,18 +156,18 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         return next;
       });
     }
-  }
+  }, []);
 
   function handleOpenPublish() {
     setPublishOpen(true);
   }
 
-  const columns = useMemo<DataTableColumn<PayslipPublication>[]>(
+  const columns = useMemo<DataTableColumn<PublicationItem>[]>(
     () => [
       {
         key: "userId",
         header: "Employee",
-        cell: (row) => <span className="text-dense">{getUserDisplayName(memberById.get(row.userId))}</span>,
+        cell: (row) => <span className="text-dense">{getUserDisplayName(row.userId ? memberById.get(row.userId) : undefined)}</span>,
       },
       {
         key: "status",
@@ -218,7 +219,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         },
       },
     ],
-    [downloadingIds, memberById],
+    [downloadingIds, memberById, handleDownload],
   );
 
   const canPublish = canManage && selectedRun?.status === "PAID";
@@ -253,7 +254,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
       {activeRunId > 0 && (
         <DataTable
           className="flex-1 min-h-0"
-          data={publications ?? []}
+          data={publications?.items ?? []}
           columns={columns}
           getRowKey={(row) => row.id}
           isLoading={pubsLoading}

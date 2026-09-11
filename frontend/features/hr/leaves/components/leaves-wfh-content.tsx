@@ -140,7 +140,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     (r) => r.status === "APPROVED",
   ).length;
 
-  const handleExportExcel = useCallback(async () => {
+  async function handleExportExcel() {
     if (myLeaveRequests.length === 0) {
       toast.error("No leave requests to export");
       return;
@@ -186,7 +186,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     } catch {
       toast.error("Failed to export");
     }
-  }, [myLeaveRequests]);
+  }
 
   const title = selfService ? "Time Off" : "Leaves & Time Off";
   const subtitle = selfService

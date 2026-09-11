@@ -1,7 +1,7 @@
-﻿import { format } from "date-fns";
+import { format } from "date-fns";
 import { fetchAllAssetsForExport } from "@/hooks/api/hr/assets";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 export interface ExportAssetFilters {
   statusFilter?: string;
@@ -10,7 +10,7 @@ export interface ExportAssetFilters {
 }
 
 export async function exportAssetsToXlsx(
-  employees: Employee[],
+  employees: EmployeeListItem[],
   filters: ExportAssetFilters,
 ): Promise<{ count: number; filtered: boolean }> {
   const { downloadXlsx } = await import("@/lib/export/xlsx-utils");

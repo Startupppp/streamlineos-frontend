@@ -7,6 +7,11 @@ import type {
   SupportDashboard,
 } from "@/types/crm";
 
+import { lazyContract } from "@/lib/api-envelope";
+const supportDashboardLazy = lazyContract(() => import("@/hooks/api/crm/analytics-schema").then((m) => m.supportDashboardContract));
+const salesKpisLazy = lazyContract(() => import("@/hooks/api/crm/analytics-schema").then((m) => m.salesKpisContract));
+const revenueVsGoalLazy = lazyContract(() => import("@/hooks/api/crm/analytics-schema").then((m) => m.revenueVsGoalContract));
+
 interface SalesDashboardFilters {
   from?: string;
   to?: string;
@@ -35,7 +40,7 @@ export interface RevenueVsGoalEntryResult {
 export function useSupportDashboard() {
   return useGatedQuery("dashboard:support:view", {
     queryKey: queryKeys.crm.supportDashboard(),
-    queryFn: () => apiClient.get<SupportDashboard>("/crm/support-dashboard"),
+    queryFn: ({ signal }) => apiClient.get<SupportDashboard>("/crm/support-dashboard", undefined, signal, supportDashboardLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -48,7 +53,7 @@ export function useSalesDashboardKPIs(filters: SalesDashboardFilters = {}) {
 
   return useGatedQuery("sales:view", {
     queryKey: queryKeys.crm.salesKpis(params),
-    queryFn: () => apiClient.get<SalesDashboardKPIsResult>("/sales/dashboard/kpis", params),
+    queryFn: ({ signal }) => apiClient.get<SalesDashboardKPIsResult>("/sales/dashboard/kpis", params, signal, salesKpisLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -57,7 +62,7 @@ export function useRevenueVsGoal(year?: number) {
   const y = year ?? new Date().getFullYear();
   return useGatedQuery("sales:view", {
     queryKey: queryKeys.crm.revenueVsGoal(y),
-    queryFn: () => apiClient.get<RevenueVsGoalEntryResult[]>("/sales/dashboard/revenue-vs-goal", { year: String(y) }),
+    queryFn: ({ signal }) => apiClient.get<RevenueVsGoalEntryResult[]>("/sales/dashboard/revenue-vs-goal", { year: String(y) }, signal, revenueVsGoalLazy),
     staleTime: 2 * 60_000,
   });
 }

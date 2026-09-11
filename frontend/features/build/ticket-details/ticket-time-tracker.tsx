@@ -44,9 +44,10 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
 
   const handleStart = useCallback(() => {
     setRunning(true);
-    startTimeRef.current = Date.now() - elapsed * 1000;
+    const startedAt = Date.now() - elapsed * 1000;
+    startTimeRef.current = startedAt;
     intervalRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current!) / 1000));
+      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
     }, 1000);
   }, [elapsed]);
 

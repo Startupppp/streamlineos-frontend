@@ -11,7 +11,7 @@ import {
   UserPenIcon,
   Trash2Icon,
 } from "@animateicons/react/lucide";
-import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import type {
   NotificationProvider,
 } from "@/types/notifications";

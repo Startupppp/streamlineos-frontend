@@ -16,6 +16,8 @@ import {
 import { BarChart3, Bot, BrainCircuit, LifeBuoy, TrendingUp, Zap } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -105,8 +107,20 @@ function FlagRow({ flagKey, label, description, icon: Icon, checked, disabled, o
 }
 
 export function CrmAiSettings() {
-  const { data: flags, isLoading: flagsLoading, isError: flagsError, refetch: refetchFlags } = useOrgFeatureFlags();
-  const { data: usage, isLoading: usageLoading, isError: usageError, refetch: refetchUsage } = useAiUsage();
+  const {
+    data: flags,
+    isLoading: flagsLoading,
+    isError: flagsError,
+    error: flagsLoadError,
+    refetch: refetchFlags,
+  } = useOrgFeatureFlags();
+  const {
+    data: usage,
+    isLoading: usageLoading,
+    isError: usageError,
+    error: usageLoadError,
+    refetch: refetchUsage,
+  } = useAiUsage();
   const updateFlag = useUpdateFeatureFlag();
 
   function handleRetryFlags() {
@@ -154,8 +168,8 @@ export function CrmAiSettings() {
             ) : flagsError ? (
               <ErrorState
                 compact
-                title="Failed to load AI feature flags"
-                description="Something went wrong while fetching AI feature configuration."
+                title="Couldn't load AI feature flags"
+                description={getErrorMessage(flagsLoadError)}
                 onRetry={handleRetryFlags}
               />
             ) : (
@@ -196,8 +210,8 @@ export function CrmAiSettings() {
             ) : usageError ? (
               <ErrorState
                 compact
-                title="Failed to load usage data"
-                description="Something went wrong while fetching AI usage statistics."
+                title="Couldn't load AI usage"
+                description={getErrorMessage(usageLoadError)}
                 onRetry={handleRetryUsage}
               />
             ) : (
@@ -240,9 +254,12 @@ export function CrmAiSettings() {
                 )}
 
                 {(usage?.byFeature.length ?? 0) === 0 && (
-                  <p className="py-6 text-center text-sm text-muted-foreground">
-                    No AI usage recorded yet.
-                  </p>
+                  <EmptyState
+                    compact
+                    illustrationPreset="chart"
+                    title="No AI usage recorded yet"
+                    description="Turn on a feature above and its token usage shows up here."
+                  />
                 )}
               </div>
             )}

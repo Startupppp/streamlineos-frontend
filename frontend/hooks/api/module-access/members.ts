@@ -3,10 +3,32 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
+import { lazyContract } from "@/lib/api-envelope";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+/** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
+const memberPageContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberPageContract),
+);
+const memberCandidatePageContract = lazyContract(() =>
+  import("./module-access-schema").then(
+    (m) => m.moduleMemberCandidatePageContract,
+  ),
+);
+const memberGrantsContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberGrantsContract),
+);
+const moduleSuccessContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleSuccessContract),
+);
+const moduleMemberGrantsSetContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberGrantsSetContract),
+);
 
 export function useModuleMembersInfinite(
   moduleKey: string,
@@ -16,16 +38,19 @@ export function useModuleMembersInfinite(
   const canView = useCan(viewKey(moduleKey));
   const userId = options?.userId;
   return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
-    queryKey: queryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
-    queryFn: ({ pageParam }) => {
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (typeof pageParam === "number") params.set("cursor", String(pageParam));
       if (userId !== undefined) params.set("userId", userId);
-      return apiClient.get<CursorPaginatedResult<ModuleMember>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/members?${params.toString()}`,
+        undefined,
+        signal,
+        memberPageContract,
       );
     },
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,
@@ -38,21 +63,21 @@ export function useAddModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
     mutationFn: (body) =>
-      apiClient.post<{ success: true }>(`/module-access/${moduleKey}/members`, body),
+      apiClient.post(`/module-access/${moduleKey}/members`, body, undefined, moduleSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
       if (userId === session?.user?.id) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.access.me(),
+          queryKey: platformCoreQueryKeys.access.me(),
           exact: true,
         });
       }
@@ -66,24 +91,26 @@ export function useUpdateModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "update-module-member"],
     mutationFn: ({ userId, groupIds }) =>
-      apiClient.patch<{ success: true }>(
+      apiClient.patch(
         `/module-access/${moduleKey}/members/${userId}`,
         { groupIds },
+        undefined,
+        moduleSuccessContract,
       ),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
       if (userId === session?.user?.id) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.access.me(),
+          queryKey: platformCoreQueryKeys.access.me(),
           exact: true,
         });
       }
@@ -97,21 +124,21 @@ export function useRemoveModuleMember(moduleKey: string) {
   return useMutation<{ success: true }, Error, { userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "remove-module-member"],
     mutationFn: ({ userId }) =>
-      apiClient.delete<{ success: true }>(`/module-access/${moduleKey}/members/${userId}`),
+      apiClient.delete(`/module-access/${moduleKey}/members/${userId}`, undefined, undefined, moduleSuccessContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
       if (userId === session?.user?.id) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.access.me(),
+          queryKey: platformCoreQueryKeys.access.me(),
           exact: true,
         });
       }
@@ -129,19 +156,22 @@ export function useModuleMemberCandidates(
   const userId = options?.userId;
   const excludeAssigned = options?.excludeAssigned ?? true;
   return useQuery<CursorPaginatedResult<ModuleMemberCandidate>, Error>({
-    queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey, {
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidates(moduleKey, {
       pageSize,
       search,
       userId,
       excludeAssigned,
     }),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
-      return apiClient.get<CursorPaginatedResult<ModuleMemberCandidate>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
+        undefined,
+        signal,
+        memberCandidatePageContract,
       );
     },
     enabled: canManage && (options?.enabled ?? true),
@@ -157,10 +187,13 @@ export function useModuleMemberGrants(
 ) {
   const canManage = useCan(manageKey(moduleKey));
   return useQuery<{ grants: MemberGrant[] }, Error>({
-    queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
-    queryFn: () =>
-      apiClient.get<{ grants: MemberGrant[] }>(
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
+        undefined,
+        signal,
+        memberGrantsContract,
       ),
     enabled: canManage && membershipId !== null && (options?.enabled ?? true),
     staleTime: 30_000,
@@ -183,17 +216,19 @@ export function useSetModuleMemberGrants(moduleKey: string) {
       apiClient.put<{ success: true; granted: number }>(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
         { items, reason },
+        undefined,
+        moduleMemberGrantsSetContract,
       ),
     onSuccess: (_, { membershipId }) => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberGrants(moduleKey, membershipId),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.access.me(),
+        queryKey: platformCoreQueryKeys.access.me(),
       });
     },
   });

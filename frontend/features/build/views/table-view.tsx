@@ -2,10 +2,10 @@
 
 import { memo, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatTicketKey } from "../shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { cn } from "@/lib/utils";
 import { TicketQuickActions } from "./ticket-quick-actions";
-import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, stopEvent } from "./card-inline-fields";
+import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, InlineFieldCell } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
@@ -99,13 +99,13 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell w-24",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineType ticketId={ticket.id} projectId={projectId} currentType={ticket.type} />
           ) : (
             <span className="text-micro text-muted-foreground">{ticket.type}</span>
           )}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -113,7 +113,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       header: "Status",
       className: "w-28",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineStatus
               ticketId={ticket.id}
@@ -124,7 +124,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           ) : (
             <span className="text-micro text-muted-foreground">{ticket.status}</span>
           )}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -133,13 +133,13 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden sm:table-cell",
       className: "hidden sm:table-cell w-24",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlinePriority ticketId={ticket.id} projectId={projectId} currentPriority={ticket.priority} />
           ) : ticket.priority ? (
             <span className="text-micro text-muted-foreground">{ticket.priority}</span>
           ) : null}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -148,13 +148,13 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden lg:table-cell",
       className: "hidden lg:table-cell w-20",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineEstimate ticketId={ticket.id} projectId={projectId} currentPoints={ticket.points} />
           ) : (
             <span className="font-mono text-dense tabular-nums">{ticket.points ?? "—"}</span>
           )}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -163,7 +163,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell w-32",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineAssignee
               ticketId={ticket.id}
@@ -172,7 +172,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
               assignee={ticket.assignee}
             />
           ) : null}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -185,11 +185,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           ?.map((l) => l.label?.id)
           .filter((v): v is number => v != null) ?? [];
         return (
-          <div onMouseDown={stopEvent} onClick={stopEvent}>
+          <InlineFieldCell>
             {hasProjectId ? (
               <InlineLabels ticketId={ticket.id} projectId={projectId} currentLabelIds={labelIds} />
             ) : null}
-          </div>
+          </InlineFieldCell>
         );
       },
     },
@@ -199,11 +199,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden xl:table-cell",
       className: "hidden xl:table-cell w-28",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineCycle ticketId={ticket.id} projectId={projectId} currentCycleId={ticket.cycleId} />
           ) : null}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -212,11 +212,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden xl:table-cell",
       className: "hidden xl:table-cell w-28",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineSprint ticketId={ticket.id} projectId={projectId} currentSprintId={ticket.sprintId} />
           ) : null}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -225,7 +225,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       headerClassName: "hidden sm:table-cell",
       className: "hidden sm:table-cell w-28",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           {hasProjectId ? (
             <InlineDueDate ticketId={ticket.id} projectId={projectId} currentDueDate={ticket.dueDate} />
           ) : ticket.dueDate ? (
@@ -235,7 +235,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           ) : (
             <span className="font-mono text-dense tabular-nums">—</span>
           )}
-        </div>
+        </InlineFieldCell>
       ),
     },
     {
@@ -243,14 +243,14 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       header: "",
       className: "w-10",
       cell: (ticket) => (
-        <div onMouseDown={stopEvent} onClick={stopEvent}>
+        <InlineFieldCell>
           <InlineFieldWrapper>
             <TicketQuickActions
               ticketId={ticket.id}
               projectId={projectId}
             />
           </InlineFieldWrapper>
-        </div>
+        </InlineFieldCell>
       ),
     },
     ];
@@ -287,7 +287,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         data={tickets}
         columns={columns}
         getRowKey={(ticket) => ticket.id}
-        selection={selection}
+        selection={
+          selection
+            ? { ...selection, getRowLabel: (ticket: Ticket) => ticket.title }
+            : undefined
+        }
         pagination={{ pageSize: 50 }}
         minWidth="640px"
         className="w-full min-w-0 overflow-hidden"

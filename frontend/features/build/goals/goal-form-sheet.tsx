@@ -62,7 +62,7 @@ export function GoalFormSheet({
       description: goal?.description ?? "",
       level: goal?.level ?? "company",
       status: goal?.status ?? "not_started",
-      ownerId: goal?.ownerId ?? "unassigned",
+      ownerId: goal?.owner?.id ?? "unassigned",
       startDate: goal?.startDate ?? "",
       dueDate: goal?.dueDate ?? "",
     },

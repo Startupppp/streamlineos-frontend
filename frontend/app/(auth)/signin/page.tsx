@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { signIn } from "next-auth/react";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { parseAuthErrorCode } from "@/lib/parse-auth-error";
 import { PasswordlessSigninForm, OAuthButtons, SignInAlerts } from "@/features/auth";
+import { useGoogleSignIn, useMicrosoftSignIn } from "@/hooks/common/auth-hooks";
 
 export const dynamic = "force-dynamic";
 
@@ -51,23 +50,8 @@ export default function SignInPage() {
     return "/dashboard";
   }, []);
 
-  const googleSignInMutation = useMutation({
-    mutationFn: async () => {
-      await signIn("google", { callbackUrl: getCallbackUrl() });
-    },
-    onError: () => {
-      toast.error("Google sign-in failed. Please try again.");
-    },
-  });
-
-  const microsoftSignInMutation = useMutation({
-    mutationFn: async () => {
-      await signIn("microsoft-entra-id", { callbackUrl: getCallbackUrl() });
-    },
-    onError: () => {
-      toast.error("Microsoft sign-in failed. Please try again.");
-    },
-  });
+  const googleSignInMutation = useGoogleSignIn(getCallbackUrl);
+  const microsoftSignInMutation = useMicrosoftSignIn(getCallbackUrl);
 
   const handleGoogleSignIn = useCallback(
     () => googleSignInMutation.mutate(),

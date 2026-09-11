@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { KbAskCitation } from "@/types/kb";

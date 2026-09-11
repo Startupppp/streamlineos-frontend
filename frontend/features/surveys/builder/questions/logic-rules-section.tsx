@@ -10,13 +10,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { SurveyBuilderQuestion, SurveyBuilderSection, SurveyBuilderLogicRule } from "@/hooks/api/surveys/builder";
+import type { SurveyBuilderViewQuestion, SurveyBuilderViewSection, SurveyBuilderLogicRule } from "@/hooks/api/surveys/builder";
 import {
   useCreateLogicRule,
   useDeleteLogicRule,
   type LogicActionType,
   type LogicConditionOp,
 } from "@/hooks/api/surveys/logic";
+
+const CONDITION_OPS = [
+  "answer_equals",
+  "answer_contains",
+  "score_gt",
+  "score_lt",
+  "metadata_equals",
+  "collector_equals",
+  "contact_field_equals",
+  "completion_status_equals",
+] as const satisfies readonly LogicConditionOp[];
+
+const ACTION_TYPES = [
+  "skip_to_question",
+  "skip_to_section",
+  "show_question",
+  "hide_question",
+  "disqualify",
+  "end_survey",
+  "assign_score",
+  "assign_segment",
+  "create_lead",
+  "send_notification",
+  "set_variable",
+] as const satisfies readonly LogicActionType[];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
 
 const CONDITION_LABELS: Record<LogicConditionOp, string> = {
   answer_equals: "Answer equals",
@@ -47,8 +76,8 @@ const QUESTION_TARGET_ACTIONS = new Set<LogicActionType>(["skip_to_question", "s
 
 interface LogicRulesSectionProps {
   surveyId: number;
-  question: SurveyBuilderQuestion;
-  sections: SurveyBuilderSection[];
+  question: SurveyBuilderViewQuestion;
+  sections: SurveyBuilderViewSection[];
   rules: SurveyBuilderLogicRule[];
 }
 
@@ -65,14 +94,26 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
   const allQuestions = sections.flatMap((s) => s.questions);
   const questionRules = rules.filter((r) => r.sourceQuestionId === question.id);
 
+  function handleConditionOpChange(value: string) {
+    const next = CONDITION_OPS.find((candidate) => candidate === value);
+    if (next) setOp(next);
+  }
+
+  function handleActionTypeChange(value: string) {
+    const next = ACTION_TYPES.find((candidate) => candidate === value);
+    if (next) setActionType(next);
+  }
+
   function questionTitle(id: number) {
     return allQuestions.find((q) => q.id === id)?.title ?? `Question ${id}`;
   }
 
   function summarizeRule(rule: SurveyBuilderLogicRule) {
-    const conditionOp = (rule.condition as { op?: LogicConditionOp }).op;
-    const value = (rule.condition as { value?: unknown }).value;
-    const type = (rule.action as { type?: LogicActionType }).type;
+    const condition = isRecord(rule.condition) ? rule.condition : {};
+    const action = isRecord(rule.action) ? rule.action : {};
+    const conditionOp = CONDITION_OPS.find((candidate) => candidate === condition.op);
+    const value = condition.value;
+    const type = ACTION_TYPES.find((candidate) => candidate === action.type);
     const conditionLabel = conditionOp ? CONDITION_LABELS[conditionOp] : "Condition";
     const actionLabel = type ? ACTION_LABELS[type] : "Action";
     return `If ${conditionLabel} "${String(value ?? "")}" → ${actionLabel}`;
@@ -123,10 +164,10 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
       {adding ? (
         <div className="space-y-2 rounded-md border border-border p-3">
           <div className="flex gap-2">
-            <Select value={op} onValueChange={(v) => setOp(v as LogicConditionOp)}>
+            <Select value={op} onValueChange={handleConditionOpChange}>
               <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(CONDITION_LABELS) as LogicConditionOp[]).map((key) => (
+                {CONDITION_OPS.map((key) => (
                   <SelectItem key={key} value={key}>{CONDITION_LABELS[key]}</SelectItem>
                 ))}
               </SelectContent>
@@ -138,10 +179,10 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
               className="flex-1"
             />
           </div>
-          <Select value={actionType} onValueChange={(v) => setActionType(v as LogicActionType)}>
+          <Select value={actionType} onValueChange={handleActionTypeChange}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {(Object.keys(ACTION_LABELS) as LogicActionType[]).map((key) => (
+              {ACTION_TYPES.map((key) => (
                 <SelectItem key={key} value={key}>{ACTION_LABELS[key]}</SelectItem>
               ))}
             </SelectContent>

@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { backendPath } from "@/lib/test-support/backend-path";
 import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
 import { collectAppRoutes } from "../app-routes";
 import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extensions";
@@ -9,56 +8,12 @@ import {
   isUniversalRoute,
 } from "../universal-routes";
 import { resolveRouteAccess } from "../route-access";
-
-const BACKEND_PERMS_DIR = backendPath("src/modules/rbac/permissions");
-
-const EXCLUDED_BACKEND_FILES = new Set([
-  "index.ts",
-  "catalog.ts",
-  "role-defaults.ts",
-  "types.ts",
-]);
-
-const BACKEND_MODULE_REGISTRY = backendPath("src/common/rbac/module-registry.ts");
-
-function readDelegableModuleIds(): string[] {
-  const source = fs.readFileSync(BACKEND_MODULE_REGISTRY, "utf8");
-  const ids: string[] = [];
-  const entry = /id:\s*["'`]([^"'`]+)["'`][\s\S]*?ladder:\s*["'`]([^"'`]+)["'`]/g;
-  for (const match of source.matchAll(entry))
-    if (match[2] === "delegable") ids.push(match[1]);
-  return ids;
-}
-
-const BACKEND_ROLE_DEFAULTS = backendPath("src/modules/rbac/permissions/role-defaults.ts");
-
-function memberDefaultPermissions(): Set<string> {
-  const source = fs.readFileSync(BACKEND_ROLE_DEFAULTS, "utf8");
-  const end = source.indexOf("ROLE_DEFAULT_PERMISSIONS");
-  const block = source.slice(0, end);
-  return new Set(
-    [...block.matchAll(/"([a-z0-9-]+:[a-z0-9:-]+)"/g)].map((m) => m[1]),
-  );
-}
-
-function readBackendPermissionNames(): Set<string> {
-  const names = new Set<string>();
-  for (const fileName of fs.readdirSync(BACKEND_PERMS_DIR)) {
-    if (!fileName.endsWith(".ts")) continue;
-    if (EXCLUDED_BACKEND_FILES.has(fileName)) continue;
-    const source = fs.readFileSync(
-      path.join(BACKEND_PERMS_DIR, fileName),
-      "utf8",
-    );
-    for (const match of source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm))
-      if (!match[1].includes("${")) names.add(match[1]);
-  }
-  for (const moduleId of readDelegableModuleIds()) {
-    names.add(`${moduleId}:access:view`);
-    names.add(`${moduleId}:access:manage`);
-  }
-  return names;
-}
+import {
+  PERMISSION_CATALOG_PATH,
+  backendPermissionNames as readBackendPermissionNames,
+  delegableModuleIds as readDelegableModuleIds,
+  memberDefaultPermissions,
+} from "@/test-utils/permission-catalog";
 
 function keysOf(pathname: string): string[] {
   const decision = resolveRouteAccess(pathname);
@@ -77,7 +32,7 @@ describe("route-access registry keys", () => {
   });
 
   it("can reach the backend catalog, so a silent empty sweep cannot pass", () => {
-    expect(fs.existsSync(BACKEND_PERMS_DIR)).toBe(true);
+    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
     expect(backendNames.size).toBeGreaterThan(400);
   });
 
@@ -104,6 +59,41 @@ describe("route-access registry keys", () => {
     });
     const ghosts = declared.filter((key) => !backendNames.has(key)).sort();
     expect(ghosts).toEqual([]);
+  });
+
+  it("each backendRoute entry carries the same permission the backend operation declares (x-permission in contracts/openapi.json)", () => {
+    // x-permission is an internal stamp, read from the vendored artifact, not a published contract.
+    const OPENAPI_PATH = path.resolve(__dirname, "../../../../contracts/openapi.json");
+    type OpenApiDoc = {
+      paths: Record<string, Record<string, { "x-permission"?: string } | undefined> | undefined>;
+    };
+    const doc = JSON.parse(fs.readFileSync(OPENAPI_PATH, "utf8")) as OpenApiDoc;
+    const mismatches: string[] = [];
+    for (const entry of ROUTE_ACCESS_EXTENSIONS) {
+      if (!entry.backendRoute) continue;
+      const { method, path: backendPath } = entry.backendRoute;
+      const op = doc.paths[backendPath]?.[method];
+      const xPermission = op?.["x-permission"];
+      if (typeof xPermission !== "string") {
+        mismatches.push(
+          `${entry.prefix}: ${method.toUpperCase()} ${backendPath} has no x-permission in contracts/openapi.json`,
+        );
+        continue;
+      }
+      const frontendKey = entry.permission;
+      if (frontendKey === undefined) {
+        mismatches.push(`${entry.prefix}: has backendRoute but no permission field`);
+        continue;
+      }
+      const match = Array.isArray(frontendKey)
+        ? frontendKey.some((key) => key === xPermission)
+        : frontendKey === xPermission;
+      if (!match)
+        mismatches.push(
+          `${entry.prefix}: frontend "${String(frontendKey)}" !== backend x-permission "${xPermission}" on ${method.toUpperCase()} ${backendPath}`,
+        );
+    }
+    expect(mismatches).toEqual([]);
   });
 
   it("never contradicts navigation for a route navigation already owns", () => {
@@ -183,7 +173,6 @@ describe("route-access registry keys", () => {
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
       "/chat/settings",
-      "/chat/moderation",
       "/calendar/settings",
     ];
     for (const route of protectedRoutes) {
@@ -270,6 +259,24 @@ describe("route-access registry keys", () => {
           : [decision.permission];
         const expectedKeys = Array.isArray(expected) ? expected : [expected];
         expect(keys.some((k) => expectedKeys.includes(k as string))).toBe(true);
+      }
+    }
+  });
+
+  it("BITE: workflows settings routes resolve as permission-gated — confirms the route move to /workflows/settings/*", () => {
+    const settingsRoutes: Array<{ path: string; expectedPermission: string }> = [
+      { path: "/workflows/settings/variables", expectedPermission: "workflows:variables:manage" },
+      { path: "/workflows/settings/secrets", expectedPermission: "workflows:secrets:manage" },
+      { path: "/workflows/settings/access", expectedPermission: "workflows:access:view" },
+    ];
+    for (const { path, expectedPermission } of settingsRoutes) {
+      const decision = resolveRouteAccess(path);
+      expect(decision.kind).toBe("permission");
+      if (decision.kind === "permission") {
+        const keys = Array.isArray(decision.permission)
+          ? decision.permission
+          : [decision.permission];
+        expect(keys).toContain(expectedPermission);
       }
     }
   });

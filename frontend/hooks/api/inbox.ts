@@ -1,68 +1,16 @@
 "use client";
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import type { Notification, UnreadCount } from "@/types/notifications";
+import { lazyContract } from "@/lib/api-envelope";
+
+const unifiedInboxContract = lazyContract(() =>
+  import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxContract),
+);
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { InboxKind, UnifiedInboxResponse } from "@/types/inbox";
-
-export type InboxSection = "ALL" | "MENTIONS" | "ASSIGNED_TO_ME" | "APPROVALS";
-
-export interface InboxListParams {
-  section?: InboxSection;
-  limit?: number;
-}
-
-function toStringParams(params: Record<string, unknown>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) out[k] = String(v);
-  }
-  return out;
-}
-
-export function useInfiniteInbox(
-  params?: InboxListParams,
-  options?: { enabled?: boolean },
-) {
-  const { data: session } = useSession();
-  const orgId = session?.orgId;
-  const limit = params?.limit ?? 25;
-
-  return useInfiniteQuery<Notification[], Error>({
-    queryKey: queryKeys.inbox.list({
-      ...(params as Record<string, unknown>),
-      infinite: true,
-    }),
-    initialPageParam: undefined as number | undefined,
-    queryFn: ({ pageParam }) =>
-      apiClient.get<Notification[]>(
-        "/me/inbox",
-        toStringParams({
-          ...(params as Record<string, unknown>),
-          limit,
-          cursor: pageParam,
-        }),
-      ),
-    getNextPageParam: (lastPage) =>
-      lastPage.length < limit ? undefined : lastPage[lastPage.length - 1]?.id,
-    staleTime: 30_000,
-    enabled: !!orgId && (options?.enabled ?? true),
-  });
-}
-
-export function useInboxCount() {
-  const { data: session } = useSession();
-  const orgId = session?.orgId;
-
-  return useQuery<UnreadCount, Error>({
-    queryKey: queryKeys.inbox.count(),
-    queryFn: () => apiClient.get<UnreadCount>("/me/inbox/count"),
-    staleTime: 30_000,
-    enabled: !!orgId,
-  });
-}
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface UnifiedInboxParams {
   limit?: number;
@@ -79,18 +27,20 @@ export function useUnifiedInbox(
   const limit = params?.limit ?? 25;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
-    queryKey: queryKeys.inbox.unified({
-      ...(params as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.inbox.unified({
+      limit: params?.limit,
+      kinds: params?.kinds,
+      unreadOnly: params?.unreadOnly,
       infinite: true,
     }),
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => {
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ pageParam , signal }) => {
       const query: Record<string, string> = { limit: String(limit) };
-      if (pageParam) query["cursor"] = String(pageParam);
+      if (pageParam !== undefined) query["cursor"] = String(pageParam);
       if (params?.kinds && params.kinds.length > 0)
         query["kinds"] = params.kinds.join(",");
       if (params?.unreadOnly) query["unreadOnly"] = "true";
-      return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query);
+      return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,

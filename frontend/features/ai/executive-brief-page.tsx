@@ -1,0 +1,182 @@
+"use client";
+
+import { AlertTriangle, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/api/access";
+import { useAiTextStream } from "@/hooks/api/ai-text-stream";
+import { AiCitationChips } from "@/components/ai/ai-citation-chips";
+import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
+import { AiUsageChip } from "@/components/ai/ai-usage-chip";
+import { AiFailureBody } from "@/components/ai/ai-failure-body";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useExecutiveBrief,
+  useGenerateBrief,
+  readBriefSources,
+  type BriefCitation,
+  type LatestBriefResponse,
+  type ExecutiveBriefSnapshot,
+} from "@/lib/api/hooks/executive-brief";
+
+export default function ExecutiveBriefPage() {
+  const { data, isLoading, isError, error, refetch } = useExecutiveBrief();
+  const generate = useGenerateBrief();
+  const canGenerate = useCan("ai:executive-brief:generate");
+  const { run, stop, isStreaming } = useAiTextStream();
+  const [draft, setDraft] = useState("");
+  const [sources, setSources] = useState<BriefCitation[]>([]);
+  const [cancelled, setCancelled] = useState(false);
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  async function handleGenerate() {
+    if (!canGenerate || isStreaming) return;
+    setDraft("");
+    setSources([]);
+    setCancelled(false);
+    try {
+      const result = await run(handleStream);
+      if (result.status === "completed") {
+        setDraft("");
+        toast.success("Executive brief generated");
+      }
+      if (result.status === "cancelled") setCancelled(true);
+    } catch {
+      // The mutation retains the error for the shared AI failure view.
+    }
+  }
+
+  function handleStream(signal: AbortSignal) {
+    function handleToken(token: string) {
+      if (!signal.aborted) setDraft((current) => current + token);
+    }
+    function handleHeaders(headers: Headers) {
+      if (!signal.aborted) setSources(readBriefSources(headers));
+    }
+    return generate.mutateAsync({ signal, onToken: handleToken, onHeaders: handleHeaders });
+  }
+
+  return (
+    <PageWrapper
+      title="Executive Brief"
+      subtitle="AI-generated cross-module operational summary for leadership"
+      actions={
+        canGenerate && (
+          <div className="flex items-center gap-2">
+            {isStreaming && <Button variant="outline" onClick={stop}>Stop generating</Button>}
+            <LoadingButton isPending={isStreaming} loadingText="Generating…" onClick={handleGenerate}>
+              <Sparkles className="h-3.5 w-3.5" />
+              Generate Brief
+            </LoadingButton>
+          </div>
+        )
+      }
+    >
+      {!generate.isPending && generate.error && (
+        <div className="mb-4">
+          <AiFailureBody error={generate.error} onRetry={handleGenerate} compact={false} />
+        </div>
+      )}
+      {(isStreaming || draft || cancelled) && (
+        <section className="mb-4 space-y-3 rounded-xl border border-border bg-card p-4" aria-label="Executive brief draft" aria-busy={isStreaming}>
+          <p role="status" className="text-sm text-muted-foreground">
+            {isStreaming ? "Generating your brief…" : cancelled ? "Generation stopped. This draft is incomplete and has not been saved." : "Generation interrupted. This draft may be incomplete."}
+          </p>
+          {draft && <p className="whitespace-pre-line text-sm leading-relaxed">{draft}</p>}
+          <AiCitationChips citations={sources} />
+        </section>
+      )}
+      {isLoading && <BriefSkeleton />}
+      {!isLoading && isError && (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the executive brief"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      )}
+      {!isLoading && !isError && data && (
+        <BriefContent data={data} freshUsage={data.snapshot?.aiUsage} />
+      )}
+    </PageWrapper>
+  );
+}
+
+function BriefSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-5 rounded-md bg-muted w-4/5" />
+      <div className="h-5 rounded-md bg-muted w-3/5" />
+      <div className="h-5 rounded-md bg-muted w-2/3" />
+      <div className="h-5 rounded-md bg-muted w-1/2" />
+    </div>
+  );
+}
+
+function BriefContent({ data, freshUsage }: { data: LatestBriefResponse; freshUsage?: ExecutiveBriefSnapshot["aiUsage"] }) {
+  const { snapshot, isStale } = data;
+
+  if (!snapshot) {
+    return (
+      <EmptyState
+        className="flex-1"
+        title="No executive brief yet"
+        description="Generate one to see a cross-module operational summary for leadership."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {isStale && (
+        <div className="flex items-center gap-2 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 text-status-warning-ink text-sm">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>This brief may be outdated. Generate a new one for current data.</span>
+        </div>
+      )}
+
+      {snapshot.uncertaintyNotes.length > 0 && (
+        <div className="rounded-xl border border-status-warning-rule bg-status-warning-surface p-4">
+          <p className="text-xs font-semibold text-status-warning-ink mb-2">
+            Data gaps — not all sources were available:
+          </p>
+          <ul className="space-y-1">
+            {snapshot.uncertaintyNotes.map((note, i) => (
+              <li
+                key={i}
+                className="text-xs text-status-warning-ink flex items-start gap-1.5"
+              >
+                <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                {note}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-center gap-2 justify-between">
+          <h2 className="text-sm font-semibold text-foreground">Operational Summary</h2>
+          <div className="flex items-center gap-3">
+            <AiUsageChip usage={freshUsage} />
+            <AiGeneratedLabel timestamp={snapshot.generatedAt} />
+          </div>
+        </div>
+        <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
+          {snapshot.narrative}
+        </p>
+        {snapshot.citations.length > 0 && (
+          <AiCitationChips citations={snapshot.citations} />
+        )}
+      </div>
+    </div>
+  );
+}

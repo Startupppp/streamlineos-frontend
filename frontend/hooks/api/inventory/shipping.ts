@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { ShipmentStatus } from "@/features/inventory/lib";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type { Package } from "./shipping-packages";
 
 /**
@@ -18,11 +19,20 @@ export * from "./shipping-packages";
 export * from "./shipping-loads";
 export * from "./shipping-carriers";
 
+/**
+ * A shipment line as `GET /inventory/shipments/:id` returns it: the stored row,
+ * quantity a decimal string, the variant by id alone. `productVariant` is only
+ * present where a caller loads the relation; the detail route does not.
+ */
 interface ShipmentLine {
   id: number;
-  variantId: number;
-  variantName: string;
-  qty: number;
+  shipmentId: number;
+  productVariantId: number;
+  quantity: string;
+  lotId: number | null;
+  serialId: number | null;
+  notes: string | null;
+  productVariant?: { id: number; name: string; sku: string };
 }
 
 export interface Shipment {
@@ -62,7 +72,7 @@ export function useShipments(params?: ShipmentQueryParams) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<ShipmentListResponse, Error>({
     queryKey: queryKeys.inventory.shipments(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ShipmentListResponse>("/inventory/shipments", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.carrierId ? { carrierId: String(params.carrierId) } : {}),
@@ -70,7 +80,7 @@ export function useShipments(params?: ShipmentQueryParams) {
         ...(params?.soId ? { soId: String(params.soId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -80,7 +90,7 @@ export function useShipment(shipmentId: number) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<Shipment, Error>({
     queryKey: queryKeys.inventory.shipment(shipmentId),
-    queryFn: () => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`),
+    queryFn: ({ signal }) => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`, undefined, signal),
     enabled: canView && shipmentId > 0,
     staleTime: 60_000,
   });
@@ -88,11 +98,11 @@ export function useShipment(shipmentId: number) {
 
 export function useCreateShipment() {
   const qc = useQueryClient();
-  return useIdempotentMutation<
+  return useAuthorizedIdempotentMutation<
     Shipment,
     Error,
     { soId?: number; warehouseId?: number; carrierId?: number; trackingNumber?: string; notes?: string }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "create"],
     mutationFn: (data, idempotencyKey) => apiClient.post<Shipment>("/inventory/shipments", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -104,11 +114,11 @@ export function useCreateShipment() {
 
 export function useUpdateShipment() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Shipment,
     Error,
     { shipmentId: number; carrierId?: number; trackingNumber?: string; notes?: string }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "update"],
     mutationFn: ({ shipmentId, ...data }) =>
       apiClient.patch<Shipment>(`/inventory/shipments/${shipmentId}`, data),
@@ -121,7 +131,7 @@ export function useUpdateShipment() {
 
 export function useShipShipment() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Shipment, Error, number>({
+  return useAuthorizedIdempotentMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "ship"],
     mutationFn: (shipmentId, idempotencyKey) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -180,8 +190,8 @@ export function useShipmentTimeline(shipmentId: number) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<ShipmentTimeline, Error>({
     queryKey: queryKeys.inventory.shipmentTimeline(shipmentId),
-    queryFn: () =>
-      apiClient.get<ShipmentTimeline>(`/inventory/shipments/${shipmentId}/timeline`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ShipmentTimeline>(`/inventory/shipments/${shipmentId}/timeline`, undefined, signal),
     enabled: canView && shipmentId > 0,
     staleTime: 30_000,
   });
@@ -189,7 +199,7 @@ export function useShipmentTimeline(shipmentId: number) {
 
 export function useRecordCarrierStatus() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     CarrierStatusRecorded,
     Error,
     {
@@ -200,7 +210,7 @@ export function useRecordCarrierStatus() {
       carrierEventId?: string;
       description?: string;
     }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "carrier-status"],
     mutationFn: ({ shipmentId: _shipmentId, ...body }) =>
       apiClient.post<CarrierStatusRecorded>("/inventory/shipments/carrier-status", body),
@@ -216,7 +226,7 @@ export function useRecordCarrierStatus() {
 
 export function useRefreshShipmentTracking() {
   const qc = useQueryClient();
-  return useMutation<CarrierRefreshResult, Error, number>({
+  return useAuthorizedMutation<CarrierRefreshResult, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "refresh-tracking"],
     mutationFn: (shipmentId) =>
       apiClient.post<CarrierRefreshResult>(
@@ -232,7 +242,7 @@ export function useRefreshShipmentTracking() {
 
 export function useCancelShipment() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Shipment, Error, number>({
+  return useAuthorizedIdempotentMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "cancel"],
     mutationFn: (shipmentId, idempotencyKey) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),

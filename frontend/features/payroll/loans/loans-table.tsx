@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
@@ -86,6 +86,14 @@ export function LoansTable() {
       : all;
   }, [loans, statusFilter]);
 
+  const filtersActive = statusFilter !== SENTINEL;
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("status");
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
+
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value === SENTINEL) {
@@ -96,13 +104,16 @@ export function LoansTable() {
     router.replace(`?${params.toString()}`);
   }
 
-  function handleOpenAdjust(row: LoanAdminItem, defaultType: LoanAdjustmentType) {
-    setAdjustState({ loanId: row.id, employeeName: row.user.name ?? row.user.email, defaultType });
-  }
+  const handleOpenAdjust = useCallback(
+    (row: LoanAdminItem, defaultType: LoanAdjustmentType) => {
+      setAdjustState({ loanId: row.id, employeeName: row.user?.name ?? row.user?.email ?? "", defaultType });
+    },
+    [],
+  );
 
-  function handleOpenApproval(loanId: number, action: "approve" | "reject") {
+  const handleOpenApproval = useCallback((loanId: number, action: "approve" | "reject") => {
     setApprovalState({ loanId, action });
-  }
+  }, []);
 
   function handleAdjustClose() {
     setAdjustState(null);
@@ -114,7 +125,7 @@ export function LoansTable() {
 
   const columns = useMemo(
     () => buildLoanColumns({ canManage, onAdjust: handleOpenAdjust, onApproval: handleOpenApproval }),
-    [canManage],
+    [canManage, handleOpenAdjust, handleOpenApproval],
   );
 
   return (
@@ -159,7 +170,7 @@ export function LoansTable() {
           mobileCard={(row) => (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
+                <p className="text-sm font-medium truncate">{row.user?.name ?? row.user?.email ?? ""}</p>
                 <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
                   {row.status}
                 </span>
@@ -178,7 +189,13 @@ export function LoansTable() {
             <EmptyState
               illustration={<EmptyPersonIllustration />}
               title="No active loans"
-              description="Employee salary loans and advances will appear here"
+              description={
+                filtersActive
+                  ? undefined
+                  : "Employee salary loans and advances will appear here"
+              }
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
             />
           }
         />

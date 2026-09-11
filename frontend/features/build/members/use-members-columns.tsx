@@ -14,6 +14,7 @@ import {
 import { WorkspaceRoleBadge } from "./members-toolbar";
 import { MemberActions } from "./member-row-actions";
 import type { DisplayProps } from "./display-props";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface UseMembersColumnsParams {
   displayProps: DisplayProps;
@@ -37,7 +38,7 @@ export function useMembersColumns({
           return (
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="h-7 w-7 shrink-0">
-                <AvatarImage src={member.image ?? undefined} alt={displayName} />
+                <AvatarImage src={resolveImageUrl(member.image)} alt={displayName} />
                 <AvatarFallback className="text-micro font-semibold bg-primary/10 text-foreground">
                   {getUserInitials(member)}
                 </AvatarFallback>

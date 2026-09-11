@@ -5,12 +5,12 @@ import { Link as LinkIcon } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { cn } from "@/lib/utils";
 import {
   getTicketDetailHref,
   parseTicketKey,
-} from "@/features/build/shared/format-ticket-key";
+} from "@/components/shared/format-ticket-key";
 
 export interface RelatedLinkDraft {
   url: string;

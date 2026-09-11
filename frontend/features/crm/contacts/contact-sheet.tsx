@@ -11,8 +11,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Combobox } from "@/components/ui/combobox";
-import { RecordForm, asRecordValue, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, asRecordValue, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
 import { useCreateContact, useDeals, useUpdateContact } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";

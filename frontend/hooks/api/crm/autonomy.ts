@@ -21,10 +21,41 @@ import type {
   Scoreboard,
   SwitchesResponse,
 } from "@/types/crm/autonomy";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+
+import { lazyContract } from "@/lib/api-envelope";
+
+const decisionsPageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.decisionsPageContract),
+);
+const switchesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.switchesContract),
+);
+const scoreboardLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.scoreboardContract),
+);
+const reviewQueueLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.reviewQueueContract),
+);
+const autonomySettingsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.autonomySettingsContract),
+);
+const liveHoldsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.liveHoldsContract),
+);
+const reverseDecisionLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.reverseDecisionContract),
+);
+const markReviewedLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.markReviewedContract),
+);
+const cancelHoldLazy = lazyContract(() =>
+  import("@/hooks/api/crm/autonomy-schema").then((m) => m.cancelHoldContract),
+);
 function toParams(filters: DecisionFilters, limit: number, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (cursor) params.set("cursor", cursor);
+  if (cursor !== undefined) params.set("cursor", cursor);
 
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === "") continue;
@@ -49,8 +80,8 @@ export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) 
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.autonomyDecisions({ ...filters, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam)}`),
+      queryFn: ({ pageParam, signal }) =>
+        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam as string | undefined)}`, undefined, signal, decisionsPageLazy),
       getNextPageParam: (lastPage: DecisionPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
       // Short, because a manager watching the feed wants to see the system act.
@@ -71,7 +102,7 @@ export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) 
 export function useReverseDecision() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:reverse", {
     mutationKey: ["crm", "autonomy", "decisions", "reverse"],
     mutationFn: ({
       decisionId,
@@ -85,6 +116,8 @@ export function useReverseDecision() {
       apiClient.post<{ reversed: boolean; action: string }>(
         `/crm/autonomy/decisions/${decisionId}/reverse`,
         { ...(reason ? { reason } : {}), consented: consented ?? false },
+        undefined,
+        reverseDecisionLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
@@ -95,7 +128,7 @@ export function useReverseDecision() {
 export function useAutonomySwitches() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySwitches(),
-    queryFn: () => apiClient.get<SwitchesResponse>("/crm/autonomy/switches"),
+    queryFn: ({ signal }) => apiClient.get<SwitchesResponse>("/crm/autonomy/switches", undefined, signal, switchesLazy),
     staleTime: 30_000,
   });
 }
@@ -110,10 +143,10 @@ export function useAutonomySwitches() {
 export function useSetAutonomySwitch() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "switches", "set"],
     mutationFn: (input: { kind: string; enabled: boolean; reason?: string }) =>
-      apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
+      apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input, undefined, switchesLazy),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySwitches(), data);
     },
@@ -209,7 +242,7 @@ export function useRevertRepair() {
 export function useAutonomyScoreboard(days = 30) {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyScoreboard(days),
-    queryFn: () => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`),
+    queryFn: ({ signal }) => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`, undefined, signal, scoreboardLazy),
     staleTime: 60_000,
   });
 }
@@ -218,7 +251,7 @@ export function useAutonomyScoreboard(days = 30) {
 export function useAutonomyReviewQueue() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyReviewQueue(),
-    queryFn: () => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue"),
+    queryFn: ({ signal }) => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue", undefined, signal, reviewQueueLazy),
     staleTime: 30_000,
   });
 }
@@ -226,12 +259,14 @@ export function useAutonomyReviewQueue() {
 export function useMarkReviewed() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:view", {
     mutationKey: ["crm", "autonomy", "review-queue", "mark-reviewed"],
     mutationFn: (shadowScoreId: string) =>
       apiClient.post<{ reviewed: boolean }>(
         `/crm/autonomy/review-queue/${shadowScoreId}/reviewed`,
         {},
+        undefined,
+        markReviewedLazy,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyReviewQueue() });
@@ -242,7 +277,7 @@ export function useMarkReviewed() {
 export function useAutonomySettings() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySettings(),
-    queryFn: () => apiClient.get<AutonomySettings>("/crm/autonomy/settings"),
+    queryFn: ({ signal }) => apiClient.get<AutonomySettings>("/crm/autonomy/settings", undefined, signal, autonomySettingsLazy),
     staleTime: 60_000,
   });
 }
@@ -250,10 +285,10 @@ export function useAutonomySettings() {
 export function useUpdateAutonomySettings() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "settings", "update"],
     mutationFn: (patch: Partial<AutonomySettings>) =>
-      apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
+      apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch, undefined, autonomySettingsLazy),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySettings(), data);
     },
@@ -270,7 +305,7 @@ export function useUpdateAutonomySettings() {
 export function useLiveHolds() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyHolds(),
-    queryFn: () => apiClient.get<LiveHold[]>("/crm/autonomy/holds"),
+    queryFn: ({ signal }) => apiClient.get<LiveHold[]>("/crm/autonomy/holds", undefined, signal, liveHoldsLazy),
     refetchInterval: 10_000,
     staleTime: 0,
   });
@@ -311,12 +346,12 @@ export function useReleaseClassStop() {
 export function useCancelHold() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:reverse", {
     mutationKey: ["crm", "autonomy", "holds", "cancel"],
     mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
       apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {
         ...(reason ? { reason } : {}),
-      }),
+      }, undefined, cancelHoldLazy),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },

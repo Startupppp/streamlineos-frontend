@@ -20,7 +20,7 @@ import {
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
 } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -63,7 +63,7 @@ export function LabelPicker({
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
       setNewLabelName("");
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
       addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -72,7 +72,7 @@ export function LabelPicker({
   const addLabel = useAddLabelToTicket({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
       });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -81,7 +81,7 @@ export function LabelPicker({
   const removeLabel = useRemoveLabelFromTicket({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
       });
     },
     onError: (error) => toast.error(getErrorMessage(error)),

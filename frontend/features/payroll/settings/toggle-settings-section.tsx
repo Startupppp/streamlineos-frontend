@@ -30,7 +30,8 @@ import {
   TOGGLE_META,
   RISKY_TOGGLES,
 } from "@/features/payroll/setup/lib/constants";
-import type { PolicyRow, VersionRow } from "@/types/payroll/setup";
+import type { PolicyRow } from "@/types/payroll/setup";
+import type { PolicyVersionRow } from "@/hooks/api/payroll/policies-schema";
 
 type PendingChange = { key: string; newValue: boolean };
 
@@ -42,7 +43,7 @@ type VersionForm = z.infer<typeof versionSchema>;
 
 type ToggleSettingsSectionProps = {
   policy: PolicyRow;
-  activeVersion: VersionRow | null;
+  activeVersion: PolicyVersionRow | null | undefined;
 };
 
 export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsSectionProps) {
@@ -165,7 +166,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                         id={`toggle-${key}`}
                         label={meta?.label ?? key}
                         description={meta?.description}
-                        checked={toggles?.[key] ?? false}
+                        checked={toggles?.[key] === true}
                         onCheckedChange={(val) => handleToggleChange(key, val)}
                         disabled={createVersion.isPending}
                       />
@@ -187,7 +188,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                       id={`toggle-${key}`}
                       label={meta?.label ?? key}
                       description={meta?.description}
-                      checked={toggles?.[key] ?? false}
+                      checked={toggles?.[key] === true}
                       onCheckedChange={(val) => handleToggleChange(key, val)}
                       disabled={createVersion.isPending}
                     />

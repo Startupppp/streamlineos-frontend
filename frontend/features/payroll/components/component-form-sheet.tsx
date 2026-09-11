@@ -169,46 +169,58 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                 <FormField
                   control={form.control}
                   name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-medium">
-                        Type <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <Select value={field.value} onValueChange={(v) => field.onChange(v as ComponentType)}>
-                        <FormControl>
-                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {COMPONENT_TYPES.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    function handleTypeChange(v: string): void {
+                      const next = COMPONENT_TYPES.find((t) => t.value === v);
+                      if (next) field.onChange(next.value);
+                    }
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">
+                          Type <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select value={field.value} onValueChange={handleTypeChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {COMPONENT_TYPES.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}
                   name="calcMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-medium">
-                        Calc. Method <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <Select value={field.value} onValueChange={(v) => field.onChange(v as CalcMethod)}>
-                        <FormControl>
-                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CALC_METHODS.map((m) => (
-                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    function handleCalcMethodChange(v: string): void {
+                      const next = CALC_METHODS.find((m) => m.value === v);
+                      if (next) field.onChange(next.value);
+                    }
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">
+                          Calc. Method <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select value={field.value} onValueChange={handleCalcMethodChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {CALC_METHODS.map((m) => (
+                              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 

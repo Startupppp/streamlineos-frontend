@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 
 export function invalidatePersonAccountAccess(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({
-    queryKey: queryKeys.directory.peopleAll,
+    queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll,
   });
 }

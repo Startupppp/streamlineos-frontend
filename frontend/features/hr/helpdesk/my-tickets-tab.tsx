@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -52,7 +54,7 @@ export function MyTicketsTab() {
   const currentCursor = cursorHistory[pageIndex];
   const params: HelpdeskListParams = { limit: MY_TICKETS_PAGE_SIZE, cursor: currentCursor };
 
-  const { data, isLoading } = useHelpdeskTickets(params);
+  const { data, isLoading, isError, error, refetch } = useHelpdeskTickets(params);
 
   const handleNextPage = useCallback(() => {
     if (!data?.pagination.nextCursor) return;
@@ -95,6 +97,13 @@ export function MyTicketsTab() {
             <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load your requests"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : !data || data.data.length === 0 ? (
         <EmptyState illustrationPreset="default" title="No tickets yet" description="Submit a request when you need HR support." action={{ label: "New Request", onClick: handleCreateOpen }} className="py-16" />
       ) : (

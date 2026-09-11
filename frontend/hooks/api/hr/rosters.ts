@@ -1,9 +1,24 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+
+const rostersListC = lazyContract(() =>
+  import("@/hooks/api/hr/rosters-schema").then((m) => m.rostersListContract),
+);
+const createRosterC = lazyContract(() =>
+  import("@/hooks/api/hr/rosters-schema").then((m) => m.createRosterContract),
+);
+const rosterEntriesC = lazyContract(() =>
+  import("@/hooks/api/hr/rosters-schema").then((m) => m.rosterEntriesContract),
+);
+const publishRosterC = lazyContract(() =>
+  import("@/hooks/api/hr/rosters-schema").then((m) => m.publishRosterContract),
+);
 
 export interface Roster {
   id: number;
@@ -21,7 +36,7 @@ export interface RosterEntry {
   userId: string;
   shiftId: number | null;
   date: string;
-  isDayOff: boolean;
+  isDayOff: boolean | null;
   notes: string | null;
 }
 
@@ -29,8 +44,8 @@ export function useRosters() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "rosters"],
-    queryFn: () => apiClient.get<Roster[]>("/hr/rosters"),
+    queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"],
+    queryFn: ({ signal }) => apiClient.get<Roster[]>("/hr/rosters", undefined, signal, rostersListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -38,11 +53,11 @@ export function useRosters() {
 
 export function useCreateRoster() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "create"],
     mutationFn: (data: { name: string; weekStart: string; weekEnd: string }) =>
-      apiClient.post<Roster>("/hr/rosters", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "rosters"] }),
+      apiClient.post<Roster>("/hr/rosters", data, undefined, createRosterC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
   });
 }
 
@@ -50,8 +65,8 @@ export function useRosterEntries(rosterId: number) {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "rosterEntries", rosterId],
-    queryFn: () => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`),
+    queryKey: [...humanResourcesQueryKeys.hr.all, "rosterEntries", rosterId],
+    queryFn: ({ signal }) => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`, undefined, signal, rosterEntriesC),
     staleTime: 30_000,
     enabled: hrEnabled && canView && rosterId > 0,
   });
@@ -59,10 +74,10 @@ export function useRosterEntries(rosterId: number) {
 
 export function usePublishRoster() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "publish"],
     mutationFn: (rosterId: number) =>
-      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "rosters"] }),
+      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, undefined, publishRosterC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
   });
 }

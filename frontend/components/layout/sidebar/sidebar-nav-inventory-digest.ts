@@ -271,5 +271,38 @@
  * and the overdue one is upstream — a period that was never submitted cannot
  * have produced an exception yet.
  */
+/*
+ * Carried in by the 2026-09-11 origin/main merge. Main kept its notes in the
+ * test, which this branch had emptied into this file, so they move here with
+ * the routes they describe:
+ *
+ * Moved 2026-09-02: the Support group and its /support + /support/inbox routes
+ * were gated on build:tickets:view, a Build key on Support routes, so the links
+ * tracked Build access instead of Support access. Repointed to
+ * dashboard:support:view and support:tickets:view to match what those pages read.
+ * Moved 2026-09-03: the Build "Settings" route (/build/settings/integrations)
+ * and the Build group's admission list were gated on settings:manage, a global
+ * key, for a surface Build owns. The four git-connection routes moved to
+ * /integrations/git/connections behind integrations:git:view|manage, and
+ * MODULE_ADMIN_EXTRA_KEYS.build now grants that pair, so a BUILD_MODULE_ADMIN
+ * holds the key but could not see the link. Repointed to integrations:git:view.
+ * Strictly widening: OWNER and ORG_ADMIN are ALL_PERMISSION_NAMES and no role
+ * template carries settings:manage, so nobody who saw the item loses it.
+ * Moved 2026-09-03: the Finance "Settings" group gained an "Automations" child
+ * (/accounting/settings/automations, settings:automations:view). The page
+ * existed and was linked from the accounting settings tab strip, but navigation
+ * had no entry for it, so route-access resolved it by the longest matching nav
+ * prefix (/accounting/settings) and gated it on accounting:settings:read — a
+ * different key from the settings:automations:view the backend routes enforce,
+ * which is how a finance admin reached a page whose every request then 403s.
+ * This is the same shape as the /support sibling, which navigation already
+ * gates on settings:automations:view. Strictly narrowing for the page and
+ * additive for the sidebar: only OWNER/ORG_ADMIN hold settings:automations:view
+ * (ALL_PERMISSION_NAMES; no role template carries it), and they already saw the
+ * Finance Settings group.
+ * Updated 2026-09-06: Workflows nav group gained module: "workflows" (nav gate
+ * fix) and Variables/Secrets/Access routes moved to /workflows/settings/*
+ * (route-conformance §8).
+ */
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
   "58389e61ae9aee791752bb56e1ddd6acf1508fcda0b147bd76dd83844b118416";

@@ -1,0 +1,4 @@
+captured: 2026-09-03T16:28:49Z
+backend SHA:  45f8a2e99494483526e357e27f18c76961ebf266
+frontend SHA: 7469d27895add587f9427e7c50c457f56e0048bf
+backend branch:  release/code-10-10-v2

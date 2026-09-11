@@ -18,7 +18,7 @@ import {
   DEFAULT_INVITE_ROLE,
   USER_INVITE_ROLES,
   formatRoleLabel,
-} from "@/features/users/user-invite-roles";
+} from "@/lib/constants/user-invite-roles";
 import { validateInviteEmail } from "../lib/invite-email";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -30,14 +30,12 @@ type StepInviteLaunchProps = {
   data: WizardData;
   onBack: () => void;
   onChangeInvitees: (invitees: Invitee[]) => void;
-  onCompletionStarted: () => void;
 };
 
 export function StepInviteLaunch({
   data,
   onChangeInvitees,
   onBack,
-  onCompletionStarted,
 }: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
@@ -64,6 +62,12 @@ export function StepInviteLaunch({
     setEmail("");
   }
 
+  function handleEmailKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    handleAdd();
+  }
+
   function handleRemove(target: string) {
     onChangeInvitees(data.invitees.filter((i) => i.email !== target));
   }
@@ -80,12 +84,7 @@ export function StepInviteLaunch({
   }, [phase]);
 
   if (phase === "generating") {
-    return (
-      <StepGeneration
-        data={data}
-        onCompletionStarted={onCompletionStarted}
-      />
-    );
+    return <StepGeneration data={data} />;
   }
 
   const isPending = phase === "pending";
@@ -128,12 +127,7 @@ export function StepInviteLaunch({
           placeholder="teammate@company.com"
           className="min-w-0 h-9 w-full flex-1 text-sm"
           disabled={isPending || atLimit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleAdd();
-            }
-          }}
+          onKeyDown={handleEmailKeyDown}
         />
         <div className="flex min-w-0 items-stretch gap-2 sm:w-auto sm:shrink-0">
           <Select value={role} onValueChange={setRole} disabled={isPending}>

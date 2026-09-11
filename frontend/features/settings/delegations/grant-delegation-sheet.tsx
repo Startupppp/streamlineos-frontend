@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -28,10 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { delegationSchema, type DelegationFormValues } from "./delegation-schema";
+import { useGrantDelegation } from "@/hooks/api/delegations";
 import {
   usePermissionCatalog,
   useRbacDiscoveryGrantable,
@@ -99,15 +98,7 @@ export function GrantDelegationSheet({
   const startsAt = watch("startsAt");
   const endsAt = watch("endsAt");
 
-  const mutation = useMutation({
-    mutationFn: (values: DelegationFormValues) =>
-      apiClient.post("/access/delegations", {
-        delegateeId: values.delegateeId,
-        permissions: values.permissions,
-        startsAt: new Date(values.startsAt).toISOString(),
-        endsAt: new Date(values.endsAt).toISOString(),
-        reason: values.reason || undefined,
-      }),
+  const mutation = useGrantDelegation({
     onSuccess: () => {
       toast.success("Delegation created");
       reset();

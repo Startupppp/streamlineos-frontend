@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { Download, ExternalLink } from "lucide-react";
+import { Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +22,16 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { useCreatePayoutBatch } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import type { BatchFormat } from "@/types/payroll";
+
+const BATCH_FORMATS = [
+  "NEFT_CSV",
+  "RTGS_CSV",
+  "GENERIC_CSV",
+  "ACH_CSV",
+  "SEPA_CSV",
+] as const satisfies readonly BatchFormat[];
 
 function getRecommendedFormat(currency: string | undefined): BatchFormat {
   if (currency === "INR") return "NEFT_CSV";
@@ -40,8 +48,10 @@ interface GeneratePayoutDialogProps {
   format: BatchFormat;
   onFormatChange: (format: BatchFormat) => void;
   idempotencyKey: string;
-  fileUrl: string | null;
-  onFileUrl: (url: string) => void;
+  generatedBatchId: number | null;
+  onGenerated: (batchId: number) => void;
+  onDownload: (batchId: number) => void;
+  isDownloading: boolean;
 }
 
 export function GeneratePayoutDialog({
@@ -52,12 +62,24 @@ export function GeneratePayoutDialog({
   format,
   onFormatChange,
   idempotencyKey,
-  fileUrl,
-  onFileUrl,
+  generatedBatchId,
+  onGenerated,
+  onDownload,
+  isDownloading,
 }: GeneratePayoutDialogProps) {
   const createMutation = useCreatePayoutBatch();
+  const handleError = useRunConflictHandler(runId);
   const { data: policyData } = usePayrollPolicyCurrent();
   const recommendedFormat = getRecommendedFormat(policyData?.policy?.currency);
+
+  function handleDownload() {
+    if (generatedBatchId !== null) onDownload(generatedBatchId);
+  }
+
+  function handleFormatChange(v: string): void {
+    const next = BATCH_FORMATS.find((candidate) => candidate === v);
+    if (next) onFormatChange(next);
+  }
 
   function handleGenerate() {
     createMutation.mutate(
@@ -65,14 +87,14 @@ export function GeneratePayoutDialog({
       {
         onSuccess: (result) => {
           if (result.replayed) toast.info("Replayed existing batch");
-          const generatedFileUrl = result.batches.find((b) => b.fileUrl)?.fileUrl ?? null;
-          if (generatedFileUrl) {
-            onFileUrl(generatedFileUrl);
+          const batchId = result.batches[0]?.batch.id ?? null;
+          if (batchId !== null) {
+            onGenerated(batchId);
           } else {
             onClose();
           }
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleError,
       },
     );
   }
@@ -87,19 +109,20 @@ export function GeneratePayoutDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          {fileUrl ? (
+          {generatedBatchId !== null ? (
             <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface p-3 text-sm text-status-success-ink">
               <Download className="h-4 w-4 shrink-0" />
               <span>Batch generated successfully.</span>
-              <a
-                href={fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto flex items-center gap-1 font-medium underline underline-offset-2"
+              <LoadingButton
+                size="sm"
+                variant="outline"
+                className="ml-auto"
+                isPending={isDownloading}
+                loadingText="Preparing…"
+                onClick={handleDownload}
               >
                 Download Bank File
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              </LoadingButton>
             </div>
           ) : (
             <>
@@ -107,7 +130,7 @@ export function GeneratePayoutDialog({
                 <Label htmlFor="batch-format">Format</Label>
                 <Select
                   value={format}
-                  onValueChange={(v) => onFormatChange(v as BatchFormat)}
+                  onValueChange={handleFormatChange}
                 >
                   <SelectTrigger id="batch-format" className="">
                     <SelectValue />
@@ -125,17 +148,17 @@ export function GeneratePayoutDialog({
                 </Select>
               </div>
               <p className="text-dense text-muted-foreground leading-snug">
-                A signed download link will be available immediately after generation. To
-                re-download, generate a new batch.
+                A short-lived signed download link is issued on request, so the bank file can
+                be downloaded again from the batch list at any time.
               </p>
             </>
           )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {fileUrl ? "Close" : "Cancel"}
+            {generatedBatchId !== null ? "Close" : "Cancel"}
           </Button>
-          {!fileUrl && (
+          {generatedBatchId === null && (
             <LoadingButton
               onClick={handleGenerate}
               isPending={createMutation.isPending}

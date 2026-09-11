@@ -6,16 +6,30 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
+import { isRecord } from "@/lib/is-record";
 
-interface NotificationPayload {
-  id?: number;
-  senderId?: string;
-  senderName?: string | null;
-  content?: string | null;
+/**
+ * An Ably message body is `any`, so asserting it into a payload interface
+ * checked nothing. Read the four fields the handler uses and verify each.
+ */
+function readChatNotification(data: unknown): {
+  id: number;
+  senderId: unknown;
+  senderName: string | null;
+  content: string | null;
+} | null {
+  if (!isRecord(data) || typeof data.id !== "number" || !data.id) return null;
+  return {
+    id: data.id,
+    senderId: data.senderId,
+    senderName: typeof data.senderName === "string" ? data.senderName : null,
+    content: typeof data.content === "string" ? data.content : null,
+  };
 }
 
 export function useChatGlobalNotifications(
@@ -44,6 +58,9 @@ export function useChatGlobalNotifications(
   useEffect(() => {
     if (!orgId || !channels?.length) return;
 
+    // Captured after the guard: the narrowing does not reach into the hoisted
+    // `setup` declaration below, and the channel name builder takes a string.
+    const org = orgId;
     const channelList = channels;
     let cancelled = false;
     const subs: Array<{
@@ -55,21 +72,21 @@ export function useChatGlobalNotifications(
       for (const channel of channelList) {
         if (cancelled) return;
 
-        const ablyChannel = ably.channels.get(`chat:${orgId}:${channel.id}`);
+        const ablyChannel = ably.channels.get(chatChannelName(org, channel.id));
         const channelId = channel.id;
         const channelType = channel.type;
         const channelDisplayName = channel.name;
 
         const handler = (msg: InboundMessage) => {
-          const payload = msg.data as NotificationPayload;
-          if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
+          const payload = readChatNotification(msg.data);
+          if (!payload || payload.senderId === currentUserIdRef.current) return;
 
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.myChannels(orgId),
+            queryKey: collaborationQueryKeys.chat.myChannels(),
             exact: true,
           });
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.unreadTotal(orgId),
+            queryKey: collaborationQueryKeys.chat.unreadTotal(),
             exact: true,
           });
 
@@ -115,7 +132,7 @@ export function useChatGlobalNotifications(
   useEffect(() => {
     if (!orgId || !currentUserId) return;
 
-    const notifChannel = ably.channels.get(`notifications:${orgId}:${currentUserId}`);
+    const notifChannel = ably.channels.get(notificationsChannelName(orgId, currentUserId));
     let cancelled = false;
     let subscribed = false;
 

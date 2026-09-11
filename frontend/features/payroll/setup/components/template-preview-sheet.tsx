@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { TemplateRow, ToggleKey } from "@/types/payroll/setup";
+import type { ToggleKey } from "@/types/payroll/setup";
 import { COMPLEXITY_CONFIG, TOGGLE_META } from "@/features/payroll/setup/lib/constants";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 
 type TemplatePreviewSheetProps = {
-  template: TemplateRow | null;
+  template: PayrollTemplate | null;
   onOpenChange: (open: boolean) => void;
 };
 
@@ -27,7 +28,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
 
   if (!template) return null;
 
-  const complexity = COMPLEXITY_CONFIG[template.complexity];
+  const complexity = template.complexity ? COMPLEXITY_CONFIG[template.complexity] : COMPLEXITY_CONFIG.SIMPLE;
   const enabledToggles = (Object.entries(template.defaultToggles) as [ToggleKey, boolean][])
     .filter(([, v]) => v)
     .map(([k]) => TOGGLE_META[k]?.label ?? k);

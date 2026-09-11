@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useIncident, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
@@ -25,13 +26,13 @@ import type { IncidentSeverity, IncidentStatus } from "@/types/projects";
  * orange before the migration, and with no orange status they collapsed onto
  * the amber below them. Everything else here means its status and keeps it.
  */
-const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
+const SEVERITY_STYLES: Record<string, string> = {
   critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   high: "text-category-orange-ink border-category-orange-rule",
   medium: "text-status-warning-ink border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
-const STATUS_STYLES: Record<IncidentStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   detected: "text-status-danger-ink border-status-danger-rule",
   investigating: "text-category-orange-ink border-category-orange-rule",
   mitigating: "text-status-warning-ink border-status-warning-rule",
@@ -39,7 +40,7 @@ const STATUS_STYLES: Record<IncidentStatus, string> = {
   postmortem: "text-status-info-ink border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
-const STATUS_LABELS: Record<IncidentStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   detected: "Detected", investigating: "Investigating", mitigating: "Mitigating",
   resolved: "Resolved", postmortem: "Post-mortem", closed: "Closed",
 };
@@ -82,7 +83,13 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const { data: incident, isLoading, isError, refetch } = useIncident(projectId, incidentId);
+  const {
+    data: incident,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useIncident(projectId, incidentId);
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
   const members = membersData?.data ?? [];
@@ -123,10 +130,32 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     );
   }
 
-  if (isError || !incident) {
+  if (isError) {
     return (
       <PageWrapper title="Incident" backHref={`/build/${projectId}/incidents`}>
-        <ErrorState onRetry={handleRetry} />
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this incident"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!incident) {
+    return (
+      <PageWrapper title="Incident" backHref={`/build/${projectId}/incidents`}>
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="alert"
+          title="Incident not found"
+          description="This incident no longer exists, or it was deleted."
+          action={{
+            label: "Back to incidents",
+            href: `/build/${projectId}/incidents`,
+          }}
+        />
       </PageWrapper>
     );
   }

@@ -12,13 +12,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface Payment {
   id: number;
   razorpayPaymentId: string | null;
-  amount: string | number;
+  amount: string | number | null;
   currency: string;
   paidAt: string | null;
   status: string;
 }
 
-function fmtAmount(amount: string | number, currency: string): string {
+function fmtAmount(amount: string | number | null, currency: string): string {
+  if (amount === null) return "—";
   const symbol = currency === "INR" ? "₹" : currency;
   return `${symbol}${Number(amount).toLocaleString("en-IN")}`;
 }

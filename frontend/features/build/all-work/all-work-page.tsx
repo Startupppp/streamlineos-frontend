@@ -21,14 +21,14 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import {
   pmSnappy,
   viewSwap,
   viewSwapReduced,
 } from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
@@ -121,7 +121,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   const handleTicketClickForTable = useCallback(
     (ticketId: number) => {
       const ticket = tickets.find((t) => t.id === ticketId);
-      if (!ticket) return;
+      if (!ticket || ticket.projectId === null) return;
       router.push(
         getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
       );

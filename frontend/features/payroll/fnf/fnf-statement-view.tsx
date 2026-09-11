@@ -1,15 +1,18 @@
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/features/payroll/shared";
 import { FnfStatusBadge } from "./fnf-status-badge";
-import type { FnfSettlement, FnfStatement, FnfStatementComponent } from "@/types/payroll";
+import type { FnfStatement } from "@/types/payroll";
+import type { FnfGetOne } from "@/hooks/api/payroll/fnf-schema";
+
+type LocalFnfComponent = { label: string; amount: string; type?: string | null };
 
 interface FnfStatementViewProps {
-  settlement: FnfSettlement;
+  settlement: FnfGetOne;
   statement: FnfStatement;
 }
 
-function derivedComponents(settlement: FnfSettlement): FnfStatementComponent[] {
-  const all: FnfStatementComponent[] = [
+function derivedComponents(settlement: FnfGetOne): LocalFnfComponent[] {
+  const all: LocalFnfComponent[] = [
     { label: "Pending Salary", amount: settlement.basicDues, type: "credit" },
     { label: "Leave Encashment", amount: settlement.leaveEncashment, type: "credit" },
     { label: "Bonus Due", amount: settlement.bonusDue, type: "credit" },
@@ -19,13 +22,13 @@ function derivedComponents(settlement: FnfSettlement): FnfStatementComponent[] {
     { label: "Notice Recovery", amount: settlement.noticeRecovery, type: "deduction" },
     { label: "Other Deductions", amount: settlement.otherDeductions, type: "deduction" },
   ];
-  return all.filter((c) => c.amount !== 0);
+  return all.filter((c) => parseFloat(c.amount) !== 0);
 }
 
 export function FnfStatementView({ settlement, statement }: FnfStatementViewProps) {
   const components =
     statement.components.length > 0 ? statement.components : derivedComponents(settlement);
-  const isPositive = statement.netPayable >= 0;
+  const isPositive = parseFloat(statement.netPayable) >= 0;
 
   return (
     <div className="flex flex-col gap-4">

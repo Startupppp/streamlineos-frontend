@@ -1,8 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportQueueListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-workspace-schema").then((m) => m.supportQueueListContract),
+);
 
 export interface SupportQueue {
   id: number;
@@ -18,9 +23,9 @@ export interface SupportQueue {
 }
 
 export function useSupportQueues() {
-  return useQuery({
-    queryKey: queryKeys.supportQueues.list(),
-    queryFn: () => apiClient.get<SupportQueue[]>("/support/queues"),
+  return useGatedQuery("support:tickets:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportQueues.list(),
+    queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal, supportQueueListContract),
     staleTime: 60_000,
   });
 }

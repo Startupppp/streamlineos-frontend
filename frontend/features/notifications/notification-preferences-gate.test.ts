@@ -6,6 +6,10 @@ import {
   useNotificationPreferences,
   useSuppressions,
 } from "@/hooks/api/notifications-preferences";
+import {
+  notificationPreferenceContract,
+  suppressionsListContract,
+} from "@/hooks/api/notifications-schema";
 
 const mockGet = jest.fn();
 
@@ -52,7 +56,12 @@ describe("notification preference hooks are platform core (no permission gate)",
     await waitFor(() => {
       expect(result.current.fetchStatus).not.toBe("idle");
     });
-    expect(mockGet).toHaveBeenCalledWith("/notification-preferences");
+    expect(mockGet).toHaveBeenCalledWith(
+      "/notification-preferences",
+      undefined,
+      expect.any(AbortSignal),
+      notificationPreferenceContract,
+    );
   });
 
   it("useSuppressions fires for any authenticated member without a permission check", async () => {
@@ -64,6 +73,9 @@ describe("notification preference hooks are platform core (no permission gate)",
     });
     expect(mockGet).toHaveBeenCalledWith(
       "/notification-preferences/suppressions",
+      undefined,
+      expect.any(AbortSignal),
+      suppressionsListContract,
     );
   });
 

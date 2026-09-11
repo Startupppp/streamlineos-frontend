@@ -7,7 +7,7 @@ import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import { Form } from "@/components/ui/form";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   clearEndIfInvalid,

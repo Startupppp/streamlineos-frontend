@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -68,7 +69,7 @@ export function DelegationSheet() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useOrgDelegations({ page, limit: 20 });
+  const { data, isLoading, isError, error, refetch } = useOrgDelegations({ page, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const grantProxy = useGrantProxy();
   const revokeProxy = useRevokeProxy();
@@ -111,6 +112,10 @@ export function DelegationSheet() {
 
   function handleOpenSheet() {
     setSheetOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   const columns: DataTableColumn<ProxyAccess>[] = [
@@ -169,11 +174,22 @@ export function DelegationSheet() {
     );
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load delegations"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground whitespace-nowrap">
-          {data?.total ?? 0} {(data?.total ?? 0) === 1 ? "proxy" : "proxies"}
+          {data?.data?.length ?? 0} {(data?.data?.length ?? 0) === 1 ? "proxy" : "proxies"}
         </p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -195,7 +211,7 @@ export function DelegationSheet() {
             action={canManage ? { label: "Grant Proxy", onClick: handleOpenSheet } : undefined}
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
+        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">

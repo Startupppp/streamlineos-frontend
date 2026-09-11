@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { RecallStatus } from "@/features/inventory/lib";
 
 /**
@@ -177,11 +178,11 @@ export function useRecalls(params?: RecallsParams) {
   const canView = useCan("inventory:quality:read");
   return useQuery<RecallListResponse, Error>({
     queryKey: queryKeys.inventory.recalls(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<RecallListResponse>("/inventory/quality/recalls", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -191,7 +192,7 @@ export function useRecall(recallId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<Recall, Error>({
     queryKey: queryKeys.inventory.recall(recallId),
-    queryFn: () => apiClient.get<Recall>(`/inventory/quality/recalls/${recallId}`),
+    queryFn: ({ signal }) => apiClient.get<Recall>(`/inventory/quality/recalls/${recallId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && recallId > 0,
   });
@@ -207,7 +208,7 @@ export function useRecall(recallId: number) {
  * server-side, so it carries no `Idempotency-Key` and invalidates nothing.
  */
 export function useSimulateRecall() {
-  return useMutation<RecallImpact, Error, RecallSelection>({
+  return useAuthorizedMutation<RecallImpact, Error, RecallSelection>("inventory:quality:read", {
     mutationKey: ["inventory", "quality", "recall", "simulate"],
     mutationFn: (selection) =>
       apiClient.post<RecallImpact>("/inventory/quality/recalls/simulate", { selection }),
@@ -227,7 +228,7 @@ export function useSimulateRecall() {
  */
 export function useCreateRecall() {
   const qc = useQueryClient();
-  return useMutation<Recall, Error, CreateRecallPayload & { idempotencyKey: string }>({
+  return useAuthorizedMutation<Recall, Error, CreateRecallPayload & { idempotencyKey: string }>("inventory:quality:recall", {
     mutationKey: ["inventory", "quality", "recall", "create"],
     mutationFn: ({ idempotencyKey, ...data }) =>
       apiClient.post<Recall>("/inventory/quality/recalls", data, {
@@ -246,11 +247,11 @@ export function useCreateRecall() {
 
 export function useUpdateRecall() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Recall,
     Error,
     { recallId: number; status?: RecallStatus; notes?: string }
-  >({
+  >("inventory:quality:recall", {
     mutationKey: ["inventory", "quality", "recall", "update"],
     mutationFn: ({ recallId, ...data }) =>
       apiClient.patch<Recall>(`/inventory/quality/recalls/${recallId}`, data),

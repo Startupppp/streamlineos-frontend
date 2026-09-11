@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useUpdateBackgroundVerification,
@@ -33,7 +33,7 @@ const TERMINAL_STATUSES = ["PASSED", "FAILED"] as const;
 type TerminalStatus = (typeof TERMINAL_STATUSES)[number];
 
 function isTerminal(status: string): status is TerminalStatus {
-  return (TERMINAL_STATUSES as readonly string[]).includes(status);
+  return TERMINAL_STATUSES.some((candidate) => candidate === status);
 }
 
 const schema = z

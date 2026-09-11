@@ -10,6 +10,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrFormField, SubmitHrFormPayload } from "../lib/types";
+import { toggleListMembership } from "@/lib/toggle-in-list";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface FormRendererProps {
   fields: HrFormField[];
@@ -44,6 +46,16 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
 
   function handleInputChange(key: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setValue(key, e.target.value);
+  }
+
+  function handleNumberChange(key: string) {
+    return numericFieldChangeOr((value) => setValue(key, value), 0);
+  }
+
+  function handleOptionToggle(key: string, selected: string[], option: string) {
+    return function toggleOption(): void {
+      setValue(key, toggleListMembership(selected, option));
+    };
   }
 
   function validate(): boolean {
@@ -112,7 +124,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               <Input
                 type="number"
                 value={numVal}
-                onChange={(e) => setValue(field.key, parseFloat(e.target.value) || 0)}
+                onChange={handleNumberChange(field.key)}
                 className="text-sm"
                 readOnly={readOnly}
               />
@@ -146,11 +158,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
                     <Checkbox
                       checked={arrVal.includes(opt.value)}
                       disabled={readOnly}
-                      onCheckedChange={() => {
-                        setValue(field.key, arrVal.includes(opt.value)
-                          ? arrVal.filter((v) => v !== opt.value)
-                          : [...arrVal, opt.value]);
-                      }}
+                      onCheckedChange={handleOptionToggle(field.key, arrVal, opt.value)}
                       id={`${field.key}-${opt.value}`}
                     />
                     <Label htmlFor={`${field.key}-${opt.value}`} className="text-sm font-normal cursor-pointer">

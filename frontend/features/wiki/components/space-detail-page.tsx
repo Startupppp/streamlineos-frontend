@@ -8,7 +8,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { useKbPagesTree } from "@/hooks/api/kb/pages";
-import { KB_SPACES } from "@/features/wiki/lib/knowledge-routes";
+import { KB_SPACES } from "@/lib/knowledge-routes";
 import { filterTreeWithAncestors } from "@/features/wiki/lib/tree-utils";
 import { KbLayoutGridIcon } from "@/features/wiki/lib/kb-icons";
 import PageTree from "./page-tree";

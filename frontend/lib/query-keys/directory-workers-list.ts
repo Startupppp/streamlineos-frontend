@@ -1,4 +1,4 @@
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 
 export const WORKERS_PAGE_SIZE = 20;
 
@@ -20,5 +20,5 @@ export function workersListParams(params: WorkersListParams = {}): Record<string
 }
 
 export function workersListKey(params: WorkersListParams = {}) {
-  return queryKeys.directory.workers(workersListParams(params));
+  return directoryAndOwnershipQueryKeys.directory.workers(workersListParams(params));
 }

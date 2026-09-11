@@ -395,6 +395,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                         <div className="relative flex items-center justify-center">
                           <input
                             ref={(el) => { cellRefs.current[cellKey] = el; }}
+                            aria-label={`${row.projectName}${row.ticketLabel ? ` — ${row.ticketLabel}` : ""} hours on ${d}`}
                             type="number"
                             min="0"
                             step="0.25"

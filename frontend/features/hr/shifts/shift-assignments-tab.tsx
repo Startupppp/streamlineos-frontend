@@ -1,15 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useShiftAssignments } from "@/hooks/api/hr/shifts";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 export function ShiftAssignmentsTab() {
-  const { data: assignments, isLoading } = useShiftAssignments();
+  const { data: assignments, isLoading, isError, error, refetch } = useShiftAssignments();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const userIds = useMemo(
     () => [...new Set((assignments ?? []).map((a) => a.userId))],
@@ -58,6 +64,17 @@ export function ShiftAssignmentsTab() {
       ),
     },
   ];
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load shift assignments"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <DataTable

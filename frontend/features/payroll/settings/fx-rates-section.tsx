@@ -22,11 +22,12 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateFxRates } from "@/hooks/api/payroll/settings";
 import { CURRENCIES } from "@/features/payroll/setup/lib/constants";
-import type { PolicyRow, VersionRow } from "@/types/payroll/setup";
+import type { PolicyRow } from "@/types/payroll/setup";
+import type { PolicyVersionRow } from "@/hooks/api/payroll/policies-schema";
 
 type FxRatesSectionProps = {
   policy: PolicyRow;
-  activeVersion: VersionRow | null;
+  activeVersion: PolicyVersionRow | null | undefined;
 };
 
 const fxRatesSchema = z.object({
@@ -42,9 +43,13 @@ const fxRatesSchema = z.object({
 
 type FxRatesForm = z.infer<typeof fxRatesSchema>;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function serializeRates(raw: unknown): Array<{ currency: string; rate: string }> {
-  if (!raw || typeof raw !== "object") return [];
-  return Object.entries(raw as Record<string, unknown>)
+  if (!isRecord(raw)) return [];
+  return Object.entries(raw)
     .filter(([, v]) => typeof v === "number")
     .map(([currency, rate]) => ({ currency, rate: String(rate) }));
 }

@@ -1,8 +1,25 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+const handbookListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/handbook-schema").then((m) => m.handbookListContract),
+);
+const handbookRowLazy = lazyContract(() =>
+  import("@/hooks/api/hr/handbook-schema").then((m) => m.handbookRowContract),
+);
+const handbookSuccessLazy = lazyContract(() =>
+  import("@/hooks/api/hr/handbook-schema").then((m) => m.handbookMutationSuccessContract),
+);
 
 export interface HandbookVersion {
   id: number;
@@ -32,44 +49,44 @@ interface UpdateHandbookVersionInput {
 }
 
 const handbookKeys = {
-  all: [...queryKeys.hr.all, "handbook"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "handbook"] as const,
   list: () => [...handbookKeys.all, "list"] as const,
 };
 
 export function useHandbookVersions() {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: handbookKeys.list(),
-    queryFn: () => apiClient.get<HandbookVersion[]>("/hr/handbook"),
+    queryFn: ({ signal }) => apiClient.get<HandbookVersion[]>("/hr/handbook", undefined, signal, handbookListLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "create"],
     mutationFn: (data: CreateHandbookVersionInput) =>
-      apiClient.post<HandbookVersion>("/hr/handbook", data),
+      apiClient.post<HandbookVersion>("/hr/handbook", data, undefined, handbookRowLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }
 
 export function useUpdateHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "update"],
     mutationFn: ({ id, ...data }: UpdateHandbookVersionInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data, undefined, handbookSuccessLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }
 
 export function useDeleteHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/handbook/${id}`),
+      apiClient.delete<void>(`/hr/handbook/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }

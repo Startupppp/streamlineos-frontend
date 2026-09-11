@@ -1,8 +1,24 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const jobBoardPostingsListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.jobBoardPostingsListContract),
+);
+const createJobBoardPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.createJobBoardPostingContract),
+);
+const updateJobBoardPostingC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.updateJobBoardPostingContract),
+);
 export type JobBoardPostingStatus = "DRAFT" | "POSTED" | "EXPIRED" | "CLOSED";
 
 export interface JobBoardPosting {
@@ -10,23 +26,23 @@ export interface JobBoardPosting {
   orgId: string;
   jobPostingId: number;
   platform: string;
-  externalPostUrl?: string;
+  externalPostUrl?: string | null;
   status: JobBoardPostingStatus;
-  postedBy?: string;
-  postedAt?: string;
-  expiryDate?: string;
-  spend?: string;
+  postedBy?: string | null;
+  postedAt?: string | null;
+  expiryDate?: string | null;
+  spend?: string | null;
   applicantCount: number;
   qualifiedCount: number;
   hiredCount: number;
-  notes?: string;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateJobBoardPostingInput {
   platform: string;
-  externalPostUrl?: string;
+  externalPostUrl?: string | null;
   status?: JobBoardPostingStatus;
   postedAt?: string;
   expiryDate?: string;
@@ -35,7 +51,7 @@ export interface CreateJobBoardPostingInput {
 }
 
 export interface UpdateJobBoardPostingInput {
-  externalPostUrl?: string;
+  externalPostUrl?: string | null;
   status?: JobBoardPostingStatus;
   postedAt?: string;
   expiryDate?: string;
@@ -49,9 +65,9 @@ export interface UpdateJobBoardPostingInput {
 const jobBoardPostingsKey = (jobId: number) => ["hr", "jobBoardPostings", jobId] as const;
 
 export function useJobBoardPostings(jobId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: jobBoardPostingsKey(jobId),
-    queryFn: () => apiClient.get<JobBoardPosting[]>(`/hr/recruitment/jobs/${jobId}/board-postings`),
+    queryFn: ({ signal }) => apiClient.get<JobBoardPosting[]>(`/hr/recruitment/jobs/${jobId}/board-postings`, undefined, signal, jobBoardPostingsListC),
     staleTime: 60_000,
     enabled: !!jobId,
   });
@@ -59,30 +75,30 @@ export function useJobBoardPostings(jobId: number) {
 
 export function useCreateJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "create", jobId],
     mutationFn: (data: CreateJobBoardPostingInput) =>
-      apiClient.post<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings`, data),
+      apiClient.post<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings`, data, undefined, createJobBoardPostingC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }
 
 export function useUpdateJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "update", jobId],
     mutationFn: ({ id, ...data }: UpdateJobBoardPostingInput & { id: number }) =>
-      apiClient.patch<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, data),
+      apiClient.patch<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, data, undefined, updateJobBoardPostingC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }
 
 export function useDeleteJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "delete", jobId],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`),
+      apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }

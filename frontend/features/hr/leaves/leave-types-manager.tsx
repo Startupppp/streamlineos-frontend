@@ -309,7 +309,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
       <AlertDialog open={deleteTarget !== null} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>Delete &quot;{deleteTarget?.name}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>
               Leave types with existing requests or attached policies cannot be deleted.
               Employee balances for this type will be removed.

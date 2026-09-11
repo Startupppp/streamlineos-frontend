@@ -5,6 +5,7 @@ import type { PropsWithChildren } from "react";
 import { NotificationBell } from "./notification-bell";
 
 let isMobile = false;
+let mockUnreadCount = 0;
 
 jest.mock("next/link", () => {
   return function Link({
@@ -36,7 +37,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/api/notifications", () => ({
-  useUnreadNotificationCount: () => ({ data: { count: 0 } }),
+  useUnreadNotificationCount: () => ({ data: { count: mockUnreadCount } }),
   useUnreadNotifications: () => ({
     data: [],
     isLoading: false,
@@ -70,6 +71,7 @@ jest.mock("@/components/ui/drawer", () => ({
 describe("NotificationBell", () => {
   afterEach(() => {
     isMobile = false;
+    mockUnreadCount = 0;
   });
 
   it("uses a popover on desktop", () => {
@@ -86,5 +88,28 @@ describe("NotificationBell", () => {
 
     expect(screen.getByTestId("mobile-drawer")).toBeInTheDocument();
     expect(screen.queryByTestId("desktop-popover")).not.toBeInTheDocument();
+  });
+
+  it("renders a polite live region with role status", () => {
+    render(<NotificationBell />);
+
+    const region = screen.getByRole("status");
+    expect(region).toBeInTheDocument();
+  });
+
+  it("live region contains the unread count when count is positive", () => {
+    mockUnreadCount = 5;
+
+    render(<NotificationBell />);
+
+    const region = screen.getByRole("status");
+    expect(region).toHaveTextContent("5 unread notifications");
+  });
+
+  it("live region is empty when unread count is zero", () => {
+    render(<NotificationBell />);
+
+    const region = screen.getByRole("status");
+    expect(region).toHaveTextContent("");
   });
 });

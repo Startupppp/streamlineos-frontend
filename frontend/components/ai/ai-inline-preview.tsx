@@ -6,20 +6,27 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
+import {
+  AiCancelledNotice,
+  AiOfflineNotice,
+  AiQueuedNotice,
+  AiUnavailableNotice,
+} from "./ai-state-notices";
+import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
 import { AiUsageChip } from "./ai-usage-chip";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { AiActionResult } from "./ai-action-result-body";
+import type { AiActionResultState } from "./ai-action-result-body";
 import { cn } from "@/lib/utils";
 
 export interface AiInlineSession {
   actionKey: string;
-  status: "loading" | "ready" | "quota" | "denied" | "error";
-  result?: AiActionResult;
-  errorMessage?: string;
-  deniedReason?: string;
+  /** Declared by the action; gates the streaming citation placeholder. */
+  expectsCitations?: boolean;
+  state: AiActionResultState;
   apply: () => void;
   reject: () => void;
   retry: () => void;
+  cancel: () => void;
 }
 
 type AiInlinePreviewMode = "title" | "description" | "fields";
@@ -37,7 +44,8 @@ export function AiInlinePreview({
   previewMode = "fields",
   className,
 }: AiInlinePreviewProps) {
-  const usage = session.result?.aiUsage;
+  const { state } = session;
+  const usage = state.status === "ready" ? (state.aiUsage ?? state.result.aiUsage) : null;
 
   return (
     <div
@@ -46,44 +54,88 @@ export function AiInlinePreview({
         className,
       )}
     >
-      {session.status === "loading" && (
-        <div className="space-y-1.5">
+      {state.status === "loading" && (
+        <div className="space-y-1.5" role="status" aria-live="polite" aria-busy>
+          {state.attempt !== undefined && state.attempt > 1 && (
+            <p className="text-dense text-muted-foreground">
+              Retrying — attempt {state.attempt}
+            </p>
+          )}
           <Skeleton className="h-3 w-3/4" />
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-2/3" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={session.cancel}
+            className="h-7 text-xs text-muted-foreground"
+          >
+            Stop
+          </Button>
         </div>
       )}
 
-      {session.status === "quota" && <AiQuotaEmptyState variant="compact" />}
-
-      {session.status === "denied" && (
-        <AiPermissionDenied reason={session.deniedReason ?? "Permission denied"} />
+      {state.status === "streaming" && (
+        <AiStreamingOutput
+          text={state.text}
+          onCancel={session.cancel}
+          variant="compact"
+          expectsCitations={session.expectsCitations ?? false}
+        />
       )}
 
-      {session.status === "error" && (
+      {state.status === "quota" && <AiQuotaEmptyState variant="compact" />}
+
+      {state.status === "denied" && <AiPermissionDenied reason={state.reason} />}
+
+      {state.status === "queued" && (
+        <AiQueuedNotice message={state.message} variant="compact" onRetry={session.retry} />
+      )}
+
+      {state.status === "unavailable" && (
+        <AiUnavailableNotice message={state.message} variant="compact" onRetry={session.retry} />
+      )}
+
+      {state.status === "offline" && (
+        <AiOfflineNotice message={state.message} variant="compact" onRetry={session.retry} />
+      )}
+
+      {state.status === "cancelled" &&
+        (state.text ? (
+          <AiCancelledOutput
+            text={state.text}
+            onRetry={session.retry}
+            variant="compact"
+          />
+        ) : (
+          <AiCancelledNotice variant="compact" onRetry={session.retry} />
+        ))}
+
+      {state.status === "error" && (
         <div className="flex flex-col items-start gap-2">
-          <p className="text-xs text-muted-foreground">{session.errorMessage}</p>
+          <p className="text-xs text-muted-foreground">{state.message}</p>
           <Button type="button" variant="outline" size="sm" onClick={session.retry} className="h-7 text-xs">
             Retry
           </Button>
         </div>
       )}
 
-      {session.status === "ready" && session.result && (
+      {state.status === "ready" && (
         <>
           {previewMode === "title" ? (
             <TruncatedText
-              text={session.result.text}
+              text={state.result.text}
               className="text-label font-medium leading-snug text-foreground"
             />
           ) : previewMode === "description" ? (
             <div
               className="max-h-32 overflow-y-auto text-xs leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(session.result.text) }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(state.result.text) }}
             />
           ) : (
             <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
-              {session.result.text}
+              {state.result.text}
             </p>
           )}
           {usage ? (
@@ -91,22 +143,21 @@ export function AiInlinePreview({
               <AiUsageChip usage={usage} />
             </div>
           ) : null}
+          <div className="mt-2 flex items-center gap-1.5">
+            <LoadingButton size="sm" onClick={session.apply} className="h-7 text-xs">
+              {applyLabel}
+            </LoadingButton>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={session.reject}
+              className="h-7 text-xs text-muted-foreground"
+            >
+              Reject
+            </Button>
+          </div>
         </>
-      )}
-
-      {(session.status === "ready" || session.status === "loading") && (
-        <div className="mt-2 flex items-center gap-1.5">
-          {session.status === "ready" ? (
-            <>
-              <LoadingButton size="sm" onClick={session.apply} className="h-7 text-xs">
-                {applyLabel}
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" onClick={session.reject} className="h-7 text-xs text-muted-foreground">
-                Reject
-              </Button>
-            </>
-          ) : null}
-        </div>
       )}
     </div>
   );

@@ -22,6 +22,18 @@ import {
   type AutomationActionType,
 } from "@/hooks/api/surveys/automations";
 
+const EVENT_TYPES = [
+  "survey.published",
+  "survey.response.started",
+  "survey.response.submitted",
+  "survey.assessment.passed",
+  "survey.assessment.failed",
+  "survey.live.started",
+  "survey.live.ended",
+  "survey.lead.created",
+  "survey.collector.completed_quota",
+] as const satisfies readonly AutomationEventType[];
+
 const EVENT_LABELS: Record<AutomationEventType, string> = {
   "survey.published": "Survey published",
   "survey.response.started": "Response started",
@@ -53,6 +65,15 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
   const [actionType, setActionType] = useState<AutomationActionType>("create_lead");
   const [scoreThreshold, setScoreThreshold] = useState("");
   const [createFollowUpTask, setCreateFollowUpTask] = useState(false);
+
+  function handleEventTypeChange(v: string): void {
+    const next = EVENT_TYPES.find((candidate) => candidate === v);
+    if (next) setEventType(next);
+  }
+
+  function handleFollowUpTaskToggle(checked: boolean | "indeterminate"): void {
+    setCreateFollowUpTask(Boolean(checked));
+  }
 
   async function handleAdd() {
     try {
@@ -115,10 +136,13 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
         <div className="space-y-3 rounded-md border border-border p-3">
           <div className="space-y-1.5">
             <Label>When</Label>
-            <Select value={eventType} onValueChange={(v) => setEventType(v as AutomationEventType)}>
+            <Select
+              value={eventType}
+              onValueChange={handleEventTypeChange}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(EVENT_LABELS) as AutomationEventType[]).map((key) => (
+                {EVENT_TYPES.map((key) => (
                   <SelectItem key={key} value={key}>{EVENT_LABELS[key]}</SelectItem>
                 ))}
               </SelectContent>
@@ -151,7 +175,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
 
           {actionType === "create_lead" && (
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={createFollowUpTask} onCheckedChange={(v) => setCreateFollowUpTask(Boolean(v))} />
+              <Checkbox checked={createFollowUpTask} onCheckedChange={handleFollowUpTaskToggle} />
               Create a follow-up task for the assigned owner
             </label>
           )}

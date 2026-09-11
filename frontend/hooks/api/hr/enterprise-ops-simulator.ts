@@ -1,8 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -20,72 +23,91 @@ export interface SimulationRecord {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const BASE = "/hr/enterprise/ops/simulator";
 
-export function useSimulationHistory(params: { page?: number; type?: SimulationType } = {}) {
-  return useQuery({
-    queryKey: queryKeys.hrSimulations.history(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>),
+const _listSimulationsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listSimulationsContract),
+);
+const _simulatePolicyContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.simulatePolicyContract),
+);
+const _simulateLeaveBalanceContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.simulateLeaveBalanceContract),
+);
+const _simulateApprovalRoutingContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.simulateApprovalRoutingContract),
+);
+const _simulatePayrollImpactContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.simulatePayrollImpactContract),
+);
+const _compareSimulationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.compareSimulationContract),
+);
+
+export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
+  return useGatedQuery("hr:policies:manage", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/history`, params, signal, _listSimulationsContract),
     staleTime: 30_000,
   });
 }
 
 export function useSimulatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "policy"],
     mutationFn: (body: {
       employeeId: string;
       policyType: string;
       hypotheticalContext: Record<string, unknown>;
-    }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/policy`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    }) => apiClient.post(`${BASE}/simulate/policy`, body, undefined, _simulatePolicyContract),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
 
 export function useSimulateLeaveBalance() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "leave"],
     mutationFn: (body: {
       employeeId: string;
       leaveTypeId: number;
       hypotheticalAccrualRate?: number;
       projectionDate: string;
-    }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/leave-balance`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    }) => apiClient.post(`${BASE}/simulate/leave-balance`, body, undefined, _simulateLeaveBalanceContract),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
 
 export function useSimulateApprovalRouting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "approval"],
     mutationFn: (body: {
       objectType: string;
       hypotheticalContext: Record<string, unknown>;
       employeeId: string;
-    }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/approval-routing`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    }) => apiClient.post(`${BASE}/simulate/approval-routing`, body, undefined, _simulateApprovalRoutingContract),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
 
 export function useSimulatePayrollImpact() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "payroll"],
     mutationFn: (body: {
       employeeId: string;
       hypotheticalComponents: Array<{ name: string; amount: number; type: "earning" | "deduction" }>;
       effectiveDate: string;
-    }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/payroll-impact`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    }) => apiClient.post(`${BASE}/simulate/payroll-impact`, body, undefined, _simulatePayrollImpactContract),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
@@ -96,9 +118,9 @@ export function useComparePolicy(params: {
   newPolicyId: number;
   policyType: string;
 } | null) {
-  return useQuery({
-    queryKey: queryKeys.hrSimulations.compare(params),
-    queryFn: () => apiClient.get<Record<string, unknown>>(`${BASE}/compare`, params as Record<string, unknown>),
+  return useGatedQuery("hr:policies:manage", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.compare(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/compare`, params ?? undefined, signal, _compareSimulationContract),
     enabled: !!params,
     staleTime: 60_000,
   });

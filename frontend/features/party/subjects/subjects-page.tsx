@@ -6,7 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { useSubjectTypes, useSubjects } from "@/hooks/api/party/subjects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { RecordList, type RecordValue } from "@/features/renderer";
+import { RecordList, type RecordValue } from "@/components/renderer";
 import { subjectLayout, subjectRecord } from "@/lib/renderer/subject-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -88,6 +88,10 @@ export function SubjectsPage() {
     cursor,
     limit: PAGE_SIZE,
   });
+
+  function handleSubjectRowClick(row: RecordValue): void {
+    setOpenSubjectId(String(row.subjectId));
+  }
 
   function handleTypeChange(value: string) {
     setTypeId(value);
@@ -232,7 +236,7 @@ export function SubjectsPage() {
               layout={layout}
               rows={rows.map((row) => subjectRecord(row) as RecordValue)}
               getRowKey={(row) => String(row.subjectId)}
-              onRowClick={(row) => setOpenSubjectId(String(row.subjectId))}
+              onRowClick={handleSubjectRowClick}
               minWidth="720px"
               className={CONTENT_FILL_PANEL}
             />

@@ -29,6 +29,31 @@ const optionalDateTime = z
     "Enter a valid date and time",
   );
 
+export const announcementTargetTypeSchema = z.enum([
+  "ALL",
+  "DEPARTMENT",
+  "BRANCH",
+  "ROLE",
+]);
+
+export const announcementStatusSchema = z.enum([
+  "DRAFT",
+  "SCHEDULED",
+  "PUBLISHED",
+  "EXPIRED",
+]);
+
+export type AnnouncementTargetType = z.infer<typeof announcementTargetTypeSchema>;
+export type AnnouncementStatus = z.infer<typeof announcementStatusSchema>;
+
+export function isAnnouncementTargetType(value: string): value is AnnouncementTargetType {
+  return announcementTargetTypeSchema.safeParse(value).success;
+}
+
+export function isAnnouncementStatus(value: string): value is AnnouncementStatus {
+  return announcementStatusSchema.safeParse(value).success;
+}
+
 export function buildAnnouncementSchema(options?: { isEdit?: boolean }) {
   const isEdit = options?.isEdit ?? false;
 
@@ -36,9 +61,9 @@ export function buildAnnouncementSchema(options?: { isEdit?: boolean }) {
     .object({
       title: titleSchema,
       content: contentSchema,
-      targetType: z.enum(["ALL", "DEPARTMENT", "BRANCH", "ROLE"]),
+      targetType: announcementTargetTypeSchema,
       targetIds: z.array(z.string()).default([]),
-      status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED", "EXPIRED"]),
+      status: announcementStatusSchema,
       publishAt: optionalDateTime,
       expiresAt: optionalDateTime,
       isPinned: z.boolean(),

@@ -1,8 +1,25 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const surveyFormListC = lazyContract(() =>
+  import("./survey-forms-schema").then((m) => m.surveyFormListContract),
+);
+const surveyFormRowC = lazyContract(() =>
+  import("./survey-forms-schema").then((m) => m.surveyFormRowContract),
+);
+const surveyTemplateListC = lazyContract(() =>
+  import("./survey-forms-schema").then((m) => m.surveyTemplateListContract),
+);
+const surveyVersionRowC = lazyContract(() =>
+  import("./survey-forms-schema").then((m) => m.surveyVersionRowContract),
+);
 
 export type SurveyMode = "survey" | "assessment" | "live_session" | "lead_qualification" | "custom";
 export type SurveyStatus = "draft" | "testing" | "published" | "paused" | "closed" | "archived";
@@ -76,70 +93,79 @@ export interface SurveyTemplate {
 }
 
 function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
-  qc.invalidateQueries({ queryKey: queryKeys.surveys.all });
+  qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.all });
 }
 
 export function useSurveys(params?: ListSurveysParams) {
-  return useQuery({
-    queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>),
+  return useGatedQuery("surveys:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.list(params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params, signal, surveyFormListC)).items,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }
 
 export function useSurvey(surveyId: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.surveys.detail(surveyId ?? -1),
-    queryFn: () => apiClient.get<SurveyForm>(`/surveys/${surveyId}`),
+  return useGatedQuery("surveys:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId ?? -1),
+    queryFn: ({ signal }) => apiClient.get<SurveyForm>(`/surveys/${surveyId}`, undefined, signal, surveyFormRowC),
     enabled: typeof surveyId === "number",
     staleTime: 15_000,
   });
 }
 
 export function useSurveyTemplates() {
-  return useQuery({
-    queryKey: queryKeys.surveys.templates(),
-    queryFn: () => apiClient.get<SurveyTemplate[]>("/surveys/templates"),
+  return useGatedQuery("surveys:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.templates(),
+    queryFn: ({ signal }) => apiClient.get<SurveyTemplate[]>("/surveys/templates", undefined, signal, surveyTemplateListC),
     staleTime: 5 * 60_000,
   });
 }
 
 export function useCreateSurvey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:create", {
     mutationKey: ["surveys", "create"] as const,
-    mutationFn: (input: CreateSurveyInput) => apiClient.post<SurveyForm>("/surveys", input),
+    mutationFn: (input: CreateSurveyInput) => apiClient.post<SurveyForm>("/surveys", input, undefined, surveyFormRowC),
     onSuccess: () => invalidateSurveyLists(qc),
   });
 }
 
 export function usePatchSurvey(surveyId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "patch", surveyId] as const,
-    mutationFn: (input: PatchSurveyInput) => apiClient.patch<SurveyForm>(`/surveys/${surveyId}`, input),
+    mutationFn: (input: PatchSurveyInput) => apiClient.patch<SurveyForm>(`/surveys/${surveyId}`, input, undefined, surveyFormRowC),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.surveys.detail(surveyId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId) });
       invalidateSurveyLists(qc);
     },
   });
 }
 
-function useSurveyLifecycleAction(action: "publish" | "pause" | "close" | "archive") {
+function useSurveyLifecycleAction(action: "pause" | "close" | "archive") {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["surveys", action] as const,
-    mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/${action}`),
+    mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/${action}`, undefined, undefined, surveyFormRowC),
     onSuccess: (_, surveyId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.surveys.detail(surveyId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId) });
       invalidateSurveyLists(qc);
     },
   });
 }
 
 export function usePublishSurvey() {
-  return useSurveyLifecycleAction("publish");
+  const qc = useQueryClient();
+  return useAuthorizedMutation("surveys:publish", {
+    mutationKey: ["surveys", "publish"] as const,
+    mutationFn: (surveyId: number) => apiClient.post(`/surveys/${surveyId}/publish`, undefined, undefined, surveyVersionRowC),
+    onSuccess: (_, surveyId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId) });
+      invalidateSurveyLists(qc);
+    },
+  });
 }
 
 export function usePauseSurvey() {
@@ -156,9 +182,9 @@ export function useArchiveSurvey() {
 
 export function useDuplicateSurvey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:create", {
     mutationKey: ["surveys", "duplicate"] as const,
-    mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/duplicate`),
+    mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/duplicate`, undefined, undefined, surveyFormRowC),
     onSuccess: () => invalidateSurveyLists(qc),
   });
 }

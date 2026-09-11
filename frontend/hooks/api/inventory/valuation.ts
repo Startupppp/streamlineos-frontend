@@ -165,11 +165,11 @@ export function useValuationReport(params?: ValuationReportParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationSummary, Error>({
     queryKey: queryKeys.inventory.valuationReport(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValuationSummary>("/inventory/reports/valuation", {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -179,11 +179,11 @@ export function useValuationLayers(variantId: number, page?: number) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationLayersResponse, Error>({
     queryKey: queryKeys.inventory.valuationLayers(variantId, page),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValuationLayersResponse>("/inventory/valuation/layers", {
         variantId: String(variantId),
         ...(page ? { page: String(page) } : {}),
-      }),
+      }, signal),
     enabled: canView && variantId > 0,
     staleTime: 2 * 60_000,
   });
@@ -200,7 +200,7 @@ export function useValuationPeriods() {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationPeriodsResponse, Error>({
     queryKey: queryKeys.inventory.valuationPeriods(),
-    queryFn: () => apiClient.get<ValuationPeriodsResponse>("/inventory/valuation/periods"),
+    queryFn: ({ signal }) => apiClient.get<ValuationPeriodsResponse>("/inventory/valuation/periods", undefined, signal),
     staleTime: 30 * 60_000,
     enabled: canView,
   });
@@ -215,7 +215,7 @@ export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationConsumptionsResponse, Error>({
     queryKey: queryKeys.inventory.valuationConsumptions(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValuationConsumptionsResponse>("/inventory/valuation/consumptions", {
         ...(params?.variantId ? { variantId: String(params.variantId) } : {}),
         ...(params?.layerId ? { layerId: String(params.layerId) } : {}),
@@ -227,7 +227,7 @@ export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
         ...(params?.toDate ? { toDate: params.toDate } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -243,11 +243,11 @@ export function useCostingProducts(params?: CostingParams) {
   const canView = useCan("inventory:products:read");
   return useQuery<CostingListResponse, Error>({
     queryKey: queryKeys.inventory.costingProducts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CostingListResponse>("/inventory/products/variants", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

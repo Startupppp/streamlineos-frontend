@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   KbCopyIcon,
   KbFileDownIcon,
@@ -45,11 +46,11 @@ import {
   useKbPageBacklinks,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
 import { exportPageToHtml } from "@/features/wiki/lib/export-page";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 
 interface PageDocumentToolbarProps {
   page: KbPageDetail;
@@ -136,7 +137,9 @@ export function PageDocumentToolbar({
   }
 
   function handleExportHtml() {
-    exportPageToHtml(page.title, page.content);
+    void exportPageToHtml(page.title, page.content).catch((error: unknown) =>
+      toast.error(getErrorMessage(error)),
+    );
   }
 
   function handleBacklinkClick(e: React.MouseEvent<HTMLButtonElement>) {

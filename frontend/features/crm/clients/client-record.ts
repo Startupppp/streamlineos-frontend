@@ -1,4 +1,4 @@
-import { asRecordValue, asRecordValues, type RecordValue } from "@/features/renderer";
+import { asRecordValue, asRecordValues, type RecordValue } from "@/components/renderer";
 import type { ClientAccount } from "@/types/crm";
 
 /**

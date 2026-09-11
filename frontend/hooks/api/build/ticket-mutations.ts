@@ -1,18 +1,44 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Ticket,
-  PaginatedResponse,
   CreateTicketInput,
   UpdateTicketInput,
   RankTicketInput,
   ProjectWithDetails,
   ProjectMember,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import { invalidateBuildViews, patchTicketCollections, restoreTicketCollections, rollbackTicketFields, ticketRollback, type TicketSnapshots } from "./ticket-cache";
+
+
+const ticketRowLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowContract),
+);
+
+const ticketUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
+);
+
+const successLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+const rankTicketResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.rankTicketResultContract),
+);
+
+const bulkUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+);
 
 export interface UpdateTicketResponse {
   updated: boolean;
@@ -22,11 +48,11 @@ export interface UpdateTicketResponse {
 interface UpdateTicketContext {
   detailKey: readonly unknown[];
   ticketKey: readonly unknown[];
-  boardKey: readonly unknown[];
   previousDetail: ProjectWithDetails | null | undefined;
   previousTicket: Ticket | null | undefined;
-  previousBoard: Ticket[] | undefined;
-  listSnapshots: [readonly unknown[], PaginatedResponse<Ticket> | undefined][];
+  optimisticDetail: ProjectWithDetails | null | undefined;
+  optimisticTicket: Ticket | null | undefined;
+  listSnapshots: TicketSnapshots;
 }
 
 function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
@@ -78,26 +104,13 @@ export function useCreateTicket(
   options?: Omit<UseMutationOptions<Ticket, Error, CreateTicketInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<Ticket, Error, CreateTicketInput>({
+  return useAuthorizedMutation<Ticket, Error, CreateTicketInput>("build:tickets:create", {
     ...options,
     mutationKey: ["projects", "tickets", "create"],
     mutationFn: ({ projectId, ...data }) =>
-      apiClient.post<Ticket>(`/build/${projectId}/tickets`, data),
+      apiClient.post<Ticket>(`/build/${projectId}/tickets`, data, undefined, ticketRowLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.columnCounts(variables.projectId),
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+      invalidateBuildViews(queryClient, variables.projectId);
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -111,30 +124,29 @@ export function useUpdateTicket(
   >
 ) {
   const queryClient = useQueryClient();
-  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>({
+  return useAuthorizedMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
       apiClient.patch<UpdateTicketResponse>(
         `/build/${projectId}/tickets/${ticketId}`,
-        data
+        data,
+        undefined,
+        ticketUpdateResultLazy,
       ),
     onMutate: async (variables) => {
-      const detailKey = queryKeys.projects.detail(projectId);
-      const ticketKey = queryKeys.projects.ticket(variables.ticketId);
-      const boardKey = queryKeys.projects.tickets({ projectId, view: "board" });
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
-        queryClient.cancelQueries({ queryKey: boardKey }),
-        queryClient.cancelQueries({ queryKey: queryKeys.projects.tickets({ projectId }) }),
+        queryClient.cancelQueries({ queryKey: ticketKey }),
+        queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) }),
       ]);
       const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
-      const previousBoard = queryClient.getQueryData<Ticket[]>(boardKey);
       const members = previousDetail?.members ?? [];
-      const listSnapshots = queryClient.getQueriesData<PaginatedResponse<Ticket>>({
-        queryKey: queryKeys.projects.tickets({ projectId }),
-      });
+      const listSnapshots = patchTicketCollections(queryClient, projectId, (ticket) =>
+        ticket.id === variables.ticketId ? applyTicketPatch(ticket, variables, members) : ticket);
 
       if (previousDetail?.tickets) {
         queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) => {
@@ -152,73 +164,30 @@ export function useUpdateTicket(
           old ? applyTicketPatch(old, variables, members) : old,
         );
       }
-      if (previousBoard) {
-        queryClient.setQueryData<Ticket[]>(boardKey, (old) =>
-          old
-            ? old.map((t) =>
-                t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
-              )
-            : old,
-        );
-      }
-      for (const [key, page] of listSnapshots) {
-        if (!page?.data) continue;
-        queryClient.setQueryData<PaginatedResponse<Ticket>>(key, {
-          ...page,
-          data: page.data.map((t) =>
-            t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
-          ),
-        });
-      }
       return {
         detailKey,
         ticketKey,
-        boardKey,
         previousDetail,
         previousTicket,
-        previousBoard,
+        optimisticDetail: queryClient.getQueryData<ProjectWithDetails | null>(detailKey),
+        optimisticTicket: queryClient.getQueryData<Ticket | null>(ticketKey),
         listSnapshots,
       };
     },
     onError: (error, variables, context, mutFnCtx) => {
       if (context) {
-        queryClient.setQueryData(context.detailKey, context.previousDetail);
-        queryClient.setQueryData(context.ticketKey, context.previousTicket);
-        queryClient.setQueryData(context.boardKey, context.previousBoard);
-        for (const [key, page] of context.listSnapshots) {
-          queryClient.setQueryData(key, page);
-        }
+        const restore = ticketRollback(context.previousDetail?.tickets ?? [], context.optimisticDetail?.tickets ?? []);
+        queryClient.setQueryData<ProjectWithDetails | null>(context.detailKey, (current) =>
+          current?.tickets ? { ...current, tickets: current.tickets.map(restore) } : current);
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) =>
+          current && context.previousTicket && context.optimisticTicket
+            ? rollbackTicketFields(current, context.previousTicket, context.optimisticTicket) : current);
+        restoreTicketCollections(queryClient, context.listSnapshots);
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
-      });
-      const affectsSprintAggregates =
-        variables.status !== undefined ||
-        variables.sprintId !== undefined ||
-        variables.points !== undefined;
-      const affectsAssignment =
-        variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
-      if (variables.status !== undefined) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.projects.columnCounts(projectId),
-        });
-      }
-      if (affectsSprintAggregates) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      }
-      if (affectsSprintAggregates || affectsAssignment) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
-      }
+      invalidateBuildViews(queryClient, projectId, [variables.ticketId], variables.status !== undefined || variables.sprintId !== undefined || variables.points !== undefined || variables.startDate !== undefined || variables.dueDate !== undefined);
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
@@ -226,31 +195,21 @@ export function useUpdateTicket(
 
 export function useDeleteTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<void, Error, { ticketId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number }>({
+  return useAuthorizedMutation<void, Error, { ticketId: number }>("build:tickets:delete", {
     ...options,
     mutationKey: ["projects", "tickets", "delete"],
     mutationFn: ({ ticketId }) =>
-      apiClient.delete<{ success: boolean }>(
-        `/build/${projectId}/tickets/${ticketId}`
+      apiClient.delete<void>(
+        `/build/${projectId}/tickets/${ticketId}`,
+        undefined,
+        undefined,
+        noContentLazy,
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.columnCounts(projectId),
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+      invalidateBuildViews(queryClient, projectId, [variables.ticketId]);
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -268,14 +227,21 @@ export function useRankTicket<TContext = unknown>(
     "mutationFn" | "mutationKey"
   >
 ) {
-  return useMutation<RankTicketResponse, Error, RankTicketInput, TContext>({
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<RankTicketResponse, Error, RankTicketInput, TContext>("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "rank"],
     mutationFn: ({ projectId, ticketId, ...data }) =>
       apiClient.patch<RankTicketResponse>(
         `/build/${projectId}/tickets/${ticketId}/rank`,
         data,
+        undefined,
+        rankTicketResultLazy,
       ),
+    onSettled: (data, error, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId, [variables.ticketId], variables.status !== undefined);
+      options?.onSettled?.(data, error, variables, context, mutationContext);
+    },
   });
 }
 
@@ -290,17 +256,17 @@ export interface BulkUpdateTicketsInput {
 
 export function useBulkUpdateTickets(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "bulk-update"],
     mutationFn: (data: BulkUpdateTicketsInput) =>
       apiClient.post<{ updated: number; ticketIds: number[] }>(
         `/build/${projectId}/tickets/bulk`,
-        data
+        data,
+        undefined,
+        bulkUpdateResultLazy,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.columnCounts(projectId) });
+    onSuccess: (_data, variables) => {
+      invalidateBuildViews(queryClient, projectId, variables.ticketIds);
     },
   });
 }

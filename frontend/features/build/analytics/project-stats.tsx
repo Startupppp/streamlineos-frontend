@@ -27,3 +27,12 @@ export const CHART_COLORS = [
   "#06b6d4",
   "#3b82f6",
 ];
+
+export const PROJECT_CHART_TOOLTIP_STYLE = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  fontSize: "12px",
+};
+
+export const PROJECT_CHART_HEIGHT = 220;

@@ -112,7 +112,7 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
 ];
 
 function getClientRowKey(row: ClientProfitabilityClient): string {
-  return row.clientId ?? "no-client";
+  return row.clientId != null ? String(row.clientId) : "no-client";
 }
 
 function renderClientMobileCard(row: ClientProfitabilityClient) {

@@ -22,10 +22,11 @@ import {
 } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { assetFormSchema, type AssetFormValues } from "./asset-schema";
 import { ASSET_TYPES } from "./asset-constants";
 import type { Asset } from "@/types/hr";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 function AssetFormFields({
   form,
@@ -183,13 +184,7 @@ function AssetFormFields({
                     min={0}
                     step={0.01}
                     value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
+                    onChange={numericFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

@@ -13,6 +13,8 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CopyIcon, ExternalLinkIcon } from "@animateicons/react/lucide";
 import { useJobShareLinks } from "@/hooks/api/hr/recruitment";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { JobShareLinks } from "@/hooks/api/hr/recruitment";
 import { PLATFORM_ICONS } from "./job-posting-constants";
 
@@ -56,7 +58,7 @@ interface ShareJobDialogProps {
 }
 
 export function ShareJobDialog({ jobId, onClose }: ShareJobDialogProps) {
-  const { data, isLoading } = useJobShareLinks(jobId);
+  const { data, isLoading, isError, error, refetch } = useJobShareLinks(jobId);
 
   function handleOpenChange(v: boolean) {
     if (!v) onClose();
@@ -83,6 +85,13 @@ export function ShareJobDialog({ jobId, onClose }: ShareJobDialogProps) {
           <div className="flex justify-center py-6">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
+        ) : isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load share links"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
         ) : data ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 bg-muted/40">
@@ -96,14 +105,22 @@ export function ShareJobDialog({ jobId, onClose }: ShareJobDialogProps) {
               />
             </div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Share on</p>
-            <div className="space-y-2">
-              {data.shareLinks.map((link: JobShareLinks["shareLinks"][number]) => (
-                <ShareLinkRow key={link.platform} link={link} onCopy={handleCopyLink} />
-              ))}
-            </div>
+            {data.shareLinks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No social platforms are configured for sharing. The direct link above still works.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {data.shareLinks.map((link: JobShareLinks["shareLinks"][number]) => (
+                  <ShareLinkRow key={link.platform} link={link} onCopy={handleCopyLink} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">Could not load share links.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            This job has no share links yet.
+          </p>
         )}
       </DialogContent>
     </Dialog>

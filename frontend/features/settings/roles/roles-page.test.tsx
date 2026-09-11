@@ -33,6 +33,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
 }));
@@ -103,7 +104,7 @@ const seededRolesPage = {
 function makeHydratedState() {
   const seed = new QueryClient();
   seed.setQueryData(
-    queryKeys.roles.list({ page: 1, limit: 20 }),
+    queryKeys.roles.list({ limit: 20 }),
     seededRolesPage,
   );
   return dehydrate(seed);
@@ -145,6 +146,8 @@ describe("RolesPage server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/roles",
       expect.anything(),
+      expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -159,6 +162,8 @@ describe("RolesPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/roles",
+      expect.anything(),
+      expect.anything(),
       expect.anything(),
     );
   });

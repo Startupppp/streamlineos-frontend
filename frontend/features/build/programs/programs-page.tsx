@@ -42,7 +42,7 @@ import {
 import { ProgramFormSheet } from "./program-form-sheet";
 import type { Program, CreateProgramInput, UpdateProgramInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -109,7 +109,7 @@ export function ProgramsPage() {
   const [editTarget, setEditTarget] = useState<Program | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
 
-  const { data, isLoading, isError, refetch } = usePrograms({
+  const { data, isLoading, isError, error, refetch } = usePrograms({
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
   const { data: portfoliosPage } = usePortfolios();
@@ -312,23 +312,28 @@ export function ProgramsPage() {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
+            <ErrorState
+              className={PM_FILL_PANEL}
+              title="Couldn't load programs"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : displayed.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"
-              title={isFiltered ? "No matching programs" : "No programs yet"}
+              title="No programs yet"
               description={
                 isFiltered
-                  ? "Try adjusting your filters."
+                  ? undefined
                   : "Create a program to coordinate related projects toward one outcome."
               }
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
               action={
-                isFiltered
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : canManage
-                    ? { label: "New Program", onClick: handleOpenCreate }
-                    : undefined
+                !isFiltered && canManage
+                  ? { label: "New Program", onClick: handleOpenCreate }
+                  : undefined
               }
             />
           ) : (

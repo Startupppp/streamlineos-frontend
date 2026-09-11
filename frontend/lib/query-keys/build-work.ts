@@ -1,10 +1,14 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const buildWorkQueryKeys = {
   projects: {
     all: [...base, "projects"] as const,
-    list: (filters?: Record<string, unknown>) =>
-      [...base, "projects", "list", filters] as const,
+    list: (filters?: QueryKeyParams) =>
+      filters === undefined
+        ? ([...base, "projects", "list"] as const)
+        : ([...base, "projects", "list", filters] as const),
+    listInfinite: (filters: QueryKeyParams) =>
+      [...base, "projects", "list", filters, "infinite"] as const,
     detail: (projectId: number) =>
       [...base, "projects", "detail", projectId] as const,
     sprints: (projectId?: number) =>
@@ -13,8 +17,10 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "sprints", projectId] as const),
     sprint: (sprintId: number) =>
       [...base, "projects", "sprints", "detail", sprintId] as const,
-    tickets: (params?: Record<string, unknown>) =>
-      [...base, "projects", "tickets", params] as const,
+    tickets: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "tickets"] as const)
+        : ([...base, "projects", "tickets", params] as const),
     ticket: (ticketId: number) =>
       [...base, "projects", "tickets", "detail", ticketId] as const,
     ticketByKey: (projectId: number, ticketNumber: number) =>
@@ -33,7 +39,7 @@ export const buildWorkQueryKeys = {
       projectId === undefined
         ? ([...base, "projects", "labels"] as const)
         : ([...base, "projects", "labels", projectId] as const),
-    timeEntries: (params?: Record<string, unknown>) =>
+    timeEntries: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "timeEntries"] as const)
         : ([...base, "projects", "timeEntries", params] as const),
@@ -45,6 +51,12 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "modules", projectId] as const,
     views: (projectId: number) =>
       [...base, "projects", "views", projectId] as const,
+    customFields: (projectId: number) =>
+      [...base, "projects", projectId, "custom-fields"] as const,
+    ticketCustomFieldValues: (projectId: number, ticketId: number) =>
+      [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
+    automations: (projectId: number) =>
+      [...base, "projects", projectId, "automations"] as const,
     intake: (projectId: number) =>
       [...base, "projects", "intake", projectId] as const,
     analytics: (projectId: number) =>
@@ -55,31 +67,31 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "budget", projectId] as const,
     templates: () => [...base, "projects", "templates"] as const,
     qa: {
-      suites: (projectId?: number) =>
+      suites: (projectId: number) =>
         [...base, "projects", projectId, "qa", "suites"] as const,
-      casesAll: (projectId?: number) =>
+      casesAll: (projectId: number) =>
         [...base, "projects", projectId, "qa", "cases"] as const,
-      cases: (projectId?: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "qa", "cases", params] as const,
-      case: (projectId?: number, testCaseId?: number) =>
-        [...base, "projects", projectId, "qa", "cases", testCaseId] as const,
-      runs: (projectId?: number, status?: string) =>
+      cases: (projectId: number, params?: QueryKeyParams) =>
+        params === undefined
+          ? ([...base, "projects", projectId, "qa", "cases"] as const)
+          : ([...base, "projects", projectId, "qa", "cases", params] as const),
+      runs: (projectId: number, status?: string) =>
         status === undefined
           ? ([...base, "projects", projectId, "qa", "runs"] as const)
           : ([...base, "projects", projectId, "qa", "runs", status] as const),
-      run: (projectId?: number, runId?: number) =>
+      run: (projectId: number, runId: number) =>
         [...base, "projects", projectId, "qa", "runs", runId] as const,
     },
     bugs: {
-      list: (projectId?: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "bugs"] as const)
           : ([...base, "projects", projectId, "bugs", params] as const),
-      detail: (projectId?: number, bugId?: number) =>
+      detail: (projectId: number, bugId: number) =>
         [...base, "projects", projectId, "bugs", bugId] as const,
     },
     changeRequests: {
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "change-requests"] as const)
           : ([...base, "projects", projectId, "change-requests", params] as const),
@@ -103,7 +115,7 @@ export const buildWorkQueryKeys = {
     },
     approvals: {
       inbox: () => [...base, "projects", "approvals", "inbox"] as const,
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "approvals"] as const)
           : ([...base, "projects", projectId, "approvals", params] as const),
@@ -111,7 +123,7 @@ export const buildWorkQueryKeys = {
         [...base, "projects", projectId, "approvals", approvalId] as const,
     },
     risks: {
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "risks"] as const)
           : ([...base, "projects", projectId, "risks", params] as const),
@@ -119,7 +131,7 @@ export const buildWorkQueryKeys = {
         [...base, "projects", projectId, "risks", riskId] as const,
     },
     decisions: {
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "decisions"] as const)
           : ([...base, "projects", projectId, "decisions", params] as const),
@@ -129,7 +141,7 @@ export const buildWorkQueryKeys = {
     meetings: {
       all: (projectId: number) =>
         [...base, "projects", projectId, "meetings"] as const,
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "meetings", "list"] as const)
           : ([
@@ -144,15 +156,15 @@ export const buildWorkQueryKeys = {
         [...base, "projects", projectId, "meetings", meetingId] as const,
     },
     incidents: {
-      list: (projectId?: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "incidents"] as const)
           : ([...base, "projects", projectId, "incidents", params] as const),
-      detail: (projectId?: number, incidentId?: number) =>
+      detail: (projectId: number, incidentId: number) =>
         [...base, "projects", projectId, "incidents", incidentId] as const,
     },
     forms: {
-      list: (projectId: number, params?: Record<string, unknown>) =>
+      list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "forms"] as const)
           : ([...base, "projects", projectId, "forms", params] as const),
@@ -169,46 +181,54 @@ export const buildWorkQueryKeys = {
         ] as const,
     },
     portfolios: {
-      list: (params?: Record<string, unknown>) =>
-        [...base, "projects", "portfolios", "list", params] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "portfolios", "list"] as const)
+        : ([...base, "projects", "portfolios", "list", params] as const),
       detail: (portfolioId: number) =>
         [...base, "projects", "portfolios", "detail", portfolioId] as const,
     },
     programs: {
-      list: (params?: Record<string, unknown>) =>
-        [...base, "projects", "programs", "list", params] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "programs", "list"] as const)
+        : ([...base, "projects", "programs", "list", params] as const),
       detail: (programId: number) =>
         [...base, "projects", "programs", "detail", programId] as const,
     },
     managedProducts: {
-      list: (params?: Record<string, unknown>) =>
-        [...base, "projects", "managed-products", "list", params] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "managed-products", "list"] as const)
+        : ([...base, "projects", "managed-products", "list", params] as const),
       detail: (managedProductId: number) =>
         [...base, "projects", "managed-products", "detail", managedProductId] as const,
     },
     pmWorkspaces: {
-      list: (params?: Record<string, unknown>) =>
-        [...base, "projects", "pm-workspaces", "list", params] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "pm-workspaces", "list"] as const)
+        : ([...base, "projects", "pm-workspaces", "list", params] as const),
       detail: (workspaceId: string) =>
         [...base, "projects", "pm-workspaces", "detail", workspaceId] as const,
-      members: (workspaceId: string, params?: Record<string, unknown>) =>
-        [
-          ...base,
-          "projects",
-          "pm-workspaces",
-          "members",
-          workspaceId,
-          params,
-        ] as const,
+      members: (workspaceId: string, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "pm-workspaces", "members", workspaceId] as const)
+        : ([...base, "projects", "pm-workspaces", "members", workspaceId, params] as const),
     },
     workflow: {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,
     },
-    allWork: (filters?: Record<string, unknown>) =>
-      [...base, "projects", "all-work", filters] as const,
-    allWorkInfinite: (filters: Record<string, unknown>) =>
+    allWorkAll: [...base, "projects", "all-work"] as const,
+    allWork: (filters?: QueryKeyParams) =>
+      filters === undefined
+        ? ([...base, "projects", "all-work"] as const)
+        : ([...base, "projects", "all-work", filters] as const),
+    allWorkInfinite: (filters: QueryKeyParams) =>
       [...base, "projects", "all-work", filters, "infinite"] as const,
+    customStates: (projectId: number) =>
+      [...base, "projects", projectId, "custom-states"] as const,
     columnCounts: (projectId: number) =>
       [...base, "projects", "column-counts", projectId] as const,
     webhooks: (projectId: number) =>
@@ -235,6 +255,43 @@ export const buildWorkQueryKeys = {
       ] as const,
     commentPermalinkTicket: (projectId: number, ticketId: number) =>
       [...base, "projects", "comment-permalink", projectId, ticketId] as const,
+    customers: {
+      all: [...base, "projects", "customers"] as const,
+      list: (filters?: QueryKeyParams) =>
+      filters === undefined
+        ? ([...base, "projects", "customers", "list"] as const)
+        : ([...base, "projects", "customers", "list", filters] as const),
+    },
+    roster: {
+      detail: (projectId: number) =>
+        [...base, "projects", "roster", projectId] as const,
+    },
+    teams: {
+      all: [...base, "projects", "teams"] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "teams", "list"] as const)
+        : ([...base, "projects", "teams", "list", params] as const),
+      detail: (teamId: number) =>
+        [...base, "projects", "teams", "detail", teamId] as const,
+      members: (teamId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "teams", "members", teamId] as const)
+        : ([...base, "projects", "teams", "members", teamId, params] as const),
+      teamProjects: (teamId: number) =>
+        [...base, "projects", "teams", "projects", teamId] as const,
+    },
+    workspaceMembers: {
+      all: [...base, "projects", "workspaceMembers"] as const,
+      list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "workspaceMembers", "list"] as const)
+        : ([...base, "projects", "workspaceMembers", "list", params] as const),
+    },
+    publicForms: {
+      token: (token: string) =>
+        [...base, "projects", "public-form", token] as const,
+    },
   },
 
 } as const;

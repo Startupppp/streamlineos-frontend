@@ -1,9 +1,19 @@
 "use client";
+import type { z } from "zod";
+import type { communityBaseContract, listCommunitiesContract, campaignContract } from "@/hooks/api/hr/engagement-schema";
+import type { pollContract } from "@/hooks/api/hr/engagement-schema";
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface MoodCheckin {
   id: number;
@@ -43,16 +53,7 @@ export interface LeaderboardEntry {
   total: number;
 }
 
-export interface HrPoll {
-  id: number;
-  orgId: string;
-  question: string;
-  options: string[];
-  status: "draft" | "active" | "closed";
-  anonymous: boolean;
-  closesAt?: string;
-  createdAt: string;
-}
+export type HrPoll = z.infer<typeof pollContract>;
 
 export interface PollResults {
   pollId: number;
@@ -63,26 +64,9 @@ export interface PollResults {
   counts: { option: string; optionIndex: number; count: number }[];
 }
 
-export interface HrCommunity {
-  id: number;
-  orgId: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-  members: { userId: string; role: "member" | "moderator" }[];
-}
+export type HrCommunity = z.infer<typeof listCommunitiesContract>["items"][number];
 
-export interface HrCampaign {
-  id: number;
-  orgId: string;
-  name: string;
-  description?: string;
-  startsAt?: string;
-  endsAt?: string;
-  status: "draft" | "active" | "completed" | "cancelled";
-  audience?: { type: string; ids?: string[] };
-  createdAt: string;
-}
+export type HrCampaign = z.infer<typeof campaignContract>;
 
 export interface EmployeeOfMonth {
   period: string;
@@ -94,26 +78,63 @@ export interface EngagementOverview {
   topLeaderboard: LeaderboardEntry[];
 }
 
-const KEYS = {
-  overview: ["hr", "engagement", "overview"] as const,
-  moodHistory: ["hr", "engagement", "mood", "history"] as const,
-  moodAggregate: ["hr", "engagement", "mood", "aggregate"] as const,
-  badges: ["hr", "engagement", "badges"] as const,
-  myBadges: ["hr", "engagement", "badges", "my"] as const,
-  leaderboard: (top?: number) => ["hr", "engagement", "leaderboard", top] as const,
-  polls: ["hr", "engagement", "polls"] as const,
-  pollResults: (pollId: number) => ["hr", "engagement", "polls", pollId, "results"] as const,
-  communities: ["hr", "engagement", "communities"] as const,
-  communityMembers: (id: number) => ["hr", "engagement", "communities", id, "members"] as const,
-  campaigns: ["hr", "engagement", "campaigns"] as const,
-};
-
+const _overviewContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.engagementOverviewContract),
+);
+const _moodHistoryContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.myMoodHistoryContract),
+);
+const _moodAggregateContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.orgMoodAggregateContract),
+);
+const _moodCheckinContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.moodCheckinContract),
+);
+const _listBadgesContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.listBadgesContract),
+);
+const _awardBadgeContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.awardBadgeContract),
+);
+const _leaderboardContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.leaderboardContract),
+);
+const _listPollsContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.listPollsContract),
+);
+const _createPollContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.createPollContract),
+);
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.successContract),
+);
+const _voteIdContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.voteIdContract),
+);
+const _pollResultsContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.pollResultsContract),
+);
+const _listCommunitiesContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.listCommunitiesContract),
+);
+const _createCommunityContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.createCommunityContract),
+);
+const _listCampaignsContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.listCampaignsContract),
+);
+const _createCampaignContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.createCampaignContract),
+);
+const _updateCampaignContract = lazyContract(() =>
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.updateCampaignContract),
+);
 export function useEngagementOverview() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<EngagementOverview>({
-    queryKey: KEYS.overview,
-    queryFn: () => apiClient.get<EngagementOverview>("/hr/engagement/overview"),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.overview(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/overview", undefined, signal, _overviewContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -122,9 +143,9 @@ export function useEngagementOverview() {
 export function useMyMoodHistory() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<MoodCheckin[]>({
-    queryKey: KEYS.moodHistory,
-    queryFn: () => apiClient.get<MoodCheckin[]>("/hr/engagement/mood/history"),
+  return useQuery({
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.moodHistory(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/history", undefined, signal, _moodHistoryContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -134,8 +155,8 @@ export function useOrgMoodAggregate() {
   const canManage = useCan("hr:engagement:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodAggregate[]>({
-    queryKey: KEYS.moodAggregate,
-    queryFn: () => apiClient.get<MoodAggregate[]>("/hr/engagement/mood/aggregate"),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.moodAggregate(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/aggregate", undefined, signal, _moodAggregateContract),
     staleTime: 5 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -146,8 +167,8 @@ export function useMoodCheckin() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "mood", "checkin"],
     mutationFn: (data: { mood: number; note?: string; date?: string }) =>
-      apiClient.post<MoodCheckin>("/hr/engagement/mood", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.moodHistory }),
+      apiClient.post("/hr/engagement/mood", data, undefined, _moodCheckinContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.moodHistory() }),
   });
 }
 
@@ -155,8 +176,8 @@ export function useEngagementBadges() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrBadge[]>({
-    queryKey: KEYS.badges,
-    queryFn: () => apiClient.get<HrBadge[]>("/hr/engagement/badges"),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.badges(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/badges", undefined, signal, _listBadgesContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -167,10 +188,10 @@ export function useAwardBadge() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "badges", "award"],
     mutationFn: ({ badgeId, ...data }: { badgeId: number; userId: string; reason?: string }) =>
-      apiClient.post<HrBadgeAward>(`/hr/engagement/badges/${badgeId}/award`, data),
+      apiClient.post(`/hr/engagement/badges/${badgeId}/award`, data, undefined, _awardBadgeContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: KEYS.myBadges });
-      qc.invalidateQueries({ queryKey: KEYS.leaderboard() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.myBadges() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.leaderboard() });
     },
   });
 }
@@ -179,8 +200,8 @@ export function useLeaderboard(top = 20) {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaderboardEntry[]>({
-    queryKey: KEYS.leaderboard(top),
-    queryFn: () => apiClient.get<LeaderboardEntry[]>(`/hr/engagement/points/leaderboard?top=${top}`),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.leaderboard(top),
+    queryFn: ({ signal }) => apiClient.get(`/hr/engagement/points/leaderboard?top=${top}`, undefined, signal, _leaderboardContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -189,9 +210,9 @@ export function useLeaderboard(top = 20) {
 export function useEngagementPolls() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<HrPoll[]>({
-    queryKey: KEYS.polls,
-    queryFn: () => apiClient.get<HrPoll[]>("/hr/engagement/polls"),
+  return useQuery({
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.polls(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/polls", undefined, signal, _listPollsContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -202,8 +223,8 @@ export function useCreatePoll() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "polls", "create"],
     mutationFn: (data: { question: string; options: string[]; anonymous?: boolean; closesAt?: string }) =>
-      apiClient.post<HrPoll>("/hr/engagement/polls", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.polls }),
+      apiClient.post("/hr/engagement/polls", data, undefined, _createPollContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() }),
   });
 }
 
@@ -212,8 +233,8 @@ export function useUpdatePoll() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "polls", "update"],
     mutationFn: ({ id, ...data }: { id: number; status?: string; question?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/engagement/polls/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.polls }),
+      apiClient.patch(`/hr/engagement/polls/${id}`, data, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() }),
   });
 }
 
@@ -222,10 +243,10 @@ export function useVotePoll() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "polls", "vote"],
     mutationFn: ({ pollId, optionIndex }: { pollId: number; optionIndex: number }) =>
-      apiClient.post<{ id: number }>(`/hr/engagement/polls/${pollId}/vote`, { optionIndex }),
+      apiClient.post(`/hr/engagement/polls/${pollId}/vote`, { optionIndex }, undefined, _voteIdContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: KEYS.polls });
-      qc.invalidateQueries({ queryKey: KEYS.pollResults(vars.pollId) });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.pollResults(vars.pollId) });
     },
   });
 }
@@ -234,8 +255,8 @@ export function usePollResults(pollId: number) {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<PollResults>({
-    queryKey: KEYS.pollResults(pollId),
-    queryFn: () => apiClient.get<PollResults>(`/hr/engagement/polls/${pollId}/results`),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.pollResults(pollId),
+    queryFn: ({ signal }) => apiClient.get(`/hr/engagement/polls/${pollId}/results`, undefined, signal, _pollResultsContract),
     staleTime: 30_000,
     enabled: pollId > 0 && canView && hrEnabled,
   });
@@ -250,12 +271,12 @@ export function useEngagementCommunities() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
-    queryKey: KEYS.communities,
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => {
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.communities(),
+    initialPageParam: NULL_CURSOR_YET,
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
-      if (pageParam) params.set("cursor", pageParam);
-      return apiClient.get<CommunityPage>(`/hr/engagement/communities?${params}`);
+      if (pageParam !== null) params.set("cursor", pageParam);
+      return apiClient.get(`/hr/engagement/communities?${params}`, undefined, signal, _listCommunitiesContract);
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
@@ -268,8 +289,8 @@ export function useCreateCommunity() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
-      apiClient.post<HrCommunity>("/hr/engagement/communities", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.communities }),
+      apiClient.post("/hr/engagement/communities", data, undefined, _createCommunityContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
@@ -278,8 +299,8 @@ export function useJoinCommunity() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "join"],
     mutationFn: (communityId: number) =>
-      apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/join`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.communities }),
+      apiClient.post(`/hr/engagement/communities/${communityId}/join`, {}, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
@@ -288,17 +309,17 @@ export function useLeaveCommunity() {
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "leave"],
     mutationFn: (communityId: number) =>
-      apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/leave`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.communities }),
+      apiClient.post(`/hr/engagement/communities/${communityId}/leave`, {}, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
 export function useEngagementCampaigns() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<HrCampaign[]>({
-    queryKey: KEYS.campaigns,
-    queryFn: () => apiClient.get<HrCampaign[]>("/hr/engagement/campaigns"),
+  return useQuery({
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns(),
+    queryFn: ({ signal }) => apiClient.get("/hr/engagement/campaigns", undefined, signal, _listCampaignsContract),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -318,8 +339,8 @@ export function useCreateCampaign() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "create"],
     mutationFn: (data: CreateCampaignData) =>
-      apiClient.post<HrCampaign>("/hr/engagement/campaigns", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.campaigns }),
+      apiClient.post("/hr/engagement/campaigns", data, undefined, _createCampaignContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
 
@@ -328,8 +349,8 @@ export function useUpdateCampaign() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "update"],
     mutationFn: ({ id, ...data }: Partial<HrCampaign> & { id: number }) =>
-      apiClient.patch<HrCampaign>(`/hr/engagement/campaigns/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.campaigns }),
+      apiClient.patch(`/hr/engagement/campaigns/${id}`, data, undefined, _updateCampaignContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
 
@@ -338,8 +359,7 @@ export function useDeleteCampaign() {
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/engagement/campaigns/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.campaigns }),
+      apiClient.delete<void>(`/hr/engagement/campaigns/${id}`, undefined, undefined, noContentC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
-

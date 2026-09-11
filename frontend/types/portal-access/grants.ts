@@ -4,7 +4,7 @@ export type PortalGrantStatus = "ACTIVE" | "SUSPENDED" | "REVOKED" | "EXPIRED";
 export interface PortalMembership {
   portalMembershipId: string;
   organizationId: string;
-  audience: "CLIENT_PORTAL";
+  audience: string | null;
   partyContactId: string;
   userId: string | null;
   status: PortalMembershipStatus;
@@ -37,10 +37,9 @@ export interface ProjectClientGrant {
 }
 
 export interface PaginationMeta {
-  page: number;
   limit: number;
-  total: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 export interface PortalMembershipsPage {

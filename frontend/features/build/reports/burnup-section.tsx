@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useCallback } from "react";
 import {
@@ -12,20 +12,18 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
 import { useVelocityReport, useBurnupReport } from "@/hooks/api/build/reports";
 import { format } from "date-fns";
-import { ChartCard, TOOLTIP_STYLE, AXIS_TICK, numberFormatter } from "./chart-card";
+import { ChartCard } from "./chart-card";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+const BurnupChart = dynamic(
+  () => import("./burnup-chart").then((m) => ({ default: m.BurnupChart })),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
+);
 
 export function BurnupSection({ projectId }: { projectId: number }) {
   const velocity = useVelocityReport(projectId);
@@ -36,12 +34,12 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     sprints.length > 0 ? sprints[sprints.length - 1].sprintId : undefined;
   const selectedSprintId = sprintId ?? activeSprintId;
 
-  const { data, isLoading, isError, refetch } = useBurnupReport(
+  const { data, isLoading, isError, error, refetch } = useBurnupReport(
     projectId,
     selectedSprintId,
   );
 
-  const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleRetry = useCallback(() => Promise.all([velocity.refetch(), refetch()]), [velocity.refetch, refetch]);
 
   const chartData = useMemo(
     () =>
@@ -64,7 +62,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
         onValueChange={handleSprintChange}
       >
         <SelectTrigger className="w-44 text-sm bg-muted/40 border-border">
-          <SelectValue placeholder="Select sprint" />
+          <SelectValue placeholder="Recent sprints" />
         </SelectTrigger>
         <SelectContent>
           {sprints.map((s) => (
@@ -77,13 +75,13 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     ) : null;
 
   return (
-    <ChartCard title="Burnup" icon={TrendingUp} actions={sprintSelect}>
+    <ChartCard title="Burnup · latest 100 sprints" icon={TrendingUp} actions={sprintSelect}>
       {velocity.isLoading || isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : velocity.isError || isError ? (
         <ErrorState
           title="Could not load burnup"
-          description="Something went wrong while computing the burnup chart."
+          description={getErrorMessage(velocity.error ?? error)}
           onRetry={handleRetry}
           compact
         />
@@ -95,64 +93,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
           compact
         />
       ) : (
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id="burnupCompleted"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                tick={AXIS_TICK}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={AXIS_TICK}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                formatter={(value) => numberFormatter.format(Number(value))}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area
-                type="monotone"
-                dataKey="Scope"
-                stroke="#94A3B8"
-                strokeDasharray="4 4"
-                fill="transparent"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="Completed"
-                stroke="#10B981"
-                fill="url(#burnupCompleted)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        <BurnupChart data={chartData} />
       )}
     </ChartCard>
   );

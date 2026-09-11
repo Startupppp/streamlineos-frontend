@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -15,16 +17,18 @@ interface ReportVarianceProps {
   month: string;
 }
 
-function formatDelta(value: number): string {
-  const abs = formatMoney(Math.abs(value));
-  if (value > 0) return `+${abs}`;
-  if (value < 0) return `−${abs}`;
+function formatDelta(value: number | string): string {
+  const n = typeof value === "number" ? value : parseFloat(value);
+  const abs = formatMoney(Math.abs(n));
+  if (n > 0) return `+${abs}`;
+  if (n < 0) return `−${abs}`;
   return abs;
 }
 
-function getDeltaClass(value: number): string {
-  if (value > 0) return "text-status-success-ink";
-  if (value < 0) return "text-status-danger-ink";
+function getDeltaClass(value: number | string): string {
+  const n = typeof value === "number" ? value : parseFloat(value);
+  if (n > 0) return "text-status-success-ink";
+  if (n < 0) return "text-status-danger-ink";
   return "text-muted-foreground";
 }
 
@@ -89,13 +93,14 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
 ];
 
 export function ReportVariance({ month }: ReportVarianceProps) {
-  const { data, isLoading } = usePayrollVariance(month);
+  const { data, isLoading, isError, error, refetch } = usePayrollVariance(month);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const totals = useMemo(() => {
     if (!data?.perEmployee.length) return null;
     return {
-      grossDelta: data.perEmployee.reduce((s, r) => s + r.grossDelta, 0),
-      netDelta: data.perEmployee.reduce((s, r) => s + r.netDelta, 0),
+      grossDelta: data.perEmployee.reduce((s, r) => s + Number(r.grossDelta), 0),
+      netDelta: data.perEmployee.reduce((s, r) => s + Number(r.netDelta), 0),
     };
   }, [data]);
 
@@ -105,6 +110,19 @@ export function ReportVariance({ month }: ReportVarianceProps) {
         <StatCardGridSkeleton cols={2} count={2} />
         <Skeleton className="h-48 rounded-xl" />
       </div>
+    );
+  }
+
+  // Before the empty state: a 500 is not the same fact as "no variance data",
+  // and the empty copy tells the operator to go run something.
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load the variance report"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

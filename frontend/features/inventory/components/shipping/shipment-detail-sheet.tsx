@@ -264,8 +264,8 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                 <div className="divide-y divide-border rounded-lg border">
                   {shipment.lines.map((line) => (
                     <div key={line.id} className="flex items-center justify-between px-3 py-2">
-                      <span className="text-sm">{line.variantName}</span>
-                      <span className="text-sm tabular-nums">{line.qty}</span>
+                      <span className="text-sm">{line.productVariant?.name ?? `Variant #${line.productVariantId}`}</span>
+                      <span className="text-sm tabular-nums">{Number(line.quantity)}</span>
                     </div>
                   ))}
                 </div>

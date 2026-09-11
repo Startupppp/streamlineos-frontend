@@ -43,6 +43,8 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
@@ -62,7 +64,8 @@ import {
   type LaborCase,
 } from "../hooks/use-labor";
 
-type ActiveTab = "memberships" | "agreements" | "cases";
+const ACTIVE_TABS = ["memberships", "agreements", "cases"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 const membershipSchema = z.object({
   userId: z.string().min(1),
@@ -93,9 +96,9 @@ export function LaborTabs() {
   const [agreementPage, setAgreementPage] = useState(1);
   const [casePage, setCasePage] = useState(1);
 
-  const { data: memberships, isLoading: membershipsLoading } = useUnionMemberships({ page: membershipPage, limit: 20 });
-  const { data: agreements, isLoading: agreementsLoading } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
-  const { data: cases, isLoading: casesLoading } = useLaborCases({ page: casePage, limit: 20 });
+  const { data: memberships, isLoading: membershipsLoading, isError: membershipsIsError, error: membershipsError, refetch: refetchMemberships } = useUnionMemberships({ page: membershipPage, limit: 20 });
+  const { data: agreements, isLoading: agreementsLoading, isError: agreementsIsError, error: agreementsError, refetch: refetchAgreements } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
+  const { data: cases, isLoading: casesLoading, isError: casesIsError, error: casesError, refetch: refetchCases } = useLaborCases({ page: casePage, limit: 20 });
   const { data: expiring } = useExpiringAgreements(30);
 
   const memberUserIds = useMemo(
@@ -136,6 +139,12 @@ export function LaborTabs() {
 
   function handleOpenSheet() {
     setSheetOpen(true);
+  }
+
+  function handleRetry() {
+    if (activeTab === "memberships") { void refetchMemberships(); return; }
+    if (activeTab === "agreements") { void refetchAgreements(); return; }
+    void refetchCases();
   }
 
   function handleCreateMembership(values: z.infer<typeof membershipSchema>) {
@@ -217,16 +226,26 @@ export function LaborTabs() {
   ];
 
   const isLoading = activeTab === "memberships" ? membershipsLoading : activeTab === "agreements" ? agreementsLoading : casesLoading;
+  const isError = activeTab === "memberships" ? membershipsIsError : activeTab === "agreements" ? agreementsIsError : casesIsError;
+  const activeError = activeTab === "memberships" ? membershipsError : activeTab === "agreements" ? agreementsError : casesError;
+  const errorTitle = activeTab === "memberships" ? "Couldn't load union memberships" : activeTab === "agreements" ? "Couldn't load collective agreements" : "Couldn't load labor cases";
+
+  const expiringCount = (expiring?.data ?? []).length;
+
+  function handleTabChange(value: string) {
+    const tab = ACTIVE_TABS.find((candidate) => candidate === value);
+    if (tab) setActiveTab(tab);
+  }
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
-      {(expiring?.data ?? []).length > 0 && (
+      {expiringCount > 0 && (
         <div className="flex items-start gap-2 p-3 mb-4 shrink-0 border border-status-warning-rule bg-status-warning-surface rounded-lg text-sm text-status-warning-ink">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>{expiring!.data.length} collective agreement{expiring!.data.length !== 1 ? "s" : ""} expiring within 30 days.</span>
+          <span>{expiringCount} collective agreement{expiringCount !== 1 ? "s" : ""} expiring within 30 days.</span>
         </div>
       )}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4 shrink-0">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-4 shrink-0">
         <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.key} value={tab.key}>
@@ -240,10 +259,17 @@ export function LaborTabs() {
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title={errorTitle}
+          description={getErrorMessage(activeError)}
+          onRetry={handleRetry}
+        />
       ) : activeTab === "memberships" ? (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{memberships?.total ?? 0} memberships</p>
+            <p className="text-sm text-muted-foreground">{memberships?.data?.length ?? 0} memberships</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
@@ -256,13 +282,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.total ?? 0, onPageChange: setMembershipPage }}
+            pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.data?.length ?? 0, onPageChange: setMembershipPage }}
           />
         </>
       ) : activeTab === "agreements" ? (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{agreements?.total ?? 0} agreements</p>
+            <p className="text-sm text-muted-foreground">{agreements?.data?.length ?? 0} agreements</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
@@ -275,13 +301,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.total ?? 0, onPageChange: setAgreementPage }}
+            pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.data?.length ?? 0, onPageChange: setAgreementPage }}
           />
         </>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{cases?.total ?? 0} cases</p>
+            <p className="text-sm text-muted-foreground">{cases?.data?.length ?? 0} cases</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
@@ -294,7 +320,7 @@ export function LaborTabs() {
                 action={canManage ? { label: "New Case", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.total ?? 0, onPageChange: setCasePage }}
+            pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.data?.length ?? 0, onPageChange: setCasePage }}
           />
         </>
       )}

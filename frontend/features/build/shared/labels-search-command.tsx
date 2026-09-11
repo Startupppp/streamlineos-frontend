@@ -12,7 +12,7 @@ import {
 import { useCreateOrgLabel } from "@/hooks/api/build/tickets";
 import { useCan } from "@/hooks/api/access";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { DEFAULT_LABEL_COLOR } from "@/components/labels/label-colors";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -57,7 +57,7 @@ export function LabelsSearchCommand({
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
       queryClient.setQueriesData<TicketLabel[]>(
-        { queryKey: [...queryKeys.projects.all, "labels"] },
+        { queryKey: [...buildWorkQueryKeys.projects.all, "labels"] },
         (old) => {
           if (!old) return [newLabel];
           if (old.some((label) => label.id === newLabel.id)) return old;

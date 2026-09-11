@@ -1,26 +1,20 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  paymentManualMethodListContract,
+  paymentManualMethodContract,
+} from "@/hooks/api/payments-schema";
 
 export type ManualMethodType = "bank_transfer" | "upi" | "cheque" | "cash" | "other";
 export type ManualMethodStatus = "enabled" | "missing_instructions" | "disabled";
 
-export type PaymentManualMethod = {
-  id: number;
-  methodType: ManualMethodType;
-  displayName: string;
-  instructions: string | null;
-  bankName: string | null;
-  accountHolder: string | null;
-  maskedAccountNumber: string | null;
-  ifscSwiftIban: string | null;
-  upiId: string | null;
-  paymentReferenceInstructions: string | null;
-  requireManualApproval: boolean;
-  status: ManualMethodStatus;
-};
+export type PaymentManualMethod = z.infer<typeof paymentManualMethodContract>;
 
 export type SaveManualMethodPayload = {
   methodType: ManualMethodType;
@@ -36,28 +30,30 @@ export type SaveManualMethodPayload = {
 };
 
 export function useManualMethods() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: [...queryKeys.payments.all, "manual-methods"],
-    queryFn: () => apiClient.get<PaymentManualMethod[]>("/payments/manual-methods"),
+    queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"],
+    queryFn: ({ signal }) => apiClient.get("/payments/manual-methods", undefined, signal, paymentManualMethodListContract),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useSaveManualMethod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:manual-methods:manage", {
     mutationKey: ["save", "manual", "method"],
     mutationFn: (payload: SaveManualMethodPayload) =>
-      apiClient.post<PaymentManualMethod>("/payments/manual-methods", payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
+      apiClient.post("/payments/manual-methods", payload, undefined, paymentManualMethodContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"] }),
   });
 }
 
 export function useDisableManualMethod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:manual-methods:manage", {
     mutationKey: ["disable", "manual", "method"],
-    mutationFn: (id: number) => apiClient.post(`/payments/manual-methods/${id}/disable`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
+    mutationFn: (id: number) => apiClient.post(`/payments/manual-methods/${id}/disable`, {}, undefined, paymentManualMethodContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"] }),
   });
 }

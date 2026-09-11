@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { withFormFields } from "@/lib/renderer/layout-adjustment";
 import { LEAD_ACTIVITY_LAYOUT } from "@/lib/renderer/crm/lead-activity-layout";
 import { TASK_LAYOUT } from "@/lib/renderer/crm/task-layout";

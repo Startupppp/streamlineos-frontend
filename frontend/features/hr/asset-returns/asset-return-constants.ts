@@ -1,4 +1,4 @@
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 export interface AssetReturn {
   id: number;
@@ -15,7 +15,7 @@ export interface AssetReturn {
 }
 
 export const arKeys = {
-  all: [...queryKeys.hr.all, "asset-returns"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "asset-returns"] as const,
   list: () => [...arKeys.all, "list"] as const,
 };
 

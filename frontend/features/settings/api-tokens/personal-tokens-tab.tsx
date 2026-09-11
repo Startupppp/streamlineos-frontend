@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback } from "react";
 import { Clock, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,11 +21,9 @@ import { CreateUserTokenSheet } from "./create-user-token-sheet";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   DEFAULT_PAGE_SIZE,
-  getLastPage,
-  parsePage,
-  parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 function RevokeTokenButton({
   token,
@@ -66,20 +63,16 @@ export function PersonalTokensTab({
   showCreate,
   onShowCreateChange,
 }: PersonalTokensTabProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-  const page = parsePage(searchParams.get("page"));
-  const pageSize = parsePageSize(searchParams.get("size"));
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const currentCursor = cursorHistory.at(-1);
   const {
     data,
     error,
     isError,
     isLoading,
-    isPlaceholderData,
     refetch,
-  } = useUserApiTokens({ page, limit: pageSize });
+  } = useUserApiTokens({ cursor: currentCursor, limit: pageSize });
   const revoke = useRevokeUserApiToken();
 
   const [createdRawToken, setCreatedRawToken] = useState<string | null>(null);
@@ -87,50 +80,28 @@ export function PersonalTokensTab({
 
   const tokens = data?.data ?? [];
   const pagination = data?.pagination;
-  const isPageOutOfRange =
-    !!pagination && page > getLastPage(pagination.total, pageSize);
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null) params.delete(key);
-        else params.set(key, value);
-      }
-      const query = params.toString();
-      startTransition(() => {
-        router.replace(query ? `${pathname}?${query}` : pathname, {
-          scroll: false,
-        });
-      });
-    },
-    [pathname, router, searchParams],
-  );
-
-  const handlePageChange = useCallback(
-    (nextPage: number) =>
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
-    [updateParams],
-  );
   const handlePageSizeChange = useCallback(
-    (size: number) =>
-      updateParams({
-        size: size === DEFAULT_PAGE_SIZE ? null : String(size),
-        page: null,
-      }),
-    [updateParams],
+    (size: number) => {
+      setPageSize(size);
+      setCursorHistory([undefined]);
+    },
+    [],
   );
 
-  useEffect(() => {
-    if (!pagination || isPlaceholderData) return;
-    const lastPage = getLastPage(pagination.total, pageSize);
-    if (page > lastPage) handlePageChange(lastPage);
-  }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((history) => history.slice(0, -1));
+  }, []);
+  const handleNext = useCallback(() => {
+    const nextCursor = pagination?.nextCursor;
+    if (!nextCursor) return;
+    setCursorHistory((history) => [...history, nextCursor]);
+  }, [pagination?.nextCursor]);
 
   const handleCreated = useCallback(
     (result: CreateUserApiTokenResponse) => {
       onShowCreateChange(false);
       setCreatedRawToken(result.rawToken);
+      setCursorHistory([undefined]);
       toast.success("Personal access token created");
     },
     [onShowCreateChange],
@@ -141,6 +112,7 @@ export function PersonalTokensTab({
     revoke.mutate(revoking.id, {
       onSuccess: () => {
         toast.success("Token revoked");
+        setCursorHistory([undefined]);
         setRevoking(null);
       },
       onError: (err) => toast.error(getErrorMessage(err)),
@@ -228,7 +200,7 @@ export function PersonalTokensTab({
 
   return (
     <>
-      {isLoading || isPageOutOfRange ? (
+      {isLoading ? (
         <DataTableSkeleton rows={8} columns={6} className="flex-1" />
       ) : isError ? (
         <ErrorState
@@ -253,15 +225,19 @@ export function PersonalTokensTab({
           columns={columns}
           getRowKey={(t) => t.id}
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: pagination?.total ?? 0,
-            onPageChange: handlePageChange,
-            onPageSizeChange: handlePageSizeChange,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
+        />
+      )}
+
+      {(cursorHistory.length > 1 || pagination?.hasMore) && (
+        <CursorPageControls
+          page={cursorHistory.length}
+          hasNext={pagination?.hasMore ?? false}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+          className="mt-2"
         />
       )}
 

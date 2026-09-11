@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import {
   Select,
   SelectContent,
@@ -22,9 +22,9 @@ import {
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
-import { RecordList, asRecordValues } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
 import Link from "next/link";

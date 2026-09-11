@@ -3,7 +3,8 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -17,6 +18,27 @@ import type {
   TimesheetExportDto,
 } from "@/features/timesheets/payroll/types";
 import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+const periodSummaryC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollPeriodSummaryResponseContract),
+);
+const payrollSettingsC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollSettingsResponseContract),
+);
+const runExportC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollRunExportResponseContract),
+);
+const exportListC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollExportListResponseContract),
+);
+const ackExportC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollAckExportResponseContract),
+);
+const exportRowsC = lazyContract(() =>
+  import("@/hooks/api/timesheets/payroll-schema").then((m) => m.payrollExportRowsResponseContract),
+);
 
 interface SummaryParams {
   start: string;
@@ -25,19 +47,31 @@ interface SummaryParams {
   includeExported?: boolean;
 }
 
+interface ExportHistoryQueryParams {
+  limit: number;
+  cursor?: string;
+}
+
+type SummaryQueryParams = {
+  start: string;
+  end: string;
+  userId?: string;
+  includeExported?: "true";
+};
+
 export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boolean) {
   const canView = useCan("timesheets:payroll:view");
-  const queryParams: Record<string, unknown> = {
+  const queryParams: SummaryQueryParams = {
     start: params.start,
     end: params.end,
+    userId: params.userId ? params.userId : undefined,
+    includeExported: params.includeExported ? "true" : undefined,
   };
-  if (params.userId) queryParams.userId = params.userId;
-  if (params.includeExported) queryParams.includeExported = "true";
 
   return useQuery({
-    queryKey: queryKeys.timesheets.payroll.summary(queryParams),
-    queryFn: () =>
-      apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.summary(queryParams),
+    queryFn: ({ signal }) =>
+      apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams, signal, periodSummaryC),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -47,8 +81,8 @@ export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boole
 export function useTimesheetPayrollSettings() {
   const canView = useCan("timesheets:payroll:view");
   return useQuery({
-    queryKey: queryKeys.timesheets.payroll.settings(),
-    queryFn: () => apiClient.get<PayrollSettings>("/timesheets/payroll/settings"),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.settings(),
+    queryFn: ({ signal }) => apiClient.get<PayrollSettings>("/timesheets/payroll/settings", undefined, signal, payrollSettingsC),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -56,12 +90,12 @@ export function useTimesheetPayrollSettings() {
 
 export function useUpdateTimesheetPayrollSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "updateSettings"],
     mutationFn: (data: Partial<PayrollSettings>) =>
-      apiClient.patch<PayrollSettings>("/timesheets/payroll/settings", data),
+      apiClient.patch<PayrollSettings>("/timesheets/payroll/settings", data, undefined, payrollSettingsC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.payroll.settings() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.settings() });
       toast.success("Payroll settings saved");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -70,12 +104,12 @@ export function useUpdateTimesheetPayrollSettings() {
 
 export function useCreateTimesheetPayrollExport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "createExport"],
     mutationFn: (data: CreateExportBody) =>
-      apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data),
+      apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data, undefined, runExportC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.payroll.all });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.all });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
@@ -84,13 +118,13 @@ export function useCreateTimesheetPayrollExport() {
 export function useTimesheetPayrollExports(limit = 20) {
   const canView = useCan("timesheets:payroll:view");
   return useInfiniteQuery<ExportHistoryResponse>({
-    queryKey: queryKeys.timesheets.payroll.exports(),
-    queryFn: ({ pageParam }) => {
-      const params: Record<string, unknown> = { limit };
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exports(limit),
+    queryFn: ({ pageParam , signal }) => {
+      const params: ExportHistoryQueryParams = { limit };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params);
+      return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params, signal, exportListC);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
@@ -99,12 +133,12 @@ export function useTimesheetPayrollExports(limit = 20) {
 
 export function useAckPayrollExport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "ackExport"],
     mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }) =>
-      apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data),
+      apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data, undefined, ackExportC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.timesheets.all, "payroll", "exports"] });
+      void qc.invalidateQueries({ queryKey: [...usersAndCommerceQueryKeys.timesheets.all, "payroll", "exports"] });
       toast.success("Acknowledgement recorded");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -113,9 +147,9 @@ export function useAckPayrollExport() {
 
 export function payrollExportRowsQueryOptions(exportId: number) {
   return {
-    queryKey: queryKeys.timesheets.payroll.exportRows(exportId),
-    queryFn: () =>
-      apiClient.get<ExportRowsResponse>(`/timesheets/payroll/exports/${exportId}/rows`),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exportRows(exportId),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<ExportRowsResponse>(`/timesheets/payroll/exports/${exportId}/rows`, undefined, signal, exportRowsC),
     staleTime: 5 * 60_000,
   };
 }

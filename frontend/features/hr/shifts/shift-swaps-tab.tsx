@@ -3,6 +3,7 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 };
 
 export function ShiftSwapsTab({ canManage }: Props) {
-  const { data: swaps, isLoading } = useShiftSwaps();
+  const { data: swaps, isLoading, isError, error, refetch } = useShiftSwaps();
   const updateStatus = useUpdateSwapStatus();
 
   const userIds = useMemo(() => {
@@ -42,6 +43,10 @@ export function ShiftSwapsTab({ canManage }: Props) {
     }
     return map;
   }, [membersData]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleApprove = useCallback((id: number) => {
     updateStatus.mutate({ id, status: "APPROVED" }, {
@@ -124,6 +129,17 @@ export function ShiftSwapsTab({ canManage }: Props) {
 
     return cols;
   }, [canManage, updateStatus.isPending, memberById, handleApprove, handleReject]);
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load swap requests"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <DataTable

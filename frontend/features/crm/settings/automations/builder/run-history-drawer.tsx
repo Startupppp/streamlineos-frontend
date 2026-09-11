@@ -1,7 +1,7 @@
 "use client";
 
-import { memo } from "react";
-import { NoPermissionState } from "@/components/shared";
+import { memo, useCallback } from "react";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCanState } from "@/hooks/api/access";
 import { CheckCircle, XCircle, Clock, SkipForward } from "lucide-react";
 import {
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCrmAutomationRuns } from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
@@ -33,8 +35,12 @@ const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.Com
 };
 
 export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, onOpenChange }: RunHistoryDrawerProps) {
-  const { data, isLoading, error, access } = useCrmAutomationRuns(ruleId, 1);
+  const { data, isLoading, error, refetch, access } = useCrmAutomationRuns(ruleId);
   const runs = data?.runs ?? [];
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   /**
    * Ticket 26. The read below disables itself without this permission, and a
@@ -57,7 +63,12 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
         </SheetHeader>
         <SheetBody className="px-5 py-4 space-y-3">
           {error ? (
-            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            <ErrorState
+              compact
+              title="Couldn't load run history"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
@@ -65,7 +76,12 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
           ) : access.denied ? (
             <NoPermissionState permission={access.permission} compact />
           ) : runs.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No runs yet.</p>
+            <EmptyState
+              compact
+              illustrationPreset="automations"
+              title="No runs yet"
+              description="This automation runs here once its trigger fires."
+            />
           ) : (
             runs.map((run) => {
               const cfg = statusConfig[run.status as AutomationRunStatus] ?? statusConfig.queued;

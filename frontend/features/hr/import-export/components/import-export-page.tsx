@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
-import { ImportExportGrid } from "@/features/shared/import-export/import-export-grid";
+import { ImportExportGrid } from "@/components/import-export/import-export-grid";
 import { HR_IMPORT_EXPORT_ENTITIES } from "@/features/hr/settings/import-export-entities";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";

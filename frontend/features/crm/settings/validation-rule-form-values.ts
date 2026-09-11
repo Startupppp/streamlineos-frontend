@@ -1,4 +1,4 @@
-import type { RecordFormValues } from "@/features/renderer";
+import type { RecordFormValues } from "@/components/renderer";
 import type {
   CrmValidationEntityType,
   CrmValidationRule,

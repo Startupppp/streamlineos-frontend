@@ -60,7 +60,10 @@ export function OfferCard({
   function handleReject() { onApprovalAction(offer, "reject"); }
   function handleViewHistory() { onViewHistory(offer); }
   function handleCopyLink() { if (offer.acceptanceToken) onCopyLink(offer.acceptanceToken); }
-  function handleStatusChange(v: string) { onStatusChange(offer.id, v as CandidateOffer["offerStatus"]); }
+  function handleStatusChange(v: string) {
+    const next = UPDATABLE_STATUSES.find((candidate) => candidate === v);
+    if (next) onStatusChange(offer.id, next);
+  }
 
   return (
     <Card key={offer.id}>

@@ -18,7 +18,7 @@ export function CrmStageBadge({
   showProbability = false,
   className,
 }: CrmStageBadgeProps) {
-  const { badgeClass } = getCrmTokenClasses(stage.color);
+  const { badgeClass } = getCrmTokenClasses(stage.color ?? "");
   const probability = "probability" in stage ? stage.probability : undefined;
 
   return (

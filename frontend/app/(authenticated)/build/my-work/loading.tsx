@@ -1,7 +1,7 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { PmPageShell, PmPanel, PmSection } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 
 export default function MyWorkLoading() {
   return (

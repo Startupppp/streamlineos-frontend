@@ -2,6 +2,7 @@ import type { MouseEvent, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { AskAiHistoryMessage } from "@/hooks/api";
+import { AiActionResultBody, type AiFailureState } from "@/components/ai";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -18,13 +19,14 @@ interface AskOsDraft {
 interface AskOsChatViewProps {
   atBottom: boolean;
   draft: AskOsDraft | null;
-  errorMessage: string | null;
+  failure: AiFailureState | null;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   isLoading: boolean;
   isStreaming: boolean;
   onJumpToLatest: () => void;
   onLoadOlder: () => void;
+  onRetry: () => void;
   onScroll: () => void;
   onSuggestion: (event: MouseEvent<HTMLButtonElement>) => void;
   persisted: AskAiHistoryMessage[];
@@ -37,13 +39,14 @@ interface AskOsChatViewProps {
 export function AskOsChatView({
   atBottom,
   draft,
-  errorMessage,
+  failure,
   hasNextPage,
   isFetchingNextPage,
   isLoading,
   isStreaming,
   onJumpToLatest,
   onLoadOlder,
+  onRetry,
   onScroll,
   onSuggestion,
   persisted,
@@ -132,8 +135,8 @@ export function AskOsChatView({
                 reduce={reduce}
               />
             )}
-            {errorMessage && (
-              <p className="px-1 text-dense text-destructive">{errorMessage}</p>
+            {failure && (
+              <AiActionResultBody state={failure} onRetry={onRetry} compact />
             )}
           </div>
         )}

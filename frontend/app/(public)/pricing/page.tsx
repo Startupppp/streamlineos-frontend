@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Layers, Sparkles } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";

@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const growthAndSignQueryKeys = {
   feedbucket: {
@@ -6,8 +6,10 @@ export const growthAndSignQueryKeys = {
     widgets: () => [...base, "feedbucket", "widgets"] as const,
     widget: (widgetId: number) =>
       [...base, "feedbucket", "widgets", widgetId] as const,
-    submissions: (params?: Record<string, unknown>) =>
-      [...base, "feedbucket", "submissions", params] as const,
+    submissions: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "feedbucket", "submissions"] as const)
+        : ([...base, "feedbucket", "submissions", params] as const),
     submission: (submissionId: number) =>
       [...base, "feedbucket", "submissions", submissionId] as const,
   },
@@ -17,24 +19,32 @@ export const growthAndSignQueryKeys = {
     detail: () => [...base, "crmMetadata", "detail"] as const,
     options: (type: string) =>
       [...base, "crmMetadata", "options", type] as const,
-    validationRules: (params?: Record<string, unknown>) =>
-      [...base, "crmMetadata", "validationRules", params] as const,
-    blueprints: (params?: Record<string, unknown>) =>
-      [...base, "crmMetadata", "blueprints", params] as const,
+    validationRules: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crmMetadata", "validationRules"] as const)
+        : ([...base, "crmMetadata", "validationRules", params] as const),
+    blueprints: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crmMetadata", "blueprints"] as const)
+        : ([...base, "crmMetadata", "blueprints", params] as const),
     blueprintTransitions: (blueprintId: string | null) =>
       [...base, "crmMetadata", "blueprints", blueprintId, "transitions"] as const,
   },
 
   crmCampaigns: {
     all: [...base, "crmCampaigns"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "crmCampaigns", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crmCampaigns", "list"] as const)
+        : ([...base, "crmCampaigns", "list", params] as const),
     detail: (campaignId: number) =>
       [...base, "crmCampaigns", "detail", campaignId] as const,
     roi: (campaignId: number) =>
       [...base, "crmCampaigns", "roi", campaignId] as const,
-    leads: (campaignId: number, params?: Record<string, unknown>) =>
-      [...base, "crmCampaigns", "leads", campaignId, params] as const,
+    leads: (campaignId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crmCampaigns", "leads", campaignId] as const)
+        : ([...base, "crmCampaigns", "leads", campaignId, params] as const),
     /** Half-life is part of the answer for time_decay, so it is part of the key. */
     attributionByModel: (model: string, halfLifeDays: number) =>
       [...base, "crmCampaigns", "attributionByModel", model, halfLifeDays] as const,
@@ -47,8 +57,10 @@ export const growthAndSignQueryKeys = {
     list: () => [...base, "crmAutomations", "list"] as const,
     events: () => [...base, "crmAutomations", "events"] as const,
     actions: () => [...base, "crmAutomations", "actions"] as const,
-    runs: (ruleId: number, page: number) =>
-      [...base, "crmAutomations", "runs", ruleId, page] as const,
+    runs: (ruleId: number, cursor?: string) =>
+      cursor === undefined
+        ? ([...base, "crmAutomations", "runs", ruleId] as const)
+        : ([...base, "crmAutomations", "runs", ruleId, cursor] as const),
   },
 
   crmSequences: {
@@ -56,8 +68,10 @@ export const growthAndSignQueryKeys = {
     list: () => [...base, "crmSequences", "list"] as const,
     steps: (sequenceId: string) =>
       [...base, "crmSequences", "steps", sequenceId] as const,
-    enrollments: (sequenceId: string, page: number) =>
-      [...base, "crmSequences", "enrollments", sequenceId, page] as const,
+    enrollments: (sequenceId: string, cursor?: string) =>
+      cursor === undefined
+        ? ([...base, "crmSequences", "enrollments", sequenceId] as const)
+        : ([...base, "crmSequences", "enrollments", sequenceId, cursor] as const),
   },
 
   crmCommission: {
@@ -111,14 +125,14 @@ export const growthAndSignQueryKeys = {
 
   signEnvelopes: {
     all: [...base, "signEnvelopes"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "signEnvelopes", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "signEnvelopes", "list"] as const)
+        : ([...base, "signEnvelopes", "list", params] as const),
     detail: (envelopeId: number) =>
       [...base, "signEnvelopes", "detail", envelopeId] as const,
     audit: (envelopeId: number) =>
       [...base, "signEnvelopes", "audit", envelopeId] as const,
-    certificate: (envelopeId: number) =>
-      [...base, "signEnvelopes", "certificate", envelopeId] as const,
   },
 
   signDocuments: {
@@ -160,7 +174,7 @@ export const growthAndSignQueryKeys = {
   billing: {
     all: [...base, "billing"] as const,
     aiCredits: () => [...base, "billing", "ai-credits"] as const,
-    aiCreditTransactions: (params: Record<string, unknown>) =>
+    aiCreditTransactions: (params: QueryKeyParams) =>
       [...base, "billing", "ai-credits", "transactions", params] as const,
     aiCreditsUsage: (days: number) =>
       [...base, "billing", "ai-credits", "usage", { days }] as const,

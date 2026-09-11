@@ -1,17 +1,59 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const talentPoolListC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/talent-pools-schema").then((m) => m.talentPoolListContract),
+);
+const talentPoolRowC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/talent-pools-schema").then((m) => m.talentPoolRowContract),
+);
+const talentPoolMembersPageC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/talent-pools-schema").then(
+    (m) => m.talentPoolMembersPageContract,
+  ),
+);
+const talentPoolMemberRowC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/talent-pools-schema").then(
+    (m) => m.talentPoolMemberRowContract,
+  ),
+);
 
 export interface TalentPool {
   id: number;
-  orgId: string;
   name: string;
   description: string | null;
   createdAt: string;
   memberCount: number;
+}
+
+export interface TalentPoolRow {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TalentPoolMemberRow {
+  id: number;
+  poolId: number;
+  candidateId: number;
+  orgId: string;
+  notes: string | null;
+  addedBy: string | null;
+  addedAt: string;
 }
 
 export interface TalentPoolMember {
@@ -29,22 +71,23 @@ export interface TalentPoolMember {
 
 export interface PaginatedPoolMembers {
   data: TalentPoolMember[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface PoolMembersParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
-const poolsKey = queryKeys.hr.talentPools();
+const poolsKey = humanResourcesQueryKeys.hr.talentPools();
 const poolMembersKey = (poolId: number) => ["hr", "talentPools", poolId, "members"] as const;
 
 export function useTalentPools() {
   const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: poolsKey,
-    queryFn: () => apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools"),
+    queryFn: ({ signal }) =>
+      apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools", undefined, signal, talentPoolListC),
     staleTime: 60_000,
     enabled: canEmployees,
   });
@@ -52,32 +95,42 @@ export function useTalentPools() {
 
 export function useCreateTalentPool() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
-      apiClient.post<TalentPool>("/hr/recruitment/talent-pools", data),
+      apiClient.post<TalentPoolRow>("/hr/recruitment/talent-pools", data, undefined, talentPoolRowC),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
   });
 }
 
 export function useDeleteTalentPool() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "delete"],
-    mutationFn: (poolId: number) => apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}`),
+    mutationFn: (poolId: number) =>
+      apiClient.delete<void>(
+        `/hr/recruitment/talent-pools/${poolId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
   });
 }
 
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
-  return useQuery({
-    queryKey: [...poolMembersKey(poolId), params] as const,
-    queryFn: () => {
-      const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
-      if (params?.limit) search.set("limit", String(params.limit));
-      const qs = search.toString();
-      return apiClient.get<PaginatedPoolMembers>(`/hr/recruitment/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}`);
+  return useGatedQuery("hr:employees:view", {
+    queryKey: [...humanResourcesQueryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
+    queryFn: ({ signal }) => {
+      const search: { cursor?: string; limit?: number } = {};
+      if (params?.cursor) search.cursor = params.cursor;
+      if (params?.limit) search.limit = params.limit;
+      return apiClient.get<PaginatedPoolMembers>(
+        `/hr/recruitment/talent-pools/${poolId}/members`,
+        search,
+        signal,
+        talentPoolMembersPageC,
+      );
     },
     staleTime: 60_000,
     enabled: !!poolId,
@@ -87,10 +140,15 @@ export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
 
 export function useAddPoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "add-member", poolId],
     mutationFn: (data: { candidateId: number; notes?: string }) =>
-      apiClient.post(`/hr/recruitment/talent-pools/${poolId}/members`, data),
+      apiClient.post<TalentPoolMemberRow>(
+        `/hr/recruitment/talent-pools/${poolId}/members`,
+        data,
+        undefined,
+        talentPoolMemberRowC,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: poolMembersKey(poolId) });
       void qc.invalidateQueries({ queryKey: poolsKey });
@@ -100,10 +158,15 @@ export function useAddPoolMember(poolId: number) {
 
 export function useRemovePoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "remove-member", poolId],
     mutationFn: (candidateId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}/members/${candidateId}`),
+      apiClient.delete<void>(
+        `/hr/recruitment/talent-pools/${poolId}/members/${candidateId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: poolMembersKey(poolId) });
       void qc.invalidateQueries({ queryKey: poolsKey });

@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RichPanel,
@@ -193,15 +194,26 @@ function GroupRow({ group, onRename, onManage }: GroupRowProps) {
 }
 
 export function GroupsPanel() {
-  const [page, setPage] = useState(1);
+  const pageStack = useCursorPageStack();
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<PrincipalGroup | null>(null);
   const [detailTarget, setDetailTarget] = useState<PrincipalGroup | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { data, isLoading, isError, error } = usePrincipalGroups({ page, limit: PAGE_SIZE });
+  const { data, isLoading, isError, error } = usePrincipalGroups({
+    cursor: pageStack.cursor,
+    limit: PAGE_SIZE,
+  });
   const groups = data?.data ?? [];
-  const pagination = data?.pagination ?? { page, limit: PAGE_SIZE, total: 0, totalPages: 0 };
+  const pagination = data?.pagination ?? {
+    limit: PAGE_SIZE,
+    nextCursor: null,
+    hasMore: false,
+  };
+
+  const handleNextPage = useCallback(() => {
+    if (pagination.nextCursor) pageStack.goToNextPage(pagination.nextCursor);
+  }, [pageStack, pagination.nextCursor]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRename = useCallback((group: PrincipalGroup) => setRenameTarget(group), []);
@@ -261,13 +273,12 @@ export function GroupsPanel() {
           )}
         </div>
 
-        {pagination.total > PAGE_SIZE && (
-          <TablePagination
-            page={pagination.page}
-            pageSize={pagination.limit}
-            total={pagination.total}
-            onPageChange={setPage}
-            showPageNumbers={false}
+        {(pageStack.hasPrevious || pagination.hasMore) && (
+          <CursorPageControls
+            page={pageStack.page}
+            hasNext={pagination.hasMore}
+            onPrevious={pageStack.goToPreviousPage}
+            onNext={handleNextPage}
           />
         )}
       </RichPanel>

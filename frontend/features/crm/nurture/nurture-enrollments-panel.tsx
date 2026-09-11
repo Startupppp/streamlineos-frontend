@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   NURTURE_ENROLLMENT_LAYOUT,
   nurtureEnrollmentRecordFields,

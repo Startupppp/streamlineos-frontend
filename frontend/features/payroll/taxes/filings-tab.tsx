@@ -7,13 +7,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -25,11 +18,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import {
   usePayrollFilings,
   useFilingCapabilities,
-  usePrepareFilingExport,
   useAttachAcknowledgement,
   downloadFilingExport,
   type PayrollFiling,
@@ -37,6 +28,7 @@ import {
   type FilingStatus,
 } from "@/hooks/api/payroll/filings";
 import { usePayrollEntities } from "@/hooks/api/payroll/entities";
+import { FilingExportDialog } from "./filing-export-dialog";
 
 const FALLBACK_HONESTY_LABEL = "Export prepared — external filing required";
 const FALLBACK_CAPABILITY_NOTE =
@@ -106,7 +98,6 @@ export function FilingsTab() {
   const { data, isLoading } = usePayrollFilings();
   const { data: capability } = useFilingCapabilities();
   const { data: entities } = usePayrollEntities();
-  const prepareMutation = usePrepareFilingExport();
   const ackMutation = useAttachAcknowledgement();
 
   const honestyLabel = capability?.honestyLabel ?? FALLBACK_HONESTY_LABEL;
@@ -116,37 +107,10 @@ export function FilingsTab() {
   const indiaEntities = (entities ?? []).filter((e) => e.countryCode.toUpperCase() === "IN");
 
   const [showExport, setShowExport] = useState(false);
-  const [exportType, setExportType] = useState<FilingType>("PF_ECR");
-  const [exportMonth, setExportMonth] = useState(getDefaultMonth);
-  const [exportEntityId, setExportEntityId] = useState<string>("");
   const [ackTarget, setAckTarget] = useState<PayrollFiling | null>(null);
   const [challanRef, setChallanRef] = useState("");
   const [ackRef, setAckRef] = useState("");
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
-
-  function handleExportConfirm() {
-    prepareMutation.mutate(
-      {
-        filingType: exportType,
-        fiscalYear: getCurrentFY(),
-        month: exportMonth,
-        ...(exportEntityId !== "" ? { entityId: Number(exportEntityId) } : {}),
-      },
-      {
-        onSuccess: (row) => {
-          const summary = row.exportSummary;
-          const rowNote =
-            summary != null
-              ? `${summary.rowCount} employee row(s) from ${summary.periodMonth ?? exportMonth} (rule ${summary.ruleBundleVersion}).`
-              : "Submit the export on the statutory portal, then record the acknowledgement here.";
-          toast.success(honestyLabel, { description: rowNote });
-          setShowExport(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
   async function handleDownload(filing: PayrollFiling) {
     if (downloadingId != null) return;
     setDownloadingId(filing.id);
@@ -300,7 +264,7 @@ export function FilingsTab() {
 
       <DataTable
         className="flex-1 min-h-0"
-        data={data ?? []}
+        data={data?.data ?? []}
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={isLoading}
@@ -359,88 +323,17 @@ export function FilingsTab() {
         }
       />
 
-      <Dialog open={showExport} onOpenChange={setShowExport}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Prepare filing export</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-3">
-            <div className="space-y-1.5">
-              <label className="block text-label font-medium text-foreground">
-                Filing type
-              </label>
-              <Select value={exportType} onValueChange={(v) => setExportType(v as FilingType)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {supportedTypes.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {FILING_TYPE_LABEL[t] ?? t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-label font-medium text-foreground">
-                Payroll month
-              </label>
-              <MonthPicker value={exportMonth} onChange={setExportMonth} className="w-full" />
-              <p className="text-dense text-muted-foreground">
-                Uses the REGULAR run for this month when present. Empty CSV if no run/lines
-                match.
-              </p>
-            </div>
-            {indiaEntities.length > 0 && (
-              <div className="space-y-1.5">
-                <label className="block text-label font-medium text-foreground">
-                  Legal entity (India)
-                </label>
-                <Select
-                  value={exportEntityId || undefined}
-                  onValueChange={setExportEntityId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Optional — prefer entity run" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {indiaEntities.map((e) => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {e.legalName} ({e.countryCode})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-dense text-muted-foreground">
-                  India PF/ESI/TDS export builders only. Non-IN entities are blocked on the
-                  server.
-                </p>
-              </div>
-            )}
-            <p className="text-dense text-muted-foreground">
-              Financial year {getCurrentFY()}
-              {ruleBundle ? ` · rule ${ruleBundle}` : ""}. {honestyLabel}.
-              {exportType === "FORM16"
-                ? " Form 16 full certificate is not generated — period summary only."
-                : ""}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setShowExport(false)}>
-              Cancel
-            </Button>
-            <LoadingButton
-              size="sm"
-              onClick={handleExportConfirm}
-              isPending={prepareMutation.isPending}
-              loadingText="Preparing…"
-            >
-              Prepare export
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FilingExportDialog
+        open={showExport}
+        onOpenChange={setShowExport}
+        supportedTypes={supportedTypes}
+        typeLabels={FILING_TYPE_LABEL}
+        indiaEntities={indiaEntities}
+        honestyLabel={honestyLabel}
+        ruleBundle={ruleBundle}
+        currentFy={getCurrentFY()}
+        defaultMonth={getDefaultMonth()}
+      />
 
       <Dialog open={ackTarget !== null} onOpenChange={(open) => !open && setAckTarget(null)}>
         <DialogContent>

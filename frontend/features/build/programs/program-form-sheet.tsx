@@ -25,14 +25,17 @@ const DEFAULTS: ProgramFormValues = {
   health: "",
 };
 
+const PROGRAM_STATUSES = ["active", "on_hold", "completed", "archived"] as const;
+const PROGRAM_HEALTHS = ["", "on_track", "at_risk", "off_track"] as const;
+
 function toForm(p: Program): ProgramFormValues {
   return {
     name: p.name,
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
     portfolioId: p.portfolioId === null ? "" : String(p.portfolioId),
-    status: p.status,
-    health: p.health ?? "",
+    status: PROGRAM_STATUSES.find((v) => v === p.status) ?? "active",
+    health: PROGRAM_HEALTHS.find((v) => v === (p.health ?? "")) ?? "",
   };
 }
 

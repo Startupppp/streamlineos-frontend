@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useIdempotentMutation } from "./use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiInsight } from "./reports";
 
 interface InsightsParams {
@@ -29,13 +30,13 @@ export function useInventoryInsights(params?: InsightsParams) {
   const canView = useCan("inventory:ai:read");
   return useQuery<InsightsPaginatedResponse, Error>({
     queryKey: queryKeys.inventory.aiInsights(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InsightsPaginatedResponse>("/inventory/ai/insights", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.type ? { type: params.type } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -43,7 +44,7 @@ export function useInventoryInsights(params?: InsightsParams) {
 
 export function useGenerateInsights() {
   const qc = useQueryClient();
-  return useIdempotentMutation<unknown, Error, void>({
+  return useAuthorizedIdempotentMutation<unknown, Error, void>("inventory:ai:manage", {
     mutationKey: ["inventory", "ai", "insights", "generate"],
     mutationFn: (_variables, idempotencyKey) => apiClient.post("/inventory/ai/insights/generate", undefined, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -55,7 +56,7 @@ export function useGenerateInsights() {
 
 export function useUpdateInsight() {
   const qc = useQueryClient();
-  return useMutation<AiInsight, Error, { insightId: number; data: UpdateInsightInput }>({
+  return useAuthorizedMutation<AiInsight, Error, { insightId: number; data: UpdateInsightInput }>("inventory:ai:manage", {
     mutationKey: ["inventory", "ai", "insight", "update"],
     mutationFn: ({ insightId, data }) =>
       apiClient.patch<AiInsight>(`/inventory/ai/insights/${insightId}`, data),
@@ -138,7 +139,7 @@ export interface InvCopilotAskInput {
  * never sits behind a `staleTime` that could refetch it on a window focus.
  */
 export function useInventoryCopilotAsk() {
-  return useMutation<InvCopilotAnswer, Error, InvCopilotAskInput>({
+  return useAuthorizedMutation<InvCopilotAnswer, Error, InvCopilotAskInput>("inventory:ai:read", {
     mutationKey: queryKeys.inventoryCopilot.ask,
     mutationFn: (body) =>
       apiClient.post<InvCopilotAnswer>("/inventory/ai/copilot/ask", body),

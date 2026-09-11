@@ -28,7 +28,7 @@ import {
 import {
   KNOWLEDGE_BASE,
   pageHref,
-} from "@/features/wiki/lib/knowledge-routes";
+} from "@/lib/knowledge-routes";
 import {
   KbPanelLeftCloseIcon,
   KbPanelLeftOpenIcon,

@@ -9,11 +9,11 @@ import {
   normalizeOrgModuleKey,
   orgModuleAliasesFor,
   matchesOrgModule,
-} from "./module-vocabulary";
+} from "./org-module-keys";
 
 describe("manifest shape", () => {
-  it("validates and exposes all 22 registry modules", () => {
-    expect(MANIFEST.modules.length).toBe(22);
+  it("validates and exposes all 23 registry modules", () => {
+    expect(MANIFEST.modules.length).toBe(23);
   });
 
   it("exposes the expected version", () => {

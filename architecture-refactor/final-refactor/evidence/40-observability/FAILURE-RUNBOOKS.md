@@ -1,6 +1,6 @@
 # Failure Runbooks — StreamlineOS Platform
 
-Companion to [`c28 RUNBOOKS.md`](../../../c28-cell-based-platform-at-20m/RUNBOOKS.md) (alert runbooks for dead-outbox, dead-delivery, sig-failures, tenant-ctx-errors, p95, seam-latency) and [`CELL-RUNBOOK.md`](../../../c28-cell-based-platform-at-20m/CELL-RUNBOOK.md) (cell bootstrap, isolation, backup/restore, relocation).
+Companion to the durable operator runbooks for [live alert delivery](../../../runbooks/RB-06-live-alert-delivery.md), [cell isolation](../../../runbooks/RB-01-cell-isolation.md), [backup/PITR](../../../runbooks/RB-02-pitr-backup.md), and [recovery](../../../runbooks/RB-04-recovery-drill.md).
 
 This file covers five operational failure scenarios. Each section anchors to an `alert-dispatch.mjs` runbook reference and cross-references the c28 degradation tests from ticket 31, which proved each dependency can be removed without an application stub.
 
@@ -140,7 +140,7 @@ The degradation test in ticket 31 (control plane and DB rows) proved:
 - A throwing `lookupOrgRegion` refuses unknown and stale placement without caching the failure.
 - The placement signed-cache path survives a control-plane outage.
 
-See [`CELL-RUNBOOK.md`](../../../c28-cell-based-platform-at-20m/CELL-RUNBOOK.md) for:
+See the [cell-isolation](../../../runbooks/RB-01-cell-isolation.md) and [recovery](../../../runbooks/RB-04-recovery-drill.md) runbooks for:
 - Cell bootstrap from nothing: `pnpm -C backend cell:bootstrap`
 - Org placement: `pnpm -C backend cell:place-org`
 - Isolation check: `pnpm -C backend cell:isolation`
@@ -168,7 +168,7 @@ pnpm -C backend cell:isolation --region=cell-2
 pnpm -C backend cell:degraded --region=cell-2 --org=<known-placed-org-id>
 ```
 
-**Containment:** If a cell database is unreachable, the signed-placement cache allows the primary cell to keep serving placed organizations without the control plane. Unknown organizations are refused (not guessed). See `CELL-RUNBOOK.md #exercise-the-degraded-control-plane`.
+**Containment:** If a cell database is unreachable, the signed-placement cache allows the primary cell to keep serving placed organizations without the control plane. Unknown organizations are refused (not guessed). Follow the degraded-control-plane and recovery procedures in RB-01 and RB-04.
 
 **Recovery (full cell failure):**
 
@@ -230,7 +230,7 @@ node backend/src/scripts/alert-queue-age.mjs
 
 **Measurable in `ai_usage_logs`:** AI token/credit spend per org (credits_milli, total_tokens, feature, model).
 
-**Not measurable by this alert:** CPU, memory, network, DB query cost, Redis memory, or object storage per tenant. Those metrics have no per-tenant ledger in the current schema. See `CELL-RUNBOOK.md` for what each shared resource currently lacks in per-cell attribution.
+**Not measurable by this alert:** CPU, memory, network, DB query cost, Redis memory, or object storage per tenant. Those metrics have no per-tenant ledger in the current schema. Use RB-07 for the required per-cell cost evidence.
 
 **First five minutes**
 
@@ -252,3 +252,323 @@ node backend/src/scripts/alert-tenant-cost.mjs --window-hours=1
 **Recovery:** No recovery needed once the abuse is contained. Historical spend is already recorded.
 
 **Verification:** `alert-tenant-cost.mjs` exits 0 after the noisy tenant's usage normalises.
+
+---
+
+## #dead-outbox
+
+**What fires:** `dead-outbox` when any `outbox_events` row this consumer owns reaches DEAD state inside a 24h window. The objective is zero — a DEAD outbox row is lost domain intent, not a retryable blip.
+
+**Detection signal:** `alert-dead-outbox.mjs` reads `outbox_events` where `delivery_state = 'DEAD'`. DEAD means the relay exhausted its retry ceiling, so `last_error` carries the terminal reason.
+
+**First five minutes**
+
+```bash
+# 1. List the dead rows and their terminal errors
+node backend/src/scripts/alert-dead-outbox.mjs --hours=24
+
+# 2. Group by event type — a single failing consumer produces one cluster
+# 3. Confirm the consumer is registered; an unregistered type dead-letters every row
+node backend/src/scripts/check-outbox-consumers.mjs
+```
+
+**Containment:** Fix the consumer before replaying. A replay against an unfixed consumer re-deads every row and burns the retry budget again.
+
+**Recovery:** Consumers are idempotent by dedupe key, so a replay cannot double-apply. Reset the affected rows to PENDING and let the relay drain them.
+
+**Verification:** `alert-dead-outbox.mjs` exits 0 with no DEAD rows in the window.
+
+---
+
+## #dead-notification-outbox
+
+**What fires:** `dead-notification-outbox` when any `notification_outbox` row reaches DEAD state inside a 24h window. `notification_outbox` is the durable record of "somebody is owed a notification"; a DEAD row is an intent that will now never be delivered, so the objective is zero.
+
+**Detection signal:** `alert-dead-notification-outbox.mjs` reads `notification_outbox` where `state = 'DEAD'`. `last_error` carries the terminal reason and `attempt_count` shows the retry ceiling was reached.
+
+**Why it is separate from `#dead-outbox`:** that alert reads `outbox_events`, a different table with a different relay. `notification_outbox` had no watcher at all until this alert existed, and the SLO registry declared the notification relay as draining `outbox_events`, which made the DEAD-letter objective for this queue unfailable.
+
+**First five minutes**
+
+```bash
+# 1. List the dead intents and their terminal errors
+node backend/src/scripts/alert-dead-notification-outbox.mjs --hours=24
+
+# 2. Group by event_key — one failing catalog entry or template produces one cluster
+# 3. An exit code of 2 means the table is empty, i.e. nothing was measured — not a clear
+```
+
+**Containment:** Fix the routing or provider fault before replaying. The relay is dedupe-keyed, so a replay cannot double-notify.
+
+**Recovery:** Reset the affected rows to `PENDING` with `attempt_count = 0` and let the relay drain them.
+
+**Verification:** `alert-dead-notification-outbox.mjs` exits 0 — with rows in the table and none DEAD in the window.
+
+---
+
+## #dead-delivery
+
+**What fires:** `dead-delivery` when a delivery-channel row (notification, email, push) reaches DEAD state inside a 24h window.
+
+**Detection signal:** `alert-dead-delivery.mjs`. Unlike `#dead-outbox`, the intent was persisted successfully and only the outbound provider hop failed, so the domain state is correct and the user simply was not told.
+
+**First five minutes**
+
+```bash
+# 1. List dead deliveries by channel and provider
+node backend/src/scripts/alert-dead-delivery.mjs --hours=24
+
+# 2. If one provider dominates, treat it as a provider outage first
+```
+
+See `#provider-outage` when a single provider accounts for the cluster.
+
+**Containment:** Suppression and bounce state are authoritative — do not replay into a suppressed address, or the provider reputation degrades further.
+
+**Recovery:** Re-queue eligible deliveries. Dedupe keys make redelivery safe for recipients who already received the message.
+
+**Verification:** `alert-dead-delivery.mjs` exits 0 with no DEAD rows in the window.
+
+---
+
+## #job-queue-age
+
+**What fires:** `job-queue-age` when a job-channel row stays QUEUED or RUNNING longer than 900 seconds, or when retry pressure exceeds 500.
+
+**Detection signal:** `alert-job-queue-age.mjs`. A RUNNING row older than the threshold usually means a worker died holding its lease rather than a slow job.
+
+**First five minutes**
+
+```bash
+# 1. Show the oldest rows per job table and their state
+node backend/src/scripts/alert-job-queue-age.mjs
+
+# 2. Distinguish the two causes:
+#    QUEUED and growing  -> no worker is claiming (worker down, or cron not firing)
+#    RUNNING and stalled -> a worker died mid-lease; the lease must expire before reclaim
+```
+
+**Containment:** Never clear a RUNNING row by hand while a worker may still hold the lease — that is how a job runs twice. Wait for lease expiry, which is what makes reclaim safe.
+
+**Recovery:** Restart the worker. Leases expire and rows return to QUEUED for a clean claim.
+
+**Verification:** `alert-job-queue-age.mjs` exits 0 with `ageBreached: false`.
+
+---
+
+## #tenant-ctx-errors
+
+**What fires:** `tenant-ctx-errors` (critical, platform-reliability) when the log stream carries `permission denied for table …` / `missing tenant context` — a `42501` raised because a query ran without the tenant GUC.
+
+**Detection signal:** `alert-tenant-ctx-errors` reads the structured log. RLS fails closed, so `app.current_org_id()` raises `42501` rather than returning rows from the wrong tenant. **This alert firing means work was dropped, never that data leaked.**
+
+**First five minutes**
+
+```bash
+# 1. Find the failing call sites and their org context
+node backend/src/scripts/alert-dispatch.mjs --alert=tenant-ctx-errors
+
+# 2. Classify the caller — the three sources have different fixes:
+#    guard        -> guards run BEFORE interceptors, so they have no ambient GUC
+#    after-commit -> a `void fn()` kept context after the transaction committed
+#    background   -> a sweep has no ambient context at all
+```
+
+**Containment:** None available at runtime; the code path is broken, not overloaded. Restarting does not help.
+
+**Recovery:** Fix by source: wrap a guard's own queries explicitly, move deferred work into `registerAfterCommit` plus `runInNewTenantTransaction`, and iterate sweeps with `forEachOrg`. Never swallow the failure — a swallowed `42501` is how this class stayed invisible platform-wide.
+
+**Verification:** the alert stops firing and the affected writes appear.
+
+---
+
+## #sig-failures
+
+**What fires:** `sig-failures` (high, payments-team) when an inbound webhook fails HMAC signature verification.
+
+**Detection signal:** `alert-sig-failures.mjs`, primarily `payment_webhook_endpoints.status = 'failing'`.
+
+**Treat as a forgery attempt until proven otherwise.** The benign cause is a provider-side secret rotation that Settings > Payments never received; the malicious cause is replay or forgery. Both look identical in the first minute.
+
+**First five minutes**
+
+```bash
+# 1. Identify which endpoint and provider is failing
+node backend/src/scripts/alert-sig-failures.mjs
+
+# 2. Confirm whether the secret was rotated provider-side in the last 24h
+# 3. If it was NOT rotated, treat the source IP and payloads as hostile
+```
+
+**Containment:** Verification already fails closed, so nothing was accepted. Do not disable verification to "unblock" a provider — that converts a contained failure into an open forgery surface.
+
+**Recovery:** Update the stored secret to match the provider. Providers redeliver failed webhooks; idempotency keys make redelivery safe.
+
+**Verification:** `alert-sig-failures.mjs` exits 0 and the endpoint leaves `failing`.
+
+---
+
+## #p95
+
+**What fires:** `p95` (high, platform-reliability) when p95 latency on the ten hottest endpoints exceeds budget.
+
+**Detection signal:** `alert-p95.mjs` computes p95 from the structured log — `LogSpanExporter` writes one `SPAN` line per finished request. There is no APM agent, so the log stream is the only source and a log outage reads as silence, not as health.
+
+**First five minutes**
+
+```bash
+# 1. Rank the offending endpoints
+node backend/src/scripts/alert-p95.mjs
+
+# 2. Separate application overhead from database time
+node backend/src/scripts/alert-seam-latency.mjs
+```
+
+**Containment:** If one endpoint dominates, its module's rate-limit tier bounds the blast radius while the cause is found.
+
+**Recovery:** Latency regressions are usually a query plan, not capacity. Re-measure as `streamline_app` with the tenant GUC set — the owner role bypasses RLS and its plans hide the cost. `VACUUM ANALYZE` after any bulk load before concluding an index is unused.
+
+**Verification:** `alert-p95.mjs` exits 0.
+
+---
+
+## #seam-latency
+
+**What fires:** `seam-latency` (high, platform-reliability) when a named seam exceeds its budget: `db.pool.wait` 3ms, `db.guc.setup` 2ms, `db.query.execute` 9ms, `db.roundtrip.simple` 15ms, `db.roundtrip.complex` 37ms, `cache.roundtrip` 1.5ms, `route.cached.read` 112ms, `route.write` 375ms, `runtime.eventloop.delay` 37ms.
+
+**Detection signal:** `alert-seam-latency.mjs`. The seam that breaches names the layer, which is why this is more actionable than `#p95` alone.
+
+**First five minutes**
+
+```bash
+# 1. Identify the breaching seam
+node backend/src/scripts/alert-seam-latency.mjs
+
+# 2. Read the seam as a diagnosis:
+#    db.pool.wait          -> pool exhaustion; connections held across provider calls
+#    db.guc.setup          -> tenant transaction setup cost; too many tiny transactions
+#    cache.roundtrip       -> Redis degraded; see #cache-loss
+#    runtime.eventloop.delay -> CPU work on the request thread
+```
+
+**Containment:** For `db.pool.wait`, the cause is almost always a connection held across an external call. Release before the provider hop rather than enlarging the pool, which only defers exhaustion.
+
+**Recovery:** Move CPU/IO-heavy work off the request thread to a durable job.
+
+**Verification:** `alert-seam-latency.mjs` exits 0 for every seam.
+
+---
+
+## #retention-dead-man
+
+**What fires:** `retention-dead-man` (critical, platform-reliability) when any declared
+retention sweep has not recorded a successful run inside its own window, when a sweep ran
+but failed for one or more tenants, or when no heartbeat can be read at all.
+
+**Detection signal:** `alert-retention-dead-man.mjs` reads two Redis key families and
+treats them as two different faults.
+
+- **Staleness** — `cron:heartbeat:<jobKey>` is written by `CronLeaseService` only on a
+  successful run. A heartbeat older than that job's `maxAgeMs` (26h for the daily sweeps,
+  3h for the hourly GDPR export-artifact sweep) means the sweep is not running. Missing
+  entirely counts as stale, not as healthy.
+- **Partial failure** — `cron:last-error:<jobKey>` is written by `CronLeaseService` when a
+  sweep throws outright, and by `CronSweepFailureSinkService` when `forEachOrg` isolated a
+  failing tenant. The heartbeat is still written in the partial case, because the sweep
+  genuinely ran, so a staleness check alone would never see a tenant whose retention has
+  been failing every night for a month. Records carry `failedOrgIds` and expire after 7
+  days; one older than the job's window is ignored, because the sweep has succeeded since.
+- **Vacuity** — every heartbeat absent exits **2**, not 0. That is unproven, not healthy:
+  it is equally consistent with Redis being unreachable, the scheduler being disabled, and
+  nothing ever having run.
+
+Exit codes: `0` healthy · `1` one or more sweeps stale or failing · `2` cannot reach
+Redis, env not configured, or the vacuity guard fired.
+
+**Why this alert exists:** every retention drain in the backend was once reachable only as
+`POST /cron/<job>` behind `CRON_SECRET`, and no scheduler in either repository ever sent
+that request. Eleven correct, fully tested drains were dead. `CronRetentionSchedulerService`
+now runs them in process, and this alert is what proves they are still running — the
+declaration in `src/modules/cron/retention-schedule.ts` is the single source of truth for
+the scheduler, this alert and the README table, and `retention-schedule-parity.spec.ts`
+fails if any of the three drift.
+
+**First five minutes**
+
+```bash
+# 1. Which sweeps are stale, which are failing, and since when
+node backend/src/scripts/alert-retention-dead-man.mjs
+
+# 2. Exit 2 means unproven, not healthy — check Redis before believing anything above
+# (confirm UPSTASH_REDIS_REST_URL / _TOKEN are set for this environment)
+
+# 3. Is the in-process scheduler even enabled in this deployment?
+# RETENTION_SCHEDULER_ENABLED must not be "false"; RETENTION_SCHEDULER_TICK_MS is the
+# due-check interval (default 10 minutes)
+
+# 4. For a sweep reported as PARTIAL, read the failed tenant ids out of the record
+# the sink wrote — the alert prints them, capped at 50
+
+# 5. Drive the named sweep by hand and read its result body
+curl -s -X POST -H "Authorization: Bearer $CRON_SECRET" \
+  "$BACKEND_ORIGIN/cron/<jobKey>"
+```
+
+**Containment:** Nothing here deletes data on its own, and nothing needs stopping — a
+stale retention sweep means data is being *kept* past its policy, not lost. The exposure is
+regulatory (a retention promise not being met) and operational (unbounded table growth), so
+do not disable the scheduler to silence the alert. If one tenant is failing repeatedly,
+`forEachOrg` already isolates it: the other tenants keep draining while you investigate.
+
+The one sweep where staleness is a live privacy exposure is
+`gdpr-export-artifact-retention`. Its objects are complete JSON dumps of a single
+subject's personal data with a 72-hour expiry, so a sweep that has not run in a day means
+archives are downloadable past the window they were promised for. Treat that job's
+staleness as the highest priority of the set.
+
+**Recovery**
+
+1. **Stale because nothing is scheduled** — confirm `RETENTION_SCHEDULER_ENABLED` is not
+   `false` and that the process actually booted `CronRetentionSchedulerService`
+   (`[retention-scheduler] disabled` is logged at warn when it is off). Restarting the API
+   re-arms it; the first tick is jittered by up to 60s.
+2. **Stale because the lease is stuck** — `withLease` refuses a lease while a sweep is
+   draining, which is deliberate: the next tick resumes the work whole rather than running
+   two drains against the same rows. A lease that outlives its `leaseSeconds` expires on
+   its own; do not delete the key while a sweep may still be running.
+3. **Failing for specific tenants** — take a `failedOrgId` from the record and drive that
+   sweep by hand; the per-tenant error is logged with `orgId`, `correlationId` and
+   `cellId`. A `42501` there is a missing tenant GUC, not a retention bug.
+4. **Truncated rather than failed** — every drain is bounded by `MAX_BATCHES` and returns
+   `truncated: true` when it hit the cap with rows still eligible, recording the flag in
+   its `hr_audit_logs` `after` payload. That is not an alertable failure: the next tick
+   resumes. A tenant that reports `truncated` on every run has a backlog growing faster
+   than one tick can drain, and needs a one-off catch-up rather than a code change.
+
+**Verification:** `alert-retention-dead-man.mjs` exits 0, with a heartbeat inside its
+window for every job in `RETENTION_JOBS` and no unexpired `cron:last-error:` record.
+
+---
+
+## #cell-recovery
+
+**What fires:** `cell-recovery` (critical, platform-reliability) when a cell fails its recovery/health assertion.
+
+**Detection signal:** `alert-cell-recovery.mjs`.
+
+**First five minutes**
+
+```bash
+# 1. Establish which cell and which assertion failed
+node backend/src/scripts/alert-cell-recovery.mjs
+
+# 2. Confirm the blast radius is one cell — cross-cell impact is a placement fault, not a cell fault
+```
+
+See `#database-cell-failure` for the database-specific path and RB-01 for the isolation proof.
+
+**Containment:** Keep the failure inside the cell. Never repoint a failing cell's traffic at another cell's resources — that breaks the isolation guarantee RB-01 exists to prove.
+
+**Recovery:** Follow [RB-04](../../../runbooks/RB-04-recovery-drill.md); relocation is [RB-02](../../../runbooks/RB-02-pitr-backup.md).
+
+**Verification:** `alert-cell-recovery.mjs` exits 0 and RB-01 isolation checks still pass.

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useInviteToHuddle } from "@/hooks/api/chat-huddles";
@@ -50,7 +51,7 @@ export function HuddleInviteSection({
           toast.success("Invited to the huddle");
           setInviteUserId("");
         },
-        onError: () => toast.error("Failed to invite"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   };

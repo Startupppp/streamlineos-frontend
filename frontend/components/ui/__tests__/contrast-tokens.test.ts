@@ -1,73 +1,12 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
-function hexToRgb(hex: string): [number, number, number] {
-  const cleaned = hex.replace("#", "");
-  const r = parseInt(cleaned.slice(0, 2), 16);
-  const g = parseInt(cleaned.slice(2, 4), 16);
-  const b = parseInt(cleaned.slice(4, 6), 16);
-  return [r, g, b];
-}
-
-function linearize(channel: number): number {
-  const c = channel / 255;
-  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-}
-
-function relativeLuminance(hex: string): number {
-  const [r, g, b] = hexToRgb(hex);
-  return (
-    0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
-  );
-}
-
-function contrastRatio(hex1: string, hex2: string): number {
-  const l1 = relativeLuminance(hex1);
-  const l2 = relativeLuminance(hex2);
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function extractTokenValue(css: string, tokenName: string): string | undefined {
-  const pattern = new RegExp(
-    String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`,
-  );
-  const match = pattern.exec(css);
-  return match?.[1];
-}
-
-const CSS_PATH = join(__dirname, "../../../globals.css");
-const cssSource = readFileSync(CSS_PATH, "utf-8");
-
-const DARK_BLOCK_START = cssSource.indexOf("\n.dark {");
-const lightCss = DARK_BLOCK_START >= 0
-  ? cssSource.slice(0, DARK_BLOCK_START)
-  : cssSource;
-const darkCss = DARK_BLOCK_START >= 0
-  ? cssSource.slice(DARK_BLOCK_START)
-  : "";
-
-const WCAG_AA_NORMAL = 4.5;
-const WCAG_AA_LARGE = 3.0;
-
-interface TokenPair {
-  fg: string;
-  bg: string;
-  label: string;
-  largeTextOnly?: boolean;
-}
-
-function resolvePair(
-  css: string,
-  fgToken: string,
-  bgToken: string,
-): { fg: string; bg: string } | null {
-  const fg = extractTokenValue(css, fgToken);
-  const bg = extractTokenValue(css, bgToken);
-  if (!fg || !bg) return null;
-  return { fg, bg };
-}
+import {
+  contrastRatio,
+  darkCss,
+  lightCss,
+  resolvePair,
+  WCAG_AA_LARGE,
+  WCAG_AA_NORMAL,
+  type TokenPair,
+} from "@/test-utils/globals-css-tokens";
 
 describe("WCAG AA contrast — light mode token pairs", () => {
   const primaryTextPairs: TokenPair[] = [
@@ -186,5 +125,52 @@ describe("contrastRatio utility — self-test", () => {
   it("detects a pair that FAILS AA (ratio < 4.5)", () => {
     const failingRatio = contrastRatio("#64748b", "#f1f5f9");
     expect(failingRatio).toBeLessThan(WCAG_AA_NORMAL);
+  });
+});
+
+const WCAG_NON_TEXT = 3.0;
+
+function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
+  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
+  if (direct) return direct[1];
+  const viaVar = new RegExp(
+    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
+  ).exec(css);
+  return viaVar?.[1];
+}
+
+function ratioOf(css: string, fgToken: string, bgToken: string): number {
+  const fg = extractTokenAnyValue(css, fgToken);
+  const bg = extractTokenAnyValue(css, bgToken);
+  expect(fg).toBeDefined();
+  expect(bg).toBeDefined();
+  return contrastRatio(fg as string, bg as string);
+}
+
+describe("WCAG 2.2 SC 1.4.11 — focus indicator contrast (3:1 non-text)", () => {
+  const lightRingSurfaces = ["background", "card", "muted"];
+
+  for (const surface of lightRingSurfaces) {
+    it(`--ring on --${surface} (light) reaches 3:1`, () => {
+      expect(ratioOf(lightCss, "ring", surface)).toBeGreaterThanOrEqual(
+        WCAG_NON_TEXT,
+      );
+    });
+  }
+
+  it("--sidebar-ring on --sidebar (light) reaches 3:1", () => {
+    expect(ratioOf(lightCss, "sidebar-ring", "sidebar")).toBeGreaterThanOrEqual(
+      WCAG_NON_TEXT,
+    );
+  });
+
+  it("--ring on --background (dark) reaches 3:1", () => {
+    expect(ratioOf(darkCss, "ring", "background")).toBeGreaterThanOrEqual(
+      WCAG_NON_TEXT,
+    );
+  });
+
+  it("BITE PROOF — slate-400, the value --ring held before this was measured, is below 3:1", () => {
+    expect(contrastRatio("#94a3b8", "#f8fafc")).toBeLessThan(WCAG_NON_TEXT);
   });
 });

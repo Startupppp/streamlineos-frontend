@@ -10,6 +10,8 @@ import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 interface WatcherListProps {
@@ -20,7 +22,13 @@ interface WatcherListProps {
 export function WatcherList({ projectId, ticketId }: WatcherListProps) {
   const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } = useAnimatedIcon();
   const { data: session } = useSession();
-  const { data: watchers = [], isLoading } = useWatchers(projectId, ticketId);
+  const {
+    data: watchers = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWatchers(projectId, ticketId);
   const toggleWatch = useToggleWatch(projectId);
   const addWatcher = useAddWatcher(projectId);
 
@@ -49,6 +57,17 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
     );
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load watchers"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -74,6 +93,12 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
           )}
         </Button>
       </div>
+
+      {watchers.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          No one is watching this ticket yet.
+        </p>
+      ) : null}
 
       {watchers.length > 0 && (
         <div className="flex flex-wrap gap-1">

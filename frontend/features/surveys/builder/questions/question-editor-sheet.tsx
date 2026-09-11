@@ -25,16 +25,16 @@ import {
   useCreateQuestion,
   usePatchQuestion,
   type ChoiceInput,
-  type SurveyBuilderQuestion,
-  type SurveyBuilderSection,
+  type SurveyBuilderViewQuestion,
+  type SurveyBuilderViewSection,
   type SurveyBuilderLogicRule,
 } from "@/hooks/api/surveys/builder";
 
 interface QuestionEditorSheetProps {
   surveyId: number;
   sectionId: number | null;
-  question: SurveyBuilderQuestion | null;
-  sections: SurveyBuilderSection[];
+  question: SurveyBuilderViewQuestion | null;
+  sections: SurveyBuilderViewSection[];
   logicRules: SurveyBuilderLogicRule[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,6 +74,11 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
         })) ?? [],
       );
     }
+  }
+
+  function handleTypeChange(v: string): void {
+    const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);
+    if (next) setType(next);
   }
 
   const meta = QUESTION_TYPE_META[type];
@@ -125,7 +130,10 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
         <SheetBody className="space-y-4 px-4 py-4">
           <div className="space-y-1.5">
             <Label>Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as SurveyQuestionType)}>
+            <Select
+              value={type}
+              onValueChange={handleTypeChange}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {QUESTION_TYPE_LIST.map((t) => (

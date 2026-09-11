@@ -35,6 +35,8 @@ import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const SYSTEM_ACTIONS = ["grant", "revoke", "review"] as const;
+
 const ALPHANUMERIC_RE = /[a-zA-Z0-9]/;
 
 const schema = z.object({
@@ -64,13 +66,18 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
   const create = useCreateProvisioningTemplate();
   const [systems, setSystems] = useState<SystemEntry[]>([]);
   const [newSystem, setNewSystem] = useState("");
-  const [newAction, setNewAction] = useState<"grant" | "revoke" | "review">("grant");
+  const [newAction, setNewAction] = useState<(typeof SYSTEM_ACTIONS)[number]>("grant");
   const [systemsError, setSystemsError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", triggeredBy: "joiner" },
   });
+
+  function handleNewActionChange(v: string) {
+    const next = SYSTEM_ACTIONS.find((candidate) => candidate === v);
+    if (next) setNewAction(next);
+  }
 
   function addSystem() {
     const trimmed = newSystem.trim();
@@ -158,7 +165,10 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   className="flex-1"
                   maxLength={200}
                 />
-                <Select value={newAction} onValueChange={(v) => setNewAction(v as typeof newAction)}>
+                <Select
+                  value={newAction}
+                  onValueChange={handleNewActionChange}
+                >
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="grant">Grant</SelectItem>

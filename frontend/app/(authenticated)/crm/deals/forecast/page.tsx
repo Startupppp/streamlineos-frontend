@@ -18,7 +18,8 @@ import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary"
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
 import { DealCloseDateList } from "@/features/crm/deals/deal-close-date-list";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 function ForecastSkeleton() {
   return (

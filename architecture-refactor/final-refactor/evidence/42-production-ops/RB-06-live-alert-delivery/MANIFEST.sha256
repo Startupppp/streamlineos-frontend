@@ -1,0 +1,46 @@
+# RB-06 evidence manifest
+# generated 2026-09-03T16:31:25Z
+# host Taruns-MBP.lan  node v25.9.0  operator: automated agent (34-alerts), unattended
+# backend repo /Users/tarunchintakunta/Personal/streamline/streamlineos-backend  branch release/code-10-10-v2
+# backend SHA observed during the run: 2f37e1bb035006e5c03680497298ad62031e79d6 -> 45f8a2e99494483526e357e27f18c76961ebf266
+#   (shared worktree; other agents committed while this ran — see the diff check at the foot)
+# frontend repo /Users/tarunchintakunta/Personal/streamline/streamlineos-frontend  branch release/code-10-10-v2
+#
+# TERMINAL VERDICT: PRD-C174 NOT MET. check:alert-ack exits 1 (UNACKNOWLEDGED).
+#   No human acknowledged a nonce in a real alert channel. See README.md.
+#
+# Exit codes recorded in this bundle:
+#   16 detector self-tests ............................. exit 0  (all)
+#   check:alert-system ................................. exit 0  allPassed:true, checkedScripts:14
+#   3 parity jest suites, 46 assertions ................ exit 0  (all)
+#   7 DB detectors vs scratch_head_1010 ................ exit 0  (all clear; empty tables)
+#   alert-dead-outbox / alert-queue-age vs seeded rows .. exit 1  (fired, as intended)
+#   alert-dispatch (deliver / suppress / test-event) .... exit 0  (all)
+#   check:gate-wiring + self-test ...................... exit 0  100 gates, 28 self-tests
+#   drill-alert-system non-interactive ................. exit 3  delivered, ACK not confirmed
+#   drill-alert-system at a closed port ................ exit 1  ECONNREFUSED, no false success
+#   check:alert-ack, no webhook ........................ exit 2  the original blocker
+#   check:alert-ack, after the drill ................... exit 1  UNACKNOWLEDGED  <-- final state
+#
+# sha256:
+32a83f58308dc988dff2d40c7a8cb98ca630c58a6a008f1210651836a9231586  ./README.md
+b66a298343d898c479c09f670b80a9dc35cb608382ba75be11d6b0885c2f282d  ./operator-attestation-UNSIGNED.md
+30ee743aac877797be68185ac90e27a96097bb5f476d4b3f64ca89c8022f92cc  ./raw/01-self-tests.txt
+74bdcfda64b97ad9e26f0756367a0c8fcbb0bede61a78f84521ffeec9f84ee5e  ./raw/02-check-alert-system.txt
+b4a05d942de8d5389a3d59ad9c248f2b51ce7d06149caf50c5f991165b6fed17  ./raw/03-gate-coverage-gap.txt
+69c5bbcd60dc30a3f5191136617f57182b098de3f6308b761227c8ec485124ad  ./raw/04-detectors-vs-local-db.txt
+247c2788268615c6025f15b3cfea38b4fb813d59cd4c7807360407805a033dc3  ./raw/05-real-row-fires-and-dispatches.txt
+353dbde1ac7534bcafbec677869ab2751ef4156be0eb9b3360fe7fbd50318fcb  ./raw/06-webhook-receiver.jsonl
+508d9bcdd9dee54d90b2efbc36c7701ac6f3bc6c9d32bb90665417163cd58b3b  ./raw/07-check-alert-ack-exit-matrix.txt
+ca80bd7473a91f533921aa90b709769c3a52d0e9c055d60980a1e9123f5cc2fc  ./raw/08-drill-alert-ack-state.json
+c06b97830d1e843415a928854172ad7f84fa035432ef05c834e4b52c16b7e0ae  ./raw/09-GATE-PROBE-synthetic-NOT-A-HUMAN-ACK.json
+ee62593d991a6ebd1bbd8e0c31492b56fac709857f76799cff9148e746e984a7  ./raw/10-GATE-PROBE-synthetic-STALE-NOT-A-HUMAN-ACK.json
+dcf4d8e4aa1afe2a6eff931a60c03e92d7ff58f492e6e11918057e6ab9873202  ./raw/11-parity-specs.txt
+2641d6240a72455e9da3a312f70eccaa2c62f858d0c1b60a00bc761c86198daf  ./raw/12-log-backed-detectors-no-stream.txt
+aaaf1222d3953717e67e743e8786ed06866a065bfba5086b99697c51da21f905  ./raw/13-coverage-of-the-alert-gates.txt
+514dda87272fc9157d83fd90f1ac0b15abab29755d2d9b5f2dc3a171b3610bc3  ./raw/14-vacuity-defect-tenant-ctx-errors.txt
+b425153cbe43e06083dc22265b6cca798d06ba100a9aff8c0e66b57ed6ea5040  ./raw/15-gate-wiring-and-routing-key.txt
+
+# Did any alert code change between the first and last SHA of this run?
+$ git diff --stat 2f37e1bb..45f8a2e99494483526e357e27f18c76961ebf266 -- 'src/scripts/alert-*' 'src/scripts/check-alert-*' '.github/workflows/alerts.yml' '.github/workflows/ci.yml'
+(empty = no alert code changed during the run; every result is reproducible at either SHA)

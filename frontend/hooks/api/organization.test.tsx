@@ -5,6 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { useDeleteOrg } from "./organization";
 import { useBulkDeleteLeads } from "./leads";
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useCan: jest.fn().mockReturnValue(true),
+  useModuleEnabled: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     delete: jest.fn(),
@@ -34,9 +40,12 @@ describe("organization mutations", () => {
       await result.current.mutateAsync({ confirmation: "Acme" });
     });
 
-    expect(mockedDelete).toHaveBeenCalledWith("/organization", {
-      confirmation: "Acme",
-    });
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/organization",
+      { confirmation: "Acme" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("sends bulk lead deletion input as the top-level request body", async () => {
@@ -47,6 +56,11 @@ describe("organization mutations", () => {
       await result.current.mutateAsync(input);
     });
 
-    expect(mockedDelete).toHaveBeenCalledWith("/leads/bulk", input);
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/leads/bulk",
+      input,
+      undefined,
+      expect.any(Function),
+    );
   });
 });

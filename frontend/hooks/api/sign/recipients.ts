@@ -1,9 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignAuthMethod, SignRecipient, SignRecipientType } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CreateSignRecipientInput {
   roleName: string;
@@ -16,24 +18,32 @@ export interface CreateSignRecipientInput {
   accessCode?: string;
 }
 
+const signRecipientMutationContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signRecipientMutationContract),
+);
+
+const signSuccessContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signSuccessContract),
+);
+
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, envelopeId: number) {
-  qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(envelopeId) });
+  qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
 }
 
 export function useAddSignRecipient(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signRecipients", "add", envelopeId],
-    mutationFn: (input: CreateSignRecipientInput) => apiClient.post<SignRecipient>(`/sign/envelopes/${envelopeId}/recipients`, input),
+    mutationFn: (input: CreateSignRecipientInput) => apiClient.post<SignRecipient>(`/sign/envelopes/${envelopeId}/recipients`, input, undefined, signRecipientMutationContract),
     onSuccess: () => invalidateEnvelope(qc, envelopeId),
   });
 }
 
 export function useDeleteSignRecipient(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signRecipients", "delete", envelopeId],
-    mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/recipients/${id}`),
+    mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/recipients/${id}`, undefined, undefined, signSuccessContract),
     onSuccess: () => invalidateEnvelope(qc, envelopeId),
   });
 }

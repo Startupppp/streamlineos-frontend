@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useMemo, memo, useCallback } from "react";
+import { useState, useMemo, memo, useCallback, type ComponentType } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import {
@@ -19,7 +19,7 @@ import { WorkloadMemberRow } from "./workload-member-row";
 import type { FilterState, StatFilter } from "./workload-types";
 import { hasActiveWorkloadFilters } from "./workload-types";
 import Link from "next/link";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkloadMember {
@@ -80,12 +80,20 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
   }
 }
 
-const STATS = [
-  { id: "all" as StatFilter, label: "Total Tickets", icon: TrendingUp, bg: "bg-primary/10", text: "text-primary" },
-  { id: "assigned" as StatFilter, label: "Assigned", icon: CheckCircle2, bg: "bg-status-success-surface", text: "text-status-success-ink" },
-  { id: "unassigned" as StatFilter, label: "Unassigned", icon: Users, bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
-  { id: "over-capacity" as StatFilter, label: "Over Capacity", icon: AlertTriangle, bg: "bg-status-danger-surface", text: "text-status-danger-ink" },
-] as const;
+interface WorkloadStat {
+  id: StatFilter;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  bg: string;
+  text: string;
+}
+
+const STATS: readonly WorkloadStat[] = [
+  { id: "all", label: "Total Tickets", icon: TrendingUp, bg: "bg-primary/10", text: "text-primary" },
+  { id: "assigned", label: "Assigned", icon: CheckCircle2, bg: "bg-status-success-surface", text: "text-status-success-ink" },
+  { id: "unassigned", label: "Unassigned", icon: Users, bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
+  { id: "over-capacity", label: "Over Capacity", icon: AlertTriangle, bg: "bg-status-danger-surface", text: "text-status-danger-ink" },
+];
 
 export const WorkloadView = memo(function WorkloadView({
   tickets,
@@ -328,6 +336,7 @@ export const WorkloadView = memo(function WorkloadView({
                           <span
                             onMouseDown={stopEvent}
                             onClick={stopEvent}
+                            onKeyDown={stopEvent}
                             className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity"
                           >
                             <InlineAssignee

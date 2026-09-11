@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollBankPayout } from "@/hooks/api/payroll/reports";
@@ -115,7 +117,8 @@ function BatchCard({ batch }: { batch: BankPayoutBatch }) {
 }
 
 export function ReportBankPayout({ month }: ReportBankPayoutProps) {
-  const { data, isLoading } = usePayrollBankPayout(month);
+  const { data, isLoading, isError, error, refetch } = usePayrollBankPayout(month);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const batches = useMemo(() => data?.batches ?? [], [data]);
 
@@ -126,6 +129,17 @@ export function ReportBankPayout({ month }: ReportBankPayoutProps) {
           <Skeleton key={i} className="h-40 rounded-xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load bank payout batches"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

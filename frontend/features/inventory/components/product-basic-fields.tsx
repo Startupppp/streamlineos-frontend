@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
-import { CategorySelect } from "@/features/inventory/components/product-field-selects";
+import { CategorySelect } from "@/features/inventory/components/category-select";
 import { cn } from "@/lib/utils";
 import {
   NAME_MAX,

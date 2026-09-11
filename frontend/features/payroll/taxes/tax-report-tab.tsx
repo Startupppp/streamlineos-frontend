@@ -13,7 +13,7 @@ import { EmptyReportIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll/tax-admin";
 import { useCan } from "@/hooks/api/access";
-import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
+import type { TaxDeclarationListItem } from "@/hooks/api/payroll/tax-schema";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
 function getCurrentFY(): string {
@@ -34,8 +34,8 @@ function getFYOptions(): string[] {
   ];
 }
 
-function calcTotal(d: TaxDeclarationAdmin): number {
-  return d.hra + d.lta + d.section80c + d.section80d + d.section80g + d.homeLoanInterest;
+function calcTotal(d: TaxDeclarationListItem): number {
+  return parseFloat(d.hra) + parseFloat(d.lta) + parseFloat(d.section80c) + parseFloat(d.section80d) + parseFloat(d.section80g) + parseFloat(d.homeLoanInterest);
 }
 
 export function TaxReportTab() {
@@ -44,7 +44,7 @@ export function TaxReportTab() {
   const exportMutation = useExportTaxReport();
   const { data, isLoading } = useTaxDeclarationsAdmin({ financialYear: fy });
 
-  const declarations = data ?? [];
+  const declarations = data?.data ?? [];
   const submitted = declarations.filter((d) => d.status === "SUBMITTED").length;
   const verified = declarations.filter((d) => d.status === "VERIFIED").length;
   const pending = declarations.filter((d) => d.status === "DRAFT").length;
@@ -61,14 +61,14 @@ export function TaxReportTab() {
     );
   }
 
-  const columns: DataTableColumn<TaxDeclarationAdmin>[] = [
+  const columns: DataTableColumn<TaxDeclarationListItem>[] = [
     {
       key: "employee",
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-dense font-medium">{row.userName}</span>
-          <span className="text-micro text-muted-foreground">{row.userEmail}</span>
+          <span className="text-dense font-medium">{row.userName ?? ""}</span>
+          <span className="text-micro text-muted-foreground">{row.userEmail ?? ""}</span>
         </div>
       ),
     },

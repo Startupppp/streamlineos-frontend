@@ -38,7 +38,7 @@ import type {
   KbReviewStatus,
   KbReviewType,
 } from "@/hooks/api/kb/page-reviews";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
 import {
   KbClipboardCheckIcon,
@@ -49,8 +49,19 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 
-type StatusFilter = "all" | KbReviewStatus;
-type TypeFilter = "all" | KbReviewType;
+const STATUS_FILTERS = [
+  "all",
+  "pending",
+  "approved",
+  "rejected",
+  "expired",
+] as const satisfies readonly ("all" | KbReviewStatus)[];
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+const TYPE_FILTERS = ["all", "approval", "freshness"] as const satisfies readonly (
+  | "all"
+  | KbReviewType
+)[];
+type TypeFilter = (typeof TYPE_FILTERS)[number];
 
 function isOverdue(dueAt: string | null, status: KbReviewStatus): boolean {
   if (!dueAt || status !== "pending") return false;
@@ -249,11 +260,13 @@ export default function ReviewsPage() {
   const { data: reviews = [], isLoading, isError } = useKbPageReviews(params);
 
   const handleStatusChange = useCallback((val: string) => {
-    setStatusFilter(val as StatusFilter);
+    const next = STATUS_FILTERS.find((candidate) => candidate === val);
+    if (next) setStatusFilter(next);
   }, []);
 
   const handleTypeChange = useCallback((val: string) => {
-    setTypeFilter(val as TypeFilter);
+    const next = TYPE_FILTERS.find((candidate) => candidate === val);
+    if (next) setTypeFilter(next);
   }, []);
 
   const handleCloseApprove = useCallback(() => setApproveTarget(null), []);

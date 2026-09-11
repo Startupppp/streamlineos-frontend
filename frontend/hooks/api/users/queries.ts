@@ -4,7 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
+import { userStatsContract } from "@/hooks/api/users/users-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+const usersResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.usersResponseContract),
+);
+const userDetailResponseContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userDetailResponseContract),
+);
+const userSessionsContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userSessionsContract),
+);
+const userPreferencesContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then((m) => m.userPreferencesContract),
+);
 import type {
   User,
   UserListParams,
@@ -20,10 +35,10 @@ export const useUsers = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
-    queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryKey: usersAndCommerceQueryKeys.users.list(params),
+    queryFn: ({ signal }) =>
       apiClient.get<UsersResponse>("/v2/users", {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),
@@ -34,7 +49,7 @@ export const useUsers = (
         ...(params?.managerUserId ? { managerUserId: params.managerUserId } : {}),
         ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
         ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
-      }),
+      }, signal, usersResponseContract),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -47,8 +62,8 @@ export const useUser = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<User, Error>({
-    queryKey: queryKeys.users.detail(userId),
-    queryFn: () => apiClient.get<User>(`/v2/users/${userId}`),
+    queryKey: usersAndCommerceQueryKeys.users.detail(userId),
+    queryFn: ({ signal }) => apiClient.get<User>(`/v2/users/${userId}`, undefined, signal, userDetailResponseContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -61,8 +76,8 @@ export const useUserSessions = (
 ) => {
   const canManage = useCan("settings:organization:manage");
   return useQuery<UserSession[], Error>({
-    queryKey: queryKeys.users.sessions(userId),
-    queryFn: () => apiClient.get<UserSession[]>(`/users/${userId}/sessions`),
+    queryKey: usersAndCommerceQueryKeys.users.sessions(userId),
+    queryFn: ({ signal }) => apiClient.get<UserSession[]>(`/users/${userId}/sessions`, undefined, signal, userSessionsContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -75,8 +90,8 @@ export const useUserPreferences = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserPreferences, Error>({
-    queryKey: queryKeys.users.preferences(userId),
-    queryFn: () => apiClient.get<UserPreferences>(`/users/${userId}/preferences`),
+    queryKey: usersAndCommerceQueryKeys.users.preferences(userId),
+    queryFn: ({ signal }) => apiClient.get<UserPreferences>(`/users/${userId}/preferences`, undefined, signal, userPreferencesContract),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -88,8 +103,8 @@ export const useUserStats = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
-    queryKey: queryKeys.users.stats(),
-    queryFn: () => apiClient.get<UserStats>("/users/stats"),
+    queryKey: usersAndCommerceQueryKeys.users.stats(),
+    queryFn: ({ signal }) => apiClient.get("/users/stats", undefined, signal, userStatsContract),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

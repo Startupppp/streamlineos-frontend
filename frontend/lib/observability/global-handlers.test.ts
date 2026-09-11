@@ -71,4 +71,36 @@ describe("installGlobalErrorHandlers", () => {
     second();
     expect(reports).toHaveLength(1);
   });
+
+  it("does not report a ResizeObserver loop notice — it is a browser scheduler signal, not an application error", () => {
+    const event = new Event("error", { cancelable: true }) as Event & {
+      message?: string;
+      error?: unknown;
+    };
+    event.message = "ResizeObserver loop completed with undelivered notifications";
+    const swallow = (e: Event) => e.preventDefault();
+    window.addEventListener("error", swallow);
+    try {
+      window.dispatchEvent(event);
+    } finally {
+      window.removeEventListener("error", swallow);
+    }
+    expect(reports).toHaveLength(0);
+  });
+
+  it("does not report the older ResizeObserver loop limit exceeded variant", () => {
+    const event = new Event("error", { cancelable: true }) as Event & {
+      message?: string;
+      error?: unknown;
+    };
+    event.message = "ResizeObserver loop limit exceeded";
+    const swallow = (e: Event) => e.preventDefault();
+    window.addEventListener("error", swallow);
+    try {
+      window.dispatchEvent(event);
+    } finally {
+      window.removeEventListener("error", swallow);
+    }
+    expect(reports).toHaveLength(0);
+  });
 });

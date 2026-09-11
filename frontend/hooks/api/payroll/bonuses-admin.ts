@@ -1,10 +1,27 @@
 "use client";
+import type { Bonus, BonusCreated, IncentiveItem, IncentiveList } from "@/hooks/api/payroll/bonuses-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+export type { Bonus, IncentiveItem as Incentive };
+
+const bonusCreatedC = lazyContract(() =>
+  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.bonusCreatedContract),
+);
+const bonusListC = lazyContract(() =>
+  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.bonusListContract),
+);
+const incentiveListC = lazyContract(() =>
+  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.incentiveListContract),
+);
+const bonusSuccessC = lazyContract(() =>
+  import("@/hooks/api/payroll/bonuses-schema").then((m) => m.successContract),
+);
 
 export type BonusType =
   | "PERFORMANCE"
@@ -16,46 +33,6 @@ export type BonusType =
   | "RETENTION"
   | "COMMISSION"
   | "ADJUSTMENT";
-export type IncentiveStatus = "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
-
-export interface Bonus {
-  id: number;
-  orgId: string;
-  userId: string;
-  type: BonusType;
-  amount: string;
-  reason: string | null;
-  month: string | null;
-  taxable: boolean;
-  status: string;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  createdAt: string;
-  userName: string | null;
-  userEmail: string | null;
-}
-
-export interface Incentive {
-  id: number;
-  orgId: string;
-  salesRepId: string;
-  clientAccountId: string | null;
-  investmentAmount: string | null;
-  incentiveRate: string | null;
-  calculatedAmount: string | null;
-  approvedAmount: string | null;
-  status: IncentiveStatus;
-  notes: string | null;
-  createdAt: string;
-  salesRep: { id: string; name: string | null; image: string | null };
-}
-
-interface IncentivesResponse {
-  incentives: Incentive[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
 
 interface CreateBonusBody {
   userId: string;
@@ -71,16 +48,16 @@ export function useCreateBonus() {
   return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "create"],
     mutationFn: (body: CreateBonusBody) =>
-      apiClient.post<Bonus>("/hr/bonuses", body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.bonuses() }),
+      apiClient.post<BonusCreated>("/hr/bonuses", body, undefined, bonusCreatedC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bonuses() }),
   });
 }
 
 export function useBonuses() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.payroll.bonuses(),
-    queryFn: () => apiClient.get<Bonus[]>("/hr/bonuses"),
+    queryKey: payrollQueryKeys.payroll.bonuses(),
+    queryFn: ({ signal }) => apiClient.get("/hr/bonuses", undefined, signal, bonusListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -91,8 +68,8 @@ export function useUpdateBonus() {
   return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "update"],
     mutationFn: ({ id, status }: { id: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
-      apiClient.patch<Bonus>(`/hr/bonuses/${id}`, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.bonuses() }),
+      apiClient.patch<BonusCreated>(`/hr/bonuses/${id}`, { status }, undefined, bonusCreatedC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bonuses() }),
   });
 }
 
@@ -104,10 +81,10 @@ export function useIncentives(params?: { status?: string; page?: number; limit?:
   const hasParams = Object.keys(queryParams).length > 0;
   const canView = useCan("hr:payroll:view");
 
-  return useQuery({
-    queryKey: queryKeys.payroll.incentives(hasParams ? queryParams : undefined),
-    queryFn: () =>
-      apiClient.get<IncentivesResponse>("/hr/incentives", hasParams ? queryParams : undefined),
+  return useQuery<IncentiveList>({
+    queryKey: payrollQueryKeys.payroll.incentives(hasParams ? queryParams : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<IncentiveList>("/hr/incentives", hasParams ? queryParams : undefined, signal, incentiveListC),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -118,8 +95,8 @@ export function useApproveIncentive() {
   return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "approve"],
     mutationFn: ({ id, approvedAmount, notes }: { id: number; approvedAmount: string; notes?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, { approvedAmount, notes }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.incentivesAll }),
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, { approvedAmount, notes }, undefined, bonusSuccessC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.incentivesAll }),
   });
 }
 
@@ -128,7 +105,7 @@ export function useRejectIncentive() {
   return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "reject"],
     mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.incentivesAll }),
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`, {}, undefined, bonusSuccessC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.incentivesAll }),
   });
 }

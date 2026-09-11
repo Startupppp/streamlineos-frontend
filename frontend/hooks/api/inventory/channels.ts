@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { SyncStatus } from "@/features/inventory/lib";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
 type ChannelStatus = "ACTIVE" | "PAUSED";
@@ -17,8 +18,9 @@ export interface Channel {
   name: string;
   channelType: ChannelType;
   status: ChannelStatus;
-  safetyBuffer: number | null;
-  publishThreshold: number | null;
+  /** `decimal` columns, so decimal strings on the wire; the update schema takes strings too. */
+  safetyBuffer: string | null;
+  publishThreshold: string | null;
   warehouseIds: number[];
   lastSyncStatus: SyncStatus | null;
   lastSyncAt: string | null;
@@ -86,7 +88,7 @@ export function useChannels() {
   const canView = useCan("inventory:channels:manage");
   return useQuery<Channel[], Error>({
     queryKey: queryKeys.inventory.channels(),
-    queryFn: () => apiClient.get<Channel[]>("/inventory/channels"),
+    queryFn: ({ signal }) => apiClient.get<Channel[]>("/inventory/channels", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -98,10 +100,10 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
     queryKey: statusFilter
       ? [...queryKeys.inventory.channelPublications(channelId), statusFilter]
       : queryKeys.inventory.channelPublications(channelId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Publication[]>(
         `/inventory/channels/${channelId}/publications`,
-        statusFilter ? { status: statusFilter } : undefined,
+        statusFilter ? { status: statusFilter } : undefined, signal,
       ),
     enabled: canView && channelId > 0,
     staleTime: 30_000,
@@ -110,7 +112,7 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
 
 export function useCreateChannel() {
   const qc = useQueryClient();
-  return useIdempotentMutation<Channel, Error, CreateChannelInput>({
+  return useAuthorizedIdempotentMutation<Channel, Error, CreateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "create"],
     mutationFn: (data, idempotencyKey) => apiClient.post<Channel>("/inventory/channels", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -121,7 +123,7 @@ export function useCreateChannel() {
 
 export function useUpdateChannel() {
   const qc = useQueryClient();
-  return useMutation<Channel, Error, UpdateChannelInput>({
+  return useAuthorizedMutation<Channel, Error, UpdateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "update"],
     mutationFn: ({ channelId, ...data }) =>
       apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data),
@@ -134,7 +136,7 @@ export function useUpdateChannel() {
 
 export function useSyncChannelStock() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "sync-stock"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/sync-stock`, {}),
@@ -147,7 +149,7 @@ export function useSyncChannelStock() {
 
 export function useRetryChannelPublications() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "publications", "retry"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/publications/retry`, {}),
@@ -161,7 +163,7 @@ export function useThreePlConnections() {
   const canView = useCan("inventory:3pl:manage");
   return useQuery<ThreePlConnection[], Error>({
     queryKey: queryKeys.inventory.threePlConnections(),
-    queryFn: () => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections"),
+    queryFn: ({ signal }) => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -169,7 +171,7 @@ export function useThreePlConnections() {
 
 export function useCreateThreePlConnection() {
   const qc = useQueryClient();
-  return useIdempotentMutation<ThreePlConnection, Error, CreateThreePlInput>({
+  return useAuthorizedIdempotentMutation<ThreePlConnection, Error, CreateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "create"],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -181,7 +183,7 @@ export function useCreateThreePlConnection() {
 
 export function useUpdateThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<ThreePlConnection, Error, UpdateThreePlInput>({
+  return useAuthorizedMutation<ThreePlConnection, Error, UpdateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "update"],
     mutationFn: ({ connectionId, ...data }) =>
       apiClient.patch<ThreePlConnection>(`/inventory/3pl/connections/${connectionId}`, data),
@@ -193,7 +195,7 @@ export function useUpdateThreePlConnection() {
 
 export function useSyncThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "sync"],
     mutationFn: (connectionId) =>
       apiClient.post<unknown>(`/inventory/3pl/connections/${connectionId}/sync`, {}),
@@ -251,14 +253,14 @@ export function useChannelSnapshotDiffs(
       channelId ?? 0,
       filters as Record<string, unknown>,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ChannelSnapshotDiffsResult>(
         `/inventory/channels/${channelId ?? 0}/snapshot-differences`,
         {
           ...(filters?.status ? { status: filters.status } : {}),
           ...(filters?.page ? { page: String(filters.page) } : {}),
           ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-        },
+        }, signal,
       ),
     staleTime: 30_000,
     enabled: canManage && channelId !== null,
@@ -267,11 +269,13 @@ export function useChannelSnapshotDiffs(
 
 function useResolveSnapshotDiff(action: "accept" | "dismiss") {
   const qc = useQueryClient();
-  return useIdempotentMutation<
+  // Accepting posts a stock movement, so it is gated on the ledger key rather
+  // than the channel key; see the note above `SnapshotDiffStatus`.
+  return useAuthorizedIdempotentMutation<
     ChannelSnapshotDiff,
     Error,
     { channelId: number; diffId: number; note: string }
-  >({
+  >(action === "accept" ? "inventory:stock:adjust" : "inventory:channels:manage", {
     mutationKey: ["inventory", "channels", "snapshot-difference", action],
     mutationFn: ({ diffId, note }, idempotencyKey) =>
       apiClient.post<ChannelSnapshotDiff>(

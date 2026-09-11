@@ -29,7 +29,8 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, Gated } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useCrmMetadata,

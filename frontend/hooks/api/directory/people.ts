@@ -1,15 +1,25 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  organizationPersonContract,
+  peoplePageContract,
+  type OrganizationPerson,
+  type PeoplePage,
+} from "@/hooks/api/directory/people-schema";
 import type {
   CreatePersonInput,
-  OrganizationPerson,
-  PeoplePage,
   UpdatePersonInput,
 } from "@/types/directory/people";
+import { lazyContract } from "@/lib/api-envelope";
+
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface UsePeopleParams {
   cursor?: string;
@@ -33,9 +43,14 @@ export function usePerson(
 ) {
   const canView = useCan("directory:people:view");
   return useQuery({
-    queryKey: queryKeys.directory.person(organizationPersonId),
-    queryFn: () =>
-      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`),
+    queryKey: directoryAndOwnershipQueryKeys.directory.person(organizationPersonId),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/directory/people/${organizationPersonId}`,
+        undefined,
+        signal,
+        organizationPersonContract,
+      ),
     staleTime: 60_000,
     enabled: canView && !!organizationPersonId && (options?.enabled ?? true),
   });
@@ -48,14 +63,19 @@ export function usePeople(params: UsePeopleParams = {}) {
   if (search) queryParams.search = search;
 
   return useQuery({
-    queryKey: queryKeys.directory.people(queryParams),
-    queryFn: () => {
+    queryKey: directoryAndOwnershipQueryKeys.directory.people(queryParams),
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
       });
       if (cursor) searchParams.set("cursor", cursor);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PeoplePage>(`/directory/people?${searchParams.toString()}`);
+      return apiClient.get(
+        `/directory/people?${searchParams.toString()}`,
+        undefined,
+        signal,
+        peoplePageContract,
+      );
     },
     staleTime: 60_000,
     enabled: canView,
@@ -64,39 +84,41 @@ export function usePeople(params: UsePeopleParams = {}) {
 
 export function useCreatePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:create", {
     mutationKey: ["directory", "people", "create"],
     mutationFn: (input: CreatePersonInput) =>
-      apiClient.post<OrganizationPerson>("/directory/people", input),
+      apiClient.post("/directory/people", input, undefined, organizationPersonContract),
     onSuccess: (created) => {
       qc.setQueryData(
-        queryKeys.directory.person(created.organizationPersonId),
+        directoryAndOwnershipQueryKeys.directory.person(created.organizationPersonId),
         created,
       );
-      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
     },
   });
 }
 
 export function useUpdatePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:update", {
     mutationKey: ["directory", "people", "update"],
     mutationFn: ({
       organizationPersonId,
       ...input
     }: UpdatePersonInput & { organizationPersonId: string }) =>
-      apiClient.patch<OrganizationPerson>(
+      apiClient.patch(
         `/directory/people/${organizationPersonId}`,
         input,
+        undefined,
+        organizationPersonContract,
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<OrganizationPerson>(
-        queryKeys.directory.person(variables.organizationPersonId),
+        directoryAndOwnershipQueryKeys.directory.person(variables.organizationPersonId),
         (old) => (old ? { ...old, ...updated } : updated),
       );
       qc.setQueriesData(
-        { queryKey: queryKeys.directory.peopleAll },
+        { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },
         (old: unknown) => {
           if (!isPeoplePage(old)) return old;
           if (
@@ -121,13 +143,18 @@ export function useUpdatePerson() {
 
 export function useDeletePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:delete", {
     mutationKey: ["directory", "people", "delete"],
     mutationFn: (organizationPersonId: string) =>
-      apiClient.delete(`/directory/people/${organizationPersonId}`),
+      apiClient.delete<void>(
+        `/directory/people/${organizationPersonId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
     onSuccess: (_, organizationPersonId) => {
       qc.setQueriesData(
-        { queryKey: queryKeys.directory.peopleAll },
+        { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },
         (old: unknown) => {
           if (!isPeoplePage(old)) return old;
           if (
@@ -145,10 +172,10 @@ export function useDeletePerson() {
         },
       );
       qc.removeQueries({
-        queryKey: queryKeys.directory.person(organizationPersonId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.person(organizationPersonId),
       });
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.peopleAll,
+        queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll,
         refetchType: "none",
       });
     },

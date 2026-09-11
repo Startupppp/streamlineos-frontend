@@ -30,23 +30,34 @@ import {
   hasActiveEmployeeFilters,
   employeeFiltersToUrlUpdates,
   DEFAULT_PAGE_SIZE,
+  type EmployeeStatusFilter,
 } from "@/features/hr/employees/employee-list-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-type ViewMode = "grid" | "list";
+const VIEW_MODES = ["grid", "list"] as const;
+type ViewMode = (typeof VIEW_MODES)[number];
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
+/**
+ * `useInfiniteHrEmployees` accumulates its pages, so the grid would mount one
+ * card per employee ever loaded. The list branch is bounded by `DataTable`'s own
+ * window; this bounds the grid to match, and "Load more employees" reveals the
+ * cards already in hand before asking the server for another page — one control,
+ * so nothing loaded is ever stranded behind a second one.
+ */
+const GRID_RENDER_PAGE_SIZE = 24;
+
 function buildEmployeeListColumns(
-  getDept: (emp: Employee) => string | null,
-): DataTableColumn<Employee>[] {
+  getDept: (emp: EmployeeListItem) => string | null,
+): DataTableColumn<EmployeeListItem>[] {
   return [
     {
       key: "employee",
@@ -145,7 +156,7 @@ export function EmployeesListPage() {
     [filters.q],
   );
   const [view, setView] = useState<ViewMode>(
-    (searchParams.get("view") as ViewMode) || "grid",
+    () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
   );
 
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -178,6 +189,25 @@ export function EmployeesListPage() {
     [employeePages],
   );
 
+  const [gridPagesShown, setGridPagesShown] = useState(1);
+  const gridVisibleCount = Math.min(
+    employees.length,
+    gridPagesShown * GRID_RENDER_PAGE_SIZE,
+  );
+  const hasUnrenderedEmployees = view === "grid" && gridVisibleCount < employees.length;
+  const gridEmployees = useMemo(
+    () => (view === "grid" ? employees.slice(0, gridVisibleCount) : employees),
+    [view, employees, gridVisibleCount],
+  );
+
+  const handleLoadMore = useCallback(() => {
+    if (hasUnrenderedEmployees) {
+      setGridPagesShown((p) => p + 1);
+      return;
+    }
+    void fetchNextPage();
+  }, [hasUnrenderedEmployees, fetchNextPage]);
+
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -188,6 +218,30 @@ export function EmployeesListPage() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, router, pathname],
+  );
+
+  const handleDepartmentFilterChange = useCallback(
+    (departmentId: string | undefined) => {
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { departmentId },
+          { size: PAGE_SIZE, status: "all" },
+        ),
+      );
+    },
+    [updateParams],
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (status: EmployeeStatusFilter) => {
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { status },
+          { size: PAGE_SIZE, status: "all" },
+        ),
+      );
+    },
+    [updateParams],
   );
 
   useEffect(() => {
@@ -214,7 +268,7 @@ export function EmployeesListPage() {
     });
   }, [updateParams, updateSearch]);
 
-  const getDept = (emp: Employee) => emp.department?.name ?? null;
+  const getDept = (emp: EmployeeListItem) => emp.department?.name ?? null;
 
   if (isLoading) {
     return (
@@ -281,22 +335,8 @@ export function EmployeesListPage() {
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
-          onDepartmentIdChange={(id) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { departmentId: id },
-                { size: PAGE_SIZE, status: "all" },
-              ),
-            )
-          }
-          onStatusChange={(s) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { status: s },
-                { size: PAGE_SIZE, status: "all" },
-              ),
-            )
-          }
+          onDepartmentIdChange={handleDepartmentFilterChange}
+          onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}
         />
       }
@@ -339,7 +379,7 @@ export function EmployeesListPage() {
                   isFetching && "opacity-70 transition-opacity",
                 )}
               >
-                {employees.map((emp) => (
+                {gridEmployees.map((emp) => (
                   <EmployeeCard key={emp.id} employee={emp} department={getDept(emp)} />
                 ))}
               </div>
@@ -348,7 +388,7 @@ export function EmployeesListPage() {
                 padded={false}
                 className="flex min-h-0 flex-col overflow-hidden md:h-full md:flex-1"
               >
-                <DataTable<Employee>
+                <DataTable<EmployeeListItem>
                   data={employees}
                   columns={buildEmployeeListColumns(getDept)}
                   getRowKey={(emp) => emp.id}
@@ -360,13 +400,13 @@ export function EmployeesListPage() {
           </div>
         </div>
 
-        {!isError && hasNextPage ? (
+        {!isError && (hasNextPage || hasUnrenderedEmployees) ? (
           <div className="flex shrink-0 justify-center rounded-xl border border-border/70 p-2">
             <Button
               variant="outline"
               size="sm"
               disabled={isFetchingNextPage}
-              onClick={() => void fetchNextPage()}
+              onClick={handleLoadMore}
             >
               {isFetchingNextPage ? "Loading..." : "Load more employees"}
             </Button>

@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,10 +52,51 @@ const DEFAULT_FORM: FormState = {
   note: "",
 };
 
+function isSuccessionReadiness(value: string): value is SuccessionReadiness {
+  return value === "ready_now" || value === "1_2_years" || value === "3_plus";
+}
+
 export function SuccessionTab() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function applyFieldEdit<K extends keyof FormState>(field: K, value: FormState[K]) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  }
+
+  function handleDialogOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) {
+      setForm(DEFAULT_FORM);
+      setFieldErrors({});
+    }
+  }
+
+  function handleRoleNameChange(event: ChangeEvent<HTMLInputElement>) {
+    applyFieldEdit("roleName", event.target.value);
+  }
+
+  function handleSuccessorChange(userId: string | null) {
+    applyFieldEdit("successorId", userId ?? "");
+  }
+
+  function handleIncumbentChange(userId: string | null) {
+    applyFieldEdit("incumbentId", userId ?? "");
+  }
+
+  function handleReadinessChange(value: string) {
+    if (isSuccessionReadiness(value)) setForm((current) => ({ ...current, readiness: value }));
+  }
+
+  function handleNoteChange(event: ChangeEvent<HTMLInputElement>) {
+    applyFieldEdit("note", event.target.value);
+  }
 
   const {
     data,
@@ -157,16 +198,17 @@ export function SuccessionTab() {
       ) : (
         <div className="space-y-2">
           {plans.map((plan) => {
-            const cfg = READINESS_CONFIG[plan.readiness];
+            const readiness = plan.readiness && isSuccessionReadiness(plan.readiness) ? plan.readiness : "ready_now";
+            const cfg = READINESS_CONFIG[readiness];
             return (
               <Card key={plan.id}>
                 <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <TruncatedText text={plan.roleName} className="font-medium text-sm" />
+                    <TruncatedText text={plan.positionTitle ?? "—"} className="font-medium text-sm" />
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Successor: {resolveMemberName(plan.successorId) ?? plan.successorId}
-                      {plan.incumbentId && (
-                        <> · Incumbent: {resolveMemberName(plan.incumbentId) ?? plan.incumbentId}</>
+                      Successor: {resolveMemberName(plan.successorUserId) ?? plan.successorUserId ?? "—"}
+                      {plan.incumbentUserId && (
+                        <> · Incumbent: {resolveMemberName(plan.incumbentUserId) ?? plan.incumbentUserId}</>
                       )}
                     </p>
                   </div>
@@ -202,13 +244,7 @@ export function SuccessionTab() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) {
-          setForm(DEFAULT_FORM);
-          setFieldErrors({});
-        }
-      }}>
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle>New Succession Plan</DialogTitle>
@@ -218,14 +254,7 @@ export function SuccessionTab() {
               <Label>Role / Position</Label>
               <Input
                 value={form.roleName}
-                onChange={(e) => {
-                  setForm((p) => ({ ...p, roleName: e.target.value }));
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.roleName;
-                    return next;
-                  });
-                }}
+                onChange={handleRoleNameChange}
                 placeholder="e.g. Head of Engineering"
               />
               {fieldErrors.roleName && <p className="text-xs text-destructive">{fieldErrors.roleName}</p>}
@@ -235,14 +264,7 @@ export function SuccessionTab() {
               <MemberPicker
                 mode="single"
                 value={form.successorId || undefined}
-                onChange={(id) => {
-                  setForm((p) => ({ ...p, successorId: id ?? "" }));
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.successorId;
-                    return next;
-                  });
-                }}
+                onChange={handleSuccessorChange}
                 placeholder="Select successor"
               />
               {fieldErrors.successorId && <p className="text-xs text-destructive">{fieldErrors.successorId}</p>}
@@ -252,14 +274,7 @@ export function SuccessionTab() {
               <MemberPicker
                 mode="single"
                 value={form.incumbentId || undefined}
-                onChange={(id) => {
-                  setForm((p) => ({ ...p, incumbentId: id ?? "" }));
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.incumbentId;
-                    return next;
-                  });
-                }}
+                onChange={handleIncumbentChange}
                 allowUnassigned
                 placeholder="Current holder"
               />
@@ -269,11 +284,7 @@ export function SuccessionTab() {
               <Label>Readiness</Label>
               <Select
                 value={form.readiness}
-                onValueChange={(v) => {
-                  if (v === "ready_now" || v === "1_2_years" || v === "3_plus") {
-                    setForm((p) => ({ ...p, readiness: v }));
-                  }
-                }}
+                onValueChange={handleReadinessChange}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -289,14 +300,7 @@ export function SuccessionTab() {
               <Label>Note</Label>
               <Input
                 value={form.note}
-                onChange={(e) => {
-                  setForm((p) => ({ ...p, note: e.target.value }));
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.note;
-                    return next;
-                  });
-                }}
+                onChange={handleNoteChange}
               />
               {fieldErrors.note && <p className="text-xs text-destructive">{fieldErrors.note}</p>}
             </div>

@@ -6,6 +6,7 @@ import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { huddleChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import type { HuddleParticipant } from "@/types/chat";
 import { useAblyConnection } from "./use-ably-connection";
 
@@ -30,8 +31,8 @@ export function useHuddleEvents({
   useEffect(() => {
     if (!orgId || sessionStatus !== "authenticated" || !isAblyConnected) return;
 
-    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
-    const userCh = ably.channels.get(`notifications:${orgId}:${currentUserId}`);
+    const ch = ably.channels.get(huddleChannelName(orgId, channelId));
+    const userCh = ably.channels.get(notificationsChannelName(orgId, currentUserId));
     let cancelled = false;
     const subscribedHuddle: Array<"huddle:user_joined" | "huddle:user_left"> = [];
     let kickedSubscribed = false;

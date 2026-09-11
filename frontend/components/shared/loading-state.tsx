@@ -1,5 +1,13 @@
+"use client";
+
+import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+
+export const PAUSED_LABEL = "Paused — waiting for a connection";
+export const PAUSED_MESSAGE =
+  "You are offline. This will load as soon as the connection returns.";
 
 interface LoadingStateProps {
   variant?: "table" | "cards" | "list" | "form" | "page";
@@ -99,17 +107,35 @@ function PageSkeleton() {
   );
 }
 
+/**
+ * TanStack pauses a query while the browser is offline: it neither resolves nor
+ * rejects, so an offline read renders this skeleton forever. Reading the
+ * connection here means every consumer says "paused" instead of "loading"
+ * without a single call site changing.
+ */
 export function LoadingState({
   variant = "table",
   className,
   rows,
 }: LoadingStateProps) {
+  const isOnline = useOnlineStatus();
   const resolvedRows =
     rows ??
     (variant === "cards" ? 9 : variant === "form" ? 8 : 12);
 
   return (
-    <div className={cn("p-4", className)} aria-label="Loading..." aria-busy="true">
+    <div
+      className={cn("p-4", className)}
+      role="status"
+      aria-label={isOnline ? "Loading..." : PAUSED_LABEL}
+      aria-busy={isOnline}
+    >
+      {!isOnline && (
+        <p className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+          <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {PAUSED_MESSAGE}
+        </p>
+      )}
       {variant === "table" && <TableSkeleton rows={resolvedRows} />}
       {variant === "cards" && <CardsSkeleton rows={resolvedRows} />}
       {variant === "list" && <ListSkeleton rows={resolvedRows} />}

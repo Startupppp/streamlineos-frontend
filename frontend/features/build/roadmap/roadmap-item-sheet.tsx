@@ -62,12 +62,12 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<RoadmapItemFormValues>({
+  const form = useForm<RoadmapItemFormValues, any, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
     defaultValues: {
       title: item?.title ?? "",
       description: item?.description ?? "",
-      status: item?.status ?? "planned",
+      status: (["planned", "in_progress", "completed", "cancelled"] as const).find((v) => v === item?.status) ?? "planned",
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
       isPublic: item?.isPublic ?? true,

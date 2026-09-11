@@ -2,9 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
+
+const teamSummaryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-team-schema").then((m) => m.teamSummaryResponseContract),
+);
 
 export interface TeamMemberWeekSummary {
   userId: string;
@@ -17,6 +22,12 @@ interface TeamWeekSummaryResponse {
   summaries: TeamMemberWeekSummary[];
 }
 
+type TeamWeekSummaryParams = {
+  userIds: string;
+  startDate: string;
+  endDate: string;
+};
+
 export function useTeamWeekSummary(
   userIds: string[],
   startDate: string,
@@ -24,11 +35,11 @@ export function useTeamWeekSummary(
   enabled = true,
 ) {
   const canView = useCan("timesheets:team:view");
-  const params = { userIds: userIds.join(","), startDate, endDate };
+  const params: TeamWeekSummaryParams = { userIds: userIds.join(","), startDate, endDate };
   return useQuery({
-    queryKey: queryKeys.timesheets.teamWeekSummary(params),
-    queryFn: () =>
-      apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.teamWeekSummary(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params, signal, teamSummaryC),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView && userIds.length > 0,

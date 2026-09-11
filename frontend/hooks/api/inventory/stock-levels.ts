@@ -262,7 +262,7 @@ export function useStockLevels(filters?: StockLevelFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StockLevelsResult, Error>({
     queryKey: queryKeys.inventory.stockLevels(filters),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawStockLevelsResponse>("/inventory/stock", {
         warehouseId: filters?.warehouseId,
         locationId: filters?.locationId,
@@ -275,7 +275,7 @@ export function useStockLevels(filters?: StockLevelFilters) {
         search: filters?.search,
         page: filters?.page,
         limit: filters?.limit,
-      });
+      }, signal);
       return {
         items: res.items.map(toStockLevelRow),
         page: res.page,
@@ -294,11 +294,11 @@ export function useStockAvailability(variantId: number, warehouseId?: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StockAvailability, Error>({
     queryKey: queryKeys.inventory.availability(variantId, warehouseId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<StockAvailability>("/inventory/stock/availability", {
         variantId,
         ...(warehouseId !== undefined ? { warehouseId } : {}),
-      }),
+      }, signal),
     enabled: canView && variantId > 0,
     staleTime: 30_000,
   });
@@ -308,7 +308,7 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StockTransactionsResult, Error>({
     queryKey: queryKeys.inventory.stockTransactions(filters),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawTransactionsResponse>("/inventory/stock/transactions", {
         productVariantId: filters?.productVariantId,
         warehouseId: filters?.warehouseId,
@@ -321,7 +321,7 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
         page: filters?.page,
         limit: filters?.limit,
         cursor: filters?.cursor,
-      });
+      }, signal);
       return {
         items: res.items.map(toStockTransaction),
         total: res.total,

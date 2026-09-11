@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useAbly } from "ably/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { safeConnect, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { huddleChannelName } from "@/lib/ably-channels";
 import { useAblyConnection } from "./use-ably-connection";
 
 const HUDDLE_EVENTS = [
@@ -44,12 +45,12 @@ export function useHuddleRealtime(channelId: number | null): {
 
     if (!isConnected && connectionState !== "connected") return;
 
-    const channel = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    const channel = ably.channels.get(huddleChannelName(orgId, channelId));
     let cancelled = false;
     const subscribed: HuddleEvent[] = [];
 
     const handleHuddleEvent = () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(channelId) });
     };
 
     async function setup() {

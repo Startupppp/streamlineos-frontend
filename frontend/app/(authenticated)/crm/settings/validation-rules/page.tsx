@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { NoPermissionState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {

@@ -2,8 +2,21 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+
+const reimbursementsListC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.reimbursementsListContract),
+);
+const createReimbursementC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.createReimbursementContract),
+);
+const processReimbursementC = lazyContract(() =>
+  import("@/hooks/api/hr/reimbursements-schema").then((m) => m.processReimbursementContract),
+);
 
 export interface Reimbursement {
   id: number;
@@ -12,7 +25,7 @@ export interface Reimbursement {
   amount: string;
   description: string | null;
   receiptUrl: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | null;
+  status: string | null;
   approvedBy: string | null;
   rejectionReason: string | null;
   createdAt: Date | string | null;
@@ -20,7 +33,7 @@ export interface Reimbursement {
 }
 
 const reimbursementKeys = {
-  all: [...queryKeys.hr.all, "reimbursements"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "reimbursements"] as const,
   list: () => [...reimbursementKeys.all, "list"] as const,
 };
 
@@ -29,7 +42,8 @@ export function useReimbursements() {
   const payrollEnabled = useModuleEnabled("payroll");
   return useQuery({
     queryKey: reimbursementKeys.list(),
-    queryFn: () => apiClient.get<Reimbursement[]>("/hr/reimbursements"),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<Reimbursement>>("/hr/reimbursements", undefined, signal, reimbursementsListC)).items,
     staleTime: 2 * 60_000,
     enabled: canPayroll && payrollEnabled,
   });
@@ -37,20 +51,20 @@ export function useReimbursements() {
 
 export function useCreateReimbursement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "create"],
     mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string }) =>
-      apiClient.post<Reimbursement>("/hr/reimbursements", data),
+      apiClient.post<Reimbursement>("/hr/reimbursements", data, undefined, createReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });
 }
 
 export function useProcessReimbursement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "process"],
     mutationFn: ({ id, ...data }: { id: number; status: string; rejectionReason?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data),
+      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data, undefined, processReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });
 }

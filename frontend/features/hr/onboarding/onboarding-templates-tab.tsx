@@ -20,7 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import {
   useHrOnboardingTemplates,
   useCreateHrOnboardingTemplate,
@@ -29,6 +29,7 @@ import {
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 const OWNER_ROLES = ["NEW_HIRE", "HR", "MANAGER", "IT"] as const;
 
@@ -45,15 +46,32 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const { data: departments } = useOnboardingTemplateDepartments();
   const createTemplate = useCreateHrOnboardingTemplate();
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setName("");
     setDepartmentId("");
     setDescription("");
     setSteps([emptyStep()]);
-  }
+  }, []);
 
   function updateStep(index: number, patch: Partial<OnboardingTemplateStep>) {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  }
+
+  function handleAddStep(): void {
+    setSteps((prev) => [...prev, emptyStep()]);
+  }
+
+  function handleRemoveStep(index: number) {
+    return function removeStep(): void {
+      setSteps((prev) => prev.filter((_, i) => i !== index));
+    };
+  }
+
+  function handleDueOffsetChange(index: number) {
+    return numericFieldChangeOr(
+      (days) => updateStep(index, { dueOffsetDays: Math.max(0, days) }),
+      0,
+    );
   }
 
   const handleSubmit = useCallback(() => {
@@ -82,7 +100,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [name, departmentId, description, steps, createTemplate, onOpenChange]);
+  }, [name, departmentId, description, steps, createTemplate, onOpenChange, resetForm]);
 
   return (
     <HrSheet
@@ -140,7 +158,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
               size="sm"
               variant="outline"
               className="text-xs gap-1"
-              onClick={() => setSteps((prev) => [...prev, emptyStep()])}
+              onClick={handleAddStep}
             >
               Add step
             </AnimatedIconButton>
@@ -164,7 +182,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                       size="icon"
                       variant="ghost"
                       className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => setSteps((prev) => prev.filter((_, idx) => idx !== i))}
+                      onClick={handleRemoveStep(i)}
                       aria-label="Remove step"
                     />
                   )}
@@ -184,7 +202,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                     type="number"
                     min={0}
                     value={step.dueOffsetDays}
-                    onChange={(e) => updateStep(i, { dueOffsetDays: Math.max(0, Number(e.target.value) || 0) })}
+                    onChange={handleDueOffsetChange(i)}
                     placeholder="Due (days after joining)"
                     className="text-xs"
                   />

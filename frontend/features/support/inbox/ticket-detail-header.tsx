@@ -133,7 +133,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
       description: "Rewrite and polish the current draft",
       run: async () => {
         const result = await improveReply.mutateAsync({ content: replyDraftContent ?? "" });
-        return { text: result.improved };
+        return { text: result?.improved ?? "" };
       },
       onApply: onInsertReply,
       applyLabel: "Apply improved reply",
@@ -144,7 +144,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
       description: "Translate the current draft to English",
       run: async () => {
         const result = await translateDraft.mutateAsync({ language: "English", content: replyDraftContent });
-        return { text: result.translatedText };
+        return { text: result?.translatedText ?? "" };
       },
       onApply: onInsertReply,
       applyLabel: "Use translation",
@@ -165,7 +165,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
       description: "Condense the full conversation into key points",
       run: async () => {
         const results = await analyzeTicket.mutateAsync();
-        const found = results.find((s) => s.type === "summary");
+        const found = results?.find((s) => s.type === "summary");
         if (found?.type === "summary") return { text: found.payload.text };
         return { text: "" };
       },

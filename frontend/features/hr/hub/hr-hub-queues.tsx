@@ -9,11 +9,8 @@ import {
   ClipboardList as ClipboardListIcon,
 } from "lucide-react";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubViewProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { HrQueueCard, OpsInboxCard, resolveQueueTone } from "./queues/queue-cards";
 
 export function HrHubQueues({
@@ -46,7 +43,7 @@ export function HrHubQueues({
   ).length;
   const pendingLeaves = metrics?.pendingLeaveRequests ?? 0;
   const wfhCount = (wfh ?? []).length;
-  const resignationCount = resignations?.pagination.total ?? 0;
+  const resignationCount = resignations?.count ?? 0;
   const docsExpiring = docStats?.expiringIn30Days ?? 0;
   const onboardingInProgress = onboarding?.inProgress ?? 0;
 

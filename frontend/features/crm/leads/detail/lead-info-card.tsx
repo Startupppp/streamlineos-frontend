@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomFieldsSection } from "@/features/crm/shared/custom-fields-section";
 import { MessagingPanel } from "@/features/crm/shared/messaging-panel";
-import { RecordDetail, RecordForm, type RecordFormValues } from "@/features/renderer";
+import { RecordDetail, RecordForm, type RecordFormValues } from "@/components/renderer";
 import { useLeadLayout } from "../use-lead-layout";
 import { useUpdateLead } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";
@@ -126,7 +126,7 @@ export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadI
         </section>
       ) : null}
 
-      <CustomFieldsSection entityType="lead" values={lead.customFields ?? {}} />
+      <CustomFieldsSection entityType="lead" values={lead.customData ?? {}} />
     </div>
   );
 }

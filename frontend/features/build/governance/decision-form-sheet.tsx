@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 
@@ -48,13 +48,15 @@ const CREATE_DEFAULTS: DecisionFormValues = {
   status: "proposed", ownerId: "", decidedAt: "", revisitAt: "", linkedTicketId: "",
 };
 
+const DECISION_STATUS_VALUES: ReadonlyArray<"proposed" | "accepted" | "superseded" | "revisit"> = ["proposed", "accepted", "superseded", "revisit"];
+
 function decisionToFormValues(d: Decision): DecisionFormValues {
   return {
     title: d.title,
     context: d.context ?? "",
     decision: d.decision ?? "",
     optionsConsidered: d.optionsConsidered ?? "",
-    status: d.status,
+    status: DECISION_STATUS_VALUES.find((v) => v === d.status) ?? "proposed",
     ownerId: d.ownerId ?? "",
     decidedAt: d.decidedAt ? d.decidedAt.slice(0, 10) : "",
     revisitAt: d.revisitAt ? d.revisitAt.slice(0, 10) : "",

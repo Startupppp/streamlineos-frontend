@@ -1,30 +1,43 @@
 "use client";
+import type { z } from "zod";
+import type { safetyIncidentContract } from "@/hooks/api/hr/safety-schema";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const incidentListContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.safetyIncidentListContract),
+);
+const incidentContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.safetyIncidentContract),
+);
+const checkinContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.wellnessCheckinContract),
+);
+const checkinListContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.wellnessCheckinListContract),
+);
+const trendListContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.wellnessTrendListContract),
+);
+const burnoutListContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.burnoutFlagListContract),
+);
+const pulseContract = lazyContract(() =>
+  import("@/hooks/api/hr/safety-schema").then((m) => m.wellnessPulseContract),
+);
 
 export type IncidentType = "injury" | "accident" | "near_miss" | "hazard" | "environmental" | "other";
 export type IncidentSeverity = "low" | "medium" | "high" | "critical";
 export type IncidentStatus = "open" | "investigating" | "mitigated" | "closed";
 
-export interface SafetyIncident {
-  id: number;
-  incidentNumber: string;
-  type: IncidentType;
-  location: string;
-  occurredAt: string;
-  reportedBy: string;
-  description: string;
-  severity: IncidentSeverity;
-  status: IncidentStatus;
-  medicalAttention: boolean;
-  confidentialMedicalNote: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SafetyIncident = z.infer<typeof safetyIncidentContract>;
 
 export interface WellnessCheckin {
   id: number;
@@ -47,13 +60,13 @@ export interface BurnoutFlag {
   checkCount: number;
 }
 
-interface PaginatedResult<T> {
+interface CursorPage<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export type ListIncidentsParams = {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: IncidentStatus;
   type?: IncidentType;
@@ -64,9 +77,9 @@ export type ListIncidentsParams = {
 };
 
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.incidents(params),
-    queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params),
+  return useGatedQuery("hr:safety:view", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents(params),
+    queryFn: ({ signal }) => apiClient.get("/hr/safety/incidents", params, signal, incidentListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -74,7 +87,7 @@ export function useSafetyIncidents(params: ListIncidentsParams = {}) {
 
 export function useReportIncident() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:safety:manage", {
     mutationKey: ["hr-safety", "incident", "create"],
     mutationFn: (body: {
       type: IncidentType;
@@ -84,9 +97,9 @@ export function useReportIncident() {
       severity: IncidentSeverity;
       medicalAttention?: boolean;
       confidentialMedicalNote?: string;
-    }) => apiClient.post<SafetyIncident>("/hr/safety/incidents", body),
+    }) => apiClient.post("/hr/safety/incidents", body, undefined, incidentContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSafety.all });
       toast.success("Incident reported");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -95,12 +108,12 @@ export function useReportIncident() {
 
 export function useSubmitCheckin() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:safety:view", {
     mutationKey: ["hr-safety", "checkin"],
     mutationFn: (body: { date: string; score: number; flags?: string[] }) =>
-      apiClient.post<WellnessCheckin>("/hr/safety/wellness/checkin", body),
+      apiClient.post("/hr/safety/wellness/checkin", body, undefined, checkinContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.wellnessAll });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessAll });
       toast.success("Wellness check-in submitted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -108,27 +121,27 @@ export function useSubmitCheckin() {
 }
 
 export function useMyCheckins(fromDate?: string, toDate?: string) {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.myCheckins(fromDate, toDate),
-    queryFn: () =>
-      apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }),
+  return useGatedQuery("hr:safety:view", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.myCheckins(fromDate, toDate),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/safety/wellness/my", { fromDate, toDate }, signal, checkinListContract),
     staleTime: 60_000,
   });
 }
 
 export function useWellnessTrend(fromDate?: string, toDate?: string) {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.wellnessTrend(fromDate, toDate),
-    queryFn: () =>
-      apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }),
+  return useGatedQuery("hr:safety:manage", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessTrend(fromDate, toDate),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/safety/wellness/trend", { fromDate, toDate }, signal, trendListContract),
     staleTime: 120_000,
   });
 }
 
 export function useBurnoutFlags() {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.burnout,
-    queryFn: () => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout"),
+  return useGatedQuery("hr:safety:manage", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.burnout,
+    queryFn: ({ signal }) => apiClient.get("/hr/safety/wellness/burnout", undefined, signal, burnoutListContract),
     staleTime: 120_000,
   });
 }
@@ -146,9 +159,9 @@ export interface WellnessPulse {
 }
 
 export function useWellnessPulse(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.wellnessPulse,
-    queryFn: () => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse"),
+  return useGatedQuery("hr:safety:manage", {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessPulse,
+    queryFn: ({ signal }) => apiClient.get("/hr/safety/wellness/pulse", undefined, signal, pulseContract),
     staleTime: 120_000,
     enabled,
   });

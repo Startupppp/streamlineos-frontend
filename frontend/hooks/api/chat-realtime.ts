@@ -5,63 +5,67 @@ import { useAbly } from "ably/react";
 import type { InboundMessage, ConnectionState, ConnectionStateChange } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { chatChannelName } from "@/lib/ably-channels";
 import type {
   Message,
-  MessageAttachment,
-  MessageMetadata,
-  MessageType,
   MessagesPage,
   ThreadPage,
   TypingIndicator,
 } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
-
-interface AblyMessagePayload {
-  id: number;
-  channelId: number;
-  senderId: string;
-  senderName?: string | null;
-  senderImage?: string | null;
-  content: string | null;
-  createdAt: string | null;
-  replyToId: number | null;
-  messageType?: MessageType;
-  metadata?: MessageMetadata | null;
-  attachments?: MessageAttachment[];
-}
-
-interface AblyMessageUpdatedPayload {
-  id: number;
-  channelId: number;
-  content: string | null;
-  isEdited: true;
-  updatedAt: string;
-}
-
-interface AblyMessageDeletedPayload {
-  id: number;
-  channelId: number;
-}
-
-interface AblyReactionUpdatedPayload {
-  messageId: number;
-  channelId: number;
-  reactions: Record<string, string[]>;
-}
-
-interface AblyTypingPayload {
-  userId: string;
-  name: string;
-}
+import {
+  messagePayloadSchema,
+  messageUpdatedPayloadSchema,
+  messageDeletedPayloadSchema,
+  reactionUpdatedPayloadSchema,
+  typingPayloadSchema,
+  type MessagePayload,
+} from "./chat-realtime-schema";
 
 const TYPING_TIMEOUT_MS = 5_000;
 
 const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
-function payloadToMessage(payload: AblyMessagePayload): Message {
+/**
+ * The four events the SERVER is the only legitimate author of.
+ *
+ * The chat token grants each of the caller's own channels `["subscribe", "publish", "history"]`
+ * (backend ably.service.ts `createChatTokenRequest`), and `publish` is not decoration — the
+ * typing indicator is published from the browser. So any member of a channel can also publish
+ * a `message` frame onto it, and this hook used to write `payload.senderId` and
+ * `payload.senderName` straight into the message cache and into a desktop Notification: a
+ * member could make a message appear, in every open window, attributed to a colleague, with
+ * text they chose. Nothing was persisted, which is exactly what makes it hard to notice.
+ *
+ * The discriminator is `clientId`, which Ably stamps on a message from the identity in the
+ * publisher's token and which a publisher cannot forge. The backend publishes over REST with
+ * the API key and no `clientId` at all (`AblyService.publishChatMessage`/`publishChatEvent`),
+ * so a server frame carries none — and a browser frame always carries one, because every chat
+ * token is minted with `clientId: <userId>`. A frame on a server-authored event that arrives
+ * WITH a clientId was published by a browser and is dropped.
+ */
+const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
+  "message",
+  "message:updated",
+  "message:deleted",
+  "reaction:updated",
+]);
+
+export function isTrustedChatFrame(
+  event: ChatEvent,
+  clientId: string | undefined,
+  declaredSenderId: string | undefined,
+): boolean {
+  if (SERVER_AUTHORED_EVENTS.has(event)) return clientId === undefined || clientId === null;
+  // `typing` is genuinely published by a browser. It may only speak for its own publisher,
+  // so a frame whose payload names someone else is dropped rather than rendered.
+  return clientId === undefined || clientId === null || clientId === declaredSenderId;
+}
+
+function payloadToMessage(payload: MessagePayload): Message {
   return {
     id: payload.id,
     channelId: payload.channelId,
@@ -75,9 +79,11 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
     actionStatus: null,
     createdAt: payload.createdAt,
     updatedAt: payload.createdAt,
-    sender: payload.senderName
-      ? { id: payload.senderId, name: payload.senderName, image: payload.senderImage ?? null }
-      : null,
+    sender: {
+      id: payload.senderId,
+      name: payload.senderName ?? null,
+      image: payload.senderImage ?? null,
+    },
     attachments: payload.attachments ?? [],
     replyTo: null,
   };
@@ -118,9 +124,15 @@ export function useChatRealtime(channelId: number | null): {
   const currentUserId = session?.user?.id;
   const orgId = session?.orgId;
 
-  const [isConnected, setIsConnected] = useState(
+  const [socketConnected, setSocketConnected] = useState(
     () => ably.connection.state === "connected",
   );
+  // A refused channel attach leaves the CONNECTION healthy, so a verdict read
+  // from `ably.connection.state` alone reports "connected" on a window that
+  // will never receive a message and keeps the poll fallback switched off.
+  // The verdict is the subscribe's own return value.
+  const [channelAttached, setChannelAttached] = useState(false);
+  const isConnected = socketConnected && channelAttached;
   const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
@@ -133,20 +145,20 @@ export function useChatRealtime(channelId: number | null): {
         prevConnectionState.current === "disconnected" ||
         prevConnectionState.current === "suspended";
       prevConnectionState.current = "connected";
-      setIsConnected(true);
+      setSocketConnected(true);
 
       if (wasDisconnected && channelId && channelId > 0) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.chat.messages(channelId),
+          queryKey: collaborationQueryKeys.chat.messages(channelId),
           exact: false,
         });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
       }
     };
     const handleDisconnected = (stateChange: ConnectionStateChange) => {
       prevConnectionState.current = stateChange.current;
-      setIsConnected(false);
+      setSocketConnected(false);
     };
 
     ably.connection.on("connected", handleConnected);
@@ -155,7 +167,7 @@ export function useChatRealtime(channelId: number | null): {
     ably.connection.on("suspended", handleDisconnected);
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsConnected(ably.connection.state === "connected");
+    setSocketConnected(ably.connection.state === "connected");
 
     return () => {
       ably.connection.off("connected", handleConnected);
@@ -168,16 +180,17 @@ export function useChatRealtime(channelId: number | null): {
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0) return;
 
-    const channelName = `chat:${orgId}:${channelId}`;
+    const channelName = chatChannelName(orgId, channelId);
     const channel = ably.channels.get(channelName);
     let cancelled = false;
     const subscribed: ChatEvent[] = [];
 
     const messageHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessagePayload;
-      if (!payload?.id) return;
+      const parsed = messagePayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
 
       queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
         if (!old) return old;
@@ -197,12 +210,12 @@ export function useChatRealtime(channelId: number | null): {
 
       if (payload.replyToId) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.chat.thread(channelId, payload.replyToId),
+          queryKey: collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
 
       if (
         payload.senderId !== currentUserId &&
@@ -217,10 +230,11 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessageUpdatedPayload;
-      if (!payload?.id) return;
+      const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return {
@@ -233,10 +247,11 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageDeletedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessageDeletedPayload;
-      if (!payload?.id) return;
+      const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return { ...m, isDeleted: true, content: null };
@@ -244,17 +259,18 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const reactionUpdatedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyReactionUpdatedPayload;
-      if (!payload?.messageId) return;
+      const parsed = reactionUpdatedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.messageId) return m;
         return { ...m, reactions: payload.reactions };
       });
 
       queryClient.setQueryData<InfiniteData<ThreadPage>>(
-        queryKeys.chat.thread(channelId, payload.messageId),
+        collaborationQueryKeys.chat.thread(channelId, payload.messageId),
         (old) => {
           if (!old) return old;
           let changed = false;
@@ -279,8 +295,10 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const typingHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyTypingPayload;
-      if (!payload?.userId || payload.userId === currentUserId) return;
+      const parsed = typingPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
+      if (payload.userId === currentUserId) return;
 
       setTypingUsers((prev) => {
         const exists = prev.some((t) => t.userId === payload.userId);
@@ -307,10 +325,37 @@ export function useChatRealtime(channelId: number | null): {
       "reaction:updated": reactionUpdatedHandler,
     };
 
+    const guardedHandlers = new Map<ChatEvent, (msg: InboundMessage) => void>();
+    function guarded(
+      event: ChatEvent,
+      handler: (msg: InboundMessage) => void,
+    ): (msg: InboundMessage) => void {
+      const existing = guardedHandlers.get(event);
+      if (existing !== undefined) return existing;
+      const wrapped = (msg: InboundMessage): void => {
+        const data: unknown = msg.data;
+        const declared: unknown =
+          data !== null && typeof data === "object" && "userId" in data
+            ? data.userId
+            : undefined;
+        if (
+          !isTrustedChatFrame(
+            event,
+            msg.clientId ?? undefined,
+            typeof declared === "string" ? declared : undefined,
+          )
+        )
+          return;
+        handler(msg);
+      };
+      guardedHandlers.set(event, wrapped);
+      return wrapped;
+    }
+
     async function setup() {
       for (const event of CHAT_EVENTS) {
         if (cancelled) return;
-        const handler = handlers[event];
+        const handler = guarded(event, handlers[event]);
         const ok = await safeSubscribe(channel, event, handler);
         if (cancelled) {
           if (ok) safeUnsubscribe(channel, event, handler);
@@ -318,14 +363,16 @@ export function useChatRealtime(channelId: number | null): {
         }
         if (ok) subscribed.push(event);
       }
+      if (!cancelled) setChannelAttached(subscribed.length === CHAT_EVENTS.length);
     }
 
     void setup();
 
     return () => {
       cancelled = true;
+      setChannelAttached(false);
       for (const event of subscribed) {
-        safeUnsubscribe(channel, event, handlers[event]);
+        safeUnsubscribe(channel, event, guarded(event, handlers[event]));
       }
     };
   }, [ably, channelId, orgId, queryClient, currentUserId]);
@@ -347,7 +394,7 @@ export function useChatRealtime(channelId: number | null): {
       !isConnected
     )
       return;
-    const channelName = `chat:${orgId}:${channelId}`;
+    const channelName = chatChannelName(orgId, channelId);
     const channel = ably.channels.get(channelName);
     channel
       .publish("typing", {

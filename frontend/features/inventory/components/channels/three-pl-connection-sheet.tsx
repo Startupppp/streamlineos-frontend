@@ -292,7 +292,7 @@ export function ThreePlConnectionSheet({
                         variant="ghost"
                         size="icon"
                         className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                        aria-label="Remove connection"
+                        aria-label="Remove config"
                         onClick={handleRemove}
                       />
                     </div>

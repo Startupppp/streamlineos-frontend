@@ -1,8 +1,21 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const surveyAutomationRuleListC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutomationRuleListContract),
+);
+const surveyAutomationRuleC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutomationRuleContract),
+);
+const surveyAutoSuccessC = lazyContract(() =>
+  import("./survey-automation-schema").then((m) => m.surveyAutoSuccessContract),
+);
 
 export type AutomationEventType =
   | "survey.published"
@@ -35,32 +48,38 @@ export interface CreateAutomationInput {
 }
 
 export function useSurveyAutomations(surveyId: number) {
-  return useQuery({
-    queryKey: queryKeys.surveys.automations(surveyId),
-    queryFn: () => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`),
+  return useGatedQuery("surveys:automations:manage", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.automations(surveyId),
+    queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal, surveyAutomationRuleListC),
     staleTime: 30_000,
   });
 }
 
 function useInvalidateAutomations(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.automations(surveyId) });
+  return () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.automations(surveyId) });
 }
 
 export function useCreateAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "create", surveyId] as const,
-    mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input),
+    mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input, undefined, surveyAutomationRuleC),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "delete", surveyId] as const,
-    mutationFn: (automationId: string) => apiClient.delete(`/surveys/${surveyId}/automations/${automationId}`),
+    mutationFn: (automationId: string) =>
+      apiClient.delete(
+        `/surveys/${surveyId}/automations/${automationId}`,
+        undefined,
+        undefined,
+        surveyAutoSuccessC,
+      ),
     onSuccess: invalidate,
   });
 }

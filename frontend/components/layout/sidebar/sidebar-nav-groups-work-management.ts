@@ -163,7 +163,7 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
       "build:workspaces:view",
       "build:approvals:view",
       "build:create",
-      "settings:manage",
+      "integrations:git:view",
     ],
     routes: [
       {
@@ -218,7 +218,7 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: Plug,
         href: "/build/settings/integrations",
-        requiredPermission: "settings:manage",
+        requiredPermission: "integrations:git:view",
       },
       {
         label: "Access",

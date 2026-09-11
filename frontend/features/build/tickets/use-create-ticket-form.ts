@@ -10,15 +10,20 @@ import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";
 import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
 import type { RelatedLinkDraft } from "./ticket-related-links-editor";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
 import type { ProjectMemberRecord, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 
 const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
@@ -165,9 +170,9 @@ export function useCreateTicketForm({
 
   const finishCreation = useCallback(() => {
     if (projectId != null) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
     }
     onCreated?.();
     if (createMore) {
@@ -219,10 +224,14 @@ export function useCreateTicketForm({
               const formData = new FormData();
               formData.append("file", file);
               formData.append("folder", "tickets");
-              const result = await apiClient.upload<{ url: string }>("/storage/upload", formData);
+              const result = await apiClient.upload<{ key: string }>(
+                "/storage/upload",
+                formData,
+                storageUploadContract,
+              );
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
-                fileUrl: result.url,
+                fileUrl: result.key,
                 fileName: file.name,
                 fileSize: file.size,
                 mimeType: file.type,

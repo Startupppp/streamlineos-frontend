@@ -6,6 +6,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2, Building2, UserCircle } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
 import {
   Sheet,
   SheetContent,
@@ -39,6 +40,7 @@ import {
   MemberRow,
   DepartmentRow,
 } from "./role-assignment-items";
+import { resolveImageUrl } from "@/lib/utils";
 
 const ORG_MEMBERS_PAGE_SIZE = 20;
 
@@ -81,11 +83,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
 
   const [userSearch, setUserSearch] = useState("");
   const debouncedUserSearch = useDebouncedValue(userSearch, 300);
-  const [userPage, setUserPage] = useState(1);
 
   const membersQuery = useRoleMembers(roleId);
   const orgMembersQuery = useOrgMembers(
-    userPage,
+    1,
     ORG_MEMBERS_PAGE_SIZE,
     debouncedUserSearch.trim() || undefined,
     { placeholderData: keepPreviousData },
@@ -110,7 +111,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
 
   const orgMembersPage = orgMembersQuery.data;
   const orgMembers = orgMembersPage?.data ?? [];
-  const orgMembersTotalPages = orgMembersPage?.pagination.totalPages ?? 1;
+  const orgMembersTruncated = orgMembers.length >= ORG_MEMBERS_PAGE_SIZE;
   const departments = departmentsQuery.data ?? [];
 
   const availableUsers = orgMembers.filter(
@@ -156,15 +157,6 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
 
   const handleUserSearchChange = useCallback((value: string) => {
     setUserSearch(value);
-    setUserPage(1);
-  }, []);
-
-  const handleUserPagePrev = useCallback(() => {
-    setUserPage((prev) => Math.max(1, prev - 1));
-  }, []);
-
-  const handleUserPageNext = useCallback(() => {
-    setUserPage((prev) => prev + 1);
   }, []);
 
   const handleAddUser = useCallback(
@@ -297,39 +289,11 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                     </CommandGroup>
                   )}
                 </CommandList>
-                {orgMembersTotalPages > 1 && (
-                  <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40">
-                    <span className="text-dense text-muted-foreground">
-                      Page {userPage} of {orgMembersTotalPages}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        disabled={userPage <= 1 || orgMembersQuery.isFetching}
-                        onClick={handleUserPagePrev}
-                        aria-label="Previous page of users"
-                      >
-                        Prev
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        disabled={
-                          userPage >= orgMembersTotalPages ||
-                          orgMembersQuery.isFetching
-                        }
-                        onClick={handleUserPageNext}
-                        aria-label="Next page of users"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                {orgMembersTruncated && (
+                  <ListTruncationNotice
+                    shown={ORG_MEMBERS_PAGE_SIZE}
+                    hint="Search to reach anyone not listed."
+                  />
                 )}
               </Command>
               <div
@@ -437,7 +401,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                     >
                       <Avatar className="w-8">
                         <AvatarImage
-                          src={user.image ?? undefined}
+                          src={resolveImageUrl(user.image)}
                           alt={user.name ?? ""}
                         />
                         <AvatarFallback className="text-micro">

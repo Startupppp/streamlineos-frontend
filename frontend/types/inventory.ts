@@ -180,16 +180,6 @@ export interface InventoryVendor {
   updatedAt: string;
 }
 
-export interface ProductVariantFlat {
-  id: number;
-  productId: number;
-  productName: string;
-  name: string;
-  sku: string;
-  costPrice: string;
-  isActive: boolean;
-}
-
 export interface PurchaseOrderLine {
   id: number;
   poId: number;
@@ -508,3 +498,4 @@ export interface StockReservation {
   location: { id: number; name: string; code: string } | null;
   warehouse: { id: number; name: string } | null;
 }
+

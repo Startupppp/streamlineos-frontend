@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
@@ -14,7 +14,7 @@ import {
   parseExpenseReceipts,
   serializeExpenseReceipts,
   type ExpenseReceipt,
-} from "../expense-constants";
+} from "@/lib/expense-constants";
 import { expenseFormSchema, type ExpenseFormData } from "./expense-form-schema";
 import { ExpenseFormFields } from "./expense-form-fields";
 import { type PendingReceipt } from "./receipt-manager";
@@ -152,7 +152,7 @@ export function CreateExpenseDialog({
     async (file: File): Promise<string | null> => {
       try {
         const result = await uploadFileMutation.mutateAsync({ file, folder: "receipts" });
-        return result.url;
+        return result.key;
       } catch (error) {
         toast.error(getErrorMessage(error));
         return null;

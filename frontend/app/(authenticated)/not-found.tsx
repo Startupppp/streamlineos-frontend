@@ -21,9 +21,9 @@ export default function DashboardNotFound() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="max-w-md space-y-3">
-        <h2 className="text-4xl font-bold text-foreground tracking-tight">
+        <h1 className="text-4xl font-bold text-foreground tracking-tight">
           Page Not Found
-        </h2>
+        </h1>
         <p className="text-muted-foreground text-base leading-relaxed">
           The page you are looking for might have been removed, had its name
           changed, or is temporarily unavailable.

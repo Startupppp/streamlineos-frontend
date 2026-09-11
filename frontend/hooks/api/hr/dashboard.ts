@@ -2,8 +2,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+
+const hrDashboardMetricsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/dashboard-schema").then((m) => m.hrDashboardMetricsContract),
+);
+const hrLeaveCalendarLazy = lazyContract(() =>
+  import("@/hooks/api/hr/dashboard-schema").then((m) => m.hrLeaveCalendarContract),
+);
+const hrDashboardOnboardingStatusLazy = lazyContract(() =>
+  import("@/hooks/api/hr/dashboard-schema").then((m) => m.hrDashboardOnboardingStatusContract),
+);
 
 export interface HrDashboardMetrics {
   totalEmployees: number;
@@ -18,7 +29,7 @@ export interface HrDashboardMetrics {
     firstName: string | null;
     lastName: string | null;
     image: string | null;
-    dateOfBirth: string;
+    dateOfBirth: string | null;
     daysUntil: number;
   }[];
 }
@@ -38,8 +49,8 @@ export function useHrDashboardMetrics() {
   const canView = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.dashboardMetrics(),
-    queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
+    queryKey: humanResourcesQueryKeys.hr.dashboardMetrics(),
+    queryFn: ({ signal }) => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics", undefined, signal, hrDashboardMetricsLazy),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
   });
@@ -53,9 +64,9 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   const qs = params.toString();
 
   return useQuery({
-    queryKey: queryKeys.hr.leaveCalendar(month ?? 0, year ?? 0),
-    queryFn: () =>
-      apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`),
+    queryKey: humanResourcesQueryKeys.hr.leaveCalendar(month ?? 0, year ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`, undefined, signal, hrLeaveCalendarLazy),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -79,8 +90,8 @@ export function useHrOnboardingStatus() {
   const canView = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.dashboardOnboardingStatus(),
-    queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
+    queryKey: humanResourcesQueryKeys.hr.dashboardOnboardingStatus(),
+    queryFn: ({ signal }) => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status", undefined, signal, hrDashboardOnboardingStatusLazy),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
   });

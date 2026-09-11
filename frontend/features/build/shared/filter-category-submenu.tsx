@@ -22,7 +22,7 @@ import {
   PanelShell,
   EmptyHint,
   FilterDatesPanel,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 import {
   PRIORITIES,
   TYPES,
@@ -33,10 +33,10 @@ import {
   type Cycle,
   type Sprint,
   type ProjectOption,
-} from "@/features/shared/list-view";
+} from "@/components/list-view";
 
-export type { StatusFilterOption } from "@/features/shared/list-view";
-export { StatusFilterDot } from "@/features/shared/list-view";
+export type { StatusFilterOption } from "@/components/list-view";
+export { StatusFilterDot } from "@/components/list-view";
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;
@@ -227,9 +227,9 @@ export function FilterCategorySubmenu({
   }
 
   if (category === "assignee") {
-    const allMembers = [
-      { id: "@me", displayName: "Me (dynamic)", member: null as Member | null },
-      { id: "__unassigned__", displayName: "Unassigned", member: null as Member | null },
+    const allMembers: { id: string; displayName: string; member: Member | null }[] = [
+      { id: "@me", displayName: "Me (dynamic)", member: null },
+      { id: "__unassigned__", displayName: "Unassigned", member: null },
       ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
     ];
     const filtered = allMembers.filter(

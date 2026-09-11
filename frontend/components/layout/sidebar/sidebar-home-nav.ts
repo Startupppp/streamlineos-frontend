@@ -36,7 +36,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         href: "/chat",
         icon: MessageSquareText,
         requiredPermission: "chat:channels:read",
-        inactivePrefixes: ["/chat/settings", "/chat/moderation"],
+        inactivePrefixes: ["/chat/settings"],
       },
       { label: "Notifications", href: "/notifications", icon: Bell },
     ],

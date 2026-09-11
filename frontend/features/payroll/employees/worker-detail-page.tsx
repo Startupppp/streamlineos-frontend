@@ -1,156 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign } from "lucide-react";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import {
   useWorkerProfile,
   useWorkerProfileHistory,
 } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import type {
-  EmployeeSalaryProfile,
-  SalaryProfileStatus,
-  ProfileComponent,
-  SalaryComponentType,
-} from "@/types/payroll/runs";
-import { cn } from "@/lib/utils";
+import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
+import { ComponentsBreakdown } from "./salary-component-breakdown";
+import { SalaryProfileStatusBadge } from "./salary-profile-status-badge";
 import { EmployeeDetailPage } from "./employee-detail-page";
 
-const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
-  UPCOMING: { className: "bg-primary/10 text-foreground border-primary/20", label: "Upcoming" },
-  SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
-};
-
-const COMPONENT_TYPE_LABELS: Record<SalaryComponentType, string> = {
-  EARNING: "Earnings",
-  DEDUCTION: "Deductions",
-  EMPLOYER_CONTRIBUTION: "Employer Contributions",
-  REIMBURSEMENT: "Reimbursements",
-  TAX: "Tax",
-  ADJUSTMENT: "Adjustments",
-};
-
-const COMPONENT_TYPE_ORDER: SalaryComponentType[] = [
-  "EARNING",
-  "DEDUCTION",
-  "EMPLOYER_CONTRIBUTION",
-  "REIMBURSEMENT",
-  "TAX",
-  "ADJUSTMENT",
-];
-
-const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
-  {
-    key: "name",
-    header: "Component",
-    cell: (comp) => (
-      <div>
-        <div className="flex items-center gap-1.5">
-          <span className="font-medium text-foreground">{comp.name}</span>
-          {comp.isOverride && (
-            <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
-              override
-            </span>
-          )}
-        </div>
-        <span className="text-micro text-muted-foreground font-mono">{comp.code}</span>
-      </div>
-    ),
-    className: "w-[40%] py-1 pr-2",
-  },
-  {
-    key: "calcMethod",
-    header: "Method",
-    cell: (comp) => <span className="text-muted-foreground">{comp.calcMethod}</span>,
-    className: "w-[20%] py-1 pr-2",
-  },
-  {
-    key: "amount",
-    header: "Amount",
-    cell: (comp) => (
-      <span className="font-mono tabular-nums">
-        {comp.amount !== null ? formatMoney(comp.amount) : "—"}
-      </span>
-    ),
-    className: "w-[20%] py-1 pr-2 text-right",
-    headerClassName: "text-right",
-  },
-  {
-    key: "percent",
-    header: "Percent",
-    cell: (comp) => (
-      <span className="font-mono tabular-nums text-muted-foreground">
-        {comp.percent !== null ? `${comp.percent}%` : "—"}
-      </span>
-    ),
-    className: "w-[20%] py-1 text-right",
-    headerClassName: "text-right",
-  },
-];
-
-function ComponentsBreakdown({ components }: { components: ProfileComponent[] }) {
-  const grouped = useMemo(
-    () =>
-      COMPONENT_TYPE_ORDER.reduce<Record<SalaryComponentType, ProfileComponent[]>>(
-        (acc, type) => {
-          acc[type] = components.filter((c) => c.type === type);
-          return acc;
-        },
-        { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], REIMBURSEMENT: [], TAX: [], ADJUSTMENT: [] },
-      ),
-    [components],
-  );
-
-  if (components.length === 0) {
-    return (
-      <p className="text-dense text-muted-foreground">No components configured for this profile.</p>
-    );
-  }
-
-  return (
-    <div className="divide-y divide-border">
-      {COMPONENT_TYPE_ORDER.filter((type) => grouped[type].length > 0).map((type) => (
-        <div key={type} className="pt-3 first:pt-0">
-          <p className="text-micro font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-            {COMPONENT_TYPE_LABELS[type]}
-          </p>
-          <DataTable
-            data={grouped[type]}
-            columns={COMPONENT_COLUMNS}
-            getRowKey={(comp) => comp.id}
-            className="border-0 rounded-none text-dense"
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProfileHistoryRow({ profile }: { profile: EmployeeSalaryProfile }) {
-  const cfg = STATUS_CONFIG[profile.status];
+function ProfileHistoryRow({ profile }: { profile: ProfileDetail }) {
   return (
     <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-dense">
       <span className="font-mono tabular-nums text-muted-foreground shrink-0">
         {profile.effectiveFrom}
       </span>
       <span className="flex-1 font-medium">{formatMoney(profile.annualCtc)} / year</span>
-      <span
-        className={cn(
-          "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
-          cfg.className,
-        )}
-      >
-        {cfg.label}
-      </span>
+      <SalaryProfileStatusBadge status={profile.status} />
     </div>
   );
 }
@@ -163,8 +41,18 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const canView = useCan("payroll:salaries:view");
   const canUpdate = useCan("payroll:salaries:update");
-  const { data: profileData, isLoading } = useWorkerProfile(workerId);
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWorkerProfile(workerId);
   const { data: historyData } = useWorkerProfileHistory(workerId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const linkedUserId = profileData?.active?.userId ?? null;
   if (linkedUserId) {
@@ -209,7 +97,20 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
     );
   }
 
-  const payeeName = activeProfile?.userName ?? "Worker payee";
+  if (isError) {
+    return (
+      <PageWrapper title="Salary Profile" backHref="/payroll/employees">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this salary profile"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  const payeeName = "Worker payee";
 
   return (
     <PageWrapper
@@ -219,14 +120,7 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
         activeProfile ? (
           <span className="flex items-center gap-2">
             <span>{formatMoney(activeProfile.annualCtc)} / year</span>
-            <span
-              className={cn(
-                "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
-                STATUS_CONFIG[activeProfile.status].className,
-              )}
-            >
-              {STATUS_CONFIG[activeProfile.status].label}
-            </span>
+            <SalaryProfileStatusBadge status={activeProfile.status} />
           </span>
         ) : "No active salary profile"
       }

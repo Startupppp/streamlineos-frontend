@@ -11,7 +11,7 @@ import {
   FILTER_SELECT_TRIGGER,
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -27,8 +27,8 @@ import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
 import { toLeadRecords } from "@/features/crm/leads/lead-record";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
-import { RecordList } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { RecordList } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useCan } from "@/hooks/api/access";
 import { useLeads } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";

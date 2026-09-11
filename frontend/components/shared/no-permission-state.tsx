@@ -35,7 +35,7 @@ export function NoPermissionState({
       >
         <ShieldAlert className={cn("text-destructive", compact ? "w-5" : "w-7")} />
       </div>
-      <h3 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>{title}</h3>
+      <h2 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>{title}</h2>
       <p
         className={cn(
           "text-muted-foreground max-w-sm mb-2",
@@ -44,7 +44,7 @@ export function NoPermissionState({
       >
         {description ?? "You don’t have the required permission for this section."}
       </p>
-      <p className="text-xs text-muted-foreground/60 font-mono bg-muted px-2 py-1 rounded">
+      <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
         {permission}
       </p>
       {compact ? null : (

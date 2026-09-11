@@ -14,7 +14,9 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   DEFAULT: CheckSquare,
 };
 
+const DEFAULT_ICON: ComponentType<{ className?: string }> = CheckSquare;
+
 export function TaskTypeIcon({ type, className }: { type: string; className?: string }) {
-  const Icon = ICONS[type] ?? ICONS.DEFAULT!;
+  const Icon = ICONS[type] ?? DEFAULT_ICON;
   return <Icon className={className} />;
 }

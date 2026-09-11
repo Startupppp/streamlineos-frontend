@@ -1,0 +1,2 @@
+{"selfTest":true,"pass":true,"checks":{"validDeployedShapePasses":true,"alteredArtifactBlocked":true,"selfTestClaimBlocked":true}}
+ops:evidence:self-test EXIT=0

@@ -2,8 +2,6 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -17,7 +15,6 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Asset } from "@/types/hr";
 import {
-  arKeys,
   STATUS_META,
   type AssetReturn,
 } from "@/features/hr/asset-returns/asset-return-constants";
@@ -28,9 +25,13 @@ import {
   AssetReturnsError,
   AssetReturnsEmptyState,
 } from "@/features/hr/asset-returns/asset-return-page-states";
+import {
+  useAssetReturns,
+  useCreateAssetReturn,
+  useMarkAssetReturned,
+} from "@/hooks/api/hr/asset-returns";
 
 export function AssetReturnsPage() {
-  const qc = useQueryClient();
   const isAdmin = useCan("hr:employees:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
@@ -83,31 +84,10 @@ export function AssetReturnsPage() {
     [employees, resolvedUserId],
   );
 
-  const { data: items, isLoading, isError, refetch } = useQuery({
-    queryKey: arKeys.list(),
-    queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
-    staleTime: 60_000,
-  });
+  const { data: items, isLoading, isError, refetch } = useAssetReturns();
 
-  const create = useMutation({
-    mutationFn: (data: {
-      userId: string;
-      assetName: string;
-      assetId?: number;
-      condition?: string;
-      notes?: string;
-    }) => apiClient.post<AssetReturn>("/hr/asset-returns", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
-  });
-
-  const markReturned = useMutation({
-    mutationFn: ({ id, condition: cond }: { id: number; condition: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, {
-        status: "RETURNED",
-        condition: cond,
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
-  });
+  const create = useCreateAssetReturn();
+  const markReturned = useMarkAssetReturned();
 
   const resetSheetState = useCallback(() => {
     setSelectedAssetId("");

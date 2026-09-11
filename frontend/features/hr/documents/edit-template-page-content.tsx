@@ -1,8 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useDocumentTemplate } from "@/hooks/api/hr/document-templates";
 import { TemplateEditor } from "@/features/hr/documents/template-editor";
 
@@ -58,16 +62,37 @@ function EditTemplateSkeleton() {
 }
 
 export function EditTemplatePageContent({ id }: EditTemplatePageContentProps) {
-  const { data: template, isLoading } = useDocumentTemplate(id);
+  const { data: template, isLoading, isError, error, refetch } = useDocumentTemplate(id);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) return <EditTemplateSkeleton />;
 
+  if (isError) {
+    return (
+      <PageWrapper title="Edit Template" backHref="/hr/documents/templates">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load template"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
   if (!template) {
     return (
-      <PageWrapper title="Template Not Found">
-        <p className="text-sm text-muted-foreground">
-          This template does not exist or has been removed.
-        </p>
+      <PageWrapper title="Edit Template" backHref="/hr/documents/templates">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="documents"
+          title="Template not found"
+          description="This template no longer exists or has been removed."
+          action={{ label: "Back to templates", href: "/hr/documents/templates" }}
+        />
       </PageWrapper>
     );
   }

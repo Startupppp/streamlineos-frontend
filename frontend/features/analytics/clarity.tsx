@@ -5,7 +5,7 @@ export function MicrosoftClarity({ nonce }: { nonce?: string }) {
   if (!clarityId || process.env.NODE_ENV !== "production") return null;
 
   return (
-    <Script id="clarity-init" strategy="afterInteractive" nonce={nonce}>
+    <Script id="clarity-init" strategy="lazyOnload" nonce={nonce}>
       {`
         (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};

@@ -15,7 +15,7 @@ describe("HR document type data-layer invariants", () => {
     expect(pageSource).not.toContain("useQuery(");
     expect(pageSource).not.toContain("useMutation(");
     expect(pageSource).not.toContain("apiClient.");
-    expect(pageSource).toContain("useHrDocumentTypesPage(page, limit)");
+    expect(pageSource).toContain("useHrDocumentTypesPage(pager.cursor, limit)");
     expect(hookSource).toContain('"/hr/document-types"');
   });
 

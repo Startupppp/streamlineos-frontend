@@ -25,7 +25,7 @@ interface Props {
 
 export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
   const [employeeId, setEmployeeId] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]!);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [queryParams, setQueryParams] = useState<{
     employeeId: string;
     date: string;

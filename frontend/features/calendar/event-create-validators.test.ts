@@ -149,4 +149,61 @@ describe("buildEventPayload", () => {
     expect(result.error).toBeNull();
     expect(result.payload.syncConnectionId).toBeUndefined();
   });
+
+  /**
+   * The authored timezone is the anchor the server re-projects every future
+   * occurrence from (`expandRecurring` builds `dtstart` with `toWallClockUtc(
+   * event.startDate, event.timezone)`), and the editor has NO timezone field —
+   * `toEditForm` never reads `event.timezone`, so a zone stated on an edit can
+   * only be the editor's browser zone.
+   *
+   * Stating it anyway moved a weekly 10:00 Asia/Kolkata stand-up onto the
+   * America/New_York wall clock the moment a US colleague fixed a typo in the
+   * title, and thereafter followed US DST rather than IST. `calendar.service.ts`
+   * also counts any `timezone` in the body as `timeChanged`, so it cleared
+   * `reminder15MinSent` and re-fired reminders for an unchanged time.
+   *
+   * A create still declares one: there, the author's browser zone IS the
+   * authored zone.
+   */
+  it("declares the author's browser zone when creating", () => {
+    const result = buildEventPayload({
+      form: base,
+      showEndDate: false,
+      linkedTicket: null,
+      existingEntityId: null,
+      isEdit: false,
+    });
+    expect(result.error).toBeNull();
+    expect(result.payload.timezone).toBe(
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+  });
+
+  it("states no timezone on an edit, so the authored zone survives the editor's", () => {
+    const result = buildEventPayload({
+      form: base,
+      showEndDate: false,
+      linkedTicket: null,
+      existingEntityId: null,
+      isEdit: true,
+    });
+    expect(result.error).toBeNull();
+    expect(result.payload.timezone).toBeUndefined();
+  });
+
+  it("drops the timezone key entirely from a serialized edit body", () => {
+    const result = buildEventPayload({
+      form: base,
+      showEndDate: false,
+      linkedTicket: null,
+      existingEntityId: null,
+      isEdit: true,
+    });
+    // apiClient sends JSON.stringify(body); an undefined value must therefore
+    // leave no key at all, or the server's `input.timezone !== undefined` check
+    // would still read it as a time change.
+    const body: unknown = JSON.parse(JSON.stringify(result.payload));
+    expect(Object.keys(body as Record<string, unknown>)).not.toContain("timezone");
+  });
 });

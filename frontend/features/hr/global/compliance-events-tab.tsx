@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import {
   useComplianceEvents,
@@ -29,12 +31,22 @@ function EventStatusIcon({ status }: { status: ComplianceEvent["status"] }) {
 
 export function ComplianceEventsTab() {
   const [statusFilter, setStatusFilter] = useState<ComplianceEventsParams["status"]>(undefined);
-  const { data, isLoading } = useComplianceEvents(statusFilter ? { status: statusFilter } : undefined);
+  const { data, isLoading, isError, error, refetch } = useComplianceEvents(
+    statusFilter ? { status: statusFilter } : undefined,
+  );
   const markDone = useMarkEventDone();
 
   const handleMarkDone = useCallback((eventId: number) => {
     markDone.mutate({ eventId });
   }, [markDone]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter(undefined);
+  }, []);
 
   if (isLoading) {
     return (
@@ -44,7 +56,19 @@ export function ComplianceEventsTab() {
     );
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load compliance events"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   const events = data?.data ?? [];
+  const filtersActive = statusFilter !== undefined;
 
   return (
     <div className="space-y-4">
@@ -66,7 +90,13 @@ export function ComplianceEventsTab() {
         <EmptyState
           illustration={<CheckCircle2 className="h-10 w-10 text-status-success-ink" aria-hidden />}
           title="No compliance events found."
-          description="Generate events or adjust filters to see upcoming compliance deadlines."
+          description={
+            filtersActive
+              ? undefined
+              : "Generate events to see upcoming compliance deadlines."
+          }
+          filtersActive={filtersActive}
+          onClearFilters={handleClearFilters}
           compact
         />
       ) : (

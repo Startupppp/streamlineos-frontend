@@ -6,6 +6,7 @@ import Link from "next/link";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { useCan } from "@/hooks/api/access";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { useImportKbPages, useKbImportJobs } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import {
   KbUploadIcon,
   KbFileTextIcon,
@@ -81,7 +82,15 @@ export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
   const { data: treeNodes = [] } = useKbPagesTree();
   const importMutation = useImportKbPages();
-  const { data: importJobs = [], isLoading: jobsLoading } = useKbImportJobs();
+  const {
+    data: importJobs = [],
+    isLoading: jobsLoading,
+    isError: jobsError,
+    error: jobsErrorValue,
+    refetch: refetchJobs,
+  } = useKbImportJobs();
+
+  const handleRetryJobs = useCallback(() => void refetchJobs(), [refetchJobs]);
 
   const [mode, setMode] = useState<SourceMode>("files");
   const [items, setItems] = useState<ParsedItem[]>([]);
@@ -372,7 +381,16 @@ export default function ImportPage() {
             </div>
           )}
 
-          {!jobsLoading && importJobs.length === 0 && (
+          {!jobsLoading && jobsError && (
+            <ErrorState
+              compact
+              title="Couldn't load import history"
+              description={getErrorMessage(jobsErrorValue)}
+              onRetry={handleRetryJobs}
+            />
+          )}
+
+          {!jobsLoading && !jobsError && importJobs.length === 0 && (
             <EmptyState
               compact
               illustration={
@@ -383,7 +401,7 @@ export default function ImportPage() {
             />
           )}
 
-          {!jobsLoading && importJobs.length > 0 && (
+          {!jobsLoading && !jobsError && importJobs.length > 0 && (
             <div className="space-y-1.5">
               {importJobs.map((job) => (
                 <ImportJobRow key={job.id} job={job} />

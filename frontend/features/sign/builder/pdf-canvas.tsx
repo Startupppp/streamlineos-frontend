@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Loader2 } from "lucide-react";
+import { isActivationKey } from "@/lib/keyboard-activation";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
@@ -87,6 +88,21 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
     onCanvasClick(xPx / scale, yPx / scale);
   }
 
+  /**
+   * A pointer places a field where it was pressed. A keyboard has no pointer,
+   * so Enter or Space places it at the centre of the page instead — otherwise
+   * placement is a mouse-only capability.
+   */
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!onCanvasClick || !canvasRef.current) return;
+    if (!isActivationKey(e)) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    onCanvasClick(canvas.width / 2 / scale, canvas.height / 2 / scale);
+  }
+
+  const placeable = onCanvasClick !== undefined;
+
   return (
     <div ref={containerRef} className="relative w-full">
       {isLoading && (
@@ -95,7 +111,14 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
         </div>
       )}
       {error && <p className="text-sm text-destructive py-12 text-center">{error}</p>}
-      <div className="relative inline-block" onClick={handleClick}>
+      <div
+        className="relative inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        role={placeable ? "button" : undefined}
+        tabIndex={placeable ? 0 : undefined}
+        aria-label={placeable ? `Page ${pageNumber} — place the selected field` : undefined}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+      >
         <canvas ref={canvasRef} className="rounded-lg shadow-sm border border-border" />
         {!isLoading && !error && renderOverlay?.(scale)}
       </div>

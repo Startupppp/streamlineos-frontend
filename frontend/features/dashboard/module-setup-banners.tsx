@@ -30,6 +30,29 @@ import {
   type ModuleChecklist,
 } from "@/hooks/api/onboarding-flow";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isSetupBannerSlotPending } from "./dashboard-hydration";
+import { useSettleDeadline } from "./use-settle-deadline";
+
+const SETUP_BANNER_SETTLE_DEADLINE_MS = 1500;
+
+/**
+ * These banners are a variable-height stack rendered above the dashboard's
+ * widget grid, and they are `null` until their query answers — measured at 520px
+ * arriving 150ms after first content paint, which moved every row below them and
+ * was 0.17 of the route's desktop CLS on a populated dashboard. Their height is
+ * only knowable from the response, so no skeleton can reserve it; the page holds
+ * its own skeleton instead and paints the banners in the first real layout.
+ */
+export function useModuleSetupBannersPending(): boolean {
+  const canView = useCan("onboarding:module-checklists:view");
+  const { isLoading } = useModuleChecklists(canView);
+  const deadlineElapsed = useSettleDeadline(SETUP_BANNER_SETTLE_DEADLINE_MS);
+  return isSetupBannerSlotPending({
+    denied: !canView,
+    isLoading,
+    deadlineElapsed,
+  });
+}
 
 const MODULE_LABELS: Record<string, string> = {
   crm: "Set up CRM",
@@ -105,7 +128,11 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
             <p className="text-sm font-semibold text-foreground">{label}</p>
             <span className="text-xs text-muted-foreground tabular-nums">{checklist.progress}%</span>
           </div>
-          <Progress value={checklist.progress} className="h-1.5" />
+          <Progress
+            value={checklist.progress}
+            aria-label={`${label} setup progress`}
+            className="h-1.5"
+          />
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button

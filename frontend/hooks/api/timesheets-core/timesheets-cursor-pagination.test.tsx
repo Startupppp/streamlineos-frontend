@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useApprovals } from "./approvals";
 import { useAuditEvents } from "./audit";
-import type { CursorPage, TimesheetPeriod, AuditEvent } from "@/features/timesheets/types";
+import type { CursorPage, TimesheetPeriod } from "@/features/timesheets/types";
+import type { AuditEvent } from "@/features/timesheets/audit-types";
 
 const mockGet = jest.fn();
 
@@ -30,14 +31,24 @@ function makeApprovalsPage(nextCursor: string | null): CursorPage<TimesheetPerio
     data: [
       {
         id: 1,
-        userId: "u1",
+        orgId: "org-1",
+        userMembershipId: 7,
         status: "SUBMITTED",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-07",
         totalHours: "40",
         billableHours: "32",
-        submittedAt: "2026-01-08T09:00:00Z",
-      } as TimesheetPeriod,
+        nonBillableHours: "8",
+        submittedAt: "2026-01-08T09:00:00.000Z",
+        approvedAt: null,
+        rejectedAt: null,
+        lockedAt: null,
+        currentApproverMembershipId: null,
+        rejectionReason: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-08T09:00:00.000Z",
+        user: { membershipId: 7, name: "Alice", email: "alice@example.com" },
+      },
     ],
     pagination: { limit: 25, nextCursor, hasMore: nextCursor !== null },
   };
@@ -51,7 +62,7 @@ function makeAuditPage(nextCursor: string | null): CursorPage<AuditEvent> {
         action: "entry.created",
         entityType: "entry",
         entityId: "42",
-        actorUserId: "u1",
+        actorMembershipId: 7,
         actorName: "Alice",
         before: null,
         after: null,

@@ -1,14 +1,5 @@
 "use client";
-import type { NotificationChannel, NotificationPriority } from "@/types/notifications";
-
-export const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
+import type { NotificationPriority } from "@/types/notifications";
 
 export const PRIORITIES: Array<{ value: NotificationPriority; label: string }> = [
   { value: "LOW", label: "Low" },

@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import type { LiveSessionResults } from "@/hooks/api/surveys/live-session";
 
 const CHART_COLOR = "#3B82F6";
@@ -12,6 +13,17 @@ export function LiveResultBars({ results }: { results: LiveSessionResults }) {
       <p className="text-sm text-muted-foreground">
         {results.question.responseCount} response{results.question.responseCount === 1 ? "" : "s"} so far. Click Reveal to show results.
       </p>
+    );
+  }
+
+  if (results.question.choiceDistribution.length === 0) {
+    return (
+      <EmptyState
+        compact
+        illustrationPreset="survey"
+        title="Nothing to chart"
+        description="This question has no answer choices, so there is no distribution to show."
+      />
     );
   }
 

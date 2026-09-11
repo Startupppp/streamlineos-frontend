@@ -25,12 +25,12 @@ export default function TicketFeedbackPage() {
   const [comment, setComment] = useState("");
 
   const survey = surveyQuery.data;
-  const alreadyResponded = Boolean(survey?.respondedAt);
+  const alreadyResponded = Boolean(survey?.alreadyResponded);
   const isSuccess = submitMutation.isSuccess;
   const showThankYou = isSuccess || alreadyResponded;
   const displayScore = isSuccess
     ? submitMutation.data?.score ?? score
-    : survey?.score ?? null;
+    : null;
 
   const handleSubmit = useCallback(() => {
     if (score === null) return;

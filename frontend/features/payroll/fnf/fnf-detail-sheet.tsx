@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFnfSettlement, useFnfStatement, useApproveFnf, downloadFnfStatement } from "@/hooks/api/payroll/fnf";
@@ -39,14 +40,31 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
   const [notes, setNotes] = useState("");
   const [downloading, setDownloading] = useState(false);
 
-  const { data: settlement, isLoading: loadingSettlement } = useFnfSettlement(settlementId);
-  const { data: statement, isLoading: loadingStatement } = useFnfStatement(settlementId);
+  const {
+    data: settlement,
+    isLoading: loadingSettlement,
+    isError: settlementError,
+    error: settlementErrorValue,
+    refetch: refetchSettlement,
+  } = useFnfSettlement(settlementId);
+  const {
+    data: statement,
+    isLoading: loadingStatement,
+    isError: statementError,
+    refetch: refetchStatement,
+  } = useFnfStatement(settlementId);
   const approveMutation = useApproveFnf();
   const canManage = useCan("payroll:fnf:manage");
 
   const isLoading = loadingSettlement || loadingStatement;
+  const isError = settlementError || statementError;
   const isFinal = settlement ? FINAL_STATUSES.includes(settlement.status) : false;
-  const showApprove = canManage && !isFinal;
+  const showApprove = canManage && !isFinal && !isError;
+
+  const handleRetry = useCallback(() => {
+    void refetchSettlement();
+    void refetchStatement();
+  }, [refetchSettlement, refetchStatement]);
 
   function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setNotes(e.target.value);
@@ -103,6 +121,13 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-48 w-full rounded-lg" />
           </div>
+        ) : isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load this settlement"
+            description={getErrorMessage(settlementErrorValue)}
+            onRetry={handleRetry}
+          />
         ) : settlement && statement ? (
           <>
             <FnfStatementView settlement={settlement} statement={statement} />

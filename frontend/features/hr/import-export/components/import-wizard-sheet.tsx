@@ -32,7 +32,8 @@ interface ImportWizardSheetProps {
   columns: string[];
 }
 
-type Step = 1 | 2 | 3;
+const STEPS = [1, 2, 3] as const;
+type Step = (typeof STEPS)[number];
 
 function splitCsvLine(line: string): string[] {
   const result: string[] = [];
@@ -182,7 +183,7 @@ export function ImportWizardSheet({
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <SheetTitle>Import {entityLabel}</SheetTitle>
           <div className="flex items-center gap-2 mt-1">
-            {([1, 2, 3] as Step[]).map((s) => (
+            {STEPS.map((s) => (
               <div key={s} className="flex items-center gap-1.5">
                 <div
                   className={cn(

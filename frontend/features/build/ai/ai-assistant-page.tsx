@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 import { useFeature } from "@/lib/billing/use-feature";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PmPageShell, PM_FILL_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPageShell, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { AiChatPanel } from "./ai-chat-panel";
 import { AiToolsRail, AiToolsMobileSheet } from "./ai-tools-rail";
 

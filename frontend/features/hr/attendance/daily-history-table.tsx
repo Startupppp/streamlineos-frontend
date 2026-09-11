@@ -1,12 +1,13 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { useHrAttendanceHistory } from "@/hooks/api/hr";
 import { toast } from "sonner";
@@ -166,44 +167,43 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   fill?: boolean;
   chrome?: boolean;
 }) {
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  /**
+   * The page-overshoot correction this component used to run — snapping
+   * `page` back to `totalPages` whenever a page-size change or a deleted row
+   * left the reader past the end — is gone because the state it corrected can
+   * no longer exist. A keyset pager holds cursors, not a page index, so there
+   * is no number to overshoot; changing the page size rewinds to the head via
+   * `resetKey`, which is the same outcome the correction produced, one render
+   * earlier and without a query for a page that isn't there.
+   */
+  const pager = useCursorPager(String(pageSize));
   const { data, error, isLoading, refetch } = useHrAttendanceHistory(
-    page,
+    pager.cursor,
     pageSize,
   );
   const logs = data?.data ?? [];
-  const total = data?.pagination.total ?? 0;
-  const totalPages = Math.max(1, data?.pagination.totalPages ?? 1);
+  const hasMore = data?.pagination.hasMore ?? false;
+  const nextCursor = data?.pagination.nextCursor ?? null;
 
-  useEffect(() => {
-    if (isLoading || page <= totalPages) return;
-    let correctionActive = true;
-    queueMicrotask(() => {
-      if (correctionActive) setPage(totalPages);
-    });
-    return () => {
-      correctionActive = false;
-    };
-  }, [isLoading, page, totalPages]);
-
-  const handlePageChange = useCallback((nextPage: number) => {
-    setPage(nextPage);
-  }, []);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const handlePageSizeChange = useCallback((nextPageSize: number) => {
     setPageSize(nextPageSize);
-    setPage(1);
   }, []);
 
   const pagination = {
-    page,
+    mode: "cursor",
     pageSize,
-    total,
-    onPageChange: handlePageChange,
+    hasMore,
+    hasPrevious: pager.hasPrevious,
+    onNext: handleNextPage,
+    onPrevious: pager.goPrevious,
     onPageSizeChange: handlePageSizeChange,
     pageSizeOptions: [10, 20, 50] as const,
-  };
+  } as const;
 
   function handleDownloadClick() {
     void handleDownloadReport(logs);

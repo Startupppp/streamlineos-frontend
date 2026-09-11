@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Unlink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -139,13 +140,17 @@ function AppCard({
 }
 
 export function ConnectedAppsSection() {
-  const { data: connections, isLoading } = useIntegrationConnections();
+  const { data: connections, isLoading, isError, error, refetch } = useIntegrationConnections();
 
   const connectionByToolkit = useCallback(
     (toolkit: IntegrationToolkit) =>
       connections?.find((c) => c.toolkit === toolkit),
     [connections],
   );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-3">
@@ -163,6 +168,13 @@ export function ConnectedAppsSection() {
               <Skeleton key={c.toolkit} className="h-16 w-full rounded-md" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load connected apps"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            compact
+          />
         ) : (
           APP_CONFIGS.map((config) => (
             <AppCard

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateBiometricDevice,
@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const VENDORS = ["ZKTeco", "Suprema", "eSSL", "Other"] as const;
 
@@ -161,7 +162,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                       type="number"
                       className="text-sm"
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      onChange={numericFieldChange(field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />

@@ -1,32 +1,26 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, PanelRightOpen } from "lucide-react";
-import { EllipsisIcon, ShareIcon } from "@animateicons/react/lucide";
+import { AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
-import { useTicketByKey } from "@/hooks/api/build";
-import { formatTicketKey, parseTicketKey } from "@/features/build/shared/format-ticket-key";
+import { useTicketByKey, useEpics, useModules, useCycles } from "@/hooks/api/build";
+import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
+import { formatTicketKey, parseTicketKey } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
-import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";
+import { TicketDetailToolbar } from "./ticket-detail-toolbar";
 import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 
 interface TicketDetailPageProps {
@@ -68,16 +62,25 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     if (typeof window === "undefined") return false;
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
   });
-  const [overflowDeleteOpen, setOverflowDeleteOpen] = useState(false);
-  const canDeleteTicket = useCan("build:tickets:delete");
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError } = useTicketByKey(
+  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError, refetch: refetchByKey } = useTicketByKey(
     projectId,
     parsed?.ticketNumber ?? null,
+    INLINE_READ_ERROR,
   );
   const ticketId = byKeyTicket?.id ?? null;
+
+  // Warmed here, not left behind the ticket guard: the right panel and the
+  // relations block are keyed on projectId alone, so waiting two round-trips
+  // for them is a pure waterfall. Mobile keeps the drawer lists off (the
+  // hooks' own `!!projectId` gate) because that drawer may never open.
+  const sidebarWarmProjectId = isMobile ? 0 : projectId;
+  useEpics(sidebarWarmProjectId);
+  useModules(sidebarWarmProjectId);
+  useCycles(sidebarWarmProjectId);
+  useProjectBoardTickets(projectId);
 
   const handleDeleted = () => {
     router.push(`/build/${projectId}`);
@@ -87,6 +90,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     ticket,
     isLoading,
     ticketError,
+    refetchTicket,
     sprints,
     subtasks,
     members,
@@ -110,15 +114,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     [autoSave],
   );
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  };
-
   function handleRightPanelOpenChange(open: boolean) {
     const collapsed = !open;
     setRightPanelCollapsed(collapsed);
@@ -127,10 +122,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   function handleExpandRightPanel() {
     handleRightPanelOpenChange(true);
-  }
-
-  function handleOpenOverflowDelete() {
-    setOverflowDeleteOpen(true);
   }
 
   if (!parsed) return notFound();
@@ -159,7 +150,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </PageWrapper>
       );
     }
-    return notFound();
+    if (isApiError(byKeyError) && byKeyError.status === 404) return notFound();
+    return (
+      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
+      </PageWrapper>
+    );
   }
 
   if (!byKeyTicket) return notFound();
@@ -190,6 +186,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_TICKET_NOT_FOUND") {
     return notFound();
+  }
+
+  if (ticketError && !ticket) {
+    return (
+      <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
+      </PageWrapper>
+    );
   }
 
   if (!ticket || !ticketId) {
@@ -237,71 +241,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       className="h-full"
       contentClassName="flex flex-1 min-h-0 flex-col p-0"
       actions={
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {rightPanelCollapsed ? (
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-              onClick={handleExpandRightPanel}
-              aria-label="Expand details panel"
-            >
-              <PanelRightOpen className="h-4 w-4" />
-            </Button>
-          ) : null}
-
-          {isMobile ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <AnimatedIconButton
-                    size="icon"
-                    variant="outline"
-                    icon={EllipsisIcon}
-                    iconSize={16}
-                    className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-                    aria-label="More actions"
-                  />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent forceMount align="end" className="w-52">
-                  <DropdownMenuItem onSelect={handleShare} className="gap-2">
-                    <ShareIcon size={14} />
-                    Share
-                  </DropdownMenuItem>
-                  {canDeleteTicket && (
-                    <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {canDeleteTicket && (
-                <TicketDetailDeleteDialog
-                  open={overflowDeleteOpen}
-                  onOpenChange={setOverflowDeleteOpen}
-                  onDelete={handleDelete}
-                  isDeleting={isDeleting}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              <AnimatedIconButton
-                size="icon"
-                variant="outline"
-                icon={ShareIcon}
-                iconSize={16}
-                className="h-8 w-8 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm"
-                onClick={handleShare}
-                aria-label="Copy share link"
-              />
-              {canDeleteTicket && (
-                <TicketDetailActions
-                  onDelete={handleDelete}
-                  isDeleting={isDeleting}
-                />
-              )}
-            </>
-          )}
-        </div>
+        <TicketDetailToolbar
+          isMobile={isMobile}
+          rightPanelCollapsed={rightPanelCollapsed}
+          onExpandRightPanel={handleExpandRightPanel}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+        />
       }
     >
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">

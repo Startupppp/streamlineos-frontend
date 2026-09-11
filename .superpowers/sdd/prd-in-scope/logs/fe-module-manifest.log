@@ -1,5 +1,0 @@
-
-> streamlineos@0.1.0 check:module-manifest D:\projects\personal\Streamlineos\frontend
-> node scripts/check-module-manifest.mjs
-
-✔  Module manifest is consistent.

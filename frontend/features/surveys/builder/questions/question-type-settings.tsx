@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Label } from "@/components/ui/label";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface QuestionTypeSettingsProps {
   type: SurveyQuestionType;
@@ -19,7 +20,7 @@ function NumberField({ label, value, onChange, placeholder }: { label: string; v
         type="number"
         value={typeof value === "number" ? value : ""}
         placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+        onChange={numericFieldChangeOr(onChange, 0)}
         className="w-28"
       />
     </div>

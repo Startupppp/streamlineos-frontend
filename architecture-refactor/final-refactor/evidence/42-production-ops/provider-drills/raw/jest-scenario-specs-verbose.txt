@@ -1,0 +1,94 @@
+PASS src/common/outbox/external-effect-ledger.spec.ts
+  ExternalEffectLedger
+    ✓ reports an undeployed ledger without querying tenant rows (2 ms)
+    ✓ records success and suppresses a later replay (2 ms)
+    ✓ records a provider failure and permits a retry (3 ms)
+    ✓ does not run concurrently while another attempt owns a live lease
+    ✓ reclaims an expired attempt and records the uncertain crash-window retry (1 ms)
+    ✓ fails closed when completion loses the lease after the provider call (2 ms)
+
+PASS src/modules/billing/payments/payment-webhook-security.spec.ts
+  billing webhook — unknown/unconfigured org returns 404, not 403
+    ✓ returns 404 when the org has no payment provider row in the DB (4 ms)
+    ✓ returns 404, not 403 — a 403 leaks that the org exists to an attacker (1 ms)
+    ✓ writes nothing to the DB when the org has no provider row
+  billing webhook — invalid signature rejected before any ledger write
+    ✓ returns 401 when the signature does not match (1 ms)
+    ✓ writes no ledger row when the signature is rejected (1 ms)
+    ✓ accepts a valid signature and returns 200 (1 ms)
+    ✓ does not notify the owner when signature is valid (1 ms)
+  billing webhook — duplicate event accepted only once
+    ✓ returns 200 ok:true duplicate:true on the second delivery of the same event (1 ms)
+  billing rate-limit TIERS registration — failing-open prevention
+    ✓ billing:webhook tier is declared and bites (non-zero effective limit)
+    ✓ billing:checkout tier is declared and bites (non-zero effective limit)
+    ✓ an unknown billing tier returns 0 — this is the deny-by-default proof
+
+PASS src/modules/chat/chat-realtime-revocation.spec.ts
+  chat channel removal realtime durability
+    ✓ writes token revocation and capability refresh to the same post-commit outbox transaction (1 ms)
+  RealtimeTokenRevocationConsumer
+    ✓ revokes old tokens before refreshing capabilities (1 ms)
+    ✓ propagates provider failure so the outbox publisher retries and can DLQ it (1 ms)
+
+PASS src/modules/billing/core/revenue-event-replay.spec.ts
+  a re-settled provider event cannot post a second revenue row
+    ✓ gives both emissions of one refund the same outbox event id (2 ms)
+    ✓ gives both emissions the same aggregate id, so the per-aggregate fence agrees (1 ms)
+    ✓ gives both emissions of one AI pack capture the same outbox event id
+    ✓ separates two different payments, so the fence never suppresses a real second movement (1 ms)
+    ✓ is the dedupe key doing the work — an event without one still gets a fresh id each time
+    ✓ keeps the emitted payload identical across the replay, so only the identity is derived
+    ✓ emits an id the outbox envelope accepts as a uuid (1 ms)
+
+PASS src/modules/email/email-webhook.spec.ts
+  EmailWebhookService
+    ✓ suppresses a hard bounce when the signature is valid (1 ms)
+    ✓ rejects a request with no signature headers
+    ✓ rejects a forged signature
+    ✓ rejects a signature computed over a different body (1 ms)
+    ✓ rejects a replayed request outside the timestamp window
+    ✓ fails closed when no signing secret is configured
+    ✓ ignores delivery events that are not bounces or complaints
+    ✓ suppresses a complaint (1 ms)
+    ✓ rejects a zeptomail callback when the shared secret does not match
+    ✓ accepts a zeptomail callback with the shared secret
+
+{"timestamp":"2026-09-03T16:29:40.151Z","level":"error","message":"[billing:razorpay] failed to record provider event","meta":{"error":{"name":"Error","message":"connection reset","stack":"Error: connection reset\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/provider-event-ledger.spec.ts:67:50)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsF… [truncated 24 chars]"},"providerEventId":"pay_001"}}
+PASS src/modules/billing/core/provider-event-ledger.spec.ts
+  ProviderEventLedger — claim()
+    ✓ returns RECORDED when the insert succeeds (1 ms)
+    ✓ returns RETRY when the insert conflicts and the row has no processedAt
+    ✓ returns PROCESSED when the insert conflicts and the row is already acknowledged
+    ✓ returns ERROR and does not propagate when the db throws (2 ms)
+    ✓ two different orgs can each claim the same (provider, event_id) — the composite index does not cross-tenant block
+    ✓ conflict target includes org_id so a same-org duplicate is caught, not a cross-org one (1 ms)
+
+PASS src/modules/crm/consent/unsubscribe-token.spec.ts
+  unsubscribe tokens
+    ✓ round-trips a payload (1 ms)
+    ✓ does not embed a guessable id — the token is not just the contact id
+    ✓ rejects a tampered payload, which is the whole point
+    ✓ rejects a tampered signature
+    ✓ rejects a token signed with a different key
+    ✓ rejects malformed input rather than throwing
+    ✓ rejects a valid signature over a structurally invalid payload
+    ✓ is deterministic, so the same contact yields a stable link
+
+PASS src/modules/email/unsubscribe-token.spec.ts
+  unsubscribe token
+    ✓ round-trips a valid token
+    ✓ rejects a tampered payload
+    ✓ rejects a token signed with a different secret
+    ✓ rejects an expired token
+    ✓ fails closed when no secret is configured
+    ✓ rejects a secret shorter than 32 characters rather than signing weakly
+    ✓ rejects garbage
+    ✓ binds the token to one user, org and address
+
+Test Suites: 8 passed, 8 total
+Tests:       59 passed, 59 total
+Snapshots:   0 total
+Time:        1.399 s
+Ran all test suites matching /(chat-realtime-revocation|provider-event-ledger|external-effect-ledger|unsubscribe-token|email-webhook|revenue-event-replay|payment-webhook-security)\.spec\.ts$/i.
+EXIT=0

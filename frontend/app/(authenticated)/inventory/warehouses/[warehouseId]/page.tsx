@@ -12,7 +12,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useWarehouse, useLocations } from "@/hooks/api/inventory/warehouses";
 import type { LocationType, WarehouseLocation } from "@/hooks/api/inventory/warehouses";

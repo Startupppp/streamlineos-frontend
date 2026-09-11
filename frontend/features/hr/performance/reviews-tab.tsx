@@ -17,7 +17,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { toast } from "sonner";
@@ -83,6 +83,15 @@ export function ReviewsTab() {
   const handleStatusChange = useCallback((value: string) => {
     setStatusFilter(isStatusTab(value) ? value : "all");
     setCursorHistory([undefined]);
+  }, []);
+
+  const handleEmployeeChange = useCallback((id: string) => {
+    setEmployeeId(id);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.employeeId;
+      return next;
+    });
   }, []);
 
   const handleNextPage = useCallback(() => {
@@ -331,10 +340,7 @@ export function ReviewsTab() {
           employees={employees}
           cycles={Array.isArray(cycles) ? cycles : []}
           employeeId={employeeId}
-          onEmployeeChange={(id) => {
-            setEmployeeId(id);
-            setFieldErrors((prev) => { const next = { ...prev }; delete next.employeeId; return next; });
-          }}
+          onEmployeeChange={handleEmployeeChange}
           employeePickerOpen={employeePickerOpen}
           onEmployeePickerOpenChange={setEmployeePickerOpen}
           cycleId={cycleId}

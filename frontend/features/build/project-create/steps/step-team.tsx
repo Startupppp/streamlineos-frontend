@@ -80,9 +80,9 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
           const isSelected = draft.memberIds.includes(m.userId);
           const displayName = getUserDisplayName({ name: m.name, email: m.email });
           return (
-            <div
+            <label
               key={m.userId}
-              onClick={() => handleToggle(m.userId)}
+              htmlFor={`project-member-${m.userId}`}
               className={cn(
                 "flex items-center gap-3 rounded-lg p-2.5 transition-colors",
                 isCreator ? "cursor-default" : "cursor-pointer",
@@ -90,6 +90,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
               )}
             >
               <Checkbox
+                id={`project-member-${m.userId}`}
                 checked={isSelected}
                 onCheckedChange={() => handleToggle(m.userId)}
                 disabled={isCreator}
@@ -109,7 +110,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{m.email}</div>
               </div>
-            </div>
+            </label>
           );
         })}
       </div>

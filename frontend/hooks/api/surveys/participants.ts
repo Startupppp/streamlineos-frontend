@@ -1,8 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type ParticipantStatus =
   | "invited"
@@ -15,6 +19,19 @@ export type ParticipantStatus =
   | "bounced"
   | "unsubscribed"
   | "expired";
+
+const surveyParticipantListC = lazyContract(() =>
+  import("./survey-participants-schema").then((m) => m.surveyParticipantListContract),
+);
+const surveyImportResultC = lazyContract(() =>
+  import("./survey-participants-schema").then((m) => m.surveyImportResultContract),
+);
+const surveyInviteResultC = lazyContract(() =>
+  import("./survey-participants-schema").then((m) => m.surveyInviteResultContract),
+);
+const surveyRemindResultC = lazyContract(() =>
+  import("./survey-participants-schema").then((m) => m.surveyRemindResultContract),
+);
 
 export interface SurveyParticipant {
   id: number;
@@ -48,44 +65,45 @@ export interface ParticipantImportRow {
 }
 
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
-  return useQuery({
-    queryKey: queryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyParticipant[]>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>),
+  return useGatedQuery("surveys:participants:view", {
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.participants(surveyId, params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params, signal, surveyParticipantListC)).items,
     staleTime: 15_000,
   });
 }
 
 function useInvalidateParticipants(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: [...queryKeys.surveys.all, "participants", surveyId] });
+  return () => qc.invalidateQueries({ queryKey: [...knowledgeAndSurveysQueryKeys.surveys.all, "participants", surveyId] });
 }
 
 export function useImportParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "import", surveyId] as const,
     mutationFn: (input: { collectorId?: number; participants: ParticipantImportRow[] }) =>
-      apiClient.post<Array<{ id: number; accessToken: string | null }>>(`/surveys/${surveyId}/participants/import`, input),
+      apiClient.post<Array<{ id: number; accessToken: string | null }>>(`/surveys/${surveyId}/participants/import`, input, undefined, surveyImportResultC),
     onSuccess: invalidate,
   });
 }
 
 export function useInviteParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "invite", surveyId] as const,
     mutationFn: (participantIds: number[]) =>
-      apiClient.post<{ success: boolean; count: number }>(`/surveys/${surveyId}/participants/invite`, { participantIds }),
+      apiClient.post<{ success: boolean; count: number }>(`/surveys/${surveyId}/participants/invite`, { participantIds }, undefined, surveyInviteResultC),
     onSuccess: invalidate,
   });
 }
 
 export function useRemindParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "remind", surveyId] as const,
     mutationFn: (participantIds: number[]) =>
-      apiClient.post<{ success: boolean; remindable: number }>(`/surveys/${surveyId}/participants/remind`, { participantIds }),
+      apiClient.post<{ success: boolean; remindable: number }>(`/surveys/${surveyId}/participants/remind`, { participantIds }, undefined, surveyRemindResultC),
     onSuccess: invalidate,
   });
 }

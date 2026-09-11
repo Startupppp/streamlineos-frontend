@@ -1,57 +1,18 @@
-export interface EssToggles {
-  essShowSalaryStructure: boolean;
-  essAllowBankUpdate: boolean;
-  essAllowLoanRequests: boolean;
-  essAllowTaxDeclarations: boolean;
-  essAllowReimbursements: boolean;
-  emailPayslips: boolean;
-}
+import type { z } from "zod";
+import type { taxDeclarationResponseContract } from "@/hooks/api/payroll/ess-overview-schema";
+import type { essOverviewContract } from "@/hooks/api/payroll/ess-overview-schema";
+import type { totalRewardsStatementContract } from "@/hooks/api/payroll/ess-overview-schema";
 
-export interface EssPayslip {
-  publicationId: number;
-  month: string;
-  net: string | null;
-  publishedAt: string | null;
-  downloadHref: string;
-  workerType?: string | null;
-  invoiceNumber?: string | null;
-  paymentAdvice?: string | null;
-}
+/**
+ * `EssPayslip` and `EssBankDetails` are `z.infer`red from the contracts that
+ * validate them at the fetch seam (`hooks/api/payroll/ess-schema.ts`).
+ */
+export type {
+  EssBankDetails,
+  EssPayslip,
+} from "@/hooks/api/payroll/ess-schema";
 
-export interface EssCapabilities {
-  mode: "employee_self_service";
-  honestyNote: string;
-  canViewSalaryStructure: boolean;
-  canUpdateBank: boolean;
-  canRequestLoans: boolean;
-  canDeclareTax: boolean;
-  canClaimReimbursements: boolean;
-}
-
-export interface EssActionRequired {
-  key: string;
-  label: string;
-  severity: "info" | "warning";
-  href: string;
-}
-
-export interface EssOverview {
-  toggles: EssToggles;
-  capabilities?: EssCapabilities;
-  latestPayslip: {
-    publicationId: number;
-    month: string;
-    net: string | null;
-    downloadHref: string;
-  } | null;
-  nextPayDate: { date: string; label: string } | null;
-  ytd: { gross: string; net: string };
-  activeLoanBalance: string;
-  pendingReimbursementsCount: number;
-  taxWindow: { status: string; financialYear: string; closesAt: string | null } | null;
-  declarationStatus: string | null;
-  actionRequired?: EssActionRequired[];
-}
+export type EssOverview = z.infer<typeof essOverviewContract>;
 
 export interface ManagerTeamMember {
   userId: string;
@@ -145,130 +106,15 @@ export interface TeamRewardsResult {
   payCompression: PayCompressionStats;
 }
 
-export interface TotalRewardsStatement {
-  mode: "illustrative_statement";
-  honestyNote: string;
-  asOf: string;
-  financialYear: string;
-  cash: {
-    annualCtc: string | null;
-    ytdGross: string;
-    ytdNet: string;
-    activeLoanBalance: string;
-  };
-  benefits: {
-    lines: {
-      planName: string;
-      category: string;
-      status: string;
-      estimatedEmployerMonthly: string | null;
-      note: string;
-    }[];
-    estimatedEmployerAnnual: string | null;
-  };
-  equity: {
-    lines: {
-      grantType: string;
-      units: number;
-      status: string;
-      grantDate: string;
-      strikePrice: string | null;
-      note: string;
-    }[];
-    totalUnits: number;
-    valued: false;
-  };
-  leave: {
-    lines: { leaveType: string; balanceDays: string }[];
-    note: string;
-  };
-  summary: {
-    cashAnnualCtc: string | null;
-    benefitsEmployerAnnualEstimate: string | null;
-    equityUnits: number;
-    completeness: "partial" | "rich";
-    missing: string[];
-  };
-}
-
-export interface EssSalaryComponent {
-  code: string;
-  name: string;
-  type: string;
-  amount: string | null;
-  percent: string | null;
-}
-
-export interface EssSalaryStructure {
-  profile: {
-    annualCtc: string | null;
-    workerType: string | null;
-    taxRegime: string | null;
-    costCenter: string | null;
-    effectiveFrom: string | null;
-  };
-  components: EssSalaryComponent[];
-}
+export type TotalRewardsStatement = z.infer<typeof totalRewardsStatementContract>;
 
 export type ReimbursementStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
-export interface EssReimbursement {
-  id: number;
-  category: string;
-  amount: string;
-  description: string;
-  receiptUrl: string | null;
-  status: ReimbursementStatus;
-  createdAt: string;
-  payrollMonth?: string | null;
-}
-
-export interface EssTaxDeclaration {
-  id: number;
-  financialYear: string;
-  regime: "OLD" | "NEW";
-  hra: string | null;
-  lta: string | null;
-  section80c: string | null;
-  section80d: string | null;
-  section80g: string | null;
-  homeLoanInterest: string | null;
-  status: string;
-  reviewNote: string | null;
-}
-
-export interface EssTaxDeclarationResponse {
-  windowStatus: "OPEN" | null;
-  financialYear: string | null;
-  closesAt: string | null;
-  declaration: EssTaxDeclaration | null;
-}
+export type EssTaxDeclarationResponse = z.infer<typeof taxDeclarationResponseContract>;
 
 export type LoanStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "CLOSED";
 
-export interface EssLoan {
-  id: number;
-  amount: string;
-  reason: string | null;
-  emiAmount: string | null;
-  totalEmis: number | null;
-  paidEmis: number;
-  status: LoanStatus;
-  balance: string;
-  createdAt: string;
-}
-
-export interface EssBankDetails {
-  hasBank: boolean;
-  masked: {
-    accountNumber: string;
-    bankName: string | null;
-    branch: string | null;
-    ifsc: string | null;
-    accountHolder: string | null;
-    bankCountry?: string;
-  } | null;
-}
+export type { EssLoan } from "@/hooks/api/payroll/ess-money-schema";
 
 export interface EssFnfSettlement {
   id: number;

@@ -1,26 +1,22 @@
 "use client";
 
-import { PhoneOff } from "lucide-react";
-import { MicIcon, MicOffIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PhoneOff, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
+import { resolveImageUrl } from "@/lib/utils";
 import type { Huddle } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 interface HuddleMiniBarProps {
   participants: Huddle["participants"];
-  isMuted: boolean;
-  onToggleMute: () => void;
+  meetingUrl: string | null;
   onLeave: () => void;
   isLeavePending: boolean;
 }
 
 export function HuddleMiniBar({
   participants,
-  isMuted,
-  onToggleMute,
+  meetingUrl,
   onLeave,
   isLeavePending,
 }: HuddleMiniBarProps) {
@@ -28,7 +24,7 @@ export function HuddleMiniBar({
     <div className="px-4 pb-2 flex items-center gap-2">
       <div className="flex -space-x-1.5">
         {participants.slice(0, 4).map((p) => (
-          <Avatar key={p.userId} className="h-5 w-5 border border-background">
+          <Avatar key={p.id} className="h-5 w-5 border border-background">
             <AvatarImage src={resolveImageUrl(p.user?.image)} />
             <AvatarFallback className="text-micro">
               {getInitials(p.user?.name)}
@@ -37,18 +33,19 @@ export function HuddleMiniBar({
         ))}
       </div>
       <div className="flex items-center gap-1 ml-auto">
-        <AnimatedIconButton
-          icon={isMuted ? MicOffIcon : MicIcon}
-          iconSize={12}
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-6 w-6 rounded-full p-0",
-            isMuted && "text-status-danger-ink",
-          )}
-          onClick={onToggleMute}
-          aria-label={isMuted ? "Unmute" : "Mute"}
-        />
+        {meetingUrl ? (
+          <a
+            href={meetingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-micro font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Video className="h-3 w-3 shrink-0" />
+            Join
+          </a>
+        ) : (
+          <span className="text-micro text-muted-foreground">No meeting link</span>
+        )}
         <Button
           variant="ghost"
           size="sm"

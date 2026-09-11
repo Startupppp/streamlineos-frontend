@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import { useCrmOptions } from "@/hooks/api/crm";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { DataScope } from "@/types/access";
 

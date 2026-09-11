@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { type ExpenseFormData } from "./expense-form-schema";
-import { MAX_EXPENSE_RECEIPTS, type ExpenseReceipt } from "../expense-constants";
+import { MAX_EXPENSE_RECEIPTS, type ExpenseReceipt } from "@/lib/expense-constants";
 import { ReceiptManager, type PendingReceipt } from "./receipt-manager";
 
 function AmountInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {

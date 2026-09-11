@@ -4,6 +4,25 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const slaPoliciesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaPoliciesListContract),
+);
+const slaReportLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaReportContract),
+);
+const slaBreachedLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaBreachedListContract),
+);
+
+const slaPolicyLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.slaPolicyContract),
+);
+const deleteSlaLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/sla-schema").then((m) => m.deleteSlaContract),
+);
 
 export interface SlaPolicy {
   id: number;
@@ -51,7 +70,7 @@ export interface UpdateSlaPolicyInput {
 export function useSlaPolicies() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaPolicies(),
-    queryFn: () => apiClient.get<SlaPolicy[]>("/crm/sla/policies"),
+    queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/crm/sla/policies", undefined, signal, slaPoliciesLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -59,7 +78,7 @@ export function useSlaPolicies() {
 export function useSlaReport() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaReport(),
-    queryFn: () => apiClient.get<SlaReport>("/crm/sla/report"),
+    queryFn: ({ signal }) => apiClient.get<SlaReport>("/crm/sla/report", undefined, signal, slaReportLazy),
     staleTime: 2 * 60_000,
   });
 }
@@ -67,18 +86,18 @@ export function useSlaReport() {
 export function useSlaBreachedLeads(params?: { limit?: number }) {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>, signal, slaBreachedLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "create"],
     mutationFn: (input: CreateSlaPolicyInput) =>
-      apiClient.post<SlaPolicy>("/crm/sla/policies", input),
+      apiClient.post<SlaPolicy>("/crm/sla/policies", input, undefined, slaPolicyLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },
@@ -87,10 +106,10 @@ export function useCreateSlaPolicy() {
 
 export function useUpdateSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "update"],
     mutationFn: ({ id, ...data }: UpdateSlaPolicyInput) =>
-      apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data),
+      apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data, undefined, slaPolicyLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },
@@ -99,10 +118,10 @@ export function useUpdateSlaPolicy() {
 
 export function useDeleteSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`, undefined, undefined, deleteSlaLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.slaPolicies() });
     },

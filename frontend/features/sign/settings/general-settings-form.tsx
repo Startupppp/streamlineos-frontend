@@ -12,6 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignSettings, useUpdateSignSettings } from "@/hooks/api/sign/settings";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const generalSettingsSchema = z.object({
   defaultExpirationDays: z.number().int().min(1).max(365).optional(),
@@ -26,11 +27,6 @@ const generalSettingsSchema = z.object({
 });
 
 type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
-
-function toNumber(value: string): number | undefined {
-  const n = parseInt(value, 10);
-  return isNaN(n) ? undefined : n;
-}
 
 export function GeneralSettingsForm() {
   const { data: settings } = useSignSettings();
@@ -97,7 +93,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -117,7 +113,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -137,7 +133,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -157,7 +153,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -177,7 +173,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -197,7 +193,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -217,7 +213,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -237,7 +233,7 @@ export function GeneralSettingsForm() {
                       <Input
                         type="number"
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onChange={numericFieldChange(field.onChange)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}

@@ -18,7 +18,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { useBillingProfile, useUpdateBillingProfile } from "@/hooks/api/subscription";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { upperCaseFieldChange } from "@/lib/case-field";
 
 const billingProfileSchema = z.object({
   billingName: z.string().max(200).nullable(),
@@ -40,7 +43,7 @@ const billingProfileSchema = z.object({
   city: z.string().max(100).nullable(),
   state: z.string().max(100).nullable(),
   pincode: z.string().max(10).nullable(),
-  country: z.string().max(100),
+  country: z.string().length(2, "Must be a 2-letter ISO country code"),
   isTaxExempt: z.boolean(),
 });
 
@@ -60,7 +63,14 @@ function BillingProfileSkeleton() {
   );
 }
 
+function toNullableText(v: string | null): string | null {
+  return v === "" ? null : v;
+}
+
 export function BillingProfileTab() {
+  const canView = useCan("billing:profile:view");
+  const canUpdate = useCan("billing:profile:update");
+
   const {
     data: profile,
     isLoading,
@@ -83,13 +93,24 @@ export function BillingProfileTab() {
       city: profile?.city ?? null,
       state: profile?.state ?? null,
       pincode: profile?.pincode ?? null,
-      country: profile?.country ?? "India",
+      country: profile?.country ?? "IN",
       isTaxExempt: profile?.isTaxExempt ?? false,
     },
   });
 
   function handleSubmit(values: BillingProfileFormValues) {
-    updateProfile(values, {
+    updateProfile({
+      ...values,
+      billingName: toNullableText(values.billingName),
+      billingEmail: toNullableText(values.billingEmail),
+      gstin: toNullableText(values.gstin),
+      pan: toNullableText(values.pan),
+      addressLine1: toNullableText(values.addressLine1),
+      addressLine2: toNullableText(values.addressLine2),
+      city: toNullableText(values.city),
+      state: toNullableText(values.state),
+      pincode: toNullableText(values.pincode),
+    }, {
       onSuccess: () => toast.success("Billing profile saved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
@@ -98,6 +119,9 @@ export function BillingProfileTab() {
   function handleRetry() {
     void refetch();
   }
+
+  if (!canView)
+    return <NoPermissionState permission="billing:profile:view" />;
 
   if (isLoading) {
     return <BillingProfileSkeleton />;
@@ -306,8 +330,10 @@ export function BillingProfileTab() {
                     <Input
                       {...field}
                       value={field.value}
-                      placeholder="India"
-                      className="h-9"
+                      placeholder="IN"
+                      maxLength={2}
+                      className="h-9 uppercase"
+                      onChange={upperCaseFieldChange(field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -339,6 +365,7 @@ export function BillingProfileTab() {
                 size="sm"
                 isPending={isPending}
                 loadingText="Saving…"
+                disabled={!canUpdate}
               >
                 Save Profile
               </LoadingButton>

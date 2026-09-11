@@ -107,9 +107,9 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
           {line.explain.steps.map((step, i) => (
             <p key={i}>{step}</p>
           ))}
-          {Object.entries(line.explain.inputs).map(([k, v]) => (
+          {line.explain.inputs ? Object.entries(line.explain.inputs).map(([k, v]) => (
             <p key={k}><span className="text-foreground">{k}:</span> {v}</p>
-          ))}
+          )) : null}
         </div>
       )}
     </div>
@@ -204,8 +204,9 @@ export function BreakdownSheet({
   const linesByCategory = snapshot?.lines.reduce<
     Partial<Record<SalaryComponentType, CalculationSnapshotLine[]>>
   >((acc, line) => {
-    if (!acc[line.category]) acc[line.category] = [];
-    acc[line.category]!.push(line);
+    const bucket = acc[line.category] ?? [];
+    bucket.push(line);
+    acc[line.category] = bucket;
     return acc;
   }, {});
 

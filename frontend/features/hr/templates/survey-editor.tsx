@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { SurveyQuestion } from "@/types/hr/templates";
+import { parseCommaList } from "@/lib/comma-list";
 
 const QUESTION_TYPES = [
   { value: "rating", label: "Rating (1–5)" },
@@ -24,6 +25,16 @@ const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
 ] as const;
 
+/**
+ * Built from the same constant the options render, so the guard cannot drift
+ * from the list. A `v as SurveyQuestion["type"]` here would accept any string
+ * the Select was ever given.
+ */
+function isSurveyQuestionType(value: string): value is SurveyQuestion["type"] {
+  return QUESTION_TYPES.some((type) => type.value === value);
+}
+
+/** "a, b, ,c" is three options, not four, and never an empty one. */
 interface SurveyEditorProps {
   questions: SurveyQuestion[];
   onChange: (questions: SurveyQuestion[]) => void;
@@ -59,6 +70,21 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
     [questions, onChange],
   );
 
+  function questionTypeHandler(questionId: string): (value: string) => void {
+    return function handleQuestionTypeChange(value) {
+      if (!isSurveyQuestionType(value)) return;
+      handleChange(questionId, { type: value });
+    };
+  }
+
+  function optionListHandler(
+    questionId: string,
+  ): (event: React.ChangeEvent<HTMLInputElement>) => void {
+    return function handleOptionListChange(event) {
+      handleChange(questionId, { options: parseCommaList(event.target.value) });
+    };
+  }
+
   return (
     <div className="space-y-2">
       {questions.map((q, idx) => (
@@ -73,7 +99,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
             />
             <Select
               value={q.type}
-              onValueChange={(v) => handleChange(q.id, { type: v as SurveyQuestion["type"] })}
+              onValueChange={questionTypeHandler(q.id)}
             >
               <SelectTrigger className="w-36 shrink-0">
                 <SelectValue />
@@ -106,9 +132,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
               <Input
                 placeholder="Options (comma-separated)"
                 value={q.options?.join(", ") ?? ""}
-                onChange={(e) =>
-                  handleChange(q.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
-                }
+                onChange={optionListHandler(q.id)}
                 className="text-xs"
               />
             </div>

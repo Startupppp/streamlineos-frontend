@@ -2,10 +2,6 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type KbAudience = "internal" | "public" | "mixed";
 
-export type KbArticleStatus = "draft" | "in_review" | "published" | "archived";
-
-export type KbVisibility = "public" | "internal";
-
 export interface KbSpace {
   id: number;
   name: string;
@@ -17,34 +13,6 @@ export interface KbSpace {
   articleCount?: number;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface KbArticleListItem {
-  id: number;
-  spaceId: number | null;
-  categoryId: number | null;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  status: KbArticleStatus;
-  visibility: KbVisibility;
-  tags: string[] | null;
-  ownerId: string | null;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  lastVerifiedAt: string | null;
-  updatedAt: string;
-}
-
-export interface KbArticle extends KbArticleListItem {
-  content: string;
-  contentText: string;
-  seoTitle: string | null;
-  seoDescription: string | null;
-  reviewIntervalDays: number | null;
-  publishedAt: string | null;
-  authorId: string | null;
-  category?: { id: number; name: string; slug: string } | null;
 }
 
 export interface CreateSpaceInput {
@@ -62,26 +30,6 @@ export interface UpdateSpaceInput {
   audience?: KbAudience;
   icon?: string | null;
   isPublicHelpCenter?: boolean;
-}
-
-export interface KbSearchResult {
-  id: number;
-  spaceId: number | null;
-  categoryId: number | null;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  snippet?: string;
-  status: KbArticleStatus;
-  updatedAt: string;
-}
-
-export interface KbSearchResponse {
-  items: KbSearchResult[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
 }
 
 export type KbAskCitation =
@@ -219,7 +167,12 @@ export interface KbResearchBrief {
   updatedAt: string;
 }
 
-export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;
+export type KbResearchBriefListItem = Omit<KbResearchBrief, "report" | "citations">;
+
+export interface KbResearchBriefListPage {
+  items: KbResearchBriefListItem[];
+  nextCursor: number | null;
+}
 
 export interface CreateResearchBriefInput {
   topic: string;

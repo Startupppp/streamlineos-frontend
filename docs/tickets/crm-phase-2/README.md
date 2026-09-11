@@ -1,87 +1,89 @@
-# CRM Phase 2 — widening the skeleton
+# CRM Phase 2 — pending work
 
-Source: `streamlineos-frontend/docs/specs/2026-08-24-crm-phase-2-widening-prd.md`
+Source: [`docs/specs/2026-08-24-crm-phase-2-widening-prd.md`](../../specs/2026-08-24-crm-phase-2-widening-prd.md)
 
-Phase 1 proved the architecture on one vertical slice. Everything it proved is
-still true of about five percent of the product. This phase widens every Phase 1
-seam to production breadth and retires the identity split.
+This is the single working list for the remaining CRM Phase 2 work. Closed
+tickets 01–06 and 12–24 were removed after verification. The seven former
+ticket files were merged here so completed work does not continue consuming
+context. All items below remain open. This README is the only active CRM Phase
+2 task file.
 
-**The identity migration is the phase.** Channels, importer and queue are each a
-few weeks; moving 132 module file references onto one identity model without an
-outage is the work, and it is what makes every later phase cheaper.
+## Current status
 
-| Track | Tickets | Shape |
-|---|---|---|
-| A — identity convergence | 01-08 | expand → dual-write → 5 migrate batches → contract |
-| B — channels | 09-12 | three adapters, then the seam claim tested |
-| C — importer | 13-15 | universal path, connectors, mapping evals |
-| D — data quality | 16-17 | one queue, then a number that moves |
-| E — records + renderer | 18-20 | issues/complaints, remaining types, tenant layout |
-| F — access | 21 | keys and backfills for everything above |
+- Identity convergence is complete on the CRM side; 16 legacy readers remain
+  in Finance/Accounting, plus one unregistered Calendar reader. The contract
+  drop cannot proceed until those readers are migrated.
+- Ticket 25 is partially complete: backend organization-to-Party convergence
+  exists, but the Companies, Clients and Parties frontend route trees are still
+  separate.
+- Tickets 09–11 have tested normalizers/services, but no production transport
+  consumer or controller reaches the ingress seam.
+- Permission-denial handling is incomplete across the CRM hooks and surfaces.
+- `src/modules/crm-import/` still needs to move under `src/modules/crm/` with
+  all imports updated.
 
-**Measured on this branch**, not taken from the PRD: `leads` 70 module files,
-`contacts` 29, `clients` 24, `businessParties` 9 — across `crm` (25), `leads`
-(19), `ai` (11), `clients` (8), `email` (7), `contacts` (6), and a long tail of
-1-3 each in `surveys`, `rbac`, `dashboard`, `billing`, `timesheets`, `support`,
-`settings`, `search`.
+## Consolidated pending tasks
 
-## Order
+### A. Finish the long-tail identity migration (former 07)
 
-01 and 02 gate everything in track A. Tracks B, C, D and E can start against the
-Party seam as soon as 02 lands. 08 is last in track A; 21 is last overall.
+- [ ] Route every remaining legacy-table read in the long-tail modules through
+  the Party resolver; remove compatibility mirrors after the migration.
+- [ ] Make every long-tail write Party-only, preserving existing behavior and
+  e2e coverage.
+- [ ] Preserve display behavior, tenant scoping, Party search indexing and
+  dashboard counts; stale legacy indexes must not serve results.
+- [ ] Move `src/modules/crm-import/` under `src/modules/crm/` and update its
+  import paths.
 
-Tracks B and C have no dependency on each other and can run in parallel.
+### B. Converge organizations and remove legacy contracts (former 25 + 08)
 
----
+- [ ] Complete the company-shaped Party model, including
+  `employer_party_id`, tenant-composite FKs, organization-to-Party resolution,
+  backfill and merge convergence.
+- [ ] Route every `crm_organizations` write through the Party mirror and
+  converge Companies, Business Parties and organization surfaces.
+- [ ] Replace the three frontend route trees (`/crm/companies`, `/crm/clients`
+  and `/parties`) with one canonical Party-backed surface.
+- [ ] Migrate the 16 Finance/Accounting readers and the Calendar reader at
+  `backend/src/modules/calendar/calendar-linked-crm.ts`; register the reader
+  with the ratchet while it remains.
+- [ ] After all readers and e2e suites pass, remove compatibility writers,
+  drop `contacts`, `clients`, `leads` and `business_parties`, and retain a
+  reversible snapshot.
+- [ ] Keep the resolver working after the drop and retain a lint/test guard
+  that rejects new legacy-table readers.
 
-## Where the phase actually stands
+### C. Wire the inbound communication adapters (former 09–11)
 
-Measured against `main` in both repos, not against intent. Per-ticket detail is
-in each ticket's `Status:` line.
+- [ ] Wire telephony, WhatsApp and web-form transports to the ingress seam so
+  each produces an `InboundCommunicationEvent` with correct participants,
+  threading and metadata.
+- [ ] Preserve no-transcript semantics for calls and capture WhatsApp media
+  through the existing attachment path.
+- [ ] Validate web-form content at the boundary and resolve email/phone fields
+  through Party without trusting submitted identity.
+- [ ] Use Composio/server-side integration paths with no provider-token
+  persistence; drive acceptance from fixtures without provider SDK mocks.
+- [ ] Keep all downstream workflow/timeline behavior behind the ingress seam
+  unchanged and prove each adapter with end-to-end tests.
 
-| | Tickets |
-|---|---|
-| Done | 01–07, 09–19, 21–25 |
-| In progress | 08 (contract) |
-| Blocked on the backend | 20 (tenant layout) — the client is complete and tested; the four `/renderer/layouts/*` routes do not exist yet |
-| Deliberately not done | 26 |
+### D. Make permission denial visible (former 26)
 
-**The identity migration went 71 → 36 readers**, and 12 of the 36 are the seam
-itself — `party-legacy-*.ts` and the divergence report, files that legitimately
-read what they write and are deleted along with the tables. So 24 real readers
-remain of an original 71.
+- [ ] Carry permission-denied results from the hook layer and render
+  `NoPermissionState` on every denied CRM surface.
+- [ ] Use `usePermissionGate` consistently rather than re-deriving denial at
+  individual call sites; cover the currently ungated CRM hooks.
+- [ ] Preserve the distinction between loading, error, empty, populated and
+  denied states; denial is its own fifth state.
+- [ ] Add a rendering-order regression test and leave server-side authorization
+  unchanged.
 
-### What is blocking the drop, precisely
+## Dependencies and release notes
 
-Ticket 08 cannot drop `leads`, `clients`, `contacts` and `crm_organizations`
-while anything still reads them, and **13 of the 24 remaining readers are in
-`src/modules/finance/` and `src/modules/accounting/core/`**. Those modules are
-being rewritten onto one `gl_*` kernel by a separate workstream, and this phase
-has no authority to change them. The drop therefore waits on that rewrite
-landing, not on any CRM work. The 11 CRM-owned readers are the part this phase
-can finish, and finishing them is what makes the drop a single migration
-afterwards rather than a project.
+Tracks C and D can proceed independently once the Party seam is available. The
+legacy contract drop in B remains blocked by the Finance/Accounting rewrite and
+the Calendar reader. The repository baseline currently has unrelated failures
+in `common/http`, `billing`, `kb`, `storage`, `chat`, `build` and one CRM
+automation-studio suite; CRM work must not claim those failures as fixed.
 
-That is a real dependency, not a scheduling excuse — and it is worth saying that
-the ratchet is what makes it visible. Without a register of readers, "we still
-read the old tables somewhere" is a feeling; with one it is a list of eleven
-files and a blocked thirteen.
-
-### Two things found while closing the phase, not yet fixed
-
-**`src/modules/crm-import/` is in the wrong place.** The backend rule is that a
-sub-module lives inside its parent — `modules/build/qa/`, never
-`modules/build-qa/` — and the CRM module already follows it everywhere else
-(`crm/core`, `crm/inbox`, `crm/consent`, `crm/entity`, `crm/metadata`,
-`crm/pricebooks`, `crm/automation-studio`). The importer is the one CRM
-sub-module standing outside its parent, which is exactly the shape the rule
-names. Moving it is mechanical but touches every importer import path, so it is
-recorded here rather than done in the middle of ticket 08.
-
-**Main is red in eight suites and nineteen type errors**, all outside this
-phase's files (`common/http`, `billing`, `kb`, `storage`, `chat`, `build`, and a
-CRM automation-studio suite pushed by another session). Every Phase 2 commit was
-verified to add none of them, by running the same gate on a clean checkout of
-`origin/main` and comparing counts. Worth stating plainly: "the suite passes"
-has not been true of this repository's `main` for the whole of this phase, and a
-green local run means the diff is clean, not the tree.
+The 79 deliberate CRM visual-token exceptions remain separate follow-up work.

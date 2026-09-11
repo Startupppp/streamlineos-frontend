@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 
 const titleSchema = z
   .string()
@@ -73,3 +73,10 @@ export function buildGoalSchema(options?: {
 }
 
 export type GoalFormValues = z.infer<ReturnType<typeof buildGoalSchema>>;
+
+export const GOAL_PROGRESS_INCREMENT_PERCENT = 10;
+export const GOAL_PROGRESS_COMPLETE_PERCENT = 100;
+
+export function incrementGoalProgress(currentProgress: number | null | undefined): number {
+  return (currentProgress ?? 0) + GOAL_PROGRESS_INCREMENT_PERCENT;
+}

@@ -1,23 +1,20 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useCallback } from "react";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
 import { useVelocityReport } from "@/hooks/api/build/reports";
-import { ChartCard, TOOLTIP_STYLE, AXIS_TICK, numberFormatter } from "./chart-card";
+import { ChartCard } from "./chart-card";
+
+const VelocityChart = dynamic(
+  () => import("./velocity-chart").then((m) => ({ default: m.VelocityChart })),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
+);
 
 export function VelocitySection({ projectId }: { projectId: number }) {
   const { data, isLoading, isError, refetch } = useVelocityReport(projectId);
@@ -35,7 +32,7 @@ export function VelocitySection({ projectId }: { projectId: number }) {
   );
 
   return (
-    <ChartCard title="Velocity" icon={Gauge}>
+    <ChartCard title="Velocity · latest 100 sprints" icon={Gauge}>
       {isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : isError ? (
@@ -53,39 +50,7 @@ export function VelocitySection({ projectId }: { projectId: number }) {
           compact
         />
       ) : (
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="name"
-                tick={AXIS_TICK}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={AXIS_TICK}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                formatter={(value) => numberFormatter.format(Number(value))}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Committed" fill="#94A3B8" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Completed" fill="#10B981" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <VelocityChart data={chartData} />
       )}
     </ChartCard>
   );

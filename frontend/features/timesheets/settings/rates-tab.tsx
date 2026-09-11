@@ -5,7 +5,7 @@ import { format, parseISO } from "date-fns";
 import { Pencil } from "lucide-react";
 import { useRates, useDeleteRate } from "@/hooks/api/timesheets-core/rates";
 import { useCan } from "@/hooks/api/access";
-import type { TimesheetRate } from "@/features/timesheets/types";
+import type { TimesheetRate } from "@/features/timesheets/rate-types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ function formatEffectiveWindow(from: string | null, to: string | null): string {
 function ScopeBadges({ rate }: { rate: TimesheetRate }) {
   const hasScope =
     rate.projectId != null ||
-    rate.userId != null ||
+    rate.userMembershipId != null ||
     rate.taskId != null ||
     rate.clientId != null;
 
@@ -66,7 +66,7 @@ function ScopeBadges({ rate }: { rate: TimesheetRate }) {
           Project
         </Badge>
       )}
-      {rate.userId != null && (
+      {rate.userMembershipId != null && (
         <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
           User
         </Badge>

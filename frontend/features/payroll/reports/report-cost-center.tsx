@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollCostCenter } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -57,13 +59,14 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
     [month, costCenter, workerType],
   );
 
-  const { data, isLoading } = usePayrollCostCenter(params);
+  const { data, isLoading, isError, error, refetch } = usePayrollCostCenter(params);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
     return {
-      gross: data.rows.reduce((s, r) => s + r.grossTotal, 0),
-      net: data.rows.reduce((s, r) => s + r.netTotal, 0),
+      gross: data.rows.reduce((s, r) => s + Number(r.grossTotal), 0),
+      net: data.rows.reduce((s, r) => s + Number(r.netTotal), 0),
     };
   }, [data]);
 
@@ -75,12 +78,23 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
     </span>
   ) : undefined;
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load cost center data"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <DataTable
       className="flex-1 min-h-0"
       data={data?.rows ?? []}
       columns={COLUMNS}
-      getRowKey={(row) => row.costCenter}
+      getRowKey={(row) => row.costCenter ?? "unassigned"}
       isLoading={isLoading}
       footer={footerNode}
       emptyState={

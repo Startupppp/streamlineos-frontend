@@ -1,43 +1,41 @@
 
 import { DefaultSession } from "next-auth";
-import type { Plan } from "@/lib/billing/feature-gates";
+import type { SessionClaims } from "@/lib/auth-claims";
 
 declare module "next-auth" {
   interface Session {
-    orgId?: string | null;
-    branchId?: number | null;
+    orgId?: SessionClaims["orgId"];
     sessionId?: string;
-    plan?: Plan | null;
-    enabledModules?: string[];
+    plan?: SessionClaims["plan"];
+    enabledModules?: SessionClaims["enabledModules"];
     daysUntilExpiry?: number;
-    orgOnboardingCompletedAt?: string | null;
-    userOnboardingCompletedAt?: string | null;
-    organizationAccess?: "active" | "suspended" | "none";
-    suspendedOrganizationName?: string | null;
+    orgOnboardingCompletedAt?: SessionClaims["orgOnboardingCompletedAt"];
+    userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
+    organizationAccess?: SessionClaims["organizationAccess"];
+    suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
     backendJwt?: string;
     authProvider?: string;
     user: {
       id: string;
-      role: string;
-      isActive?: boolean;
-      isOrgOwner?: boolean;
+      role: SessionClaims["role"];
+      isActive?: SessionClaims["isActive"];
+      isOrgOwner?: SessionClaims["isOrgOwner"];
     } & DefaultSession["user"];
   }
 
   interface User {
-    role?: string;
+    role?: SessionClaims["role"];
     id?: string;
-    isActive?: boolean;
+    isActive?: SessionClaims["isActive"];
     daysUntilExpiry?: number;
-    orgId?: string | null;
-    isOrgOwner?: boolean;
-    orgOnboardingCompletedAt?: string | null;
-    branchId?: number | null;
-    plan?: Plan | null;
-    enabledModules?: string[];
-    userOnboardingCompletedAt?: string | null;
-    organizationAccess?: "active" | "suspended" | "none";
-    suspendedOrganizationName?: string | null;
+    orgId?: SessionClaims["orgId"];
+    isOrgOwner?: SessionClaims["isOrgOwner"];
+    orgOnboardingCompletedAt?: SessionClaims["orgOnboardingCompletedAt"];
+    plan?: SessionClaims["plan"];
+    enabledModules?: SessionClaims["enabledModules"];
+    userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
+    organizationAccess?: SessionClaims["organizationAccess"];
+    suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
     name?: string | null;
     sessionId?: string;
   }
@@ -46,20 +44,16 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
-    orgId?: string | null;
-    role?: string;
-    isActive?: boolean;
-    image?: string | null;
-    branchId?: number | null;
+    orgId?: SessionClaims["orgId"];
+    role?: SessionClaims["role"];
+    isActive?: SessionClaims["isActive"];
     sessionId?: string;
-    plan?: Plan | null;
-    isOrgOwner?: boolean;
-    enabledModules?: string[];
+    isOrgOwner?: SessionClaims["isOrgOwner"];
     daysUntilExpiry?: number;
-    orgOnboardingCompletedAt?: string | null;
-    userOnboardingCompletedAt?: string | null;
-    organizationAccess?: "active" | "suspended" | "none";
-    suspendedOrganizationName?: string | null;
+    orgOnboardingCompletedAt?: SessionClaims["orgOnboardingCompletedAt"];
+    userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
+    organizationAccess?: SessionClaims["organizationAccess"];
+    suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
     authProvider?: string;
   }
 }

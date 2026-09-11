@@ -9,12 +9,14 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { documentListContract } from "@/hooks/api/hr/documents-schema";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: null }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
 }));
@@ -32,7 +34,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: <T,>(value: T) => value,
 }));
 
-jest.mock("@/features/sign", () => ({
+jest.mock("@/components/sign/create-envelope-dialog", () => ({
   CreateEnvelopeDialog: () => null,
 }));
 
@@ -141,6 +143,12 @@ function Wrapper({
   );
 }
 
+function documentListCalls(): unknown[][] {
+  return (apiClient.get as jest.Mock).mock.calls.filter(
+    (call) => call[0] === "/hr/documents",
+  );
+}
+
 describe("DocumentsPage server-prefetch seam", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -163,10 +171,13 @@ describe("DocumentsPage server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/hr/documents",
       expect.anything(),
+      expect.anything(),
+      expect.anything(),
     );
+    expect(documentListCalls()).toEqual([]);
   });
 
-  it("fetches from the API when HydrationBoundary carries no cache", () => {
+  it("fetches from the API when HydrationBoundary carries no cache", async () => {
     const client = new QueryClient();
 
     render(
@@ -177,7 +188,14 @@ describe("DocumentsPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/documents",
+      { limit: 20 },
       expect.anything(),
+      expect.any(Function),
+    );
+    const [call] = documentListCalls();
+    expect(call).toBeDefined();
+    await expect((call?.[3] as () => Promise<unknown>)()).resolves.toBe(
+      documentListContract,
     );
   });
 });

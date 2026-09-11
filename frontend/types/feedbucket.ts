@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
@@ -82,43 +85,7 @@ export interface FeedbucketWidget {
   openCount?: number;
 }
 
-export interface FeedbucketSubmissionUser {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  image: string | null;
-}
-
-export interface FeedbucketSubmission {
-  id: number;
-  orgId: string;
-  widgetId: number;
-  type: FeedbucketSubmissionType;
-  status: FeedbucketSubmissionStatus;
-  priority: FeedbucketSubmissionPriority | null;
-  message: string;
-  pageUrl: string | null;
-  screenshotUrl: string | null;
-  recordingUrl: string | null;
-  metadata: FeedbucketMetadata | null;
-  consoleLogs: FeedbucketConsoleEntry[] | null;
-  networkLogs: FeedbucketNetworkEntry[] | null;
-  reporterName: string | null;
-  reporterEmail: string | null;
-  assigneeId: string | null;
-  linkedTicketId: number | null;
-  aiType: FeedbucketAiType | null;
-  aiConfidence: number | null;
-  aiAnalysis: FeedbucketAiAnalysis | null;
-  aiModel: string | null;
-  aiProcessedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  widget?: { id: number; name: string; projectId: number | null } | null;
-  assignee?: FeedbucketSubmissionUser | null;
-}
+export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
 
 export interface CreateFeedbucketWidgetInput {
   name: string;
@@ -157,10 +124,4 @@ export interface UpdateFeedbucketSubmissionInput {
   assigneeId?: string | null;
 }
 
-export interface PaginatedFeedbucketSubmissions {
-  data: FeedbucketSubmission[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;

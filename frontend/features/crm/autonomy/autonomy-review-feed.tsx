@@ -27,7 +27,7 @@ import {
   type DecisionKind,
   type DecisionOutcome,
 } from "@/types/crm/autonomy";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { DecisionEntryRow } from "./decision-entry-row";
 
 const ANY = "__any__";

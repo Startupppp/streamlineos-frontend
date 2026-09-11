@@ -1,15 +1,7 @@
-"use client";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
+import { NewInvoicePageClient } from "@/features/billing/new-invoice/new-invoice-page-client";
 
-import { useRouter } from "next/navigation";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { NewInvoiceForm } from "@/features/billing/new-invoice/new-invoice-form";
-
-export default function NewInvoicePage() {
-  const router = useRouter();
-
-  function handleCreated(invoiceId: number) {
-    router.push(`/billing/invoices/${invoiceId}`);
-  }
-
-  return <PageWrapper title="New Invoice" subtitle="Create a new invoice for a client" backHref="/billing/invoices"><NewInvoiceForm onCreated={handleCreated} /></PageWrapper>;
+export default async function NewInvoicePage() {
+  await enforceRouteAccess("/billing/invoices/new");
+  return <NewInvoicePageClient />;
 }

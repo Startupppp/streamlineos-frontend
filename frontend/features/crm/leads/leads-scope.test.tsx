@@ -8,7 +8,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/hooks/api/crm", () => ({
+jest.mock("@/hooks/api/crm/metadata", () => ({
   useCrmOptions: () => ({ data: [] }),
 }));
 

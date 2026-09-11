@@ -17,8 +17,8 @@ import {
 import {
   NOTIFICATION_PRIORITY_CONFIG,
   type NotificationPriority,
-} from "@/features/notifications/notification-types";
-import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+} from "@/lib/notification-types";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import type { Notification } from "@/types/notifications";
 
 const ALERT_DISPLAY_LIMIT = 5;

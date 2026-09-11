@@ -23,6 +23,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadC = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { useAddSupportMessage } from "@/hooks/api/support";
 import {
   useSupportMacros,
@@ -201,10 +206,10 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
         const fd = new FormData();
         fd.append("file", file);
         fd.append("folder", "support-attachments");
-        const json = await apiClient.upload<{ url: string }>("/storage/upload", fd);
+        const json = await apiClient.upload("/storage/upload", fd, storageUploadC);
         uploaded.push({
           fileName: file.name,
-          fileUrl: json.url,
+          fileUrl: json.key,
           fileSize: file.size,
           mimeType: file.type,
         });

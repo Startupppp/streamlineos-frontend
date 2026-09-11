@@ -88,13 +88,13 @@ function PersonSummary({ employee }: { employee: OrgChartNode }) {
       <Avatar className="h-9 w-9 shrink-0">
         <AvatarImage src={resolveImageUrl(employee.image)} />
         <AvatarFallback className="bg-primary/10 text-xs text-primary">
-          {employee.name.charAt(0).toUpperCase() || "?"}
+          {employee.name?.charAt(0).toUpperCase() || "?"}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <TruncatedText text={employee.name} className="text-sm font-semibold" />
+        <TruncatedText text={employee.name ?? "Unnamed"} className="text-sm font-semibold" />
         <TruncatedText
-          text={employee.designation ?? employee.role}
+          text={employee.designation ?? employee.role ?? ""}
           className="text-xs text-muted-foreground"
         />
       </div>

@@ -1,8 +1,40 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const benefitPlansPageC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.benefitPlansPageContract),
+);
+const benefitPlanC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.benefitPlanContract_),
+);
+const myBenefitsC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.myBenefitsContract),
+);
+const enrollmentC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.enrollmentResponseContract),
+);
+const waiveC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.waiveResponseContract),
+);
+const dependentListC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.dependentListContract),
+);
+const dependentSingleC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.dependentSingleContract),
+);
+const deleteDependentC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.deleteDependentContract),
+);
+const claimsPageC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.claimsPageContract),
+);
+const claimSingleC = lazyContract(() =>
+  import("@/hooks/api/hr/benefits-schema").then((m) => m.claimSingleContract),
+);
 
 export interface BenefitPlan {
   id: number;
@@ -30,7 +62,7 @@ export interface BenefitEnrollment {
   enrolledAt: string;
   effectiveFrom: string | null;
   dependentsCovered: number;
-  plan: BenefitPlan;
+  plan?: BenefitPlan;
 }
 
 export interface Dependent {
@@ -58,19 +90,31 @@ export interface InsuranceClaim {
   decidedBy: string | null;
   rejectionReason: string | null;
   payoutRoute: "payroll_payable" | "finance_payable" | "already_paid" | null;
-  user?: { id: string; name: string | null; email: string } | null;
+  user?: { id: string; name: string | null; email: string | null } | null;
   plan?: BenefitPlan | null;
 }
 
-export function useBenefitPlans(query?: { status?: string; category?: string; page?: number; limit?: number }) {
+export interface BenefitsCursorPage<T> {
+  data: T[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
+export type BenefitPlansQuery = {
+  status?: BenefitPlan["status"];
+  category?: BenefitPlan["category"];
+  cursor?: string;
+  limit?: number;
+};
+
+export function useBenefitPlans(query: BenefitPlansQuery = {}) {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.benefitPlans(query),
-    queryFn: () =>
-      apiClient.get<{ data: BenefitPlan[]; total: number; page: number; limit: number }>(
+    queryKey: humanResourcesQueryKeys.hr.benefitPlans(query),
+    queryFn: ({ signal }) =>
+      apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
-        query as Record<string, unknown>,
+        query, signal, benefitPlansPageC,
       ),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
@@ -82,8 +126,8 @@ export function useCreateBenefitPlan() {
   return useAuthorizedMutation("hr:benefits:manage", {
     mutationKey: ["hr", "benefits", "plans", "create"],
     mutationFn: (data: Omit<BenefitPlan, "id" | "orgId" | "createdAt" | "updatedAt">) =>
-      apiClient.post<BenefitPlan>("/hr/benefits/plans", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
+      apiClient.post<BenefitPlan>("/hr/benefits/plans", data, undefined, benefitPlanC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
   });
 }
 
@@ -92,8 +136,8 @@ export function useUpdateBenefitPlan() {
   return useAuthorizedMutation("hr:benefits:manage", {
     mutationKey: ["hr", "benefits", "plans", "update"],
     mutationFn: ({ id, ...data }: Partial<BenefitPlan> & { id: number }) =>
-      apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
+      apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${id}`, data, undefined, benefitPlanC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
   });
 }
 
@@ -101,9 +145,9 @@ export function useMyBenefits() {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.benefitMy,
-    queryFn: () =>
-      apiClient.get<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>("/hr/benefits/my"),
+    queryKey: humanResourcesQueryKeys.hr.benefitMy,
+    queryFn: ({ signal }) =>
+      apiClient.get<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>("/hr/benefits/my", undefined, signal, myBenefitsC),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -114,8 +158,8 @@ export function useEnroll() {
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "enroll"],
     mutationFn: (data: { planId: number; effectiveFrom?: string; dependentsCovered?: number }) =>
-      apiClient.post<BenefitEnrollment>("/hr/benefits/enroll", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitMy }),
+      apiClient.post<BenefitEnrollment>("/hr/benefits/enroll", data, undefined, enrollmentC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy }),
   });
 }
 
@@ -124,8 +168,8 @@ export function useWaive() {
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "waive"],
     mutationFn: (data: { planId: number }) =>
-      apiClient.post<BenefitEnrollment>("/hr/benefits/waive", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitMy }),
+      apiClient.post<BenefitEnrollment>("/hr/benefits/waive", data, undefined, waiveC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy }),
   });
 }
 
@@ -133,8 +177,8 @@ export function useDependents() {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.benefitDependents,
-    queryFn: () => apiClient.get<Dependent[]>("/hr/benefits/dependents"),
+    queryKey: humanResourcesQueryKeys.hr.benefitDependents,
+    queryFn: ({ signal }) => apiClient.get<Dependent[]>("/hr/benefits/dependents", undefined, signal, dependentListC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -145,10 +189,10 @@ export function useAddDependent() {
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "dependents", "add"],
     mutationFn: (data: { name: string; relationship: string; dateOfBirth?: string; isCovered?: boolean }) =>
-      apiClient.post<Dependent>("/hr/benefits/dependents", data),
+      apiClient.post<Dependent>("/hr/benefits/dependents", data, undefined, dependentSingleC),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.benefitDependents });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.benefitMy });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitDependents });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy });
     },
   });
 }
@@ -157,20 +201,27 @@ export function useDeleteDependent() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "dependents", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/dependents/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitDependents }),
+    mutationFn: (id: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/dependents/${id}`, undefined, undefined, deleteDependentC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitDependents }),
   });
 }
 
-export function useInsuranceClaims(query?: { status?: string; userId?: string; page?: number; limit?: number }) {
+export type InsuranceClaimsQuery = {
+  status?: InsuranceClaim["status"];
+  userId?: string;
+  cursor?: string;
+  limit?: number;
+};
+
+export function useInsuranceClaims(query: InsuranceClaimsQuery = {}) {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.benefitClaims(query),
-    queryFn: () =>
-      apiClient.get<{ data: InsuranceClaim[]; total: number; page: number; limit: number }>(
+    queryKey: humanResourcesQueryKeys.hr.benefitClaims(query),
+    queryFn: ({ signal }) =>
+      apiClient.get<BenefitsCursorPage<InsuranceClaim>>(
         "/hr/benefits/claims",
-        query as Record<string, unknown>,
+        query, signal, claimsPageC,
       ),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
@@ -189,8 +240,8 @@ export function useReviewClaim() {
       status: "approved" | "rejected" | "in_review";
       rejectionReason?: string;
       payoutRoute?: string;
-    }) => apiClient.patch<InsuranceClaim>(`/hr/benefits/claims/${claimId}/review`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
+    }) => apiClient.patch<InsuranceClaim>(`/hr/benefits/claims/${claimId}/review`, data, undefined, claimSingleC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
   });
 }
 

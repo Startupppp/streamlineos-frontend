@@ -1,21 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { FileText } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Download, FileText } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
-import { usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
+import { useDownloadBatchFile, usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { formatMoney } from "@/features/payroll/shared";
 import { formatShortDate } from "@/lib/date-utils";
+import { downloadBlob } from "@/lib/download-blob";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
 import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
 import { cn } from "@/lib/utils";
 import type { PayoutBatch, BankBatchStatus, BatchFormat } from "@/types/payroll";
-import { randomId } from "@/lib/random-id";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -39,30 +43,57 @@ export function BatchesTable({
   canManage,
   onSelectBatch,
 }: BatchesTableProps) {
-  const { data: batches, isLoading } = usePayoutBatches(runId);
+  const {
+    data: batches,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePayoutBatches(runId);
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
 
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [format, setFormat] = useState<BatchFormat>("NEFT_CSV");
   const [idempotencyKey, setIdempotencyKey] = useState("");
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [generatedBatchId, setGeneratedBatchId] = useState<number | null>(null);
+  const batchFile = useDownloadBatchFile();
 
   const [markSentBatchId, setMarkSentBatchId] = useState<number | null>(null);
   const [markPaidBatchId, setMarkPaidBatchId] = useState<number | null>(null);
   const [txnRef, setTxnRef] = useState("");
 
   function handleOpenGenerateDialog() {
-    setIdempotencyKey(randomId());
+    setIdempotencyKey(crypto.randomUUID());
     setFormat("NEFT_CSV");
-    setFileUrl(null);
+    setGeneratedBatchId(null);
     setShowGenerateDialog(true);
   }
 
   function handleCloseGenerateDialog() {
     setShowGenerateDialog(false);
-    setFileUrl(null);
+    setGeneratedBatchId(null);
   }
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  /**
+   * The bank file carries unmasked account numbers. It arrives as bytes over the
+   * authenticated request and is saved straight from memory — `window.open` on a
+   * presigned URL used to hand the browser a link that outlived the screen,
+   * worked without a session and sat in history.
+   */
+  const handleDownloadBatchFile = useCallback(
+    (batchId: number) => {
+      batchFile.mutate(batchId, {
+        onSuccess: (blob) => downloadBlob(blob, `payout-batch-${batchId}.csv`),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    },
+    [batchFile],
+  );
 
   function handleOpenMarkPaid(batchId: number) {
     setMarkPaidBatchId(batchId);
@@ -80,10 +111,7 @@ export function BatchesTable({
           key: "actions",
           header: "",
           cell: (row) => (
-            <div
-              className="flex items-center gap-1.5"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center gap-1.5" {...propagationShield}>
               {row.status === "GENERATED" && (
                 <Button
                   size="sm"
@@ -92,6 +120,17 @@ export function BatchesTable({
                   onClick={() => setMarkSentBatchId(row.id)}
                 >
                   Mark Sent
+                </Button>
+              )}
+              {row.status !== "DRAFT" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  disabled={batchFile.isPending}
+                  onClick={() => handleDownloadBatchFile(row.id)}
+                >
+                  <Download className="mr-1 h-3 w-3" /> Bank File
                 </Button>
               )}
               {row.status === "SENT" && (
@@ -162,6 +201,17 @@ export function BatchesTable({
     return <Skeleton className="h-48 w-full rounded-xl" />;
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load payment batches"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <>
       <div className="flex flex-1 min-h-0 flex-col space-y-3">
@@ -228,8 +278,10 @@ export function BatchesTable({
         format={format}
         onFormatChange={setFormat}
         idempotencyKey={idempotencyKey}
-        fileUrl={fileUrl}
-        onFileUrl={setFileUrl}
+        generatedBatchId={generatedBatchId}
+        onGenerated={setGeneratedBatchId}
+        onDownload={handleDownloadBatchFile}
+        isDownloading={batchFile.isPending}
       />
 
       <MarkBatchSentDialog

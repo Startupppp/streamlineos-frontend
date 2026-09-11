@@ -19,7 +19,7 @@ interface UseFeatureResult {
 
 export function useFeature(feature: Feature): UseFeatureResult {
   const { data: session } = useSession();
-  const plan = (session?.plan ?? null) as Plan | null;
+  const plan = session?.plan ?? null;
   return {
     enabled: canUseFeature(plan, feature),
     plan,

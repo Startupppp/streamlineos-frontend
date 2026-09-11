@@ -7,16 +7,17 @@ import { AlertTriangle, Banknote, Clock, TrendingDown } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   DEAL_AGING_LAYOUT,
   dealAgingRecordFields,

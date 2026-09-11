@@ -1,17 +1,57 @@
 "use client";
 
+import { useCallback } from "react";
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { usePaymentReadiness } from "@/hooks/api/payments";
+import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ReadinessRail({ providerKey }: { providerKey: string | null }) {
-  const { data: readiness, isLoading } = usePaymentReadiness(providerKey ?? "", !!providerKey);
+  const canView = useCan("payments:providers:view");
+  const {
+    data: readiness,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePaymentReadiness(providerKey ?? "", !!providerKey);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (!providerKey) {
     return (
       <div className="rounded-xl border border-border bg-card p-4">
         <p className="text-sm text-muted-foreground">Select a provider to see its readiness status.</p>
       </div>
+    );
+  }
+
+  if (!canView) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4">
+        <NoPermissionState
+          compact
+          permission="payments:providers:view"
+          title="Readiness hidden"
+          description="You do not have permission to view this provider's live readiness checks."
+        />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load readiness"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

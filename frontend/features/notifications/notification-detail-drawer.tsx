@@ -15,9 +15,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   NOTIFICATION_CATEGORY_CONFIG,
   NOTIFICATION_PRIORITY_CONFIG,
-  type NotificationCategory,
-  type NotificationPriority,
-} from "./notification-types";
+  NOTIFICATION_CATEGORIES,
+  NOTIFICATION_PRIORITIES,
+} from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { useCreateSuppression } from "@/hooks/api/notifications";
 import type { Notification } from "@/types/notifications";
@@ -52,7 +52,12 @@ function formatFullDate(value: Date | string): string {
   return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-const SNOOZE_PRESETS: Array<{ label: string; getIso: () => string }> = [
+interface SnoozePreset {
+  label: string;
+  getIso: () => string;
+}
+
+const SNOOZE_PRESETS: SnoozePreset[] = [
   { label: "1 hour", getIso: () => new Date(Date.now() + 60 * 60 * 1000).toISOString() },
   { label: "3 hours", getIso: () => new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() },
   {
@@ -87,6 +92,13 @@ export function NotificationDetailDrawer({
     onOpenChange(false);
   }, [notification, onDelete, onOpenChange]);
 
+  const handleSnooze = (preset: SnoozePreset) =>
+    function snoozeUntilPreset(): void {
+      if (!notification) return;
+      onSnooze(notification.id, preset.getIso());
+      onOpenChange(false);
+    };
+
   const handleMute = useCallback(() => {
     if (!notification?.eventKey) return;
     createSuppression.mutate(
@@ -116,8 +128,8 @@ export function NotificationDetailDrawer({
 
   if (!notification) return null;
 
-  const categoryKey = (notification.category ?? "SYSTEM") as NotificationCategory;
-  const priorityKey = (notification.priority ?? "NORMAL") as NotificationPriority;
+  const categoryKey = NOTIFICATION_CATEGORIES.find((c) => c === notification.category) ?? "SYSTEM";
+  const priorityKey = NOTIFICATION_PRIORITIES.find((p) => p === notification.priority) ?? "NORMAL";
   const categoryConfig = NOTIFICATION_CATEGORY_CONFIG[categoryKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
   const priorityConfig = NOTIFICATION_PRIORITY_CONFIG[priorityKey] ?? NOTIFICATION_PRIORITY_CONFIG.NORMAL;
   const Icon = categoryConfig.icon;
@@ -206,10 +218,7 @@ export function NotificationDetailDrawer({
                 {SNOOZE_PRESETS.map((preset) => (
                   <DropdownMenuItem
                     key={preset.label}
-                    onClick={() => {
-                      onSnooze(notification.id, preset.getIso());
-                      onOpenChange(false);
-                    }}
+                    onClick={handleSnooze(preset)}
                   >
                     {preset.label}
                   </DropdownMenuItem>

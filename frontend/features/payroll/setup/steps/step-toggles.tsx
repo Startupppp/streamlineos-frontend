@@ -200,7 +200,7 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
                     <p className="text-xs text-muted-foreground">{group.description}</p>
                   </div>
                   <div className="divide-y divide-border">
-                    {(group.keys as readonly ToggleKey[]).map((key) => {
+                    {group.keys.map((key) => {
                       const meta = TOGGLE_META[key];
                       return (
                         <ToggleRow
@@ -229,7 +229,7 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
                 <p className="text-xs text-muted-foreground">{group.description}</p>
               </div>
               <div className="divide-y divide-border">
-                {(group.keys as readonly ToggleKey[]).map((key) => {
+                {group.keys.map((key) => {
                   const meta = TOGGLE_META[key];
                   return (
                     <ToggleRow

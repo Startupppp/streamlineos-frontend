@@ -1,12 +1,12 @@
 import rawManifest from "./module-manifest.json";
-import { moduleManifestSchema } from "./module-manifest-schema";
+import { parseModuleManifest } from "./module-manifest-schema";
 import type { ModuleEntry, ModuleManifest } from "./module-manifest-schema";
 
 export type { ModuleEntry, ModuleManifest };
 
 export const EXPECTED_MANIFEST_VERSION = 1;
 
-export const MANIFEST: ModuleManifest = moduleManifestSchema.parse(rawManifest);
+export const MANIFEST: ModuleManifest = parseModuleManifest(rawManifest);
 
 const byId = new Map<string, ModuleEntry>(
   MANIFEST.modules.map((m) => [m.id, m]),

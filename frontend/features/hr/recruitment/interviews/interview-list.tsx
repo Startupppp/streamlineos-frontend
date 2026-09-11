@@ -123,7 +123,7 @@ function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName
 }
 
 export function InterviewList() {
-  const { data: interviews } = useInterviews({ pageSize: 100 });
+  const { data: interviews } = useInterviews({ limit: 100 });
   const bulkReschedule = useBulkRescheduleInterviews();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -274,7 +274,12 @@ export function InterviewList() {
             data={interviews ?? []}
             columns={columns}
             getRowKey={getRowKey}
-            selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+            selection={{
+              selected: selectedIds,
+              onChange: handleSelectionChange,
+              getRowLabel: (interview) =>
+                `${interview.candidate?.firstName ?? ""} ${interview.candidate?.lastName ?? ""}`.trim(),
+            }}
             minWidth="820px"
             className="flex-1 min-h-0"
             emptyState={

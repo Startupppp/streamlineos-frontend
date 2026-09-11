@@ -6,7 +6,7 @@ import {
   useEffect,
   useCallback,
   useRef,
-  type MouseEvent,
+  type UIEvent,
 } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,16 +18,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
-import { getStatusHexColor } from "../shared/status-badge";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { computeBarGeometry } from "./gantt/gantt-geometry";
+import { GanttTicketRows } from "./gantt/gantt-ticket-rows";
+import { resolveGanttRowBand } from "./gantt/gantt-row-window";
 import { GanttDependencyOverlay } from "./gantt/gantt-dependency-overlay";
 import { GanttMilestoneMarkers } from "./gantt/gantt-milestone-markers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PmPanel, PM_TOOLBAR } from "@/features/build/shared/pm-chrome";
+import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +118,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -171,13 +173,6 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   const handlePrevWeek = useCallback(() => setWeekOffset((w) => w - 1), []);
   const handleResetWeek = useCallback(() => setWeekOffset(0), []);
   const handleNextWeek = useCallback(() => setWeekOffset((w) => w + 1), []);
-  const handleGanttRowClick = useCallback(
-    (e: MouseEvent<SVGGElement>) => {
-      const id = Number(e.currentTarget.dataset.ticketId);
-      if (id) onTicketClick(id);
-    },
-    [onTicketClick],
-  );
 
   const handleGoToBacklog = useCallback(() => {
     router.push(`/build/${projectId}/backlog`);
@@ -214,6 +209,19 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
         ]),
       ),
     [datedTickets, rowMap, startOfWeek, numDays, dayWidth, labelWidth, rowHeight],
+  );
+
+  function handleTimelineScroll(event: UIEvent<HTMLDivElement>) {
+    const next = event.currentTarget.scrollTop;
+    setScrollTop((prev) => (Math.abs(prev - next) < rowHeight ? prev : next));
+  }
+
+  const rowBand = resolveGanttRowBand(
+    datedTickets.length,
+    scrollTop,
+    scrollViewportHeight,
+    headerHeight,
+    rowHeight,
   );
 
   const contentHeight = headerHeight + datedTickets.length * rowHeight;
@@ -287,7 +295,11 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           </div>
         ) : null}
 
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
+        <div
+          ref={scrollRef}
+          onScroll={handleTimelineScroll}
+          className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
+        >
           <div className="min-w-max">
             <svg width={svgWidth} height={svgHeight} className="text-foreground">
               <rect x={0} y={0} width={labelWidth} height={headerHeight} className="fill-muted/40" />
@@ -358,62 +370,17 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                 className="stroke-border/80"
               />
 
-              {datedTickets.map((ticket) => {
-                const geo = barGeometries.get(ticket.id);
-                if (!geo) return null;
-                const y = geo.y;
-                const isCp = criticalPathIds.has(ticket.id);
-                const label = ticket.sequenceId ?? `#${ticket.ticketNumber ?? ticket.id}`;
-                const shortTitle =
-                  ticket.title.length > titleMax
-                    ? `${ticket.title.slice(0, titleMax)}…`
-                    : ticket.title;
-                return (
-                  <g
-                    key={ticket.id}
-                    data-ticket-id={ticket.id}
-                    onClick={handleGanttRowClick}
-                    className="cursor-pointer"
-                  >
-                    <title>{`${label} ${ticket.title}`}</title>
-                    <rect
-                      x={0}
-                      y={y}
-                      width={svgWidth}
-                      height={rowHeight}
-                      className="fill-transparent hover:fill-primary/[0.03]"
-                    />
-                    <line
-                      x1={0}
-                      y1={y}
-                      x2={svgWidth}
-                      y2={y}
-                      className="stroke-border/50"
-                      strokeWidth={0.5}
-                    />
-                    <text
-                      x={8}
-                      y={y + rowHeight / 2 + 4}
-                      className="fill-foreground"
-                      fontSize={labelWidth < 180 ? 9 : 11}
-                    >
-                      {`${label} ${shortTitle}`}
-                    </text>
-                    {geo.visible ? (
-                      <rect
-                        x={geo.x}
-                        y={y + 6}
-                        width={geo.width}
-                        height={rowHeight - 12}
-                        rx={4}
-                        fill={getStatusHexColor(ticket.status)}
-                        opacity={0.85}
-                        {...(isCp ? { stroke: "var(--destructive)", strokeWidth: 2 } : {})}
-                      />
-                    ) : null}
-                  </g>
-                );
-              })}
+              <GanttTicketRows
+                tickets={datedTickets}
+                band={rowBand}
+                geometries={barGeometries}
+                criticalPathIds={criticalPathIds}
+                svgWidth={svgWidth}
+                rowHeight={rowHeight}
+                titleMax={titleMax}
+                labelFontSize={labelWidth < 180 ? 9 : 11}
+                onTicketClick={onTicketClick}
+              />
 
               <GanttMilestoneMarkers
                 milestones={milestones ?? []}

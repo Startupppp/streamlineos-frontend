@@ -24,6 +24,18 @@ export const invoiceStatusBadge: Record<
     label: "Voided",
     className: "bg-muted text-muted-foreground border-border",
   },
+  SENT: {
+    label: "Sent",
+    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  },
+  PARTIALLY_PAID: {
+    label: "Partially paid",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  },
+  OVERDUE: {
+    label: "Overdue",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  },
 };
 
 export function formatInvoiceAmount(amount: string | number) {

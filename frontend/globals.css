@@ -87,7 +87,7 @@
   --muted-foreground: #64748b; /* slate-500 */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
-  --ring: #94a3b8; /* slate-400 focus ring â€” accent themes override */
+  --ring: #3b82f6; /* blue-500 focus ring - 3.52:1 on --background, meets WCAG 2.2 SC 1.4.11 (3:1); slate-400 was 2.45:1 */
 
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220; /* slate-900 â€” primary CTAs */
@@ -134,7 +134,7 @@
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 8%, transparent);
   --sidebar-accent-foreground: #0b1220;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #60a5fa;
+  --sidebar-ring: #3b82f6; /* blue-500 - 3.68:1 on the white sidebar; blue-400 was 2.54:1 */
 
   /* â”€â”€â”€ Cinematic dark canvas (only used on auth right-panel and rare dark sections) â”€â”€â”€ */
   --bg-deep: #03060f;
@@ -815,6 +815,22 @@ button.goal-everything-chip[aria-checked="true"]::before {
   background: transparent;
 }
 
+/* The all-day band is sized by its content, so it grows from 40px to 125px the
+   moment the events query answers and pushes the whole time grid down 85px —
+   measured as 0.10 of /calendar's desktop CLS on a populated org. Pinned to two
+   rows and scrolled beyond, the band is the same height before and after the
+   data lands. */
+.calendar-container .rbc-time-view .rbc-allday-cell {
+  height: 82px;
+  max-height: 82px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.calendar-container .rbc-time-view .rbc-allday-cell::-webkit-scrollbar {
+  display: none;
+}
+
 .calendar-container .rbc-header {
   display: flex;
   align-items: center;
@@ -1348,7 +1364,10 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --status-success-rule: var(--color-emerald-200, #a7f3d0);
 
   --status-warning-surface: var(--color-amber-50, #fffbeb);
-  --status-warning-ink: var(--color-amber-600, #d97706);
+  /* Not amber-600: it measures 2.91:1 on --muted, below the 3:1 SC 1.4.11 floor
+     an icon or rule drawn in it has to clear. Darkened to the first amber that
+     clears 3:1 on every light surface while staying distinct from -ink-strong. */
+  --status-warning-ink: #cb7006;
   --status-warning-ink-strong: var(--color-amber-700, #b45309);
   --status-warning-rule: var(--color-amber-200, #fde68a);
 

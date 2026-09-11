@@ -1,34 +1,63 @@
 "use client";
 
 import { useCallback, useRef, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMailAccounts } from "@/hooks/api/mail";
+import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { MailListPane } from "./mail-list-pane";
-import { MailAccountsSheet } from "./mail-accounts-sheet";
-import { MailReadingPane } from "./mail-reading-pane";
-import { MailComposeSheet } from "./mail-compose-sheet";
-import {
-  MailInboxSummarySheet,
-  useMailInboxSummarySheet,
-} from "./mail-inbox-summary-sheet";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
+import { seedMailDetailFromSummary } from "./mail-thread-seed";
+import { useMailInboxSummarySheet } from "./use-mail-inbox-summary";
+import {
+  MailReadingPaneSkeleton,
+  MailSheetSkeleton,
+} from "./mail-shell-skeletons";
 import type { MailMessageSummary } from "@/types/mail";
-import type { MailComposeMode } from "./mail-compose-sheet";
+import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
+
+const MailReadingPane = dynamic(
+  () => import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
+  { ssr: false, loading: () => <MailReadingPaneSkeleton /> },
+);
+
+const MailAccountsSheet = dynamic(
+  () => import("./mail-accounts-sheet").then((m) => ({ default: m.MailAccountsSheet })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
+
+const MailComposeSheet = dynamic(
+  () => import("./mail-compose-sheet").then((m) => ({ default: m.MailComposeSheet })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
+
+const MailInboxSummarySheet = dynamic(
+  () =>
+    import("./mail-inbox-summary-sheet").then((m) => ({
+      default: m.MailInboxSummarySheet,
+    })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
 
 export function MailShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { data: accounts = [], isLoading: accountsLoading } = useMailAccounts();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
   const canAi = useCan("mail:ai:use");
+  const canManageMail = useCan("mail:messages:manage");
+  const inboxAccess = usePermissionGate("mail:inbox:view");
+  const mailAction = useMailAction();
 
   const [accountsSheetOpen, setAccountsSheetOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | "all">(
@@ -101,10 +130,30 @@ export function MailShell() {
     setSelectedMessage(null);
   }, []);
 
-  const handleSelectMessage = useCallback((message: MailMessageSummary) => {
-    setSelectedMessage(message);
-    setShowMobileList(false);
-  }, []);
+  const mailActionMutate = mailAction.mutate;
+  const handleSelectMessage = useCallback(
+    (message: MailMessageSummary) => {
+      setShowMobileList(false);
+      seedMailDetailFromSummary(queryClient, message);
+      if (message.isRead || !canManageMail) {
+        setSelectedMessage(message);
+        return;
+      }
+      setSelectedMessage({ ...message, isRead: true });
+      mailActionMutate(
+        {
+          messageId: message.id,
+          body: {
+            accountId: message.accountId,
+            action: "markRead",
+            ...(message.threadId && { threadId: message.threadId }),
+          },
+        },
+        { onError: () => setSelectedMessage(message) },
+      );
+    },
+    [canManageMail, mailActionMutate, queryClient],
+  );
 
   const handleBackToList = useCallback(() => {
     setShowMobileList(true);
@@ -139,6 +188,27 @@ export function MailShell() {
   const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
 
   const hasAccounts = accounts.length > 0;
+
+  /**
+   * A reader without `mail:inbox:view` is refused, not asked to connect a
+   * mailbox. Both reads this page makes are gated on that key already, so a
+   * member who lacks it gets an empty account list and used to land on the
+   * "Connect your inbox" pane — an instruction to fix an account problem they
+   * do not have and a Connect button that cannot help them.
+   *
+   * `denied`, never `!allowed`: until the access snapshot arrives the gate is
+   * pending, and reading that as a refusal flashes "Access Restricted" at a
+   * permitted reader on every load.
+   */
+  if (inboxAccess.denied)
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <NoPermissionState
+          permission={inboxAccess.permission}
+          description="Mail is not available to your role."
+        />
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
@@ -196,23 +266,29 @@ export function MailShell() {
         </div>
       </div>
 
-      <MailAccountsSheet
-        open={accountsSheetOpen}
-        onClose={handleCloseAccountsSheet}
-      />
+      {accountsSheetOpen && (
+        <MailAccountsSheet
+          open={accountsSheetOpen}
+          onClose={handleCloseAccountsSheet}
+        />
+      )}
 
-      <MailComposeSheet
-        open={composeOpen}
-        onClose={handleCloseCompose}
-        mode={composeMode}
-        accounts={accounts}
-      />
+      {composeOpen && (
+        <MailComposeSheet
+          open={composeOpen}
+          onClose={handleCloseCompose}
+          mode={composeMode}
+          accounts={accounts}
+        />
+      )}
 
-      <MailInboxSummarySheet
-        open={summarySheetOpen}
-        onClose={handleCloseSummary}
-        summaryState={summaryState}
-      />
+      {summarySheetOpen && (
+        <MailInboxSummarySheet
+          open={summarySheetOpen}
+          onClose={handleCloseSummary}
+          summaryState={summaryState}
+        />
+      )}
     </div>
   );
 }

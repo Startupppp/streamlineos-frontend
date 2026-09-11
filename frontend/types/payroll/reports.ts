@@ -1,3 +1,18 @@
+import type { z } from "zod";
+import type { taxWindowContract } from "@/hooks/api/payroll/tax-schema";
+import type { fnfStatementContract } from "@/hooks/api/payroll/fnf-schema";
+import type { calendarEventContract } from "@/hooks/api/payroll/calendar-schema";
+import type {
+  summaryReportContract,
+  registerReportContract,
+  deptCostReportContract,
+  costCenterReportContract,
+  componentPivotReportContract,
+  bankPayoutReportContract,
+  varianceReportContract,
+  journalReportContract,
+} from "@/hooks/api/payroll/reports-schema";
+
 export type PayrollReportType =
   | "summary"
   | "register"
@@ -12,124 +27,44 @@ export type PayrollReportType =
   | "journal"
   | "pay-compression";
 
-export interface PayrollSummaryReport {
-  run: {
-    month: string;
-    status: string;
-    employeeCount: number;
-    grossTotal: number;
-    deductionTotal: number;
-    netTotal: number;
-    employerCostTotal: number;
-    exceptionCount: number;
-  } | null;
-  provisional: boolean;
-}
+export type PayrollSummaryReport = z.infer<typeof summaryReportContract>;
 
-export interface EmployeeRegisterRow {
-  employeeId: string;
-  name: string;
-  department: string;
-  workerType: string;
-  paidDays: number;
-  gross: number;
-  totalDeductions: number;
-  net: number;
-  components: Record<string, string>;
-}
+export type EmployeeRegisterRow = z.infer<typeof registerReportContract>["rows"][number];
 
-export interface PayrollRegisterReport {
-  provisional: boolean;
-  columns: string[];
-  rows: EmployeeRegisterRow[];
-}
+export type PayrollRegisterReport = z.infer<typeof registerReportContract>;
 
-export interface DeptCostRow {
-  department: string;
-  employeeCount: number;
-  grossTotal: number;
-  netTotal: number;
-  employerCostTotal: number;
-}
+export type DeptCostRow = z.infer<typeof deptCostReportContract>["rows"][number];
 
-export interface PayrollDeptCostReport {
-  rows: DeptCostRow[];
-}
+export type PayrollDeptCostReport = z.infer<typeof deptCostReportContract>;
 
-export interface CostCenterRow {
-  costCenter: string;
-  employeeCount: number;
-  grossTotal: number;
-  netTotal: number;
-}
+export type CostCenterRow = z.infer<typeof costCenterReportContract>["rows"][number];
 
-export interface PayrollCostCenterReport {
-  rows: CostCenterRow[];
-}
+export type PayrollCostCenterReport = z.infer<typeof costCenterReportContract>;
 
-export interface ComponentPivotRow {
-  employeeId: string;
-  name: string;
-  department: string;
-  workerType: string;
-  components: Record<string, string>;
-}
+export type ComponentPivotRow = z.infer<typeof componentPivotReportContract>["rows"][number];
 
-export interface ComponentPivotReport {
-  provisional: boolean;
-  columns: string[];
-  rows: ComponentPivotRow[];
-}
+export type ComponentPivotReport = z.infer<typeof componentPivotReportContract>;
 
-export interface BankPayoutItem {
-  userName: string;
-  accountMasked: string;
-  ifsc: string;
-  amount: number;
-  status: string;
-}
+export type BankPayoutItem = z.infer<typeof bankPayoutReportContract>["batches"][number]["items"][number];
 
-export interface BankPayoutBatch {
-  batchNumber: string;
-  format: string;
-  totalAmount: number;
-  itemCount: number;
-  status: string;
-  generatedAt: string | null;
-  items: BankPayoutItem[];
-}
+export type BankPayoutBatch = z.infer<typeof bankPayoutReportContract>["batches"][number];
 
-export interface BankPayoutReport {
-  batches: BankPayoutBatch[];
-}
+export type BankPayoutReport = z.infer<typeof bankPayoutReportContract>;
 
-export interface VarianceEmployeeRow {
-  userId: string;
-  name: string;
-  prevGross: number;
-  currGross: number;
-  grossDelta: number;
-  prevNet: number;
-  currNet: number;
-  netDelta: number;
-}
+export type VarianceEmployeeRow = z.infer<typeof varianceReportContract>["perEmployee"][number];
 
-export interface VarianceReport {
-  perEmployee: VarianceEmployeeRow[];
-}
+export type VarianceReport = z.infer<typeof varianceReportContract>;
 
-export interface JournalLine {
-  account: string;
-  description: string;
-  debit: number;
-  credit: number;
-  costCenter: string | null;
-}
+export type JournalLine = z.infer<typeof journalReportContract>["lines"][number];
 
-export interface JournalReport {
-  lines: JournalLine[];
-  unmappedCodes: string[];
-}
+/**
+ * Mirrors `JournalResult` in `payroll/insights/journal.service.ts`. The three
+ * fields below `unmappedCodes` were dropped from this type once, so the report
+ * re-derived the totals in float from `lines` and adjudicated "balanced"
+ * itself — over a line set the server had already filtered. The totals are the
+ * server's, computed in integer paise; do not recompute them here.
+ */
+export type JournalReport = z.infer<typeof journalReportContract>;
 
 export interface AccountingMapping {
   id: number;
@@ -150,16 +85,7 @@ export interface CreateAccountingMappingInput {
 
 export type UpdateAccountingMappingInput = Partial<CreateAccountingMappingInput>;
 
-export type CalendarEventStatus = "upcoming" | "due" | "overdue";
-
-export interface PayrollCalendarEvent {
-  id: number;
-  type: string;
-  date: string;
-  title: string;
-  month: string | null;
-  status: CalendarEventStatus;
-}
+export type PayrollCalendarEvent = z.infer<typeof calendarEventContract>;
 
 export interface CreateCalendarEventInput {
   type: string;
@@ -172,15 +98,7 @@ export type UpdateCalendarEventInput = Partial<CreateCalendarEventInput>;
 
 export type TaxWindowStatus = "DRAFT" | "OPEN" | "CLOSED" | "LOCKED";
 
-export interface TaxWindow {
-  id: number;
-  financialYear: string;
-  opensAt: string;
-  closesAt: string;
-  proofDeadline: string | null;
-  lockDate: string | null;
-  status: TaxWindowStatus;
-}
+export type TaxWindow = z.infer<typeof taxWindowContract>;
 
 export interface CreateTaxWindowInput {
   financialYear: string;
@@ -193,28 +111,6 @@ export interface CreateTaxWindowInput {
 export type UpdateTaxWindowInput = Partial<CreateTaxWindowInput> & { status?: TaxWindowStatus };
 
 export type TaxDeclarationStatus = "DRAFT" | "SUBMITTED" | "VERIFIED";
-export type TaxRegime = "NEW" | "OLD";
-
-export interface TaxDeclarationAdmin {
-  id: number;
-  orgId: string;
-  userId: string;
-  financialYear: string;
-  regime: TaxRegime;
-  hra: number;
-  lta: number;
-  section80c: number;
-  section80d: number;
-  section80g: number;
-  homeLoanInterest: number;
-  status: TaxDeclarationStatus;
-  verifiedBy: string | null;
-  verifiedAt: string | null;
-  reviewNote: string | null;
-  createdAt: string;
-  userName: string;
-  userEmail: string;
-}
 
 export type FnfStatus = "PENDING" | "HR_REVIEW" | "FINANCE_REVIEW" | "APPROVED" | "PAID";
 
@@ -240,19 +136,7 @@ export interface FnfSettlement {
   userEmail: string;
 }
 
-export interface FnfStatementComponent {
-  label: string;
-  amount: number;
-  type: string | null;
-}
-
-export interface FnfStatement {
-  settlementId: number;
-  employee: { id: string; name: string; email: string };
-  components: FnfStatementComponent[];
-  netPayable: number;
-  status: FnfStatus;
-}
+export type FnfStatement = z.infer<typeof fnfStatementContract>;
 
 export type LoanAdjustmentType = "SKIP_EMI" | "EXTRA_RECOVERY" | "FORECLOSURE" | "MANUAL_ADJUST";
 

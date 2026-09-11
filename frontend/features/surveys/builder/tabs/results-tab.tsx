@@ -13,7 +13,7 @@ import { AssessmentResultsCard } from "@/features/surveys/results/assessment-res
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
-import { surveyAiSummarizeResponses } from "@/hooks/api/surveys/survey-ai";
+import { streamSurveyResponseSummary } from "@/hooks/api/surveys/survey-ai";
 
 export function ResultsTab({ survey }: { survey: SurveyForm }) {
   const { data: overview, isLoading: overviewLoading, isError, refetch } = useAnalyticsOverview(survey.id);
@@ -24,9 +24,13 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
       key: "summarize-responses",
       label: "Summarize responses",
       description: "AI narrative of key themes and insights",
-      run: async () => {
-        const res = await surveyAiSummarizeResponses(survey.id);
-        return { text: res.summary };
+      run: async (signal, onToken) => {
+        const outcome = await streamSurveyResponseSummary({
+          surveyId: survey.id,
+          onToken,
+          signal,
+        });
+        return { text: outcome.text };
       },
     },
   ];

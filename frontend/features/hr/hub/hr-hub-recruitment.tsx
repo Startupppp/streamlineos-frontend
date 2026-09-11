@@ -7,11 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubViewProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { ErrorRetry } from "./today/today-card";
 
 interface RecruitmentCountCardProps {

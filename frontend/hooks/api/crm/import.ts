@@ -9,6 +9,11 @@ import type {
   ImportPreview,
   PlannedEntity,
 } from "@/types/crm/import";
+import { lazyContract } from "@/lib/api-envelope";
+
+const importProgressLazy = lazyContract(() => import("@/hooks/api/crm/import-schema").then((m) => m.importProgressContract));
+const importPreviewLazy = lazyContract(() => import("@/hooks/api/crm/import-schema").then((m) => m.importPreviewContract));
+
 
 /**
  * Ask what a file would do. Writes nothing.
@@ -27,7 +32,7 @@ export function usePreviewImport() {
       headers: string[];
       rows: string[][];
       overrides?: Record<string, string>;
-    }) => apiClient.post<ImportPreview>("/crm/imports/preview", input),
+    }) => apiClient.post<ImportPreview>("/crm/imports/preview", input, undefined, importPreviewLazy),
   });
 }
 
@@ -70,12 +75,14 @@ export function useCommitImport() {
       let progress = await apiClient.post<ImportProgress>(
         `/crm/imports/${crmImportId}/commit`,
         {},
+        undefined,
+        importProgressLazy,
       );
       onProgress?.(progress);
 
       for (let poll = 0; poll < MAX_POLLS && !progress.complete; poll++) {
         await new Promise((resolve) => setTimeout(resolve, POLL_MS));
-        progress = await apiClient.get<ImportProgress>(`/crm/imports/${crmImportId}/progress`);
+        progress = await apiClient.get<ImportProgress>(`/crm/imports/${crmImportId}/progress`, undefined, undefined, importProgressLazy);
         onProgress?.(progress);
         if (progress.status === "failed")
           throw new Error(
@@ -105,7 +112,7 @@ export function useRevertImport() {
   return useAuthorizedMutation("crm:imports:manage", {
     mutationKey: ["crm", "imports", "revert"],
     mutationFn: (crmImportId: string) =>
-      apiClient.post<ImportProgress>(`/crm/imports/${crmImportId}/revert`, {}),
+      apiClient.post<ImportProgress>(`/crm/imports/${crmImportId}/revert`, {}, undefined, importProgressLazy),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.party.all });

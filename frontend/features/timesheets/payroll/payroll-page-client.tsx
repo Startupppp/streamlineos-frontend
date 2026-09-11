@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { differenceInCalendarDays, parseISO, isValid } from "date-fns";
 import { Banknote, Settings2 } from "lucide-react";
@@ -42,6 +42,8 @@ export function TimesheetPayrollPageClient() {
 
   const { data: settings, isLoading: settingsLoading } = useTimesheetPayrollSettings();
 
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const defaultRange = useMemo(
     () => getPresetRange("this-period", settings?.payPeriod ?? "MONTHLY"),
@@ -117,13 +119,28 @@ export function TimesheetPayrollPageClient() {
       ? `${totals.userCount} people · ${totals.payableHours.toFixed(1)} h payable`
       : undefined;
 
-  const hasFilters = !!(userId && userId !== "all");
+  const hasFilters =
+    !!(userId && userId !== "all") ||
+    start !== defaultRange.from ||
+    end !== defaultRange.to ||
+    includeExported;
 
   const mapping = settings?.payrollMapping ?? DEFAULT_PAYROLL_MAPPING;
 
   const handleSummaryRetry = useCallback(() => {
     void refetchSummary();
   }, [refetchSummary]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("start");
+    params.delete("end");
+    params.delete("userId");
+    params.delete("includeExported");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    setSelectedUserIds(new Set());
+  }, [pathname, router, searchParams]);
 
   const pageActions = (
     <div className="flex items-center gap-2">
@@ -238,6 +255,7 @@ export function TimesheetPayrollPageClient() {
                 selection={visibleSelectedUserIds}
                 onSelectionChange={handleSelectionChange}
                 onRowClick={handleRowClick}
+                onClearFilters={handleClearFilters}
               />
             )}
           </TabsContent>

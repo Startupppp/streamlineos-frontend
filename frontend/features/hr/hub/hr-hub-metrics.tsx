@@ -13,11 +13,8 @@ import {
   StatCardGrid,
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
-import {
-  hubSectionData,
-  hubSectionError,
-  type HrHubViewProps,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { ErrorRetry } from "./today/today-card";
 
 export function HrHubMetrics({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  useCreateAutomation,
-  useTestAutomation,
-  useUpdateAutomation,
-  type AutomationAction,
-  type AutomationCondition,
-  type AutomationConditionOp,
-  type AutomationRule,
-  type AutomationTestResult,
-  type AutomationTrigger,
+import type {
+  AutomationAction,
+  AutomationCondition,
+  AutomationConditionOp,
+  AutomationRule,
+  AutomationTestResult,
+  AutomationTrigger,
 } from "@/hooks/api/automations";
 import type {
   ExtendedAutomationAction,
@@ -33,11 +30,49 @@ import { TRIGGER_META, getTriggerMeta, type TriggerMeta } from "./automation-tri
 import { AutomationBuilderEditor } from "./automation-builder-editor";
 import { AutomationTestResultPanel } from "./automation-test-result";
 
+interface AutomationCreatePayload {
+  name: string;
+  description?: string;
+  triggerEvent: AutomationTrigger;
+  conditions: AutomationCondition[];
+  actions: AutomationAction[];
+  isEnabled: boolean;
+}
+
+interface AutomationUpdatePayload {
+  id: number;
+  name?: string;
+  description?: string | null;
+  triggerEvent?: AutomationTrigger;
+  conditions?: AutomationCondition[];
+  actions?: AutomationAction[];
+  isEnabled?: boolean;
+}
+
+interface AutomationTestPayload {
+  id: number;
+  payload: Record<string, unknown>;
+}
+
+interface InjectedMutation<TInput, TResult> {
+  mutate: (
+    variables: TInput,
+    options?: {
+      onSuccess?: (data: TResult) => void;
+      onError?: () => void;
+    },
+  ) => void;
+  isPending: boolean;
+}
+
 interface AutomationBuilderSheetProps {
   rule?: AutomationRule;
   onClose: () => void;
   triggerOptions?: TriggerMeta[];
   defaultTrigger?: AutomationTrigger;
+  create: InjectedMutation<AutomationCreatePayload, AutomationRule>;
+  update: InjectedMutation<AutomationUpdatePayload, AutomationRule>;
+  test: InjectedMutation<AutomationTestPayload, AutomationTestResult>;
 }
 
 function defaultActionConfig(
@@ -78,6 +113,9 @@ export function AutomationBuilderSheet({
   onClose,
   triggerOptions,
   defaultTrigger,
+  create,
+  update,
+  test,
 }: AutomationBuilderSheetProps) {
   const isEdit = Boolean(rule);
   const effectiveTriggerOptions = useMemo(() => {
@@ -107,9 +145,6 @@ export function AutomationBuilderSheet({
   const [testResult, setTestResult] = useState<AutomationTestResult | null>(
     null,
   );
-  const create = useCreateAutomation();
-  const update = useUpdateAutomation();
-  const test = useTestAutomation();
   const triggerMeta = useMemo(
     () => getTriggerMeta(triggerEvent),
     [triggerEvent],
@@ -167,6 +202,15 @@ export function AutomationBuilderSheet({
     setConditions((current) =>
       current.filter((_, currentIndex) => currentIndex !== index),
     );
+  }
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+  function handleDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setDescription(event.target.value);
+  }
+  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setName(event.target.value);
   }
   function handleTriggerChange(value: string) {
     setTriggerEvent(value as AutomationTrigger);
@@ -232,12 +276,7 @@ export function AutomationBuilderSheet({
   }
 
   return (
-    <Sheet
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
+    <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="flex w-full flex-col overflow-hidden p-0 gap-0 sm:max-w-xl"
@@ -266,9 +305,9 @@ export function AutomationBuilderSheet({
             onConditionField={handleConditionField}
             onConditionOp={handleConditionOp}
             onConditionValue={handleConditionValue}
-            onDescriptionChange={(event) => setDescription(event.target.value)}
+            onDescriptionChange={handleDescriptionChange}
             onEnabledChange={setIsEnabled}
-            onNameChange={(event) => setName(event.target.value)}
+            onNameChange={handleNameChange}
             onRemoveAction={handleRemoveAction}
             onRemoveCondition={handleRemoveCondition}
             onTriggerChange={handleTriggerChange}

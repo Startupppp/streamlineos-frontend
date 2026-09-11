@@ -21,6 +21,15 @@ interface SubmissionsDataTableProps {
   canManage: boolean;
 }
 
+async function noSubmitInReadOnlyView(): Promise<void> {}
+
+const SUBMISSION_STATUSES = [
+  "submitted",
+  "in_review",
+  "approved",
+  "rejected",
+] as const satisfies readonly HrFormSubmissionStatus[];
+
 export function SubmissionsDataTable({ formId, submissions, canManage }: SubmissionsDataTableProps) {
   const [viewSub, setViewSub] = useState<HrFormSubmission | null>(null);
   const updateStatus = useUpdateSubmissionStatus(formId);
@@ -32,6 +41,13 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
+  }
+
+  function makeHandleStatusSelect(rowId: number) {
+    return (v: string) => {
+      const next = SUBMISSION_STATUSES.find((candidate) => candidate === v);
+      if (next) handleStatusChange(rowId, next);
+    };
   }
 
   function handleViewClick(sub: HrFormSubmission) {
@@ -66,7 +82,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
         canManage ? (
           <Select
             value={row.status}
-            onValueChange={(v) => handleStatusChange(row.id, v as HrFormSubmissionStatus)}
+            onValueChange={makeHandleStatusSelect(row.id)}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -115,7 +131,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
           {viewSub && (
             <FormRenderer
               fields={viewSub.formSchemaSnapshot}
-              onSubmit={async () => {}}
+              onSubmit={noSubmitInReadOnlyView}
               isPending={false}
               readOnly
               initialData={viewSub.data}

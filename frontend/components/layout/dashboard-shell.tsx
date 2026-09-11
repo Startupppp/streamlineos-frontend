@@ -13,21 +13,25 @@ import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
-import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
+import { LazyAppLoadingScreen } from "@/components/ui/app-loading-screen-lazy";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
-import { CommandPaletteProvider } from "@/features/command-palette";
-import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
-import { getChatMobileContentPaddingClassName } from "@/features/chat/chat-mobile-chrome-layout";
+import { CommandPaletteProvider } from "@/components/command-palette";
+import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
 import {
   getMobileModuleContentPaddingClassName,
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
-import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
+import { isPortalChromelessPath, type ModuleAccent } from "./sidebar/sidebar-nav-items";
+import { ShellOfflineBanner } from "./shell-offline-banner";
+import { ShellVariantProvider } from "./shell-variant-context";
+import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
+import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
+import type { ShellVariant } from "@/lib/shell-variant";
 
 const SuccessChecklist = dynamic(
   () =>
@@ -45,6 +49,7 @@ const WelcomeToast = dynamic(
   { ssr: false },
 );
 
+
 const SIDEBAR_COOKIE = "sidebar-collapsed";
 const SIDEBAR_COLLAPSED_W = "3.5rem";
 const SIDEBAR_EXPANDED_W = "17rem";
@@ -53,26 +58,47 @@ function setSidebarCookie(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
+interface ProjectNavTreeSlotProps {
+  projectId: string;
+  collapsed: boolean;
+  accent: ModuleAccent;
+  onNavigate: () => void;
+}
+
 interface DashboardShellProps {
   userId: string;
   defaultCollapsed: boolean;
+  shellVariant?: ShellVariant;
   children: React.ReactNode;
+  createTicketDialog?: React.ReactNode;
+  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
+  notificationBellSlot?: React.ReactNode;
+  chatMobileNavSlot?: (onOpenMobileMenu: () => void) => React.ReactNode;
 }
 
 export function DashboardShell({
   userId,
   defaultCollapsed,
+  shellVariant = "desktop",
   children,
+  createTicketDialog,
+  projectNavTreeSlot,
+  notificationBellSlot,
+  chatMobileNavSlot,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const route = pathname ?? "";
   const isPortalRoute = isPortalChromelessPath(route);
+
+  useRouteFocus();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
+  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
+  const [enhancementsReady, setEnhancementsReady] = useState(false);
 
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
   const {
@@ -163,6 +189,28 @@ export function DashboardShell({
     };
   }, []);
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(WELCOME_POP_KEY) === "1")
+        setWelcomeToastActive(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (access?.isOrgOwner !== true) return;
+
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(
+        () => setEnhancementsReady(true),
+        { timeout: 1500 },
+      );
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(() => setEnhancementsReady(true), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [access?.isOrgOwner]);
+
   if ((accessLoading && !access) || (accessError && !access))
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
@@ -174,7 +222,7 @@ export function DashboardShell({
             onRetry={handleRetryAccess}
           />
         ) : (
-          <AppLoadingScreen className="flex-1" />
+          <LazyAppLoadingScreen className="flex-1" />
         )}
       </div>
     );
@@ -188,7 +236,7 @@ export function DashboardShell({
         Skip to content
       </Link>
 
-      <CommandPaletteProvider>
+      <CommandPaletteProvider createTicketDialog={createTicketDialog}>
         <AskOsProvider>
           <CommandPalette />
           <TrialBanner />
@@ -200,21 +248,26 @@ export function DashboardShell({
               showSidebarToggle={!hideSidebar}
               mobileNavOpen={mobileMenuOpen}
               hideAdminChrome={isPortalRoute}
+              shellVariant={shellVariant}
+              notificationBellSlot={notificationBellSlot}
             />
 
+            <ShellOfflineBanner />
+
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              {!hideSidebar && (
+              {shellVariant === "desktop" && !hideSidebar && (
                 <aside
                   aria-label="Sidebar"
                   style={{ width: sidebarW }}
                   className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
                 >
-                  <AppSidebar isCollapsed={isSidebarCollapsed} />
+                  <AppSidebar isCollapsed={isSidebarCollapsed} projectNavTreeSlot={projectNavTreeSlot} />
                 </aside>
               )}
 
               <main
                 id="dashboard-content"
+                aria-label="Main content"
                 className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
               >
                 <div
@@ -228,10 +281,12 @@ export function DashboardShell({
                   )}
                 >
                   <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
-                    {children}
+                    <ShellVariantProvider variant={shellVariant}>
+                      {children}
+                    </ShellVariantProvider>
                   </div>
-                  <WelcomeToast />
-                  <SuccessChecklist />
+                  {welcomeToastActive && <WelcomeToast />}
+                  {enhancementsReady ? <SuccessChecklist /> : null}
                 </div>
               </main>
             </div>
@@ -250,6 +305,7 @@ export function DashboardShell({
                   isMobile
                   onNavigate={handleCloseMobileMenu}
                   onRequestProductSwitcher={handleRequestProductSwitcher}
+                  projectNavTreeSlot={projectNavTreeSlot}
                 />
               </DrawerContent>
             </Drawer>
@@ -264,9 +320,7 @@ export function DashboardShell({
           )}
 
           <MobileModuleBottomNav />
-          {isChatRoute && (
-            <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
-          )}
+          {isChatRoute && chatMobileNavSlot?.(handleOpenMobileMenu)}
           {!(isChatRoute && isChatConversationOpen) && (
             <MobileShellFab
               onOpenMobileMenu={handleOpenMobileMenu}

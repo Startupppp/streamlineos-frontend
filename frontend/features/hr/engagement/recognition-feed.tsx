@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
@@ -6,7 +6,7 @@ import { Heart, Award, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { MemberPicker } from "@/components/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -35,8 +35,8 @@ interface Recognition {
   message: string;
   category: string;
   createdAt: string;
-  fromUser?: { name?: string; email: string };
-  toUser?: { name?: string; email: string };
+  fromUser?: { name: string | null; email: string | null };
+  toUser?: { name: string | null; email: string | null };
 }
 
 interface RecognitionFeedProps {
@@ -53,7 +53,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   ABOVE_AND_BEYOND: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
-function displayName(user?: { name?: string; email: string } | null): string {
+function displayName(user?: { name: string | null; email: string | null } | null): string {
   return user?.name ?? user?.email ?? "Unknown";
 }
 

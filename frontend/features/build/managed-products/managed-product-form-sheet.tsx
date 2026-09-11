@@ -23,6 +23,7 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import { upperCaseFieldChange } from "@/lib/case-field";
 
 const createSchema = z.object({
   name: z.string().min(1, "Required").max(255),
@@ -59,12 +60,14 @@ const EDIT_DEFAULTS: EditFormValues = {
   status: "active",
 };
 
+const MANAGED_PRODUCT_STATUSES = ["active", "archived"] as const;
+
 function toEditForm(p: ManagedProduct): EditFormValues {
   return {
     name: p.name,
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
-    status: p.status,
+    status: MANAGED_PRODUCT_STATUSES.find((v) => v === p.status) ?? "active",
   };
 }
 
@@ -288,7 +291,7 @@ export function ManagedProductFormSheet({
                   <Input
                     {...field}
                     placeholder="PROD"
-                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    onChange={upperCaseFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

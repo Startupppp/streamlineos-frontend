@@ -5,6 +5,7 @@ overrides:
   minimatch: ">=9.0.7"
   "test-exclude>minimatch": "3.1.2"
   undici: ">=8.9.0"
+  "jsdom>undici": ">=7.29.0 <8"
   flatted: ">=3.4.2"
   esbuild: ">=0.25.0"
   ajv: ">=8.17.1"
@@ -30,3 +31,11 @@ overrides:
   "nanoid@^3": ">=3.3.11"
   "nanoid@^4": ">=5.1.16"
   "@auth/core": ">=0.41.3"
+
+packageExtensions:
+  "@animateicons/react@0.3.4":
+    dependencies:
+      framer-motion: "^12.23.25"
+
+patchedDependencies:
+  "@animateicons/react@0.3.4": patches/@animateicons__react@0.3.4.patch

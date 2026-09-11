@@ -58,6 +58,8 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
     setNewOption(e.target.value);
   }
 
+  const conditional = field.conditional;
+
   return (
     <div className="space-y-3 p-3 border border-border rounded-lg bg-card">
       <div className="flex items-center justify-between">
@@ -148,11 +150,11 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                 ))}
               </SelectContent>
             </Select>
-            {field.conditional?.fieldKey && (
+            {conditional?.fieldKey && (
               <Select
-                value={field.conditional.operator}
+                value={conditional.operator}
                 onValueChange={(v) => update({
-                  conditional: { ...field.conditional!, operator: v as "eq" | "neq" | "contains" | "notEmpty" }
+                  conditional: { ...conditional, operator: v as "eq" | "neq" | "contains" | "notEmpty" }
                 })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -164,12 +166,12 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                 </SelectContent>
               </Select>
             )}
-            {field.conditional?.fieldKey && field.conditional.operator !== "notEmpty" && (
+            {conditional?.fieldKey && conditional.operator !== "notEmpty" && (
               <Input
                 className="text-xs"
                 placeholder="Value…"
-                value={typeof field.conditional.value === "string" ? field.conditional.value : ""}
-                onChange={(e) => update({ conditional: { ...field.conditional!, value: e.target.value } })}
+                value={typeof conditional.value === "string" ? conditional.value : ""}
+                onChange={(e) => update({ conditional: { ...conditional, value: e.target.value } })}
               />
             )}
           </div>

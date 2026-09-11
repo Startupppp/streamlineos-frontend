@@ -29,6 +29,27 @@ export interface ApprovalSubject {
   currentApproverId: string | null;
 }
 
+/**
+ * A period's two parties in the shape the standing check compares.
+ *
+ * Both backends name them by membership id (`organization_members.id`) —
+ * `userMembershipId` and `currentApproverMembershipId`, which is also all that
+ * `timesheets-period-schema.ts` lets through. Stringified here so the check
+ * stays one comparison, which means the viewer id it is given has to be the
+ * viewer's membership id too, never a `users.id`.
+ */
+export function approvalSubjectOf(
+  period: Pick<TimesheetPeriod, "userMembershipId" | "currentApproverMembershipId">,
+): ApprovalSubject {
+  return {
+    userId: period.userMembershipId === null ? "" : String(period.userMembershipId),
+    currentApproverId:
+      period.currentApproverMembershipId === null
+        ? null
+        : String(period.currentApproverMembershipId),
+  };
+}
+
 export function approvalStanding(
   viewerId: string | null | undefined,
   isOrgOwner: boolean,
@@ -69,10 +90,11 @@ export function summarizeBorrowedAuthority(
   let count = 0;
 
   for (const period of periods) {
-    const standing = approvalStanding(viewerId, isOrgOwner, period);
+    const subject = approvalSubjectOf(period);
+    const standing = approvalStanding(viewerId, isOrgOwner, subject);
     if (standing !== "delegate" && standing !== "owner-override") continue;
     count += 1;
-    if (period.currentApproverId) approverIds.add(period.currentApproverId);
+    if (subject.currentApproverId) approverIds.add(subject.currentApproverId);
   }
 
   if (count === 0) return null;

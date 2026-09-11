@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/ui/search-input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
@@ -24,8 +23,13 @@ import {
 } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ChatUserVirtualList } from "./chat-user-virtual-list";
+import { getInitials } from "@/lib/format-utils";
+
+const DM_LIST_BOX_HEIGHT = 340;
+const DM_LIST_PADDING = 8;
+const DM_ROW_HEIGHT = 56;
 
 type OrgUser = {
   id: string;
@@ -145,6 +149,19 @@ export function NewDMDialog({
     return [self, ...matched.filter((u) => u.id !== currentUserId)];
   }, [orgUsers, search, currentUserId]);
 
+  const renderUser = useCallback(
+    (user: OrgUser) => (
+      <DMUserItem
+        user={user}
+        isOnline={onlineUserIds.has(user.id)}
+        isPending={createDM.isPending}
+        isSelf={user.id === currentUserId}
+        onSelect={handleSelectUser}
+      />
+    ),
+    [onlineUserIds, createDM.isPending, currentUserId, handleSelectUser],
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {!hideTrigger && (
@@ -169,28 +186,29 @@ export function NewDMDialog({
           <SearchInput fill placeholder="Search by name or email..." value={search} onValueChange={handleSearchChange} autoFocus />
         </div>
         </div>
-        <ScrollArea className="h-[340px] border-t border-border/30">
-          <div className="p-1">
-            {filteredUsers.map((user) => (
-              <DMUserItem
-                key={user.id}
-                user={user}
-                isOnline={onlineUserIds.has(user.id)}
-                isPending={createDM.isPending}
-                isSelf={user.id === currentUserId}
-                onSelect={handleSelectUser}
-              />
-            ))}
-            {filteredUsers.length === 0 && !isLoading && (
+        <div
+          className="border-t border-border/30 p-1"
+          style={{ height: DM_LIST_BOX_HEIGHT }}
+        >
+          {filteredUsers.length === 0 ? (
+            !isLoading && (
               <div className="text-center py-10">
                 <Users className="w-8 text-muted-foreground/30 mx-auto mb-2" />
                 <p className="text-label text-muted-foreground">
                   No users found
                 </p>
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            )
+          ) : (
+            <ChatUserVirtualList
+              users={filteredUsers}
+              rowHeight={DM_ROW_HEIGHT}
+              listHeight={DM_LIST_BOX_HEIGHT - DM_LIST_PADDING}
+              ariaLabel="People you can message"
+              renderUser={renderUser}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

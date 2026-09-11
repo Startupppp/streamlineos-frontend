@@ -1,8 +1,21 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const supportTicketLinkListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.supportTicketLinkListContract),
+);
+const addTicketLinkContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.addTicketLinkContract),
+);
+const mergeTicketContract = lazyContract(() =>
+  import("@/hooks/api/support/support-ticket-schema").then((m) => m.mergeTicketContract),
+);
 
 export type TicketLinkRelation = "duplicate" | "related" | "split";
 
@@ -18,9 +31,9 @@ export interface SupportTicketLink {
 }
 
 export function useSupportTicketLinks(ticketId: number) {
-  return useQuery({
-    queryKey: [...queryKeys.support.detail(ticketId), "links"] as const,
-    queryFn: () => apiClient.get<SupportTicketLink[]>(`/support/${ticketId}/links`),
+  return useGatedQuery("support:tickets:view", {
+    queryKey: [...platformCoreQueryKeys.support.detail(ticketId), "links"] as const,
+    queryFn: ({ signal }) => apiClient.get<SupportTicketLink[]>(`/support/${ticketId}/links`, undefined, signal, supportTicketLinkListContract),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });
@@ -28,7 +41,7 @@ export function useSupportTicketLinks(ticketId: number) {
 
 export function useAddTicketLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["add", "ticket", "link"],
     mutationFn: ({
       ticketId,
@@ -39,23 +52,23 @@ export function useAddTicketLink() {
       linkedTicketId: number;
       relation: TicketLinkRelation;
     }) =>
-      apiClient.post<SupportTicketLink>(`/support/${ticketId}/links`, { linkedTicketId, relation }),
+      apiClient.post(`/support/${ticketId}/links`, { linkedTicketId, relation }, undefined, addTicketLinkContract),
     onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) }),
   });
 }
 
 export function useMergeTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["merge", "ticket"],
     mutationFn: ({ ticketId, intoTicketId }: { ticketId: number; intoTicketId: number }) =>
       apiClient.post<{ success: boolean; mergedIntoTicketId: number }>(`/support/${ticketId}/merge`, {
         intoTicketId,
-      }),
+      }, undefined, mergeTicketContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
-      qc.invalidateQueries({ queryKey: queryKeys.support.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
   });
 }

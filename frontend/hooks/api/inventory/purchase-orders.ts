@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useIdempotentMutation } from "./use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PurchaseOrder,
   PurchaseOrderSummary,
@@ -54,13 +55,13 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
     queryKey: queryKeys.inventory.purchaseOrders(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         ...(filters?.vendorId ? { vendorId: String(filters.vendorId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -70,10 +71,10 @@ export function useVendorPurchaseOrders(vendorId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
     queryKey: queryKeys.inventory.purchaseOrders({ vendorId }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         vendorId: String(vendorId),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView && vendorId > 0,
   });
@@ -83,7 +84,7 @@ export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PurchaseOrder, Error>({
     queryKey: queryKeys.inventory.purchaseOrder(poId),
-    queryFn: () => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`),
+    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && poId > 0,
   });
@@ -91,7 +92,7 @@ export function usePurchaseOrder(poId: number) {
 
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>("inventory:purchase-orders:create", {
     mutationKey: ["inventory", "purchase-orders", "create"],
     mutationFn: (data, idempotencyKey) => {
       const body: CreatePoWire = {
@@ -119,7 +120,7 @@ export function useCreatePurchaseOrder() {
 
 export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
-  return useIdempotentMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "send", poId],
     mutationFn: (vars, idempotencyKey) => {
       const id = poId ?? vars?.poId;
@@ -142,7 +143,7 @@ export function useSendPurchaseOrder(poId?: number) {
  */
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useIdempotentMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
+  return useAuthorizedIdempotentMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -163,7 +164,7 @@ interface CancelPurchaseOrderInput {
 
 export function useApprovePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useIdempotentMutation<PurchaseOrderSummary, Error, void>({
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "approve", poId],
     mutationFn: (_variables, idempotencyKey) =>
       apiClient.post<PurchaseOrderSummary>(
@@ -179,7 +180,7 @@ export function useApprovePurchaseOrder(poId: number) {
 
 export function useClosePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, void>({
+  return useAuthorizedIdempotentMutation<void, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "close", poId],
     mutationFn: (_variables, idempotencyKey) =>
       apiClient.post<void>(
@@ -195,7 +196,7 @@ export function useClosePurchaseOrder(poId: number) {
 
 export function useCancelPurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, CancelPurchaseOrderInput | undefined>({
+  return useAuthorizedIdempotentMutation<void, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "cancel", poId],
     mutationFn: (vars, idempotencyKey) =>
       apiClient.post<void>(
@@ -230,7 +231,7 @@ export interface UpdatePurchaseOrderInput {
 
 export function useUpdatePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
+  return useAuthorizedMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>("inventory:purchase-orders:update", {
     mutationKey: ["inventory", "purchase-orders", "update", poId],
     mutationFn: ({ lines, ...rest }) =>
       apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, {

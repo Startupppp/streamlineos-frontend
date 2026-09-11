@@ -14,6 +14,14 @@ import type {
   IssueTransitionStage,
   UpdateIssueInput,
 } from "@/types/crm/issues";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const issueRecordTypesLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema").then((m) => m.issueRecordTypesContract));
+const issueListLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema").then((m) => m.issueListContract));
+const issueDetailLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema").then((m) => m.issueDetailContract));
+const issueDeleteLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema").then((m) => m.issueDeleteContract));
+
 
 /**
  * Issues, tasks and complaints.
@@ -36,7 +44,7 @@ const BASE = "/crm/issues";
 export function useIssueRecordTypes() {
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issueRecordTypes(),
-    queryFn: () => apiClient.get<IssueRecordTypesResponse>(`${BASE}/record-types`),
+    queryFn: ({ signal }) => apiClient.get<IssueRecordTypesResponse>(`${BASE}/record-types`, undefined, signal, issueRecordTypesLazy),
     staleTime: 30 * 60_000,
   });
 }
@@ -52,12 +60,12 @@ export function useIssues(params: UseIssuesParams) {
 
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issues({ recordType, limit, cursor, ...filters }),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams({ recordType, limit: String(limit) });
       if (cursor) search.set("cursor", cursor);
       for (const [key, value] of Object.entries(filters))
         if (value !== undefined && value !== "") search.set(key, String(value));
-      return apiClient.get<IssuePage>(`${BASE}?${search.toString()}`);
+      return apiClient.get<IssuePage>(`${BASE}?${search.toString()}`, undefined, signal, issueListLazy);
     },
     staleTime: 30_000,
   });
@@ -66,7 +74,7 @@ export function useIssues(params: UseIssuesParams) {
 export function useIssue(issueRecordId: string | null) {
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issue(issueRecordId ?? ""),
-    queryFn: () => apiClient.get<IssueDetailResponse>(`${BASE}/${issueRecordId}`),
+    queryFn: ({ signal }) => apiClient.get<IssueDetailResponse>(`${BASE}/${issueRecordId}`, undefined, signal, issueDetailLazy),
     enabled: !!issueRecordId,
   });
 }
@@ -90,10 +98,10 @@ function useInvalidateIssues() {
 export function useCreateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "create"],
     mutationFn: (input: CreateIssueInput) =>
-      apiClient.post<IssueDetailResponse>(BASE, input),
+      apiClient.post<IssueDetailResponse>("/crm/issues", input, undefined, issueDetailLazy),
     onSuccess: () => invalidate(),
   });
 }
@@ -101,10 +109,10 @@ export function useCreateIssue() {
 export function useUpdateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "update"],
     mutationFn: ({ issueRecordId, ...patch }: UpdateIssueInput & { issueRecordId: string }) =>
-      apiClient.patch<IssueDetailResponse>(`${BASE}/${issueRecordId}`, patch),
+      apiClient.patch<IssueDetailResponse>(`${BASE}/${issueRecordId}`, patch, undefined, issueDetailLazy),
     onSuccess: () => invalidate(),
   });
 }
@@ -119,7 +127,7 @@ export function useUpdateIssue() {
 export function useTransitionIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "transition"],
     mutationFn: ({
       issueRecordId,
@@ -128,7 +136,7 @@ export function useTransitionIssue() {
       issueRecordId: string;
       toStage: IssueTransitionStage;
       reason?: string;
-    }) => apiClient.post<IssueDetailResponse>(`${BASE}/${issueRecordId}/stage`, body),
+    }) => apiClient.post<IssueDetailResponse>(`${BASE}/${issueRecordId}/stage`, body, undefined, issueDetailLazy),
     onSuccess: () => invalidate(),
   });
 }
@@ -137,10 +145,10 @@ export function useTransitionIssue() {
 export function useEscalateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:escalate", {
     mutationKey: ["crm", "issues", "escalate"],
     mutationFn: ({ issueRecordId, reason }: { issueRecordId: string; reason: string }) =>
-      apiClient.post<IssueDetailResponse>(`${BASE}/${issueRecordId}/escalate`, { reason }),
+      apiClient.post<IssueDetailResponse>(`${BASE}/${issueRecordId}/escalate`, { reason }, undefined, issueDetailLazy),
     onSuccess: () => invalidate(),
   });
 }

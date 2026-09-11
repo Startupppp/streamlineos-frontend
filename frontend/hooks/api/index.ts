@@ -11,7 +11,7 @@ export * from "./notifications";
 export * from "./organization";
 export * from "./roles";
 export * from "./access";
-export * from "./branches";
+export * from "./org-hierarchy-branch-options";
 export * from "./invoice";
 export * from "./support";
 export * from "./audit-log";

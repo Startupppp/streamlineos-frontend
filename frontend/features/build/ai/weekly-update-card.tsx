@@ -5,7 +5,7 @@ import { RotateCcw } from "lucide-react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiFailureBody } from "@/components/ai";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { useWeeklyUpdate } from "@/hooks/api/build/ai";
@@ -52,13 +52,7 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
       ) : null}
 
       {mutation.isError ? (
-        <div className="space-y-2.5">
-          <p className="text-label leading-snug text-destructive">{getErrorMessage(mutation.error)}</p>
-          <LoadingButton variant="outline" size="sm" onClick={handleRun} className="w-full gap-1.5 text-xs">
-            <RotateCcw className="h-3.5 w-3.5" />
-            Retry
-          </LoadingButton>
-        </div>
+        <AiFailureBody error={mutation.error} onRetry={handleRun} />
       ) : null}
 
       {result ? (

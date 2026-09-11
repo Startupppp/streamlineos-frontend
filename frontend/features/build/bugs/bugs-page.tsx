@@ -28,7 +28,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -40,7 +40,7 @@ const BUG_STATUSES: readonly BugStatus[] = [
 ];
 const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
 
-const SEVERITY_STYLES: Record<BugSeverity, string> = {
+const SEVERITY_STYLES: Record<string, string> = {
   blocker: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   critical: "text-status-danger-ink border-status-danger-rule",
   major: "text-status-warning-ink border-status-warning-rule",
@@ -48,7 +48,7 @@ const SEVERITY_STYLES: Record<BugSeverity, string> = {
   trivial: "text-muted-foreground border-border",
 };
 
-const STATUS_STYLES: Record<BugStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   new: "text-muted-foreground border-border",
   triaged: "text-status-info-ink border-status-info-rule",
   assigned: "text-status-info-ink border-status-info-rule",
@@ -63,13 +63,13 @@ const STATUS_STYLES: Record<BugStatus, string> = {
   closed: "text-muted-foreground border-border",
 };
 
-const STATUS_LABELS: Record<BugStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   new: "New", triaged: "Triaged", assigned: "Assigned", in_progress: "In Progress",
   fixed: "Fixed", ready_for_qa: "Ready for QA", verified: "Verified",
   reopened: "Reopened", closed: "Closed",
 };
 
-const PRIORITY_STYLES: Record<BugPriority, string> = {
+const PRIORITY_STYLES: Record<string, string> = {
   low: "text-muted-foreground border-border",
   medium: "text-status-warning-ink border-status-warning-rule",
   high: "text-status-danger-ink border-status-danger-rule",
@@ -236,8 +236,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "assignee",
       header: "Assignee",
       cell: (row) => {
-        const member = members.find((m) => m.id === row.assigneeId);
-        const label = member ? getUserDisplayName(member) : "—";
+        const label = "—";
         return (
           <TruncatedText text={label} className="max-w-[7rem] text-dense text-muted-foreground" />
         );

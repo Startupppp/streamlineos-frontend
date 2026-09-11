@@ -2,7 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
+
+const opsInboxContract = lazyContract(() =>
+  import("@/hooks/api/hr/service-delivery-schema").then((m) => m.opsInboxContract),
+);
+const myItemsContract = lazyContract(() =>
+  import("@/hooks/api/hr/service-delivery-schema").then((m) => m.myItemsContract),
+);
 
 export type AgingBucket = "fresh" | "watch" | "overdue" | "critical";
 
@@ -61,8 +69,8 @@ export function useServiceDeliveryOpsInbox(enabled = true) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.opsInbox,
-    queryFn: () =>
-      apiClient.get<ServiceDeliveryOpsInbox>("/hr/service-delivery/ops-inbox"),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/service-delivery/ops-inbox", undefined, signal, opsInboxContract),
     staleTime: 30_000,
     enabled: canCases && enabled,
   });
@@ -72,8 +80,8 @@ export function useServiceDeliveryMyItems(enabled = true) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.myItems,
-    queryFn: () =>
-      apiClient.get<ServiceDeliveryMyItems>("/hr/service-delivery/my-items"),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/service-delivery/my-items", undefined, signal, myItemsContract),
     staleTime: 30_000,
     enabled: canHelpdesk && enabled,
   });

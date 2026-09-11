@@ -41,18 +41,9 @@ import {
 import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,
-  NotificationChannel,
   NotificationProviderName,
 } from "@/types/notifications";
-
-const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
+import { NOTIFICATION_CHANNELS } from "@/features/notifications/notification-channels";
 
 const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
   { value: "SMTP", label: "SMTP" },
@@ -215,7 +206,7 @@ export function ProviderSheet({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CHANNELS.map((c) => (
+                          {NOTIFICATION_CHANNELS.map((c) => (
                             <SelectItem key={c.value} value={c.value}>
                               {c.label}
                             </SelectItem>

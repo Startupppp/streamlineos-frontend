@@ -49,6 +49,14 @@ export function FieldOptionsEditor({
     onAppend({ label: "", value: "" });
   };
 
+  const handleLabelInputChange = (idx: number) =>
+    async function handleOptionLabelInput(
+      event: React.ChangeEvent<HTMLInputElement>,
+    ): Promise<void> {
+      await form.register(`options.${idx}.label`).onChange(event);
+      handleOptionLabelChange(idx, event.target.value);
+    };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -74,10 +82,7 @@ export function FieldOptionsEditor({
               {...form.register(`options.${idx}.label`)}
               className="text-xs"
               placeholder="Label"
-              onChange={(e) => {
-                form.register(`options.${idx}.label`).onChange(e);
-                handleOptionLabelChange(idx, e.target.value);
-              }}
+              onChange={handleLabelInputChange(idx)}
             />
             {form.formState.errors.options?.[idx]?.label && (
               <p className="text-micro text-destructive">

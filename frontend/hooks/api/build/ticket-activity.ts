@@ -1,45 +1,40 @@
-﻿"use client";
+"use client";
 
-import { useQuery } from "@tanstack/react-query";
+import type { z } from "zod";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import type { ticketActivityPageContract as ticketActivityPageContractDef } from "@/hooks/api/build/build-tickets-schema";
 
-export type TicketActivityAction =
-  | "created"
-  | "status_changed"
-  | "priority_changed"
-  | "assignee_changed"
-  | "title_changed"
-  | "sprint_changed"
-  | "due_date_changed"
-  | "comment_added"
-  | "comment_updated"
-  | "comment_deleted"
-  | "label_changed"
-  | "estimate_changed"
-  | "cycle_changed"
-  | "type_changed";
+const ticketActivityPageLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketActivityPageContract),
+);
 
-export interface TicketActivityEntry {
-  id: number;
-  action: TicketActivityAction;
-  label: string;
-  fromValue: string | null;
-  toValue: string | null;
-  createdAt: string | null;
-  user: { id: string; name: string | null; image: string | null } | null;
-}
+type TicketActivityPage = z.infer<typeof ticketActivityPageContractDef>;
+
+export type TicketActivityEntry = TicketActivityPage["data"][number];
+export type TicketActivityAction = TicketActivityEntry["action"];
 
 export function useTicketActivity(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
-  return useQuery({
-    queryKey: queryKeys.ticketActivity.list(ticketId),
-    queryFn: () =>
-      apiClient.get<TicketActivityEntry[]>(
+  const query = useInfiniteQuery({
+    queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<TicketActivityPage>(
         `/build/${projectId}/tickets/${ticketId}/activity`,
+        { limit: 25, ...(pageParam === undefined ? {} : { cursor: pageParam }) },
+        signal,
+        ticketActivityPageLazy,
       ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
   });
+  const data = useMemo(() => query.data?.pages.flatMap((page) => page.data) ?? [], [query.data]);
+  return { ...query, data };
 }

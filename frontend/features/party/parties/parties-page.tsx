@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -9,10 +10,23 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useParties, useDeleteParty } from "@/hooks/api/party/parties";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import type { ReactNode } from "react";
-import { RecordList, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import type { RecordValue } from "@/components/renderer";
+
+const RecordList = dynamic(
+  () =>
+    import("@/components/renderer/record-list").then((m) => ({
+      default: m.RecordList,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+    ),
+  },
+);
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -27,23 +41,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PartyFormDialog } from "./party-form-dialog";
-import { PartyDetailSheet } from "./party-detail-sheet";
+import { PartyDetailSheet, PartyFormDialog } from "./parties-lazy";
+
+const PartyDeleteDialog = dynamic(
+  () =>
+    import("./party-delete-dialog").then((m) => ({
+      default: m.PartyDeleteDialog,
+    })),
+  { ssr: false },
+);
 import type { BusinessParty, PartyType } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -119,11 +130,15 @@ export function PartiesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [partyTypeFilter, setPartyTypeFilter] = useState<PartyTypeFilter>("ALL");
+  const [partyTypeFilter, setPartyTypeFilter] =
+    useState<PartyTypeFilter>("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<BusinessParty | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BusinessParty | null>(null);
 
@@ -140,7 +155,9 @@ export function PartiesPage() {
       if (partyId) params.set("partyId", partyId);
       else params.delete("partyId");
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
@@ -200,13 +217,13 @@ export function PartiesPage() {
     void refetch();
   }
 
-  function handleEditRow(row: BusinessParty) {
+  const handleEditRow = useCallback((row: BusinessParty) => {
     setEditTarget(row);
-  }
+  }, []);
 
-  function handleDeleteRow(row: BusinessParty) {
+  const handleDeleteRow = useCallback((row: BusinessParty) => {
     setDeleteTarget(row);
-  }
+  }, []);
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
@@ -219,25 +236,33 @@ export function PartiesPage() {
     });
   }
 
-  // Columns, labels, alignment, the legal-name subtitle and the mobile card all
-  // come from PARTY_LAYOUT now. Row actions stay here because what a row can do
-  // depends on this caller's permissions, which is not a property of the shape.
-  const renderRowActions = (row: RecordValue): ReactNode =>
-    canManageRow ? (
-      <PartyRowActions
-        party={row as unknown as BusinessParty}
-        canEdit={canUpdate}
-        canDelete={canDelete}
-        onEdit={handleEditRow}
-        onDelete={handleDeleteRow}
-      />
-    ) : null;
-
   const rows = data?.data ?? [];
+  const partiesById = useMemo(
+    () => new Map(rows.map((party) => [party.partyId, party])),
+    [rows],
+  );
+
+  const renderRowActions = useCallback(
+    (row: RecordValue): ReactNode => {
+      const party = partiesById.get(String(row.partyId));
+      return canManageRow && party ? (
+        <PartyRowActions
+          party={party}
+          canEdit={canUpdate}
+          canDelete={canDelete}
+          onEdit={handleEditRow}
+          onDelete={handleDeleteRow}
+        />
+      ) : null;
+    },
+    [partiesById, canManageRow, canUpdate, canDelete, handleEditRow, handleDeleteRow],
+  );
   const [density, setDensity] = useDensity();
   const pagination = data?.pagination;
   const isFiltered =
-    !!debouncedSearch.trim() || partyTypeFilter !== "ALL" || roleFilter !== "ALL";
+    !!debouncedSearch.trim() ||
+    partyTypeFilter !== "ALL" ||
+    roleFilter !== "ALL";
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -276,7 +301,10 @@ export function PartiesPage() {
           setPage(1);
         }}
       >
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Filter by role">
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Filter by role"
+        >
           <SelectValue placeholder="All roles" />
         </SelectTrigger>
         <SelectContent>
@@ -295,7 +323,9 @@ export function PartiesPage() {
       title="Business Parties"
       subtitle="Customers, vendors and partners"
       filters={filtersBar}
-      actions={canCreate ? <AddPartyButton onClick={handleOpenCreate} /> : undefined}
+      actions={
+        canCreate ? <AddPartyButton onClick={handleOpenCreate} /> : undefined
+      }
     >
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
@@ -325,7 +355,7 @@ export function PartiesPage() {
             <>
               <RecordList
                 layout={PARTY_LAYOUT}
-                rows={rows as unknown as RecordValue[]}
+                rows={rows}
                 actions={renderRowActions}
                 getRowKey={(row) => String(row.partyId)}
                 onRowClick={handleRowClick}
@@ -364,29 +394,21 @@ export function PartiesPage() {
         />
       )}
 
-      <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
+      {openPartyId !== null && (
+        <PartyDetailSheet
+          partyId={openPartyId}
+          onOpenChange={handleDetailOpenChange}
+        />
+      )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this party?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove{" "}
-              {deleteTarget ? deleteTarget.name : "this party"} from your
-              business directory. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteTarget && (
+        <PartyDeleteDialog
+          partyName={deleteTarget.name}
+          open
+          onOpenChange={handleDeleteDialogChange}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </PageWrapper>
   );
 }

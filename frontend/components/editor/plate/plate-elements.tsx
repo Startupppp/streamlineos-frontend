@@ -6,6 +6,7 @@ import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';
 import { useTodoListElement, useTodoListElementState } from '@platejs/list/react';
 import { useEditorPageContext } from './plate-context';
+import { activationProps } from '@/lib/keyboard-activation';
 
 type ListElement = TElement & { listStyleType?: string; indent?: number; checked?: boolean; textAlign?: string };
 
@@ -88,6 +89,7 @@ function TodoListItemElement({
       <span className="mr-2 shrink-0 mt-1" contentEditable={false}>
         <input
           type="checkbox"
+          aria-label="Toggle task item"
           checked={checkboxProps.checked ?? false}
           onChange={handleCheckedChange}
           onMouseDown={checkboxProps.onMouseDown}
@@ -276,8 +278,8 @@ export function PageLinkElement({ element, children, ...props }: PlateElementPro
   return (
     <PlateElement {...props} element={element}>
       <span
-        className="inline-flex items-center rounded border border-border bg-muted/50 px-1.5 py-0.5 text-xs font-medium text-foreground cursor-pointer hover:bg-muted select-none mx-0.5"
-        onClick={handleClick}
+        className="inline-flex items-center rounded border border-border bg-muted/50 px-1.5 py-0.5 text-xs font-medium text-foreground cursor-pointer hover:bg-muted select-none mx-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        {...activationProps(handleClick, `Open page ${value}`)}
       >
         📄 {value}
         {children}

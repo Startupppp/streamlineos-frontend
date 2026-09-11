@@ -1,24 +1,16 @@
-export type DataScope = "all" | "team" | "own" | "none";
+/**
+ * The response shapes are `z.infer`red from the contracts that validate them at
+ * the fetch seam (`hooks/api/access-schema.ts`), so there is one definition of
+ * each and it is the one enforced at runtime.
+ */
+export type {
+  AccessResponse,
+  DataScope,
+} from "@/hooks/api/access-schema";
 
-export type Tier = "free" | "starter" | "pro" | "enterprise";
+import type { DataScope } from "@/hooks/api/access-schema";
 
 export type RolePrincipalType = "user" | "department";
-
-export interface MfaState {
-  enforced: boolean;
-  satisfied: boolean;
-}
-
-export interface AccessResponse {
-  scopes: Record<string, DataScope>;
-  isOrgOwner: boolean;
-  canManageOrganizationMembership: boolean;
-  modules: Record<string, boolean>;
-  mfa?: MfaState;
-  enabledModules?: string[];
-  version?: number;
-  tier?: Tier;
-}
 
 export interface RolePermissionGrant {
   permissionKey: string;
@@ -41,18 +33,6 @@ export interface SetRolePermissionsInput {
   roleId: number;
   version: number;
   items: RolePermissionGrant[];
-}
-
-export interface RbacDiscoveryGrantable {
-  grantableKeys: string[];
-  assignableRanks: number[];
-  allowedModules: string[] | null;
-}
-
-export interface RbacDiscoveryMember {
-  userId: string;
-  name: string | null;
-  email: string;
 }
 
 export interface AssignRoleMemberInput {

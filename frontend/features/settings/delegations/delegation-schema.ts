@@ -1,32 +1,7 @@
 import { z } from "zod";
 
-export interface Delegation {
-  id: string;
-  orgId: string;
-  delegatorId: string;
-  delegateeId: string;
-  delegatorName?: string | null;
-  delegateeName?: string | null;
-  permissions: string[];
-  startsAt: string;
-  endsAt: string;
-  reason: string | null;
-  status: string;
-  lifecycle: "ACTIVE" | "SCHEDULED" | "EXPIRED" | "REVOKED";
-  createdAt: string;
-  revokedAt: string | null;
-  revokedBy: string | null;
-}
-
-export interface DelegationPage {
-  data: Delegation[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export const MAX_DELEGATION_DAYS = 90;
+const MAX_DELEGATION_MS = MAX_DELEGATION_DAYS * 24 * 60 * 60 * 1000;
 
 export const delegationSchema = z
   .object({
@@ -39,6 +14,15 @@ export const delegationSchema = z
   .refine((d) => new Date(d.endsAt) > new Date(d.startsAt), {
     message: "End date must be after start date",
     path: ["endsAt"],
-  });
+  })
+  .refine(
+    (d) =>
+      new Date(d.endsAt).getTime() - new Date(d.startsAt).getTime() <=
+      MAX_DELEGATION_MS,
+    {
+      message: `A delegation may not run longer than ${MAX_DELEGATION_DAYS} days`,
+      path: ["endsAt"],
+    },
+  );
 
 export type DelegationFormValues = z.infer<typeof delegationSchema>;

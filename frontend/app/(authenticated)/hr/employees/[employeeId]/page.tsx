@@ -19,10 +19,10 @@ export default async function EditEmployeePage({
 
   let employee: EmployeeData | null = null;
   try {
-    const response = await serverGet<unknown>(
+    employee = await serverGet<EmployeeData>(
       `/hr/employees/${employeeId}`,
+      employeeDataSchema,
     );
-    employee = employeeDataSchema.parse(response);
   } catch {
     return notFound();
   }

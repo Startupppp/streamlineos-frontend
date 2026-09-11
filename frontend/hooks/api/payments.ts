@@ -1,8 +1,28 @@
 "use client";
 
+import type { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  paymentCatalogContract,
+  paymentProviderListContract,
+  paymentProviderRowContract,
+  credentialSaveContract,
+  paymentDisconnectContract,
+  paymentTestTransactionListContract,
+  paymentTestTransactionContract,
+  paymentTestTransactionCreatedContract,
+  webhookEndpointContract,
+  webhookEventListContract,
+  webhookEventRowContract,
+  paymentReadinessContract,
+  paymentAuditListContract,
+  webhookEventContract,
+  paymentProviderWithCredentialsContract,
+} from "@/hooks/api/payments-schema";
 
 export type {
   ManualMethodType,
@@ -54,41 +74,35 @@ export type PaymentProviderStatus =
   | "degraded"
   | "disabled";
 
-export type PaymentProvider = {
-  id: number;
-  providerKey: string;
-  displayName: string;
-  status: PaymentProviderStatus;
-  environment: PaymentEnvironment;
-  isPrimary: boolean;
-  supportedCurrencies: string[];
-  supportedPaymentMethods: string[];
-  credentials: PaymentProviderCredentialPublic[];
-};
+export type PaymentProvider = z.infer<typeof paymentProviderWithCredentialsContract>;
 
 export function usePaymentCatalog() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.catalog(),
-    queryFn: () => apiClient.get<PaymentProviderCatalogEntry[]>("/payments/providers/catalog"),
+    queryKey: platformCoreQueryKeys.payments.catalog(),
+    queryFn: ({ signal }) => apiClient.get("/payments/providers/catalog", undefined, signal, paymentCatalogContract),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function usePaymentProviders() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.providers(),
-    queryFn: () => apiClient.get<PaymentProvider[]>("/payments/providers"),
+    queryKey: platformCoreQueryKeys.payments.providers(),
+    queryFn: ({ signal }) => apiClient.get("/payments/providers", undefined, signal, paymentProviderListContract),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useCreatePaymentProvider() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:providers:manage", {
     mutationKey: ["create", "payment", "provider"],
     mutationFn: (providerKey: string) =>
-      apiClient.post<PaymentProvider>("/payments/providers", { providerKey }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.providers() }),
+      apiClient.post("/payments/providers", { providerKey }, undefined, paymentProviderRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() }),
   });
 }
 
@@ -101,29 +115,29 @@ export type SaveCredentialsPayload = {
 
 export function useSavePaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:credentials:manage", {
     mutationKey: ["save", "payment", "credentials"],
     mutationFn: (payload: SaveCredentialsPayload) =>
-      apiClient.post<{ credential: PaymentProviderCredentialPublic; warning: { code: string; message: string } | null }>(
+      apiClient.post(
         `/payments/providers/${providerKey}/credentials`,
-        payload,
+        payload, undefined, credentialSaveContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
 
 export function useDisconnectPaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:credentials:manage", {
     mutationKey: ["disconnect", "payment", "credentials"],
     mutationFn: (environment: PaymentEnvironment) =>
-      apiClient.post(`/payments/providers/${providerKey}/disconnect`, { environment }),
+      apiClient.post(`/payments/providers/${providerKey}/disconnect`, { environment }, undefined, paymentDisconnectContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -144,36 +158,37 @@ export type PaymentTestTransaction = {
 };
 
 export function useTestTransactions(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.testTransactions(providerKey),
-    queryFn: () => apiClient.get<PaymentTestTransaction[]>(`/payments/providers/${providerKey}/test-transactions`),
+    queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey),
+    queryFn: ({ signal }) => apiClient.get(`/payments/providers/${providerKey}/test-transactions`, undefined, signal, paymentTestTransactionListContract),
     staleTime: 15_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
 export function useCreateTestTransaction(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["create", "test", "transaction"],
     mutationFn: (payload: { amount: string; currency: string }) =>
-      apiClient.post<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions`, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.testTransactions(providerKey) }),
+      apiClient.post(`/payments/providers/${providerKey}/test-transactions`, payload, undefined, paymentTestTransactionCreatedContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey) }),
   });
 }
 
 export function useVerifyTestTransaction(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["verify", "test", "transaction"],
     mutationFn: ({ id, providerPaymentId, signature }: { id: number; providerPaymentId: string; signature: string }) =>
-      apiClient.patch<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions/${id}/verify`, {
+      apiClient.patch(`/payments/providers/${providerKey}/test-transactions/${id}/verify`, {
         providerPaymentId,
         signature,
-      }),
+      }, undefined, paymentTestTransactionContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.testTransactions(providerKey) });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -191,43 +206,33 @@ export type PaymentWebhookEndpoint = {
 
 export function useGenerateWebhook(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:webhooks:manage", {
     mutationKey: ["generate", "webhook"],
     mutationFn: (environment: PaymentEnvironment) =>
-      apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/generate`, { environment }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
+      apiClient.post(`/payments/providers/${providerKey}/webhooks/generate`, { environment }, undefined, webhookEndpointContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) }),
   });
 }
 
-export type PaymentWebhookEvent = {
-  id: number;
-  environment: PaymentEnvironment;
-  providerEventId: string;
-  eventType: string;
-  signatureValid: boolean;
-  processingStatus: "received" | "processed" | "failed" | "ignored_duplicate";
-  payloadRedacted: Record<string, unknown>;
-  receivedAt: string;
-  processedAt: string | null;
-  errorMessage: string | null;
-};
+export type PaymentWebhookEvent = z.infer<typeof webhookEventContract>;
 
 export function useWebhookEvents(providerKey: string, enabled = true) {
+  const canView = useCan("payments:webhooks:view");
   return useQuery({
-    queryKey: queryKeys.payments.webhookEvents(providerKey),
-    queryFn: () => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`),
+    queryKey: platformCoreQueryKeys.payments.webhookEvents(providerKey),
+    queryFn: ({ signal }) => apiClient.get(`/payments/providers/${providerKey}/webhooks/events`, undefined, signal, webhookEventListContract),
     staleTime: 15_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
 export function useRetryWebhookEvent(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:webhooks:manage", {
     mutationKey: ["retry", "webhook", "event"],
     mutationFn: (eventId: number) =>
-      apiClient.post(`/payments/providers/${providerKey}/webhooks/events/${eventId}/retry`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.webhookEvents(providerKey) }),
+      apiClient.post(`/payments/providers/${providerKey}/webhooks/events/${eventId}/retry`, {}, undefined, webhookEventRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.webhookEvents(providerKey) }),
   });
 }
 
@@ -239,22 +244,23 @@ export type PaymentReadiness = {
 };
 
 export function usePaymentReadiness(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.readiness(providerKey),
-    queryFn: () => apiClient.get<PaymentReadiness>(`/payments/providers/${providerKey}/readiness`),
+    queryKey: platformCoreQueryKeys.payments.readiness(providerKey),
+    queryFn: ({ signal }) => apiClient.get(`/payments/providers/${providerKey}/readiness`, undefined, signal, paymentReadinessContract),
     staleTime: 10_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
 export function useActivateLivePayments(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:live:activate", {
     mutationKey: ["activate", "live", "payments"],
-    mutationFn: () => apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/activate-live`, {}),
+    mutationFn: () => apiClient.post(`/payments/providers/${providerKey}/activate-live`, {}, undefined, paymentProviderRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -271,10 +277,11 @@ export type PaymentAuditEvent = {
 };
 
 export function usePaymentAudit(providerKey: string, enabled = true) {
+  const canView = useCan("payments:audit:view");
   return useQuery({
-    queryKey: queryKeys.payments.audit(providerKey),
-    queryFn: () => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`),
+    queryKey: platformCoreQueryKeys.payments.audit(providerKey),
+    queryFn: ({ signal }) => apiClient.get(`/payments/providers/${providerKey}/audit`, undefined, signal, paymentAuditListContract),
     staleTime: 30_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }

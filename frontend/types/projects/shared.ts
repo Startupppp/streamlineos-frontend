@@ -20,14 +20,6 @@ export type IntakeSource = "manual" | "web_form" | "email";
 
 export type ViewLayoutType = "board" | "list" | "table" | "calendar" | "gantt";
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 // `total` rides the first page only; later pages carry no count because the cursor already knows there is more.
 export interface CursorPaginatedResponse<T> {
   data: T[];
@@ -35,4 +27,13 @@ export interface CursorPaginatedResponse<T> {
   limit: number;
   nextCursor: string | null;
   hasMore: boolean;
+}
+
+export interface CursorPageResponse<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }

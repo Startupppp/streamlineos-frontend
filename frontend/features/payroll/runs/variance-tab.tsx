@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { useRunVariance } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -13,7 +14,11 @@ interface VarianceTabProps {
 }
 
 export function VarianceTab({ runId }: VarianceTabProps) {
-  const { data, isLoading } = useRunVariance(runId);
+  const { data, isLoading, isError, refetch } = useRunVariance(runId);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   if (isLoading) {
     return (
@@ -24,6 +29,16 @@ export function VarianceTab({ runId }: VarianceTabProps) {
           <StatCard label="Net Delta" value="—" isLoading />
         </StatCardGrid>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Failed to load variance"
+        description="This run's variance could not be loaded. Retry before treating the run as unchanged."
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -85,7 +100,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
                 idx > 0 && "border-t border-border",
               )}
             >
-              <TruncatedText text={emp.userName} className="text-foreground font-medium min-w-0 flex-1" />
+              <TruncatedText text={emp.userName ?? emp.userId ?? ""} className="text-foreground font-medium min-w-0 flex-1" />
               <span className="font-mono tabular-nums text-foreground">
                 {formatMoney(emp.net)}
               </span>

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useBudgets, useDeleteBudget } from "@/hooks/api/timesheets-core/budgets";
-import type { TimesheetBudget } from "@/features/timesheets/types";
+import type { TimesheetBudget } from "@/features/timesheets/budget-types";
 import { cn } from "@/lib/utils";
 import { BudgetFormDialog } from "./budget-form-dialog";
 import { formatCurrencyFull } from "@/lib/format-utils";

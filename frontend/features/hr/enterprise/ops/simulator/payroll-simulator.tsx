@@ -20,6 +20,8 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { SimulationResult } from "./simulation-result";
 import { useSimulatePayrollImpact } from "@/hooks/api/hr/enterprise-ops-simulator";
 
+const COMPONENT_TYPES = ["earning", "deduction"] as const;
+
 const schema = z.object({
   employeeId: z.string().min(1),
   effectiveDate: z.string().min(1),
@@ -34,18 +36,29 @@ export function PayrollSimulator() {
   const [components, setComponents] = useState<Component[]>([]);
   const [newName, setNewName] = useState("");
   const [newAmount, setNewAmount] = useState("");
-  const [newType, setNewType] = useState<"earning" | "deduction">("earning");
+  const [newType, setNewType] = useState<(typeof COMPONENT_TYPES)[number]>("earning");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { employeeId: "", effectiveDate: "" },
   });
 
+  function handleNewTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const next = COMPONENT_TYPES.find((candidate) => candidate === e.target.value);
+    if (next) setNewType(next);
+  }
+
   function addComponent() {
     if (!newName.trim() || !newAmount) return;
     setComponents((c) => [...c, { name: newName.trim(), amount: parseFloat(newAmount), type: newType }]);
     setNewName("");
     setNewAmount("");
+  }
+
+  function handleRemoveComponent(index: number) {
+    return function removeComponent(): void {
+      setComponents((cs) => cs.filter((_, i) => i !== index));
+    };
   }
 
   function onSubmit(values: FormValues) {
@@ -88,9 +101,10 @@ export function PayrollSimulator() {
                 <Input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1" />
                 <Input type="number" placeholder="Amount" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} className="w-24" />
                 <select
+                  aria-label="Component type"
                   className="rounded-md border border-border bg-background px-2 text-sm"
                   value={newType}
-                  onChange={(e) => setNewType(e.target.value as typeof newType)}
+                  onChange={handleNewTypeChange}
                 >
                   <option value="earning">Earning</option>
                   <option value="deduction">Deduction</option>
@@ -119,7 +133,7 @@ export function PayrollSimulator() {
                       size="icon"
                       variant="ghost"
                       className="h-5 w-5 text-destructive"
-                      onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}
+                      onClick={handleRemoveComponent(i)}
                       aria-label={`Remove ${c.name}`}
                     />
                   </div>

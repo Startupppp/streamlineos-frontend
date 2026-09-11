@@ -8,7 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import type { KnowledgeGap } from "@/features/support/lib/knowledge-gap.types";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KnowledgeGapStatusBadge } from "./knowledge-gap-status-badge";
 
 interface KnowledgeGapCardProps {
@@ -28,7 +28,7 @@ export function KnowledgeGapCard({
 }: KnowledgeGapCardProps) {
   const canManage = useCan("support:knowledge-gaps:manage");
 
-  const topSearchQueries = (gap.evidence.searchQueries ?? []).slice(0, 3);
+  const topSearchQueries = (gap.evidence?.searchQueries ?? []).slice(0, 3);
   const canDraft =
     canManage && (gap.status === "OPEN" || gap.status === "DRAFTED");
   const canDismiss = canManage && gap.status === "OPEN";

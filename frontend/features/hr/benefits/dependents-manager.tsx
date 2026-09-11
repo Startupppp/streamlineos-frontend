@@ -12,7 +12,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import {
   Select,
   SelectContent,
@@ -30,10 +30,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+
+const DEPENDENT_RELATIONSHIPS = ["spouse", "child", "parent", "other"] as const;
 
 const depSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  relationship: z.enum(["spouse", "child", "parent", "other"]),
+  relationship: z.enum(DEPENDENT_RELATIONSHIPS),
   dateOfBirth: z.string().optional(),
 });
 
@@ -78,7 +81,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
 }
 
 export function DependentsManager() {
-  const { data: dependents, isLoading } = useDependents();
+  const { data: dependents, isLoading, isError, error, refetch } = useDependents();
   const addDependent = useAddDependent();
   const deleteDependent = useDeleteDependent();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -130,6 +133,11 @@ export function DependentsManager() {
     [deleteDependent],
   );
 
+  function handleRelationshipChange(v: string) {
+    const next = DEPENDENT_RELATIONSHIPS.find((candidate) => candidate === v);
+    if (next) form.setValue("relationship", next);
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -146,6 +154,13 @@ export function DependentsManager() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
+          ) : isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load your dependents"
+              description={getErrorMessage(error)}
+              onRetry={() => void refetch()}
+            />
           ) : !dependents?.length ? (
             <EmptyState
               illustrationPreset="team"
@@ -186,7 +201,7 @@ export function DependentsManager() {
           <Label>Relationship <span className="text-destructive">*</span></Label>
           <Select
             defaultValue="spouse"
-            onValueChange={(v) => form.setValue("relationship", v as DepFormValues["relationship"])}
+            onValueChange={handleRelationshipChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue />

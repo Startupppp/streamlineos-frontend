@@ -106,7 +106,10 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
   );
 
   const handleFuTypeChange = useCallback(
-    (v: string) => setFuType(v as TaskType),
+    (v: string) => {
+      const next = FOLLOW_UP_TYPES.find((t) => t.value === v);
+      if (next) setFuType(next.value);
+    },
     [],
   );
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value), []);

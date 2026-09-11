@@ -18,55 +18,56 @@ their decision (name, date, rationale), and file the result as evidence.
 
 ### Current implementation state (updated 2026-09-01)
 
-Migration `0747` applied. Tables: `platform_operator_access_grants` — schema at
+Migration `0747` applied. Tables: `operator_access_grants` — schema at
 `backend/src/db/schema/common/platform-operator-grants.ts`. `assertGrant` requires
 `status = 'active'`. DB CHECK `approver_id != granted_by` is convalidated (no self-approval).
 
 **What IS built (2026-09-01):**
 - `PlatformOperatorAccessService` — full grant lifecycle: create, approve (dual-control), reject,
-  revoke, assertGrant (checks status + expiry + revokedAt in one query), assertAndLog (asserts +
-  writes `operator_access_log`). 34 tests pass, all four guard behaviors proven with bite proofs.
-- `OperatorSessionGuard` — reads `req.user.userId` (JWT sub) + `:orgId` route param, calls
-  `assertAndLog`, writes a log row on every privileged call. 7 tests, all bite proofs labeled.
+  revoke, `assertGrant` (checks status + expiry + revokedAt in one query), and transactional
+  `authorizeRequest` (checks the grant and writes `operator_access_log` before the tenant read).
+- `OperatorSessionGuard` — requires an authenticated human session, reads `userId` + `:orgId`,
+  calls `authorizeRequest`, and sets the target organization on the request before the data
+  service runs.
 - `@RequireOperatorGrant(scope)` — decorator, attached to the guard via `Reflector`.
 
 **What is NOT built:**
 - No `OperatorAuditInterceptor` — individual API calls are logged by the guard, but a
   dedicated interceptor (diffing data accessed) is not implemented.
+- No tenant notification dispatch is wired to the operator-grant lifecycle. The recipient
+  population, mandatory channel, and customer-facing disclosure still require an approved policy;
+  the existing notification catalog cannot be treated as that decision.
+- No emergency exception/bypass path exists. Requests without a normal, two-person grant are
+  denied by the existing guard; adding an emergency path requires an approved authority, scope,
+  duration, and post-incident review procedure.
+- No periodic review worker or selected review cadence exists. The expiry sweep only closes stale
+  pending requests and does not replace the unresolved monthly-versus-quarterly governance choice.
 
-**Why the guard is attached to no route — a route-by-route decision:**
+**Current repository data-plane routes:**
 
-All routes in `PlatformOperatorAccessController` use `INTERNAL_API_SECRET` header auth (no JWT).
-The `OperatorSessionGuard` reads `req.user?.userId` (set by `JwtAuthGuard`), so the two auth
-models are incompatible. Bolting the guard onto an `INTERNAL_API_SECRET` route would cause it to
-throw `UnauthorizedException` on every request since `req.user` is always undefined there.
+The management-plane routes in `PlatformOperatorAccessController` use `INTERNAL_API_SECRET`
+plus an eligible human session. The separate customer data-plane controller is JWT-backed and
+uses `OperatorSessionGuard` with `:orgId`:
 
 | Route | Auth model | Reads tenant data? | Can take OperatorSessionGuard? |
 |---|---|---|---|
-| `POST /platform/operator-access/grants` | INTERNAL_API_SECRET | No — creates a pending grant | No: no JWT user |
-| `POST /platform/operator-access/grants/:grantId/approve` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
-| `POST /platform/operator-access/grants/:grantId/reject` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
-| `GET /platform/operator-access/grants` | INTERNAL_API_SECRET | No — lists grant metadata | No: no JWT user |
-| `DELETE /platform/operator-access/grants/:grantId` | INTERNAL_API_SECRET | No — revokes grant | No: no JWT user |
-| `GET /platform/operator-access/logs` | INTERNAL_API_SECRET | No — lists audit log metadata | No: no JWT user |
-| `GET /health/workflows` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
-| `GET /health/db` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
-| `POST /internal/audit` | INTERNAL_API_SECRET | No — writes audit log | No: no JWT user |
+| `GET /platform/operator/organizations/:orgId` | JWT human session | Yes — customer/member data | `read_customer_data` |
+| `GET /platform/operator/organizations/:orgId/billing` | JWT human session | Yes — billing/payment data | `read_payments` |
+| `POST /platform/operator-access/grants` | INTERNAL_API_SECRET + human session | No — creates a pending grant | Management plane |
+| `POST /platform/operator-access/grants/:grantId/approve` | INTERNAL_API_SECRET + human session | No — updates grant status | Management plane |
+| `POST /platform/operator-access/grants/:grantId/reject` | INTERNAL_API_SECRET + human session | No — updates grant status | Management plane |
+| `GET /platform/operator-access/grants` | INTERNAL_API_SECRET + human session | No — lists grant metadata | Management plane |
+| `DELETE /platform/operator-access/grants/:grantId` | INTERNAL_API_SECRET + human session | No — revokes grant | Management plane |
+| `GET /platform/operator-access/logs` | INTERNAL_API_SECRET + human session | No — lists access-log metadata | Management plane |
 
-`PlatformAdminService` has methods that read per-org business data (`listCustomers`,
-`getCustomerBySlug` with `users.email`/`users.name`, `listMessages`, `listLeads`, `listPayments`),
-but these are not exposed via any HTTP controller. When those routes are wired (under JWT auth +
-`:orgId` param), `OperatorSessionGuard` + `@RequireOperatorGrant(scope)` can be applied directly.
+`PlatformOperatorAdminService` also contains additional per-organization readers, but only the
+customer and billing routes above are currently exposed. The repository proves those two route
+bindings and focused behavior tests; it does not prove that every future data-plane route is
+protected or that the deployed route set matches the repository.
 
-**Guard is architecturally correct and fully tested.** The absence of compatible routes to attach it
-to is not a guard defect — it reflects the current state of the admin surface. The INTERNAL_API_SECRET
-pattern is appropriate for the management plane (grant lifecycle); the guard is appropriate for the
-data plane (operator reading customer data under an active grant). They are different surfaces and
-require different auth models.
-
-Current enforcement level: DB schema + `PlatformOperatorAccessService` layer. Guard enforces
-per-request expiry and writes audit rows wherever it is applied.
-Application layer enforcement: guard is tested and ready; awaiting compatible routes.
+Current enforcement level: DB schema + service + two repository data-plane routes. The guard
+enforces per-request expiry, organization/scope matching, human-session identity, and audit-row
+creation where applied. Deployed route coverage remains open.
 
 ### Decision required: policy parameters
 
@@ -83,8 +84,9 @@ The operator must choose:
 | Review cadence | Never | Monthly | Quarterly |
 | Auto-expiry of pending grants | Never | 24 hours | 48 hours |
 
-Current max grant duration: 24 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
-The recommended value is 4 hours. This is an engineering change requiring the operator's sign-off.
+Current max grant duration: 4 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
+The four-hour limit and pending-grant expiry sweep are implemented; named Product/Security approval
+and the operator-selected pending-grant/review cadence remain required.
 
 **Recommended defaults:** Option B throughout. Dual control prevents insider threat from a single
 compromised operator account. 4-hour sessions cover a typical incident response window. 20-char
@@ -106,30 +108,52 @@ JWT-authenticated routes reading per-org tenant data in the platform module.
 ### Current implementation state
 
 Tables with retention-related data:
-- `hr_retention_policies` — exists; schema at `backend/src/db/schema/hr/data-requests.ts`. No worker
-  reads them to trigger scheduled deletions.
+- `hr_retention_policies` — exists; schema at `backend/src/db/schema/hr/governance.ts`. The
+  `CronHrRetentionService` reads active policies and applies supported outcomes in bounded batches.
 - `hr_legal_holds` + `organization_legal_holds` — exist and are enforced by `GdprService` and
-  `purge-user.mjs`. Verified working: legal-hold drill PASS 2026-09-01.
+  `purge-user.mjs`. Repository/dry-run legal-hold checks PASS 2026-09-01; deployed drill evidence remains open.
 - `audit_logs.metadata` — stores contextual metadata per action. The `user.registered` action stores
   `{ email, companyName }` — this is PII. Operator must decide whether this is within the approved
   inventory and lawful basis.
 
 **Data categories the system processes (from pg_catalog, 2026-09-01):**
 - Identity: `users` (email, name, auth credentials)
-- Employment: `hr_people`, `hr_employments`, `hr_people_payroll`, `hr_banking_details`
-- Payroll: `payroll_runs`, `payroll_payslips`, bank account details
-- Communication: `chat_messages`, `mail_messages`, `notifications`
+- Employment: `hr_people`, `hr_employments`, `employee_salary_profiles`, `fin_bank_accounts`
+- Payroll: `payroll_runs`, `payslip_publications`, bank account details
+- Communication: `chat_messages`, `mail_message_metadata`, `notifications`, and queued attendance report emails from `hr/time/attendance-email-report.service.ts`
 - Time: `attendance`, `timesheets`, `leave_requests`
-- Documents: `candidate_documents_vault`, `hr_documents`
+- Documents: `candidate_documents_vault`, `documents`
 - Financial: `expenses`, `invoices`, `salary_loans`
-- Recruitment: `candidates`, `applications`, `offer_letters`
+- Recruitment: `candidates`, `candidate_applications`, `candidate_offers`
+- Sensitive workplace records: `biometric_logs`, `hr_wellness_checkins`,
+  `hr_accommodation_requests`, `hr_safety_incidents`, and `hr_work_authorizations`
+- AI processing: `ai_chat_conversations`, `ai_chat_messages`, `ai_feedback`, `ai_jobs`, and
+  `ai_usage_logs`
+- Knowledge base: `kb_chat_conversations`, `kb_chat_messages`, `kb_pages`, `kb_page_versions`,
+  and `kb_article_chunks`
+- Support: `support_tickets`, `support_ticket_messages`, `support_ticket_attachments`, and
+  `support_csat_requests`
+- Signatures: `sign_documents` and `sign_audit_events`
+- Notifications: `notification_preferences`, `notification_consents`, `notification_deliveries`,
+  `notification_outbox`, and `notification_digest_runs`
+- Integrations and webhooks: `user_integration_connections`, `webhook_deliveries`, and
+  `webhook_logs`
+- Organization and collaboration metadata: `organizations`, `organization_members`,
+  `calendar_events`, `event_attendees`, `project_meetings`, `meeting_attendees`, `projects`, and
+  `project_members`
+
+The detailed schema-backed inventory is maintained in
+`architecture-refactor/DATA-CATALOGUE.md`; the reviewable row-based form is maintained in
+`architecture-refactor/runbooks/data-map-template.md`. Neither is approval evidence until a
+dated decision record is signed.
 
 ### Decisions required
 
 **2a. Data inventory sign-off:**
 The operator (DPO or equivalent) must review the categories above, confirm each is in scope of
 processing, and sign the inventory. A template data map is in
-`architecture-refactor/runbooks/data-map-template.md` (to be created by the operator).
+`architecture-refactor/runbooks/data-map-template.md`; copy it to a dated controlled record
+after the DPO review.
 
 **2b. Lawful purpose per category:**
 Each category needs a lawful basis under GDPR Art. 6 (contract, legal obligation, legitimate
@@ -138,9 +162,11 @@ Art. 6(1)(b) + Art. 9(2)(b); marketing is consent.
 
 **2c. Retention owner:**
 Each category needs a named owner accountable for enforcing the retention period.
-Current state: `hr_retention_policies` table exists but no automatic enforcement. The operator
-must name an owner for each category, set a retention period, and commission the retention-sweep
-worker (see OPERATOR-EVIDENCE.md Gap 1).
+Current state: `CronHrRetentionService` reads active `hr_retention_policies` per organization,
+applies the supported employee/case/attendance/document/payroll outcomes in bounded batches, and
+writes retention audit rows. Repository coverage is partial and deployed scheduling/execution
+evidence is still required. The operator must name an owner for each category and approve the
+policy periods.
 
 **2d. Audit log PII review:**
 `audit_logs.metadata` contains `{ email, companyName }` in `user.registered` events. The operator
@@ -160,6 +186,27 @@ must decide: (a) this is approved (traceability for audit trail under Art. 5(1)(
 Record here: DPO name, sign-off date, chosen lawful bases per category, retention periods per
 category, owner assignments.
 
+### Additional inventory decisions required
+
+The following policy choices are unresolved and must be recorded before the expanded inventory
+can be approved:
+
+| Decision | Options to record | Recommended default |
+|---|---|---|
+| Sensitive HR data and Art. 9 conditions | Permit each field with a documented condition; restrict collection; or remove the field | Restrict collection until the condition, access group and retention are approved |
+| AI prompts, responses and usage | Retain for service history; retain only redacted metadata; or delete after processing | Delete prompts/responses after 90 days and retain non-content usage metadata for 2 years |
+| Knowledge-base and support content | Category-specific periods and special-category handling | KB chat active account + 1 year; support closure + 2 years; derived chunks follow source deletion |
+| Signature records | Statutory period, contract period, or shorter period | 7 years after document expiry or applicable statutory period |
+| Notification consent and delivery records | Evidence period and operational message period | Consent evidence for processing period + 3 years; operational delivery records 90 days |
+| Integrations and webhooks | Permitted payload classes, provider disclosures and deletion periods | Delete connections on disconnect; payloads 30 days; no unapproved special-category payloads |
+| Organization, membership, calendar, meeting and project metadata | Owners, closure events and retention periods | Retain access/audit history only as required; delete collaboration content on approved closure-based periods |
+
+### AWAITING OPERATOR APPROVAL
+
+Record the decision maker, selected option, lawful basis, special-category condition where
+applicable, retention period, owner and rationale for each additional inventory decision. Do not
+mark any row approved based on this template or the repository catalogue alone.
+
 ---
 
 ## 3. Residency policy
@@ -168,19 +215,21 @@ category, owner assignments.
 
 ### Current implementation state
 
-All data resides in Neon Postgres, region `ap-southeast-1` (Singapore). Redis via Upstash (region
-set per deployment environment variable). Object storage: Cloudflare R2 (regional bucket configurable).
-No data residency enforcement in code — all orgs share the same region.
+The checked-in example describes a primary region/cell and optional explicitly configured
+secondary regions. The current production values and deployed placement are not established by
+the repository alone. Redis uses `UPSTASH_REDIS_REST_URL`; object storage uses `R2_REGION`,
+`R2_ENDPOINT`, and placement-specific settings.
 
 **Cell-model implication:** The cell architecture supports per-region databases (`REGION_KEYS`,
 `REGION_CELL_2_APP_DATABASE_URL`). An org can be placed in a specific cell via `cell:place-org`.
-This would allow EU-resident data to be placed in an EU cell. No EU cell exists.
+The source supports an `eu` region when its database, storage, and cell variables are explicitly
+configured. No deployed EU cell or customer commitment is evidenced here.
 
 ### Decision required
 
 | Option | What it means | What it requires |
 |---|---|---|
-| A — No residency guarantee (current) | All data in ap-southeast-1; documented in ToS | Document in ToS; no code change |
+| A — No residency guarantee (current) | Data remains in the configured deployment region; the repository does not establish the deployed region | Document the deployed region in ToS; no code change |
 | B — Residency by request | Orgs can request a specific region cell; provisioning is manual | Provision cell(s) per region; `cell:place-org` to move org |
 | C — Residency by org country | Org's `country` field automatically determines cell | Add cell-placement logic to org-creation flow |
 
@@ -201,21 +250,28 @@ Record here: chosen option, ToS statement language, any commitments made to cust
 
 | Subprocessor | Data transferred | Region | Mechanism |
 |---|---|---|---|
-| Neon (postgres) | All tenant data | ap-southeast-1 (Singapore) | Primary database |
+| Neon (postgres) | All tenant data | Configured deployment region; repository does not establish the deployed location | Primary database |
 | Upstash | Session tokens, cache keys, rate-limit counters, permission-version numbers | Configurable (env) | Redis REST API |
 | Cloudflare R2 | File uploads, exports, attachments | Configurable (env) | S3-compatible API |
-| Resend | Email content + recipient addresses | US (Resend infrastructure) | SMTP/API |
+| Resend | Email content + recipient addresses | Provider-configured region | SMTP/API |
 | Ably | Realtime event payloads (channel names + message bodies) | Global (Ably edge) | WebSocket |
-| OpenAI / Anthropic | AI prompt content (if `AI_PROVIDER=openai` or `anthropic`) | US | HTTPS API |
+| OpenAI | LLM prompt content when `AI_LLM_PROVIDER=openai` and embeddings for KB RAG via `OPENAI_API_KEY` | Provider/deployment dependent | HTTPS API |
+| Google | Chat prompt content when `AI_CHAT_PROVIDER=google` | Provider/deployment dependent | HTTPS API |
+| OpenRouter | LLM or chat prompt content when `AI_LLM_PROVIDER=openrouter` or `AI_CHAT_PROVIDER=openrouter` | Provider and underlying model dependent | HTTPS API |
+| ZeptoMail | Email content and recipient addresses when configured | Provider/deployment dependent | HTTPS API |
+| Razorpay | Payment amount and customer billing contact data when configured | India/provider dependent | HTTPS API |
 | Composio | Third-party integration credentials (OAuth tokens) | US | REST API |
 
 Sources: `backend/src/modules/mail/resend.service.ts`, `backend/src/common/ably/ably.service.ts`,
-`backend/src/modules/ai/ai-gateway.service.ts`, `backend/src/modules/integrations/`.
+`backend/src/modules/ai/core/providers/llm-provider.config.ts`,
+`backend/src/modules/ai/core/services/chat-assistant-model.ts`,
+`backend/src/modules/ai/core/providers/embeddings.service.ts`, `backend/src/modules/integrations/`.
 
 ### Decisions required
 
 **4a. Standard contractual clauses (SCCs):**
-For transfers from the EU/EEA to the US (Resend, Ably, OpenAI/Anthropic, Composio), the operator
+For transfers from the EU/EEA to a provider or region outside the approved residency boundary
+(including Resend, Ably, OpenAI, Google, OpenRouter, ZeptoMail, Razorpay, or Composio where applicable), the operator
 must ensure SCCs or an equivalent adequacy mechanism is in place with each subprocessor.
 
 **4b. Subprocessor list publication:**
@@ -226,7 +282,7 @@ this list.
 AI prompt content may contain personal data (names, employment details in HR AI features). The
 operator must decide: (a) accept transfer to the AI provider's US infrastructure under SCCs, or
 (b) use an EU-hosted model, or (c) strip PII from prompts before sending.
-Current state: prompts are sent as-is; no PII-stripping layer exists.
+Current state: the shared AI gateway applies default regex redaction, but the streaming chat path also sends conversation content and requires separate minimization verification before approval.
 
 **4d. Composio token storage:**
 OAuth tokens from third-party integrations are stored via Composio (US). The operator must confirm
@@ -271,11 +327,12 @@ disclosure decision.
 
 ## 6. End-to-End GDPR Compliance Drill Workflow
 
-**Context:** The four drills were each exercised individually on 2026-09-01 (see `PRODUCTION-OPERATIONS-STATUS.md` §7). The PRD requires them as one end-to-end workflow.
+**Context:** The four drills were each exercised individually on 2026-09-01. Ticket S05 requires fresh deployed evidence for the complete end-to-end workflow.
 
-**Status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` is built and verified.
-It runs all five phases as a single ordered workflow against the live DB. Self-test PASS (8/8
-assertion bite proofs). Live dry-run PASS (13/13 checks). Commands:
+**Repository status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` exists and
+has self-test/live dry-run commands, but no redacted deployed evidence bundle is committed.
+Repository focused S05 tests also pass 48 suites / 617 tests for the current operator, GDPR,
+retention, purge, and scheduling implementation. Commands:
 
 ```bash
 # Verify each assertion bites (no DB required)
@@ -319,7 +376,7 @@ SUBJECT_EMAIL="gdpr-drill-$(date +%Y%m%d)@test.invalid"
 ORG_ID="<your-test-org-id>"
 
 pnpm -C backend drill:legal-hold "$SUBJECT_EMAIL" "$ORG_ID"
-# Expected: RESULT: PASS (8 passed, 0 failed)
+# Expected: RESULT: PASS (the drill's reported checks pass; do not hard-code a count here)
 # This commits and releases real hold rows. Confirm no orphan holds remain:
 node --input-type=module << 'EOF'
 import { config } from 'dotenv'; config({ path: '.env' });
@@ -335,7 +392,7 @@ EOF
 
 ```bash
 pnpm -C backend drill:export "$SUBJECT_EMAIL"
-# Expected: RESULT: PASS — 6 checks including cross-tenant isolation
+# Expected: RESULT: PASS with all declared source sections and cross-tenant isolation
 ```
 
 ### Step 3 — Erasure drill (dry-run — rolled back)
@@ -358,9 +415,13 @@ pnpm -C backend compliance:drill
 ```bash
 # Confirm no DELETE/UPDATE on audit_logs via the code-level spec
 node ./node_modules/jest/bin/jest.js src/modules/platform/audit-log-immutability.spec.ts --maxWorkers=1 --no-coverage
-# Expected: 6 passed
+# Expected: the focused audit immutability suite passes
 
 # Confirm streamline_app privileges on audit_logs (read-only probe)
+# Preferred verifier (uses APP_DATABASE_URL and also checks the enabled trigger):
+node --env-file-if-exists=.env src/scripts/verify-audit-log-privileges.mjs
+# The inline DATABASE_URL probe below is retained only as historical context;
+# do not use the owner connection as evidence for application-role privileges.
 node --input-type=module << 'EOF'
 import { config } from 'dotenv'; config({ path: '.env' });
 import postgres from 'postgres';
@@ -373,8 +434,10 @@ const priv = await sql`
 console.log('streamline_app privileges on audit_logs:', priv.map(r => r.privilege_type));
 await sql.end();
 EOF
-# Current result (2026-09-01): DELETE, INSERT, SELECT, UPDATE
-# FINDING P1: DELETE and UPDATE should be revoked — see §Handoffs
+# Recorded result from the configured environment (2026-09-01): role=streamline_app, UPDATE=false, DELETE=false, trigger_present=false.
+# The result above supersedes any earlier privilege snapshot in this runbook; the remaining P1 is the absent enabled trigger, not app-role UPDATE/DELETE grants.
+# FINDING P1: the enabled append-only trigger is absent — see §Handoffs; the configured
+# application role already reports UPDATE=false and DELETE=false.
 ```
 
 ### Step 6 — Object storage erasure (manual — not scripted)
@@ -385,7 +448,7 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 # 2. For each key returned, manually delete from R2:
 #    wrangler r2 object delete $R2_BUCKET_NAME <key>
 # 3. Confirm no remaining blobs for subject
-# Note: the automated storage purge adapter is not yet implemented (OPERATOR-EVIDENCE.md Gap 2).
+# Note: the automated storage purge adapter is required by Ticket S05.
 ```
 
 ### Pass/fail criteria
@@ -396,21 +459,37 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 | Export | RESULT: PASS; 0 cross-tenant rows |
 | Erasure | RESULT: PASS; 0 residual rows in simulation |
 | Compliance audit | All required audit actions present |
-| Immutability | 6 specs pass; privilege list noted for migration handoff |
-| Object storage | DECISION REQUIRED — manual until adapter is implemented |
+| Immutability | Focused specs pass; application-role verifier confirms denied UPDATE/DELETE; trigger deployment remains open |
+| Object storage | Adapter enumerates/deletes/retries/verifies keys in code; deployed provider evidence and failed-key evidence are still required |
 
-### Known gaps (from PRODUCTION-OPERATIONS-STATUS.md §7)
+### Known gaps owned by Ticket S05
 
-1. Export worker not implemented — `hr_data_requests` tracks requests; no worker produces an actual data file.
-2. Object storage purge adapter returns FAILED — not yet implemented.
-3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
-4. No background retention-sweep service — `hr_retention_policies` are inserted but no worker reads them.
+1. Export worker is resumable by stable per-section cursor and covers the declared repository sources, including reporting-line history; object bytes, sources outside the repository catalog, and deployed evidence are still required.
+2. Object storage purge enumerates all pages, retries failed deletes, and verifies absence when the adapter exposes `fileExists`; live configuration and immutable evidence are missing, and failed keys remain release-blocking.
+3. Database rows adapter physically deletes the organization row after adapter confirmation and
+   retains detached platform audit evidence; deployed database and dependent-row evidence remain required.
+4. `CronHrRetentionService` reads `hr_retention_policies` and the coverage matrix has no unclassified measured high-growth table, but deployed scheduling/execution and policy-owner approval are not evidenced.
+
+5. Retention scheduling is only partially wired in the repository: HR policy retention,
+   notification retention, and AI-usage retention have authenticated, leased cron routes;
+   AI usage explicitly invokes the non-dry-run sweep. The source-level contract is covered by
+   `backend/src/modules/cron/__tests__/s05-retention-scheduling-contract.spec.ts`. A deployed
+   scheduler identity, cadence, successful run, failure alert, and retry evidence are still
+   required for the S05 gate.
+
+6. Downstream purge status is explicit rather than inferred. The organization purge registry
+   reports cache and Postgres-side search as `NOT_APPLICABLE`, deletes and verifies the
+   repository's `kb_article_chunks` vector source, and returns `FAILED` for analytics copies,
+   provider mirrors, and backups until configured adapters and verification evidence exist.
+   These outcomes are covered by `organization-purge-adapters.spec.ts`; they do not prove that
+   external caches, warehouses, provider accounts, or backup/PITR copies are absent.
 
 ---
 
 ## Evidence trail
 
-Once each section above is approved, file a signed decision record in
+Once each section above is approved, copy
+`architecture-refactor/decisions/README.md` to a dated decision record in
 `architecture-refactor/decisions/privacy-YYYY-MM-DD.md` with:
 - Item number (1–4)
 - Decision maker name + role

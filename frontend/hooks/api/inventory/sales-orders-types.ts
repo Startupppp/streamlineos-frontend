@@ -106,7 +106,7 @@ export interface RawListSalesOrder {
   orderDate: string | null;
   requiredDate: string | null;
   total: string;
-  client: RawNamedRef | null;
+  client?: RawNamedRef | null;
 }
 
 export interface RawListResponse {
@@ -133,7 +133,7 @@ export interface RawDetailLine {
   unitPrice: string;
   taxRate: string | null;
   amount: string;
-  productVariant: RawVariantRef | null;
+  productVariant?: RawVariantRef | null;
 }
 
 export interface RawInvoiceRef {
@@ -148,16 +148,16 @@ export interface RawDetailSalesOrder {
   orderDate: string | null;
   requiredDate: string | null;
   currency: string | null;
-  shippingAddress: string | null;
+  shippingAddress?: string | null;
   notes: string | null;
   warehouseId: number | null;
-  subtotal: string;
+  subtotal?: string;
   total: string;
-  invoiceId: number | null;
-  client: RawNamedRef | null;
-  warehouse: RawNamedRef | null;
-  invoice: RawInvoiceRef | null;
-  lines: RawDetailLine[];
+  invoiceId?: number | null;
+  client?: RawNamedRef | null;
+  warehouse?: RawNamedRef | null;
+  invoice?: RawInvoiceRef | null;
+  lines?: RawDetailLine[];
 }
 
 export interface RawAtpEntry {
@@ -203,15 +203,15 @@ export function mapDetail(raw: RawDetailSalesOrder): SalesOrderDetail {
     orderDate: raw.orderDate,
     expectedShipDate: raw.requiredDate,
     currency: raw.currency,
-    shippingAddress: raw.shippingAddress,
+    shippingAddress: raw.shippingAddress ?? null,
     notes: raw.notes,
     warehouseId: raw.warehouseId ?? raw.warehouse?.id ?? null,
     warehouseName: raw.warehouse?.name ?? null,
-    subtotal: raw.subtotal,
+    subtotal: raw.subtotal ?? "0",
     total: raw.total,
-    invoiceId: raw.invoiceId,
+    invoiceId: raw.invoiceId ?? null,
     invoiceNumber: raw.invoice?.invoiceNumber ?? null,
-    lines: raw.lines.map(mapDetailLine),
+    lines: (raw.lines ?? []).map(mapDetailLine),
   };
 }
 

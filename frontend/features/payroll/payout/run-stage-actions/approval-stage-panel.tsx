@@ -19,7 +19,7 @@ import { useCan } from "@/hooks/api/access";
 import { formatShortDate } from "@/lib/date-utils";
 import { useRunApprovals, useApproveStage, useRejectStage } from "@/hooks/api/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { PayrollApprovalRow } from "@/types/payroll";
+import type { ApprovalStage } from "@/hooks/api/payroll/approvals-schema";
 
 interface Props {
   runId: number;
@@ -43,7 +43,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 
 interface StageRowProps {
-  row: PayrollApprovalRow;
+  row: ApprovalStage;
   canAct: boolean;
   isActive: boolean;
   runId: number;
@@ -102,9 +102,9 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
         </span>
       </div>
 
-      {row.actedBy && (
+      {row.actedByMembershipId !== null && (
         <p className="text-xs text-muted-foreground pl-9">
-          by {row.actedBy}{row.actedAt ? ` · ${formatShortDate(row.actedAt)}` : ""}
+          by {row.approverName}{row.actedAt ? ` · ${formatShortDate(row.actedAt)}` : ""}
         </p>
       )}
       {row.comment && (

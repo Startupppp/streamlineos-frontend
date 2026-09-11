@@ -1,0 +1,19 @@
+(node:5665) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/tarunchintakunta/Personal/streamline/streamlineos-frontend/architecture-refactor/final-refactor/evidence/42-production-ops/deploy-safety/kill-switch-readpath-drill.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/tarunchintakunta/Personal/streamline/streamlineos-frontend/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5665) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/autonomy/kill-switch.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/package.json.
+
+cleanup: autonomy_switches rows remaining = 0
+
+PASS  no switch row: the act path is allowed by default                allowed=true decidedBy=default rowsSeen=0
+PASS  org+kind switch OFF stops that kind for that org                 allowed=false decidedBy=org-kind reason=drill: org kind off
+PASS  org+kind switch does not stop a different kind                   allowed=true decidedBy=default
+PASS  another org is unaffected by org A's switch (RLS + switchesFor)  allowed=true decidedBy=default rowsSeen=0
+PASS  platform '*' OFF overrides a tenant's own enabled switch         allowed=false decidedBy=platform-all reason=drill: platform kill switch
+PASS  platform '*' OFF reaches every org and every kind                allowed=false decidedBy=platform-all
+PASS  switching the platform kill switch back on restores the act path allowed=true decidedBy=default
+
+RESULT: checks=7 failed=0

@@ -75,7 +75,7 @@ export function ActionsCell({
 
   if (!canEdit && !canDelete) return null;
 
-  function handleStopPropagation(e: React.MouseEvent) {
+  function handleStopPropagation(e: React.MouseEvent | React.KeyboardEvent) {
     e.stopPropagation();
   }
   function handleEditClick(e: React.MouseEvent) {
@@ -92,7 +92,7 @@ export function ActionsCell({
   }
 
   return (
-    <div onClick={handleStopPropagation}>
+    <div onClick={handleStopPropagation} onKeyDown={handleStopPropagation}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { PREVIEW_EASE } from "../lib/preview-motion";
+import type { ProvisioningIssue } from "../hooks/use-setup-provisioning";
 import type { SetupError } from "./generation-failure-stage";
 import { GenerationFailureStage } from "./generation-failure-stage";
 
@@ -21,12 +22,12 @@ type GenerationProgressStageProps = {
   progress: number;
   companyName?: string;
   setupError: SetupError | null;
-  generationPending: { failureMessage: string } | null;
-  isRetryingGeneration: boolean;
+  provisioningIssue: ProvisioningIssue | null;
+  isRecheckingProvisioning: boolean;
   showWelcome: boolean;
   onRetry: () => void;
-  onRetryGeneration: () => void;
-  onContinueWithoutGeneration: () => void;
+  onRecheckProvisioning: () => void;
+  onContinueAnyway: () => void;
   onOpenOrganization?: () => void;
   onGoToInvitations?: () => void;
   isNavigating: boolean;
@@ -38,12 +39,12 @@ export function GenerationProgressStage({
   progress,
   companyName,
   setupError,
-  generationPending,
-  isRetryingGeneration,
+  provisioningIssue,
+  isRecheckingProvisioning,
   showWelcome,
   onRetry,
-  onRetryGeneration,
-  onContinueWithoutGeneration,
+  onRecheckProvisioning,
+  onContinueAnyway,
   onOpenOrganization,
   onGoToInvitations,
   isNavigating,
@@ -258,7 +259,7 @@ export function GenerationProgressStage({
           })}
         </ul>
 
-        {generationPending !== null && !showWelcome && (
+        {provisioningIssue !== null && !showWelcome && (
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -266,27 +267,27 @@ export function GenerationProgressStage({
             className="mt-2 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3.5 py-3"
           >
             <p className="text-xs font-semibold text-status-warning-ink">
-              Starter content wasn&apos;t generated
+              {provisioningIssue.title}
             </p>
             <p className="mt-0.5 break-words text-xs text-status-warning-ink">
-              {generationPending.failureMessage}
+              {provisioningIssue.message}
             </p>
             <div className="mt-2.5 flex gap-2">
               <LoadingButton
                 size="sm"
                 variant="outline"
-                onClick={onRetryGeneration}
-                isPending={isRetryingGeneration}
+                onClick={onRecheckProvisioning}
+                isPending={isRecheckingProvisioning}
                 className="h-7 gap-1.5 border-status-warning-rule bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-surface"
               >
                 <RefreshCw className="h-3 w-3" aria-hidden />
-                Retry
+                Check again
               </LoadingButton>
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={onContinueWithoutGeneration}
-                disabled={isRetryingGeneration}
+                onClick={onContinueAnyway}
+                disabled={isRecheckingProvisioning}
                 className="h-7 text-status-warning-ink hover:bg-status-warning-surface"
               >
                 Continue to dashboard

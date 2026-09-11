@@ -65,17 +65,19 @@ function SectionHeader({
   icon,
   title,
   count,
+  titleId,
 }: {
   icon: React.ReactNode;
   title: string;
   count?: number;
+  titleId?: string;
 }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/5 text-muted-foreground">
         {icon}
       </div>
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <h2 id={titleId} className="text-sm font-semibold text-foreground">{title}</h2>
       {count !== undefined && (
         <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
           {count}
@@ -402,6 +404,7 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
           <section aria-labelledby="milestones-heading">
             <SectionHeader
               icon={<Milestone className="h-3.5 w-3.5" />}
+              titleId="milestones-heading"
               title="Milestones"
               count={milestones.length}
             />
@@ -412,6 +415,7 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
           <section aria-labelledby="tasks-heading">
             <SectionHeader
               icon={<CheckSquare className="h-3.5 w-3.5" />}
+              titleId="tasks-heading"
               title="Tasks"
               count={tasks.length}
             />
@@ -422,6 +426,7 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
           <section aria-labelledby="attachments-heading">
             <SectionHeader
               icon={<Paperclip className="h-3.5 w-3.5" />}
+              titleId="attachments-heading"
               title="Files"
               count={attachments.length}
             />
@@ -432,6 +437,7 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
           <section aria-labelledby="comments-heading">
             <SectionHeader
               icon={<MessageSquare className="h-3.5 w-3.5" />}
+              titleId="comments-heading"
               title="Updates"
               count={comments.length}
             />

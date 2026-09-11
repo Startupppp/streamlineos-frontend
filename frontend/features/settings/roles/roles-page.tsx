@@ -60,6 +60,8 @@ import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { useRoleListState } from "./use-role-list-state";
 import { RolesListPanel } from "./roles-list-panel";
 
+const ROLES_PAGE_TABS = ["roles", "groups"] as const;
+
 const EMPTY_ROLE_ROWS: RoleListRow[] = [];
 
 export function RolesPage() {
@@ -71,7 +73,8 @@ export function RolesPage() {
     search,
     serverSearch,
     setSearch,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     query,
   } = useRoleListState();
@@ -92,14 +95,10 @@ export function RolesPage() {
   const [renameTarget, setRenameTarget] = useState<Role | null>(null);
   const roles = rolesPage?.data ?? EMPTY_ROLE_ROWS;
   const pagination = rolesPage?.pagination ?? {
-    page,
     limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
-  const lastPage = Math.max(1, pagination.totalPages);
-  const isOutOfRange =
-    rolesPage !== undefined && page > lastPage;
   const selectedRole =
     roles.find((role) => role.id === selectedRoleId) ?? null;
 
@@ -137,12 +136,12 @@ export function RolesPage() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
-  const deleteEnabled = deleteConfirmation === (deleteTarget?.name ?? "");
+  function handleTabChange(v: string): void {
+    const tab = ROLES_PAGE_TABS.find((candidate) => candidate === v);
+    if (tab) setActiveTab(tab);
+  }
 
-  useEffect(() => {
-    if (!isOutOfRange) return;
-    setPage(lastPage);
-  }, [isOutOfRange, lastPage, setPage]);
+  const deleteEnabled = deleteConfirmation === (deleteTarget?.name ?? "");
 
   useEffect(() => {
     if (selectedRoleId === null || isLoading || rolesPage === undefined) return;
@@ -204,7 +203,7 @@ export function RolesPage() {
     >
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "roles" | "groups")}
+        onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <TabsList className="shrink-0">
@@ -234,11 +233,12 @@ export function RolesPage() {
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch">
           <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full">
             <RolesListPanel
-              isLoading={isLoading || isOutOfRange}
+              isLoading={isLoading}
               rolesError={rolesError}
               rolesQueryError={rolesQueryError}
               roles={roles}
               search={serverSearch}
+              page={page}
               pagination={pagination}
               selectedRoleId={selectedRoleId}
               onRetry={handleRetryRoles}
@@ -246,7 +246,8 @@ export function RolesPage() {
               onDelete={handleOpenDelete}
               onRename={setRenameTarget}
               onClearSearch={handleClearSearch}
-              onPageChange={setPage}
+              onPrevious={previousPage}
+              onNext={() => nextPage(pagination.nextCursor)}
               onPageSizeChange={setPageSize}
             />
           </div>

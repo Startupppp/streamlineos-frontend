@@ -4,12 +4,12 @@ import { useCallback, useMemo } from "react";
 import { useCanState } from "@/hooks/api/access";
 import { Activity } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
-import { RecordList } from "@/features/renderer";
-import { useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList } from "@/components/renderer";
+import { useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   SOURCE_ATTRIBUTION_LAYOUT,
   sourceAttributionFields,

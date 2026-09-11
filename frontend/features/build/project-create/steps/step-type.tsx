@@ -6,6 +6,7 @@ import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import type { StepSharedProps } from "../use-project-create";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface ProjectTypeOption {
   id: string;
@@ -63,7 +64,7 @@ export function StepType({ draft, updateDraft }: StepSharedProps) {
           return (
             <div
               key={type.id}
-              onClick={() => handleSelect(type.id)}
+              {...activationProps(() => handleSelect(type.id), type.label)}
               className={cn(
                 "cursor-pointer rounded-xl border p-4 flex flex-col gap-2 transition-all",
                 isSelected

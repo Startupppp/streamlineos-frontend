@@ -7,7 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useMeetingFollowUpDraft } from "@/hooks/api/crm";
-import { DraftComposer } from "@/features/ai-drafts/draft-composer";
+import { DraftComposer } from "@/features/crm/ai-drafts/draft-composer";
 import { cn } from "@/lib/utils";
 
 interface MeetingFollowUpComposerProps {

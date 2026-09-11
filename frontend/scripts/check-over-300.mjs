@@ -1,7 +1,26 @@
 #!/usr/bin/env node
 /**
  * Ratchet gate: count of frontend production TypeScript/TSX files over 300 lines
- * must not increase beyond the baseline set on 2026-08-31.
+ * must not increase beyond the baseline.
+ *
+ * BASELINE HISTORY. Seeded at 519 on 2026-08-31. That seeding carried slack —
+ * the measured count on 2026-09-02 was 509 — and eleven files crossed 300 into
+ * the gap unremarked before the count reached 520 and the gate finally bit.
+ * Lowered to 516 on 2026-09-03 by splitting five of those crossings by
+ * responsibility (mail cache patching, three column sets, the salary-profile
+ * presentation), leaving the number equal to the measured count with no slack.
+ * Lowered to 513 on 2026-09-07. The response-contract sweep pushed the count to
+ * 530 and the gate bit; fifteen files were split by seam, not by line count —
+ * pages that implemented instead of composing (the deal detail route, the
+ * knowledge settings page, the locations page), Zod schemas lifted out of
+ * components into sibling *-schema.ts, column builders and row components out of
+ * list pages, and form state machines into hooks. No export, contract or
+ * capability was removed to shrink a file. The number again equals the measured
+ * count with no slack.
+ *
+ * THE BASELINE MAY ONLY EVER MOVE DOWN, and only because files got shorter.
+ * Raising it to absorb a new crossing is the failure mode this gate exists to
+ * catch; a red run means split the file the run names.
  *
  * Scans: all *.ts and *.tsx under the project root, excluding:
  *   node_modules, every .next* build directory (.next, .next-e2e — gitignored
@@ -16,42 +35,42 @@
  *   --self-test   Run internal assertions and exit (no file scan).
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, extname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
-// 520, set 2026-09-11. The merge of the CRM/Timesheets lane (7486adb99) took the
-// inventory-lane baseline of 519, which never counted that lane's files, to 522:
-// 35 of the 36 files the merge newly counts were already over 300 there, and
-// none grew in the merge except lib/query-keys/access-and-crm.ts (+9 lines,
-// already 358 on that lane). The 36th, sidebar-nav-inventory.test.ts, grew past
-// 300 in the merge and was split instead. 32 inventory-side files left the
-// count, replaced by the accounting rewrite: 519 + 35 - 32 = 522. Deleting the
-// dead pre-rewrite types/accounting.ts and hooks/api/accounting.ts made it 520.
-const BASELINE = 520;
-const MIN_FILES = 100;
+// 2026-09-11, the merge of origin/main into the inventory integration lane.
+// Main had lowered its own count to 513 (see BASELINE HISTORY above). This lane
+// had moved to 520: the CRM/Timesheets merge (7486adb99) took the inventory-lane
+// baseline of 519, which never counted that lane's files, to 522 — 35 of the 36
+// files it newly counted were already over 300 there, and the 36th,
+// sidebar-nav-inventory.test.ts, was split instead; 32 inventory-side files left
+// the count, replaced by the accounting rewrite; deleting the dead pre-rewrite
+// types/accounting.ts and hooks/api/accounting.ts made it 520. Neither number
+// describes the merged tree. The lower one is kept because this baseline may
+// only move down; re-measure the merged tree before trusting a red or a green.
+const BASELINE = 513;
+// Main's vacuity floor, the stricter of the two (this lane had 100). The merged
+// tree only adds files to main's, so it cannot fall under it.
+const MIN_FILES = 4900;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-const EXCLUDED_DIRS = new Set([
-  "node_modules",
-  ".next",
-  "feedbucket-widget",
-  ".git",
-  "scripts",
-  "public",
-]);
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts", "public"]);
 
 /**
  * Next writes generated types under a build directory per mode — `.next` for
  * dev/build, `.next-e2e` for the e2e harness — and both are gitignored. Naming
  * only `.next` let `.next-e2e/dev/types/validator.ts` into the count at **6,082
  * lines**, so the ratchet was partly measuring whether anyone had run the e2e
- * harness lately. Matched by prefix so a future mode directory cannot reopen it.
+ * harness lately. `isExcludedScanDir` skips every dot-directory, so a future
+ * mode directory cannot reopen it.
  */
 function isExcludedDir(name) {
-  return EXCLUDED_DIRS.has(name) || name.startsWith(".next");
+  return isExcludedScanDir(name) || EXTRA_EXCLUDED_DIRS.has(name);
 }
 
 function collectFiles(dir, files = []) {
@@ -102,17 +121,54 @@ function runSelfTests() {
   assert("BASELINE is a positive integer", Number.isInteger(BASELINE) && BASELINE > 0);
   assert("LIMIT is 300", LIMIT === 300);
   assert("MIN_FILES is a positive integer", Number.isInteger(MIN_FILES) && MIN_FILES > 0);
-  assert("countLines counts lines in a string", (() => {
-    const fake = "a\nb\nc\n";
-    const parts = fake.split("\n");
-    const count = fake.endsWith("\n") ? parts.length - 1 : parts.length;
-    return count === 3;
-  })());
-  assert("EXCLUDED_DIRS excludes node_modules", EXCLUDED_DIRS.has("node_modules"));
-  assert("isExcludedDir excludes .next", isExcludedDir(".next"));
-  assert("isExcludedDir excludes .next-e2e", isExcludedDir(".next-e2e"));
-  assert("isExcludedDir keeps a real directory", isExcludedDir("features") === false);
-  assert("EXCLUDED_DIRS excludes feedbucket-widget", EXCLUDED_DIRS.has("feedbucket-widget"));
+
+  // The scan itself, against known-bad files on disk. Asserting the constants and
+  // re-implementing countLines inside the assertion left a broken collectFiles()
+  // reporting zero crossings and still passing — the backend twin shipped exactly
+  // that defect.
+  const fixture = mkdtempSync(join(tmpdir(), "fe-over-300-self-test-"));
+  try {
+    mkdirSync(join(fixture, "features", "nested"), { recursive: true });
+    mkdirSync(join(fixture, ".next-buildmart", "dev"), { recursive: true });
+    mkdirSync(join(fixture, "next-intl"), { recursive: true });
+    mkdirSync(join(fixture, "node_modules"), { recursive: true });
+
+    writeFileSync(join(fixture, "features", "nested", "over.tsx"), "x\n".repeat(301));
+    writeFileSync(join(fixture, "exactly-at-limit.ts"), "x\n".repeat(300));
+    writeFileSync(join(fixture, "under.ts"), "x\n".repeat(12));
+    writeFileSync(join(fixture, "over.spec.ts"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.spec.tsx"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.d.ts"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.js"), "x\n".repeat(400));
+    writeFileSync(join(fixture, ".next-buildmart", "dev", "chunk.ts"), "x\n".repeat(9000));
+    writeFileSync(join(fixture, "next-intl", "authored.tsx"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "node_modules", "dep.ts"), "x\n".repeat(900));
+
+    const collected = collectFiles(fixture).map((f) => f.replace(/\\/g, "/"));
+    const overLimit = collected.filter((f) => countLines(f) > LIMIT);
+
+    assert("collectFiles recurses into subdirectories", collected.some((f) => f.endsWith("/features/nested/over.tsx")));
+    assert("a 301-line file is over the limit", overLimit.some((f) => f.endsWith("/features/nested/over.tsx")));
+    assert("a file at exactly 300 lines is not over the limit", !overLimit.some((f) => f.endsWith("exactly-at-limit.ts")));
+    assert("an under-limit file is not counted", !overLimit.some((f) => f.endsWith("under.ts")));
+    assert("countLines does not count the trailing newline as a line", countLines(join(fixture, "under.ts")) === 12);
+    assert("spec files are excluded", !collected.some((f) => f.includes(".spec.")));
+    assert("declaration files are excluded", !collected.some((f) => f.endsWith(".d.ts")));
+    assert("non-TypeScript files are excluded", !collected.some((f) => f.endsWith(".js")));
+    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-buildmart")));
+    assert("node_modules is excluded", !collected.some((f) => f.includes("node_modules")));
+    assert(
+      "an authored directory merely starting with 'next-' is still scanned",
+      overLimit.some((f) => f.endsWith("/next-intl/authored.tsx")),
+    );
+    assert("the vacuity guard would fire on this fixture", collected.length < MIN_FILES);
+    runScanDirSelfTest(assert);
+    assert("isExcludedDir excludes .next", isExcludedDir(".next"));
+    assert("isExcludedDir excludes .next-e2e", isExcludedDir(".next-e2e"));
+    assert("isExcludedDir keeps a real directory", isExcludedDir("features") === false);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
 
   if (failed > 0) {
     console.error(`check-over-300 self-tests: ${failed} failed, ${passed} passed`);

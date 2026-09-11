@@ -7,8 +7,8 @@ import {
   useCanManageOrganizationMembership,
 } from "@/hooks/api/access";
 import { useUser } from "@/hooks/api/users";
-import { UserInviteDialog } from "@/features/users/user-invite-dialog";
-import { UserModuleAccessSection } from "@/features/users/user-module-access-section";
+import { UserInviteDialog } from "@/features/directory/users/user-invite-dialog";
+import { UserModuleAccessSection } from "@/features/directory/users/user-module-access-section";
 import type { OrganizationPerson } from "@/types/directory/people";
 import { getPersonAccountAccess } from "./person-account-access";
 import {

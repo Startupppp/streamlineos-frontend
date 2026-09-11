@@ -4,11 +4,11 @@ import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import { toKanbanTicket, type ProjectGroup } from "./all-work-ticket-utils";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface BoardProjectSectionProps {
   group: ProjectGroup;

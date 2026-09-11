@@ -17,8 +17,8 @@ import {
   asRecordValue,
   type RecordFieldControl,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   useCreateEmailTemplate,
   useUpdateEmailTemplate,

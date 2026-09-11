@@ -1,12 +1,13 @@
-﻿"use client";
+"use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { usePayoutBatch, useImportBankReturn } from "@/hooks/api/payroll/payout-batches";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { formatMoney } from "@/features/payroll/shared";
@@ -18,7 +19,8 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/payroll";
+import type { BankBatchStatus, BankItemStatus } from "@/types/payroll";
+import type { BatchItemRow } from "@/hooks/api/payroll/payout-schema";
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
   PENDING: "bg-muted text-muted-foreground",
@@ -45,23 +47,23 @@ interface BatchDetailSheetProps {
 
 function buildColumns(
   canManage: boolean,
-  onAction: (type: "paid" | "failed", item: PayoutBatchItem) => void,
+  onAction: (type: "paid" | "failed", item: BatchItemRow) => void,
   resolveMemberName: (userId: string) => string,
-): DataTableColumn<PayoutBatchItem>[] {
-  const cols: DataTableColumn<PayoutBatchItem>[] = [
+): DataTableColumn<BatchItemRow>[] {
+  const cols: DataTableColumn<BatchItemRow>[] = [
     {
       key: "userId",
       header: "Employee",
       className: "max-w-[180px]",
       cell: (row) => (
-        <TruncatedText text={resolveMemberName(row.userId)} className="font-medium text-foreground" />
+        <TruncatedText text={resolveMemberName(row.userId ?? "")} className="font-medium text-foreground" />
       ),
     },
     {
       key: "account",
       header: "Account",
       cell: (row) =>
-        canManage ? (
+        canManage && row.userId ? (
           <RevealCell userId={row.userId} masked={row.accountMasked} />
         ) : (
           <span className="font-mono text-xs text-muted-foreground">{row.accountMasked}</span>
@@ -134,13 +136,13 @@ function buildColumns(
 }
 
 export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailSheetProps) {
-  const { data, isLoading } = usePayoutBatch(batchId ?? 0);
+  const { data, isLoading, isError, error, refetch } = usePayoutBatch(batchId ?? 0);
   const { data: membersData } = useOrgMembers(1, 200);
   const importReturn = useImportBankReturn();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [actionDialog, setActionDialog] = useState<{
     type: "paid" | "failed";
-    item: PayoutBatchItem;
+    item: BatchItemRow;
   } | null>(null);
 
   const memberById = useMemo(() => {
@@ -160,8 +162,12 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   );
 
   const batch = data?.batch;
-  const items = data?.items.data ?? [];
-  const hasMoreItems = data?.items.hasMore ?? false;
+  // Optional all the way down on purpose: `items` is required by the type, so a
+  // missing one can only mean this observer was handed a foreign payload — the
+  // shape that used to reach here through a shared query key. Crashing the sheet
+  // takes mark-paid, mark-failed and import-return down with it.
+  const items = data?.items?.data ?? [];
+  const hasMoreItems = data?.items?.hasMore ?? false;
   const canImportReturn =
     canManage &&
     batch != null &&
@@ -173,9 +179,9 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     setActionDialog(null);
   }
 
-  function handleAction(type: "paid" | "failed", item: PayoutBatchItem) {
+  const handleAction = useCallback((type: "paid" | "failed", item: BatchItemRow) => {
     setActionDialog({ type, item });
-  }
+  }, []);
 
   function handleReturnFile(file: File | undefined) {
     if (!file || batchId == null || batch == null) return;
@@ -214,9 +220,18 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     reader.readAsText(file);
   }
 
+  function handleReturnFileChange(event: ChangeEvent<HTMLInputElement>) {
+    handleReturnFile(event.target.files?.[0]);
+    event.target.value = "";
+  }
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo(
     () => buildColumns(canManage, handleAction, resolveMemberName),
-    [canManage, resolveMemberName],
+    [canManage, handleAction, resolveMemberName],
   );
 
   return (
@@ -255,10 +270,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                     type="file"
                     accept=".csv,text/csv"
                     className="hidden"
-                    onChange={(e) => {
-                      handleReturnFile(e.target.files?.[0]);
-                      e.target.value = "";
-                    }}
+                    onChange={handleReturnFileChange}
                   />
                   <LoadingButton
                     size="sm"
@@ -279,6 +291,13 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
           <SheetBody className="px-6 py-4">
             {isLoading ? (
               <DataTableSkeleton rows={8} columns={canManage ? 7 : 6} />
+            ) : isError ? (
+              <ErrorState
+                compact
+                title="Couldn't load this batch"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
             ) : (
               <DataTable
                 data={items}
@@ -292,7 +311,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                 minWidth="640px"
               />
             )}
-            {hasMoreItems ? (
+            {!isError && hasMoreItems ? (
               <p className="pt-3 text-sm text-muted-foreground">
                 Showing the first {items.length} items in this batch. Download the batch file for
                 the complete list.

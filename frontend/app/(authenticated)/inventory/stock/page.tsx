@@ -10,8 +10,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import {
   Select,
   SelectContent,
@@ -257,7 +257,10 @@ export default function StockLevelsPage() {
           </Select>
         )}
         <Select value={stockStatusParam} onValueChange={handleStockStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
+          <SelectTrigger
+            aria-label="Filter by stock level"
+            className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

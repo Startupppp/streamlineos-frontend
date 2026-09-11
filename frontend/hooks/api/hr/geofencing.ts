@@ -1,9 +1,21 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+
+const geofenceListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/geofencing-schema").then((m) => m.geofenceListContract),
+);
+const geofenceRowLazy = lazyContract(() =>
+  import("@/hooks/api/hr/geofencing-schema").then((m) => m.geofenceRowContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface Geofence {
   id: number;
@@ -18,8 +30,8 @@ export function useGeofences() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "geofences"],
-    queryFn: () => apiClient.get<Geofence[]>("/hr/geofencing"),
+    queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"],
+    queryFn: ({ signal }) => apiClient.get<Geofence[]>("/hr/geofencing", undefined, signal, geofenceListLazy),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -27,29 +39,30 @@ export function useGeofences() {
 
 export function useCreateGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "create"],
     mutationFn: (data: { name: string; lat: string; lng: string; radiusMeters?: number }) =>
-      apiClient.post<Geofence>("/hr/geofencing", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "geofences"] }),
+      apiClient.post<Geofence>("/hr/geofencing", data, undefined, geofenceRowLazy),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }
 
 export function useUpdateGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; lat?: string; lng?: string; radiusMeters?: number }) =>
-      apiClient.patch<Geofence>(`/hr/geofencing/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "geofences"] }),
+      apiClient.patch<Geofence>(`/hr/geofencing/${id}`, data, undefined, geofenceRowLazy),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }
 
 export function useDeleteGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/geofencing/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "geofences"] }),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/hr/geofencing/${id}`, undefined, undefined, noContentLazy),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }

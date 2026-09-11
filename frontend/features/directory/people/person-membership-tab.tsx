@@ -11,10 +11,10 @@ import {
   useCanManageOrganizationMembership,
 } from "@/hooks/api/access";
 import { useUser } from "@/hooks/api/users";
-import { UserInviteDialog } from "@/features/users/user-invite-dialog";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
-import { UserMembershipSection } from "@/features/users/user-membership-section";
-import { UserStatusBadge } from "@/features/users/user-status-badge";
+import { UserInviteDialog } from "@/features/directory/users/user-invite-dialog";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
+import { UserMembershipSection } from "@/features/directory/users/user-membership-section";
+import { UserStatusBadge } from "@/features/directory/users/user-status-badge";
 import type { OrganizationPerson } from "@/types/directory/people";
 import { getPersonAccountAccess } from "./person-account-access";
 import {

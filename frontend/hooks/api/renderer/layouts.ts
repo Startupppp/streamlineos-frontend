@@ -3,9 +3,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const layoutAdjustmentContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutAdjustmentContract),
+);
+const layoutAdjustmentSaveContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutAdjustmentSaveContract),
+);
+const layoutUsageContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutUsageContract),
+);
+const layoutResetContract = lazyContract(() =>
+  import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutResetContract),
+);
 
 /**
  * Where a tenant's arrangement of a record type lives.
@@ -58,10 +73,10 @@ export function useLayoutAdjustment(layoutKey: string) {
   const orgId = useLayoutTenant();
 
   return useQuery({
-    queryKey: queryKeys.recordLayouts.adjustment(orgId, layoutKey),
-    queryFn: () =>
+    queryKey: platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
+    queryFn: ({ signal }) =>
       apiClient.get<LayoutAdjustment | null>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, undefined, signal, layoutAdjustmentContract,
       ),
     // An arrangement changes when an administrator edits it, which is rare, and
     // every record surface in the product reads it.
@@ -99,19 +114,21 @@ export function useSaveLayoutAdjustment(layoutKey: string) {
   const queryClient = useQueryClient();
   const orgId = useLayoutTenant();
 
-  return useMutation({
+  return useAuthorizedMutation("settings:record-layouts:manage", {
     mutationKey: ["recordLayouts", "save", layoutKey] as const,
     mutationFn: (input: LayoutAdjustmentInput) =>
       apiClient.put<LayoutAdjustment>(
         `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
         input,
+        undefined,
+        layoutAdjustmentSaveContract,
       ),
     onSuccess: (saved) => {
       queryClient.setQueryData(
-        queryKeys.recordLayouts.adjustment(orgId, layoutKey),
+        platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
         saved,
       );
-      void queryClient.invalidateQueries({ queryKey: queryKeys.recordLayouts.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.recordLayouts.all });
     },
   });
 }
@@ -120,31 +137,36 @@ export function useResetLayoutAdjustment(layoutKey: string) {
   const queryClient = useQueryClient();
   const orgId = useLayoutTenant();
 
-  return useMutation({
+  return useAuthorizedMutation("settings:record-layouts:manage", {
     mutationKey: ["recordLayouts", "reset", layoutKey] as const,
     mutationFn: () =>
-      apiClient.delete<null>(`/renderer/layouts/${encodeURIComponent(layoutKey)}`),
+      apiClient.delete<null>(
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
+        undefined,
+        undefined,
+        layoutResetContract,
+      ),
     onSuccess: () => {
       queryClient.setQueryData(
-        queryKeys.recordLayouts.adjustment(orgId, layoutKey),
+        platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
         null,
       );
-      void queryClient.invalidateQueries({ queryKey: queryKeys.recordLayouts.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.recordLayouts.all });
     },
   });
 }
 
 export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean }) {
   const orgId = useLayoutTenant();
-  const canAdjust = useCanAdjustLayouts();
+  const canReadUsage = useCan("settings:record-layouts:manage");
 
   return useQuery({
-    queryKey: queryKeys.recordLayouts.usage(orgId, layoutKey),
-    queryFn: () =>
+    queryKey: platformCoreQueryKeys.recordLayouts.usage(orgId, layoutKey),
+    queryFn: ({ signal }) =>
       apiClient.get<LayoutUsage>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal, layoutUsageContract,
       ),
     staleTime: 10 * 60_000,
-    enabled: !!orgId && !!layoutKey && canAdjust && (options?.enabled ?? true),
+    enabled: !!orgId && !!layoutKey && canReadUsage && (options?.enabled ?? true),
   });
 }

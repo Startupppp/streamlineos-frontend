@@ -53,9 +53,8 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/chat/channels", universalMatch: true, decisionKind: "universal", label: "channel list" },
   { path: "/chat/channels/general", universalMatch: true, decisionKind: "universal", label: "channel conversation" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
-  // administrative descendants DENIED
+  // administrative descendant DENIED
   { path: "/chat/settings", universalMatch: false, decisionKind: "permission", label: "org chat settings admin — gated on chat:org-settings:manage" },
-  { path: "/chat/moderation", universalMatch: false, decisionKind: "permission", label: "huddle moderation admin — gated on chat:huddles:moderate" },
 
   // ── /calendar ───────────────────────────────────────────────────────────────
   // root read allowed (single unified calendar page)
@@ -168,7 +167,6 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
       "/chat/settings",
-      "/chat/moderation",
       "/calendar/settings",
     ];
     for (const p of adminPaths) {

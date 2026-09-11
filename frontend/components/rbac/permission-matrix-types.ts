@@ -1,3 +1,4 @@
+import { administeringModuleOf } from "@/lib/rbac/administering-module";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { DataScope } from "@/types/access";
 
@@ -13,13 +14,13 @@ export const MODULE_LABELS: Record<string, string> = {
   reports: "Reports",
   accounting: "Accounting",
   dashboard: "Dashboards",
+  home: "Home",
   kb: "Knowledge Base",
   inventory: "Inventory",
   support: "Support",
   self: "Self-Service",
   branch: "Branches",
   dm: "Digital Marketing",
-  chat: "Chat",
   payroll: "Payroll",
   sign: "SignOS",
   surveys: "Surveys",
@@ -73,10 +74,6 @@ export interface CatalogModule {
   resources: CatalogResource[];
 }
 
-export function moduleOf(key: string): string {
-  return key.split(":")[0] ?? key;
-}
-
 export function prettify(value: string): string {
   return value
     .split(/[:\-_]/)
@@ -95,7 +92,7 @@ export function resourceLabel(resource: string, moduleKey: string): string {
 
 export function isScopable(perm: Permission): boolean {
   return (
-    SCOPABLE_MODULES.has(moduleOf(perm.name)) &&
+    SCOPABLE_MODULES.has(administeringModuleOf(perm.name)) &&
     SCOPABLE_ACTIONS.has(perm.action)
   );
 }
@@ -111,7 +108,7 @@ export function toEditableScope(scope: DataScope): EditableScope {
 export function buildCatalog(permissions: readonly Permission[]): CatalogModule[] {
   const modules = new Map<string, Map<string, Permission[]>>();
   for (const perm of permissions) {
-    const key = moduleOf(perm.name);
+    const key = administeringModuleOf(perm.name);
     let resources = modules.get(key);
     if (!resources) {
       resources = new Map();

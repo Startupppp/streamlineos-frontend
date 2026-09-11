@@ -77,7 +77,7 @@ function LoadsPageInner() {
     {
       key: "id",
       header: "Load",
-      cell: (l) => l.name ?? (formatShortDate(l.createdAt) || "—"),
+      cell: (l) => l.loadNumber ?? (formatShortDate(l.createdAt) || "—"),
     },
     {
       key: "status",
@@ -92,10 +92,10 @@ function LoadsPageInner() {
       ),
     },
     {
-      key: "members",
-      header: "Members",
+      key: "packages",
+      header: "Packages",
       cell: (l) => (
-        <span className="tabular-nums">{l.members?.length ?? 0}</span>
+        <span className="tabular-nums">{l.packages?.length ?? 0}</span>
       ),
     },
     {
@@ -170,7 +170,7 @@ function LoadsPageInner() {
       <AppSheet
         open={detailOpen}
         onOpenChange={handleDetailClose}
-        title={selectedLoad?.name ?? (selectedId ? `Load #${selectedId}` : "Load Details")}
+        title={selectedLoad?.loadNumber ?? (selectedId ? `Load #${selectedId}` : "Load Details")}
         description={selectedLoad ? `Status: ${LOAD_STATUS_LABEL[selectedLoad.status]}` : undefined}
       >
         {selectedId !== null && (

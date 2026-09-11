@@ -1,0 +1,1 @@
+reset-scratch-db: refusing to reset database "postgres" — SCRATCH_URL must name a scratch database (its name must contain "scratch"). This script drops every schema in it.

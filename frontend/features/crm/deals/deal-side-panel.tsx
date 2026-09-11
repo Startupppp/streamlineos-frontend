@@ -15,7 +15,7 @@ import {
   useDealDetail,
   useUpdateDeal,
 } from "@/hooks/api/crm";
-import { ActivityTimeline as UnifiedTimeline } from "@/features/crm/timeline/activity-timeline";
+import { ActivityTimeline as UnifiedTimeline } from "@/components/timeline/activity-timeline";
 import { DealStageHistory } from "./detail/deal-stage-history";
 import { DealEditForm } from "./detail/deal-edit-form";
 import { toUpdateInput, type DealSubmission } from "./deal-form";

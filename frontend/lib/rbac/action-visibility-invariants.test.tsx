@@ -31,7 +31,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   }),
 }));
 
-jest.mock("@/features/build/shared/pm-chrome", () => ({
+jest.mock("@/components/pm-chrome", () => ({
   PM_PANEL: "pm-panel",
   PM_PANEL_SOLID: "pm-panel-solid",
 }));

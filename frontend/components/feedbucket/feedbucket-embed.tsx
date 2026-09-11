@@ -17,7 +17,7 @@ export function FeedbucketEmbed() {
       src={FEEDBUCKET_WIDGET_SCRIPT_PATH}
       data-key={projectId}
       data-api={apiBase}
-      strategy="afterInteractive"
+      strategy="lazyOnload"
     />
   );
 }

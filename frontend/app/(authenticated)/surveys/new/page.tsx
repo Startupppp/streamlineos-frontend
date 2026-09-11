@@ -6,6 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSurvey, useSurveyTemplates, type SurveyMode } from "@/hooks/api/surveys/forms";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
@@ -15,8 +16,13 @@ const CORE_MODES: SurveyMode[] = ["survey", "assessment", "live_session", "lead_
 
 export default function NewSurveyPage() {
   const router = useRouter();
-  const { data: templates, isLoading } = useSurveyTemplates();
+  const templatesQuery = useSurveyTemplates();
+  const { data: templates, isLoading } = templatesQuery;
   const createSurvey = useCreateSurvey();
+
+  function handleTemplatesRetry() {
+    void templatesQuery.refetch();
+  }
 
   async function startFrom(templateKey: string | undefined, mode: SurveyMode, title: string) {
     try {
@@ -64,7 +70,16 @@ export default function NewSurveyPage() {
                 </div>
               </div>
 
-              {customTemplates.length > 0 && (
+              {templatesQuery.isError && (
+                <ErrorState
+                  compact
+                  title="Couldn't load your templates"
+                  description={getErrorMessage(templatesQuery.error)}
+                  onRetry={handleTemplatesRetry}
+                />
+              )}
+
+              {!templatesQuery.isError && customTemplates.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-foreground mb-2">Templates</p>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

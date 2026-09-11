@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Pencil, Sparkles } from "lucide-react";
@@ -10,8 +11,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  extractEventNumericId,
+  parseCalendarEventId,
   useCancelOccurrence,
+  useCalendarEvent,
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
   useUpdateCalendarEvent,
@@ -26,8 +28,23 @@ import {
   getEventColor,
   RSVP_STATUS_LABELS,
 } from "./event-detail-content";
-import { MeetingFollowUpPanel } from "./meeting-follow-up-panel";
-import { MeetingPrepPanel } from "./meeting-prep-panel";
+import { CalendarListFallback } from "./calendar-lazy-fallbacks";
+
+const MeetingFollowUpPanel = dynamic(
+  () =>
+    import("./meeting-follow-up-panel").then((m) => ({
+      default: m.MeetingFollowUpPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading AI follow-up" /> },
+);
+
+const MeetingPrepPanel = dynamic(
+  () =>
+    import("./meeting-prep-panel").then((m) => ({
+      default: m.MeetingPrepPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading AI meeting prep" /> },
+);
 
 interface EventDetailSheetProps {
   event: CalendarListItem | null;
@@ -45,8 +62,12 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const { mutateAsync: cancelOccurrence, isPending: cancelOccurrenceIsPending } = useCancelOccurrence();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } = useRsvpCalendarEvent();
   const { mutateAsync: updateEvent } = useUpdateCalendarEvent();
-  const numericEventId = event ? extractEventNumericId(event.id) : null;
+  const parsedEventId = event ? parseCalendarEventId(event.id) : null;
+  const numericEventId = parsedEventId?.eventId ?? null;
   const isCalendarEvent = event?.source === "event";
+  const { data: detail, isLoading: detailLoading } = useCalendarEvent(
+    isCalendarEvent ? numericEventId : null,
+  );
   const canUpdate = isCalendarEvent;
   const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } = useAnimatedIcon();
   const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
@@ -77,14 +98,19 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const handleCancelOccurrence = useCallback(async () => {
     if (!event || numericEventId === null) return;
     try {
-      await cancelOccurrence({ eventId: numericEventId, occurrenceStart: event.start });
+      // The exception is keyed on the occurrence's NOMINAL start, which the id
+      // carries; `event.start` is the moved time once an occurrence is rescheduled.
+      await cancelOccurrence({
+        eventId: numericEventId,
+        occurrenceStart: parsedEventId?.occurrenceStart ?? event.start,
+      });
       toast.success("Occurrence cancelled");
       setCancelOccurrenceOpen(false);
       onClose();
     } catch {
       toast.error("Failed to cancel occurrence");
     }
-  }, [cancelOccurrence, event, numericEventId, onClose]);
+  }, [cancelOccurrence, event, numericEventId, parsedEventId, onClose]);
 
   const handleRsvp = useCallback(async (status: "accepted" | "declined" | "tentative") => {
     if (!event || numericEventId === null) return;
@@ -122,13 +148,13 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             <TruncatedText text={event?.title ?? ""} className="min-w-0 flex-1" />
           </SheetTitle>
         </SheetHeader>
-        <EventDetailContent event={event} numericEventId={numericEventId} isCalendarEvent={isCalendarEvent} canUpdate={canUpdate} deleteEventIsPending={deleteEventIsPending} rsvpMutationIsPending={rsvpMutationIsPending} onClose={onClose} onRequestUnlink={() => setUnlinkConfirmOpen(true)} onRsvp={handleRsvp} />
+        <EventDetailContent event={event} numericEventId={numericEventId} isCalendarEvent={isCalendarEvent} canUpdate={canUpdate} deleteEventIsPending={deleteEventIsPending} rsvpMutationIsPending={rsvpMutationIsPending} detail={detail} detailLoading={detailLoading} onClose={onClose} onRequestUnlink={() => setUnlinkConfirmOpen(true)} onRsvp={handleRsvp} />
         {event?.category === "huddle" && event.entityId ? <div className="px-5 pt-3 pb-1 shrink-0"><Link href={`/chat?channel=${event.entityId}`} onClick={onClose}><Button size="sm" className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white" {...huddleHoverHandlers}><MicIcon ref={huddleIconRef} size={14} />Join Huddle</Button></Link></div> : null}
         <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
           {isCalendarEvent && event?.category !== "huddle" ? (
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmOpen(true)} {...deleteHoverHandlers}><Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />Delete</Button>
-              {event?.isRecurring ? (
+              {detail?.isRecurring ? (
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => setCancelOccurrenceOpen(true)}>Cancel occurrence</Button>
               ) : null}
             </div>
@@ -145,7 +171,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title="Delete Event" description="This will permanently delete the event. This action cannot be undone." confirmLabel="Delete" destructive onConfirm={handleDelete} />
     <ConfirmDialog open={cancelOccurrenceOpen} onOpenChange={setCancelOccurrenceOpen} title="Cancel this occurrence?" description="Only this occurrence will be cancelled. The rest of the series will continue." confirmLabel="Cancel occurrence" destructive isPending={cancelOccurrenceIsPending} onConfirm={handleCancelOccurrence} />
     <ConfirmDialog open={unlinkConfirmOpen} onOpenChange={setUnlinkConfirmOpen} title="Unlink ticket?" description="The ticket will no longer be associated with this event." confirmLabel="Unlink" onConfirm={handleUnlink} />
-    <EventCreateDialog open={editOpen} onOpenChange={setEditOpen} event={event} />
+    <EventCreateDialog open={editOpen} onOpenChange={setEditOpen} event={event} rrule={detail?.rrule} />
     <AiMeetingSheets event={event} aiPrepOpen={aiPrepOpen} aiFollowUpOpen={aiFollowUpOpen} onAiPrepOpenChange={setAiPrepOpen} onAiFollowUpOpenChange={setAiFollowUpOpen} onSwitchToFollowUp={handleSwitchToFollowUp} />
   </>;
 }

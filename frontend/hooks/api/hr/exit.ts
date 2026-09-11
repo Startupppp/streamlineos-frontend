@@ -1,39 +1,15 @@
 "use client";
+import type { z } from "zod";
+import type { resignationContract } from "@/hooks/api/hr/exit-schema";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export interface Resignation {
-  id: number;
-  orgId: string;
-  userId: string;
-  reason: string | null;
-  reasonCategory: string | null;
-  lastWorkingDate: string | null;
-  noticePeriodDays: number | null;
-  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "FINAL_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
-  hasResignationLetter: boolean;
-  approvedBy: string | null;
-  approvedAt: Date | string | null;
-  hrReviewedBy: string | null;
-  hrReviewedAt: Date | string | null;
-  hrRemarks: string | null;
-  finalReviewedBy: string | null;
-  finalReviewedAt: Date | string | null;
-  finalRemarks: string | null;
-  willingForExitInterview: boolean | null;
-  companyFeedback: string | null;
-  exitInterviewNotes: string | null;
-  exitInterviewDate: Date | string | null;
-  feedback: { question: string; answer: string }[] | null;
-  createdAt: Date | string | null;
-  user?: { id: string; name: string | null; image: string | null; email: string; designation: string | null; joiningDate?: string | null } | null;
-  hrReviewer?: { id: string; name: string | null } | null;
-  finalReviewer?: { id: string; name: string | null } | null;
-  checklists?: { id: number; item: string; status: string | null; completedAt: Date | string | null }[];
-}
+export type Resignation = z.infer<typeof resignationContract>;
 
 interface ResignationProgressStep {
   step: string;
@@ -53,34 +29,47 @@ export interface ResignationProgress {
 
 export interface PaginatedResignations {
   data: Resignation[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 interface ResignationListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
 
 const exitKeys = {
-  all: [...queryKeys.hr.all, "exit"] as const,
-  list: () => [...exitKeys.all, "list"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
+  list: (params?: ResignationListParams) => [...exitKeys.all, "list", params] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
 };
+
+const _resignationListContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationListContract),
+);
+const _resignationContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationContract),
+);
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.successContract),
+);
+const _resignationProgressContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.resignationProgressContract),
+);
 
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...exitKeys.list(), params] as const,
-    queryFn: () => {
+    queryKey: exitKeys.list(params),
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       if (params?.status) search.set("status", params.status);
       const qs = search.toString();
-      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`);
+      return apiClient.get(`/hr/exit${qs ? `?${qs}` : ""}`, undefined, signal, _resignationListContract);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -90,7 +79,7 @@ export function useResignations(params?: ResignationListParams) {
 
 export function useCreateResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:create", {
     mutationKey: ["hr", "exit", "create"],
     mutationFn: (data: {
       reason: string;
@@ -100,38 +89,38 @@ export function useCreateResignation() {
       willingForExitInterview?: boolean;
       companyFeedback?: string;
       resignationLetterUrl?: string;
-    }) => apiClient.post<Resignation>("/hr/exit", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+    }) => apiClient.post("/hr/exit", data, undefined, _resignationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
 export function useHrReviewResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+      apiClient.patch(`/hr/exit/${id}/hr-review`, { decision: action, remarks }, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
 export function useFinalReviewResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:approve", {
     mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/final-review`, { decision: action, remarks }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+      apiClient.patch(`/hr/exit/${id}/final-review`, { decision: action, remarks }, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
 export function useWithdrawResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:view", {
     mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/withdraw`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
+      apiClient.patch(`/hr/exit/${id}/withdraw`, {}, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
 
@@ -143,10 +132,9 @@ export function useResignationProgress(
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: exitKeys.progress(resignationId),
-    queryFn: () =>
-      apiClient.get<ResignationProgress>(`/hr/exit/${resignationId}/progress`),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/hr/exit/${resignationId}/progress`, undefined, signal, _resignationProgressContract),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && resignationId > 0 && enabled,
   });
 }
-

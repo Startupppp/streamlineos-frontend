@@ -20,4 +20,21 @@ export const FINANCE_TRIGGER_META: TriggerMeta[] = [
       clientEmail: "ap@client.com",
     },
   },
+  {
+    value: "invoice.paid",
+    label: "Invoice paid",
+    description: "Runs when an invoice is settled in full",
+    module: "finance",
+    fields: [
+      { value: "number", label: "Invoice number" },
+      { value: "amount", label: "Amount paid" },
+      { value: "clientEmail", label: "Client email" },
+    ],
+    samplePayload: {
+      id: 1,
+      number: "INV-1024",
+      amount: "12000",
+      clientEmail: "ap@client.com",
+    },
+  },
 ];

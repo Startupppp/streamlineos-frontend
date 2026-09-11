@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { Combobox } from "@/components/ui/combobox";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
@@ -20,8 +20,8 @@ import {
   RecordList,
   type RecordFieldControl,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useProducts } from "@/hooks/api/crm/products";
 import {

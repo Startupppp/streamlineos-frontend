@@ -1,197 +1,21 @@
-import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import axios from "axios";
 import { randomUUID } from "crypto";
 import { headers as nextHeaders } from "next/headers";
-import { SignJWT, decodeJwt } from "jose";
-import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
 import {
-  INTERNAL_TOKEN_AUDIENCE,
-  INTERNAL_TOKEN_ISSUER,
-} from "@/lib/backend-token-contract";
-
-const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
-
-function resolveSessionDisplayName(data: {
-  name?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string | null;
-}): string {
-  const displayName = data.name?.trim();
-  if (displayName) return displayName;
-  const full = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
-  if (full) return full;
-  const email = data.email?.trim();
-  if (!email) return "";
-  const local = email.split("@")[0]?.trim();
-  return local || email;
-}
-
-interface BackendJwtEntry {
-  token: string;
-  expiresAt: number;
-}
-const backendJwtStore = new Map<string, BackendJwtEntry>();
-
-function getBackendJwtFromStore(key: string): string | null {
-  const entry = backendJwtStore.get(key);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    backendJwtStore.delete(key);
-    return null;
-  }
-  return entry.token;
-}
-
-function setBackendJwtInStore(key: string, token: string): void {
-  try {
-    const claims = decodeJwt(token);
-    const exp = typeof claims.exp === "number" ? claims.exp : 0;
-    const expiresAt = exp * 1000 - 60_000;
-    if (expiresAt > Date.now()) {
-      backendJwtStore.set(key, { token, expiresAt });
-    }
-  } catch {
-  }
-}
-
-interface SessionData {
-  userId: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  name: string | null;
-  image: string | null;
-  role: string | null;
-  isActive: boolean;
-  branchId: number | null;
-  orgId: string | null;
-  isOrgOwner: boolean;
-  enabledModules: string[];
-  plan: Plan | null;
-  orgOnboardingCompletedAt: string | null;
-  userOnboardingCompletedAt: string | null;
-  organizationAccess: "active" | "suspended" | "none";
-  suspendedOrganizationName: string | null;
-}
-
-async function fetchSessionData(userId: string): Promise<SessionData | null> {
-  const attempts = 2;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000);
-    try {
-      const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
-        headers: { "x-internal-secret": INTERNAL_SECRET },
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (!res.ok) continue;
-      const body = (await res.json()) as unknown;
-      return unwrapBackend<SessionData>(body);
-    } catch {
-      clearTimeout(timeout);
-    }
-  }
-  return null;
-}
-
-async function fetchSessionDataWithCache(
-  userId: string,
-  _orgId: string | null,
-): Promise<SessionData | null> {
-  return fetchSessionData(userId);
-}
-
-const fetchSessionDataCached = cache(fetchSessionDataWithCache);
-
-
-function unwrapBackend<T>(body: unknown): T {
-  if (body !== null && typeof body === "object") {
-    const b = body as Record<string, unknown>;
-    if (b.success === true && "data" in b) return b.data as T;
-  }
-  return body as T;
-}
-
-interface GoogleAuthResult {
-  userId: string;
-  sessionId: string | null;
-}
-
-async function resolveGoogleUser(
-  email: string,
-  googleId: string,
-  clientUserAgent: string | null,
-  clientIp: string | null,
-  name?: string | null,
-  image?: string | null,
-): Promise<GoogleAuthResult | null> {
-  try {
-    const reqHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-      "x-internal-secret": INTERNAL_SECRET,
-    };
-    if (clientUserAgent) reqHeaders["x-client-user-agent"] = clientUserAgent;
-    if (clientIp) reqHeaders["x-client-ip"] = clientIp;
-
-    const res = await fetch(`${BACKEND_URL}/auth/google`, {
-      method: "POST",
-      headers: reqHeaders,
-      body: JSON.stringify({
-        email,
-        googleId,
-        name: name ?? undefined,
-        image: image ?? undefined,
-      }),
-    });
-    if (!res.ok) return null;
-    const raw = (await res.json()) as {
-      success?: boolean;
-      data?: { userId: string; sessionId?: string };
-      userId?: string;
-      sessionId?: string;
-    };
-    const userId = raw?.data?.userId ?? raw?.userId ?? null;
-    if (!userId) return null;
-    const sessionId = raw?.data?.sessionId ?? raw?.sessionId ?? null;
-    return { userId, sessionId };
-  } catch {
-    return null;
-  }
-}
-
-function buildUserFromSessionData(
-  userId: string,
-  sessionData: SessionData,
-  extra?: { daysUntilExpiry?: number },
-) {
-  return {
-    id: userId,
-    email: sessionData.email,
-    name: resolveSessionDisplayName(sessionData),
-    image: sessionData.image,
-    role: sessionData.role ?? undefined,
-    isActive: sessionData.isActive,
-    orgId: sessionData.orgId ?? null,
-    isOrgOwner: sessionData.isOrgOwner,
-    branchId: sessionData.branchId ?? null,
-    plan: sessionData.plan ?? null,
-    enabledModules: sessionData.enabledModules,
-    orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt,
-    userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt,
-    organizationAccess: sessionData.organizationAccess,
-    suspendedOrganizationName: sessionData.suspendedOrganizationName,
-    ...(extra?.daysUntilExpiry !== undefined
-      ? { daysUntilExpiry: extra.daysUntilExpiry }
-      : {}),
-  };
-}
+  getBackendJwtFromStore,
+  setBackendJwtInStore,
+  exchangeSessionForBackendJwt,
+  fetchSessionData,
+  fetchSessionDataCached,
+  resolveGoogleUser,
+  buildUserFromSessionData,
+  unwrapBackend,
+} from "@/lib/auth-session";
+import { resolveSessionClaims } from "@/lib/auth-claims";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -207,7 +31,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials, request) {
         const magicToken = credentials?.magicToken;
-        if (typeof magicToken !== "string" || magicToken.length === 0) return null;
+        if (typeof magicToken !== "string" || magicToken.length === 0)
+          return null;
         try {
           const ua = request.headers.get("user-agent") ?? null;
           const rawIp =
@@ -226,8 +51,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               },
             },
           );
-          const data = unwrapBackend<{ userId?: string; sessionId?: string }>(raw);
-          if (typeof data?.userId !== "string" || data.userId.length === 0) return null;
+          const data = unwrapBackend<{ userId?: string; sessionId?: string }>(
+            raw,
+          );
+          if (typeof data?.userId !== "string" || data.userId.length === 0)
+            return null;
           const sessionData = await fetchSessionData(data.userId);
           if (!sessionData) return null;
           return {
@@ -258,8 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           clientUserAgent = h.get("user-agent") ?? null;
           const rawIp = h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? null;
           clientIp = rawIp ? rawIp.split(",")[0].trim() : null;
-        } catch {
-        }
+        } catch {}
         const googleResult = await resolveGoogleUser(
           user.email ?? "",
           account.providerAccountId,
@@ -274,20 +101,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (sessionId) user.sessionId = sessionId;
         const sessionData = await fetchSessionData(userId);
         if (sessionData) {
-          user.name = resolveSessionDisplayName(sessionData) || user.name || user.email || "";
-          user.image = sessionData.image ?? user.image;
-          user.role = sessionData.role ?? undefined;
-          user.isActive = sessionData.isActive;
-          user.orgId = sessionData.orgId ?? null;
-          user.isOrgOwner = sessionData.isOrgOwner;
-          user.branchId = sessionData.branchId ?? null;
-          user.plan = sessionData.plan ?? null;
-          user.enabledModules = sessionData.enabledModules;
-          user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
-          user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
-          user.organizationAccess = sessionData.organizationAccess;
-          user.suspendedOrganizationName =
-            sessionData.suspendedOrganizationName;
+          const claims = resolveSessionClaims(sessionData, {
+            picture: user.image ?? undefined,
+          });
+          user.name = claims.name || user.name || user.email || "";
+          user.image = claims.image;
+          user.role = claims.role;
+          user.isActive = claims.isActive;
+          user.orgId = claims.orgId;
+          user.isOrgOwner = claims.isOrgOwner;
+          user.plan = claims.plan;
+          user.enabledModules = claims.enabledModules;
+          user.orgOnboardingCompletedAt = claims.orgOnboardingCompletedAt;
+          user.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
+          user.organizationAccess = claims.organizationAccess;
+          user.suspendedOrganizationName = claims.suspendedOrganizationName;
         }
       }
       return true;
@@ -298,7 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name ?? null;
-        token.role = user.role;
+        token.role = user.role ?? "";
         token.isActive = user.isActive ?? true;
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
@@ -315,20 +143,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (trigger === "update") {
-        const userId = token.id as string | undefined;
+        const userId = token.id;
         if (userId) {
           const fresh = await fetchSessionData(userId);
           if (fresh) {
-            token.name = resolveSessionDisplayName(fresh);
-            token.orgId = fresh.orgId;
-            token.isOrgOwner = fresh.isOrgOwner;
-            token.role = fresh.role ?? undefined;
-            token.isActive = fresh.isActive;
-            token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
-            token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
-            token.organizationAccess = fresh.organizationAccess;
-            token.suspendedOrganizationName =
-              fresh.suspendedOrganizationName;
+            const claims = resolveSessionClaims(fresh, token);
+            token.name = claims.name;
+            token.orgId = claims.orgId;
+            token.isOrgOwner = claims.isOrgOwner;
+            token.role = claims.role;
+            token.isActive = claims.isActive;
+            token.orgOnboardingCompletedAt = claims.orgOnboardingCompletedAt;
+            token.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
+            token.organizationAccess = claims.organizationAccess;
+            token.suspendedOrganizationName = claims.suspendedOrganizationName;
           } else if (
             session &&
             typeof session === "object" &&
@@ -350,117 +178,74 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async session({ session, token }) {
       try {
-        const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
         const fresh = token.id
-          ? await fetchSessionDataCached(token.id as string, tokenOrgId)
+          ? await fetchSessionDataCached(token.id)
           : null;
 
-        const orgId = fresh
-          ? fresh.orgId
-          : ((token.orgId as string | null | undefined) ?? null);
-        const isOrgOwner = fresh
-          ? fresh.isOrgOwner
-          : ((token.isOrgOwner as boolean | undefined) ?? false);
-        const enabledModules = fresh?.enabledModules ?? [];
-        const plan = fresh?.plan ?? null;
-        const role = fresh?.role ?? (token.role as string | undefined) ?? "";
-        const branchId = fresh?.branchId ?? null;
+        const claims = resolveSessionClaims(fresh, token);
 
         if (session.user) {
-          session.user.id = token.id as string;
-          session.user.email = token.email as string;
-          session.user.name = fresh
-            ? resolveSessionDisplayName(fresh)
-            : ((token.name as string | null | undefined) ??
-              session.user.name ??
-              "");
-          session.user.role = role;
-          session.user.image =
-            fresh?.image ?? (token.picture as string | null | undefined) ?? null;
-          session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
-          session.user.isOrgOwner = isOrgOwner;
+          session.user.id = token.id ?? session.user.id;
+          session.user.email = token.email ?? session.user.email;
+          session.user.name = claims.name;
+          session.user.role = claims.role;
+          session.user.image = claims.image;
+          session.user.isActive = claims.isActive;
+          session.user.isOrgOwner = claims.isOrgOwner;
         }
-        session.orgId = orgId;
-        session.branchId = branchId;
-        session.sessionId = token.sessionId as string | undefined;
-        session.plan = plan;
-        session.enabledModules = enabledModules;
+        session.orgId = claims.orgId;
+        session.sessionId = token.sessionId;
+        session.plan = claims.plan;
+        session.enabledModules = claims.enabledModules;
         if (token.daysUntilExpiry !== undefined)
-          session.daysUntilExpiry = token.daysUntilExpiry as number;
-        session.authProvider =
-          (token.authProvider as string | undefined) ?? "credentials";
-        session.orgOnboardingCompletedAt =
-          fresh?.orgOnboardingCompletedAt ??
-          (token.orgOnboardingCompletedAt as string | null | undefined) ??
-          null;
-        session.userOnboardingCompletedAt =
-          fresh?.userOnboardingCompletedAt ??
-          (token.userOnboardingCompletedAt as string | null | undefined) ??
-          null;
-        session.organizationAccess =
-          fresh?.organizationAccess ??
-          (token.organizationAccess as
-            | "active"
-            | "suspended"
-            | "none"
-            | undefined) ??
-          (orgId ? "active" : "none");
-        session.suspendedOrganizationName =
-          fresh?.suspendedOrganizationName ??
-          (token.suspendedOrganizationName as string | null | undefined) ??
-          null;
+          session.daysUntilExpiry = token.daysUntilExpiry;
+        session.authProvider = token.authProvider ?? "credentials";
+        session.orgOnboardingCompletedAt = claims.orgOnboardingCompletedAt;
+        session.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
+        session.organizationAccess = claims.organizationAccess;
+        session.suspendedOrganizationName = claims.suspendedOrganizationName;
 
-        const jwtSecret = process.env.BACKEND_JWT_SECRET;
-        const sessionId = (token.sessionId as string | undefined)?.trim();
-        if (jwtSecret && token.id && sessionId) {
-          const userId = token.id as string;
-          const jwtCacheKey = `${userId}:${orgId ?? ""}`;
+        const sessionId = token.sessionId?.trim();
+        if (token.id && sessionId) {
+          const userId = token.id;
+          const jwtCacheKey = `${userId}:${claims.orgId ?? ""}`;
           const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
           if (cachedJwt) {
             session.backendJwt = cachedJwt;
           } else {
-            const minted = await new SignJWT({ orgId, sessionId })
-              .setProtectedHeader({ alg: "HS256" })
-              .setSubject(userId)
-              .setIssuer(INTERNAL_TOKEN_ISSUER)
-              .setAudience(INTERNAL_TOKEN_AUDIENCE)
-              .setIssuedAt()
-              .setExpirationTime("10m")
-              .sign(new TextEncoder().encode(jwtSecret));
-            setBackendJwtInStore(jwtCacheKey, minted);
-            session.backendJwt = minted;
+            const exchanged = await exchangeSessionForBackendJwt(
+              userId,
+              sessionId,
+              claims.orgId,
+            );
+            if (exchanged) {
+              setBackendJwtInStore(jwtCacheKey, exchanged);
+              session.backendJwt = exchanged;
+            }
           }
         }
 
         return session;
       } catch {
+        const claims = resolveSessionClaims(null, token);
         if (session.user) {
-          session.user.id = token.id as string;
-          session.user.email = token.email as string;
-          session.user.name =
-            (token.name as string | null | undefined) ?? session.user.name ?? "";
-          session.user.role = (token.role as string | undefined) ?? "";
-          session.user.isActive = (token.isActive as boolean | undefined) ?? true;
-          session.user.isOrgOwner =
-            (token.isOrgOwner as boolean | undefined) === true;
+          session.user.id = token.id ?? session.user.id;
+          session.user.email = token.email ?? session.user.email;
+          session.user.name = claims.name;
+          session.user.role = claims.role;
+          session.user.image = claims.image;
+          session.user.isActive = claims.isActive;
+          session.user.isOrgOwner = claims.isOrgOwner;
         }
-        session.orgId =
-          (token.orgId as string | null | undefined) ?? null;
-        session.sessionId = token.sessionId as string | undefined;
-        session.orgOnboardingCompletedAt =
-          (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
-        session.userOnboardingCompletedAt =
-          (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
-        session.organizationAccess =
-          (token.organizationAccess as
-            | "active"
-            | "suspended"
-            | "none"
-            | undefined) ??
-          (session.orgId ? "active" : "none");
-        session.suspendedOrganizationName =
-          (token.suspendedOrganizationName as string | null | undefined) ??
-          null;
+        session.orgId = claims.orgId;
+        session.sessionId = token.sessionId;
+        session.plan = claims.plan;
+        session.enabledModules = claims.enabledModules;
+        session.authProvider = token.authProvider ?? "credentials";
+        session.orgOnboardingCompletedAt = claims.orgOnboardingCompletedAt;
+        session.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
+        session.organizationAccess = claims.organizationAccess;
+        session.suspendedOrganizationName = claims.suspendedOrganizationName;
         return session;
       }
     },

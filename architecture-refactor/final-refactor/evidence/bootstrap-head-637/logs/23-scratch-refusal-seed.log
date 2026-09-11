@@ -1,0 +1,2 @@
+◇ injected env (56) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+seed-scratch-e2e: refusing to seed database "postgres" — SCRATCH_DATABASE_URL must name a scratch database (its name must contain "scratch")

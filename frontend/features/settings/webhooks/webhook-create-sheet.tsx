@@ -32,11 +32,22 @@ import {
   webhookCreateSchema,
   type WebhookCreateFormValues,
 } from "./webhook-schema";
+import { setListMembership } from "@/lib/toggle-in-list";
 
 interface WebhookCreateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (secret: string) => void;
+}
+
+function sendOnEvent(
+  onChange: (events: string[]) => void,
+  selected: string[],
+  eventId: string,
+): (checked: boolean) => void {
+  return function handleEventSelectionToggle(checked) {
+    onChange(setListMembership(selected, eventId, checked));
+  };
 }
 
 interface EventCheckboxItemProps {
@@ -168,12 +179,7 @@ export function WebhookCreateSheet({
                           key={ev.id}
                           event={ev}
                           checked={field.value.includes(ev.id)}
-                          onToggle={(checked) => {
-                            if (checked)
-                              field.onChange([...field.value, ev.id]);
-                            else
-                              field.onChange(field.value.filter((e) => e !== ev.id));
-                          }}
+                          onToggle={sendOnEvent(field.onChange, field.value, ev.id)}
                         />
                       ))}
                     </div>

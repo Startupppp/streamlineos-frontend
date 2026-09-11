@@ -1,9 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbImportItem = {
   title: string;
@@ -26,7 +28,7 @@ export type ImportResult = {
 export type KbImportJob = {
   id: number;
   orgId: string;
-  sourceType: "markdown" | "html" | "zip";
+  sourceType: string;
   fileKey: string | null;
   status: "pending" | "processing" | "completed" | "failed";
   totalItems: number;
@@ -43,7 +45,7 @@ export type KbImportJob = {
 export type KbExportJob = {
   id: number;
   orgId: string;
-  scopeType: "page" | "all";
+  scopeType: string;
   scopeId: number | null;
   format: "markdown" | "html";
   status: "pending" | "processing" | "completed" | "failed";
@@ -54,16 +56,28 @@ export type KbExportJob = {
   updatedAt: string;
 };
 
+const kbImportResultContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportResultContract),
+);
+
+const kbImportJobListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListContract),
+);
+
+const kbExportJobListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbExportJobListContract),
+);
+
 export function useImportKbPages() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
-      apiClient.post<ImportResult>("/kb/pages/import", input),
+      apiClient.post<ImportResult>("/kb/pages/import", input, undefined, kbImportResultContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.kbPages() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.importJobs() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
     },
   });
 }
@@ -71,8 +85,8 @@ export function useImportKbPages() {
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useQuery({
-    queryKey: queryKeys.kb.importJobs(),
-    queryFn: () => apiClient.get<KbImportJob[]>("/kb/import-jobs"),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
+    queryFn: ({ signal }) => apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal, kbImportJobListContract),
     enabled: canImport,
     staleTime: 30_000,
   });
@@ -81,8 +95,8 @@ export function useKbImportJobs() {
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useQuery({
-    queryKey: queryKeys.kb.exportJobs(),
-    queryFn: () => apiClient.get<KbExportJob[]>("/kb/export-jobs"),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
+    queryFn: ({ signal }) => apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal, kbExportJobListContract),
     enabled: canExport,
     staleTime: 30_000,
   });

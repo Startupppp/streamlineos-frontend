@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { OrganizationPerson } from "@/types/directory/people";
 import {
@@ -101,7 +101,7 @@ export function PersonProfileTab({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-start gap-3">
         <Avatar className="h-14 w-14 shrink-0">
-          <AvatarImage src={person.avatarUrl ?? undefined} alt={displayName} />
+          <AvatarImage src={resolveImageUrl(person.avatarUrl)} alt={displayName} />
           <AvatarFallback className="text-sm font-semibold">
             {getPersonInitials(person)}
           </AvatarFallback>

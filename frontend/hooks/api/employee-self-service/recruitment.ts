@@ -1,7 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface AssignedInterview {
   id: number;
@@ -25,30 +29,37 @@ interface AssignedInterviewsResponse {
   totalPages: number;
 }
 
+const assignedInterviewsC = lazyContract(() =>
+  import("@/hooks/api/employee-self-service/recruitment-schema").then((m) => m.assignedInterviewsResponseContract),
+);
+const interviewScorecardC = lazyContract(() =>
+  import("@/hooks/api/employee-self-service/recruitment-schema").then((m) => m.interviewScorecardResponseContract),
+);
+
 const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
 export function useAssignedInterviews(page: number) {
-  return useQuery({
-    queryKey: [...recruitmentKey, page],
-    queryFn: () =>
+  return useGatedQuery("self:recruitment", {
+    queryKey: humanResourcesQueryKeys.hr.hrAssignedInterviews(page),
+    queryFn: ({ signal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,
         pageSize: 20,
-      }),
+      }, signal, assignedInterviewsC),
     staleTime: 60_000,
   });
 }
 
 export function useSubmitAssignedInterviewScorecard(interviewId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:recruitment", {
     mutationKey: [...recruitmentKey, interviewId, "scorecard"],
     mutationFn: (body: {
       ratings: Record<string, number>;
       recommendation: "HIRE" | "NO_HIRE" | "MAYBE";
       notes?: string;
     }) =>
-      apiClient.post(`/me/recruitment/${interviewId}/scorecard`, body),
+      apiClient.post(`/me/recruitment/${interviewId}/scorecard`, body, undefined, interviewScorecardC),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: recruitmentKey });
     },

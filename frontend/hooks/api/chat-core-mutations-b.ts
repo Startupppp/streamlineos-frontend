@@ -1,10 +1,9 @@
 "use client";
 
-import {
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   Channel,
@@ -16,15 +15,27 @@ import type {
 } from "@/types/chat";
 import { refreshRealtimeCapability } from "./chat-shared";
 
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+
+const chatChannelContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatChannelContract),
+);
+
+const chatReactionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatReactionsContract),
+);
+
 export function useCreateDMChannel() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-dm"],
     mutationFn: (input: CreateDMInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }),
+      apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }, undefined, chatChannelContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -34,10 +45,10 @@ export function useCreateGroupChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-group"],
     mutationFn: (input: CreateGroupChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }),
+      apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }, undefined, chatChannelContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -47,12 +58,12 @@ export function useCreatePublicChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-public"],
     mutationFn: (input: CreatePublicChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
+      apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }, undefined, chatChannelContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -63,10 +74,10 @@ export function useCreatePrivateChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-private"],
     mutationFn: (input: CreatePrivateChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
+      apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }, undefined, chatChannelContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -76,12 +87,12 @@ export function useJoinChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "join"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -92,12 +103,12 @@ export function useLeaveChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "leave"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`, undefined, undefined, chatOkContract),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -114,12 +125,10 @@ export function useAddChannelMember() {
       channelId: number;
       userId: string;
     }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, {
-        userId,
-      }),
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, { userId }, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
     },
   });
@@ -138,12 +147,15 @@ export function useRemoveChannelMember() {
     }) =>
       apiClient.delete<{ ok: boolean }>(
         `/chat/channels/${channelId}/members/${userId}`,
+        undefined,
+        undefined,
+        chatOkContract,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -156,12 +168,12 @@ export function useUpdateChannel() {
       channelId,
       ...update
     }: UpdateChannelInput & { channelId: number }) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/channels/${channelId}`, update),
+      apiClient.patch<{ ok: boolean }>(`/chat/channels/${channelId}`, update, undefined, chatOkContract),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -170,7 +182,7 @@ export function useChatHeartbeat() {
   return useAuthorizedMutation("chat:messages:read", {
     mutationKey: ["chat", "presence", "heartbeat"],
     mutationFn: () =>
-      apiClient.post<{ ok: boolean }>("/chat/presence/heartbeat"),
+      apiClient.post<{ ok: boolean }>("/chat/presence/heartbeat", undefined, undefined, chatOkContract),
   });
 }
 
@@ -182,10 +194,12 @@ export function useToggleReaction(channelId: number) {
       apiClient.post<{ reactions: Record<string, string[]> }>(
         `/chat/channels/${channelId}/messages/${messageId}/reactions`,
         { emoji },
+        undefined,
+        chatReactionsContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(channelId),
+        queryKey: collaborationQueryKeys.chat.messages(channelId),
       });
     },
   });

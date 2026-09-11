@@ -1,19 +1,46 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrForm } from "@/features/hr/forms/hooks/use-hr-forms";
 import { useHrFormSubmissions } from "@/features/hr/forms/hooks/use-hr-form-submissions";
 import { SubmissionsDataTable } from "@/features/hr/forms/components/submissions-data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 interface HrFormSubmissionsContentProps {
   formId: number;
 }
 
 export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentProps) {
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const { data: form, isLoading: formLoading } = useHrForm(formId);
-  const { data: subs, isLoading: subsLoading } = useHrFormSubmissions(formId);
+  const {
+    data: subs,
+    isLoading: subsLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useHrFormSubmissions(formId, { cursor, limit: 20 });
   const isLoading = formLoading || subsLoading;
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = subs?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [subs?.pagination.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -27,6 +54,13 @@ export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentPro
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load submissions"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col pt-2">
           <SubmissionsDataTable
@@ -34,6 +68,16 @@ export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentPro
             submissions={subs?.data ?? []}
             canManage
           />
+          {subs && (page > 1 || subs.pagination.hasMore) ? (
+            <CursorPageControls
+              page={page}
+              hasNext={subs.pagination.hasMore}
+              disabled={isFetching}
+              onPrevious={handlePreviousPage}
+              onNext={handleNextPage}
+              className="mt-3"
+            />
+          ) : null}
         </div>
       )}
     </PageWrapper>

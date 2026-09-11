@@ -11,11 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordDetail, type RecordValue } from "@/features/renderer";
+import { RecordDetail } from "@/components/renderer";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { useParty } from "@/hooks/api/party/parties";
 import { usePartySubjects } from "@/hooks/api/party/subjects";
-import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
+import { ActivityTimeline } from "@/components/timeline/activity-timeline";
 
 export interface PartyDetailSheetProps {
   partyId: string | null;
@@ -66,7 +66,7 @@ export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: Party
             <>
               <RecordDetail
                 layout={PARTY_LAYOUT}
-                record={party.data as unknown as RecordValue}
+                record={party.data}
               />
 
               <section className="flex flex-col gap-2">

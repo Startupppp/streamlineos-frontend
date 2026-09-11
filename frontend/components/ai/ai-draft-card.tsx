@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiGeneratedLabel } from "./ai-generated-label";
 import { AiConfidenceBadge } from "./ai-confidence-badge";
-import { AiCitationChips, type Citation } from "./ai-citation-chips";
+import {
+  AiCitationChips,
+  AiCitationChipsSkeleton,
+  type Citation,
+} from "./ai-citation-chips";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiUsageChip, type AiUsageMeta } from "./ai-usage-chip";
 
@@ -16,6 +20,7 @@ interface AiDraftCardProps {
   timestamp?: string | Date;
   confidence?: number;
   citations?: Citation[];
+  citationsPending?: boolean;
   usage?: AiUsageMeta | null;
   onAccept?: () => void;
   onEdit?: () => void;
@@ -32,6 +37,7 @@ export function AiDraftCard({
   timestamp,
   confidence,
   citations,
+  citationsPending = false,
   usage,
   onAccept,
   onEdit,
@@ -42,7 +48,7 @@ export function AiDraftCard({
   className,
 }: AiDraftCardProps) {
   const hasFooter = !hideFooter && (onAccept || onEdit || onDiscard);
-  const hasCitations = citations && citations.length > 0;
+  const hasCitations = citations !== undefined && citations.length > 0;
 
   return (
     <div
@@ -64,11 +70,15 @@ export function AiDraftCard({
 
       <div className="px-3 py-3">{children}</div>
 
-      {hasCitations && (
+      {citationsPending ? (
+        <div className="border-t border-border px-3 pb-2 pt-2">
+          <AiCitationChipsSkeleton />
+        </div>
+      ) : hasCitations ? (
         <div className="border-t border-border px-3 pb-2 pt-2">
           <AiCitationChips citations={citations} />
         </div>
-      )}
+      ) : null}
 
       {hasFooter && (
         <div className="flex items-center gap-1.5 border-t border-border px-3 py-2">

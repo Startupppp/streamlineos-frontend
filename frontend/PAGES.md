@@ -3,19 +3,55 @@
 **What this file is:** A complete audit index of every page route in `frontend/app/`. Each row is one `page.tsx` file. It exists so the §3 workflow ("go" = next unchecked page) has a durable, ordered queue and so any contributor can confirm a route's module, primary hooks, and §8 Definition-of-Done status at a glance.
 
 **How to use it:**
+
+Current local verification (2026-09-10): the final full frontend unit run passed 486 suites /
+5,123 tests, including ten cross-tab cases and Support create/edit trigger coverage. Build mutations
+now notify same-user/same-organization peer caches, including when the originating
+provider unmounts during the request. Ticket resolution failures offer retry; risk
+cells, parent search and reaction controls expose accessible state/names and touch
+controls. Wiki comments distinguish read errors from empty results and support retry.
+These checks do not mark responsive or screen-reader journeys visually certified:
+the browser runtime has no connected browser. Current evidence and unresolved work:
+`architecture-refactor/prd/build.md`, `architecture-refactor/prd/documents.md` and
+`architecture-refactor/prd/overall-release.md`.
+
+Build acceptance follow-up (2026-09-09): the KB isolation gap is closed (946/946 declared coverage; 469 runtime suites / 1,992 tests; two real-PostgreSQL controls). Whole OpenAPI snapshots were regenerated and committed byte-identically; 2,668/2,668 response seam calls carry parsing contracts. Exact timesheet totals remain synchronous by explicit compatibility decision, with their O(history) cost disclosed. Browser discovery still finds no connection, so loading/empty/error/retry/responsive states and current Web Vitals remain unverified. Evidence: `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/BUILD-ACCEPTANCE-FOLLOWUP-2026-09-09.md`.
+
+Build/PM verification (2026-09-09): repaired infinite-board edit/drag cache updates, conditional field rollback, project analytics/report invalidation, ticket/detail/sprint/dashboard refresh, cursor-based older activity, and logged-time response parsing. Bounded reports display actionable errors and retry both burnup dependencies. The final focused run passed **24 suites / 137 tests**; frontend source and strict test-tree typechecks passed. Madge processed 5,926 files with zero cycles (20 external-import warnings). Evidence: `.artifacts/build-review-20260909-frontend-final-results.json` and `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/CERTIFICATION-BUILD-PM-2026-09-09.md`. Browser validation is blocked until a signed-in browser is connected; production latency, Web Vitals and responsive layouts are not certified by these checks.
+
+Five-area verification (2026-09-09): the focused organization/RBAC, Settings, module-access, billing and payments frontend run passed **52 suites / 474 tests**. Query-scope validation passed across 5,933 files; route-access validation checked 205 navigation permission keys against 633 contract permissions; the permission catalog remained current at 704 keys. Madge processed 5,929 files with zero circular dependencies (20 resolution warnings). Raw logs are in `.artifacts/five-areas-2026-09-09/frontend-agent/`. These checks do not certify individual page layouts or production infrastructure.
+
+Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtime on first opening and preserves state after minimizing; Inbox no longer preloads its closed notification drawer on mount. The two focused suites pass 6 tests and frontend source typecheck passes. This does not mark individual page audits or measured browser performance complete.
+
 - `- [ ]` = not yet audited for this cycle. `- [x]` = audited; mark done after Audit → Plan → Confirm → Edit.
 - §8 DoD columns: **L**ist · **C**reate · **E**dit · **D**elete · **F**ilters · **P**agination · **Perm** · **States** (loading/error/empty/denied). `✓` confirmed present, `✗` confirmed missing, `?` not yet verified.
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.
 - **Never delete a row** — mark it `[x]` and append `[RETIRED path]` if a route is removed.
 
-**Generated:** 2026-08-30. **Total routes: 600.** Last updated: 2026-08-30 (PAGES2 lane).
+**Generated:** 2026-08-30. **Total routes: 606.** Last updated: 2026-09-10 (C8 settings prefetch census).
+
+**C5 — one owner for the session-claims refresh (2026-09-11).** `useSessionClaimsRefresh()` (`hooks/common/auth-hooks.ts`) is now the single owner of "re-read the session claims": `clearBackendTokenCache()` + `update()` + an 18s timeout, resolving `null` when the refresh fails or times out. All 13 hand-rolled `update()` call sites were repointed at it, `useSwitchOrg` included; `completeOnboardingGate` no longer races its own timeout and takes the shared refresh instead. Claim freshness gained two sources that did not exist: `useAccessVersionSync()` (`hooks/common/use-access-version-sync.ts`), mounted once in `app/(authenticated)/layout-client.tsx`, watches the permission `version` the sidebar already polls off `/me/access` — zero new requests — and on a change evicts every inactive query, refetches every active one and refreshes the claims; `SessionProvider` gained a 5-minute `refetchInterval` as the backstop for claims no version bump carries (plan change, org rename). Eviction is now app-wide rather than Home-only: `useHomeCacheSync` is deleted and its behaviour subsumed, so cached data for a now-denied module is dropped instead of merely stopping refetch. Dead key factory `queryKeys.hr.leaveBalance` removed (the live path is `collaborationQueryKeys.dashboard.myLeaveBalance()`). Types, gates and tests are **not run** in this lane — verified centrally.
+
+**C1 — the org-setup wizard stops orchestrating (2026-09-11).** `/org-setup` no longer sequences provisioning from the browser. `features/org-setup/components/step-generation.tsx` (357 → 245 lines) lost `buildPayload`, `runPostSetupTasks` and the `generationPending` retry state machine; it fires `POST /org/setup/complete` once and then polls `GET /org/setup/status` through `features/org-setup/hooks/use-setup-provisioning.ts` under a 90s bound, so a closed tab can no longer leave an org half-provisioned. Workspace generation and bulk invites moved server-side into the setup-completed outbox consumer, and the complete/skip routes are now naturally idempotent (they short-circuit on `onboardingCompletedAt`), so a replay no longer re-sends the welcome mail or mints a second magic-link token. Payload mapping lives in `features/org-setup/lib/setup-payload.ts` and emits `{email, role}` only — the backend invitee schema is `.strict()` and never accepted `department`. Rendered states are not certified; no browser run.
+
+**C10 — settings form owner + residuals (2026-09-10).** The organization settings edit protocol (enter edit, cancel, re-seed from the server record, submit once, toast, exit on success, keep input on failure) existed in six hand-written copies and now has one owner, `features/settings/organization/use-organization-settings-form.ts`. Six sections migrated; four are exempt with a reason each, held executable in `org-settings-form-adoption.contract.test.ts`. Payload conversion stays local per section — no `getPayload` bag, which is the shape the wave-2 lane rejected. Two latent defects fell out: Cancel restored mount-time defaults (stale after any save), and no section re-seeded when the org record changed underneath. `jest features/settings` passes 23 suites / 221 tests. Rendered behaviour is not certified — no browser run.
+
+**C8 — settings prefetch census (2026-09-10).** All 23 `/settings/**` routes are now accounted for: 22 server-prefetch their initial reads behind the route's own permission gate and hydrate them through `HydrationBoundary`; `/settings/incoming-transfer` is classified NO PREFETCH NEEDED because its read declares `staleTime: 0` + `refetchOnMount: "always"`. The census is executable — `lib/prefetch/settings-prefetch-census.test.ts` enumerates the routes from disk, so a new settings page with neither a real prefetch nor a tested classification fails the suite. Measured with request-count assertions in `lib/prefetch/settings-hydration.test.tsx`: 20 first-mount reads removed, 1 deliberately retained.
 
 **PAGES2 count reconciliation (2026-08-30):**
 - Disk: 598 `page.tsx` files (confirmed via `find … | wc -l`).
 - Normalizer strips every parenthesised route-group segment (e.g. `(auth)`, `(authenticated)`, `(portal)`, `(public)`, `(site)`). All 6 sanity-test paths passed.
 - 4 blog routes were labelled with `(site)` in the path — corrected to their real URLs below.
-- 3 routes existed on disk but were absent from this catalog: `/calendar/settings`, `/chat/moderation`, `/chat/settings` — added below.
+- 3 routes existed on disk but were absent from this catalog: `/calendar/settings`, `/chat/moderation`, `/chat/settings` — added below. (2026-09-09: `/chat/moderation` has since been deleted — the huddle-to-Meet migration removed the participant controls it existed for; `/chat/settings` was kept and implemented.)
 - Module-index sum after those additions: 600. Disk: 598. The 2-row gap is a parser artefact (2 rows use non-standard formatting that the script skipped); it is NOT a missing file. The module index is authoritative.
+
+**Count reconciliation (2026-09-08):**
+- Disk: 601 `page.tsx` files (measured via Glob tool).
+- 6 routes existed on disk but were absent from this catalog: `/hr/dashboard`, `/inbox`, `/workflows/settings/access`, `/workflows/settings/secrets`, `/workflows/settings/variables`, `/blog/admin` — added below.
+- 3 catalog rows had no matching `page.tsx` on disk: `/workflows/secrets`, `/workflows/variables`, `/waitlist` — marked `[x] [RETIRED path]`.
+- Module-index sum after additions: 606. Disk: 601. Gap of 5 = 3 newly retired rows + the pre-existing 2-row parser artefact.
+
+**Route-module thinness (S11, 2026-09-02).** `pnpm check:route-thinness` now measures what the "thin route module" rule asks for, so it is a number rather than a judgement. It scans all 586 authenticated `page.tsx`/`layout.tsx` files for component state, data fetching, forms, direct `apiClient` calls and files over 300 lines, and ratchets the in-scope count at **118**; a further **67** are CRM/Inventory and are printed under OUT OF SCOPE rather than filtered away. Run it with `--list` for the per-file reasons. Owners of the 118: HR 42, Accounting 33, Support 14, Build 10, Workflows 7, Notifications 6, Surveys 2, Settings 2, Payroll 1, Chat 1. Client route modules remain **260 of 600** against the 304 ceiling.
 
 ---
 
@@ -29,6 +65,13 @@ All prior violations resolved on 2026-08-30:
 | `/payroll/me` | DELETED — self-service pay is at `/me/pay`. |
 | `/knowledge-base` | DELETED — canonical KB is at `/knowledge/wiki/**`. |
 | `(portal)/projects` and `(portal)/projects/[projectId]` | DELETED — external client portal moved to `/client-portal` and `/client-portal/[projectId]`. |
+
+Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
+
+| API prefix | Resolution |
+|---|---|
+| `product-management/workspaces` | RENAMED to `build/workspaces` — §8 puts every Build resource under `/build`. Both frontend callers (`hooks/api/build/pm-workspaces.ts`, the `[pmWorkspaceId]` layout server fetch) and 6 e2e route literals updated; all 9 operations were `internal permissioned`, so no published contract broke. |
+| `whiteboards` (hub) | RENAMED to `build/whiteboards`. The project-scoped `build/:projectId/whiteboards` routes were already canonical; only the org-wide hub sat outside the prefix, where any middleware or rate-limit tier keyed on `/build` silently missed it. No frontend caller existed. |
 
 **Open question (blocked — do not change unilaterally):** Root `CLAUDE.md` §8 lists "people directory" as a universal surface but also places workforce at `/directory/workers` as governance. The current code gates `/directory/workers` on `directory:workers:view`. Widening access is the unsafe direction to guess; left as-is pending an explicit product decision.
 
@@ -44,13 +87,13 @@ All prior violations resolved on 2026-08-30:
 | Platform shell (root) | 4 |
 | Dashboard / Home | 1 |
 | Calendar | 2 |
-| Mail | 1 |
+| Mail | 2 |
 | Chat | 5 |
 | Notifications | 7 |
 | AI / Ask | 2 |
 | CRM | 56 |
 | Build | 77 |
-| HR | 124 |
+| HR | 125 |
 | Payroll | 23 |
 | Accounting | 74 |
 | Inventory | 61 |
@@ -58,13 +101,13 @@ All prior violations resolved on 2026-08-30:
 | Me (self-service) | 7 |
 | Support | 26 |
 | Surveys | 6 |
-| Workflows | 11 |
+| Workflows | 14 |
 | Sign (e-signature) | 8 |
 | Timesheets | 9 |
 | Directory | 6 |
 | Settings | 25 |
 | Billing (customer invoices) | 3 |
-| Blog | 1 |
+| Blog | 2 |
 | Parties / Subjects | 2 |
 | Portal (authenticated) | 2 |
 | Portal group (client) | 3 |
@@ -107,16 +150,25 @@ All prior violations resolved on 2026-08-30:
 ## Mail
 
 - [ ] `/mail` · **Communications** · hooks: `→ feature/mail` · §8: L ? States ?
+- [ ] `/inbox` · **Communications** · hooks: `→ feature/inbox` · §8: L ? States ?
 
 ---
 
 ## Chat
 
-- [ ] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ? States ?
-- [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ?
-- [ ] `/chat/invite/[token]` · **Communications** · hooks: channel invite fetch · §8: States ?
-- [ ] `/chat/moderation` · **Communications** · hooks: `enforceRouteAccess("/chat/moderation")` · §8: L ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
-- [ ] `/chat/settings` · **Communications** · hooks: `enforceRouteAccess("/chat/settings")` · §8: E ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
+2026-09-10 verification: Chat frontend selection passed 26 suites / 234 tests. The entity-action
+dialog now has an accessible description; its focused follow-up passed 6/6 with no Radix
+description warning. Backend Chat passed 53 suites / 503 tests; the strengthened entity-channel
+controller suite passed 12/12, and the message/idempotency fixture follow-up passed 18/18.
+The read-path database fixture has been isolated from seed distribution, but its real-PostgreSQL
+suite has not executed in this environment because no approved disposable database is configured.
+Responsive browser acceptance remains unverified. Evidence:
+`architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/CHAT-EVIDENCE-2026-09-09.md`.
+
+- [x] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ✓ E ✓ Err ✓ Offline ✓ States ✓ — Chat authz audit (2026-09-09): backend fixed a cross-channel reply content leak on message send, attachments readable outside channel membership, a private-channel existence oracle on send/edit/delete, and admin-check bypasses on channel-update/role-change — all exercised from this page's message panel and channel-info panel, now covered by new seeded real-database e2e specs. Unread badges now key off a commit-ordered position cursor (migration 1074), not a timestamp. Huddle panel shows a Join-meeting link only; the WebRTC mesh, device pickers and mute/deafen controls were deleted (`huddle-panel.tsx`). States completed 2026-09-09: loading skeletons, empty, error, and an offline/reconnect banner driven by `navigator.onLine` in `use-message-panel-data.ts` ("You're offline — messages will be sent when you reconnect"). Unread counting proved atomic under concurrent delivery by a two-connection real-DB spec, and cursor replay proved gapless and duplicate-free by `chat-realtime-unread.seeded-e2e-spec.ts` (12/12). Read cost measured as `streamline_app` with the tenant GUC: a 50-message page is 96 buffers, page 2 is 72, and unread across 52 channels is 33 — unread is O(channels), never O(messages). Query counts over the HTTP stack (`route-budget-http`, 5 of 7 chat routes measured): `/chat/unread` db=14, `/chat/channels` db=18, `/messages` db=16, `/members` db=16, `/chat/saved` db=13. That run found `GET /chat/saved` returning a shape its `@ResponseSchema` did not describe (`reactions` never hydrated, and `nextCursor` null vs `optional`) — the client contract rejected it too, so the Saved Messages panel failed closed for anyone whose first page was also their last. Both ends fixed.
+- [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ? — Chat authz audit (2026-09-09): "Create Channel" on this page reached a channel-create record-binding bypass — the insert returned the raw row instead of a membership-bound detail load, and entity/DM channels could skip the plan-limit check; both fixed in `chat-channels.service.ts`, now covered by new seeded real-database e2e specs for channel lifecycle and membership. A11y 2026-09-09: the discovery list now carries `aria-busy` + an `sr-only` `role="status"` while loading, and each row an `aria-label="Open <channel>"`. **Responsive was NOT visually verified at 375/768/1280** — the breakpoint classes are present in source but nobody rendered the page at those widths, so this row stays unchecked until someone does.
+- [x] `/chat/invite/[token]` · **Communications** · hooks: `useJoinViaInviteLink` · §8: States ✓ — 2026-09-09: invite lifecycle is now real. Migration 1080 added `expires_at`, `max_uses` and `use_count`; before it a link was valid forever, so "expired invite" had no state to test. Join treats revoked, expired, exhausted and archived-channel identically with a **byte-identical 404 body** (no oracle), and admission is transactional and idempotent so a rejoin increments `use_count` once. Admins pick an expiry (never / 24h / 7d / 30d) in the add-members dialog. Verified by `chat-invite-links.seeded-e2e-spec.ts` — 10/10 against a real database, including cross-tenant.
+- [x] `/chat/settings` · **Communications** · hooks: `useChatOrgSettings`, `useUpdateChatOrgSettings` · §8: L ✓ E ✓ Err ✓ Perm ✓ States ✓ — 2026-09-09: placeholder replaced with a real react-hook-form over `GET`/`PATCH /chat/settings` (`defaultNotificationPreference`, `maxAttachmentSizeMb`, `maxHuddleParticipants`). Read gated `chat:channels:read`, save gated `chat:org-settings:manage`, route gated by `enforceRouteAccess`. Skeleton mirrors the two cards; `ErrorState` with retry; `NoPermissionState`. Contract `chatOrgSettingsContract` is `.strict()` against the backend's strict response schema.
 
 ---
 
@@ -135,7 +187,7 @@ All prior violations resolved on 2026-08-30:
 ## AI / Ask
 
 - [ ] `/ask` · **AI** · hooks: `→ feature/ask` · §8: States ?
-- [ ] `/ai/executive-brief` · **AI** · hooks: `→ feature/ai` · §8: States ?
+- [ ] `/ai/executive-brief` · **AI** · hooks: `lib/api/hooks/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
 
 ---
 
@@ -306,7 +358,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/build/[projectId]/reports` · **Build** · hooks: `→ features/build/project` · §8: F ? States ?
 - [ ] `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? F ? P ? States ?
 - [ ] `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project` · §8: E ? Perm ? States ?
-- [ ] `/build/[projectId]/sprints` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? F ? P ? States ?
+- [x] `/build/[projectId]/sprints` · **Build** · hooks: `useSprints, useUpdateSprint, useUpdateTicket, useSprintTicketMover` · §8: L ✓ C ✓ E ✓ D ✓ F ? P ? States ✓ — S06: three `Promise.all` per-ticket fan-outs replaced by the bounded transactional `POST /build/:projectId/tickets/bulk` (chunked at the backend cap of 100); sprint completion now sends `sprintId: null` so "move to backlog" actually clears the sprint instead of serialising `undefined` to a no-op. 5 tests in `use-sprint-ticket-mover.test.ts`.
 - [ ] `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` · §8: E ? D ? Perm ? States ?
 - [ ] `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project` · §8: F ? States ?
 - [ ] `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project` · §8: L ? States ?
@@ -323,6 +375,7 @@ All prior violations resolved on 2026-08-30:
 
 ### Hub
 - [ ] `/hr` · **HR** · hooks: `→ features/hr/hub` · §8: States ✓ (hub surface)
+- [ ] `/hr/dashboard` · **HR** · hooks: `→ features/hr/dashboard` · §8: States ?
 
 ### Employees
 - [ ] `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")`, `→ features/hr/employees` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
@@ -756,6 +809,8 @@ All prior violations resolved on 2026-08-30:
 
 ## Support
 
+2026-09-10 RBAC-004 verification: Support automation create/edit now share ticket-only trigger options; the rendered editor regression passes 2/2. Backend ownership and manual-ticket-target regressions plus adjacent automation tests pass 115/115 across 8 suites. Scope, commands, red/green evidence and remaining integration/deployed proof are recorded in [the RBAC lane](../architecture-refactor/prd/rbac.md). This does not mark the unverified Support page checklist below complete.
+
 ### Hub & inbox
 - [ ] `/support` · **Support** · hooks: `→ features/support` · §8: States ?
 - [ ] `/support/inbox` · **Support** · hooks: `→ features/support/inbox` · §8: L ? F ? P ? Perm ? States ?
@@ -816,10 +871,15 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/workflows/approvals` · **Workflows** · hooks: `→ features/workflows` · §8: L ? Perm ? States ?
 - [ ] `/workflows/executions` · **Workflows** · hooks: `→ features/workflows` · §8: L ? F ? P ? States ?
 - [ ] `/workflows/scheduler` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/workflows/secrets` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? D ? Perm ? States ?
+- [x] `/workflows/secrets` · **Workflows** [RETIRED path: moved to `/workflows/settings/secrets`]
 - [ ] `/workflows/templates` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/workflows/variables` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? Perm ? States ?
+- [x] `/workflows/variables` · **Workflows** [RETIRED path: moved to `/workflows/settings/variables`]
 - [ ] `/workflows/access` · **Workflows** · hooks: `→ features/workflows` · §8: Perm ? States ?
+
+### Settings (Workflows module)
+- [ ] `/workflows/settings/access` · **Workflows** · hooks: `→ features/workflows/settings` · §8: Perm ? States ?
+- [ ] `/workflows/settings/secrets` · **Workflows** · hooks: `→ features/workflows/settings` · §8: L ? C ? D ? Perm ? States ?
+- [ ] `/workflows/settings/variables` · **Workflows** · hooks: `→ features/workflows/settings` · §8: L ? C ? E ? D ? Perm ? States ?
 
 ---
 
@@ -863,14 +923,14 @@ All prior violations resolved on 2026-08-30:
 
 ## Settings (Global Administration)
 
-- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ?
-- [ ] `/settings/users` · **Settings** · hooks: `→ features/settings/users` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
+- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ✓ — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAccountSettings` (`/sessions`, `/me/login-history?page=1&limit=5`, `/auth/mfa/status`); universal route, so the gate stays `enforceRouteAccess`. S01 (2026-09-02): the sessions panel had loading/empty but no error branch, so a failed `GET /sessions` rendered "No active sessions found" — a false all-clear on a security surface. `ErrorState` + retry added; `revokedCount` typed at the hook instead of two `as` casts.
+- [ ] `/settings/users` · **Settings** · hooks: `→ features/settings/users` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsUsers` (`/v2/users`, `/users/stats`); the initial key is derived from server `searchParams` through `readUsersListState`, shared with the page
 - [ ] `/settings/roles` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles` · §8: E ? D ? Perm ? States ?
-- [ ] `/settings/roles/audit` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/settings/roles/simulate` · **Settings** · hooks: `→ features/settings/roles` · §8: States ?
-- [ ] `/settings/modules` · **Settings** · hooks: `→ features/settings/modules` · §8: L ? E ? Perm ? States ?
-- [ ] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ? Perm ? States ?
+- [ ] `/settings/roles/audit` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchRolesAudit` over `RBAC_AUDIT_INITIAL_FILTERS`
+- [ ] `/settings/roles/simulate` · **Settings** · hooks: `→ features/settings/roles` · §8: States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchRoleSimulation` (`/roles/simulate/candidates?limit=100`); the per-user simulate read stays client-side because it needs a selection
+- [ ] `/settings/modules` · **Settings** · hooks: `→ features/settings/modules` · §8: L ? E ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchOrgModules`; converted from a client page + `DashboardGate` to a server wrapper with `requirePermission("settings:manage")` over `features/settings/modules/modules-page.tsx`
+- [x] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ✓ Perm ? States ? — C10 residuals (2026-09-10): the edit/cancel/save protocol duplicated across six sections now has one owner, `useOrganizationSettingsForm`; branding 313 → 251, localization → 138, the page 165 → 80. Perm and States stay `?` — neither was verified in a browser. — S01 (2026-09-02): `mfaEnforced`, `allowedEmailDomains` and `ipAllowlist` were writable through both `PATCH /organization/settings` and `PATCH /organization/security` with different bounds and cache order; the security route is now the only writer, and the form's list bounds match the backend's 100-entry cap.
 - [ ] `/settings/organization/branches` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/settings/organization/business-units` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/organization/chart` · **Settings** · hooks: `→ features/settings/organization` · §8: States ?
@@ -879,13 +939,13 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/settings/organization/locations` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/organization/structure` · **Settings** · hooks: `→ features/settings/organization` · §8: States ?
 - [ ] `/settings/organization/teams` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/settings/billing` · **Settings** · hooks: `→ features/settings/billing` · §8: E ? Perm ? States ? — platform billing page 1 of 2
-- [ ] `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` · §8: L ? C ? Perm ? States ? — platform billing page 2 of 2
+- [ ] `/settings/billing` · **Settings** · hooks: `→ features/settings/billing` · §8: E ? Perm ? States ? — platform billing page 1 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchBillingSettings(tab)` — the `?tab` param selects which reads are prefetched, and `/billing/seats` is skipped for a viewer without `billing:seats:view`
+- [ ] `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` · §8: L ? C ? Perm ? States ? — platform billing page 2 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAiCreditsSettings` (wallet, transactions, usage)
 - [ ] `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens` · §8: L ? C ? D ? Perm ? States ?
-- [ ] `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` · §8: L ? C ? D ? Perm ? States ?
-- [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ? D ? Perm ? States ?
-- [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ?
+- [ ] `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` · §8: L ? C ? D ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsWebhooks`; the `?size` param feeds the initial key
+- [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsAuditLog` (list + actions + target types); the initial key comes from `readAuditLogFilters(searchParams)`, shared with the page
+- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ✓ D ? Perm ? States ? — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsDelegations` (received, given, discovery members); each list keys off its own `received*`/`granted*` params. S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
+- [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ? — C8 (2026-09-10): classified NO PREFETCH NEEDED. `useIncomingOrgTransfers` declares `staleTime: 0` + `refetchOnMount: "always"`, so a hydrated offer is re-read on first mount anyway; a stale accept/decline offer is the one thing this page must not show. Pinned by `lib/prefetch/settings-prefetch-census.test.ts`
 
 ---
 
@@ -902,6 +962,7 @@ All prior violations resolved on 2026-08-30:
 ## Blog (authenticated admin)
 
 - [ ] `/blog/access` · **Blog** · hooks: `→ features/blog` · §8: Perm ? States ?
+- [ ] `/blog/admin` · **Blog** · hooks: `→ features/blog` · §8: L ? C ? E ? D ? Perm ? States ?
 
 ---
 
@@ -936,7 +997,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/about` · **Marketing** · hooks: none
 - [ ] `/pricing` · **Marketing** · hooks: none
 - [ ] `/contact` · **Marketing** · hooks: none
-- [ ] `/waitlist` · **Marketing** · hooks: none
+- [x] `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
 - [ ] `/design-system` · **Dev** · hooks: none — dev-only gallery
 - [ ] `/legal/privacy` · **Marketing** · hooks: none
 - [ ] `/legal/security` · **Marketing** · hooks: none

@@ -11,7 +11,9 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 import { isApiError } from "@/lib/api-client";
+import { useAccess } from "@/hooks/api/access";
 import { useProject } from "@/hooks/api/build/projects";
+import { ProjectNavTreeSkeleton } from "./project-nav-tree-skeleton";
 import {
   buildProjectNavGroups,
   filterHiddenNavGroups,
@@ -114,6 +116,7 @@ export function ProjectNavTree({
   const isActive = useProjectNavIsActive(baseUrl);
   const { hiddenIds, isVisible, setVisible, reset, hasCustomizations } =
     useProjectNavVisibility();
+  const { data: access } = useAccess();
   const { data: project, isError, error } = useProject(Number(projectId));
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
@@ -124,7 +127,9 @@ export function ProjectNavTree({
     isError &&
     isApiError(error) &&
     (error.status === 403 || error.status === 404);
-  if (inaccessible || allGroups.length === 0) return null;
+  if (inaccessible) return null;
+  if (access === undefined) return <ProjectNavTreeSkeleton collapsed={collapsed} />;
+  if (allGroups.length === 0) return null;
 
   const visibleGroups = filterVisibleNavGroups(allGroups, hiddenIds);
   const overflowGroups = filterHiddenNavGroups(allGroups, hiddenIds);

@@ -129,9 +129,12 @@ export function KbConversationList({
       arr.push(c);
       map.set(g, arr);
     }
-    return (["Today", "Yesterday", "Previous 7 Days", "Previous 30 Days", "Older"] as const)
-      .filter((g) => map.has(g))
-      .map((g) => ({ label: g, items: map.get(g)! }));
+    const groups: { label: string; items: KbConversation[] }[] = [];
+    for (const g of ["Today", "Yesterday", "Previous 7 Days", "Previous 30 Days", "Older"] as const) {
+      const items = map.get(g);
+      if (items) groups.push({ label: g, items });
+    }
+    return groups;
   }, [conversations, search]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) { onSearchChange(e.target.value); }
@@ -235,6 +238,7 @@ export function KbConversationList({
                     {renamingId === conv.id ? (
                       <input
                         type="text"
+                        aria-label="Rename conversation"
                         value={renameValue}
                         onChange={handleRenameInputChange}
                         onKeyDown={handleRenameKeyDown}

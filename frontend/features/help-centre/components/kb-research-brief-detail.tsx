@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
 import { Loader2 } from "lucide-react";
@@ -135,7 +136,15 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
   if (error) {
     return <ErrorState description={getErrorMessage(error)} onRetry={handleRetry} />;
   }
-  if (!brief) return null;
+  if (!brief) {
+    return (
+      <EmptyState
+        title="Research brief not found"
+        description="This brief may have been deleted, or the link is out of date."
+        action={{ label: "Back to research briefs", href: "/support/kb/research-briefs" }}
+      />
+    );
+  }
 
   const isInProgress = brief.status === "queued" || brief.status === "running";
 

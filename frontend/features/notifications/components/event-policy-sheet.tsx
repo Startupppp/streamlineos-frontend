@@ -42,7 +42,8 @@ import type {
   NotificationEventDefinition,
 } from "@/types/notifications";
 
-import { CHANNELS, PRIORITIES, QUIET_HOURS_OPTIONS } from "./event-config";
+import { PRIORITIES, QUIET_HOURS_OPTIONS } from "./event-config";
+import { NOTIFICATION_CHANNELS } from "@/features/notifications/notification-channels";
 
 export function PolicySheet({
   open,
@@ -181,7 +182,7 @@ export function PolicySheet({
                   <FormItem>
                     <FormLabel>Default Channels</FormLabel>
                     <div className="grid grid-cols-2 gap-2 pt-1">
-                      {CHANNELS.filter((c) => allowedChannelSet.has(c.value)).map((c) => {
+                      {NOTIFICATION_CHANNELS.filter((c) => allowedChannelSet.has(c.value)).map((c) => {
                         const checked = field.value.includes(c.value);
                         const handleChange = (checked: boolean) => {
                           field.onChange(

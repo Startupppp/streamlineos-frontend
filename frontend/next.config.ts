@@ -26,60 +26,10 @@ function shouldSendStrictTransportSecurity(): boolean {
   return true;
 }
 
-function apiConnectOrigin(): string {
-  const raw = process.env.NEXT_PUBLIC_API_URL;
-  if (!raw) return "";
-  try {
-    const parsed = new URL(raw);
-    return `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return "";
-  }
-}
-
-function buildContentSecurityPolicy(): string {
-  const isDev = process.env.NODE_ENV === "development";
-  const scriptSrc = [
-    "'self'",
-    ...(isDev ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    "https://accounts.google.com",
-    "https://checkout.razorpay.com",
-  ].join(" ");
-  const apiOrigin = apiConnectOrigin();
-  const connectSrc = [
-    "'self'",
-    "https://accounts.google.com",
-    "https://*.upstash.io",
-    "https://*.r2.dev",
-    "https://*.r2.cloudflarestorage.com",
-    "wss://",
-    "https://api.razorpay.com",
-    "https://checkout.razorpay.com",
-    ...(apiOrigin ? [apiOrigin] : []),
-  ].join(" ");
-
-  return [
-    "default-src 'self'",
-    `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://images.unsplash.com https://lh3.googleusercontent.com https://streamlineos.app",
-    `connect-src ${connectSrc}`,
-    "worker-src 'self' blob:",
-    "frame-src 'self' https://accounts.google.com https://checkout.razorpay.com https://api.razorpay.com",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join("; ");
-}
-
 const optimizePackageImports =
   process.env.NODE_ENV === "production"
     ? [
         "lucide-react",
-        "@animateicons/react",
-        "@animateicons/react/lucide",
-        "@animateicons/react/huge",
         "recharts",
         "@hello-pangea/dnd",
         "date-fns",
@@ -113,15 +63,23 @@ const nextConfig: NextConfig = {
    */
   distDir: process.env.NEXT_DIST_DIR || ".next",
   productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  typescript: { ignoreBuildErrors: true },
   experimental: {
     optimizePackageImports,
     serverActions: {
       allowedOrigins: [
-        ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),
+        ...(process.env.NODE_ENV === "development"
+          ? ["*.devtunnels.ms", "*.vscode.dev"]
+          : []),
         ...(() => {
           const urls = [process.env.NEXTAUTH_URL].filter(Boolean);
           const hosts = urls.flatMap((u) => {
-            try { return [new URL(u!).host]; } catch { return []; }
+            try {
+              return [new URL(u!).host];
+            } catch {
+              return [];
+            }
           });
           return hosts;
         })(),
@@ -141,6 +99,7 @@ const nextConfig: NextConfig = {
     },
   ],
   images: {
+    formats: ["image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -170,8 +129,38 @@ const nextConfig: NextConfig = {
   },
   headers: async () => [
     {
+      source:
+        "/:asset(logo.svg|logo-email.svg|bimi-logo.svg|feedbucket-widget.js)",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=86400, stale-while-revalidate=604800",
+        },
+      ],
+    },
+    {
+      source: "/:dir(illustrations|icons)/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=604800, stale-while-revalidate=2592000",
+        },
+      ],
+    },
+    {
       source: "/(.*)",
       headers: [
+        /**
+         * Advertise that we select the shell variant from Sec-CH-UA-Mobile so
+         * the browser sends it on the next navigation.  Caches must vary on it
+         * (and User-Agent for the UA fallback path) so they never serve the
+         * mobile shell to a desktop or vice-versa.  The Vary header on static
+         * _next/static/** assets is harmless — those URLs are content-addressed
+         * and served Cache-Control: immutable, so no proxy varies their cache
+         * by this header in practice.
+         */
+        { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
+        { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
         { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -193,10 +182,6 @@ const nextConfig: NextConfig = {
           value: "same-origin-allow-popups",
         },
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
-        {
-          key: "Content-Security-Policy",
-          value: buildContentSecurityPolicy(),
-        },
       ],
     },
   ],

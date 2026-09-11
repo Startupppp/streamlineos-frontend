@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   Layers,
@@ -32,7 +32,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
@@ -83,7 +83,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
   const [linkOpen, setLinkOpen] = useState(false);
-  const editTriggerRef = useRef<HTMLButtonElement>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
   const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
@@ -110,7 +110,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
 
   const handleToggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
 
-  const handleStopPropagation = useCallback((e: MouseEvent) => {
+  const handleStopPropagation = useCallback((e: MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
   }, []);
 
@@ -155,7 +155,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   }, [newStoryTitle, handleEpicCreateStory]);
 
   const handleEditMenuSelect = useCallback(() => {
-    editTriggerRef.current?.click();
+    setEditOpen(true);
   }, []);
 
   const handleDeleteMenuSelect = useCallback(() => {
@@ -201,7 +201,11 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 ) : null}
               </div>
             </div>
-            <div className="ml-1 flex shrink-0 items-center gap-1" onClick={handleStopPropagation}>
+            <div
+              className="ml-1 flex shrink-0 items-center gap-1"
+              onClick={handleStopPropagation}
+              onKeyDown={handleStopPropagation}
+            >
               <Badge
                 variant="outline"
                 className={cn("h-5 px-1.5 text-micro", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
@@ -212,11 +216,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 <EditEpicDialog
                   epic={epic}
                   projectId={projectId}
-                  trigger={
-                    <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>
-                      Edit
-                    </button>
-                  }
+                  open={editOpen}
+                  onOpenChange={setEditOpen}
                 />
               )}
               {(canUpdate || canDeleteEpic) && <DropdownMenu>

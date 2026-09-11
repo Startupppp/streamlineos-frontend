@@ -1,7 +1,7 @@
 "use client";
 
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { LEAD_ACTIVITY_LAYOUT } from "@/lib/renderer/crm/lead-activity-layout";
 
 export interface ActivityFormValues {

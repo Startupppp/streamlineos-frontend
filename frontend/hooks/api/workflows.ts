@@ -43,19 +43,14 @@ export { usePendingApprovals, useHandleApproval } from "./workflows-approvals";
 
 export {
   useAllSchedules,
-  useWorkflowSchedules,
-  useCreateSchedule,
   useUpdateSchedule,
   useDeleteSchedule,
 } from "./workflows-schedules";
 
 export {
   useGlobalSecrets,
-  useWorkflowSecrets,
   useCreateGlobalSecret,
-  useCreateWorkflowSecret,
   useDeleteGlobalSecret,
-  useDeleteWorkflowSecret,
 } from "./workflows-secrets";
 
 export { useGlobalVariables, useDeleteGlobalVariable } from "./workflows-variables";

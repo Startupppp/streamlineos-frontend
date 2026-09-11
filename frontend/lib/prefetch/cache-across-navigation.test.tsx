@@ -64,7 +64,7 @@ const WORKERS_PAGE: WorkersPage = {
 
 const ROLES_PAGE: PaginatedRolesResponse = {
   data: [],
-  pagination: { page: 1, limit: 20, total: 0, totalPages: 1 },
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
 // ---------- helpers ----------
@@ -110,7 +110,7 @@ function WorkersProbe({ label }: { label: string }) {
 
 /** Renders a testid-able element showing the roles query status. */
 function RolesProbe() {
-  const { status } = usePaginatedRoles({ page: 1, limit: 20 });
+  const { status } = usePaginatedRoles({ limit: 20 });
   return <span data-testid="roles" data-status={status} />;
 }
 

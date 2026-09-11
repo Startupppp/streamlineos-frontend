@@ -21,12 +21,12 @@ import {
   useMarkItemFailed,
   useEmployeeBankDetails,
 } from "@/hooks/api/payroll/payout-batches";
-import { getErrorMessage } from "@/lib/get-error-message";
-import type { PayoutBatchItem } from "@/types/payroll";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
+import type { BatchItemRow } from "@/hooks/api/payroll/payout-schema";
 
 interface ItemActionDialogProps {
   type: "paid" | "failed";
-  item: PayoutBatchItem;
+  item: BatchItemRow;
   batchId: number;
   runId: number;
   onClose: () => void;
@@ -42,6 +42,7 @@ export function ItemActionDialog({
   const [value, setValue] = useState("");
   const markPaidMutation = useMarkItemPaid();
   const markFailedMutation = useMarkItemFailed();
+  const handleError = useRunConflictHandler(runId);
   const isPending = markPaidMutation.isPending || markFailedMutation.isPending;
 
   function handleSubmit() {
@@ -54,7 +55,7 @@ export function ItemActionDialog({
             toast.success("Item marked as paid");
             onClose();
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleError,
         },
       );
     } else {
@@ -65,7 +66,7 @@ export function ItemActionDialog({
             toast.success("Item marked as failed");
             onClose();
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleError,
         },
       );
     }

@@ -1,34 +1,45 @@
 "use client";
 
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/features/timesheets/types";
 import type {
-  CursorPage,
   ExceptionsQueryInput,
   ExceptionsSummary,
   RunDetectionResult,
   TimesheetException,
   TimesheetExceptionRecord,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const exceptionsListPrefix = queryKeys.timesheets
+const exceptionsListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionsListResponseContract),
+);
+const exceptionsSummaryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionsSummaryResponseContract),
+);
+const exceptionResolutionC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.exceptionResolutionResponseContract),
+);
+const detectorC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-exception-schema").then((m) => m.detectorResponseContract),
+);
+
+const exceptionsListPrefix = usersAndCommerceQueryKeys.timesheets
   .exceptions(undefined)
   .slice(0, -1);
 
 function invalidateExceptionQueries(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: exceptionsListPrefix });
   void qc.invalidateQueries({
-    queryKey: queryKeys.timesheets.exceptionsSummary(),
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptionsSummary(),
   });
 }
 
@@ -54,16 +65,22 @@ export function useTimesheetExceptions(
     limit: query.limit ?? EXCEPTIONS_PAGE_LIMIT,
   };
   return useInfiniteQuery<CursorPage<TimesheetException>>({
-    queryKey: queryKeys.timesheets.exceptions(filters),
-    queryFn: ({ pageParam }) => {
-      const params: Record<string, unknown> = { ...filters };
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptions(filters),
+    queryFn: ({ pageParam , signal }) => {
+      const params: ExceptionsQueryInput = {
+        status: filters.status,
+        severity: filters.severity,
+        rule: filters.rule,
+        userId: filters.userId,
+        limit: filters.limit,
+      };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetException>>(
         "/timesheets/exceptions",
-        params,
+        params, signal, exceptionsListC,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: enabled && canView,
@@ -71,24 +88,25 @@ export function useTimesheetExceptions(
 }
 
 export function useExceptionsSummary(enabled = true) {
-  const canView = useCan("timesheets:exceptions:view");
-  return useQuery({
-    queryKey: queryKeys.timesheets.exceptionsSummary(),
-    queryFn: () =>
-      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary"),
+  return useGatedQuery("timesheets:exceptions:view", {
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptionsSummary(),
+    queryFn: ({ signal }) =>
+      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal, exceptionsSummaryC),
     staleTime: 60_000,
-    enabled: enabled && canView,
+    enabled,
   });
 }
 
 export function useResolveException() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "resolve"],
     mutationFn: ({ exceptionId, reason }: { exceptionId: number; reason: string }) =>
       apiClient.post<TimesheetExceptionRecord>(
         `/timesheets/exceptions/${exceptionId}/resolve`,
         { reason },
+        undefined,
+        exceptionResolutionC,
       ),
     onSuccess: () => {
       invalidateExceptionQueries(qc);
@@ -100,12 +118,14 @@ export function useResolveException() {
 
 export function useDismissException() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "dismiss"],
     mutationFn: ({ exceptionId, reason }: { exceptionId: number; reason: string }) =>
       apiClient.post<TimesheetExceptionRecord>(
         `/timesheets/exceptions/${exceptionId}/dismiss`,
         { reason },
+        undefined,
+        exceptionResolutionC,
       ),
     onSuccess: () => {
       invalidateExceptionQueries(qc);
@@ -117,10 +137,10 @@ export function useDismissException() {
 
 export function useRunExceptionDetection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "run-detection"],
     mutationFn: () =>
-      apiClient.post<RunDetectionResult>("/timesheets/exceptions/run-detection"),
+      apiClient.post<RunDetectionResult>("/timesheets/exceptions/run-detection", undefined, undefined, detectorC),
     onSuccess: (res) => {
       invalidateExceptionQueries(qc);
       toast.success(

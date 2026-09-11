@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -140,13 +140,13 @@ export function DepartmentCombobox({
       { name },
       {
         onSuccess: async () => {
-          await qc.invalidateQueries({ queryKey: queryKeys.hr.departments() });
+          await qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.departments() });
           const list = await qc.fetchQuery({
-            queryKey: queryKeys.hr.departments(),
+            queryKey: humanResourcesQueryKeys.hr.departments(),
             queryFn: async () => {
               const result = await qc.getQueryData<
                 { id: string; name: string }[]
-              >(queryKeys.hr.departments());
+              >(humanResourcesQueryKeys.hr.departments());
               return result ?? [];
             },
           });

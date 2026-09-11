@@ -39,7 +39,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
  * stock description, as `rep-metrics-table.test.tsx` does — that the arrangement
  * path leaves a description valid is `lib/renderer/registry.test.ts`'s job.
  */
-jest.mock("@/features/renderer/use-tenant-layout", () => ({
+jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 

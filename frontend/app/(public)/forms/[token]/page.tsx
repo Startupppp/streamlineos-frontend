@@ -4,8 +4,6 @@ import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,104 +13,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { buildUrl } from "@/lib/api-client";
-
-interface FormField {
-  key: string;
-  label: string;
-  type: string;
-  required: boolean;
-  options?: string[];
-}
-
-interface PublicFormDefinition {
-  id: number;
-  name: string;
-  description: string | null;
-  type: string;
-  fields: FormField[];
-}
-
-interface SubmitResponse {
-  id: number;
-  message: string;
-}
-
-async function fetchPublicForm(token: string): Promise<PublicFormDefinition> {
-  const res = await fetch(buildUrl(`/public/forms/${token}`));
-  if (!res.ok) {
-    let message = "Form not found or no longer active.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<PublicFormDefinition>;
-}
-
-async function submitPublicForm(
-  token: string,
-  values: Record<string, string>,
-  submittedByName?: string,
-): Promise<SubmitResponse> {
-  const res = await fetch(buildUrl(`/public/forms/${token}/submit`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ values, submittedByName }),
-  });
-  if (!res.ok) {
-    let message = "Failed to submit. Please try again.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      } else if (Array.isArray(data?.message) && data.message.length > 0) {
-        const msgs = data.message.filter((m): m is string => typeof m === "string");
-        if (msgs.length > 0) message = msgs.join(", ");
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<SubmitResponse>;
-}
-
-type StringSchema = z.ZodString;
-
-function buildFieldSchema(field: FormField): StringSchema {
-  if (field.type === "email") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
-      : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-          message: `${field.label} must be a valid email`,
-        });
-  }
-  if (field.type === "number") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        })
-      : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        });
-  }
-  if (field.required) {
-    return z.string().trim().min(1, `${field.label} is required`);
-  }
-  return z.string();
-}
-
-function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, StringSchema>> {
-  const shape: Record<string, StringSchema> = {};
-  for (const field of fields) {
-    shape[field.key] = buildFieldSchema(field);
-  }
-  return z.object(shape);
-}
+import {
+  type FormField,
+  buildDynamicSchema,
+} from "@/features/build/forms/form-submission-schema";
+import { usePublicForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 
 function FieldInput({
   field,
@@ -220,12 +125,7 @@ export default function PublicFormPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
-  const formQuery = useQuery({
-    queryKey: ["public-form", token],
-    queryFn: () => fetchPublicForm(token),
-    retry: false,
-    staleTime: 60_000,
-  });
+  const formQuery = usePublicForm(token);
 
   const fields = useMemo(() => formQuery.data?.fields ?? [], [formQuery.data]);
 
@@ -244,27 +144,22 @@ export default function PublicFormPage() {
     defaultValues,
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: Record<string, string>) => {
-      const formDef = formQuery.data;
-      if (!formDef) throw new Error("Form not loaded");
-      const payload: Record<string, string> = {};
-      for (const field of formDef.fields) {
-        const val = values[field.key];
-        if (val !== undefined) payload[field.key] = val;
-      }
-      return submitPublicForm(token, payload);
-    },
-  });
+  const mutation = useSubmitPublicForm(token);
+
+  const form = formQuery.data;
 
   const onSubmit = useCallback(
     (values: Record<string, string>) => {
-      mutation.mutate(values);
+      if (!form) return;
+      const payload: Record<string, string> = {};
+      for (const field of form.fields) {
+        const val = values[field.key];
+        if (val !== undefined) payload[field.key] = val;
+      }
+      mutation.mutate(payload);
     },
-    [mutation],
+    [mutation, form],
   );
-
-  const form = formQuery.data;
 
   return (
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">

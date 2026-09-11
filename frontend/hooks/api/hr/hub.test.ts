@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { scopedQueryKeyHashFn, authenticatedScope } from "@/lib/query-scope";
-import { useHrHubSnapshot, type HrHubSnapshot } from "./hub";
+import { useHrHubSnapshot } from "./hub";
+import type { HrHubSnapshot } from "./hub-types";
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn(),
+  hashKey: jest.requireActual("@tanstack/react-query").hashKey,
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -43,7 +45,7 @@ describe("useHrHubSnapshot", () => {
     expect(useQueryMock).toHaveBeenCalledTimes(1);
     const queryOptions = useQueryMock.mock.calls[0]?.[0] as {
       queryKey: readonly unknown[];
-      queryFn: () => Promise<HrHubSnapshot>;
+      queryFn: (context: { signal?: AbortSignal }) => Promise<HrHubSnapshot>;
       enabled: boolean;
     };
     expect(queryOptions.queryKey).toEqual([
@@ -59,10 +61,13 @@ describe("useHrHubSnapshot", () => {
     );
     expect(queryOptions.enabled).toBe(true);
 
-    await expect(queryOptions.queryFn()).resolves.toBe(response);
+    await expect(queryOptions.queryFn({})).resolves.toBe(response);
     expect(apiGetMock).toHaveBeenCalledTimes(1);
-    expect(apiGetMock).toHaveBeenCalledWith("/hr/hub", {
-      today: "2026-08-18",
-    });
+    expect(apiGetMock).toHaveBeenCalledWith(
+      "/hr/hub",
+      { today: "2026-08-18" },
+      undefined,
+      expect.any(Function),
+    );
   });
 });

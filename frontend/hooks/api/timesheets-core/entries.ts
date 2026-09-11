@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -11,11 +12,35 @@ import type {
   CreateEntryInput,
   CursorPage,
   EntriesQuery,
+  EntryStatus,
   TimesheetEntry,
   UpdateEntryInput,
 } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-function toParams(query: EntriesQuery): Record<string, unknown> {
+const entriesListC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entriesListResponseContract),
+);
+const entryVoidC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryVoidResultContract),
+);
+const entryC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-entry-schema").then((m) => m.entryContract),
+);
+
+type EntriesQueryParams = {
+  userId?: string;
+  projectId?: number;
+  ticketId?: number;
+  status?: EntryStatus;
+  startDate?: string;
+  endDate?: string;
+  billable?: "true" | "false";
+  cursor?: string;
+  limit?: number;
+};
+
+function toParams(query: EntriesQuery): EntriesQueryParams {
   return {
     userId: query.userId,
     projectId: query.projectId,
@@ -23,7 +48,7 @@ function toParams(query: EntriesQuery): Record<string, unknown> {
     status: query.status,
     startDate: query.startDate,
     endDate: query.endDate,
-    billable: query.billable === undefined ? undefined : String(query.billable),
+    billable: query.billable === undefined ? undefined : query.billable ? "true" : "false",
     cursor: query.cursor,
     limit: query.limit,
   };
@@ -31,10 +56,10 @@ function toParams(query: EntriesQuery): Record<string, unknown> {
 
 export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const canView = useCan("timesheets:entries:view");
-  const params = toParams(query);
+  const params: EntriesQueryParams = toParams(query);
   return useQuery({
-    queryKey: queryKeys.timesheets.entries(params),
-    queryFn: () => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.entries(params),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal, entriesListC),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -43,13 +68,13 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
 
 export function useCreateTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "entries", "create"],
     mutationFn: (data: CreateEntryInput) =>
-      apiClient.post<TimesheetEntry>("/timesheets/entries", data),
+      apiClient.post<TimesheetEntry>("/timesheets/entries", data, undefined, entryC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
       toast.success("Time logged");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -88,17 +113,17 @@ export function useDraftEntriesFromAttendance() {
 
 export function useUpdateTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:update", {
     mutationKey: ["timesheets", "entries", "update"],
     mutationFn: ({ entryId, data }: { entryId: number; data: UpdateEntryInput }) =>
-      apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data),
+      apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data, undefined, entryC),
     onMutate: async ({ entryId, data }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
-        queryKey: queryKeys.timesheets.entries(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.entries(),
       });
       qc.setQueriesData<CursorPage<TimesheetEntry>>(
-        { queryKey: queryKeys.timesheets.entries() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.entries() },
         (prev) =>
           prev
             ? {
@@ -130,25 +155,25 @@ export function useUpdateTimesheetEntry() {
       toast.success("Entry updated");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
     },
   });
 }
 
 export function useVoidTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:void", {
     mutationKey: ["timesheets", "entries", "void"],
     mutationFn: ({ entryId, reason }: { entryId: number; reason: string }) =>
-      apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }),
+      apiClient.post<{ success: true }>(`/timesheets/entries/${entryId}/void`, { reason }, undefined, entryVoidC),
     onMutate: async ({ entryId }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
-        queryKey: queryKeys.timesheets.entries(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.entries(),
       });
       qc.setQueriesData<CursorPage<TimesheetEntry>>(
-        { queryKey: queryKeys.timesheets.entries() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.entries() },
         (prev) =>
           prev
             ? {
@@ -172,8 +197,8 @@ export function useVoidTimesheetEntry() {
       toast.success("Entry voided");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
     },
   });
 }

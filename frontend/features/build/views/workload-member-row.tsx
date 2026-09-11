@@ -17,7 +17,7 @@ import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkloadMember {
@@ -152,12 +152,14 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
           </span>
         </div>
 
-        {ticketsByDay.map(({ count }, i) => (
+        {ticketsByDay.map(({ count }, i) => {
+          const day = days[i];
+          return (
           <div
             key={i}
             className={cn(
               "w-12 shrink-0 px-1 py-3 flex items-center justify-center",
-              isSameDay(days[i]!, new Date()) && "bg-primary/5",
+              day && isSameDay(day, new Date()) && "bg-primary/5",
             )}
           >
             {count > 0 && (
@@ -171,7 +173,8 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
               </span>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {memberTickets.length > 0 && (
@@ -218,6 +221,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   onMouseDown={stopEvent}
                   onClick={stopEvent}
+                  onKeyDown={stopEvent}
                   className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
                 >
                   <InlineAssignee
@@ -230,6 +234,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   onMouseDown={stopEvent}
                   onClick={stopEvent}
+                  onKeyDown={stopEvent}
                   className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
                 >
                   <TicketQuickActions ticketId={ticket.id} projectId={projectId} />

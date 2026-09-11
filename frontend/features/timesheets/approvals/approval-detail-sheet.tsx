@@ -29,7 +29,7 @@ import {
   PERIOD_STATUS_LABEL,
   ENTRY_STATUS_BADGE,
 } from "@/features/timesheets/types";
-import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets/types";
+import type { TimesheetPeriod, PeriodEntry } from "@/features/timesheets/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +39,8 @@ interface ApprovalDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function groupByDate(entries: TimesheetEntry[]): Map<string, TimesheetEntry[]> {
-  const map = new Map<string, TimesheetEntry[]>();
+function groupByDate(entries: PeriodEntry[]): Map<string, PeriodEntry[]> {
+  const map = new Map<string, PeriodEntry[]>();
   for (const entry of entries) {
     const list = map.get(entry.date) ?? [];
     list.push(entry);
@@ -108,7 +108,7 @@ export function ApprovalDetailSheet({
 
   const grouped = detail
     ? groupByDate(detail.entries)
-    : new Map<string, TimesheetEntry[]>();
+    : new Map<string, PeriodEntry[]>();
   const sortedDates = [...grouped.keys()].sort();
   const isActionable = period?.status === "SUBMITTED";
   const isPending = approveMutation.isPending || rejectMutation.isPending;
@@ -123,9 +123,9 @@ export function ApprovalDetailSheet({
         key: "summarize-period",
         label: "Summarize this timesheet",
         description: "Narrate hours by project, billable ratio, and notable patterns",
-        run: async () => {
-          const res = await fetchTimesheetPeriodSummary(periodId);
-          return { text: res.narration };
+        run: async (signal, onToken) => {
+          const res = await fetchTimesheetPeriodSummary(periodId, { signal, onToken });
+          return { text: res.narration, aiUsage: res.aiUsage };
         },
       },
     ];
@@ -141,8 +141,8 @@ export function ApprovalDetailSheet({
         description: "Constructive feedback grounded in this timesheet",
         surface: "popover",
         applyLabel: "Use this",
-        run: async () => {
-          const res = await draftRejectionReason(periodId, rejectReason.trim() || undefined);
+        run: async (signal, onToken) => {
+          const res = await draftRejectionReason(periodId, rejectReason.trim() || undefined, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
         onApply: (text) => setRejectReason(text),

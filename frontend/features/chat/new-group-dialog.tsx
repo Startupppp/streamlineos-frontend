@@ -32,6 +32,11 @@ import {
 } from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { MemberPicker } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 
@@ -125,8 +130,8 @@ export function NewGroupDialog({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "chat-avatars");
-      const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
-      if (data.url) setAvatarUrl(data.url);
+      const data = await apiClient.upload<{ key: string }>("/storage/upload", formData, storageUploadContract);
+      if (data.key) setAvatarUrl(data.key);
       else toast.error("Upload failed");
     } catch (error) {
       toast.error(getErrorMessage(error));

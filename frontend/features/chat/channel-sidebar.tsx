@@ -4,6 +4,8 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Archive,
@@ -12,23 +14,44 @@ import {
 } from "lucide-react";
 import {
   CompassIcon,
+  PlusIcon,
   SearchIcon,
+  UsersIcon,
 } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
+import {
+  useChatChannels,
+  useArchivedChannels,
+  useChatOnlineUsers,
+} from "@/hooks/api/chat-core-read";
 import { cn } from "@/lib/utils";
-import type { Channel } from "./chat-types";
+import dynamic from "next/dynamic";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
-import { ChannelListEntry } from "./channel-list-entry";
-import { NewDMDialog } from "./new-dm-dialog";
-import { NewGroupDialog } from "./new-group-dialog";
-import { ChatSearchDialog } from "./chat-search-dialog";
+import { ChannelSectionList } from "./channel-section-list";
+import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { ChannelCompactRail } from "./channel-compact-rail";
 import { ChannelArchivedSection } from "./channel-archived-section";
+
+const NewDMDialog = dynamic(
+  () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new message" /> },
+);
+
+const NewGroupDialog = dynamic(
+  () =>
+    import("./new-group-dialog").then((m) => ({ default: m.NewGroupDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
+);
+
+const ChatSearchDialog = dynamic(
+  () =>
+    import("./chat-search-dialog").then((m) => ({ default: m.ChatSearchDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading chat search" /> },
+);
 
 const RAIL_ICON_SIZE = 14;
 
@@ -66,10 +89,8 @@ export function ChannelSidebar({
   onOpenSettings,
 }: ChannelSidebarProps) {
   const router = useRouter();
-  const { data: rawChannels, isLoading } = useChatChannels();
-  const channels = rawChannels as Channel[] | undefined;
-  const { data: rawArchivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
-  const archivedChannels = rawArchivedChannels as Channel[] | undefined;
+  const { data: channels, isLoading, isError, refetch } = useChatChannels();
+  const { data: archivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -84,6 +105,9 @@ export function ChannelSidebar({
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleRetryChannels = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
   const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
@@ -211,8 +235,26 @@ export function ChannelSidebar({
               >
                 <CompassIcon size={RAIL_ICON_SIZE} />
               </button>
-              <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
-              <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={RAIL_ICON_SIZE}
+                variant="ghost"
+                size="icon"
+                className="w-7 rounded-lg"
+                onClick={handleOpenNewDM}
+                title="New Direct Message"
+                aria-label="New Direct Message"
+              />
+              <AnimatedIconButton
+                icon={UsersIcon}
+                iconSize={RAIL_ICON_SIZE}
+                variant="ghost"
+                size="icon"
+                className="w-7 rounded-lg"
+                onClick={handleOpenNewGroup}
+                title="New Channel"
+                aria-label="New Channel"
+              />
             </div>
           </div>
 
@@ -249,8 +291,17 @@ export function ChannelSidebar({
               onStartCall={onStartCall}
               onOpenSettings={onOpenSettings}
             />
+          ) : isError ? (
+            <ErrorState
+              compact
+              className="m-2"
+              title="Couldn't load your conversations"
+              description="The channel list could not be read. Please try again."
+              onRetry={handleRetryChannels}
+            />
           ) : isLoading ? (
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2" aria-busy="true">
+              <span role="status" className="sr-only">Loading conversations…</span>
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-2.5 px-2 py-2">
                   <Skeleton className="h-10 w-10 rounded-full" />
@@ -263,18 +314,17 @@ export function ChannelSidebar({
             </div>
           ) : (
             <>
-              <div className={cn("py-1 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1 [&>*]:shrink-0", isCollapsed && "hidden md:block")}>
-                {compactChannels.map((ch) => (
-                  <ChannelListEntry
-                    key={ch.id}
-                    channel={ch}
-                    activeChannelId={activeChannelId}
-                    currentUserId={currentUserId}
-                    onlineUserIds={onlineUserIds}
-                    onSelectChannel={onSelectChannel}
-                    compact
-                  />
-                ))}
+              <div className={cn("py-1", isCollapsed && "hidden md:block")}>
+                <ChannelSectionList
+                  channels={compactChannels}
+                  label="Conversations"
+                  compact
+                  className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  activeChannelId={activeChannelId}
+                  currentUserId={currentUserId}
+                  onlineUserIds={onlineUserIds}
+                  onSelectChannel={onSelectChannel}
+                />
               </div>
 
               <div className={cn("py-1", isCollapsed && "md:hidden")}>
@@ -286,18 +336,16 @@ export function ChannelSidebar({
                     onToggle={handleToggleFavorites}
                     icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
                   >
-                    {favorites.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={favorites}
+                      label="Favorites"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
               </div>
@@ -328,18 +376,16 @@ export function ChannelSidebar({
                     collapsed={publicCollapsed}
                     onToggle={handleTogglePublic}
                   >
-                    {publicChannels.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={publicChannels}
+                      label="Public channels"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 
@@ -350,18 +396,16 @@ export function ChannelSidebar({
                     collapsed={groupsCollapsed}
                     onToggle={handleToggleGroups}
                   >
-                    {groups.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={groups}
+                      label="Groups"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 
@@ -372,42 +416,58 @@ export function ChannelSidebar({
                     collapsed={dmsCollapsed}
                     onToggle={handleToggleDMs}
                   >
-                    {dms.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={dms}
+                      label="Direct messages"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 
                 {filteredChannels.length === 0 && (
-                  <div className="text-center py-10 px-4">
-                    <EmptyMailIllustration className="mx-auto mb-4 w-32 h-32" />
-                    <p className="text-label text-muted-foreground font-medium">
-                      {search ? "No results found" : "No conversations yet"}
-                    </p>
-                    <p className="text-dense text-muted-foreground/50 mt-1">
-                      {search ? "Try a different search" : "Start a new conversation"}
-                    </p>
-                  </div>
+                  <EmptyState
+                    compact
+                    illustrationPreset="mail"
+                    title="No conversations yet"
+                    description="Start a direct message or create a channel to begin."
+                    filtersActive={Boolean(search)}
+                    filteredTitle="No conversations match your search."
+                    onClearFilters={handleClearSearch}
+                  />
                 )}
               </div>
             </>
           )}
         </ScrollArea>
 
-        <ChatSearchDialog
-          open={chatSearchOpen}
-          onOpenChange={setChatSearchOpen}
-          onSelectChannel={onSelectChannel}
-        />
+        {chatSearchOpen && (
+          <ChatSearchDialog
+            open
+            onOpenChange={setChatSearchOpen}
+            onSelectChannel={onSelectChannel}
+          />
+        )}
+        {newDMOpen && (
+          <NewDMDialog
+            open
+            onOpenChange={setNewDMOpen}
+            onCreated={onSelectChannel}
+            hideTrigger
+          />
+        )}
+        {newGroupOpen && (
+          <NewGroupDialog
+            open
+            onOpenChange={setNewGroupOpen}
+            onCreated={onSelectChannel}
+            hideTrigger
+          />
+        )}
       </div>
     </TooltipProvider>
   );

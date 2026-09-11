@@ -1,21 +1,41 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { AppLoadingStalled } from "@/components/ui/app-loading-stalled";
 import { cn } from "@/lib/utils";
 
 interface AppLoadingScreenProps {
   className?: string;
   label?: string;
+  /** Milliseconds before the screen stops claiming to be loading and says so. */
+  stalledAfterMs?: number;
 }
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
+export const DEFAULT_STALLED_AFTER_MS = 20_000;
+
+/**
+ * A branded loading screen with no upper bound is the same defect as a skeleton
+ * on a paused query: when the session exchange or the access read never
+ * resolves, nothing ever tells the reader the workspace is not coming.
+ */
 export function AppLoadingScreen({
   className,
   label = "Loading",
+  stalledAfterMs = DEFAULT_STALLED_AFTER_MS,
 }: AppLoadingScreenProps) {
   const reduce = useReducedMotion();
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStalled(true), stalledAfterMs);
+    return () => clearTimeout(timer);
+  }, [stalledAfterMs]);
+
+  if (stalled) return <AppLoadingStalled className={className} label={label} />;
 
   if (reduce) {
     return (

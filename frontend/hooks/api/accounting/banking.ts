@@ -7,7 +7,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingBankingQueryKeys } from "@/lib/query-keys/accounting-banking";
 import { useCan } from "@/hooks/api/access";
 import type {
   BankAccountBalance,
@@ -55,7 +55,7 @@ export function useBankAccounts(
   const canRead = useCan("accounting:banking:read");
   const request = queryParams({ ...params });
   return useQuery<BankAccountPage, Error>({
-    queryKey: queryKeys.accountingBanking.accounts(request),
+    queryKey: accountingBankingQueryKeys.accountingBanking.accounts(request),
     queryFn: () => apiClient.get<BankAccountPage>(ACCOUNTS_PATH, request),
     staleTime: STANDARD_LIST_STALE,
     ...options,
@@ -66,7 +66,7 @@ export function useBankAccounts(
 export function useBankAccount(bankAccountId: string, options?: QueryOpts<BankAccountSummary>) {
   const canRead = useCan("accounting:banking:read");
   return useQuery<BankAccountSummary, Error>({
-    queryKey: queryKeys.accountingBanking.account(bankAccountId),
+    queryKey: accountingBankingQueryKeys.accountingBanking.account(bankAccountId),
     queryFn: () => apiClient.get<BankAccountSummary>(`${ACCOUNTS_PATH}/${bankAccountId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -81,7 +81,7 @@ export function useBankAccountBalance(
 ) {
   const canRead = useCan("accounting:banking:read");
   return useQuery<BankAccountBalance, Error>({
-    queryKey: queryKeys.accountingBanking.accountBalance(bankAccountId, asOf),
+    queryKey: accountingBankingQueryKeys.accountingBanking.accountBalance(bankAccountId, asOf),
     queryFn: () =>
       apiClient.get<BankAccountBalance>(`${ACCOUNTS_PATH}/${bankAccountId}/balance`, { asOf }),
     staleTime: ENTITY_STALE,
@@ -96,7 +96,7 @@ export function useCreateBankAccount() {
     mutationKey: ["accounting", "banking", "accounts", "create"],
     mutationFn: (input) => apiClient.post<BankAccountSummary>(ACCOUNTS_PATH, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.accountsAll });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
     },
   });
 }
@@ -112,9 +112,9 @@ export function useUpdateBankAccount() {
     mutationFn: ({ bankAccountId, input }) =>
       apiClient.patch<BankAccountSummary>(`${ACCOUNTS_PATH}/${bankAccountId}`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.accountsAll });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingBanking.account(variables.bankAccountId),
+        queryKey: accountingBankingQueryKeys.accountingBanking.account(variables.bankAccountId),
       });
     },
   });
@@ -131,9 +131,9 @@ export function useSaveCsvMapping() {
     mutationFn: ({ bankAccountId, input }) =>
       apiClient.put<BankAccountSummary>(`${ACCOUNTS_PATH}/${bankAccountId}/csv-mapping`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.accountsAll });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingBanking.account(variables.bankAccountId),
+        queryKey: accountingBankingQueryKeys.accountingBanking.account(variables.bankAccountId),
       });
     },
   });
@@ -144,7 +144,7 @@ export function useStatementMappingPresets(
 ) {
   const canRead = useCan("accounting:banking:read");
   return useQuery<{ presets: StatementMappingPreset[] }, Error>({
-    queryKey: queryKeys.accountingBanking.mappingPresets(),
+    queryKey: accountingBankingQueryKeys.accountingBanking.mappingPresets(),
     queryFn: () =>
       apiClient.get<{ presets: StatementMappingPreset[] }>(`${STATEMENTS_PATH}/mapping-presets`),
     staleTime: CATALOG_STALE,
@@ -160,7 +160,7 @@ export function useBankStatements(
   const canRead = useCan("accounting:banking:read");
   const request = queryParams({ ...params });
   return useQuery<StatementPage, Error>({
-    queryKey: queryKeys.accountingBanking.statements(request),
+    queryKey: accountingBankingQueryKeys.accountingBanking.statements(request),
     queryFn: () => apiClient.get<StatementPage>(STATEMENTS_PATH, request),
     staleTime: STANDARD_LIST_STALE,
     ...options,
@@ -176,7 +176,7 @@ export function useBankStatement(
   const canRead = useCan("accounting:banking:read");
   const request = queryParams({ ...params });
   return useQuery<StatementDetail, Error>({
-    queryKey: [...queryKeys.accountingBanking.statement(statementId), request],
+    queryKey: [...accountingBankingQueryKeys.accountingBanking.statement(statementId), request],
     queryFn: () => apiClient.get<StatementDetail>(`${STATEMENTS_PATH}/${statementId}`, request),
     staleTime: VOLATILE_STALE,
     ...options,
@@ -190,7 +190,7 @@ export function useImportBankStatement() {
     mutationKey: ["accounting", "banking", "statements", "import"],
     mutationFn: (input) => apiClient.post<StatementImportResult>(`${STATEMENTS_PATH}/imports`, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.all });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
   });
 }
@@ -201,7 +201,7 @@ export function useReconciliationProof(
 ) {
   const canRead = useCan("accounting:banking:read");
   return useQuery<ReconciliationProof, Error>({
-    queryKey: queryKeys.accountingBanking.reconciliation(statementId),
+    queryKey: accountingBankingQueryKeys.accountingBanking.reconciliation(statementId),
     queryFn: () =>
       apiClient.get<ReconciliationProof>(`${STATEMENTS_PATH}/${statementId}/reconciliation`),
     staleTime: VOLATILE_STALE,
@@ -217,7 +217,7 @@ export function useMarkStatementReconciled() {
     mutationFn: (statementId) =>
       apiClient.post<ReconciliationProof>(`${STATEMENTS_PATH}/${statementId}/reconcile`, {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.all });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
   });
 }
@@ -230,7 +230,7 @@ export function useMatchSuggestions(
   const canReconcile = useCan("accounting:banking:reconcile");
   const request = queryParams({ ...params });
   return useQuery<MatchSuggestionsResponse, Error>({
-    queryKey: [...queryKeys.accountingBanking.suggestions(statementLineId), request],
+    queryKey: [...accountingBankingQueryKeys.accountingBanking.suggestions(statementLineId), request],
     queryFn: () =>
       apiClient.get<MatchSuggestionsResponse>(
         `${LINES_PATH}/${statementLineId}/suggestions`,
@@ -253,7 +253,7 @@ export function useMatchStatementLine() {
     mutationFn: ({ statementLineId, kind, id }) =>
       apiClient.post<RecordedMatch>(`${LINES_PATH}/${statementLineId}/match`, { kind, id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.all });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
   });
 }
@@ -267,7 +267,7 @@ export function useUnmatchStatementLine() {
         `${LINES_PATH}/${statementLineId}/match`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingBanking.all });
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
   });
 }
@@ -276,7 +276,7 @@ export function useUnreconciled(params: UnreconciledParams, options?: QueryOpts<
   const canRead = useCan("accounting:banking:read");
   const request = queryParams({ ...params });
   return useQuery<UnreconciledView, Error>({
-    queryKey: queryKeys.accountingBanking.unreconciled(request),
+    queryKey: accountingBankingQueryKeys.accountingBanking.unreconciled(request),
     queryFn: () => apiClient.get<UnreconciledView>("/accounting/banking/unreconciled", request),
     staleTime: SLOW_LIST_STALE,
     ...options,

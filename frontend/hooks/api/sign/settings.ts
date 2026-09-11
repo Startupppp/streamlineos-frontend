@@ -1,41 +1,61 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignOrgSettings, SignSweepRunSummary, SignWatermarkPolicy } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const signSettingsSingleContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signSettingsSingleContract),
+);
+
+const signWatermarkPolicyListContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signWatermarkPolicyListContract),
+);
+
+const signWatermarkPolicyMutationContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signWatermarkPolicyMutationContract),
+);
+
+const signSuccessContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signSuccessContract),
+);
 
 export function useSignSettings() {
-  return useQuery({
-    queryKey: queryKeys.signAdmin.settings(),
-    queryFn: () => apiClient.get<SignOrgSettings>("/sign/admin/settings"),
+  return useGatedQuery("sign:admin:manage", {
+    queryKey: growthAndSignQueryKeys.signAdmin.settings(),
+    queryFn: ({ signal }) => apiClient.get<SignOrgSettings>("/sign/admin/settings", undefined, signal, signSettingsSingleContract),
     staleTime: 60_000,
   });
 }
 
 export function useUpdateSignSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "settings", "update"],
-    mutationFn: (input: Partial<SignOrgSettings>) => apiClient.patch<SignOrgSettings>("/sign/admin/settings", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.settings() }),
+    mutationFn: (input: Partial<SignOrgSettings>) => apiClient.patch<SignOrgSettings>("/sign/admin/settings", input, undefined, signSettingsSingleContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signAdmin.settings() }),
   });
 }
 
 // Both sweeps come back whether or not they have ever run: an absent run is reported as
 // neverRun, which is the state SignOS actually shipped in and the one a screen must not hide.
 export function useSignSweepStatus() {
-  return useQuery({
-    queryKey: queryKeys.signAdmin.sweepStatus(),
-    queryFn: () => apiClient.get<{ sweeps: SignSweepRunSummary[] }>("/sign/admin/sweep-status"),
+  return useGatedQuery("sign:admin:manage", {
+    queryKey: growthAndSignQueryKeys.signAdmin.sweepStatus(),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ sweeps: SignSweepRunSummary[] }>("/sign/admin/sweep-status", undefined, signal),
     staleTime: 60_000,
   });
 }
 
 export function useSignWatermarkPolicies() {
-  return useQuery({
-    queryKey: queryKeys.signAdmin.watermarkPolicies(),
-    queryFn: () => apiClient.get<SignWatermarkPolicy[]>("/sign/admin/watermark-policies"),
+  return useGatedQuery("sign:admin:manage", {
+    queryKey: growthAndSignQueryKeys.signAdmin.watermarkPolicies(),
+    queryFn: ({ signal }) => apiClient.get<SignWatermarkPolicy[]>("/sign/admin/watermark-policies", undefined, signal, signWatermarkPolicyListContract),
     staleTime: 60_000,
   });
 }
@@ -56,28 +76,28 @@ export interface WatermarkPolicyInput {
 
 export function useCreateWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "create"],
-    mutationFn: (input: WatermarkPolicyInput) => apiClient.post<SignWatermarkPolicy>("/sign/admin/watermark-policies", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),
+    mutationFn: (input: WatermarkPolicyInput) => apiClient.post<SignWatermarkPolicy>("/sign/admin/watermark-policies", input, undefined, signWatermarkPolicyMutationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signAdmin.watermarkPolicies() }),
   });
 }
 
 export function useUpdateWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "update"],
     mutationFn: ({ id, input }: { id: number; input: Partial<WatermarkPolicyInput> }) =>
-      apiClient.patch<SignWatermarkPolicy>(`/sign/admin/watermark-policies/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),
+      apiClient.patch<SignWatermarkPolicy>(`/sign/admin/watermark-policies/${id}`, input, undefined, signWatermarkPolicyMutationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signAdmin.watermarkPolicies() }),
   });
 }
 
 export function useDeleteWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/admin/watermark-policies/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),
+    mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/admin/watermark-policies/${id}`, undefined, undefined, signSuccessContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signAdmin.watermarkPolicies() }),
   });
 }

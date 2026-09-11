@@ -1,0 +1,12 @@
+PASS src/common/observability/pii-redaction.spec.ts
+PASS src/common/observability/redact.spec.ts
+PASS src/common/observability/nest-logger.adapter.spec.ts
+PASS src/common/logger/logger.service.spec.ts
+PASS src/common/observability/log-context-completeness.spec.ts
+
+Test Suites: 5 passed, 5 total
+Tests:       55 passed, 55 total
+Snapshots:   0 total
+Time:        0.588 s, estimated 1 s
+Ran all test suites matching /src\/common\/observability\/(redact|pii-redaction|nest-logger.adapter|log-context-completeness)\.spec\.ts|src\/common\/logger\/logger.service.spec.ts/i.
+specs EXIT=0

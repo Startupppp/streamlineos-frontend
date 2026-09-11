@@ -35,8 +35,14 @@ const BGV_STATUSES: Array<{ value: BgvStatus; label: string; color: string }> = 
   { value: "FAILED", label: "Failed", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
+const BGV_STATUS_FALLBACK = {
+  value: "PENDING",
+  label: "Pending",
+  color: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+};
+
 function getBgvStyle(status: string | null) {
-  return BGV_STATUSES.find((s) => s.value === status) ?? BGV_STATUSES[0]!;
+  return BGV_STATUSES.find((s) => s.value === status) ?? BGV_STATUS_FALLBACK;
 }
 
 export interface BgvTrackerProps {
@@ -64,7 +70,10 @@ export function BgvTracker({
   const update = useUpdateCandidateBgv(candidateId);
   const style = getBgvStyle(bgvStatus);
 
-  const handleStatusChange = useCallback((v: string) => setStatus(v as BgvStatus), []);
+  const handleStatusChange = useCallback((v: string) => {
+    const next = BGV_STATUSES.find((s) => s.value === v);
+    if (next) setStatus(next.value);
+  }, []);
   const handleAgencyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAgency(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 

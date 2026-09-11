@@ -1,5 +1,6 @@
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function escapeHtml(str: string): string {
   return str
@@ -107,18 +108,18 @@ function slateToHtml(nodes: SlateNode[]): string {
   return parts.join("\n");
 }
 
-export function exportPageToHtml(title: string, content: unknown): void {
+export async function exportPageToHtml(title: string, content: unknown): Promise<void> {
   let bodyHtml = "";
   if (content) {
     try {
       if (Array.isArray(content)) {
         bodyHtml = slateToHtml(content as SlateNode[]);
-      } else if (
-        typeof content === "object" &&
-        content !== null &&
-        (content as Record<string, unknown>).type === "doc"
-      ) {
-        bodyHtml = generateHTML(content as Record<string, unknown>, [StarterKit]);
+      } else if (isRecord(content) && content.type === "doc") {
+        const [{ generateHTML }, { default: StarterKit }] = await Promise.all([
+          import("@tiptap/html"),
+          import("@tiptap/starter-kit"),
+        ]);
+        bodyHtml = generateHTML(content, [StarterKit]);
       }
     } catch {
       bodyHtml = "";

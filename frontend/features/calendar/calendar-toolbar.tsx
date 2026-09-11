@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo, useCallback } from "react";
 import {
@@ -86,7 +86,7 @@ export const CalendarToolbarPrimaryActions = memo(
               className="gap-1 px-3 text-xs font-medium"
             >
               <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Share</span>
+              <span className="sr-only sm:not-sr-only">Share</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 text-xs">
@@ -116,6 +116,7 @@ export const CalendarToolbarPrimaryActions = memo(
               iconSize={14}
               iconClassName="mr-0"
               size="sm"
+              aria-label="Add to calendar"
               className="gap-1 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
             >
               <span className="hidden sm:inline">Add</span>
@@ -219,6 +220,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Select value={view} onValueChange={handleViewChange}>
           <SelectTrigger
+            aria-label="Calendar view"
             className={cn(
               "h-8 w-fit min-w-[4.5rem] text-xs font-medium",
               FILTER_SELECT_TRIGGER,
@@ -249,7 +251,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   className="gap-1 px-3 text-xs font-medium"
                 >
                   <Share2 className="h-3.5 w-3.5" />
-                  <span className="hidden xl:inline">Share</span>
+                  <span className="sr-only xl:not-sr-only">Share</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 text-xs">
@@ -359,6 +361,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 iconSize={14}
                 iconClassName="mr-0"
                 size="sm"
+                aria-label="Add to calendar"
                 className="gap-1 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
               >
                 <span className="hidden sm:inline">Add</span>

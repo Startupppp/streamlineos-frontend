@@ -3,7 +3,10 @@
 import { useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-export type LeadsView = "table" | "kanban" | "funnel";
+const LEADS_VIEWS = ["table", "kanban", "funnel"] as const;
+const SORT_DIRECTIONS = ["asc", "desc"] as const;
+
+export type LeadsView = (typeof LEADS_VIEWS)[number];
 
 export interface LeadsFilters {
   view: LeadsView;
@@ -12,8 +15,7 @@ export interface LeadsFilters {
   priorityFilter: string | undefined;
   sourceFilter: string | undefined;
   sortColumn: string;
-  sortDirection: "asc" | "desc";
-  tablePage: number;
+  sortDirection: (typeof SORT_DIRECTIONS)[number];
   pageSize: number;
 }
 
@@ -24,7 +26,6 @@ export interface UseLeadsFiltersReturn extends LeadsFilters {
   setPriorityFilter: (p: string | undefined) => void;
   setSourceFilter: (s: string | undefined) => void;
   setSort: (col: string, dir: "asc" | "desc") => void;
-  setTablePage: (page: number) => void;
   setPageSize: (size: number) => void;
   clearFilters: () => void;
   isPending: boolean;
@@ -34,20 +35,33 @@ function parseOptional(v: string | null): string | undefined {
   return v || undefined;
 }
 
+/**
+ * A URL segment is a bare `string`, so narrowing it with `as LeadsView` claimed
+ * a membership nobody checked — `?view=nonsense` reached the switch and fell
+ * through every branch. Reading the member back out of the tuple the union is
+ * DERIVED from means the guard cannot drift from the type.
+ */
+function parseView(v: string | null): LeadsView {
+  return LEADS_VIEWS.find((candidate) => candidate === v) ?? "table";
+}
+
+function parseSortDirection(v: string | null): LeadsFilters["sortDirection"] {
+  return SORT_DIRECTIONS.find((candidate) => candidate === v) ?? "desc";
+}
+
 export function useLeadsFilters(): UseLeadsFiltersReturn {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
-  const view = (searchParams.get("view") as LeadsView) || "table";
+  const view = parseView(searchParams.get("view"));
   const searchQuery = searchParams.get("q") || "";
   const statusFilter = parseOptional(searchParams.get("status"));
   const priorityFilter = parseOptional(searchParams.get("priority"));
   const sourceFilter = parseOptional(searchParams.get("source"));
   const sortColumn = searchParams.get("sortBy") || "createdAt";
-  const sortDirection = (searchParams.get("order") as "asc" | "desc") || "desc";
-  const tablePage = Number(searchParams.get("page")) || 1;
+  const sortDirection = parseSortDirection(searchParams.get("order"));
   const pageSize = Number(searchParams.get("size")) || 50;
 
   const update = useCallback(
@@ -77,42 +91,37 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
   );
 
   const setSearchQuery = useCallback(
-    (q: string) => update({ q: q || null, page: null }),
+    (q: string) => update({ q: q || null }),
     [update],
   );
 
   const setStatusFilter = useCallback(
-    (s: string | undefined) => update({ status: s || null, page: null }),
+    (s: string | undefined) => update({ status: s || null }),
     [update],
   );
 
   const setPriorityFilter = useCallback(
-    (p: string | undefined) => update({ priority: p || null, page: null }),
+    (p: string | undefined) => update({ priority: p || null }),
     [update],
   );
 
   const setSourceFilter = useCallback(
-    (s: string | undefined) => update({ source: s || null, page: null }),
+    (s: string | undefined) => update({ source: s || null }),
     [update],
   );
 
   const setSort = useCallback(
-    (col: string, dir: "asc" | "desc") => update({ sortBy: col, order: dir, page: null }),
-    [update],
-  );
-
-  const setTablePage = useCallback(
-    (page: number) => update({ page: String(page) }),
+    (col: string, dir: "asc" | "desc") => update({ sortBy: col, order: dir }),
     [update],
   );
 
   const setPageSize = useCallback(
-    (size: number) => update({ size: String(size), page: null }),
+    (size: number) => update({ size: String(size) }),
     [update],
   );
 
   const clearFilters = useCallback(
-    () => update({ status: null, priority: null, source: null, q: null, page: null }),
+    () => update({ status: null, priority: null, source: null, q: null }),
     [update],
   );
 
@@ -124,7 +133,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
     sourceFilter,
     sortColumn,
     sortDirection,
-    tablePage,
     pageSize,
     setView,
     setSearchQuery,
@@ -132,7 +140,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
     setPriorityFilter,
     setSourceFilter,
     setSort,
-    setTablePage,
     setPageSize,
     clearFilters,
     isPending,

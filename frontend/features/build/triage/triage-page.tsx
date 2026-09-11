@@ -5,7 +5,7 @@ import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
 
@@ -150,14 +150,15 @@ export function TriagePage({ projectId }: TriagePageProps) {
     );
   }
 
-  const total = ticketPage?.total ?? 0;
+  const visibleCount = tickets.length;
+  const hasMore = ticketPage?.pagination.hasMore ?? false;
 
   return (
     <PageWrapper
       title="Triage"
       subtitle={
-        total > 0
-          ? `${total} issue${total !== 1 ? "s" : ""} awaiting triage`
+        visibleCount > 0
+          ? `${visibleCount}${hasMore ? "+" : ""} issue${visibleCount !== 1 ? "s" : ""} awaiting triage`
           : "Review and process incoming issues"
       }
     >
@@ -187,9 +188,9 @@ export function TriagePage({ projectId }: TriagePageProps) {
                 />
               ))}
             </PmStaggerList>
-            {total > PAGE_LIMIT ? (
+            {hasMore ? (
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                Showing first {PAGE_LIMIT} of {total} issues
+                Showing the first {PAGE_LIMIT} issues
               </p>
             ) : null}
           </PmSection>

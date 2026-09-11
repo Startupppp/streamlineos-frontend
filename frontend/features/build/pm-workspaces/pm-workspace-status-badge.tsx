@@ -1,8 +1,7 @@
 import { memo } from "react";
-import type { PmWorkspaceStatus } from "@/types/projects";
 import { StatusMapBadge, type StatusEntry } from "@/components/ui/status-map-badge";
 
-const PM_WORKSPACE_STATUS_MAP: Record<PmWorkspaceStatus, StatusEntry> = {
+const PM_WORKSPACE_STATUS_MAP: Record<string, StatusEntry> = {
   active: { label: "Active", tone: "success" },
   archived: { label: "Archived", tone: "neutral", className: "dark:bg-muted/40" },
 };
@@ -10,7 +9,7 @@ const PM_WORKSPACE_STATUS_MAP: Record<PmWorkspaceStatus, StatusEntry> = {
 export const PmWorkspaceStatusBadge = memo(function PmWorkspaceStatusBadge({
   status,
 }: {
-  status: PmWorkspaceStatus;
+  status: string;
 }) {
   return <StatusMapBadge status={status} map={PM_WORKSPACE_STATUS_MAP} />;
 });

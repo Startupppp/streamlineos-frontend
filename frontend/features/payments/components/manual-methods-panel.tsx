@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { Landmark, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +30,7 @@ const METHOD_TYPES: { value: ManualMethodType; label: string }[] = [
 ];
 
 function MethodEditor({ methodType, label, existing }: { methodType: ManualMethodType; label: string; existing: PaymentManualMethod | undefined }) {
+  const canManage = useCan("payments:manual-methods:manage");
   const save = useSaveManualMethod();
   const disable = useDisableManualMethod();
   const [form, setForm] = useState({
@@ -135,10 +139,12 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
       </label>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
-          <Save className="h-3 w-3" /> Save
-        </Button>
-        {existing && existing.status !== "disabled" && (
+        {canManage ? (
+          <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
+            <Save className="h-3 w-3" /> Save
+          </Button>
+        ) : null}
+        {canManage && existing && existing.status !== "disabled" && (
           <Button
             size="sm"
             variant="ghost"
@@ -154,7 +160,27 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
 }
 
 export function ManualMethodsPanel() {
-  const { data: methods, isLoading } = useManualMethods();
+  const canView = useCan("payments:providers:view");
+  const { data: methods, isLoading, isError, error, refetch } = useManualMethods();
+
+  function handleRetryLoad() {
+    void refetch();
+  }
+
+  // A denied or failed read settles to `methods === undefined`, which the
+  // editors below would render as five blank forms reading "Missing
+  // instructions" — an operator would conclude their live bank details were
+  // gone, and a Save from that state would overwrite them with blanks.
+  if (!canView) {
+    return (
+      <NoPermissionState
+        compact
+        permission="payments:providers:view"
+        title="Payment instructions hidden"
+        description="You do not have permission to view this organization's offline payment instructions."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -163,6 +189,17 @@ export function ManualMethodsPanel() {
           <Skeleton key={i} className="h-32 rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load payment instructions"
+        description={getErrorMessage(error)}
+        onRetry={handleRetryLoad}
+      />
     );
   }
 

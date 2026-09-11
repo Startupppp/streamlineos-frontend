@@ -25,7 +25,7 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import {
   STARTER_TEMPLATES,
   deriveContentText,
@@ -210,6 +210,7 @@ export default function TemplatesPage() {
                 pageId: page.id,
                 content: template.content as Record<string, unknown>,
                 contentText: deriveContentText(template.content),
+                expectedContentRevision: page.contentRevision,
               },
               {
                 onSettled: () => {

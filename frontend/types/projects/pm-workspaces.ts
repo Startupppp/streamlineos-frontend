@@ -6,7 +6,7 @@ export interface PmWorkspace {
   name: string;
   slug: string;
   isDefault: boolean;
-  status: PmWorkspaceStatus;
+  status: string;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -35,7 +35,7 @@ export interface PmWorkspaceMember {
   pmWorkspaceId: string;
   organizationMembershipId: number;
   userId: string;
-  role: PmWorkspaceMemberRole;
+  role: string;
   addedAt: string;
 }
 

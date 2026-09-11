@@ -12,7 +12,7 @@ import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
@@ -61,7 +61,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
 
   const grouped = useMemo(() => {
-    const map: Record<RoadmapStatus, RoadmapItem[]> = {
+    const map: Record<string, RoadmapItem[]> = {
       planned: [],
       in_progress: [],
       completed: [],

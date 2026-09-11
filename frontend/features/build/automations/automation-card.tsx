@@ -27,7 +27,7 @@ import {
   ACTION_TYPES,
   type ProjectAutomation,
 } from "@/hooks/api/build/automations";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 
 function getTriggerLabel(event: string): string {
   return TRIGGER_EVENTS.find((t) => t.value === event)?.label ?? event;

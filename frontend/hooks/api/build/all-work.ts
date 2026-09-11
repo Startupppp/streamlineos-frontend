@@ -7,9 +7,15 @@ import type {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const allWorkPageContract = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.allWorkPageContract),
+);
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export const COMMAND_CENTER_MY_ISSUES_PAGE_SIZE = 15;
 
@@ -28,9 +34,9 @@ export function useAllWork(
   const canView = useCan("build:tickets:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
-    queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
-    queryFn: () =>
-      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined),
+    queryKey: buildWorkQueryKeys.projects.allWork(filters ? { ...filters } : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined, signal, allWorkPageContract),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...restOptions,
@@ -52,17 +58,18 @@ export function useInfiniteAllWork(
   >
 ) {
   const { enabled: enabledOption, ...restOptions } = options ?? {};
+  const canView = useCan("build:tickets:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.projects.allWorkInfinite({ ...filters }),
-    queryFn: ({ pageParam }) =>
+    queryKey: buildWorkQueryKeys.projects.allWorkInfinite({ ...filters }),
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,
-        ...(pageParam ? { cursor: pageParam } : {}),
-      }),
-    initialPageParam: undefined as string | undefined,
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+      }, signal, allWorkPageContract),
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     ...restOptions,
-    enabled: enabledOption ?? true,
+    enabled: canView && (enabledOption ?? true),
   });
 }

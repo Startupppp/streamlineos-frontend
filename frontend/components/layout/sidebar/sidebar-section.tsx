@@ -14,6 +14,8 @@ import {
   type ModuleAccent,
 } from "./sidebar-nav-items";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
+import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -148,12 +150,21 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
   const isActive = isNavRouteActive(route, pathname);
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(route.href),
+    [prefetchOnIntent, route.href],
+  );
 
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <Link
           href={route.href}
+          prefetch={false}
+          onMouseEnter={handleIntent}
+          onFocus={handleIntent}
+          onTouchStart={handleIntent}
           onClick={onNavigate}
           aria-current={isActive ? "page" : undefined}
           className={cn("nav-item group relative justify-center w-8 h-8 mx-auto flex", isActive && "active")}
@@ -173,6 +184,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           {hasBadge && (
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-status-danger-fill ring-1 ring-sidebar z-[2]" />
           )}
+          <NavPendingIndicator className="z-[2]" />
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
@@ -207,11 +219,20 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(route.href),
+    [prefetchOnIntent, route.href],
+  );
 
   return (
     <div>
       <Link
         href={route.href}
+        prefetch={false}
+        onMouseEnter={handleIntent}
+        onFocus={handleIntent}
+        onTouchStart={handleIntent}
         onClick={onNavigate}
         aria-current={isActive ? "page" : undefined}
         className={cn(
@@ -250,6 +271,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             />
           </button>
         )}
+        <NavPendingIndicator />
       </Link>
 
       {(hasChildren && expanded || singleChild) && (

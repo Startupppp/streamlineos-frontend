@@ -21,12 +21,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const leadEnrichmentLazy = lazyContract(() => import("@/hooks/api/crm/ai-schema").then((m) => m.leadEnrichmentContract));
 import type { LeadEnrichmentResult } from "@/lib/ai/schemas";
 import type { Contact } from "@/types/crm";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useEnrichContact() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["contacts", "enrich"] as const,
     mutationFn: (input: {
       name: string;
@@ -37,7 +41,7 @@ export function useEnrichContact() {
         name: input.name,
         email: input.email ?? undefined,
         company: input.company ?? undefined,
-      }),
+      }, undefined, leadEnrichmentLazy),
   });
 }
 

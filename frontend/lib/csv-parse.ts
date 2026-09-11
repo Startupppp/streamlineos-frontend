@@ -46,7 +46,7 @@ export function parseCsv(text: string): ParsedCsv {
   const input = text.replace(/\r\n?/g, "\n");
 
   for (let i = 0; i < input.length; i++) {
-    const char = input[i]!;
+    const char = input[i];
 
     if (quoted) {
       if (char === '"') {
@@ -120,7 +120,7 @@ export function parseCsv(text: string): ParsedCsv {
   while (
     rows.length > 0 &&
     !rowWasQuoted[rows.length - 1] &&
-    rows[rows.length - 1]!.every((value) => value.trim() === "")
+    rows[rows.length - 1].every((value) => value.trim() === "")
   ) {
     rows.pop();
     rowWasQuoted.pop();

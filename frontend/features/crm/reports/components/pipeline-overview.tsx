@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { LeadStats } from "@/types/leads";
 import type { DealStats } from "@/types/crm/deals";
-import { formatCurrency } from "../lib/types";
+import { formatCompactInr } from "../lib/types";
 
 interface PipelineOverviewProps {
   stats: LeadStats | undefined;
@@ -43,14 +43,14 @@ export function PipelineOverview({
           />
           <StatCard
             label="Pipeline Value"
-            value={dealStats ? formatCurrency(dealStats.pipelineValue) : "—"}
+            value={dealStats ? formatCompactInr(dealStats.pipelineValue) : "—"}
             icon={BarChart3}
             color="blue"
             index={2}
           />
           <StatCard
             label="Won Revenue"
-            value={dealStats ? formatCurrency(dealStats.wonValue) : "—"}
+            value={dealStats ? formatCompactInr(dealStats.wonValue) : "—"}
             icon={DollarSign}
             color="green"
             index={3}

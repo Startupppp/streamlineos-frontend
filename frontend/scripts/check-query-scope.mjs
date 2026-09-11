@@ -1,19 +1,16 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, extname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const EXCLUDE_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", "scripts"]);
-
 /*
-  A build directory is any name starting with `.next`, not the one called
-  exactly `.next`. A dev server run with a custom `distDir` (`.next-local`)
-  left its Turbopack output here and this walk read all of it: two gates went
-  red over compiled chunks and the rest merely scanned 718MB for nothing.
+  `isExcludedScanDir` (check-repo-paths.mjs) skips every dot-directory, the
+  `.next*` build outputs among them, plus node_modules and feedbucket-widget.
+  scripts/ holds the gates themselves and stays out of their own corpus, as it
+  was before the shared helper replaced this file's own list.
 */
-function isBuildDir(name) {
-  return name.startsWith(".next");
-}
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts"]);
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 
 const SANCTIONED_QUERY_CLIENT = new Set([
@@ -60,6 +57,83 @@ function checkQueryKeyHashFn(content, relPath) {
   return `${relPath}  (queryKeyHashFn set outside sanctioned files)`;
 }
 
+// ── Rule 4: inline queryKey array literals ────────────────────────────────────
+// `queryKey: ["module", "entity"]` by-passes the factory and loses the tenant hash.
+// Legitimate patterns:
+//   queryKey: queryKeys.foo.bar(params)   ← factory call
+//   queryKey: queryKeys.foo.all           ← factory constant
+//   queryKey: [...queryKeys.foo.bar(), "variant"] as const  ← factory + variant suffix
+//
+// Bad patterns (detected):
+//   queryKey: ["module", "entity"]        ← pure string array
+//   queryKey: [orgId, "employees"]        ← variable-first array (no factory)
+//
+// ALLOWLIST: files that intentionally define query-key shapes (factories, tests, scope lib).
+const INLINE_KEY_ALLOWLIST = new Set([
+  "lib/query-keys.ts",         // the factory definitions themselves
+  "lib/query-scope.ts",        // scope isolation testing
+  "lib/query-scope-isolation.test.tsx",
+]);
+
+// The accepted factory names are READ from lib/query-keys/, never hardcoded. This rule
+// matched only the literal `...queryKeys` and so went stale the moment that one factory
+// was split into the named per-domain ones, reporting 73 correct call sites as
+// violations while its own self-test stayed green on a `queryKeys` fixture.
+function readFactoryNames() {
+  const names = new Set();
+  const sources = [join(ROOT, "lib/query-keys.ts")];
+  const dir = join(ROOT, "lib/query-keys");
+  for (const entry of readdirSync(dir))
+    if (extname(entry) === ".ts" && !entry.endsWith(".test.ts")) sources.push(join(dir, entry));
+  for (const file of sources) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/export\s+const\s+([A-Za-z0-9_]*[Qq]ueryKeys)\b/g)) names.add(m[1]);
+  }
+  return names;
+}
+
+const FACTORY_NAMES = readFactoryNames();
+// An empty or near-empty set would make the negative lookahead match nothing and turn this
+// rule into a scanner that flags every call site, or — if inverted — none of them.
+if (FACTORY_NAMES.size < 2)
+  throw new Error(
+    `check-query-scope: found ${FACTORY_NAMES.size} query-key factories in lib/query-keys — ` +
+      `the reader is broken, not the corpus. Refusing to report over a factory set this rule cannot trust.`,
+  );
+
+// Matches `queryKey:` followed (after optional whitespace/newline) by `[` whose first
+// non-whitespace element is not a spread of one of the real factories.
+const INLINE_KEY_RE = new RegExp(
+  String.raw`\bqueryKey\s*:\s*\[(?!\s*\.\.\.(?:${[...FACTORY_NAMES].join("|")})\b)`,
+  "g",
+);
+
+function checkInlineQueryKey(content, relPath) {
+  if (isTestFile(relPath)) return null;
+  if (INLINE_KEY_ALLOWLIST.has(normRel(relPath))) return null;
+  if (!INLINE_KEY_RE.test(content)) {
+    INLINE_KEY_RE.lastIndex = 0;
+    return null;
+  }
+  INLINE_KEY_RE.lastIndex = 0;
+  return `${relPath}  (inline queryKey array — use queryKeys factory instead)`;
+}
+
+// A local key factory may live beside its feature, but it must compose the shared
+// prefix rather than repeat the literal — otherwise a change to `queryKeyBase`
+// applies to half the cache and silently splits every affected key space.
+const HARDCODED_BASE_RE = /\[\s*"streamlineos"\s*[,\]]/;
+const BASE_LITERAL_ALLOWLIST = new Set(["lib/query-scope.ts"]);
+
+function checkHardcodedKeyBase(content, relPath) {
+  const norm = normRel(relPath);
+  if (isTestFile(relPath)) return null;
+  if (norm.startsWith("lib/query-keys/") || norm === "lib/query-keys.ts") return null;
+  if (BASE_LITERAL_ALLOWLIST.has(norm)) return null;
+  if (!HARDCODED_BASE_RE.test(content)) return null;
+  return `${relPath}  (hardcoded "streamlineos" key prefix — spread queryKeyBase instead)`;
+}
+
 function checkPrefetchDehydrate(content, relPath) {
   const norm = normRel(relPath);
   if (!norm.startsWith("lib/prefetch/")) return null;
@@ -71,7 +145,7 @@ function checkPrefetchDehydrate(content, relPath) {
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if ((EXCLUDE_DIRS.has(entry.name) || isBuildDir(entry.name))) continue;
+    if (isExcludedScanDir(entry.name) || EXTRA_EXCLUDED_DIRS.has(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);
@@ -91,6 +165,7 @@ function runSelfTest() {
         "export const rogue = new QueryClient();",
       ].join("\n"),
       detect: checkNewQueryClient,
+      reason: "new QueryClient() outside sanctioned factories",
     },
     {
       description: "rule 2 — queryKeyHashFn outside sanctioned files",
@@ -100,6 +175,7 @@ function runSelfTest() {
         "const c = new QueryClient({ defaultOptions: { queries: { queryKeyHashFn: () => '' } } });",
       ].join("\n"),
       detect: checkQueryKeyHashFn,
+      reason: "queryKeyHashFn set outside sanctioned files",
     },
     {
       description: "rule 3 — dehydrate() in lib/prefetch/ without createServerQueryClient",
@@ -111,6 +187,7 @@ function runSelfTest() {
         "}",
       ].join("\n"),
       detect: checkPrefetchDehydrate,
+      reason: "dehydrate() called without createServerQueryClient",
     },
     {
       description:
@@ -121,10 +198,40 @@ function runSelfTest() {
         "export const rogue = new QueryClient();",
       ].join("\n"),
       detect: checkNewQueryClient,
+      reason: "new QueryClient() outside sanctioned factories",
     },
   ];
 
+  fixtures.push(
+    {
+      description: "rule 5 — a local key factory hardcoding the \"streamlineos\" prefix",
+      relPath: "hooks/api/hr/cases.ts",
+      content: 'const caseKeys = { all: ["streamlineos", "hr", "cases"] as const };',
+      detect: checkHardcodedKeyBase,
+      reason: 'hardcoded "streamlineos" key prefix',
+    },
+    {
+      description: "rule 5 — the prefix alone, with no trailing segment",
+      relPath: "hooks/api/hr/other.ts",
+      content: 'const root = ["streamlineos"] as const;',
+      detect: checkHardcodedKeyBase,
+      reason: 'hardcoded "streamlineos" key prefix',
+    },
+  );
+
   const exemptFixtures = [
+    {
+      description: "rule 5 — a factory that spreads queryKeyBase is not flagged",
+      relPath: "hooks/api/hr/cases.ts",
+      content: 'const caseKeys = { all: [...queryKeyBase, "hr", "cases"] as const };',
+      detect: checkHardcodedKeyBase,
+    },
+    {
+      description: "rule 5 — the registry itself may hold the literal",
+      relPath: "lib/query-keys/base.ts",
+      content: 'export const queryKeyBase = ["streamlineos"] as const;',
+      detect: checkHardcodedKeyBase,
+    },
     {
       description: "test harness under test-utils/ may construct a QueryClient",
       relPath: "test-utils/render.tsx",
@@ -143,14 +250,45 @@ function runSelfTest() {
       ].join("\n"),
       detect: checkNewQueryClient,
     },
+    {
+      description: "rule 2 — a sanctioned file may set queryKeyHashFn",
+      relPath: "components/providers/query-provider.tsx",
+      content: "const c = new QueryClient({ defaultOptions: { queries: { queryKeyHashFn: hashQueryKey } } });",
+      detect: checkQueryKeyHashFn,
+    },
+    {
+      description: "rule 2 — a file that never mentions queryKeyHashFn is not flagged",
+      relPath: "lib/some-hook.ts",
+      content: 'const c = new QueryClient();',
+      detect: checkQueryKeyHashFn,
+    },
+    {
+      description: "rule 3 — dehydrate() with createServerQueryClient is correct",
+      relPath: "lib/prefetch/good.ts",
+      content: [
+        'import { dehydrate } from "@tanstack/react-query";',
+        "export async function prefetchFoo() {",
+        "  return dehydrate(createServerQueryClient());",
+        "}",
+      ].join("\n"),
+      detect: checkPrefetchDehydrate,
+    },
+    {
+      description: "rule 3 — dehydrate() outside lib/prefetch/ is out of scope",
+      relPath: "lib/elsewhere/other.ts",
+      content: "export const x = dehydrate(new QueryClient());",
+      detect: checkPrefetchDehydrate,
+    },
   ];
 
   const selfFailures = [];
 
-  for (const { description, relPath, content, detect } of fixtures) {
+  for (const { description, relPath, content, detect, reason } of fixtures) {
     const result = detect(content, relPath);
-    if (result === null) {
-      selfFailures.push(`self-test MISSED: ${description}`);
+    if (typeof result !== "string" || !result.includes(relPath)) {
+      selfFailures.push(`self-test MISSED: ${description} (got ${JSON.stringify(result)})`);
+    } else if (reason && !result.includes(reason)) {
+      selfFailures.push(`self-test REJECTED FOR THE WRONG REASON: ${description} — expected "${reason}", got "${result}"`);
     } else {
       console.log(`✔ self-test detected ${description}`);
     }
@@ -165,12 +303,88 @@ function runSelfTest() {
     }
   }
 
+  // Rule 4 fixtures
+  const inlineKeyBad = {
+    description: "rule 4 — inline queryKey array without factory",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: ["module", "entity"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodFactory = {
+    description: "rule 4 — queryKey from factory (should NOT be flagged)",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: queryKeys.widgets.list(params), queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodSpread = {
+    description: "rule 4 — queryKey spreading factory key (should NOT be flagged)",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: [...queryKeys.widgets.list(), "page"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodTestFile = {
+    description: "rule 4 — inline queryKey in a test file (should NOT be flagged)",
+    relPath: "hooks/api/widgets.test.ts",
+    content: 'const q = useQuery({ queryKey: ["test", "key"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  // Pinned against the split factories by name. The previous fixtures exercised only the
+  // legacy `queryKeys`, so this rule reported green while rejecting every real call site.
+  const inlineKeyGoodSplitFactory = {
+    description: "rule 4 — spread of a split per-domain factory (should NOT be flagged)",
+    relPath: "hooks/api/tasks.ts",
+    content:
+      'const q = useQuery({ queryKey: [...accessAndCrmQueryKeys.tasks.all, "analytics", days] as const });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyUnknownFactory = {
+    description: "rule 4 — spread of a name that is not an exported factory",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: [...notARealQueryKeys.widgets.all, "x"] });',
+    detect: checkInlineQueryKey,
+  };
+
+  for (const bad of [inlineKeyBad, inlineKeyUnknownFactory]) {
+    const r = bad.detect(bad.content, bad.relPath);
+    if (typeof r !== "string" || !r.includes("inline queryKey array"))
+      selfFailures.push(`self-test MISSED: ${bad.description} (got ${JSON.stringify(r)})`);
+    else console.log(`✔ self-test detected ${bad.description}`);
+  }
+  for (const f of [inlineKeyGoodFactory, inlineKeyGoodSpread, inlineKeyGoodTestFile, inlineKeyGoodSplitFactory]) {
+    const result = f.detect(f.content, f.relPath);
+    if (result !== null) {
+      selfFailures.push(`self-test WRONGLY FLAGGED: ${f.description}`);
+    } else {
+      console.log(`✔ self-test exempted ${f.description}`);
+    }
+  }
+
   if (selfFailures.length > 0) {
     for (const f of selfFailures) console.error(`✖  ${f}`);
     process.exit(1);
   }
 
-  console.log("\n✔ All 3 rules self-tested successfully — check-query-scope is live.");
+  const rulesProven = new Set(
+    [...fixtures, inlineKeyBad].map((f) => f.detect.name),
+  );
+  const allRules = [
+    checkNewQueryClient,
+    checkQueryKeyHashFn,
+    checkInlineQueryKey,
+    checkHardcodedKeyBase,
+    checkPrefetchDehydrate,
+  ];
+  const unproven = allRules.filter((fn) => !rulesProven.has(fn.name));
+  if (unproven.length > 0) {
+    console.error(
+      `✖  ${unproven.length} rule(s) have no known-bad fixture: ${unproven.map((f) => f.name).join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `\n✔ All ${allRules.length} rules self-tested successfully — check-query-scope is live.`,
+  );
   process.exit(0);
 }
 
@@ -181,10 +395,18 @@ if (process.argv.includes("--self-test")) {
 const violations1 = [];
 const violations2 = [];
 const violations3 = [];
+const violations4 = [];
+const violations5 = [];
+
+// Without a floor, a walk that reaches nothing prints the same green line as a
+// clean tree: the failure of the scan is indistinguishable from its success.
+const MIN_SCANNED_FILES = 5000;
+let scanned = 0;
 
 for (const file of walkFiles(ROOT)) {
   const content = readFileSync(file, "utf8");
   const rel = relative(ROOT, file);
+  scanned++;
 
   const v1 = checkNewQueryClient(content, rel);
   if (v1) violations1.push(`  ${v1}`);
@@ -194,12 +416,26 @@ for (const file of walkFiles(ROOT)) {
 
   const v3 = checkPrefetchDehydrate(content, rel);
   if (v3) violations3.push(`  ${v3}`);
+
+  const v4 = checkInlineQueryKey(content, rel);
+  if (v4) violations4.push(`  ${v4}`);
+
+  const v5 = checkHardcodedKeyBase(content, rel);
+  if (v5) violations5.push(`  ${v5}`);
 }
 
-const allViolations = [...violations1, ...violations2, ...violations3];
+const allViolations = [...violations1, ...violations2, ...violations3, ...violations4, ...violations5];
+
+if (scanned < MIN_SCANNED_FILES) {
+  console.error(
+    `✖  INCONCLUSIVE — the scan reached only ${scanned} file(s) (floor ${MIN_SCANNED_FILES}). ` +
+      "This run proves nothing about query scoping.",
+  );
+  process.exit(2);
+}
 
 if (allViolations.length === 0) {
-  console.log("✔  No query-scope violations found.");
+  console.log(`✔  No query-scope violations found (${scanned} files scanned).`);
   process.exit(0);
 } else {
   if (violations1.length > 0) {
@@ -213,6 +449,14 @@ if (allViolations.length === 0) {
   if (violations3.length > 0) {
     console.error(`✖  ${violations3.length} prefetch file(s) calling dehydrate() without createServerQueryClient:`);
     for (const v of violations3) console.error(v);
+  }
+  if (violations5.length > 0) {
+    console.error(`✖  ${violations5.length} hardcoded "streamlineos" key prefix(es) — spread queryKeyBase:`);
+    for (const v of violations5) console.error(v);
+  }
+  if (violations4.length > 0) {
+    console.error(`✖  ${violations4.length} inline queryKey array(s) — use queryKeys factory:`);
+    for (const v of violations4) console.error(v);
   }
   process.exit(1);
 }

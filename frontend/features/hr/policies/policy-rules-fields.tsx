@@ -19,6 +19,7 @@ import {
 import type { HrPolicyType } from "@/types/hr/policies";
 import type { UseFormReturn } from "react-hook-form";
 import type { PolicyFormValues } from "./policy-form-types";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface Props {
   policyType: HrPolicyType;
@@ -57,7 +58,7 @@ function NumberField({
               type="number"
               className="text-xs"
               value={(field.value as number) ?? 0}
-              onChange={(e) => field.onChange(Number(e.target.value))}
+              onChange={numericFieldChangeOr(field.onChange, 0)}
               disabled={disabled}
             />
           </FormControl>

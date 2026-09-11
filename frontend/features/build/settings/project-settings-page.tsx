@@ -10,6 +10,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -28,7 +30,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import {
   TEXT_ONE_LINE,
   TEXT_BODY,
@@ -81,7 +83,13 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<SectionId>("general");
 
-  const { data: project, isLoading } = useProject(projectId);
+  const {
+    data: project,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProject(projectId);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -153,6 +161,10 @@ export function ProjectSettingsPage({ params }: PageProps) {
     setReassignDialog(null);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleDeleteSuccess = useCallback(() => {
     router.push("/build");
   }, [router]);
@@ -201,20 +213,32 @@ export function ProjectSettingsPage({ params }: PageProps) {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Settings">
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load project settings"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
   if (!project) {
     return (
       <PageWrapper title="Settings">
         <PmPageShell>
-          <PmPanel className="flex h-64 items-center justify-center" solid>
-            <div className="space-y-2 text-center" role="alert">
-              <h2 className="text-lg font-semibold text-destructive">
-                Project not found
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                The requested project could not be loaded.
-              </p>
-            </div>
-          </PmPanel>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="projects"
+            title="Project not found"
+            description="This project no longer exists, or you no longer have access to it."
+            action={{ label: "Back to projects", href: "/build" }}
+          />
         </PmPageShell>
       </PageWrapper>
     );

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useCallback } from "react";
 import { useProjects, useProject } from "@/hooks/api/build/projects";

@@ -8,7 +8,7 @@ export type CrmPipelineType =
 
 export interface CrmPipeline {
   id: string;
-  type: CrmPipelineType;
+  type: CrmPipelineType | null;
   key: string;
   name: string;
   description: string | null;
@@ -25,7 +25,7 @@ export interface CrmPipelineStage {
   key: string;
   label: string;
   description: string | null;
-  color: string;
+  color: string | null;
   icon: string | null;
   sortOrder: number;
   probability: number;
@@ -33,7 +33,7 @@ export interface CrmPipelineStage {
   isTerminal: boolean;
   slaHours: number | null;
   requiresApproval: boolean;
-  requiredFields: string[];
+  requiredFields: string[] | null;
   allowedNextStageKeys: string[] | null;
   isActive: boolean;
 }
@@ -59,7 +59,7 @@ export interface CrmOption {
   key: string;
   label: string;
   description: string | null;
-  color: string;
+  color: string | null;
   icon: string | null;
   sortOrder: number;
   isActive: boolean;
@@ -132,11 +132,11 @@ export interface CrmBlueprintTransition {
   blueprintId: string;
   fromStageKey: string;
   toStageKey: string;
-  requiredFields: string[];
-  requiredActivityTypeKeys: string[];
+  requiredFields: string[] | null;
+  requiredActivityTypeKeys: string[] | null;
   requiresApproval: boolean;
   requiresQuote: boolean;
-  autoTaskTemplates: Record<string, unknown>[];
+  autoTaskTemplates: Record<string, unknown>[] | null;
   sortOrder: number;
 }
 

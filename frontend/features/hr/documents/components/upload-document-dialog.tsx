@@ -8,7 +8,7 @@ import { Upload, FileText, FileSpreadsheet, FileImage, File } from "lucide-react
 import { XIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -238,11 +238,11 @@ export function UploadDocumentDialog({
   }, []);
 
   const uploadFileFn = useCallback(
-    async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
+    async (file: File): Promise<{ key: string; size: number; mimeType: string } | null> => {
       try {
         setUploading(true);
         const result = await uploadFileMutation.mutateAsync({ file, folder: "hr-documents" });
-        return { url: result.key, size: result.size, mimeType: result.mimeType };
+        return { key: result.key, size: result.size, mimeType: result.mimeType };
       } catch (error) {
         toast.error(getErrorMessage(error));
         return null;
@@ -278,7 +278,7 @@ export function UploadDocumentDialog({
             isPublic: data.isPublic,
             expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
             tags: data.tags,
-            fileUrl: uploaded.url,
+            fileUrl: uploaded.key,
             fileName: file.name,
             fileSize: uploaded.size,
             mimeType: uploaded.mimeType,

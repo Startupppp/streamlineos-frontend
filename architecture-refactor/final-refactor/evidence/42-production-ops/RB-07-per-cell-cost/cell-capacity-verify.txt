@@ -1,0 +1,35 @@
+$ npm run --silent cell:capacity:verify
+--- stdout+stderr ---
+PASS  validateCapacityBudgets returns no errors for the declared budgets
+PASS  ADMISSION_THRESHOLD is exactly 0.6
+PASS  identifyLimitingResource returns the measurement with the highest ratio
+PASS  identifyLimitingResource result is determined by ratio, not position or name
+PASS  identifyLimitingResource returns null for empty input
+PASS  checkAdmission returns true when ratio is strictly below threshold
+PASS  checkAdmission returns false when ratio equals the threshold
+PASS  checkAdmission returns false when ratio exceeds threshold
+PASS  forecastSaturation refuses with fewer than 3 data points
+PASS  forecastSaturation refuses with zero data points
+PASS  forecastSaturation refuses when trend is flat (well-spaced samples with identical ratios)
+PASS  forecastSaturation returns a forecast when ratio is growing toward threshold
+PASS  CAPACITY_BUDGETS includes at least one vendor-declared ceiling
+PASS  CAPACITY_BUDGETS vendor-declared entries have no ceilingSql
+PASS  CAPACITY_BUDGETS measured-ceiling entries have ceilingSql and no ceilingValue
+PASS  an advisory resource never becomes the limiting resource, however high its ratio
+PASS  identifyLimitingResource returns null when every measurement is advisory
+PASS  advisoryResources returns exactly the non-gating measurements
+PASS  index-size-vs-buffers is declared advisory, because it has no upper bound
+PASS  a budget with no admissionGating flag is rejected by validation
+PASS  operational judgment is a distinct ceiling source from a vendor limit
+PASS  at least one admission-gating resource has a measured ceiling
+PASS  MIN_SAMPLE_SPACING_MS is 24 hours in milliseconds
+PASS  filterWellSpacedSamples keeps only entries ≥ MIN_SAMPLE_SPACING_MS apart
+PASS  filterWellSpacedSamples handles empty input
+PASS  filterWellSpacedSamples handles a single entry
+PASS  filterWellSpacedSamples sorts by ts before filtering
+PASS  forecastSaturation refuses when only closely-spaced samples exist
+PASS  forecastSaturation correctly fits a trend from well-spaced samples
+PASS  forecastSaturation excludes duringBulkLoad entries from the trend
+
+All cell-capacity tests passed.
+--- exit code: 0 ---

@@ -2,199 +2,122 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { lazyContract } from "@/lib/api-envelope";
 
-export type { CreateCalendarEventPayload } from "./calendar-event-mutations";
+const calendarEventsResponseContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarEventsResponseContract),
+);
+const calendarSourcesContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSourcesContract),
+);
+const calendarSourcePreferenceContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSourcePreferenceContract),
+);
+const calendarExternalEventsContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarExternalEventsContract),
+);
+const calendarOrgMembersContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarOrgMembersContract),
+);
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { useCan } from "@/hooks/api/access";
+import type {
+  CalendarOrgMember,
+  CalendarSource,
+  CalendarEventsResponse,
+  ExternalCalendarEventsResponse,
+} from "./calendar-types";
+
+// ---- Re-exports — all public imports from this module remain intact ----
+export type {
+  CalendarOrgMember,
+  CalendarOooConflict,
+  CalendarEventConflict,
+  CalendarListItem,
+  CalendarEventDetail,
+  ParsedCalendarEventId,
+  CalendarEventsResponse,
+  ExternalCalendarEvent,
+  ExternalCalendarEventsResponse,
+  CalendarSource,
+  EventSyncStatusResponse,
+} from "./calendar-types";
+export {
+  parseCalendarEventId,
+  extractEventNumericId,
+} from "./calendar-types";
+export type { CreateCalendarEventPayload } from "./calendar-mutations";
 export {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
   useDeleteCalendarEvent,
   useUpsertOccurrenceException,
   useCancelOccurrence,
-} from "./calendar-event-mutations";
+} from "./calendar-mutations";
+export {
+  useCalendarEvent,
+  useEventAttendees,
+  useRsvpCalendarEvent,
+  useEventSyncStatus,
+  useRetryEventSync,
+} from "./calendar-event-detail";
 
-interface CalendarOrgMember {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  name: string | null;
-  email: string;
-  image: string | null;
-  role: string;
-}
+// ---- Member lookup hook ----
 
-export function useCalendarOrgMembers() {
+export function useCalendarMemberLookup({
+  search = "",
+  limit,
+  enabled = true,
+}: {
+  search?: string;
+  limit?: number;
+  enabled?: boolean;
+} = {}) {
   const canView = useCan("directory:people:view");
-  return useQuery({
-    queryKey: queryKeys.calendar.orgMembers(),
-    queryFn: () => apiClient.get<CalendarOrgMember[]>("/org/members"),
-    staleTime: 5 * 60 * 1000,
-    enabled: canView,
-  });
-}
-
-export type { CalendarOrgMember };
-
-export function useCalendarMemberSearch(search: string, enabled = true) {
   const term = search.trim();
+  const isSearch = term.length > 0;
   return useQuery({
-    queryKey: queryKeys.calendar.memberSearch(term),
-    queryFn: () =>
-      apiClient.get<CalendarOrgMember[]>("/org/members", {
-        search: term,
-        limit: 25,
-      }),
-    enabled: enabled && term.length > 0,
-    staleTime: 30 * 1000,
-    placeholderData: keepPreviousData,
+    queryKey: isSearch
+      ? platformHierarchyQueryKeys.calendar.memberSearch(term)
+      : platformHierarchyQueryKeys.calendar.orgMembers(),
+    queryFn: ({ signal }) =>
+      apiClient.get<CalendarOrgMember[]>(
+        "/org/members",
+        isSearch ? { search: term, limit: limit ?? 25 } : undefined,
+        signal,
+        calendarOrgMembersContract,
+      ),
+    staleTime: isSearch ? 30 * 1000 : 5 * 60 * 1000,
+    enabled: canView && enabled,
+    placeholderData: isSearch ? keepPreviousData : undefined,
   });
 }
 
-export interface CalendarListItem {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  allDay?: boolean;
-  color?: string | null;
-  category: string;
-  source:
-    | "event"
-    | "leave"
-    | "interview"
-    | "task"
-    | "holiday"
-    | "attendance";
-  location?: string | null;
-  meetingUrl?: string | null;
-  description?: string | null;
-  creatorName?: string | null;
-  entityId?: string | null;
-  entityType?: string | null;
-  projectId?: number | null;
-  linkedTicket?: {
-    id: number;
-    key: string;
-    title: string;
-    projectId: number;
-    status: string;
-  } | null;
-  myRsvpStatus?: string | null;
-  rrule?: string | null;
-  isRecurring?: boolean | null;
-}
-
-export function extractEventNumericId(id: string): number | null {
-  const match = id.match(/(\d+)$/);
-  return match ? parseInt(match[1], 10) : null;
-}
-
-export interface CalendarEventsResponse {
-  events: CalendarListItem[];
-  failures: Array<{ key: string; label: string }>;
-  truncated: boolean;
-}
+// ---- Range-list hooks ----
 
 export function useCalendarEvents(start: Date, end: Date) {
   const canView = useCan("calendar:read");
   return useQuery({
-    queryKey: queryKeys.calendar.events(start.toISOString(), end.toISOString()),
-    queryFn: () =>
+    queryKey: platformHierarchyQueryKeys.calendar.events(
+      start.toISOString(),
+      end.toISOString(),
+    ),
+    queryFn: ({ signal }) =>
       apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }),
+      }, signal, calendarEventsResponseContract),
     staleTime: 2 * 60 * 1000,
     enabled: canView,
   });
 }
 
-type RsvpStatus = "accepted" | "declined" | "tentative";
-
-interface EventAttendee {
-  id: number;
-  eventId: number;
-  userId: string;
-  status: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  } | null;
-}
-
-export function useEventAttendees(eventId: number | null) {
-  return useQuery({
-    queryKey: queryKeys.calendar.attendees(eventId ?? 0),
-    queryFn: () => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`),
-    enabled: eventId !== null,
-    staleTime: 60 * 1000,
-  });
-}
-
-export function useRsvpCalendarEvent() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["calendar", "events", "rsvp"],
-    mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
-      apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
-    onSuccess: (_, { eventId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.attendees(eventId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
-    },
-  });
-}
-
-export interface ExternalCalendarEvent {
-  id: string;
-  connectionId: number;
-  toolkit: "googlecalendar" | "outlook";
-  accountEmail: string | null;
-  providerEventId: string;
-  title: string;
-  start: string;
-  end: string;
-  allDay: boolean;
-  location: string | null;
-  meetingUrl: string | null;
-  webLink: string | null;
-}
-
-export interface ExternalCalendarEventsResponse {
-  events: ExternalCalendarEvent[];
-  errors: Array<{ connectionId: number; accountEmail: string | null; message: string }>;
-}
-
-export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
-  const canView = useCan("calendar:read");
-  return useQuery({
-    queryKey: queryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
-    queryFn: () =>
-      apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
-        start: start.toISOString(),
-        end: end.toISOString(),
-      }),
-    enabled: canView && enabled,
-    staleTime: 60_000,
-  });
-}
-
-export interface CalendarSource {
-  key: string;
-  label: string;
-  module: string;
-  enabled: boolean;
-}
-
 export function useCalendarSources() {
   const canView = useCan("calendar:read");
   return useQuery({
-    queryKey: queryKeys.calendar.sources(),
-    queryFn: () => apiClient.get<CalendarSource[]>("/calendar/sources"),
+    queryKey: platformHierarchyQueryKeys.calendar.sources(),
+    queryFn: ({ signal }) =>
+      apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -208,9 +131,28 @@ export function useSetCalendarSourcePreference() {
       apiClient.put<{ sourceKey: string; enabled: boolean }>(
         `/calendar/sources/${sourceKey}`,
         { enabled },
+        undefined,
+        calendarSourcePreferenceContract,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
     },
+  });
+}
+
+export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
+  const canView = useCan("calendar:read");
+  return useQuery({
+    queryKey: platformHierarchyQueryKeys.calendar.externalEvents(
+      start.toISOString(),
+      end.toISOString(),
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      }, signal, calendarExternalEventsContract),
+    enabled: canView && enabled,
+    staleTime: 60_000,
   });
 }

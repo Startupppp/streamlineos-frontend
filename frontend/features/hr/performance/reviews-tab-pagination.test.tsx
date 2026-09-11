@@ -20,7 +20,7 @@ jest.mock("@/hooks/api/hr", () => ({
   unwrapEmployees: jest.fn(() => []),
 }));
 
-jest.mock("@/features/hr/hr-sheet", () => ({
+jest.mock("@/components/shared/hr-sheet", () => ({
   HrSheet: () => null,
 }));
 
@@ -47,10 +47,8 @@ jest.mock("@/components/illustrations", () => ({
 }));
 
 jest.mock("@/components/ui/tabs", () => {
-  // A `jest.mock` factory is hoisted above the imports, so React has to be
-  // reached at call time rather than imported at the top.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createContext, useContext, createElement } = require("react") as typeof import("react");
+  const { createContext, useContext, createElement } =
+    jest.requireActual<typeof import("react")>("react");
   type OnChange = (value: string) => void;
   const Ctx = createContext<OnChange>(() => {});
   return {

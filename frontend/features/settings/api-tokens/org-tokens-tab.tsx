@@ -21,6 +21,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateOrgTokenSheet } from "./create-org-token-sheet";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 function RevokeTokenButton({
   token,
@@ -184,7 +185,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       headerClassName: "w-10",
       className: "w-10",
       cell: (t) => (
-        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5" {...propagationShield}>
           {!t.isRevoked && (
             <RevokeTokenButton token={t} onRevoke={setRevoking} />
           )}

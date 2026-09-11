@@ -33,27 +33,28 @@ export function LeadInlineAiMenu({
   const duplicatesMutation = useDuplicateSuggestions();
 
   const actions = useMemo<AiAction[]>(() => {
-    async function runSummary() {
-      const data = await leadSummaryMutation.mutateAsync(leadId);
+    async function runSummary(signal?: AbortSignal) {
+      const data = await leadSummaryMutation.mutateAsync({ leadId, signal });
       return {
         text: data.summary + "\n\nNext steps:\n" + data.nextBestActions.join("\n"),
         citations: data.citations,
       };
     }
 
-    async function runNextAction() {
-      const data = await nextActionMutation.mutateAsync(leadId);
+    async function runNextAction(signal?: AbortSignal) {
+      const data = await nextActionMutation.mutateAsync({ leadId, signal });
       return {
         text: [data.action, data.reasoning, data.template].filter(Boolean).join("\n\n"),
       };
     }
 
-    async function runEmailDraft() {
+    async function runEmailDraft(signal?: AbortSignal) {
       const data = await emailDraftMutation.mutateAsync({
         entityType: "lead",
         entityId: leadId,
         intent: "outreach",
         tone: "friendly",
+        signal,
       });
       return { text: "Subject: " + data.subject + "\n\n" + data.body };
     }
@@ -66,8 +67,8 @@ export function LeadInlineAiMenu({
       onDraftEmail(subject, body);
     }
 
-    async function runDuplicates() {
-      const data = await duplicatesMutation.mutateAsync(leadId);
+    async function runDuplicates(signal?: AbortSignal) {
+      const data = await duplicatesMutation.mutateAsync({ leadId, signal });
       const detail =
         data.duplicates.length > 0
           ? "\n\n" +
@@ -87,7 +88,7 @@ export function LeadInlineAiMenu({
     }
 
     return [
-      { key: "summary", label: "Lead summary", run: runSummary },
+      { key: "summary", label: "Lead summary", run: runSummary, expectsCitations: true },
       { key: "next-action", label: "Next best action", run: runNextAction },
       {
         key: "email-draft",
@@ -119,8 +120,8 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
   const predictDealMutation = usePredictDeal();
 
   const actions = useMemo<AiAction[]>(() => {
-    async function runBrief() {
-      const data = await dealSummaryMutation.mutateAsync(dealId);
+    async function runBrief(signal?: AbortSignal) {
+      const data = await dealSummaryMutation.mutateAsync({ dealId, signal });
       const parts = [
         data.summary,
         data.risks.length ? "Risks:\n" + data.risks.join("\n") : "",
@@ -130,8 +131,8 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
       return { text: parts.join("\n\n"), citations: data.citations };
     }
 
-    async function runNextAction() {
-      const data = await nextBestActionsMutation.mutateAsync(1);
+    async function runNextAction(signal?: AbortSignal) {
+      const data = await nextBestActionsMutation.mutateAsync({ limit: 1, signal });
       const first = data.actions[0];
       if (!first) return { text: "No priority action identified." };
       return {
@@ -139,19 +140,20 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
       };
     }
 
-    async function runFollowUp() {
+    async function runFollowUp(signal?: AbortSignal) {
       const data = await followUpMutation.mutateAsync({
         meetingTitle: "Meeting — " + dealName,
         attendeeType: "lead",
         attendeeId: dealId,
         outcome: "discussed deal progress",
         scheduledAt: new Date().toISOString(),
+        signal,
       });
       return { text: data.draft };
     }
 
-    async function runWinProbability() {
-      const data = await predictDealMutation.mutateAsync(dealId);
+    async function runWinProbability(signal?: AbortSignal) {
+      const data = await predictDealMutation.mutateAsync({ dealId, signal });
       const riskPart = data.riskFactors.length
         ? "\n\nRisk factors:\n" + data.riskFactors.join("\n")
         : "";
@@ -175,7 +177,7 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
     }
 
     return [
-      { key: "brief", label: "Deal brief", run: runBrief },
+      { key: "brief", label: "Deal brief", run: runBrief, expectsCitations: true },
       { key: "next-action", label: "Next best action", run: runNextAction },
       {
         key: "meeting-followup",
@@ -213,12 +215,13 @@ export function ContactInlineAiMenu({
   const nextActionMutation = useNextBestAction();
 
   const actions = useMemo<AiAction[]>(() => {
-    async function runEmailDraft() {
+    async function runEmailDraft(signal?: AbortSignal) {
       const data = await emailDraftMutation.mutateAsync({
         entityType: "lead",
         entityId: contactId,
         intent: "outreach",
         tone: "formal",
+        signal,
       });
       return { text: "Subject: " + data.subject + "\n\n" + data.body };
     }
@@ -231,8 +234,8 @@ export function ContactInlineAiMenu({
       onDraftEmail(subject, body);
     }
 
-    async function runNextAction() {
-      const data = await nextActionMutation.mutateAsync(contactId);
+    async function runNextAction(signal?: AbortSignal) {
+      const data = await nextActionMutation.mutateAsync({ leadId: contactId, signal });
       return {
         text: [data.action, data.reasoning, data.template].filter(Boolean).join("\n\n"),
       };
@@ -271,17 +274,18 @@ export function AccountInlineAiMenu({
   const emailDraftMutation = useCrmEmailDraft();
 
   const actions = useMemo<AiAction[]>(() => {
-    async function runBrief() {
-      const data = await accountSummaryMutation.mutateAsync(clientId);
+    async function runBrief(signal?: AbortSignal) {
+      const data = await accountSummaryMutation.mutateAsync({ clientId, signal });
       return { text: data.summary, citations: data.citations };
     }
 
-    async function runEmailDraft() {
+    async function runEmailDraft(signal?: AbortSignal) {
       const data = await emailDraftMutation.mutateAsync({
         entityType: "deal",
         entityId: clientId,
         intent: "client outreach",
         tone: "formal",
+        signal,
       });
       return { text: "Subject: " + data.subject + "\n\n" + data.body };
     }
@@ -295,7 +299,7 @@ export function AccountInlineAiMenu({
     }
 
     return [
-      { key: "brief", label: "Account brief", run: runBrief },
+      { key: "brief", label: "Account brief", run: runBrief, expectsCitations: true },
       {
         key: "email-draft",
         label: "Draft email",

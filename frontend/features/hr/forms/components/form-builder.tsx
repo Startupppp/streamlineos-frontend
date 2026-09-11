@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -88,6 +88,10 @@ function generateKey(label: string, existing: string[]): string {
 export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
   const [fields, setFields] = useState<HrFormField[]>(form?.schema ?? []);
   const [selectedFieldIdx, setSelectedFieldIdx] = useState<number | null>(null);
+
+  const handleToggleField = useCallback((idx: number) => {
+    setSelectedFieldIdx((current) => (current === idx ? null : idx));
+  }, []);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const rhf = useForm<FormValues>({
@@ -137,7 +141,11 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
     const next = [...fields];
     const swap = idx + dir;
     if (swap < 0 || swap >= next.length) return;
-    [next[idx], next[swap]] = [next[swap]!, next[idx]!];
+    const current = next[idx];
+    const target = next[swap];
+    if (!current || !target) return;
+    next[idx] = target;
+    next[swap] = current;
     setFields(next);
     setSelectedFieldIdx(swap);
   }
@@ -306,7 +314,6 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                     ? "border-primary ring-1 ring-primary"
                     : "border-border"
                 }`}
-                onClick={() => setSelectedFieldIdx(selectedFieldIdx === idx ? null : idx)}
               >
                 {selectedFieldIdx === idx ? (
                   <FieldConfigPanel
@@ -317,7 +324,12 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                   />
                 ) : (
                   <div className="flex items-center justify-between px-3 py-2">
-                    <div className="min-w-0">
+                    <button
+                      type="button"
+                      className="min-w-0 text-left"
+                      aria-expanded={false}
+                      onClick={() => handleToggleField(idx)}
+                    >
                       <span className="text-sm font-medium">{field.label || field.key}</span>
                       <span className="ml-2 text-xs text-muted-foreground">{field.type}</span>
                       {field.required && (
@@ -326,7 +338,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                       {field.sensitive && (
                         <span className="ml-1 text-xs text-status-warning-ink">sensitive</span>
                       )}
-                    </div>
+                    </button>
                     <div className="flex items-center gap-1">
                       <Button
                         type="button"
@@ -376,7 +388,6 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                     ? "border-primary ring-1 ring-primary"
                     : "border-border"
                 }`}
-                onClick={() => setSelectedFieldIdx(selectedFieldIdx === idx ? null : idx)}
               >
                 {selectedFieldIdx === idx ? (
                   <FieldConfigPanel
@@ -387,7 +398,12 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                   />
                 ) : (
                   <div className="flex items-center justify-between px-3 py-2">
-                    <div className="min-w-0">
+                    <button
+                      type="button"
+                      className="min-w-0 text-left"
+                      aria-expanded={false}
+                      onClick={() => handleToggleField(idx)}
+                    >
                       <span className="text-sm font-medium">{field.label || field.key}</span>
                       <span className="ml-2 text-xs text-muted-foreground">{field.type}</span>
                       {field.required && (
@@ -396,7 +412,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                       {field.sensitive && (
                         <span className="ml-1 text-xs text-status-warning-ink">sensitive</span>
                       )}
-                    </div>
+                    </button>
                     <div className="flex items-center gap-1">
                       <Button
                         type="button"

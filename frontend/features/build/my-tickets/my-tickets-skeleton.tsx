@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import type { MyTicketsView } from "./my-tickets-view";
 

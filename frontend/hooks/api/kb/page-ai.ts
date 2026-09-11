@@ -1,37 +1,51 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  readAiAbortableScalar,
+  type AiAbortInput,
+  type AiAbortableScalar,
+} from "@/hooks/api/ai-abort";
 
 type PageAiTextResult = { text: string; aiUsage?: AiUsageMeta | null };
 
+const kbPageAiBufferedContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbPageAiBufferedContract),
+);
+
 export function useKbPageSummarize(pageId: number) {
-  return useMutation({
+  return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "summarize"],
-    mutationFn: () => apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/summarize`, {}),
+    mutationFn: (input) =>
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/summarize`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }
 
 export function useKbPageAsk(pageId: number) {
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "ask"],
-    mutationFn: (question: string) =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }),
+    mutationFn: (input: AiAbortableScalar<string>) => {
+      const { value: question, signal } = readAiAbortableScalar(input);
+      return apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }, { signal }, kbPageAiBufferedContract);
+    },
   });
 }
 
 export function useKbPageImprove(pageId: number) {
-  return useMutation({
+  return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "improve"],
-    mutationFn: () => apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/improve`, {}),
+    mutationFn: (input) =>
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/improve`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }
 
 export function useKbPageSuggestRelated(pageId: number) {
-  return useMutation({
+  return useAuthorizedMutation<PageAiTextResult, Error, AiAbortInput | void>("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "suggest-related"],
-    mutationFn: () =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/suggest-related`, {}),
+    mutationFn: (input) =>
+      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/suggest-related`, {}, { signal: input?.signal }, kbPageAiBufferedContract),
   });
 }

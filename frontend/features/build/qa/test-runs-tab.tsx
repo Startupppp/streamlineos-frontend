@@ -29,14 +29,14 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestRunSheet } from "./test-run-sheet";
 
-const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
+const RUN_STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
   in_progress: "text-status-info-ink border-status-info-rule",
   completed: "text-status-success-ink border-status-success-rule",
   aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
-const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {
+const RUN_STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",
@@ -98,7 +98,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const [deleteTarget, setDeleteTarget] = useState<TestRun | null>(null);
 
   const filters = statusFilter !== "all" ? { status: statusFilter } : undefined;
-  const { data: runs, isLoading, isError, refetch } = useTestRuns(projectId, filters);
+  const { data: runs, isLoading, isError, error, refetch } = useTestRuns(projectId, filters);
   const deleteRun = useDeleteTestRun();
 
   const handleDelete = useCallback(() => {
@@ -126,6 +126,12 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const filtersActive = statusFilter !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+  }, []);
 
   const columns = useMemo<DataTableColumn<TestRun>[]>(() => [
     {
@@ -193,7 +199,15 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   ], [canManage, projectId]);
 
   if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
-  if (isError) return <ErrorState onRetry={handleRetry} />;
+  if (isError)
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load test runs"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
@@ -217,8 +231,14 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         <EmptyState
           illustrationPreset="ticket"
           title="No test runs"
-          description="Create a test run to start executing tests."
-          action={canManage ? { label: "New Test Run", onClick: handleNewRun } : undefined}
+          description={filtersActive ? undefined : "Create a test run to start executing tests."}
+          filtersActive={filtersActive}
+          onClearFilters={handleClearFilters}
+          action={
+            !filtersActive && canManage
+              ? { label: "New Test Run", onClick: handleNewRun }
+              : undefined
+          }
           className="min-h-[32dvh] flex-1"
         />
       ) : (

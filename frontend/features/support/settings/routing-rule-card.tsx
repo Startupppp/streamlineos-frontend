@@ -16,6 +16,7 @@ import {
   ROUTING_FIELDS,
   ROUTING_OPERATORS,
 } from "./routing-rule-options";
+import { conditionSchema } from "./routing-rule-form.schema";
 
 interface RoutingRuleCardProps {
   rule: SupportRoutingRule;
@@ -102,21 +103,26 @@ export function RoutingRuleCard({
               )}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {rule.conditions.map((condition, conditionIndex) => (
-                <Badge
-                  key={conditionIndex}
-                  variant="outline"
-                  className="text-micro"
-                >
-                  {ROUTING_FIELDS.find(
-                    (field) => field.value === condition.field,
-                  )?.label ?? condition.field}{" "}
-                  {ROUTING_OPERATORS.find(
-                    (operator) => operator.value === condition.op,
-                  )?.label ?? condition.op}{" "}
-                  {condition.value}
-                </Badge>
-              ))}
+              {rule.conditions.map((rawCondition, conditionIndex) => {
+                const parsed = conditionSchema.safeParse(rawCondition);
+                if (!parsed.success) return null;
+                const condition = parsed.data;
+                return (
+                  <Badge
+                    key={conditionIndex}
+                    variant="outline"
+                    className="text-micro"
+                  >
+                    {ROUTING_FIELDS.find(
+                      (field) => field.value === condition.field,
+                    )?.label ?? condition.field}{" "}
+                    {ROUTING_OPERATORS.find(
+                      (operator) => operator.value === condition.op,
+                    )?.label ?? condition.op}{" "}
+                    {condition.value}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">

@@ -14,18 +14,6 @@ function accessResponse(
   overrides: Partial<AccessResponse> = {},
 ): AccessResponse {
   return {
-    /*
-     * `scopes`, because that is the field `AccessResponse` actually has and the
-     * one `usePermissionGate` reads — a held permission is a KEY in it
-     * (`permission in data.scopes`).
-     *
-     * This fixture said `permissions: []` and passed `permissions: [...]` in the
-     * case below. No such field exists on the type, and nothing reads it, so the
-     * permission the test claimed to grant was never represented in any shape the
-     * code could see. The suite could not catch that because this branch's
-     * tsconfig excludes test files and there is no `type-check:specs` script, so
-     * no typecheck ever looked at this file.
-     */
     scopes: {},
     isOrgOwner: false,
     canManageOrganizationMembership: false,

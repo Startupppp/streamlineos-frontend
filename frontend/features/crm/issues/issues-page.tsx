@@ -5,7 +5,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Gated } from "@/components/shared";
 import { ErrorState } from "@/components/shared/error-state";
@@ -22,8 +22,8 @@ import {
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { RecordList } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { RecordList } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useCan } from "@/hooks/api/access";
 import { useIssueRecordTypes, useIssues } from "@/hooks/api/crm/issues";
 import { cn } from "@/lib/utils";

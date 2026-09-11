@@ -1,17 +1,22 @@
 "use client";
-import { useMutation } from "@tanstack/react-query";
+
 import { apiClient } from "@/lib/api-client";
-import type { KbArticle } from "@/types/kb";
+import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CreateFromTicketInput {
   ticketId: number;
   spaceId: number;
 }
 
+const kbFromTicketSuccessContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbFromTicketSuccessContract),
+);
+
 export function useCreateKbArticleFromTicket() {
-  return useMutation({
+  return useAuthorizedMutation("kb:articles:create", {
     mutationKey: ["create", "kb", "article", "from", "ticket"],
     mutationFn: ({ ticketId, spaceId }: CreateFromTicketInput) =>
-      apiClient.post<KbArticle>(`/kb/articles/from-ticket/${ticketId}`, { spaceId }),
+      apiClient.post<{ success: boolean }>(`/kb/articles/from-ticket/${ticketId}`, { spaceId }, undefined, kbFromTicketSuccessContract),
   });
 }

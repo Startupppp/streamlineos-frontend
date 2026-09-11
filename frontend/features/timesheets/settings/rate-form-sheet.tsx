@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -26,7 +26,8 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
 import { useProjects } from "@/hooks/api/build";
-import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets/types";
+import type { TimesheetRate, CreateRateInput } from "@/features/timesheets/rate-types";
+import type { BillingType } from "@/features/timesheets/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
 
 const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "FIXED"];
@@ -98,7 +99,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
       rate
         ? {
             projectId: rate.projectId != null ? String(rate.projectId) : SELECT_NONE,
-            userId: rate.userId ?? SELECT_NONE,
+            userId: SELECT_NONE,
             billingType: rate.billingType,
             billRate: rate.billRate,
             costRate: rate.costRate ?? "",

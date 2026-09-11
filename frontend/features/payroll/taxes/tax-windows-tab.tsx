@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +23,9 @@ import { useTaxWindows, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-windo
 import type { TaxWindow, TaxWindowStatus } from "@/types/payroll/reports";
 import { TaxWindowStatusBadge } from "./tax-window-status-badge";
 import { TaxWindowSheet } from "./tax-window-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 const NEXT_STATUS: Partial<Record<TaxWindowStatus, { next: TaxWindowStatus; label: string; confirm: string }>> = {
   DRAFT: {
@@ -50,11 +53,15 @@ interface AdvanceTarget {
 }
 
 export function TaxWindowsTab() {
-  const { data, isLoading } = useTaxWindows();
+  const { data, isLoading, isError, error, refetch } = useTaxWindows();
   const updateMutation = useUpdateTaxWindow();
 
   const [sheetWindow, setSheetWindow] = useState<TaxWindow | null | "new">(null);
   const [advanceTarget, setAdvanceTarget] = useState<AdvanceTarget | null>(null);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const columns: DataTableColumn<TaxWindow>[] = [
     {
@@ -93,7 +100,7 @@ export function TaxWindowsTab() {
       cell: (row) => {
         const advance = NEXT_STATUS[row.status];
         return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1" {...propagationShield}>
             <Button
               variant="ghost"
               size="sm"
@@ -144,26 +151,36 @@ export function TaxWindowsTab() {
 
   return (
     <>
-      <DataTable
-        className="flex-1 min-h-0"
-        data={data ?? []}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        minWidth="720px"
-        toolbar={
-          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleAddClick}>
-            Add Window
-          </AnimatedIconButton>
-        }
-        emptyState={
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No declaration windows yet"
-            description="Create a window to let employees submit tax declarations"
-          />
-        }
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load declaration windows"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={data ?? []}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="720px"
+          toolbar={
+            <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleAddClick}>
+              Add Window
+            </AnimatedIconButton>
+          }
+          emptyState={
+            <EmptyState
+              illustration={<EmptyDocumentsIllustration />}
+              title="No declaration windows yet"
+              description="Create a window to let employees submit tax declarations"
+              action={{ label: "Add Window", onClick: handleAddClick }}
+            />
+          }
+        />
+      )}
 
       {sheetWindow !== null && (
         <TaxWindowSheet

@@ -1,11 +1,14 @@
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "@/features/settings/settings-profile";
-import { SettingsSecurity } from "@/features/settings/settings-security";
-import { MfaSettings } from "@/components/settings/mfa-settings";
+import { SettingsSecuritySection } from "@/features/settings/settings-security-section";
+import { prefetchAccountSettings } from "@/lib/prefetch/settings-account";
 
 export default async function SettingsPage() {
   await enforceRouteAccess("/settings");
+  const state = await prefetchAccountSettings();
   return (
     <PageWrapper
       title="Account Settings"
@@ -33,8 +36,11 @@ export default async function SettingsPage() {
               Change your password and manage account security.
             </p>
           </div>
-          <SettingsSecurity />
-          <MfaSettings />
+          <Suspense>
+            <HydrationBoundary state={state}>
+              <SettingsSecuritySection />
+            </HydrationBoundary>
+          </Suspense>
         </section>
       </div>
     </PageWrapper>

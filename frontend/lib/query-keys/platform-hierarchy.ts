@@ -1,10 +1,12 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const platformHierarchyQueryKeys = {
   calendar: {
     all: [...base, "calendar"] as const,
-    events: (start: string, end: string) =>
-      [...base, "calendar", "events", start, end] as const,
+    events: (start: string, end: string, sources?: readonly string[]) =>
+      sources === undefined
+        ? ([...base, "calendar", "events", start, end] as const)
+        : ([...base, "calendar", "events", start, end, sources] as const),
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
     orgMembers: () => [...base, "calendar", "orgMembers"] as const,
@@ -15,6 +17,7 @@ export const platformHierarchyQueryKeys = {
     hrSupplemental: (from: string, to: string) =>
       [...base, "calendar", "hr-supplemental", from, to] as const,
     sources: () => [...base, "calendar", "sources"] as const,
+    eventDetail: (eventId: number) => [...base, "calendar", "event", eventId] as const,
   },
 
   integrations: {
@@ -32,18 +35,26 @@ export const platformHierarchyQueryKeys = {
 
   salesAnalytics: {
     all: [...base, "salesAnalytics"] as const,
-    velocity: (params: Record<string, unknown>) =>
+    velocity: (params: QueryKeyParams) =>
       [...base, "salesAnalytics", "velocity", params] as const,
     aging: (thresholdDays: number) =>
       [...base, "salesAnalytics", "aging", thresholdDays] as const,
     cycleLength: (repId?: string) =>
-      [...base, "salesAnalytics", "cycleLength", repId] as const,
+      repId === undefined
+        ? ([...base, "salesAnalytics", "cycleLength"] as const)
+        : ([...base, "salesAnalytics", "cycleLength", repId] as const),
     lostAnalysis: (repId?: string) =>
-      [...base, "salesAnalytics", "lostAnalysis", repId] as const,
+      repId === undefined
+        ? ([...base, "salesAnalytics", "lostAnalysis"] as const)
+        : ([...base, "salesAnalytics", "lostAnalysis", repId] as const),
     cohort: (months: number) =>
       [...base, "salesAnalytics", "cohort", months] as const,
     repComparison: (rep1Id?: number, rep2Id?: number) =>
-      [...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const,
+      rep1Id === undefined
+        ? ([...base, "salesAnalytics", "repComparison"] as const)
+        : rep2Id === undefined
+          ? ([...base, "salesAnalytics", "repComparison", rep1Id] as const)
+          : ([...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const),
     sourceReport: () => [...base, "salesAnalytics", "sourceReport"] as const,
   },
 
@@ -51,27 +62,28 @@ export const platformHierarchyQueryKeys = {
     all: [...base, "hierarchy"] as const,
     parentOptions: (parentKind: string, search: string) =>
       [...base, "hierarchy", "parentOptions", parentKind, search] as const,
-    businessUnits: (params?: Record<string, unknown>) =>
+    businessUnits: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "businessUnits", params] as const)
         : ([...base, "hierarchy", "businessUnits"] as const),
-    orgBranches: (params?: Record<string, unknown>) =>
+    branchOptions: () => [...base, "hierarchy", "branchOptions"] as const,
+    orgBranches: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "orgBranches", params] as const)
         : ([...base, "hierarchy", "orgBranches"] as const),
-    departments: (params?: Record<string, unknown>) =>
+    departments: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "departments", params] as const)
         : ([...base, "hierarchy", "departments"] as const),
-    teams: (params?: Record<string, unknown>) =>
+    teams: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "teams", params] as const)
         : ([...base, "hierarchy", "teams"] as const),
-    locations: (params?: Record<string, unknown>) =>
+    locations: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "locations", params] as const)
         : ([...base, "hierarchy", "locations"] as const),
-    costCenters: (params?: Record<string, unknown>) =>
+    costCenters: (params?: QueryKeyParams) =>
       params !== undefined
         ? ([...base, "hierarchy", "costCenters", params] as const)
         : ([...base, "hierarchy", "costCenters"] as const),

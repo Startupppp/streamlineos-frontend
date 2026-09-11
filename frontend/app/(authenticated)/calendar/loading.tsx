@@ -21,7 +21,7 @@ export default function CalendarLoading() {
         </div>
 
         <div className="flex-1 min-h-0">
-          <Skeleton className="h-full w-full rounded-lg min-h-[420px]" />
+          <Skeleton className="h-full w-full rounded-lg" />
         </div>
       </div>
     </PageWrapper>

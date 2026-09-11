@@ -1,8 +1,12 @@
 /backend/
 /node_modules
+.artifacts/
 .cursor/mcp.json
 .DS_Store
 **/.DS_Store
 
 # agent scratch space (tickets, evidence reports) — never committed
 .scratch/
+# Agent scratch probes: local-only, may hold credentials in the process env. Never commit.
+frontend/.scratch/
+architecture-refactor/audit-2026-09-09/logs

@@ -49,6 +49,8 @@ interface ApprovalsTableProps {
   hasMore: boolean;
   isFetchingMore: boolean;
   onLoadMore: () => void;
+  filtersActive: boolean;
+  onClearFilters: () => void;
 }
 
 function ApprovalsTable({
@@ -67,6 +69,8 @@ function ApprovalsTable({
   hasMore,
   isFetchingMore,
   onLoadMore,
+  filtersActive,
+  onClearFilters,
 }: ApprovalsTableProps) {
   const columns = useMemo<DataTableColumn<TimesheetPeriod>[]>(
     () => [
@@ -199,7 +203,9 @@ function ApprovalsTable({
           <EmptyState
             illustrationPreset="approval"
             title="No timesheets"
-            description={TAB_EMPTY[tab]}
+            description={filtersActive ? undefined : TAB_EMPTY[tab]}
+            filtersActive={filtersActive}
+            onClearFilters={onClearFilters}
             compact
           />
         }
@@ -233,6 +239,7 @@ export interface ApprovalsTabPanelProps {
   onBulkApprove: () => void;
   onBulkReject: () => void;
   isBulkPending: boolean;
+  onClearFilters: () => void;
 }
 
 export function ApprovalsTabPanel({
@@ -248,6 +255,7 @@ export function ApprovalsTabPanel({
   onBulkApprove,
   onBulkReject,
   isBulkPending,
+  onClearFilters,
 }: ApprovalsTabPanelProps) {
   const {
     data,
@@ -281,6 +289,8 @@ export function ApprovalsTabPanel({
     void fetchNextPage();
   }, [fetchNextPage]);
 
+  const filtersActive = memberFilter !== "all" || !!dateFrom || !!dateTo;
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -300,6 +310,8 @@ export function ApprovalsTabPanel({
           hasMore={hasNextPage}
           isFetchingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
+          filtersActive={filtersActive}
+          onClearFilters={onClearFilters}
         />
       </CardContent>
     </Card>

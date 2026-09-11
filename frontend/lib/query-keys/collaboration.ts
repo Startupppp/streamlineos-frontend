@@ -3,31 +3,25 @@ import { queryKeyBase as base } from "./base";
 export const collaborationQueryKeys = {
   chat: {
     all: [...base, "chat"] as const,
-    myChannels: (orgId?: string | null) =>
-      orgId
-        ? ([...base, "chat", "myChannels", orgId] as const)
-        : ([...base, "chat", "myChannels"] as const),
+    myChannels: () => [...base, "chat", "myChannels"] as const,
     archivedChannels: () => [...base, "chat", "archivedChannels"] as const,
     publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (channelId: number) =>
       [...base, "chat", "channel", channelId] as const,
     messages: (channelId: number, cursor?: number) =>
-      [...base, "chat", "messages", channelId, cursor] as const,
+      cursor === undefined
+        ? ([...base, "chat", "messages", channelId] as const)
+        : ([...base, "chat", "messages", channelId, cursor] as const),
     poll: (channelId: number, since: string) =>
       [...base, "chat", "poll", channelId, since] as const,
     entityActions: (channelId: number, referenceKeys: string) =>
       [...base, "chat", "entityActions", channelId, referenceKeys] as const,
     entityActionOptions: (channelId: number, referenceKey: string) =>
       [...base, "chat", "entityActionOptions", channelId, referenceKey] as const,
-    unreadTotal: (orgId?: string | null) =>
-      orgId
-        ? ([...base, "chat", "unreadTotal", orgId] as const)
-        : ([...base, "chat", "unreadTotal"] as const),
+    unreadTotal: () => [...base, "chat", "unreadTotal"] as const,
     onlineUsers: () => [...base, "chat", "onlineUsers"] as const,
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
-    typing: (channelId: number) =>
-      [...base, "chat", "typing", channelId] as const,
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
     thread: (channelId: number, messageId: number) =>
       [...base, "chat", "thread", channelId, messageId] as const,
@@ -36,6 +30,9 @@ export const collaborationQueryKeys = {
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
     inviteLink: (channelId: number) =>
       [...base, "chat", "inviteLink", channelId] as const,
+    attachment: (channelId: number, attachmentId: number) =>
+      [...base, "chat", "attachment", channelId, attachmentId] as const,
+    orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
   aiChat: {

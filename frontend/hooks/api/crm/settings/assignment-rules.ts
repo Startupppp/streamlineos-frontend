@@ -4,6 +4,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const assignmentRulesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentRulesListContract),
+);
+const assignmentPreviewLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentPreviewContract),
+);
+const assignmentRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.assignmentRuleContract),
+);
+const deleteAssignmentRuleLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.deleteAssignmentRuleContract),
+);
 
 /**
  * The two the `assignment_type` column will hold. `assignmentRuleCreateSchema`
@@ -107,17 +122,17 @@ export interface AssignmentPreviewResult {
 export function useAssignmentRules() {
   return useGatedQuery("crm:assignment-rules:manage", {
     queryKey: queryKeys.crmSettings.assignmentRules(),
-    queryFn: () => apiClient.get<AssignmentRule[]>("/crm/assignment-rules"),
+    queryFn: ({ signal }) => apiClient.get<AssignmentRule[]>("/crm/assignment-rules", undefined, signal, assignmentRulesLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "create"],
     mutationFn: (input: CreateAssignmentRuleInput) =>
-      apiClient.post<AssignmentRule>("/crm/assignment-rules", input),
+      apiClient.post<AssignmentRule>("/crm/assignment-rules", input, undefined, assignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -126,10 +141,10 @@ export function useCreateAssignmentRule() {
 
 export function useUpdateAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateAssignmentRuleInput) =>
-      apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data),
+      apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data, undefined, assignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -138,10 +153,10 @@ export function useUpdateAssignmentRule() {
 
 export function useDeleteAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`, undefined, undefined, deleteAssignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -150,10 +165,10 @@ export function useDeleteAssignmentRule() {
 
 export function useReorderAssignmentRules() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "reorder"],
     mutationFn: (input: ReorderAssignmentRulesInput) =>
-      apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input),
+      apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input, undefined, deleteAssignmentRuleLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
     },
@@ -161,7 +176,7 @@ export function useReorderAssignmentRules() {
 }
 
 export function usePreviewAssignmentRule() {
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "preview"],
     mutationFn: (sampleLead: {
       source?: string;
@@ -169,6 +184,6 @@ export function usePreviewAssignmentRule() {
       score?: number;
       city?: string;
     }) =>
-      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }),
+      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }, undefined, assignmentPreviewLazy),
   });
 }

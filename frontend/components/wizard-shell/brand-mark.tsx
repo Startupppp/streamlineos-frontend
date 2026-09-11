@@ -1,4 +1,4 @@
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
 import { cn } from "@/lib/utils";
 

@@ -1,8 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const supportSavedViewListContract = lazyContract(() =>
+  import("@/hooks/api/support/support-workspace-schema").then((m) => m.supportSavedViewListContract),
+);
 
 export type SavedViewVisibility = "personal" | "team" | "global";
 
@@ -19,9 +24,9 @@ export interface SupportSavedView {
 }
 
 export function useSupportSavedViews() {
-  return useQuery({
-    queryKey: queryKeys.supportViews.list(),
-    queryFn: () => apiClient.get<SupportSavedView[]>("/support/views"),
+  return useGatedQuery("support:tickets:view", {
+    queryKey: supportAndWorkflowsQueryKeys.supportViews.list(),
+    queryFn: ({ signal }) => apiClient.get("/support/views", undefined, signal, supportSavedViewListContract),
     staleTime: 60_000,
   });
 }

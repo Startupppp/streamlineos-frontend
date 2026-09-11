@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrEmployees, useHrTemplates } from "@/hooks/api/hr";
 import { useRenderLetter, useSaveLetter } from "@/hooks/api/hr/letters";

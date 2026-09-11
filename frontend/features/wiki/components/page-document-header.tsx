@@ -24,14 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useDeleteKbPage, useCreateKbPageTemplate } from "@/hooks/api/kb";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import PageCommentsSheet from "./page-comments-sheet";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageMetadataSheet from "./page-metadata-sheet";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
-import { KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 
 interface PageDocumentHeaderProps {
   page: KbPageDetail;

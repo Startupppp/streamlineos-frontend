@@ -6,10 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useCreateKbPage } from "@/hooks/api/kb";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 
 interface PageTreeProps {
   nodes: KbPageTreeNode[];
@@ -54,7 +54,7 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
 
   const rootNodes = nodes
     .filter((n) => n.parentPageId === null)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   if (rootNodes.length === 0) {
     return (

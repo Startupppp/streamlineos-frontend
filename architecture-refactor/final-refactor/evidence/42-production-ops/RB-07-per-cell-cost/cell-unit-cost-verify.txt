@@ -1,0 +1,36 @@
+$ npm run --silent cell:unit-cost:verify
+--- stdout+stderr ---
+PASS  UNIT_COSTS contains exactly nine units
+PASS  every unit has a unique id
+PASS  every unit has source of measured, ledger, or unmeasured
+PASS  canContributeQuantity returns false for unmeasured units
+PASS  canContributeQuantity returns true for measured and ledger units
+PASS  unmeasured units have requiredInput and no countSql
+PASS  measured and ledger units have countSql
+PASS  the per-ai-token unit uses ledger source
+PASS  per-1k-requests is unmeasured and names the required input
+PASS  per-1k-realtime-minutes is unmeasured and names the required input
+PASS  detectAnomalousTenants refuses with fewer than 3 samples
+PASS  detectAnomalousTenants returns ok with no anomalous when all costs equal
+PASS  detectAnomalousTenants flags a clear outlier in a realistic sample
+PASS  detectAnomalousTenants respects the stdDevThreshold parameter
+PASS  vendored units declare vendorCostSource
+PASS  per-1k-requests requiredInput mentions .load-driver-results.json
+PASS  EXPECTED_FIELDS names requestCount, durationMs, and realtimeConnectionMinutes
+PASS  readLoadDriverResults returns null when file does not exist
+PASS  readLoadDriverResults returns ok with correct fields when file is valid
+PASS  readLoadDriverResults reports missingFields when requestCount is absent
+PASS  readLoadDriverResults returns parse-error for malformed JSON
+PASS  readSpanLog returns skipped when logFilePath is null
+PASS  readSpanLog returns absent when file does not exist
+PASS  readSpanLog returns ok and aggregates db.query.execute spans by org.id
+PASS  readSpanLog aggregates cache.roundtrip spans by org.id
+PASS  readSpanLog puts spans without org.id into the null bucket
+PASS  readSpanLog ignores non-SPAN lines and non-relevant seams
+PASS  topOrgsByDbTime returns orgs sorted descending by db time, excluding null bucket
+PASS  ATTRIBUTION_NOTES names egress, dbTime, cacheTime, pgStatStatements, pgStatDatabase, redisMemory
+PASS  ATTRIBUTION_NOTES.egress mentions CDN or load balancer
+PASS  ATTRIBUTION_NOTES.pgStatStatements explains why it cannot attribute per org
+
+All cell-unit-cost tests passed.
+--- exit code: 0 ---

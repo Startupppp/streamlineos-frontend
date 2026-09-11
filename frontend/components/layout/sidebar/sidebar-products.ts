@@ -1,6 +1,6 @@
 import { LayoutDashboard, Users, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
 import type { ComponentType } from "react";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
 import type { ProductKey } from "./sidebar-nav-types";
 
@@ -25,8 +25,8 @@ export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration"]);
 function resolveProductHref(key: ProductKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
   if (exception !== undefined) return exception;
-  const product = moduleByProductKey(key);
-  return product?.route ?? `/${key}`;
+  const manifestModule = moduleByProductKey(key);
+  return manifestModule?.route ?? `/${key}`;
 }
 
 // Verify at module load time that the manifest productKey set and the
@@ -82,6 +82,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",
   sign: "Envelopes & e-signatures",
+  workflows: "Automation & integrations",
 };
 
 export interface ModuleAccent {
@@ -170,6 +171,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-category-sky-fill",
     border: "border-category-sky-rule",
   },
+  workflows: {
+    text: "!text-category-violet-ink",
+    bg: "bg-category-violet-surface",
+    indicator: "bg-category-violet-fill",
+    border: "border-category-violet-rule",
+  },
 };
 
 const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
@@ -182,6 +189,7 @@ const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
   surveys: "surveys",
   payroll: "payroll",
   sign: "sign",
+  workflows: "workflows",
 };
 
 export function isModuleEnabled(

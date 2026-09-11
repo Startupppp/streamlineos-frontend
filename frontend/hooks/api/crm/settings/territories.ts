@@ -4,6 +4,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const territoriesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/territories-schema").then((m) => m.territoriesListContract),
+);
+const territoryLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/territories-schema").then((m) => m.territoryContract),
+);
+const deleteTerritoryLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/territories-schema").then((m) => m.deleteTerritoryContract),
+);
+const territoryPreviewLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/territories-schema").then((m) => m.territoryPreviewContract),
+);
 
 export interface TerritoryCriteria {
   countries?: string[];
@@ -60,17 +75,17 @@ export interface TerritoryPreviewResult {
 export function useTerritories() {
   return useGatedQuery("crm:territories:manage", {
     queryKey: queryKeys.crmSettings.territories(),
-    queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
+    queryFn: ({ signal }) => apiClient.get<Territory[]>("/crm/territories", undefined, signal, territoriesLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "create"],
     mutationFn: (input: CreateTerritoryInput) =>
-      apiClient.post<Territory>("/crm/territories", input),
+      apiClient.post<Territory>("/crm/territories", input, undefined, territoryLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
     },
@@ -79,10 +94,10 @@ export function useCreateTerritory() {
 
 export function useUpdateTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "update"],
     mutationFn: ({ id, ...data }: UpdateTerritoryInput) =>
-      apiClient.patch<Territory>(`/crm/territories/${id}`, data),
+      apiClient.patch<Territory>(`/crm/territories/${id}`, data, undefined, territoryLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
     },
@@ -91,10 +106,10 @@ export function useUpdateTerritory() {
 
 export function useDeleteTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`, undefined, undefined, deleteTerritoryLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
     },
@@ -102,7 +117,7 @@ export function useDeleteTerritory() {
 }
 
 export function usePreviewTerritory() {
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "preview"],
     mutationFn: (sampleLead: {
       city?: string;
@@ -110,6 +125,6 @@ export function usePreviewTerritory() {
       country?: string;
       industry?: string;
     }) =>
-      apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", { sample: sampleLead }),
+      apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", { sample: sampleLead }, undefined, territoryPreviewLazy),
   });
 }

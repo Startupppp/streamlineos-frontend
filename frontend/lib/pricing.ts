@@ -169,6 +169,21 @@ export const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
+/**
+ * `PRICING_TIERS.find(…)!` appeared three times, and the `!` is the only reason
+ * a renamed or removed tier id compiled: `find` returns `undefined`, every
+ * `STARTER_TIER.annual` read below becomes a crash at the call site, and nothing
+ * names the tier that went missing. Resolving it once, loudly, keeps the failure
+ * at the file that owns the list.
+ */
+function requireTier(id: PricingTier["id"]): PricingTier {
+  const tier = PRICING_TIERS.find((candidate) => candidate.id === id);
+  if (!tier) throw new Error(`pricing: PRICING_TIERS has no "${id}" tier`);
+  return tier;
+}
+
+const STARTER_TIER = requireTier("starter");
+
 export const COMPETITOR_PRICES = {
   allInOneErp: 580,
   zohoOne: 2500,
@@ -192,11 +207,10 @@ export function calculateSavingsVsAllInOne(
   billingPeriod: BillingPeriod = "annual",
 ): SavingsBreakdown {
   const competitorAnnual = COMPETITOR_PRICES.allInOneErp * seats * 12;
-  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
   const streamlinePerSeat =
     billingPeriod === "annual"
-      ? (starter.annual ?? 0)
-      : (starter.monthly ?? 0);
+      ? (STARTER_TIER.annual ?? 0)
+      : (STARTER_TIER.monthly ?? 0);
   // Org-priced plans: compare total org cost vs competitor per-seat stack for the seat count.
   const streamlineAnnual = streamlinePerSeat * 12;
   return {
@@ -216,8 +230,7 @@ export function calculateSavingsVsStack(seats: number) {
     COMPETITOR_PRICES.teamChat +
     COMPETITOR_PRICES.notion;
   const stackAnnual = stackPerSeat * seats * 12;
-  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
-  const streamlineAnnual = (starter.annual ?? 0) * 12;
+  const streamlineAnnual = (STARTER_TIER.annual ?? 0) * 12;
   return {
     stackAnnual,
     stackPerSeat,
@@ -230,8 +243,7 @@ export function calculateSavingsVsStack(seats: number) {
 }
 
 export function bundleSavingsCopy(): string {
-  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
-  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Starter is ${fmt(starter.annual ?? annualOf(PRICING.starterMonthlyInr))}/month on annual billing.`;
+  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Starter is ${fmt(STARTER_TIER.annual ?? annualOf(PRICING.starterMonthlyInr))}/month on annual billing.`;
 }
 
 export function cheapestAnnualLabel(): string {

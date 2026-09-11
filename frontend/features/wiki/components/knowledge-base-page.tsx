@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { useKbAsk } from "@/hooks/api/kb/ask";
+import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import {
   useKbConversations,
   useRenameKbConversation,
@@ -26,7 +27,7 @@ import {
   useUploadKbSource,
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
-import { pageHref } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
@@ -38,11 +39,12 @@ import {
   buildKbHistoryRows,
   type ChatMessage,
 } from "@/features/wiki/components/kb-chat-parts";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
   question: string;
+  answer?: string;
   error?: string;
 }
 
@@ -68,6 +70,7 @@ export default function KnowledgeBasePage() {
   const loadingOlderRef = useRef(false);
   const isNearBottomRef = useRef(true);
   const tempIdRef = useRef(0);
+  const generationRef = useRef(0);
   const initializedRef = useRef(false);
 
   const ask = useKbAsk();
@@ -178,25 +181,36 @@ export default function KnowledgeBasePage() {
     setInput("");
     isNearBottomRef.current = true;
     setPending({ question: trimmed });
+    const generation = ++generationRef.current;
+    function handleToken(token: string) {
+      if (generationRef.current === generation)
+        setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
+    }
     ask.mutate(
-      { question: trimmed, conversationId: activeConversationId ?? undefined },
+      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken },
       {
         onSuccess: (data) => {
+          if (generationRef.current !== generation) return;
           const convId = activeConversationId ?? data.conversationId;
           const now = new Date().toISOString();
           const userMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "user", content: trimmed, citations: null, createdAt: now };
           const assistantMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "assistant", content: data.answer, citations: data.citations ?? null, createdAt: now };
-          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(queryKeys.kb.chatConversationMessages(convId), (old) => {
+          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(convId), (old) => {
             if (!old || old.pages.length === 0) {
               return { pages: [{ messages: [assistantMsg, userMsg], nextCursor: null }], pageParams: [undefined] };
             }
             return { ...old, pages: old.pages.map((page, i) => i === 0 ? { ...page, messages: [assistantMsg, userMsg, ...page.messages] } : page) };
           });
           if (activeConversationId === null) setConversation(data.conversationId);
-          void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+          void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           setPending(null);
         },
         onError: (error) => {
+          if (generationRef.current !== generation) return;
+          if (isAiStreamAbort(error)) {
+            setPending((current) => current ? { ...current, error: "Generation stopped. This answer is incomplete." } : current);
+            return;
+          }
           const message = getErrorMessage(error);
           setPending((prev) => (prev ? { ...prev, error: message } : prev));
           toast.error("Couldn't get an answer", { description: message });
@@ -218,15 +232,21 @@ export default function KnowledgeBasePage() {
     setConversationsOpen((prev) => { if (prev) setConversationsSearch(""); return !prev; });
   }
   function handleConversationsSearchChange(v: string) { setConversationsSearch(v); }
-  function handleSelectConversation(id: number) { setConversation(id); setConversationsOpen(false); }
-  function handleNewChat() { setConversation(null); setConversationsOpen(false); setPending(null); }
+  function handleStop() { ask.stop(); }
+  function handleRegenerate() {
+    if (!pending || ask.isPending) return;
+    ask.resetAttempt();
+    sendMessage(pending.question);
+  }
+  function handleSelectConversation(id: number) { generationRef.current += 1; ask.stop(); setPending(null); setConversation(id); setConversationsOpen(false); }
+  function handleNewChat() { generationRef.current += 1; ask.stop(); setConversation(null); setConversationsOpen(false); setPending(null); }
   function handleLoadMoreConversations() { void conversationsQuery.fetchNextPage(); }
 
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id, {
       onSuccess: () => {
         if (id === activeConversationId) setConversation(null);
-        void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+        void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
       },
       onError: (error) => toast.error("Couldn't delete conversation", { description: getErrorMessage(error) }),
     });
@@ -258,7 +278,7 @@ export default function KnowledgeBasePage() {
     };
   }
 
-  const sources = sourcesQuery.data ?? [];
+  const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
 
   return (
@@ -344,7 +364,9 @@ export default function KnowledgeBasePage() {
                     {pending?.error && (
                       <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
-                    {ask.isPending && <TypingBubble reduce={Boolean(reduce)} />}
+                    {pending?.error && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.answer && <ChatBubble message={{ id: "pending-answer", role: "assistant", content: pending.answer }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />}
+                    {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
                   </>
                 )}
                 </div>
@@ -353,6 +375,7 @@ export default function KnowledgeBasePage() {
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">
                   <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-11 rounded-xl text-sm" autoFocus />
+                  {ask.isPending && <Button variant="outline" onClick={handleStop}>Stop</Button>}
                   <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-11 w-11 shrink-0 rounded-xl p-0" aria-label="Send">
                     <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
                       <Send className="h-4 w-4" />

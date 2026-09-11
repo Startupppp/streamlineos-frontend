@@ -7,10 +7,15 @@ import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const storageUploadC = lazyContract(() =>
+  import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
+);
+
 interface FileUploadProps {
-  onUploadComplete: (url: string, key: string) => void;
+  onUploadComplete: (key: string) => void;
   folder?: string;
   maxSize?: number;
   accept?: string;
@@ -19,7 +24,7 @@ interface FileUploadProps {
 }
 
 interface UploadedFileRowProps {
-  file: { url: string; key: string; name: string };
+  file: { key: string; name: string };
   index: number;
   onRemove: (index: number) => void;
 }
@@ -58,7 +63,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
-    Array<{ url: string; key: string; name: string }>
+    Array<{ key: string; name: string }>
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,13 +93,13 @@ export function FileUpload({
         formData.append("folder", folder);
 
         try {
-          const result = await apiClient.upload<{ url: string; key: string }>(
+          const result = await apiClient.upload<{ key: string }>(
             "/storage/upload",
             formData,
+            storageUploadC,
           );
-          const newFile = { url: result.url, key: result.key, name: file.name };
-          setUploadedFiles((prev) => [...prev, newFile]);
-          onUploadComplete(result.url, result.key);
+          setUploadedFiles((prev) => [...prev, { key: result.key, name: file.name }]);
+          onUploadComplete(result.key);
         } catch (err) {
           toast.error(`Failed to upload ${file.name}: ${getErrorMessage(err)}`);
           continue;

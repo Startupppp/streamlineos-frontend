@@ -27,11 +27,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useKbPage, useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
-import type { KbPageVersion } from "@/hooks/api/kb/pages";
+import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import PublicPageContent from "./public-page-content";
 import { computeVersionDiff } from "@/features/wiki/lib/version-diff";
-import { pageHref, KNOWLEDGE_BASE } from "@/features/wiki/lib/knowledge-routes";
+import { pageHref, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
 interface DiffSummaryProps {
@@ -90,7 +90,8 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
 
   const { data: currentPage, isLoading: pageLoading, isError: pageError } = useKbPage(pageId);
-  const { data: versions = [], isLoading: versionsLoading } = useKbPageVersions(pageId);
+  const { data: versionsData, isLoading: versionsLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersions(pageId);
+  const versions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
     pageId,
     selectedVersionNumber ?? 0,
@@ -109,6 +110,10 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
 
   function handleRestoreAlertOpenChange(open: boolean) {
     setRestoreAlertOpen(open);
+  }
+
+  function handleLoadMore() {
+    void fetchNextPage();
   }
 
   function handleConfirmRestore() {
@@ -214,6 +219,18 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       </div>
                     </button>
                   ))}
+                  {hasNextPage && (
+                    <LoadingButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLoadMore}
+                      isPending={isFetchingNextPage}
+                      loadingText="Loading…"
+                      className="w-full text-xs h-8 text-muted-foreground"
+                    >
+                      Load more versions
+                    </LoadingButton>
+                  )}
                 </div>
               </ScrollArea>
             </div>

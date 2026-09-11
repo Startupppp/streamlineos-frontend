@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -21,12 +21,22 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/features/hr/onboarding/onboarding-schema").then((m) => m.storageUploadContract),
+);
+const onboardingDocRowContract = lazyContract(() =>
+  import("@/features/hr/onboarding/onboarding-schema").then((m) => m.onboardingDocumentRowContract),
+);
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
+import { useMyOnboardingDocList, useSubmitOnboardingDoc } from "@/hooks/api/hr/onboarding";
 
 import {
   DocumentChecklistRow,
@@ -34,34 +44,6 @@ import {
   type OnboardingDoc,
 } from "./onboarding-document-checklist-row";
 import { UploadSheet, ACCEPTED_EXTENSIONS, validateDocumentFile } from "./onboarding-upload-sheet";
-
-interface OnboardingDocsResponse {
-  data: OnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}
-
-function useMyOnboardingDocs() {
-  return useQuery<OnboardingDoc[]>({
-    queryKey: queryKeys.hr.myOnboardingDocs(),
-    queryFn: async () => {
-      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", { limit: 100 });
-      return res.data;
-    },
-    staleTime: 60_000,
-  });
-}
-
-function useSubmitOnboardingDoc() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "onboarding-doc", "submit"],
-    mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
-      apiClient.post("/hr/onboarding-docs", body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
-    },
-  });
-}
 
 export type EmployeeDocumentsTabHandle = {
   submitPendingUploads: () => Promise<void>;
@@ -91,8 +73,18 @@ export const EmployeeDocumentsTab = forwardRef<
   ref,
 ) {
   const qc = useQueryClient();
-  const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
-  const { data: docTypes, isLoading: typesLoading } = useHrDocumentTypes();
+  const {
+    data: myDocs,
+    isLoading: docsLoading,
+    isError: docsFailed,
+    refetch: refetchDocs,
+  } = useMyOnboardingDocList();
+  const {
+    data: docTypes,
+    isLoading: typesLoading,
+    isError: typesFailed,
+    refetch: refetchDocTypes,
+  } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
 
   const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);
@@ -103,7 +95,13 @@ export const EmployeeDocumentsTab = forwardRef<
   const pickTargetRef = useRef<DocumentType | null>(null);
 
   const isLoading = docsLoading || typesLoading;
+  const isError = docsFailed || typesFailed;
   const isWizard = variant === "wizard";
+
+  const handleRetryLoad = useCallback(() => {
+    void refetchDocs();
+    void refetchDocTypes();
+  }, [refetchDocs, refetchDocTypes]);
 
   const checklist = (() => {
     const country = countryCode?.toUpperCase();
@@ -183,15 +181,15 @@ export const EmployeeDocumentsTab = forwardRef<
       const fd = new FormData();
       fd.append("file", file);
       fd.append("folder", "onboarding-docs");
-      const uploadResult = await apiClient.upload<{ key: string }>("/storage/upload", fd);
-      await apiClient.post("/hr/onboarding-docs", {
+      const uploadResult = await apiClient.upload("/storage/upload", fd, storageUploadContract);
+      await apiClient.post("/hr/onboarding-docs/me", {
         documentTypeId,
         fileUrl: uploadResult.key,
         fileName: file.name,
-      });
+      }, undefined, onboardingDocRowContract);
     }
 
-    await qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
+    await qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
     setPendingFiles(new Map());
   }, [pendingFiles, qc]);
 
@@ -223,6 +221,22 @@ export const EmployeeDocumentsTab = forwardRef<
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-14 rounded-xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <ErrorState
+          title="Couldn’t load your documents"
+          description="The document checklist did not load, so we cannot tell you what is still outstanding. Try again."
+          onRetry={handleRetryLoad}
+          compact
+        />
+        {!hideNav && (onBack || onContinue) ? (
+          <DocumentsTabNav onBack={onBack} onContinue={onContinue} />
+        ) : null}
       </div>
     );
   }

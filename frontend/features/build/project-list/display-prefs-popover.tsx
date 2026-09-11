@@ -51,7 +51,21 @@ const ORDER_OPTIONS: { value: ProjectOrderBy; label: string }[] = [
   { value: "createdAt", label: "Created" },
 ];
 
-const PROPERTY_TOGGLES: { key: keyof DisplayPrefs; label: string }[] = [
+const GROUP_BY_OPTIONS = ["none", "status", "lead"] as const satisfies readonly ProjectGroupBy[];
+const ORDER_BY_OPTIONS = [
+  "name",
+  "status",
+  "targetDate",
+  "progress",
+  "createdAt",
+] as const satisfies readonly ProjectOrderBy[];
+const ORDER_DIR_OPTIONS = ["asc", "desc"] as const satisfies readonly ProjectSortDir[];
+
+type BooleanPrefKey = {
+  [K in keyof DisplayPrefs]: DisplayPrefs[K] extends boolean ? K : never;
+}[keyof DisplayPrefs];
+
+const PROPERTY_TOGGLES: { key: BooleanPrefKey; label: string }[] = [
   { key: "showSummary", label: "Summary" },
   { key: "showStatus", label: "Status" },
   { key: "showPriority", label: "Priority" },
@@ -71,15 +85,18 @@ export function DisplayPrefsPopover({
   onSet,
 }: DisplayPrefsPopoverProps) {
   function handleGroupByChange(value: string) {
-    onSet({ groupBy: value as ProjectGroupBy });
+    const groupBy = GROUP_BY_OPTIONS.find((candidate) => candidate === value);
+    if (groupBy) onSet({ groupBy });
   }
 
   function handleOrderByChange(value: string) {
-    onSet({ orderBy: value as ProjectOrderBy });
+    const orderBy = ORDER_BY_OPTIONS.find((candidate) => candidate === value);
+    if (orderBy) onSet({ orderBy });
   }
 
   function handleOrderDirChange(value: string) {
-    onSet({ orderDir: value as ProjectSortDir });
+    const orderDir = ORDER_DIR_OPTIONS.find((candidate) => candidate === value);
+    if (orderDir) onSet({ orderDir });
   }
 
   function handleShowClosedChange(checked: boolean) {
@@ -161,7 +178,7 @@ export function DisplayPrefsPopover({
               key={p.key}
               id={`toggle-${p.key}`}
               label={p.label}
-              checked={prefs[p.key] as boolean}
+              checked={prefs[p.key]}
               onCheckedChange={() => onToggle(p.key)}
             />
           ))}

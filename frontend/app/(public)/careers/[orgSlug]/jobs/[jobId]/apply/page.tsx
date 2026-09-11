@@ -11,9 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type Props = { params: Promise<{ orgSlug: string; jobId: string }> };
+
+const publicJobApplicationContract = lazyContract(() =>
+  import("@/lib/public-schema").then((m) => m.publicJobApplicationContract),
+);
 
 export default function ApplyPage({ params }: Props) {
   const { orgSlug, jobId } = use(params);
@@ -102,6 +107,8 @@ export default function ApplyPage({ params }: Props) {
           coverLetter: coverLetter.trim() || undefined,
           resumeUrl: resumeUrl.trim() || undefined,
         },
+        undefined,
+        publicJobApplicationContract,
       );
       setTrackingToken(data.trackingToken);
       setSubmitted(true);

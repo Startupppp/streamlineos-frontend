@@ -13,10 +13,11 @@ export function AssetTableSection({
   columns,
   isLoading,
   isError,
-  page,
-  total,
+  hasMore,
+  hasPrevious,
   statusFilter,
-  onPageChange,
+  onNextPage,
+  onPreviousPage,
   onRetry,
   onOpenAdd,
 }: {
@@ -24,10 +25,11 @@ export function AssetTableSection({
   columns: DataTableColumn<Asset>[];
   isLoading: boolean;
   isError: boolean;
-  page: number;
-  total: number;
+  hasMore: boolean;
+  hasPrevious: boolean;
   statusFilter?: string;
-  onPageChange: (page: number) => void;
+  onNextPage: () => void;
+  onPreviousPage: () => void;
   onRetry: () => void;
   onOpenAdd: () => void;
 }) {
@@ -42,11 +44,12 @@ export function AssetTableSection({
       getRowKey={(row) => row.id}
       isLoading={isLoading}
       pagination={{
-        mode: "server",
-        page,
+        mode: "cursor",
         pageSize: PAGE_SIZE,
-        total,
-        onPageChange,
+        hasMore,
+        hasPrevious,
+        onNext: onNextPage,
+        onPrevious: onPreviousPage,
       }}
       minWidth="900px"
       emptyState={

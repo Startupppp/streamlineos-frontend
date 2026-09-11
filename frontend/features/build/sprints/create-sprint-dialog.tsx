@@ -11,6 +11,7 @@ import { createSprintSchema, type CreateSprintInput } from "./sprint-schema";
 import { useCreateSprint } from "@/hooks/api/build";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface CreateSprintDialogProps {
   projectId: number;
@@ -47,7 +48,7 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
   return (
     <>
       {trigger ? (
-        <span onClick={handleOpen} role="button" tabIndex={0}>
+        <span {...activationProps(handleOpen)}>
           {trigger}
         </span>
       ) : (

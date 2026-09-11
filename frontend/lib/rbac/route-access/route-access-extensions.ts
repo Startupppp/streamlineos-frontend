@@ -3,21 +3,38 @@ import type {
   ProductKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 
+export interface BackendRouteRef {
+  readonly method: "get" | "post" | "put" | "patch" | "delete";
+  readonly path: string;
+}
+
 export interface RouteAccessExtension {
   readonly prefix: string;
   readonly exact?: boolean;
   readonly product?: ProductKey;
   readonly permission?: PermissionRequirement;
   readonly reason: string;
+  // Set it and the suite asserts this operation's backend x-permission equals `permission`.
+  readonly backendRoute?: BackendRouteRef;
 }
 
 export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/billing/invoices",
     product: "finance",
-    permission: "accounting:receivables:read",
+    permission: "accounting:read",
     reason:
-      "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it.",
+      "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it. The key is the one the page's own reads declare — GET /invoices, /invoices/stats and /invoices/:id are all accounting:read. It used to be accounting:receivables:read, which no role template grants and which gates only the finance AR endpoints (/accounting/ar-payments, /accounting/customer-statements), so the gate denied every non-owner including the ACCOUNTANT who holds every key this page calls.",
+    backendRoute: { method: "get", path: "/invoices" },
+  },
+  {
+    prefix: "/billing/invoices/new",
+    exact: true,
+    product: "finance",
+    permission: "accounting:create",
+    reason:
+      "Raising an invoice is a create, not a read. The parent /billing/invoices gate is the read key, so without this entry the create surface inherited a read gate. Matches the backend gate on POST /invoices.",
+    backendRoute: { method: "post", path: "/invoices" },
   },
   {
     prefix: "/portal",
@@ -31,12 +48,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "ai:executive-brief:view",
     reason:
       "Matches the backend gate on GET /ai/executive-brief. The surface has no navigation entry.",
+    backendRoute: { method: "get", path: "/ai/executive-brief" },
   },
   {
     prefix: "/ask",
     permission: "kb:pages:view",
     reason:
       "Matches the backend gate on the KB ask endpoints. Knowledge Base reading is a member default, so this denies nobody who keeps platform core.",
+    backendRoute: { method: "post", path: "/kb/ask" },
   },
   {
     prefix: "/blog/access",
@@ -49,6 +68,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "blog:posts:manage",
     reason:
       "Matches the backend gate on the /blog/admin/* endpoints. Authoring is administration, so it is gated on manage rather than on the public read key.",
+    backendRoute: { method: "get", path: "/blog/admin/posts" },
   },
   {
     prefix: "/subjects",
@@ -141,13 +161,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "chat:org-settings:manage",
     reason:
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
-  },
-  {
-    prefix: "/chat/moderation",
-    product: "administration",
-    permission: "chat:huddles:moderate",
-    reason:
-      "Huddle moderation controls (kick, restrict, view active sessions) are administrative. chat:huddles:moderate is outside the universal MEMBER set.",
   },
   {
     prefix: "/calendar/settings",

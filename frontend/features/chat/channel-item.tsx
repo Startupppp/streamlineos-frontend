@@ -13,9 +13,22 @@ import {
 import { formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
-import { ChannelItemMenu } from "./channel-item-menu";
-import { useMarkChannelUnread } from "@/hooks/api";
+import { resolveDirectPartner } from "./channel-member-lookup";
+import dynamic from "next/dynamic";
+import { useMarkChannelUnread } from "@/hooks/api/chat-personal-b";
 import { TruncatedText } from "@/components/ui/truncated-text";
+
+/**
+ * The per-row overflow menu, and the add-members dialog it owns, are behind a
+ * click. Loading them eagerly put both in the first-load chunk of every route
+ * that renders a channel list, because `channel-item` renders once per channel.
+ * `loading: null` costs nothing here: the trigger sits in a hover-revealed
+ * cluster, so there is no layout box to reserve and nothing visible to flash.
+ */
+const ChannelItemMenu = dynamic(
+  () => import("./channel-item-menu").then((m) => ({ default: m.ChannelItemMenu })),
+  { ssr: false, loading: () => null },
+);
 
 export function ChannelItem({
   channel,
@@ -37,9 +50,7 @@ export function ChannelItem({
   onOpenSettings?: (channelId: number) => void;
 }) {
   const otherMember =
-    channel.type === "DIRECT"
-      ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
-      : null;
+    channel.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
 
   const displayName =
     channel.type === "DIRECT" ? otherMember?.name ?? "Unknown" : channel.name;

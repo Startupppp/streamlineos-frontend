@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -13,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -22,52 +22,12 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useEmployeeOnboardingDocs, useReviewDocument } from "@/hooks/api/hr/document-review";
 import { DocCard, type OnboardingDoc } from "./doc-card";
 import { UploadDocSheet } from "./upload-doc-sheet";
-
-const DOCS_PAGE_SIZE = 20;
-
-interface OnboardingDocsResponse {
-  data: OnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}
-
-function useEmployeeOnboardingDocs(userId: string | null, page: number) {
-  return useQuery<OnboardingDocsResponse>({
-    queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, page, limit: DOCS_PAGE_SIZE }),
-    queryFn: () =>
-      apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
-        userId,
-        page,
-        limit: DOCS_PAGE_SIZE,
-      }),
-    enabled: !!userId,
-    staleTime: 30_000,
-  });
-}
-
-function useReviewDocument() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      docId,
-      status,
-      remarks,
-    }: {
-      docId: number;
-      status: "APPROVED" | "RE_UPLOAD_REQUESTED";
-      remarks?: string;
-    }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, { status, remarks }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
-    },
-  });
-}
 
 interface ReviewSheetProps {
   userId: string | null;
@@ -78,11 +38,24 @@ interface ReviewSheetProps {
 
 export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewSheetProps) {
   const reviewMutation = useReviewDocument();
-  const [docsPage, setDocsPage] = useState(1);
-  const { data: docsData, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId, docsPage);
+  const [docsCursorHistory, setDocsCursorHistory] = useState<
+    Array<string | undefined>
+  >([undefined]);
+  const docsPage = docsCursorHistory.length;
+  const docsCursor = docsCursorHistory.at(-1);
+  const {
+    data: docsData,
+    isLoading: docsLoading,
+    isFetching: docsFetching,
+    isError: docsFailed,
+    refetch: refetchDocs,
+  } = useEmployeeOnboardingDocs(userId, docsCursor);
+
+  const handleRetryDocs = useCallback(() => {
+    void refetchDocs();
+  }, [refetchDocs]);
 
   const employeeDocs = docsData?.data;
-  const docsTotalPages = docsData?.pagination.totalPages ?? 1;
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
@@ -92,7 +65,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        setDocsPage(1);
+        setDocsCursorHistory([undefined]);
         onClose();
       }
     },
@@ -100,12 +73,17 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   );
 
   const handlePrevDocsPage = useCallback(() => {
-    setDocsPage((prev) => Math.max(1, prev - 1));
+    setDocsCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
   }, []);
 
   const handleNextDocsPage = useCallback(() => {
-    setDocsPage((prev) => prev + 1);
-  }, []);
+    const nextCursor = docsData?.pagination.nextCursor;
+    if (nextCursor) {
+      setDocsCursorHistory((history) => [...history, nextCursor]);
+    }
+  }, [docsData?.pagination.nextCursor]);
 
   const handleSetApproveDoc = useCallback((doc: OnboardingDoc) => setApproveDoc(doc), []);
 
@@ -216,6 +194,13 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                     <Skeleton key={i} className="h-20 rounded-xl" />
                   ))}
                 </div>
+              ) : docsFailed ? (
+                <ErrorState
+                  title="Couldn’t load this employee’s documents"
+                  description="The submission list did not load, so an empty review queue would be misleading. Try again."
+                  onRetry={handleRetryDocs}
+                  compact
+                />
               ) : !employeeDocs || employeeDocs.length === 0 ? (
                 <EmptyState
                   illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
@@ -234,33 +219,17 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                       onRequestReupload={handleOpenReupload}
                     />
                   ))}
-                  {docsTotalPages > 1 && (
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-dense text-muted-foreground">
-                        Page {docsPage} of {docsTotalPages}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          disabled={docsPage <= 1}
-                          onClick={handlePrevDocsPage}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          disabled={docsPage >= docsTotalPages}
-                          onClick={handleNextDocsPage}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {docsData &&
+                  (docsPage > 1 || docsData.pagination.hasMore) ? (
+                    <CursorPageControls
+                      page={docsPage}
+                      hasNext={docsData.pagination.hasMore}
+                      disabled={docsFetching}
+                      onPrevious={handlePrevDocsPage}
+                      onNext={handleNextDocsPage}
+                      className="pt-1"
+                    />
+                  ) : null}
                 </>
               )}
             </div>

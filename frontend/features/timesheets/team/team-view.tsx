@@ -24,7 +24,7 @@ import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus } from "@/features/timesheets/types";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";
 import { MemberDetailSheet } from "./member-detail-sheet";
@@ -67,7 +67,7 @@ export function TeamView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo<Employee[]>(
+  const employees = useMemo<EmployeeListItem[]>(
     () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
@@ -148,7 +148,6 @@ export function TeamView() {
   const handleThisWeek = useCallback(() => setWeekOffset(0), []);
   const handleRetry = useCallback(() => { void refetchSummary(); }, [refetchSummary]);
 
-  const isLoading = summaryLoading;
   const subtitle = `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")} · ${employees.length} member${employees.length === 1 ? "" : "s"}`;
 
   const motionProps = shouldReduceMotion
@@ -245,7 +244,7 @@ export function TeamView() {
           billablePercent={stats.billablePercent}
           submittedCount={stats.submittedCount}
           missingCount={stats.missingCount}
-          isLoading={isLoading || overviewLoading}
+          isLoading={summaryLoading || overviewLoading}
         />
 
         {summaryError ? (
@@ -259,7 +258,7 @@ export function TeamView() {
           <TeamTable
             rows={filteredRows}
             weekStart={weekStart}
-            isLoading={isLoading}
+            isLoading={summaryLoading}
             onRowClick={handleRowClick}
           />
         )}

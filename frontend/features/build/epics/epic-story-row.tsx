@@ -24,10 +24,10 @@ import {
   InlineStartDate,
 } from "../views/card-inline-date-fields";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
-import { PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface EpicStoryRowProps {
   story: Ticket;
@@ -160,7 +160,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
             ) : null}
           </div>
 
-          <div className="shrink-0" onMouseDown={stopEvent} onClick={stopEvent}>
+          <div className="shrink-0" onMouseDown={stopEvent} onClick={stopEvent} onKeyDown={stopEvent}>
             <Link href={detailHref}>
               <Button
                 variant="ghost"

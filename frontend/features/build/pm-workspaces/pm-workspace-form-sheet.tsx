@@ -28,6 +28,7 @@ import type {
   CreatePmWorkspaceInput,
   UpdatePmWorkspaceInput,
 } from "@/types/projects";
+import { lowerCaseFieldChange } from "@/lib/case-field";
 
 const createSchema = z.object({
   name: z.string().min(1, "Required").max(120),
@@ -49,8 +50,10 @@ type EditFormValues = z.infer<typeof editSchema>;
 const CREATE_DEFAULTS: CreateFormValues = { name: "", slug: "" };
 const EDIT_DEFAULTS: EditFormValues = { name: "", status: "active" };
 
+const PM_WORKSPACE_STATUSES = ["active", "archived"] as const;
+
 function toEditForm(w: PmWorkspace): EditFormValues {
-  return { name: w.name, status: w.status };
+  return { name: w.name, status: PM_WORKSPACE_STATUSES.find((v) => v === w.status) ?? "active" };
 }
 
 interface CreateProps {
@@ -234,7 +237,7 @@ export function PmWorkspaceFormSheet({
                   <Input
                     {...field}
                     placeholder="my-workspace"
-                    onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                    onChange={lowerCaseFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

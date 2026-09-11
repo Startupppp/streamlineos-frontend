@@ -6,7 +6,7 @@ export function formatMinutes(value: number | null): string {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 }
 
-export function formatPercent(value: number | null, decimals = 0): string {
+export function formatNullablePercent(value: number | null, decimals = 0): string {
   if (value === null || Number.isNaN(value)) return "—";
   return `${value.toFixed(decimals)}%`;
 }

@@ -400,7 +400,7 @@ export function OrgDepartmentsPage() {
             <DepartmentForm
               defaultValues={{
                 name: editingDepartment.name,
-                code: editingDepartment.code,
+                code: editingDepartment.code ?? "",
                 branchId: editingDepartment.branchId ?? "",
                 headUserId: editingDepartment.headUserId ?? "",
                 description: editingDepartment.description ?? "",

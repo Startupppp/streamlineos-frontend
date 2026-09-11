@@ -1,13 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { homeSectionPermission } from "@/lib/home/home-sections";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface DashboardAccess {
   accessLoading: boolean;
+  accessResolved: boolean;
+  refetchAccess: () => void;
   hrEnabled: boolean;
   crmEnabled: boolean;
   projectsEnabled: boolean;
@@ -25,17 +28,15 @@ export interface DashboardAccess {
   canViewCrmReports: boolean;
   canViewTickets: boolean;
   canViewPayrollSelf: boolean;
-  canViewPayrollAdmin: boolean;
   canViewOnboardingDocsSummary: boolean;
   canViewExpenses: boolean;
   canCreateExpenses: boolean;
   canApproveExpenses: boolean;
-  canViewInterviews: boolean;
   canViewSignEnvelopes: boolean;
 }
 
 export function useDashboardAccess(): DashboardAccess {
-  const { data, isLoading } = useAccess();
+  const { data, isLoading, refetch } = useAccess();
   const enabledModules = useEnabledModules();
 
   return useMemo(() => {
@@ -44,9 +45,15 @@ export function useDashboardAccess(): DashboardAccess {
     const owner = data?.isOrgOwner ?? false;
     const scopes = data?.scopes ?? {};
     const can = (key: PermissionKey) => owner || key in scopes;
+    const canSection = (id: string) => {
+      const key = homeSectionPermission(id);
+      return key === null ? true : can(key);
+    };
 
     return {
       accessLoading: isLoading,
+      accessResolved: data !== undefined,
+      refetchAccess: () => void refetch(),
       hrEnabled: moduleOn("HR"),
       crmEnabled: moduleOn("CRM"),
       projectsEnabled: moduleOn("PROJECTS"),
@@ -55,22 +62,20 @@ export function useDashboardAccess(): DashboardAccess {
       accountingEnabled: moduleOn("accounting"),
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
-      canViewAttendance: can("hr:attendance:view"),
+      canViewAttendance: canSection("team-attendance"),
       canSelfAttendance: can("self:attendance"),
-      canViewLeaves: can("hr:leaves:view"),
-      canApproveLeaves: can("hr:leaves:approve"),
-      canViewExecutive: can("hr:analytics:read"),
-      canViewCrmLeads: can("crm:leads:view"),
+      canViewLeaves: canSection("leaves-today"),
+      canApproveLeaves: canSection("pending-approvals"),
+      canViewExecutive: canSection("executive"),
+      canViewCrmLeads: canSection("today-activities"),
       canViewCrmReports: can("crm:reports:view"),
-      canViewTickets: can("build:tickets:view"),
+      canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
-      canViewPayrollAdmin: can("payroll:runs:view"),
       canViewOnboardingDocsSummary: can("hr:onboarding:manage"),
       canViewExpenses: can("hr:expenses:view"),
       canCreateExpenses: can("hr:expenses:create"),
       canApproveExpenses: can("hr:expenses:approve"),
-      canViewInterviews: can("hr:interviews:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };
-  }, [data, isLoading, enabledModules]);
+  }, [data, isLoading, refetch, enabledModules]);
 }

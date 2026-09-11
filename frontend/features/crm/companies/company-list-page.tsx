@@ -6,16 +6,17 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
@@ -27,23 +28,6 @@ import { CompanyRowActions, CompanySelectionBar } from "./company-list-controls"
 import { CompanySheet } from "./company-sheet";
 import { CompanyMergeDialog } from "./detail/company-merge-dialog";
 import type { DuplicateOrgPair } from "@/types/crm";
-
-/**
- * Companies.
- *
- * The columns, the domain subtitle under each name, the alignment and the mobile
- * card come from `COMPANY_LAYOUT`. What stays here is what a description cannot
- * say: the search this domain filters on, and what this caller is allowed to do
- * to a row.
- *
- * Merge selection sits in the row-actions column rather than in a leading
- * checkbox column. `RecordList` does forward `DataTable`'s `selection`, but that
- * column comes with a select-all header, and merge takes exactly two records —
- * an affordance offering the whole page to an action that accepts two is an
- * affordance that mostly refuses. The pair-merge flow predates the engine and is
- * the only way into `CompanyMergeDialog`, so it is carried across rather than
- * dropped.
- */
 
 const PAGE_SIZE = 20;
 
@@ -67,7 +51,16 @@ export function CompanyListPage() {
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const page = Number(searchParams.get("page")) || 1;
+
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+  const [cursorIndex, setCursorIndex] = useState(0);
+
+  const filterKey = debouncedSearch.trim();
+
+  useEffect(() => {
+    setCursors([undefined]);
+    setCursorIndex(0);
+  }, [filterKey]);
 
   const deleteCompany = useDeleteCrmOrganization();
 
@@ -88,16 +81,19 @@ export function CompanyListPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null, page: null });
+    updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
+
+  const currentCursor = cursors[cursorIndex];
 
   const { data, isLoading, isError, error, refetch } = useCrmOrganizations({
     search: debouncedSearch.trim() || undefined,
-    limit: PAGE_SIZE,
-    page,
+    pageSize: PAGE_SIZE,
+    cursor: currentCursor,
   });
 
   const companies = useMemo(() => data?.organizations ?? [], [data?.organizations]);
+  const hasMore = data?.hasMore ?? false;
   const isFiltered = !!debouncedSearch.trim();
 
   const mergePair = useMemo<DuplicateOrgPair | null>(() => {
@@ -121,13 +117,18 @@ export function CompanyListPage() {
 
   const handleClearSearch = useCallback(() => {
     setSearch("");
-    updateParams({ q: null, page: null });
+    updateParams({ q: null });
   }, [updateParams]);
 
-  const handlePageChange = useCallback(
-    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
-    [updateParams],
-  );
+  const handleNextPage = useCallback(() => {
+    const next = data?.nextCursor ?? undefined;
+    setCursors((prev) => [...prev.slice(0, cursorIndex + 1), next]);
+    setCursorIndex((i) => i + 1);
+  }, [data?.nextCursor, cursorIndex]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorIndex((i) => Math.max(0, i - 1));
+  }, []);
 
   const handleRowClick = useCallback(
     (row: RecordValue) => router.push(`/crm/companies/${String(row.id)}`),
@@ -260,24 +261,27 @@ export function CompanyListPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <RecordList
-            layout={layout}
-            rows={asRecordValues(companies)}
-            getRowKey={(row) => String(row.id)}
-            onRowClick={handleRowClick}
-            actions={canManage || canMerge ? renderRowActions : undefined}
-            density={density}
-            money={money}
-            minWidth="900px"
-            className={CONTENT_FILL_PANEL}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_SIZE,
-              total: data?.totalCount ?? 0,
-              onPageChange: handlePageChange,
-            }}
-          />
+          <>
+            <RecordList
+              layout={layout}
+              rows={asRecordValues(companies)}
+              getRowKey={(row) => String(row.id)}
+              onRowClick={handleRowClick}
+              actions={canManage || canMerge ? renderRowActions : undefined}
+              density={density}
+              money={money}
+              minWidth="900px"
+              className={CONTENT_FILL_PANEL}
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+              />
+            ) : null}
+          </>
         )}
       </div>
 

@@ -227,7 +227,7 @@ export function CyclesTab() {
               </AnimatedIconButton>
             </motion.div>
           </SheetTrigger>
-          <SheetContent className="flex w-[480px] flex-col gap-0 overflow-hidden p-0">
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create Feedback Cycle</SheetTitle>
             </SheetHeader>

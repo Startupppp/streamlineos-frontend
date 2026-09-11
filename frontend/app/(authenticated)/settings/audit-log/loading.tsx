@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AuditLogLoading() {

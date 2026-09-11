@@ -45,13 +45,15 @@ const CREATE_DEFAULTS: ActionItemFormValues = {
   status: "open",
 };
 
+const ACTION_ITEM_STATUSES = ["open", "in_progress", "done", "converted", "cancelled"] as const;
+
 function itemToFormValues(item: ActionItem): ActionItemFormValues {
   return {
     title: item.title,
     description: item.description ?? "",
     assigneeId: item.assigneeId ?? NONE_SENTINEL,
     dueDate: item.dueDate ? item.dueDate.slice(0, 10) : "",
-    status: item.status,
+    status: ACTION_ITEM_STATUSES.find((v) => v === item.status) ?? "open",
   };
 }
 

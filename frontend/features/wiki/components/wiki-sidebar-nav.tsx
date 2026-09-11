@@ -46,7 +46,7 @@ import {
   KB_SPACES,
   KB_TEMPLATES,
   KB_TRASH,
-} from "@/features/wiki/lib/knowledge-routes";
+} from "@/lib/knowledge-routes";
 
 const WIKI_NAV_GROUPS_KEY = "wiki-nav-groups";
 

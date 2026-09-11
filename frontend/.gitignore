@@ -25,6 +25,8 @@ package-lock.json
 # left 718MB of Turbopack output untracked here, and the repo gates exclude the
 # directory named exactly `.next`, so two of them went red over compiled chunks.
 /.next-*/
+/.next-baseline/
+/.next-buildmart/
 /out/
 
 # production
@@ -93,3 +95,13 @@ docs/superpowers/
 /playwright/.cache/
 # The e2e suite's own dev-server build dir (playwright.config.ts NEXT_DIST_DIR).
 .next-e2e
+
+# minted test session token — never commit
+.capture-cookie*
+.build-lock
+.capture-final.json
+.run-build.mjs
+
+# Local browser and Web Vitals run outputs
+.browser-*-results.json
+.vitals-capture-*.json

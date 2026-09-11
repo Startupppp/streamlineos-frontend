@@ -32,7 +32,7 @@ import {
   useDeleteProduct,
 } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
-import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
+import type { TrackingMethod } from "@/types/inventory";
 
 export function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";

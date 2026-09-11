@@ -59,11 +59,11 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
       ),
   },
   {
-    key: "avgDecisionHours",
+    key: "avgHoursToDecision",
     header: "Avg Decision Time",
     cell: (row) => (
       <span className="tabular-nums">
-        {row.avgDecisionHours === null ? "—" : `${row.avgDecisionHours.toFixed(1)}h`}
+        {row.avgHoursToDecision === null ? "—" : `${row.avgHoursToDecision.toFixed(1)}h`}
       </span>
     ),
   },
@@ -79,9 +79,9 @@ function renderApproverMobileCard(row: ApprovalSlaApprover) {
       <p className="truncate text-sm font-medium text-foreground">{memberLabel(row.name, row.email)}</p>
       <p className="text-xs tabular-nums text-muted-foreground">
         {row.pendingCount} pending ·{" "}
-        {row.avgDecisionHours === null
+        {row.avgHoursToDecision === null
           ? "no decisions yet"
-          : `${row.avgDecisionHours.toFixed(1)}h avg decision`}
+          : `${row.avgHoursToDecision.toFixed(1)}h avg decision`}
       </p>
     </div>
   );

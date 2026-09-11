@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -175,7 +175,7 @@ function RevokeGrantAction({
 export function ClientAccessPage() {
   const canManage = useCan("build:clientvisibility:manage");
 
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const [search, setSearch] = useState("");
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
@@ -184,7 +184,7 @@ export function ClientAccessPage() {
   const [revokeTarget, setRevokeTarget] = useState<ProjectClientGrant | null>(null);
 
   const { data, isLoading, isError, refetch } = useProjectClientGrants({
-    page,
+    cursor: cursorHistory.at(-1),
     limit: PAGE_SIZE,
   });
 
@@ -208,8 +208,12 @@ export function ClientAccessPage() {
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.slice(0, -1));
+  }, []);
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -245,6 +249,11 @@ export function ClientAccessPage() {
 
   function handleRevokeSettled() {
     setRevokeTarget(null);
+  }
+
+  function handleNextPage(): void {
+    const nextCursor = pagination?.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }
 
   const columns: DataTableColumn<ProjectClientGrant>[] = [
@@ -393,12 +402,13 @@ export function ClientAccessPage() {
                 minWidth="680px"
                 className={CONTENT_FILL_PANEL}
               />
-              {pagination && pagination.totalPages > 1 ? (
-                <TablePagination
-                  page={pagination.page}
-                  pageSize={pagination.limit}
-                  total={pagination.total}
-                  onPageChange={setPage}
+              {pagination && (cursorHistory.length > 1 || pagination.hasMore) ? (
+                <CursorPageControls
+                  page={cursorHistory.length}
+                  hasNext={pagination.hasMore}
+                  disabled={isLoading}
+                  onPrevious={handlePreviousPage}
+                  onNext={handleNextPage}
                   className="mt-2 px-1"
                 />
               ) : null}

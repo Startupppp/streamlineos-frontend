@@ -24,7 +24,7 @@ export function toKanbanTicket(t: AllWorkTicket): KanbanTicket {
     cycleId: t.cycleId,
     dueDate: t.dueDate,
     startDate: t.startDate,
-    sequenceId: t.sequenceId,
+    sequenceId: undefined,
     assignee: t.assignee
       ? {
           id: t.assignee.id,
@@ -75,7 +75,7 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
     priority: t.priority,
     points: t.points,
     ticketNumber: t.ticketNumber,
-    sequenceId: t.sequenceId,
+    sequenceId: undefined,
     startDate: t.startDate,
     dueDate: t.dueDate,
     assigneeId: t.assigneeId,
@@ -100,14 +100,15 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
 export function groupByProject(tickets: AllWorkTicket[]): ProjectGroup[] {
   const map = new Map<number, ProjectGroup>();
   for (const t of tickets) {
+    if (t.projectId === null) continue;
     const existing = map.get(t.projectId);
     if (existing) {
       existing.tickets.push(t);
     } else {
       map.set(t.projectId, {
         projectId: t.projectId,
-        projectKey: t.projectKey,
-        projectName: t.projectName,
+        projectKey: t.projectKey ?? "",
+        projectName: t.projectName ?? "",
         tickets: [t],
       });
     }

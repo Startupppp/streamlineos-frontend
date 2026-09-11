@@ -1,17 +1,41 @@
 "use client";
 
 import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
-import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Notification,
   UnreadCount,
   NotificationListParams,
 } from "@/types/notifications";
-import { SHARED_UNREAD_PARAMS, toStringParams, useNotificationInboxInvalidation } from "./notifications-shared";
+import {
+  SHARED_UNREAD_PARAMS,
+  toStringParams,
+  useNotificationInboxInvalidation,
+} from "./notifications-shared";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
+import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
+import {
+  snapshotAndPatchLists,
+  snapshotAndPatchUnified,
+} from "./notifications-inbox-cache";
+import {
+  type NotifMutationContext,
+  type NotificationAck,
+  applyUnreadDelta,
+  beginInboxPatch,
+  countUnreadAmong,
+  isUnreadNow,
+  restoreInboxSnapshot,
+} from "./notifications-inbox-optimistic";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+const notificationListLazy = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationListContract));
+const notificationCountLazy = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract));
+const notificationAckLazy = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationAckContract));
 
 export {
   useArchiveNotification,
@@ -34,12 +58,14 @@ export const useNotifications = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<Notification[]>(
+    queryKey: platformCoreQueryKeys.notifications.list(params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
-        params ? toStringParams(params as Record<string, unknown>) : undefined,
-      ),
+        params ? toStringParams(params) : undefined,
+        signal,
+        notificationListLazy,
+      )).data,
     staleTime: 30_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),
@@ -47,13 +73,19 @@ export const useNotifications = (
 };
 
 /**
- * RT-008. The feed fetched a flat `limit: 50` and ignored the `cursor` the backend has
- * always supported, so it silently truncated at 50 with no way to see anything older.
- *
- * Keyset, not offset: the list endpoint filters `id < cursor`, so the next cursor is
- * simply the last id on the page. A full page means there may be more; a short page is
- * the end. Offset pagination would re-scan everything already seen.
+ * `/notifications` orders by `id DESC` and continues with `id < cursor`, so the
+ * only safe continuation is the lowest id the page carried. Reading
+ * `page[page.length - 1].id` assumes the rows arrive in sort order; a page that
+ * disagrees skips every row between the last element and the true minimum.
  */
+function lowestNotificationId(page: Notification[]): number | undefined {
+  let lowest: number | undefined;
+  for (const item of page) {
+    if (lowest === undefined || item.id < lowest) lowest = item.id;
+  }
+  return lowest;
+}
+
 export const useInfiniteNotifications = (
   params?: Omit<NotificationListParams, "cursor">,
   options?: { enabled?: boolean },
@@ -62,19 +94,30 @@ export const useInfiniteNotifications = (
   const orgId = session?.orgId;
   const limit = params?.limit ?? 30;
 
+  // The page stays a bare `Notification[]` here on purpose: the optimistic cache
+  // helpers in `notifications-inbox-cache.ts` patch `InfiniteData<Notification[]>`
+  // pages in place. The envelope is unwrapped at this boundary, and the
+  // continuation is still the lowest id the page carried — `nextCursor` from the
+  // body would say the same thing.
   return useInfiniteQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list({
-      ...(params as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.notifications.list({
+      ...(params),
       infinite: true,
     }),
-    initialPageParam: undefined as number | undefined,
-    queryFn: ({ pageParam }) =>
-      apiClient.get<Notification[]>(
+    initialPageParam: NO_ID_CURSOR_YET,
+    queryFn: async ({ pageParam, signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
-        toStringParams({ ...(params as Record<string, unknown>), limit, cursor: pageParam }),
-      ),
+        toStringParams({
+          ...(params),
+          limit,
+          cursor: pageParam,
+        }),
+        signal,
+        notificationListLazy,
+      )).data,
     getNextPageParam: (lastPage) =>
-      lastPage.length < limit ? undefined : lastPage[lastPage.length - 1]?.id,
+      lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
     staleTime: 30_000,
     enabled: !!orgId && (options?.enabled ?? true),
   });
@@ -88,12 +131,14 @@ export const useUnreadNotifications = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
 
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.unreadList(),
-    queryFn: () =>
-      apiClient.get<Notification[]>(
+    queryKey: platformCoreQueryKeys.notifications.unreadList(),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
-        toStringParams(SHARED_UNREAD_PARAMS as Record<string, unknown>),
-      ),
+        toStringParams(SHARED_UNREAD_PARAMS),
+        signal,
+        notificationListLazy,
+      )).data,
     staleTime: 30_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),
@@ -106,11 +151,10 @@ export const useUnreadNotificationCount = (
   const { data: session } = useSession();
   const orgId = session?.orgId;
   return useQuery<UnreadCount, Error>({
-    queryKey: queryKeys.notifications.unreadCount(),
-    queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
+    queryKey: platformCoreQueryKeys.notifications.unreadCount(),
+    queryFn: ({ signal }) =>
+      apiClient.get<UnreadCount>("/notifications/unread-count", undefined, signal, notificationCountLazy),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -119,142 +163,72 @@ export const useUnreadNotificationCount = (
 
 export const useMarkNotificationRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<
-    { success: boolean },
-    Error,
-    number,
-    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
-  >({
+  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "mark-read"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/read`),
+    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/read`, undefined, undefined, notificationAckLazy),
     onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      let wasUnread = false;
-      for (const [, data] of previousLists) {
-        const found = data?.find((n) => n.id === id);
-        if (found) {
-          wasUnread = !found.isRead;
-          break;
-        }
-      }
-      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
-        old ? old.map((n) => (n.id === id ? { ...n, isRead: true } : n)) : old,
-      );
-      if (wasUnread) {
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - 1) } : old,
-        );
-      }
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          n.id === id ? { ...n, isRead: true } : n,
+        ),
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) =>
+          item.id === id ? { ...item, isRead: true } : item,
+        ),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },
-    onError: (_err, _id, context) => {
-      if (context) {
-        context.previousLists.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
-        });
-        if (context.previousCount !== undefined) {
-          queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-        }
-      }
-    },
+    onError: (_err, _id, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useMarkAllNotificationsRead = () => {
-  const { invalidateInbox, queryClient } =
-    useNotificationInboxInvalidation();
-  return useMutation<
-    { success: boolean },
-    Error,
-    void,
-    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
-  >({
+  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
+  return useMutation<NotificationAck, Error, void, NotifMutationContext>({
     mutationKey: ["notifications", "mark-all-read"],
-    mutationFn: () => apiClient.patch<{ success: boolean }>("/notifications/read-all"),
+    mutationFn: () => apiClient.patch<NotificationAck>("/notifications/read-all", undefined, undefined, notificationAckLazy),
     onMutate: async () => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
-        old ? old.map((n) => ({ ...n, isRead: true })) : old,
-      );
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) => ({ ...n, isRead: true })),
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) => ({
+          ...item,
+          isRead: true,
+        })),
+      ];
       queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
       return { previousLists, previousCount };
     },
-    onError: (_, _vars, context) => {
-      if (context) {
-        context.previousLists.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
-        });
-        if (context.previousCount !== undefined) {
-          queryClient.setQueryData(
-            queryKeys.notifications.unreadCount(),
-            context.previousCount,
-          );
-        }
-      }
-    },
-    onSettled: () => {
-      invalidateInbox();
-    },
+    onError: (_err, _vars, context) => restoreInboxSnapshot(queryClient, context),
+    onSettled: () => invalidateInbox(),
   });
 };
 
 export const useBulkMarkRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<
-    { success: boolean },
-    Error,
-    number[],
-    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
-  >({
+  return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-mark-read"],
-    mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/read", { ids }),
+    mutationFn: (ids) =>
+      apiClient.post<NotificationAck>("/notifications/bulk/read", { ids }, undefined, notificationAckLazy),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const unreadIds = new Set<number>();
-      for (const [, data] of previousLists) {
-        if (data) {
-          for (const n of data) {
-            if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-          }
-        }
-      }
-      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
-        old ? old.map((n) => (idSet.has(n.id) ? { ...n, isRead: true } : n)) : old,
-      );
-      if (unreadIds.size > 0) {
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
-        );
-      }
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = countUnreadAmong(queryClient, listKey, idSet);
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          idSet.has(n.id) ? { ...n, isRead: true } : n,
+        ),
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) =>
+          idSet.has(item.id) ? { ...item, isRead: true } : item,
+        ),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },
-    onError: (_err, _ids, context) => {
-      if (context) {
-        context.previousLists.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
-        });
-        if (context.previousCount !== undefined) {
-          queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-        }
-      }
-    },
+    onError: (_err, _ids, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };

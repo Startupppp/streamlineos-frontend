@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Papa from "papaparse";
 import { toast } from "sonner";
 import { CloudUploadIcon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -45,10 +44,24 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
     },
   });
 
+  function submitBulkSend(dryRun: boolean) {
+    return function startBulkSend(): void {
+      void form.handleSubmit((values) => handleSubmit(values, dryRun))();
+    };
+  }
+
+  const handleDryRun = submitBulkSend(true);
+  const handleStartBulkSend = submitBulkSend(false);
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    void parseUploadedCsv(file);
+  }
+
+  async function parseUploadedCsv(file: File) {
+    const { default: Papa } = await import("papaparse");
     Papa.parse<Record<string, unknown>>(file, {
       header: true,
       skipEmptyLines: true,
@@ -233,14 +246,14 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
           <Button
             type="button"
             variant="outline"
-            onClick={() => form.handleSubmit((values) => handleSubmit(values, true))()}
+            onClick={handleDryRun}
             disabled={createJob.isPending}
           >
             Dry run
           </Button>
           <LoadingButton
             type="button"
-            onClick={() => form.handleSubmit((values) => handleSubmit(values, false))()}
+            onClick={handleStartBulkSend}
             isPending={createJob.isPending}
             loadingText="Starting…"
           >

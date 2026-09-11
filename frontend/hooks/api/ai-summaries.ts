@@ -1,26 +1,38 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/ai-summaries/types";
+import { lazyContract } from "@/lib/api-envelope";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/build/ai-summaries/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const snapshotWithDiffNullableContract = lazyContract(() =>
+  import("@/hooks/api/ai-schema").then((m) => m.snapshotWithDiffNullableContract),
+);
+const aiSummarySnapshotContract = lazyContract(() =>
+  import("@/hooks/api/ai-schema").then((m) => m.aiSummarySnapshotContract),
+);
 
 export function useLatestSnapshot(entityType: string, entityId: string) {
-  return useQuery({
-    queryKey: queryKeys.aiSummaries.latest(entityType, entityId),
-    queryFn: () =>
-      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`),
+  return useGatedQuery("ai:summaries:view", {
+    queryKey: growthAndSignQueryKeys.aiSummaries.latest(entityType, entityId),
+    queryFn: ({ signal }) =>
+      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`, undefined, signal, snapshotWithDiffNullableContract),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useSaveSnapshot(entityType: string, entityId: string) {
-  return useMutation({
+  return useAuthorizedMutation("ai:summaries:create", {
     mutationKey: ["ai", "summaries", entityType, entityId, "save"],
     mutationFn: (payload: SaveSnapshotPayload) =>
       apiClient.post<AiSummarySnapshot>(
         `/ai/summaries/${entityType}/${entityId}/snapshot`,
         payload,
+        undefined,
+        aiSummarySnapshotContract,
       ),
   });
 }

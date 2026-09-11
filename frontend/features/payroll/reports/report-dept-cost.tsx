@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollDeptCost } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -65,14 +67,15 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
     [month, department, workerType],
   );
 
-  const { data, isLoading } = usePayrollDeptCost(params);
+  const { data, isLoading, isError, error, refetch } = usePayrollDeptCost(params);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
     return {
-      gross: data.rows.reduce((s, r) => s + r.grossTotal, 0),
-      net: data.rows.reduce((s, r) => s + r.netTotal, 0),
-      employer: data.rows.reduce((s, r) => s + r.employerCostTotal, 0),
+      gross: data.rows.reduce((s, r) => s + Number(r.grossTotal), 0),
+      net: data.rows.reduce((s, r) => s + Number(r.netTotal), 0),
+      employer: data.rows.reduce((s, r) => s + Number(r.employerCostTotal), 0),
     };
   }, [data]);
 
@@ -85,12 +88,23 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
     </span>
   ) : undefined;
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load department cost"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <DataTable
       className="flex-1 min-h-0"
       data={data?.rows ?? []}
       columns={COLUMNS}
-      getRowKey={(row) => row.department}
+      getRowKey={(row) => row.department ?? "unassigned"}
       isLoading={isLoading}
       footer={footerNode}
       emptyState={

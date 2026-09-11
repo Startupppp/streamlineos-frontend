@@ -1,21 +1,14 @@
 "use client";
 
-import { apiClient } from "@/lib/api-client";
-import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+import { streamAiResult, type AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
+import { timesheetDraftSchema, timesheetSummarySchema } from "./ai-schema";
+import type { z } from "zod";
 
-interface PeriodSummaryResponse {
-  narration: string;
-  evidence: Record<string, unknown>;
+export async function fetchTimesheetPeriodSummary(periodId: number, options?: AiResultStreamOptions) {
+  return streamAiResult({ path: `/timesheets/periods/${periodId}/ai/summarize/stream`, schema: timesheetSummarySchema, ...options });
 }
 
-export async function fetchTimesheetPeriodSummary(periodId: number): Promise<PeriodSummaryResponse> {
-  return apiClient.post<PeriodSummaryResponse>(`/timesheets/periods/${periodId}/ai/summarize`);
-}
-
-export interface AiTextDraftResponse {
-  text: string;
-  aiUsage?: AiUsageMeta | null;
-}
+export type AiTextDraftResponse = z.infer<typeof timesheetDraftSchema>;
 
 export interface DescribeEntryInput {
   description: string;
@@ -27,8 +20,9 @@ export interface DescribeEntryInput {
 
 export async function describeTimesheetEntry(
   input: DescribeEntryInput,
+  options?: AiResultStreamOptions,
 ): Promise<AiTextDraftResponse> {
-  return apiClient.post<AiTextDraftResponse>("/timesheets/ai/describe-entry", input);
+  return streamAiResult({ path: "/timesheets/ai/describe-entry/stream", body: input, schema: timesheetDraftSchema, ...options });
 }
 
 export interface BillingNarrativeInput {
@@ -39,8 +33,9 @@ export interface BillingNarrativeInput {
 
 export async function generateBillingNarrative(
   input: BillingNarrativeInput,
+  options?: AiResultStreamOptions,
 ): Promise<AiTextDraftResponse> {
-  return apiClient.post<AiTextDraftResponse>("/timesheets/ai/billing-narrative", input);
+  return streamAiResult({ path: "/timesheets/ai/billing-narrative/stream", body: input, schema: timesheetDraftSchema, ...options });
 }
 
 export interface ReportsNarrativeInput {
@@ -51,16 +46,15 @@ export interface ReportsNarrativeInput {
 
 export async function generateReportsNarrative(
   input: ReportsNarrativeInput,
+  options?: AiResultStreamOptions,
 ): Promise<AiTextDraftResponse> {
-  return apiClient.post<AiTextDraftResponse>("/timesheets/ai/reports-narrative", input);
+  return streamAiResult({ path: "/timesheets/ai/reports-narrative/stream", body: input, schema: timesheetDraftSchema, ...options });
 }
 
 export async function draftRejectionReason(
   periodId: number,
   note?: string,
+  options?: AiResultStreamOptions,
 ): Promise<AiTextDraftResponse> {
-  return apiClient.post<AiTextDraftResponse>(
-    `/timesheets/periods/${periodId}/ai/rejection-reason`,
-    { note },
-  );
+  return streamAiResult({ path: `/timesheets/periods/${periodId}/ai/rejection-reason/stream`, body: { note }, schema: timesheetDraftSchema, ...options });
 }

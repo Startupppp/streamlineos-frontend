@@ -2,8 +2,33 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const velocityContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.velocityContract),
+);
+const burnupDataContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.burnupDataContract),
+);
+const cfdDataContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.cfdDataContract),
+);
+const criticalPathContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.criticalPathContract),
+);
+const cycleTimeContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.cycleTimeContract),
+);
+const leadTimeContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.leadTimeContract),
+);
+const snapshotResultContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.snapshotResultContract),
+);
 
 interface VelocitySprint {
   sprintId: number;
@@ -60,8 +85,8 @@ interface CriticalPathReport {
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.velocity(projectId),
-    queryFn: () => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`),
+    queryKey: accountingAndSupportQueryKeys.projectReports.velocity(projectId),
+    queryFn: ({ signal }) => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`, undefined, signal, velocityContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -70,11 +95,13 @@ export function useVelocityReport(projectId: number) {
 export function useBurnupReport(projectId: number, sprintId?: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.burnup(projectId, sprintId),
-    queryFn: () =>
+    queryKey: accountingAndSupportQueryKeys.projectReports.burnup(projectId, sprintId),
+    queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
         sprintId ? { sprintId } : undefined,
+        signal,
+        burnupDataContract,
       ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -84,9 +111,9 @@ export function useBurnupReport(projectId: number, sprintId?: number) {
 export function useCfdReport(projectId: number, days = 30) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.cfd(projectId, { days }),
-    queryFn: () =>
-      apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }),
+    queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId, { days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }, signal, cfdDataContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -95,9 +122,9 @@ export function useCfdReport(projectId: number, days = 30) {
 export function useCriticalPath(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.criticalPath(projectId),
-    queryFn: () =>
-      apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`),
+    queryKey: accountingAndSupportQueryKeys.projectReports.criticalPath(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`, undefined, signal, criticalPathContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -106,8 +133,8 @@ export function useCriticalPath(projectId: number) {
 export function useCycleTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; count: number }>>({
-    queryKey: queryKeys.projectReports.cycleTime(projectId),
-    queryFn: () => apiClient.get(`/build/${projectId}/reports/cycle-time`),
+    queryKey: accountingAndSupportQueryKeys.projectReports.cycleTime(projectId),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/cycle-time`, undefined, signal, cycleTimeContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -116,8 +143,8 @@ export function useCycleTimeReport(projectId: number) {
 export function useLeadTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; p50Days: number; p90Days: number; count: number }>>({
-    queryKey: queryKeys.projectReports.leadTime(projectId),
-    queryFn: () => apiClient.get(`/build/${projectId}/reports/lead-time`),
+    queryKey: accountingAndSupportQueryKeys.projectReports.leadTime(projectId),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/lead-time`, undefined, signal, leadTimeContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -125,12 +152,12 @@ export function useLeadTimeReport(projectId: number) {
 
 export function useCaptureSnapshot(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "reports", "snapshot"],
     mutationFn: () =>
-      apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`),
+      apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`, undefined, undefined, snapshotResultContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projectReports.cfd(projectId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId) });
     },
   });
 }

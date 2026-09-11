@@ -2,10 +2,18 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+
+const runExceptionsListC = lazyContract(() =>
+  import("@/hooks/api/payroll/run-exceptions-schema").then((m) => m.runExceptionsListContract),
+);
+const resolveExceptionC = lazyContract(() =>
+  import("@/hooks/api/payroll/run-exceptions-schema").then((m) => m.resolveExceptionResponseContract),
+);
 
 export function useRunExceptions(
   runId: number,
@@ -13,9 +21,9 @@ export function useRunExceptions(
 ) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
-    queryKey: queryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params),
+    queryKey: payrollQueryKeys.payroll.runExceptions(runId, params),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/payroll/runs/${runId}/exceptions`, params, signal, runExceptionsListC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });
@@ -29,11 +37,13 @@ export function useResolveException(runId: number) {
       apiClient.patch<{ ok: boolean }>(
         `/payroll/runs/${runId}/exceptions/${exceptionId}/resolve`,
         { note },
+        undefined,
+        resolveExceptionC,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -46,11 +56,13 @@ export function useOverrideException(runId: number) {
       apiClient.patch<{ ok: boolean }>(
         `/payroll/runs/${runId}/exceptions/${exceptionId}/override`,
         { reason },
+        undefined,
+        resolveExceptionC,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }

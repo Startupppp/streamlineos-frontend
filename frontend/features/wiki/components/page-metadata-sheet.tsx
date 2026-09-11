@@ -34,7 +34,7 @@ import {
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
   { value: "draft", label: "Draft" },

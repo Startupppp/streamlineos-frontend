@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   useCompCycle,
   useCompRecommendations,
@@ -55,8 +57,24 @@ function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
 }
 
 export function CompCycleDetail({ cycleId, canManage }: Props) {
-  const { data: cycle, isLoading: cycleLoading } = useCompCycle(cycleId);
-  const { data: recsData, isLoading: recsLoading } = useCompRecommendations(cycleId);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const {
+    data: cycle,
+    isLoading: cycleLoading,
+    isError: cycleIsError,
+    error: cycleError,
+    refetch: refetchCycle,
+  } = useCompCycle(cycleId);
+  const {
+    data: recsData,
+    isLoading: recsLoading,
+    isFetching: recsFetching,
+    isError: recsIsError,
+    error: recsError,
+    refetch: refetchRecs,
+  } = useCompRecommendations(cycleId, { cursor });
   const { data: pools, isLoading: poolsLoading } = useBudgetPools(cycleId);
   const calibrateMut = useCalibrateRecommendation();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -80,7 +98,35 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
   const [calibratingId, setCalibratingId] = useState<number | null>(null);
   const [calibrateValue, setCalibrateValue] = useState<Record<number, string>>({});
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = recsData?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [recsData?.pagination.nextCursor]);
+
+  const handleRetryCycle = useCallback(() => {
+    void refetchCycle();
+  }, [refetchCycle]);
+
+  const handleRetryRecs = useCallback(() => {
+    void refetchRecs();
+  }, [refetchRecs]);
+
   if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
+
+  if (cycleIsError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load this compensation cycle"
+        description={getErrorMessage(cycleError)}
+        onRetry={handleRetryCycle}
+      />
+    );
+  }
 
   const recs = recsData?.data ?? [];
 
@@ -117,7 +163,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
             {Object.entries(cycle.meritMatrix).map(([rating, pct]) => (
               <div key={rating} className="p-2 rounded-lg bg-primary/5 text-center">
                 <p className="text-xs text-muted-foreground">{rating}</p>
-                <p className="text-sm font-bold text-primary">{pct}%</p>
+                <p className="text-sm font-bold text-primary">{String(pct)}%</p>
               </div>
             ))}
           </div>
@@ -129,12 +175,20 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         <p className="text-sm font-semibold mb-3">Recommendations ({recs.length})</p>
         {recsLoading ? (
           Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 mb-2 rounded-lg" />)
+        ) : recsIsError ? (
+          <ErrorState
+            title="Couldn't load recommendations"
+            description={getErrorMessage(recsError)}
+            onRetry={handleRetryRecs}
+            compact
+          />
         ) : !recs.length ? (
           <EmptyState illustrationPreset="default" title="No recommendations yet" compact className="h-40 border-0 shadow-none" />
         ) : (
-          <DataTable
-            getRowKey={(r) => r.id}
-            columns={[
+          <div className="flex min-h-0 flex-col gap-3">
+            <DataTable
+              getRowKey={(r) => r.id}
+              columns={[
               { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
               { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
               { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
@@ -168,9 +222,19 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                   </div>
                 ) : null,
               },
-            ]}
-            data={recs}
-          />
+              ]}
+              data={recs}
+            />
+            {recsData && (page > 1 || recsData.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={recsData.pagination.hasMore}
+                disabled={recsFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+              />
+            ) : null}
+          </div>
         )}
       </div>
     </div>

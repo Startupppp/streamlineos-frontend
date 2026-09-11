@@ -63,10 +63,10 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         key: "stock-risk",
         label: "Explain stock risk",
         description: "AI narrates deterministic stock health evidence",
-        run: async () => {
+        run: async (signal?: AbortSignal) => {
           const insights = await apiClient.get<{
             items: AiInsight[];
-          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" });
+          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" }, signal);
 
           const variantSku = firstVariant.sku;
           const matching = insights.items.find(
@@ -85,6 +85,8 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
 
           const narration = await apiClient.post<InsightNarration>(
             `/inventory/ai/insights/${matching.id}/explain`,
+            undefined,
+            { signal },
           );
 
           return { text: narrationToText(narration) };
@@ -96,13 +98,14 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
           key: "reorder-proposal",
           label: "Reorder proposal",
           description: "Draft PO based on deterministic reorder evidence",
-          run: async () => {
+          run: async (signal?: AbortSignal) => {
             // F4. The response is the persisted C2 proposal: the quantity is
             // the one the server would order, as an exact decimal string, and
             // `blocked` means it declined to propose at all.
             const response = await apiClient.post<ReorderProposalResponse>(
               "/inventory/ai/reorder-proposal",
               { variantId: firstVariant.id },
+              { signal },
             );
 
             const ev = response.evidence;

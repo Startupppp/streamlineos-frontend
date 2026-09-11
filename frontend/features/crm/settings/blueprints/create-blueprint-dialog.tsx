@@ -21,8 +21,8 @@ import {
   RecordForm,
   type RecordFieldControl,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { useCreateBlueprint, useCrmMetadata } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BLUEPRINT_LAYOUT } from "@/lib/renderer/crm/settings/blueprint-layout";

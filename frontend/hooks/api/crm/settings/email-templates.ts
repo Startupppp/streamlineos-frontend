@@ -4,6 +4,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const emailTemplatesLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.emailTemplatesListContract),
+);
+const emailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.emailTemplateContract),
+);
+const deleteEmailTemplateLazy = lazyContract(() =>
+  import("@/hooks/api/crm/settings/email-templates-schema").then((m) => m.deleteEmailTemplateContract),
+);
 
 export interface EmailTemplate {
   id: number;
@@ -31,18 +43,18 @@ export interface UpdateEmailTemplateInput {
 export function useEmailTemplates(params?: { limit?: number; offset?: number }) {
   return useGatedQuery("crm:email-templates:manage", {
     queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>, signal, emailTemplatesLazy),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "create"],
     mutationFn: (input: CreateEmailTemplateInput) =>
-      apiClient.post<EmailTemplate>("/crm/email-templates", input),
+      apiClient.post<EmailTemplate>("/crm/email-templates", input, undefined, emailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },
@@ -51,10 +63,10 @@ export function useCreateEmailTemplate() {
 
 export function useUpdateEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
-      apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data),
+      apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data, undefined, emailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },
@@ -63,10 +75,10 @@ export function useUpdateEmailTemplate() {
 
 export function useDeleteEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`, undefined, undefined, deleteEmailTemplateLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSettings.all });
     },

@@ -2,8 +2,8 @@
 
 import { FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RecordDetail } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordDetail } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { QUOTE_LAYOUT, quoteRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { Quote } from "@/types/crm/quotes";

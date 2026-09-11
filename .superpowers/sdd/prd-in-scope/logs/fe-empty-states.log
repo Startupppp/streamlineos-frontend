@@ -1,5 +1,0 @@
-
-> streamlineos@0.1.0 check:empty-states D:\projects\personal\Streamlineos\frontend
-> node scripts/check-no-handrolled-empty-states.mjs
-
-✔  No hand-rolled empty states found outside EmptyState.

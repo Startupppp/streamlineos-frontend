@@ -3,7 +3,8 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -19,10 +20,11 @@ import { ImportTypeStep, type ImportType } from "./import-type-step";
 import { ImportPreviewStep } from "./import-preview-step";
 import { StagedImportRunner } from "./staged-import-runner";
 import { ImportResultStep } from "./import-result-step";
-import { AppSheet } from "@/components/shared";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { ExportTab } from "./export-tab";
 
-type Step = "type" | "preview" | "running";
+const STEPS = ["type", "preview", "running"] as const;
+type Step = (typeof STEPS)[number];
 
 const STEP_LABELS: Record<Step, string> = {
   type: "1. Select Type",
@@ -30,15 +32,20 @@ const STEP_LABELS: Record<Step, string> = {
   running: "3. Import",
 };
 
+/**
+ * The job row under the names the import routes return: its kind is `jobType`,
+ * its failures `errorRows`, and it carries no completion time, so `updatedAt`
+ * is when it last moved.
+ */
 interface ImportJobRow {
   id: number;
-  importType: string;
+  jobType: string;
   status: JobStatus;
   totalRows: number;
   processedRows: number;
-  errorCount: number;
+  errorRows: number;
   createdAt: string;
-  completedAt: string | null;
+  updatedAt: string;
 }
 
 const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
@@ -49,10 +56,10 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => job.id,
   },
   {
-    key: "importType",
+    key: "jobType",
     header: "Type",
     className: "text-xs capitalize",
-    cell: (job) => job.importType,
+    cell: (job) => job.jobType,
   },
   {
     key: "status",
@@ -76,11 +83,11 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => job.processedRows,
   },
   {
-    key: "errorCount",
+    key: "errorRows",
     header: "Errors",
     cell: (job) => (
-      <span className={`text-xs ${job.errorCount > 0 ? "text-status-danger-ink font-medium" : ""}`}>
-        {job.errorCount}
+      <span className={`text-xs ${job.errorRows > 0 ? "text-status-danger-ink font-medium" : ""}`}>
+        {job.errorRows}
       </span>
     ),
   },
@@ -91,10 +98,10 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     cell: (job) => new Date(job.createdAt).toLocaleDateString(),
   },
   {
-    key: "completedAt",
-    header: "Completed",
+    key: "updatedAt",
+    header: "Updated",
     className: "text-xs text-muted-foreground",
-    cell: (job) => (job.completedAt ? new Date(job.completedAt).toLocaleDateString() : "—"),
+    cell: (job) => new Date(job.updatedAt).toLocaleDateString(),
   },
 ];
 
@@ -207,7 +214,7 @@ export function ImportClient() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    {(["type", "preview", "running"] as Step[]).map(function renderStep(s) {
+                    {STEPS.map(function renderStep(s) {
                       return (
                         <span
                           key={s}

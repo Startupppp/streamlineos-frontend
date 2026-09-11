@@ -2,8 +2,8 @@
 
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RecordDetail } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordDetail } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CLIENT_LAYOUT } from "@/lib/renderer/crm/client-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { ActivityItem } from "./activity-item";

@@ -38,7 +38,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/build/qa";
 import { useProject } from "@/hooks/api/build/projects";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
 
 const schema = z.object({
@@ -100,10 +100,10 @@ export function TestCaseSheet({
               title: editCase.title,
               suiteId: editCase.suiteId != null ? String(editCase.suiteId) : "none",
               preconditions: editCase.preconditions ?? "",
-              steps: editCase.steps,
+              steps: editCase.steps ?? [],
               expectedResult: editCase.expectedResult ?? "",
-              priority: editCase.priority,
-              automationStatus: editCase.automationStatus,
+              priority: (["low", "medium", "high"] as const).find((v) => v === editCase.priority) ?? "medium",
+              automationStatus: (["manual", "automated", "planned"] as const).find((v) => v === editCase.automationStatus) ?? "manual",
               component: editCase.component ?? "",
               linkedTicketId:
                 editCase.linkedTicketId != null ? String(editCase.linkedTicketId) : "",

@@ -8,7 +8,7 @@ import {
   useRef,
   useTransition,
 } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ShieldX } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -24,16 +24,20 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan, useRbacDiscoveryMembers } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
-import type { Delegation, DelegationPage } from "./delegation-schema";
 import {
-  buildDelegationListUrl,
+  useReceivedDelegations,
+  useGrantedDelegations,
+  useRevokeDelegation,
+  type Delegation,
+} from "@/hooks/api/delegations";
+import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
+import {
   DELEGATION_URL_KEYS,
   readDelegationListState,
   type DelegationListKind,
@@ -56,6 +60,12 @@ export function DelegationsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Delegation | null>(null);
   const [revokeError, setRevokeError] = useState<unknown>(null);
+  const [receivedCursors, setReceivedCursors] = useState<
+    Array<string | undefined>
+  >([undefined]);
+  const [grantedCursors, setGrantedCursors] = useState<
+    Array<string | undefined>
+  >([undefined]);
 
   const activeTab: DelegationListKind =
     searchParams.get("tab") === "granted" ? "granted" : "received";
@@ -130,9 +140,9 @@ export function DelegationsPage() {
     const normalizedSearch = debouncedReceivedSearch.trim();
     if (normalizedSearch === receivedState.search) return;
     requestedReceivedSearchRef.current = normalizedSearch;
+    setReceivedCursors([undefined]);
     updateParams({
-      [DELEGATION_URL_KEYS.received.search]:
-        normalizedSearch || null,
+      [DELEGATION_URL_KEYS.received.search]: normalizedSearch || null,
       [DELEGATION_URL_KEYS.received.page]: null,
     });
   }, [debouncedReceivedSearch, receivedState.search, updateParams]);
@@ -141,9 +151,9 @@ export function DelegationsPage() {
     const normalizedSearch = debouncedGrantedSearch.trim();
     if (normalizedSearch === grantedState.search) return;
     requestedGrantedSearchRef.current = normalizedSearch;
+    setGrantedCursors([undefined]);
     updateParams({
-      [DELEGATION_URL_KEYS.granted.search]:
-        normalizedSearch || null,
+      [DELEGATION_URL_KEYS.granted.search]: normalizedSearch || null,
       [DELEGATION_URL_KEYS.granted.page]: null,
     });
   }, [debouncedGrantedSearch, grantedState.search, updateParams]);
@@ -154,13 +164,10 @@ export function DelegationsPage() {
     isError: receivedError,
     error: receivedQueryError,
     refetch: refetchReceived,
-  } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.received(receivedState),
-    queryFn: () =>
-      apiClient.get<DelegationPage>(
-        buildDelegationListUrl("/access/delegations", receivedState),
-      ),
-    staleTime: 60_000,
+    access: receivedAccess,
+  } = useReceivedDelegations({
+    ...receivedState,
+    cursor: receivedCursors.at(-1),
   });
 
   const {
@@ -169,23 +176,15 @@ export function DelegationsPage() {
     isError: givenError,
     error: givenQueryError,
     refetch: refetchGiven,
-  } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.given(grantedState),
-    queryFn: () =>
-      apiClient.get<DelegationPage>(
-        buildDelegationListUrl("/access/delegations/given", grantedState),
-      ),
-    staleTime: 60_000,
+    access: grantedAccess,
+  } = useGrantedDelegations({
+    ...grantedState,
+    cursor: grantedCursors.at(-1),
   });
 
-  const revokeMutation = useMutation({
-    mutationKey: [...queryKeys.delegations.all, "revoke"],
-    mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
+  const revokeMutation = useRevokeDelegation({
     onSuccess: () => {
       toast.success("Delegation revoked");
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.delegations.all,
-      });
       setRevokeTarget(null);
       setRevokeError(null);
     },
@@ -226,16 +225,16 @@ export function DelegationsPage() {
     },
     [activeTab],
   );
-  const handleReceivedPageChange = useCallback(
-    (page: number) => {
-      updateParams({
-        [DELEGATION_URL_KEYS.received.page]: page === 1 ? null : String(page),
-      });
-    },
-    [updateParams],
-  );
+  const handleReceivedPrevious = useCallback(() => {
+    setReceivedCursors((current) => current.slice(0, -1));
+  }, []);
+  const handleReceivedNext = useCallback(() => {
+    const cursor = receivedPage?.pagination.nextCursor;
+    if (cursor) setReceivedCursors((current) => [...current, cursor]);
+  }, [receivedPage?.pagination.nextCursor]);
   const handleReceivedLimitChange = useCallback(
     (limit: number) => {
+      setReceivedCursors([undefined]);
       updateParams({
         [DELEGATION_URL_KEYS.received.size]:
           limit === 20 ? null : String(limit),
@@ -244,16 +243,16 @@ export function DelegationsPage() {
     },
     [updateParams],
   );
-  const handleGrantedPageChange = useCallback(
-    (page: number) => {
-      updateParams({
-        [DELEGATION_URL_KEYS.granted.page]: page === 1 ? null : String(page),
-      });
-    },
-    [updateParams],
-  );
+  const handleGrantedPrevious = useCallback(() => {
+    setGrantedCursors((current) => current.slice(0, -1));
+  }, []);
+  const handleGrantedNext = useCallback(() => {
+    const cursor = grantedPage?.pagination.nextCursor;
+    if (cursor) setGrantedCursors((current) => [...current, cursor]);
+  }, [grantedPage?.pagination.nextCursor]);
   const handleGrantedLimitChange = useCallback(
     (limit: number) => {
+      setGrantedCursors([undefined]);
       updateParams({
         [DELEGATION_URL_KEYS.granted.size]: limit === 20 ? null : String(limit),
         [DELEGATION_URL_KEYS.granted.page]: null,
@@ -273,33 +272,27 @@ export function DelegationsPage() {
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
+    void queryClient.invalidateQueries({
+      queryKey: supportAndWorkflowsQueryKeys.delegations.all,
+    });
   }, [queryClient]);
-
-  const receivedTotalPages = receivedPage?.pagination.totalPages;
-  const grantedTotalPages = grantedPage?.pagination.totalPages;
 
   const received = receivedPage?.data ?? [];
   const granted = grantedPage?.data ?? [];
-  const receivedCount = receivedPage?.pagination.total ?? 0;
-  const grantedCount = grantedPage?.pagination.total ?? 0;
   const receivedPagination = receivedPage?.pagination ?? {
-    page: receivedState.page,
     limit: receivedState.limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
   const grantedPagination = grantedPage?.pagination ?? {
-    page: grantedState.page,
     limit: grantedState.limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
   const activeSearch =
     activeTab === "received" ? receivedSearchInput : grantedSearchInput;
   const revokeDescription = revokeTarget
     ? (revokeTarget.delegateeName ??
-        memberMap.get(revokeTarget.delegateeId) ??
         "This member") +
       " will lose " +
       revokeTarget.permissions.length +
@@ -307,26 +300,6 @@ export function DelegationsPage() {
       (revokeTarget.permissions.length === 1 ? "" : "s") +
       ". Existing audit history is preserved."
     : "";
-
-  useEffect(() => {
-    if (receivedTotalPages === undefined) return;
-    const lastPage = Math.max(1, receivedTotalPages);
-    if (receivedState.page <= lastPage) return;
-    updateParams({
-      [DELEGATION_URL_KEYS.received.page]:
-        lastPage === 1 ? null : String(lastPage),
-    });
-  }, [receivedState.page, receivedTotalPages, updateParams]);
-
-  useEffect(() => {
-    if (grantedTotalPages === undefined) return;
-    const lastPage = Math.max(1, grantedTotalPages);
-    if (grantedState.page <= lastPage) return;
-    updateParams({
-      [DELEGATION_URL_KEYS.granted.page]:
-        lastPage === 1 ? null : String(lastPage),
-    });
-  }, [grantedState.page, grantedTotalPages, updateParams]);
 
   return (
     <Tabs
@@ -359,19 +332,9 @@ export function DelegationsPage() {
             <TabsList className="w-full shrink-0 md:w-auto">
               <TabsTrigger value="received" className="gap-1.5 truncate">
                 Received
-                {!loadingReceived && receivedCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">
-                    {receivedCount}
-                  </span>
-                ) : null}
               </TabsTrigger>
               <TabsTrigger value="granted" className="gap-1.5 truncate">
                 Granted
-                {!loadingGiven && grantedCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">
-                    {grantedCount}
-                  </span>
-                ) : null}
               </TabsTrigger>
             </TabsList>
             <SearchInput
@@ -385,65 +348,77 @@ export function DelegationsPage() {
       >
         <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
-            <DelegationListPanel
-              isLoading={loadingReceived}
-              isError={receivedError}
-              queryError={receivedQueryError}
-              delegations={received}
-              memberMap={memberMap}
-              listState={receivedState}
-              pagination={receivedPagination}
-              nameField="delegatorId"
-              onRetry={handleRetryReceived}
-              onPageChange={handleReceivedPageChange}
-              onLimitChange={handleReceivedLimitChange}
-              emptyTitle={
-                receivedState.search
-                  ? "No matching delegations"
-                  : "No active delegations received"
-              }
-              emptyDescription={
-                receivedState.search
-                  ? "Try adjusting your search."
-                  : "Active permissions delegated to you will appear here. Scheduled and ended grants do not affect your current access."
-              }
-              errorTitle="Could not load received delegations"
-            />
+            {receivedAccess.denied ? (
+              <NoPermissionState permission={receivedAccess.permission} />
+            ) : (
+              <DelegationListPanel
+                isLoading={loadingReceived}
+                isError={receivedError}
+                queryError={receivedQueryError}
+                delegations={received}
+                memberMap={memberMap}
+                listState={receivedState}
+                page={receivedCursors.length}
+                pagination={receivedPagination}
+                nameField="delegator"
+                onRetry={handleRetryReceived}
+                onPrevious={handleReceivedPrevious}
+                onNext={handleReceivedNext}
+                onLimitChange={handleReceivedLimitChange}
+                emptyTitle={
+                  receivedState.search
+                    ? "No matching delegations"
+                    : "No active delegations received"
+                }
+                emptyDescription={
+                  receivedState.search
+                    ? "Try adjusting your search."
+                    : "Active permissions delegated to you will appear here. Scheduled and ended grants do not affect your current access."
+                }
+                errorTitle="Could not load received delegations"
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="granted" className={TAB_PANEL_CLASS}>
-            <DelegationListPanel
-              isLoading={loadingGiven}
-              isError={givenError}
-              queryError={givenQueryError}
-              delegations={granted}
-              memberMap={memberMap}
-              listState={grantedState}
-              pagination={grantedPagination}
-              nameField="delegateeId"
-              onRetry={handleRetryGiven}
-              onPageChange={handleGrantedPageChange}
-              onLimitChange={handleGrantedLimitChange}
-              emptyTitle={
-                grantedState.search
-                  ? "No matching delegations"
-                  : "No delegations granted"
-              }
-              emptyDescription={
-                grantedState.search
-                  ? "Try adjusting your search."
-                  : "Delegate permissions to share access with colleagues."
-              }
-              errorTitle="Could not load granted delegations"
-              emptyAction={
-                !grantedState.search && canManageRbac
-                  ? { label: "Delegate", onClick: handleOpenSheet }
-                  : undefined
-              }
-              revokeTarget={revokeTarget}
-              revokePending={revokeMutation.isPending}
-              onRevoke={handleRequestRevoke}
-            />
+            {grantedAccess.denied ? (
+              <NoPermissionState permission={grantedAccess.permission} />
+            ) : (
+              <DelegationListPanel
+                isLoading={loadingGiven}
+                isError={givenError}
+                queryError={givenQueryError}
+                delegations={granted}
+                memberMap={memberMap}
+                listState={grantedState}
+                page={grantedCursors.length}
+                pagination={grantedPagination}
+                nameField="delegatee"
+                onRetry={handleRetryGiven}
+                onPrevious={handleGrantedPrevious}
+                onNext={handleGrantedNext}
+                onLimitChange={handleGrantedLimitChange}
+                emptyTitle={
+                  grantedState.search
+                    ? "No matching delegations"
+                    : "No delegations granted"
+                }
+                emptyDescription={
+                  grantedState.search
+                    ? "Try adjusting your search."
+                    : "Delegate permissions to share access with colleagues."
+                }
+                errorTitle="Could not load granted delegations"
+                emptyAction={
+                  !grantedState.search && canManageRbac
+                    ? { label: "Delegate", onClick: handleOpenSheet }
+                    : undefined
+                }
+                revokeTarget={revokeTarget}
+                revokePending={revokeMutation.isPending}
+                onRevoke={handleRequestRevoke}
+              />
+            )}
           </TabsContent>
         </div>
 

@@ -147,7 +147,7 @@ export function AskOsConversationList({
                 {items.map((conv) => (
                   <div key={conv.id} className="group relative">
                     {editingId === conv.id ? (
-                      <input autoFocus data-id={String(conv.id)} value={editValue}
+                      <input autoFocus aria-label="Rename conversation" data-id={String(conv.id)} value={editValue}
                         onChange={handleRenameChange} onKeyDown={handleRenameKeyDown} onBlur={handleRenameBlur}
                         className="w-full bg-muted px-3 py-2 text-xs text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm" />
                     ) : (

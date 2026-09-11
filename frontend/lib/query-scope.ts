@@ -1,3 +1,4 @@
+import { hashKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 
 /**
@@ -32,8 +33,17 @@ export function authenticatedScope(
   return `authenticated:${orgId ?? ""}:${userId ?? ""}`;
 }
 
+/**
+ * Delegates to TanStack's own `hashKey`, which is `JSON.stringify` with a
+ * replacer that sorts plain-object keys. A hand-rolled `JSON.stringify` here
+ * preserves insertion order, so `{limit,cursor}` and `{cursor,limit}` — the
+ * same filter set, built by two call sites in two orders — hash to two
+ * different cache entries: a duplicate fetch, and an invalidation that misses.
+ * The output is byte-identical to the old one for keys with no plain object in
+ * them, so nothing that already matched stops matching.
+ */
 export function scopedQueryKeyHashFn(
   scope: string,
 ): (queryKey: QueryKey) => string {
-  return (queryKey) => JSON.stringify([scope, queryKey]);
+  return (queryKey) => hashKey([scope, queryKey]);
 }

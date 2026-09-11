@@ -15,7 +15,9 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { LoadingState, ErrorState, NoPermissionState } from "@/components/shared";
+import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -301,11 +303,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                   <InfoRow
                     label="Category"
-                    value={product.categoryName ?? "—"}
+                    value={product.category?.name ?? "—"}
                   />
                   <InfoRow
                     label="Unit of Measure"
-                    value={product.uomName ?? "—"}
+                    value={product.uom?.name ?? "—"}
                   />
                   <InfoRow
                     label="Cost Price"

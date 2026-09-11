@@ -6,6 +6,7 @@ import {
 import { renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { useUserApiTokens } from "./user-api-tokens";
+import { userApiTokenPageContract } from "./user-api-tokens-schema";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -13,6 +14,15 @@ jest.mock("@/lib/api-client", () => ({
     post: jest.fn(),
     delete: jest.fn(),
   },
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: jest.fn((permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
 }));
 
 const mockedGet = apiClient.get as jest.Mock;
@@ -33,24 +43,26 @@ describe("useUserApiTokens pagination", () => {
     jest.clearAllMocks();
   });
 
-  it("requests the selected server page and preserves its metadata", async () => {
+  it("requests the selected cursor and preserves its metadata", async () => {
     const response = {
       data: [],
-      pagination: { page: 3, limit: 50, total: 120, totalPages: 3 },
+      pagination: { limit: 50, hasMore: true, nextCursor: "next-cursor" },
     };
     mockedGet.mockResolvedValue(response);
 
     const { result } = renderHook(
-      () => useUserApiTokens({ page: 3, limit: 50 }),
+      () => useUserApiTokens({ cursor: "current-cursor", limit: 50 }),
       { wrapper: createWrapper() },
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockedGet).toHaveBeenCalledWith("/me/api-tokens", {
-      page: "3",
-      limit: "50",
-    });
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/me/api-tokens",
+      { cursor: "current-cursor", limit: "50" },
+      expect.any(AbortSignal),
+      userApiTokenPageContract,
+    );
     expect(result.current.data).toEqual(response);
   });
 });

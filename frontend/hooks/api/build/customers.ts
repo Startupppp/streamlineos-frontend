@@ -3,8 +3,14 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type { BuildCustomersPage } from "@/types/crm";
+
+const customerPageContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.customerPageContract),
+);
 
 interface ProjectCustomersFilters {
   search?: string;
@@ -12,14 +18,6 @@ interface ProjectCustomersFilters {
   cursor?: string;
   limit?: number;
 }
-
-const PROJECT_CUSTOMERS_BASE = ["streamlineos", "projects", "customers"] as const;
-
-export const projectCustomersQueryKeys = {
-  all: PROJECT_CUSTOMERS_BASE,
-  list: (filters?: Record<string, unknown>) =>
-    [...PROJECT_CUSTOMERS_BASE, "list", filters] as const,
-};
 
 export function useProjectCustomers(filters?: ProjectCustomersFilters) {
   const canView = useCan("build:customers:view");
@@ -29,9 +27,9 @@ export function useProjectCustomers(filters?: ProjectCustomersFilters) {
   if (filters?.search) params["search"] = filters.search;
   if (filters?.industry) params["industry"] = filters.industry;
   return useQuery({
-    queryKey: projectCustomersQueryKeys.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<BuildCustomersPage>("/build/customers", params),
+    queryKey: buildWorkQueryKeys.projects.customers.list(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<BuildCustomersPage>("/build/customers", params, signal, customerPageContract),
     enabled: canView,
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,

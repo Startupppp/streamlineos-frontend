@@ -10,6 +10,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteSignDocument, useUploadSignDocument } from "@/hooks/api/sign/documents";
 import type { SignDocument } from "@/types/sign";
 import { useBuilder } from "./builder-context";
+import { isActivationKey } from "@/lib/keyboard-activation";
 
 interface DocumentPanelProps {
   envelopeId: number;
@@ -36,6 +37,21 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
     }
   }
 
+  function selectDocument(id: number) {
+    return function handleDocumentSelected(): void {
+      setSelectedDocumentId(id);
+      setCurrentPage(1);
+    };
+  }
+
+  function selectDocumentOnActivationKey(id: number) {
+    const select = selectDocument(id);
+    return function handleDocumentActivationKey(e: React.KeyboardEvent): void {
+      if (!isActivationKey(e)) return;
+      select();
+    };
+  }
+
   async function handleDelete(id: number, e: React.MouseEvent) {
     e.stopPropagation();
     try {
@@ -56,16 +72,8 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
             key={doc.id}
             role="button"
             tabIndex={0}
-            onClick={() => {
-              setSelectedDocumentId(doc.id);
-              setCurrentPage(1);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                setSelectedDocumentId(doc.id);
-                setCurrentPage(1);
-              }
-            }}
+            onClick={selectDocument(doc.id)}
+            onKeyDown={selectDocumentOnActivationKey(doc.id)}
             className={`w-full flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors cursor-pointer ${
               selectedDocumentId === doc.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/50"
             }`}

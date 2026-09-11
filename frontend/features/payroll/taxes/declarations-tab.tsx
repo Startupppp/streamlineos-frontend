@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -9,16 +9,19 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll/tax-admin";
 import { useCan } from "@/hooks/api/access";
-import type { TaxDeclarationAdmin, TaxDeclarationStatus } from "@/types/payroll/reports";
+import type { TaxDeclarationStatus } from "@/types/payroll/reports";
+import type { TaxDeclarationListItem } from "@/hooks/api/payroll/tax-schema";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { DeclarationReviewSheet } from "./declaration-review-sheet";
 
-const STATUS_BADGE: Record<TaxDeclarationStatus, string> = {
+const STATUS_BADGE: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
   SUBMITTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   VERIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -54,8 +57,8 @@ function getFYOptions(): string[] {
 }
 
 
-function calcTotal(d: TaxDeclarationAdmin): number {
-  return d.hra + d.lta + d.section80c + d.section80d + d.section80g + d.homeLoanInterest;
+function calcTotal(d: TaxDeclarationListItem): number {
+  return parseFloat(d.hra) + parseFloat(d.lta) + parseFloat(d.section80c) + parseFloat(d.section80d) + parseFloat(d.section80g) + parseFloat(d.homeLoanInterest);
 }
 
 export function DeclarationsTab() {
@@ -66,13 +69,26 @@ export function DeclarationsTab() {
   const fyParam = searchParams.get("fy") ?? "all";
   const statusParam = searchParams.get("status") ?? "all";
 
-  const [selectedDeclaration, setSelectedDeclaration] = useState<TaxDeclarationAdmin | null>(null);
+  const [selectedDeclaration, setSelectedDeclaration] = useState<TaxDeclarationListItem | null>(null);
   const exportMutation = useExportTaxReport();
 
-  const { data, isLoading } = useTaxDeclarationsAdmin({
+  const { data, isLoading, isError, error, refetch } = useTaxDeclarationsAdmin({
     financialYear: fyParam !== "all" ? fyParam : undefined,
     status: statusParam !== "all" ? statusParam : undefined,
   });
+
+  const filtersActive = fyParam !== "all" || statusParam !== "all";
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("fy");
+    params.delete("status");
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -89,7 +105,7 @@ export function DeclarationsTab() {
     updateParam("status", value);
   }
 
-  function handleRowClick(row: TaxDeclarationAdmin) {
+  function handleRowClick(row: TaxDeclarationListItem) {
     setSelectedDeclaration(row);
   }
 
@@ -107,14 +123,14 @@ export function DeclarationsTab() {
 
   const fyOptions = getFYOptions();
 
-  const columns: DataTableColumn<TaxDeclarationAdmin>[] = [
+  const columns: DataTableColumn<TaxDeclarationListItem>[] = [
     {
       key: "employee",
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.userName} className="text-dense font-medium" />
-          <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
+          <TruncatedText text={row.userName ?? ""} className="text-dense font-medium" />
+          <TruncatedText text={row.userEmail ?? ""} className="text-micro text-muted-foreground" />
         </div>
       ),
     },
@@ -178,11 +194,22 @@ export function DeclarationsTab() {
     },
   ];
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load declarations"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <>
       <DataTable
         className="flex-1 min-h-0"
-        data={data ?? []}
+        data={data?.data ?? []}
         columns={columns}
         getRowKey={(row) => row.id}
         onRowClick={handleRowClick}
@@ -234,8 +261,14 @@ export function DeclarationsTab() {
         emptyState={
           <EmptyState
             illustration={<EmptyApprovalIllustration />}
-            title="No declarations found"
-            description="Declarations submitted by employees will appear here"
+            title="No declarations yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Declarations submitted by employees will appear here"
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
           />
         }
       />

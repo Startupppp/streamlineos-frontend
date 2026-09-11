@@ -13,8 +13,9 @@ import {
   receiptKindEmoji,
   receiptKindLabel,
   type ExpenseReceipt,
-} from "../expense-constants";
+} from "@/lib/expense-constants";
 import { toast } from "sonner";
+import { resolveImageUrl } from "@/lib/utils";
 
 export type PendingReceipt = {
   id: string;
@@ -102,7 +103,7 @@ export function ReceiptManager({
             <div className="h-14 w-14 flex items-center justify-center bg-primary/10 rounded shrink-0 overflow-hidden">
               {kind === "image" ? (
                 <Image
-                  src={receipt.url}
+                  src={resolveImageUrl(receipt.url) ?? receipt.url}
                   alt={receipt.fileName}
                   width={56}
                   height={56}

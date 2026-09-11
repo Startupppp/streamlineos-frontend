@@ -3,7 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+
+const projectRosterContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectRosterContract),
+);
 
 export interface RosterTeam {
   id: number;
@@ -25,12 +31,6 @@ export interface ProjectRoster {
   members: RosterMember[];
 }
 
-const ROSTER_BASE = ["streamlineos", "projects", "roster"] as const;
-
-export const rosterQueryKeys = {
-  detail: (projectId: number) => [...ROSTER_BASE, projectId] as const,
-};
-
 export function useProjectRoster(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectRoster, Error>, "queryKey" | "queryFn">,
@@ -40,8 +40,8 @@ export function useProjectRoster(
   const enabled = canView && !!projectId && (callerEnabled ?? true);
 
   return useQuery<ProjectRoster, Error>({
-    queryKey: rosterQueryKeys.detail(projectId),
-    queryFn: () => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`),
+    queryKey: buildWorkQueryKeys.projects.roster.detail(projectId),
+    queryFn: ({ signal }) => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`, undefined, signal, projectRosterContract),
     staleTime: 30_000,
     enabled,
     ...restOptions,

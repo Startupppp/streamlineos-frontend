@@ -1,7 +1,7 @@
 "use client";
 
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import type { HrHubViewProps } from "@/hooks/api/hr/hub";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { OutTodayCard } from "./today/out-today-card";
 import { JoiningSoonCard } from "./today/joining-soon-card";
 import { InterviewsTodayCard } from "./today/interviews-today-card";

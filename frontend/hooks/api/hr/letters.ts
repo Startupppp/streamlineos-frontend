@@ -1,9 +1,21 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const lettersListC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.lettersListContract),
+);
+const renderLetterC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.renderLetterContract),
+);
+const saveLetterC = lazyContract(() =>
+  import("@/hooks/api/hr/letters-schema").then((m) => m.saveLetterContract),
+);
 
 export interface LetterRender {
   id: number;
@@ -44,17 +56,17 @@ export interface SaveLetterInput {
   contextSnapshot?: Record<string, unknown>;
 }
 
-const LETTERS_KEY = [...queryKeys.hr.all, "letters"] as const;
+const LETTERS_KEY = [...humanResourcesQueryKeys.hr.all, "letters"] as const;
 
 export function useLetters(employmentId?: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LetterRender[]>({
-    queryKey: [...LETTERS_KEY, { employmentId }],
-    queryFn: () =>
+    queryKey: [...humanResourcesQueryKeys.hr.all, "letters", { employmentId }],
+    queryFn: ({ signal }) =>
       apiClient.get<LetterRender[]>(
         "/hr/documents/letters",
-        employmentId ? { employmentId } : undefined,
+        employmentId ? { employmentId } : undefined, signal, lettersListC,
       ),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
@@ -62,19 +74,19 @@ export function useLetters(employmentId?: number) {
 }
 
 export function useRenderLetter() {
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "render"],
     mutationFn: (data: RenderLetterInput) =>
-      apiClient.post<RenderLetterPreview>("/hr/documents/letters/render", data),
+      apiClient.post<RenderLetterPreview>("/hr/documents/letters/render", data, undefined, renderLetterC),
   });
 }
 
 export function useSaveLetter() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "save"],
     mutationFn: (data: SaveLetterInput) =>
-      apiClient.post<LetterRender>("/hr/documents/letters", data),
+      apiClient.post<LetterRender>("/hr/documents/letters", data, undefined, saveLetterC),
     onSuccess: () => qc.invalidateQueries({ queryKey: LETTERS_KEY }),
   });
 }

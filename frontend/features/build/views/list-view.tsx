@@ -14,7 +14,7 @@ import {
 } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUpdateTicket, useRankTicket } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -33,6 +33,7 @@ import {
 import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
+import { GroupRows } from "./list-view-group-rows";
 import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -70,7 +71,7 @@ export const ListView = memo(function ListView({
     onMutate: async (): Promise<ReorderContext> => {
       if (projectId == null) return { previousTickets: optimisticTickets };
       await queryClient.cancelQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
       return { previousTickets: optimisticTickets };
     },
@@ -86,7 +87,7 @@ export const ListView = memo(function ListView({
       }
       if (projectId == null) return;
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
     },
   });
@@ -323,19 +324,14 @@ export const ListView = memo(function ListView({
                 )}
               </div>
               <AccordionContent className="pb-0">
-                <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-                  {items.map((ticket) => (
-                    <ListViewItem
-                      key={ticket.id}
-                      ticket={ticket}
-                      projectKey={projectKey}
-                      projectId={projectId}
-                      projectStatuses={projectStatuses}
-                      onClick={onTicketClick}
-                      displayOptions={displayOptions}
-                    />
-                  ))}
-                </div>
+                <GroupRows
+                  items={items}
+                  projectKey={projectKey}
+                  projectId={projectId}
+                  projectStatuses={projectStatuses}
+                  displayOptions={displayOptions}
+                  onTicketClick={onTicketClick}
+                />
               </AccordionContent>
             </AccordionItem>
           ))}

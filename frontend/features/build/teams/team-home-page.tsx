@@ -47,11 +47,13 @@ import {
   PmSection,
   PM_PANEL,
   PM_ROW,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
+
+const TEAM_MEMBER_ROLES = ["member", "lead"] as const;
 
 function TeamActionsButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -171,6 +173,11 @@ export function TeamHomePage({ teamId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
   const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
+
+  function handleAddMemberRoleChange(value: string): void {
+    const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
+    if (role) setAddMemberRole(role);
+  }
 
   const { data, isLoading, isError, refetch } = useProjectTeam(teamId);
   const updateTeam = useUpdateProjectTeam();
@@ -323,10 +330,7 @@ export function TeamHomePage({ teamId }: Props) {
                   placeholder="Add a member…"
                   className="h-8 min-w-[180px]"
                 />
-                <Select
-                  value={addMemberRole}
-                  onValueChange={(v) => setAddMemberRole(v as "member" | "lead")}
-                >
+                <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
                   <SelectTrigger className="w-24 text-xs border-input bg-card">
                     <SelectValue />
                   </SelectTrigger>

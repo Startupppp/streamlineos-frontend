@@ -18,7 +18,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Form } from "@/components/ui/form";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -40,7 +40,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { buildGoalSchema, type GoalFormValues } from "./goal-schema";
+import {
+  buildGoalSchema,
+  incrementGoalProgress,
+  GOAL_PROGRESS_COMPLETE_PERCENT,
+  type GoalFormValues,
+} from "./goal-schema";
 import { GoalFormFields } from "./goal-form-fields";
 
 export function GoalsTab() {
@@ -194,6 +199,16 @@ export function GoalsTab() {
     [updateGoal],
   );
 
+  const handleIncrementProgress = useCallback(
+    (goal: HrGoal) => () => handleProgressUpdate(goal.id, incrementGoalProgress(goal.progress)),
+    [handleProgressUpdate],
+  );
+
+  const handleMarkGoalComplete = useCallback(
+    (goalId: number) => () => handleProgressUpdate(goalId, GOAL_PROGRESS_COMPLETE_PERCENT),
+    [handleProgressUpdate],
+  );
+
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
     deleteGoal.mutate(deleteId, {
@@ -293,19 +308,10 @@ export function GoalsTab() {
                           <Pencil className="h-3.5 w-3.5 mr-1.5" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleProgressUpdate(
-                              goal.id,
-                              (goal.progress ?? 0) + 10,
-                            )
-                          }
-                        >
+                        <DropdownMenuItem onClick={handleIncrementProgress(goal)}>
                           +10% Progress
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleProgressUpdate(goal.id, 100)}
-                        >
+                        <DropdownMenuItem onClick={handleMarkGoalComplete(goal.id)}>
                           Mark Complete
                         </DropdownMenuItem>
                         <DropdownMenuItem

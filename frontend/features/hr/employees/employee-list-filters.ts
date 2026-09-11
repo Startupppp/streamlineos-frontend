@@ -15,7 +15,8 @@
 
 import type { HrEmployeesParams } from "@/hooks/api/hr/employees";
 
-export type EmployeeStatusFilter = "active" | "inactive" | "all";
+export const EMPLOYEE_STATUS_FILTERS = ["active", "inactive", "all"] as const;
+export type EmployeeStatusFilter = (typeof EMPLOYEE_STATUS_FILTERS)[number];
 
 export type EmployeeListFilters = {
   q: string;

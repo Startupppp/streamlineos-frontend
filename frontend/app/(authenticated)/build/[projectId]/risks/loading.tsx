@@ -1,8 +1,8 @@
 ﻿import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PmPageShell, PmSection } from "@/features/build/shared/pm-chrome";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ProjectRisksLoading() {

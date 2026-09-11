@@ -357,7 +357,7 @@ export function BusinessUnitsPage() {
             <BusinessUnitForm
               defaultValues={{
                 name: editingBusinessUnit.name,
-                code: editingBusinessUnit.code,
+                code: editingBusinessUnit.code ?? "",
                 description: editingBusinessUnit.description ?? "",
               }}
               onSubmit={handleUpdate}

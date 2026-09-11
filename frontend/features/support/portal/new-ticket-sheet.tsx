@@ -34,6 +34,11 @@ import {
 import { Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadC = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreatePortalTicket } from "@/hooks/api/support/portal";
 import { usePortalActiveCustomFields } from "@/hooks/api/support/custom-fields";
@@ -112,10 +117,10 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
         const fd = new FormData();
         fd.append("file", file);
         fd.append("folder", "support-attachments");
-        const json = await apiClient.upload<{ url: string }>("/storage/upload", fd);
+        const json = await apiClient.upload("/storage/upload", fd, storageUploadC);
         uploaded.push({
           fileName: file.name,
-          fileUrl: json.url,
+          fileUrl: json.key,
           fileSize: file.size,
           mimeType: file.type,
         });

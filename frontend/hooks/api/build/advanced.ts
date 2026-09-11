@@ -4,7 +4,45 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const epicListContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.epicListContract),
+);
+const cycleListContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.cycleListContract),
+);
+const cycleRowContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.cycleRowContract),
+);
+const moduleListContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.moduleListContract),
+);
+const moduleRowContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.moduleRowContract),
+);
+const viewListContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.viewListContract),
+);
+const viewRowContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.viewRowContract),
+);
+const intakeListContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.intakeListContract),
+);
+const intakeItemContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.intakeItemContract),
+);
+const analyticsContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.analyticsContract),
+);
+const successContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 import type {
   Epic,
   Cycle,
@@ -21,15 +59,16 @@ import type {
   CreateIntakeRequestInput,
   UpdateIntakeRequestInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useEpics(
   projectId: number,
   options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  const canView = useCan("build:view");
+  const canView = useCan("build:tickets:view");
   return useQuery<Epic[]>({
-    queryKey: queryKeys.projects.epics(projectId),
-    queryFn: () => apiClient.get<Epic[]>(`/build/${projectId}/epics`),
+    queryKey: buildWorkQueryKeys.projects.epics(projectId),
+    queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal, epicListContract),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -43,8 +82,8 @@ export function useCycles(
 ) {
   const canView = useCan("build:view");
   return useQuery<Cycle[]>({
-    queryKey: queryKeys.projects.cycles(projectId),
-    queryFn: () => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`),
+    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+    queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -53,16 +92,16 @@ export function useCycles(
 
 export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
-      apiClient.post<Cycle>(`/build/${projectId}/cycles`, data),
+      apiClient.post<Cycle>(`/build/${projectId}/cycles`, data, undefined, cycleRowContract),
     onSuccess: (_: unknown, variables: CreateCycleInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.cycles(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.cycles(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -72,8 +111,8 @@ export function useModules(
 ) {
   const canView = useCan("build:view");
   return useQuery<Module[]>({
-    queryKey: queryKeys.projects.modules(projectId),
-    queryFn: () => apiClient.get<Module[]>(`/build/${projectId}/modules`),
+    queryKey: buildWorkQueryKeys.projects.modules(projectId),
+    queryFn: ({ signal }) => apiClient.get<Module[]>(`/build/${projectId}/modules`, undefined, signal, moduleListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -82,16 +121,16 @@ export function useModules(
 
 export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "modules", "create"],
     mutationFn: ({ projectId, ...data }: CreateModuleInput) =>
-      apiClient.post<Module>(`/build/${projectId}/modules`, data),
+      apiClient.post<Module>(`/build/${projectId}/modules`, data, undefined, moduleRowContract),
     onSuccess: (_: unknown, variables: CreateModuleInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.modules(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.modules(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -101,8 +140,8 @@ export function useViews(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
-    queryKey: queryKeys.projects.views(projectId),
-    queryFn: () => apiClient.get<ProjectView[]>(`/build/${projectId}/views`),
+    queryKey: buildWorkQueryKeys.projects.views(projectId),
+    queryFn: ({ signal }) => apiClient.get<ProjectView[]>(`/build/${projectId}/views`, undefined, signal, viewListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -111,46 +150,46 @@ export function useViews(
 
 export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "views", "create"],
     mutationFn: ({ projectId, ...data }: CreateViewInput) =>
-      apiClient.post<ProjectView>(`/build/${projectId}/views`, data),
+      apiClient.post<ProjectView>(`/build/${projectId}/views`, data, undefined, viewRowContract),
     onSuccess: (_: unknown, variables: CreateViewInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.views(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
 export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "views", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
-      apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data),
+      apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data, undefined, viewRowContract),
     onSuccess: (_: unknown, variables: UpdateViewInput & { projectId: number }) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.views(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
 export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "views", "delete"],
     mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/views/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/views/${id}`, undefined, undefined, noContentLazy),
     onSuccess: (_: unknown, variables: { id: number; projectId: number }) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.views(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -159,8 +198,8 @@ export function useWorkspaceViews(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
-    queryKey: queryKeys.projects.workspaceViews(),
-    queryFn: () => apiClient.get<ProjectView[]>("/build/views"),
+    queryKey: buildWorkQueryKeys.projects.workspaceViews(),
+    queryFn: ({ signal }) => apiClient.get<ProjectView[]>("/build/views", undefined, signal, viewListContract),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -169,46 +208,46 @@ export function useWorkspaceViews(
 
 export function useCreateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "workspace-views", "create"],
     mutationFn: (data: CreateWorkspaceViewInput) =>
-      apiClient.post<ProjectView>("/build/views", data),
+      apiClient.post<ProjectView>("/build/views", data, undefined, viewRowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.workspaceViews(),
+        queryKey: buildWorkQueryKeys.projects.workspaceViews(),
       });
     },
-    ...options,
   });
 }
 
 export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "workspace-views", "update"],
     mutationFn: ({ id, ...data }: UpdateWorkspaceViewInput) =>
-      apiClient.patch<ProjectView>(`/build/views/${id}`, data),
+      apiClient.patch<ProjectView>(`/build/views/${id}`, data, undefined, viewRowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.workspaceViews(),
+        queryKey: buildWorkQueryKeys.projects.workspaceViews(),
       });
     },
-    ...options,
   });
 }
 
 export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "workspace-views", "delete"],
     mutationFn: ({ id }: { id: number }) =>
-      apiClient.delete<{ success: boolean }>(`/build/views/${id}`),
+      apiClient.delete<void>(`/build/views/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.workspaceViews(),
+        queryKey: buildWorkQueryKeys.projects.workspaceViews(),
       });
     },
-    ...options,
   });
 }
 
@@ -228,11 +267,13 @@ export function useIntakeRequests(
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.limit) query["limit"] = String(params.limit);
   return useQuery<IntakePage>({
-    queryKey: queryKeys.projects.intake(projectId),
-    queryFn: () =>
+    queryKey: buildWorkQueryKeys.projects.intake(projectId),
+    queryFn: ({ signal }) =>
       apiClient.get<IntakePage>(
         `/build/${projectId}/intake`,
-        Object.keys(query).length ? query : undefined
+        Object.keys(query).length ? query : undefined,
+        signal,
+        intakeListContract,
       ),
     enabled: canView && !!projectId,
     staleTime: 30_000,
@@ -242,37 +283,39 @@ export function useIntakeRequests(
 
 export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "intake", "create"],
     mutationFn: ({ projectId, ...data }: CreateIntakeRequestInput) =>
-      apiClient.post<IntakeRequest>(`/build/${projectId}/intake`, data),
+      apiClient.post<IntakeRequest>(`/build/${projectId}/intake`, data, undefined, intakeItemContract),
     onSuccess: (_: unknown, variables: CreateIntakeRequestInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.intake(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
 export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
     mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<{ success: boolean }>(
         `/build/${projectId}/intake/${id}`,
-        data
+        data,
+        undefined,
+        successContract,
       ),
     onSuccess: (_: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.intake(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -282,9 +325,9 @@ export function useProjectAnalytics(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectAnalytics>({
-    queryKey: queryKeys.projects.analytics(projectId),
-    queryFn: () =>
-      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`),
+    queryKey: buildWorkQueryKeys.projects.analytics(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`, undefined, signal, analyticsContract),
     enabled: canView && !!projectId,
     staleTime: 5 * 60_000,
     ...options,

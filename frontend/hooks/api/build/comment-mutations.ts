@@ -1,8 +1,18 @@
-﻿"use client";
-
+"use client";
+﻿
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const commentEditResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentEditResultContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface UpdateCommentInput {
   commentId: number;
@@ -19,19 +29,21 @@ interface DeleteCommentInput {
 
 export function useUpdateComment() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; updatedAt: string }, Error, UpdateCommentInput>({
+  return useAuthorizedMutation<{ updated: true }, Error, UpdateCommentInput>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "comments", "update"],
     mutationFn: ({ commentId, ticketId, projectId, content }) =>
-      apiClient.patch<{ id: number; content: string; updatedAt: string }>(
+      apiClient.patch<{ updated: true }>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
-        { content }
+        { content },
+        undefined,
+        commentEditResultLazy,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
     },
   });
@@ -39,18 +51,21 @@ export function useUpdateComment() {
 
 export function useDeleteComment() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, DeleteCommentInput>({
+  return useAuthorizedMutation<void, Error, DeleteCommentInput>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "comments", "delete"],
     mutationFn: ({ commentId, ticketId, projectId }) =>
       apiClient.delete<void>(
-        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`
+        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
     },
   });

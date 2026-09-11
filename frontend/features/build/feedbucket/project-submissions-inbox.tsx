@@ -12,10 +12,13 @@ import { EmptyInboxIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import type {
-  FeedbucketSubmission,
+  PaginatedFeedbucketSubmissions,
   FeedbucketSubmissionType,
   FeedbucketSubmissionStatus,
 } from "@/types/feedbucket";
+import { resolveImageUrl } from "@/lib/utils";
+
+type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
 
 const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
   bug: "Bug",
@@ -64,14 +67,14 @@ function formatSubmissionAge(value: string | null | undefined): string {
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
-const SUBMISSION_COLUMNS: DataTableColumn<FeedbucketSubmission>[] = [
+const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
   {
     key: "screenshot",
     header: "",
     cell: (row) =>
       row.screenshotUrl ? (
         <img
-          src={row.screenshotUrl}
+          src={resolveImageUrl(row.screenshotUrl) ?? row.screenshotUrl}
           alt="Screenshot"
           loading="lazy"
           decoding="async"
@@ -143,7 +146,7 @@ export function ProjectSubmissionsInbox({
     widgetId,
   });
 
-  function handleRowClick(row: FeedbucketSubmission) {
+  function handleRowClick(row: SubmissionRow) {
     router.push(`/build/${projectId}/feedbucket/${row.id}`);
   }
 

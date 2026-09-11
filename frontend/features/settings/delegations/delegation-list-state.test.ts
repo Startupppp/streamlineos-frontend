@@ -1,19 +1,15 @@
-import {
-  buildDelegationListUrl,
-  readDelegationListState,
-} from "./delegation-list-state";
+import { readDelegationListState } from "./delegation-list-state";
+import { delegationListQuery } from "@/hooks/api/delegations-request";
 
 describe("delegation list URL state", () => {
   it("defaults each list to the first 20 records", () => {
     const params = new URLSearchParams();
 
     expect(readDelegationListState(params, "received")).toEqual({
-      page: 1,
       limit: 20,
       search: "",
     });
     expect(readDelegationListState(params, "granted")).toEqual({
-      page: 1,
       limit: 20,
       search: "",
     });
@@ -30,12 +26,10 @@ describe("delegation list URL state", () => {
     });
 
     expect(readDelegationListState(params, "received")).toEqual({
-      page: 3,
       limit: 50,
       search: "Alex",
     });
     expect(readDelegationListState(params, "granted")).toEqual({
-      page: 2,
       limit: 10,
       search: "coverage",
     });
@@ -48,7 +42,6 @@ describe("delegation list URL state", () => {
     });
 
     expect(readDelegationListState(params, "received")).toEqual({
-      page: 1,
       limit: 20,
       search: "",
     });
@@ -56,13 +49,12 @@ describe("delegation list URL state", () => {
 
   it("builds an encoded server-pagination request", () => {
     expect(
-      buildDelegationListUrl("/access/delegations/given", {
-        page: 4,
+      `/access/delegations/given?${delegationListQuery({
         limit: 10,
         search: "Sam & Alex",
-      }),
+      })}`,
     ).toBe(
-      "/access/delegations/given?page=4&limit=10&search=Sam+%26+Alex",
+      "/access/delegations/given?limit=10&search=Sam+%26+Alex",
     );
   });
 });

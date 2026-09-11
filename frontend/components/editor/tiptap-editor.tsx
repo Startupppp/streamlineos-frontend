@@ -14,6 +14,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { resolveImageUrl, storageKeyFromUrl } from "@/lib/utils";
+
+const storageUploadC = lazyContract(() =>
+  import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
+);
 
 export interface TiptapEditorProps {
   content?: unknown;
@@ -29,8 +35,36 @@ export interface TiptapEditorProps {
 }
 
 interface UploadResult {
-  url: string;
   key: string;
+}
+
+/**
+ * The document stores the object key; only the rendered DOM carries the resolved
+ * source, so the API origin never reaches a saved page.
+ */
+const StorageImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      src: {
+        default: null,
+        parseHTML: (element: HTMLElement) =>
+          storageKeyFromUrl(element.getAttribute("src") ?? ""),
+        renderHTML: (attributes: Record<string, unknown>) => {
+          const src = attributes["src"];
+          if (typeof src !== "string" || src.length === 0) return {};
+          return { src: resolveImageUrl(src) ?? src };
+        },
+      },
+    };
+  },
+});
+
+function keyifyStoredHtml(html: string): string {
+  return html.replace(/src="([^"]*)"/g, (whole, src: string) => {
+    const key = storageKeyFromUrl(src);
+    return key === src ? whole : `src="${key}"`;
+  });
 }
 
 function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undefined {
@@ -56,8 +90,8 @@ async function uploadImageFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", "editor-images");
-  const data = await apiClient.upload<UploadResult>("/storage/upload", formData);
-  return data.url;
+  const data = await apiClient.upload<UploadResult>("/storage/upload", formData, storageUploadC);
+  return data.key;
 }
 
 function isImageFile(file: File): boolean {
@@ -90,7 +124,7 @@ export function TiptapEditor({
     Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Underline,
-    Image.configure({ HTMLAttributes: { class: "max-w-full rounded-md" } }),
+    StorageImage.configure({ HTMLAttributes: { class: "max-w-full rounded-md" } }),
   ];
 
   const editor = useEditor({
@@ -100,7 +134,7 @@ export function TiptapEditor({
     editable,
     onUpdate: ({ editor: e }) => {
       if (output === "html") {
-        onChangeHtml?.(e.isEmpty ? "" : e.getHTML());
+        onChangeHtml?.(e.isEmpty ? "" : keyifyStoredHtml(e.getHTML()));
       } else {
         onChange?.(e.getJSON());
       }
@@ -190,7 +224,7 @@ export function TiptapEditor({
     if (target.tagName !== "IMG") return;
     e.preventDefault();
     const src = (target as HTMLImageElement).src;
-    setContextMenu({ position: { x: e.clientX, y: e.clientY }, imageUrl: src });
+    setContextMenu({ position: { x: e.clientX, y: e.clientY }, imageUrl: storageKeyFromUrl(src) });
   }
 
   function handleContextMenuClose() {

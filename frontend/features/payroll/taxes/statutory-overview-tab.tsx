@@ -1,12 +1,15 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useFilingCapabilities } from "@/hooks/api/payroll/filings";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ToggleKey } from "@/types/payroll/setup";
 
 interface StatutoryRowConfig {
@@ -39,8 +42,12 @@ function EnabledBadge({ enabled }: { enabled: boolean }) {
 }
 
 export function StatutoryOverviewTab() {
-  const { data, isLoading } = usePayrollPolicyCurrent();
+  const { data, isLoading, isError, error, refetch } = usePayrollPolicyCurrent();
   const { data: filingCapability } = useFilingCapabilities();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -49,6 +56,17 @@ export function StatutoryOverviewTab() {
           <Skeleton key={i} className="h-14 rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load statutory settings"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -68,14 +86,19 @@ export function StatutoryOverviewTab() {
 
   const toggles = data.activeVersion.toggles;
   const config = data.activeVersion.config;
-  const statutory = config.statutory;
+
+  function isRecord(v: unknown): v is Record<string, unknown> {
+    return typeof v === "object" && v !== null && !Array.isArray(v);
+  }
+
+  const statutory = isRecord(config.statutory) ? config.statutory : null;
 
   const pfEmployerRate =
-    typeof statutory?.["pfEmployerRate"] === "number"
+    statutory !== null && typeof statutory["pfEmployerRate"] === "number"
       ? `${statutory["pfEmployerRate"]}%`
       : null;
   const pfEmployeeRate =
-    typeof statutory?.["pfEmployeeRate"] === "number"
+    statutory !== null && typeof statutory["pfEmployeeRate"] === "number"
       ? `${statutory["pfEmployeeRate"]}%`
       : null;
 
@@ -128,7 +151,7 @@ export function StatutoryOverviewTab() {
         <Card className="overflow-hidden py-0">
           <CardContent className="p-0">
             {STATUTORY_ROWS.map((row, idx) => {
-              const enabled = toggles[row.key] ?? false;
+              const enabled = toggles[row.key] === true;
               return (
                 <div
                   key={row.key}

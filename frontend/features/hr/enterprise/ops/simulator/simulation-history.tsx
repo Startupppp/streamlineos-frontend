@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
@@ -6,9 +6,12 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSimulationHistory, type SimulationRecord, type SimulationType } from "@/hooks/api/hr/enterprise-ops-simulator";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   getUserDisplayName,
   type NamedUser,
@@ -22,9 +25,15 @@ const TYPE_COLORS: Record<SimulationType, string> = {
   payroll: "bg-muted text-muted-foreground",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function SimulationHistory() {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useSimulationHistory({ page });
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching, isError, error, refetch } = useSimulationHistory({ cursor });
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -73,37 +82,61 @@ export function SimulationHistory() {
       header: "Label",
       cell: (r) => (
         <span className="text-xs text-status-warning-ink">
-          {String((r.result as Record<string, unknown>)?.simulation ?? "")}
+          {isRecord(r.result) ? String(r.result.simulation ?? "") : ""}
         </span>
       ),
     },
   ], [resolveMemberName]);
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load simulation history"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
-    <DataTable
-      data={data?.data ?? []}
-      columns={columns}
-      getRowKey={(r) => r.id}
-      isLoading={isLoading}
-      emptyState={
-        <EmptyState
-          illustrationPreset="chart"
-          title="No simulations run yet"
-          description="Run a simulation to preview policy, leave, attendance, or payroll outcomes."
-          compact
+    <div className="space-y-3">
+      <DataTable
+        data={data?.data ?? []}
+        columns={columns}
+        getRowKey={(r) => r.id}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            illustrationPreset="chart"
+            title="No simulations run yet"
+            description="Run a simulation to preview policy, leave, attendance, or payroll outcomes."
+            compact
+          />
+        }
+      />
+      {data && (page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
         />
-      }
-      pagination={
-        data
-          ? {
-              mode: "server",
-              page,
-              pageSize: data.pagination.limit,
-              total: data.pagination.total,
-              onPageChange: setPage,
-            }
-          : undefined
-      }
-    />
+      ) : null}
+    </div>
   );
 }

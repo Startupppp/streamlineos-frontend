@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { ChannelItem } from "./channel-item";
 import type { Channel } from "./chat-types";
 
@@ -15,7 +15,13 @@ export interface ChannelListEntryProps {
   onOpenSettings?: (channelId: number) => void;
 }
 
-export function ChannelListEntry({
+/**
+ * Rendered twice per channel by the sidebar — once in the compact rail, once
+ * in its section — and re-rendered by every keystroke in the channel search.
+ * All of its props are referentially stable at the call site, so memo turns
+ * 2N avoidable renders per keystroke into zero.
+ */
+export const ChannelListEntry = memo(function ChannelListEntry({
   channel: ch,
   activeChannelId,
   currentUserId,
@@ -38,4 +44,4 @@ export function ChannelListEntry({
       onOpenSettings={onOpenSettings}
     />
   );
-}
+});

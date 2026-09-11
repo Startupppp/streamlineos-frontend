@@ -173,7 +173,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                   {timer.project?.name ?? "No project"}
                   {timer.ticket && (
                   <span className="ml-1.5 text-muted-foreground/70">
-                    · {timer.ticket.ticketNumber != null ? `#${timer.ticket.ticketNumber}` : timer.ticket.title}
+                    · {timer.ticket.title}
                   </span>
                 )}
                 </p>

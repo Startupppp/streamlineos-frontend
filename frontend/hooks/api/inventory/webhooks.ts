@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export type WebhookEventType =
   | "inventory.product.created"
@@ -80,7 +81,7 @@ export function useWebhooks() {
   const canView = useCan("inventory:webhooks:manage");
   return useQuery<Webhook[], Error>({
     queryKey: queryKeys.inventory.webhooks(),
-    queryFn: () => apiClient.get<Webhook[]>("/inventory/webhooks"),
+    queryFn: ({ signal }) => apiClient.get<Webhook[]>("/inventory/webhooks", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -88,11 +89,11 @@ export function useWebhooks() {
 
 export function useCreateWebhook() {
   const qc = useQueryClient();
-  return useIdempotentMutation<
+  return useAuthorizedIdempotentMutation<
     Webhook,
     Error,
     { url: string; events: WebhookEventType[]; isActive?: boolean }
-  >({
+  >("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "create"],
     mutationFn: (data, idempotencyKey) => apiClient.post<Webhook>("/inventory/webhooks", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -103,11 +104,11 @@ export function useCreateWebhook() {
 
 export function useUpdateWebhook() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Webhook,
     Error,
     { webhookId: number; url?: string; events?: WebhookEventType[]; isActive?: boolean }
-  >({
+  >("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "update"],
     mutationFn: ({ webhookId, ...data }) =>
       apiClient.patch<Webhook>(`/inventory/webhooks/${webhookId}`, data),
@@ -119,7 +120,7 @@ export function useUpdateWebhook() {
 
 export function useDeleteWebhook() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "delete"],
     mutationFn: (webhookId) => apiClient.delete<void>(`/inventory/webhooks/${webhookId}`),
     onSuccess: () => {
@@ -132,12 +133,12 @@ export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams
   const canView = useCan("inventory:webhooks:manage");
   return useQuery<WebhookEventsResponse, Error>({
     queryKey: queryKeys.inventory.webhookEvents(webhookId, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WebhookEventsResponse>(`/inventory/webhooks/${webhookId}/events`, {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     enabled: canView && webhookId > 0,
     staleTime: 30_000,
   });
@@ -145,7 +146,7 @@ export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams
 
 export function useRetryWebhookEvent() {
   const qc = useQueryClient();
-  return useMutation<WebhookEvent, Error, { webhookId: number; eventId: number }>({
+  return useAuthorizedMutation<WebhookEvent, Error, { webhookId: number; eventId: number }>("inventory:webhooks:manage", {
     mutationKey: ["inventory", "webhook", "event", "retry"],
     mutationFn: ({ eventId }) =>
       apiClient.post<WebhookEvent>(`/inventory/webhooks/events/${eventId}/retry`),

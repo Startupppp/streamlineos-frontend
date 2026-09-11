@@ -1,20 +1,37 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+const successionListContract = lazyContract(() =>
+  import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanListContract),
+);
+const successionRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/succession-schema").then((m) => m.successionPlanContract),
+);
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
 
 export interface SuccessionPlan {
   id: number;
   orgId: string;
-  roleName: string;
-  jobRoleId: number | null;
-  incumbentId: string | null;
-  successorId: string;
-  readiness: SuccessionReadiness;
-  note: string | null;
-  createdBy: string | null;
+  positionId: string | null;
+  positionTitle: string | null;
+  incumbentUserId: string | null;
+  incumbentMembershipId: number | null;
+  successorUserId: string | null;
+  successorMembershipId: number | null;
+  readiness: string | null;
+  notes: string | null;
+  status: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,39 +41,52 @@ interface SuccessionPage {
   nextCursor: string | null;
 }
 
-const keys = {
-  list: () => ["hr", "succession", "list"] as const,
-};
-
 export function useSuccessionPlans() {
+  const canView = useCan("hr:succession:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
-    queryKey: keys.list(),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => {
+    queryKey: hrEngagementQueryKeys.hrSuccession.list(),
+    initialPageParam: NULL_CURSOR_YET,
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
-      if (pageParam) params.set("cursor", pageParam);
-      return apiClient.get<SuccessionPage>(`/hr/succession?${params}`);
+      if (pageParam !== null) params.set("cursor", pageParam);
+      return apiClient.get(
+        `/hr/succession?${params}`,
+        undefined,
+        signal,
+        successionListContract,
+      );
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateSuccessionPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "create"],
-    mutationFn: (body: Omit<SuccessionPlan, "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt">) =>
-      apiClient.post<SuccessionPlan>("/hr/succession", body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
+    mutationFn: (
+      body: {
+        roleName: string;
+        successorId: string;
+        incumbentId?: string | null;
+        jobRoleId?: number | null;
+        readiness?: SuccessionReadiness;
+        note?: string | null;
+      },
+    ) => apiClient.post("/hr/succession", body, undefined, successionRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }
 
 export function useDeleteSuccessionPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/succession/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
+    mutationFn: (id: number) =>
+      apiClient.delete<void>(`/hr/succession/${id}`, undefined, undefined, noContentC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }

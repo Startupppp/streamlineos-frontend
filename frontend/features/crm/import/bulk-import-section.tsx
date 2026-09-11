@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, FileUp, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { apiClient } from "@/lib/api-client";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { downloadBlob } from "@/lib/download-blob";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
+import { useBulkImport } from "@/hooks/api/crm/bulk-import";
 import {
   matchField,
   requiredFieldOf,
@@ -442,24 +440,3 @@ function previewColumns(entity: BulkEntity): DataTableColumn<PreviewRow>[] {
   }));
 }
 
-/**
- * The write itself.
- *
- * Local to this file for the same reason the endpoints are described in
- * `bulk-import-entities.ts`: there is one caller, and three hooks differing only
- * in a URL were part of what made three dialogs feel like three features.
- */
-function useBulkImport(entity: BulkEntity) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["crm", "imports", "bulk", entity.id],
-    mutationFn: ({ rows, autoDistribute }: { rows: BulkRow[]; autoDistribute: boolean }) =>
-      apiClient.post<BulkImportResult>(entity.endpoint, entity.body(rows, autoDistribute)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: entity.queryKey });
-      // An import lands in counts, boards and dashboards outside the list it wrote to.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
-    },
-  });
-}

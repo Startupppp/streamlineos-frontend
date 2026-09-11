@@ -2,15 +2,15 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { ErrorState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
-import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useLeadBoard, useLeadStats, useUpdateLeadStatus, useLeads } from "@/hooks/api/leads";
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
@@ -20,24 +20,17 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
 import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
-import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
-import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
-import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { LeadListView } from "@/features/crm/leads/lead-list-view";
-import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
-import { LEAD_STATUSES, type BoardLead } from "@/features/crm/leads/leads-types";
+import {
+  CreateLeadSheet,
+  LeadDetailSheet,
+  LeadExportDialog,
+  LeadsFunnelView,
+  LeadsKanban,
+} from "@/features/crm/leads/leads-lazy";
+import { projectBoardColumns } from "@/features/crm/leads/lead-board-columns";
+import type { BoardLead } from "@/features/crm/leads/leads-types";
 import type { LeadFilters } from "@/types/leads";
-
-/**
- * The lead pipeline.
- *
- * Three views over the same leads, and only one of them is a record list: the
- * table is `RecordList` over `LEAD_LAYOUT`, and nothing about its columns is
- * written here. The board and the funnel stay hand-built on purpose — a pipeline
- * board is a set of ordered buckets you drag between, and a funnel is a shape
- * that reads stage-to-stage fall-off. Neither is a list of records with columns,
- * so neither is something a layout description can produce.
- */
 
 const SORT_FIELDS: readonly NonNullable<LeadFilters["sortBy"]>[] = [
   "name",
@@ -93,7 +86,22 @@ export default function LeadsPipelinePage() {
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [density, setDensity] = useDensity();
+
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+
+  const resetCursors = useCallback(() => setCursorHistory([undefined]), []);
+
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+  }, []);
+
+  const handleNext = useCallback((nextCursor: string) => {
+    setCursorHistory((prev) => [...prev, nextCursor]);
+  }, []);
+
+  const currentCursor = cursorHistory[cursorHistory.length - 1];
 
   const {
     view,
@@ -103,17 +111,45 @@ export default function LeadsPipelinePage() {
     sourceFilter,
     sortColumn,
     sortDirection,
-    tablePage,
     pageSize,
     setView,
     setSearchQuery,
     setStatusFilter,
     setPriorityFilter,
     setSourceFilter,
-    setTablePage,
     setPageSize,
     clearFilters,
   } = useLeadsFilters();
+
+  const handleSetSearchQuery = useCallback(
+    (q: string) => { setSearchQuery(q); resetCursors(); },
+    [setSearchQuery, resetCursors],
+  );
+
+  const handleSetStatusFilter = useCallback(
+    (s: string | undefined) => { setStatusFilter(s); resetCursors(); },
+    [setStatusFilter, resetCursors],
+  );
+
+  const handleSetPriorityFilter = useCallback(
+    (p: string | undefined) => { setPriorityFilter(p); resetCursors(); },
+    [setPriorityFilter, resetCursors],
+  );
+
+  const handleSetSourceFilter = useCallback(
+    (s: string | undefined) => { setSourceFilter(s); resetCursors(); },
+    [setSourceFilter, resetCursors],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    clearFilters();
+    resetCursors();
+  }, [clearFilters, resetCursors]);
+
+  const handleSetPageSize = useCallback(
+    (size: number) => { setPageSize(size); resetCursors(); },
+    [setPageSize, resetCursors],
+  );
 
   const {
     data: tableData,
@@ -124,7 +160,7 @@ export default function LeadsPipelinePage() {
     search: searchQuery.trim() || undefined,
     sortBy: pick(SORT_FIELDS, sortColumn),
     sortOrder: sortDirection,
-    page: tablePage,
+    cursor: currentCursor,
     limit: pageSize,
     status: pick(STATUSES, statusFilter),
     priority: pick(PRIORITIES, priorityFilter),
@@ -157,6 +193,7 @@ export default function LeadsPipelinePage() {
   const updateStatus = useUpdateLeadStatus();
 
   const handleOpenCreateLead = useCallback(() => setCreateOpen(true), [setCreateOpen]);
+  const handleOpenExport = useCallback(() => setExportOpen(true), []);
   const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
   const handleRetryTable = useCallback(() => void refetchTable(), [refetchTable]);
   const handleRetryBoard = useCallback(() => void refetchBoard(), [refetchBoard]);
@@ -166,30 +203,10 @@ export default function LeadsPipelinePage() {
     [setView],
   );
 
-  const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(() => {
-    if (!board) return null;
-    const result: Record<string, BoardLead[]> = {};
-    const q = searchQuery.trim().toLowerCase();
-
-    /*
-      Walked by the statuses the board type declares rather than by
-      `Object.entries`, which hands back `any` for an interface and would let a
-      renamed column through unnoticed.
-    */
-    for (const status of LEAD_STATUSES) {
-      const leads = board[status].leads;
-      result[status] = q
-        ? leads.filter(
-            (lead) =>
-              lead.name.toLowerCase().includes(q) ||
-              lead.email?.toLowerCase().includes(q) ||
-              lead.phone?.includes(q) ||
-              lead.company?.toLowerCase().includes(q),
-          )
-        : leads;
-    }
-    return result;
-  }, [board, searchQuery]);
+  const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(
+    () => projectBoardColumns(board, searchQuery),
+    [board, searchQuery],
+  );
 
   const handleMoveStatus = useCallback(
     async (leadId: number, status: string, expectedStatus?: string) => {
@@ -221,6 +238,13 @@ export default function LeadsPipelinePage() {
     },
     [handleMoveStatus],
   );
+
+  const hasMore = tableData?.hasMore ?? false;
+  const nextCursor = tableData?.nextCursor ?? null;
+
+  const handleNextPage = useCallback(() => {
+    if (nextCursor) handleNext(nextCursor);
+  }, [nextCursor, handleNext]);
 
   if (boardLoading || statsLoading) {
     return (
@@ -254,11 +278,13 @@ export default function LeadsPipelinePage() {
     <PageWrapper
       title="Lead Pipeline"
       subtitle={stats ? `${stats.total} leads` : undefined}
-      badge={view === "table" && tableData ? String(tableData.totalCount) : undefined}
+      badge={view === "table" && tableData?.totalCount !== undefined ? String(tableData.totalCount) : undefined}
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
-          <LeadExportDialog />
+          <Button variant="outline" size="sm" onClick={handleOpenExport}>
+            <Download className="mr-1 h-4 w-4" /> Export
+          </Button>
           {canCreate ? (
             <>
               <ImportLinkButton entity="leads" label="Import Leads" />
@@ -275,16 +301,16 @@ export default function LeadsPipelinePage() {
           <div className="min-w-0 flex-1">
             <LeadsToolbar
               searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+              onSearchChange={handleSetSearchQuery}
               view={view}
               onViewChange={handleViewChange}
               statusFilter={statusFilter}
               priorityFilter={priorityFilter}
               sourceFilter={sourceFilter}
-              onStatusFilterChange={setStatusFilter}
-              onPriorityFilterChange={setPriorityFilter}
-              onSourceFilterChange={setSourceFilter}
-              onClearFilters={clearFilters}
+              onStatusFilterChange={handleSetStatusFilter}
+              onPriorityFilterChange={handleSetPriorityFilter}
+              onSourceFilterChange={handleSetSourceFilter}
+              onClearFilters={handleClearFilters}
               scope={scope}
             />
           </div>
@@ -305,11 +331,14 @@ export default function LeadsPipelinePage() {
           <div className="mt-2 flex min-h-0 min-w-0 flex-1 flex-col">
             <LeadListView
               leads={tableData?.leads ?? []}
-              totalCount={tableData?.totalCount ?? 0}
-              page={tableData?.page ?? tablePage}
+              totalCount={tableData?.totalCount}
+              cursorPage={cursorHistory.length}
+              hasMore={hasMore}
+              onPrevious={handlePrevious}
+              onNext={handleNextPage}
+              onResetPage={resetCursors}
               pageSize={pageSize}
-              onPageChange={setTablePage}
-              onPageSizeChange={setPageSize}
+              onPageSizeChange={handleSetPageSize}
               isLoading={tableLoading}
               isError={tableError}
               onRetry={handleRetryTable}
@@ -320,7 +349,7 @@ export default function LeadsPipelinePage() {
               canDelete={canDelete}
               canCreateDeal={canCreateDeal}
               activeFilterLabels={activeFilterLabels}
-              onClearFilters={clearFilters}
+              onClearFilters={handleClearFilters}
               onCreateLead={handleOpenCreateLead}
             />
           </div>
@@ -343,23 +372,26 @@ export default function LeadsPipelinePage() {
             <LeadsFunnelView
               board={filteredBoard}
               searchQuery={searchQuery}
-              onClearSearch={clearFilters}
+              onClearSearch={handleClearFilters}
               onCreateLead={handleOpenCreateLead}
               canCreate={canCreate}
             />
           </div>
         )}
 
-        <LeadDetailSheet
-          leadId={selectedLeadId}
-          open={!!selectedLeadId}
-          onClose={handleCloseDetail}
-          onMoveStatus={handleMoveStatus}
-          canUpdate={canUpdate}
-        />
+        {selectedLeadId !== null && (
+          <LeadDetailSheet
+            leadId={selectedLeadId}
+            open
+            onClose={handleCloseDetail}
+            onMoveStatus={handleMoveStatus}
+            canUpdate={canUpdate}
+          />
+        )}
       </div>
 
-      <CreateLeadSheet open={createOpen} onOpenChange={setCreateOpen} />
+      {createOpen && <CreateLeadSheet open onOpenChange={setCreateOpen} />}
+      {exportOpen && <LeadExportDialog open onOpenChange={setExportOpen} />}
     </PageWrapper>
   );
 }

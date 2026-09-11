@@ -24,7 +24,7 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((opt) => {
-      const cls = getCrmTokenClasses(opt.color);
+      const cls = getCrmTokenClasses(opt.color ?? "");
       return {
         key: opt.key,
         label: opt.label,
@@ -34,7 +34,7 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
       };
     });
 
-  const byStatus = stats.byStatus as Record<string, number>;
+  const byStatus = stats.byStatus;
 
   const maxCount = stages.length > 0
     ? Math.max(1, ...(stages.map((s) => byStatus[s.key] ?? 0)))

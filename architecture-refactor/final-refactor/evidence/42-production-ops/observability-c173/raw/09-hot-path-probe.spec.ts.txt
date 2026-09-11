@@ -1,0 +1,21 @@
+import { runWithObservabilityContext } from "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/common/observability/observability-context";
+import { currentRelease } from "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/common/observability/release";
+import { structuredNestLogger } from "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/common/observability/nest-logger.adapter";
+
+test("PRD-C173 hot path: Nest logger -> structured logger -> redact + release stamp", () => {
+  const lines: string[] = [];
+  const spy = jest.spyOn(process.stdout, "write").mockImplementation(((c: any) => { lines.push(String(c)); return true; }) as any);
+  process.env["APP_RELEASE"] = "deadbeef1234567";
+  try {
+    runWithObservabilityContext(
+      { correlationId: "corr-1", release: currentRelease(), cellId: "cell-x", orgId: "org-1" },
+      () => { structuredNestLogger.log("user signed in", { password: "hunter2supersecret", apiKey: "sk-live-abcdefgh", userId: "u1" }, "AuthService"); },
+    );
+  } finally { spy.mockRestore(); }
+  const rec = JSON.parse(lines.find((l) => l.includes("user signed in"))!);
+  console.log("EMITTED RECORD: " + JSON.stringify(rec));
+  expect(rec.release).toBe("deadbeef1234567");
+  expect(rec.correlationId).toBe("corr-1");
+  expect(JSON.stringify(rec)).not.toContain("hunter2supersecret");
+  expect(JSON.stringify(rec)).not.toContain("sk-live-abcdefgh");
+});

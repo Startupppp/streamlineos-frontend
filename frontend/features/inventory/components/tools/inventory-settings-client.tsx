@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { NoPermissionState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,9 +30,18 @@ const settingsSchema = z.object({
   expiryReservationPolicy: z.enum(["BLOCK", "WARN", "ALLOW"]),
   inspectionOnReceipt: z.boolean(),
   inspectionOnReturn: z.boolean(),
-  overReceiptTolerancePct: z.number().min(0).max(100),
+  // Decimal strings, as the endpoint stores and accepts them. The bounds are the
+  // ones the numeric schema enforced, checked on the parsed value.
+  overReceiptTolerancePct: z.string().refine(function isPercent(value) {
+    const n = Number(value);
+    return value.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 100;
+  }, "Enter a percentage between 0 and 100."),
   requirePoApproval: z.boolean(),
-  adjustmentApprovalThreshold: z.number().min(0),
+  adjustmentApprovalThreshold: z.string().nullable().refine(function isThreshold(value) {
+    if (value === null) return true;
+    const n = Number(value);
+    return value.trim() !== "" && Number.isFinite(n) && n >= 0;
+  }, "Enter a threshold of zero or more."),
   autoReserveOnConfirm: z.boolean(),
   allowPartialShipment: z.boolean(),
   packageRequiredForShipping: z.boolean(),
@@ -51,6 +61,29 @@ const settingsSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
+/** The loaded settings as form values, field by field rather than by cast. */
+function toFormValues(settings: InventorySettings): SettingsFormValues {
+  return {
+    allowNegativeStock: settings.allowNegativeStock,
+    allowBackorders: settings.allowBackorders,
+    reservationStrategy: settings.reservationStrategy,
+    defaultCostingMethod: settings.defaultCostingMethod,
+    expiryReservationPolicy: settings.expiryReservationPolicy,
+    inspectionOnReceipt: settings.inspectionOnReceipt,
+    inspectionOnReturn: settings.inspectionOnReturn,
+    overReceiptTolerancePct: settings.overReceiptTolerancePct,
+    requirePoApproval: settings.requirePoApproval,
+    adjustmentApprovalThreshold: settings.adjustmentApprovalThreshold,
+    autoReserveOnConfirm: settings.autoReserveOnConfirm,
+    allowPartialShipment: settings.allowPartialShipment,
+    packageRequiredForShipping: settings.packageRequiredForShipping,
+    packWarehouse: settings.packWarehouse,
+    packKirana: settings.packKirana,
+    packPharmacy: settings.packPharmacy,
+    packGst: settings.packGst,
+  };
+}
+
 function SettingsLoadingSkeleton() {
   return (
     <div className="space-y-4">
@@ -63,7 +96,7 @@ function SettingsLoadingSkeleton() {
 
 export function InventorySettingsClient() {
   const canManage = useCan("inventory:settings:manage");
-  const { data: settings, isLoading } = useInventorySettings();
+  const { data: settings, isLoading, isError, error, refetch } = useInventorySettings();
   const updateMutation = useUpdateInventorySettings();
 
   const methods = useForm<SettingsFormValues>({
@@ -75,7 +108,7 @@ export function InventorySettingsClient() {
   React.useEffect(
     function populateForm() {
       if (settings) {
-        reset(settings as SettingsFormValues);
+        reset(toFormValues(settings));
       }
     },
     [settings, reset],
@@ -96,7 +129,7 @@ export function InventorySettingsClient() {
 
   async function onSubmit(values: SettingsFormValues): Promise<void> {
     try {
-      await updateMutation.mutateAsync(values as InventorySettings);
+      await updateMutation.mutateAsync(values);
       toast.success("Settings saved.");
       reset(values);
     } catch (err) {
@@ -108,6 +141,10 @@ export function InventorySettingsClient() {
     reset();
   }
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   return (
     <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -115,6 +152,12 @@ export function InventorySettingsClient() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {isLoading ? (
             <SettingsLoadingSkeleton />
+          ) : isError ? (
+            <ErrorState
+              title="Couldn't load inventory settings"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : (
             <InventorySettingsForm />
           )}

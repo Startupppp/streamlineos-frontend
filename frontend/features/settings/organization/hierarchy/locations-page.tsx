@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,9 +12,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
@@ -28,134 +24,19 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
+import type { OrgLocation } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { useHierarchyListState } from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
-
-const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
-  type: z.enum(LOCATION_TYPE_ENUM),
-  address: z.string().trim().max(500).optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-function LocationForm({
-  defaultValues,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: FormValues;
-  onSubmit: (v: FormValues) => void;
-  isPending: boolean;
-}) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { name: "", type: "OFFICE" as const, address: "" },
-  });
-
-  return (
-    <Form {...form}>
-      <form id="location-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Mumbai Office" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Type</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {LOCATION_TYPE_ENUM.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t.charAt(0) + t.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Input placeholder="Full address" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
-
-function TypeBadge({ type }: { type: LocationType }) {
-  const colors: Record<LocationType, string> = {
-    OFFICE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-    WAREHOUSE: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-    STORE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-    FACTORY: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-    REMOTE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  };
-  return (
-    <Badge variant="outline" className={cn("h-4 px-1.5 py-0 text-micro", colors[type])}>
-      {type.charAt(0) + type.slice(1).toLowerCase()}
-    </Badge>
-  );
-}
+import type { FormValues } from "./location-form-schema";
+import { LocationForm } from "./location-form";
+import { buildLocationColumns } from "./location-columns";
 
 export function OrgLocationsPage() {
   const {
@@ -252,76 +133,15 @@ export function OrgLocationsPage() {
 
   const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
-  function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
-  function makeArchiveHandler(loc: OrgLocation) { return () => archiveFlow.requestArchive(loc); }
-  function makeSetEditingHandler(loc: OrgLocation) { return () => setEditing(loc); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
 
-  const columns: DataTableColumn<OrgLocation>[] = [
-    {
-      key: "name",
-      header: "Name",
-      cell: (l) => <span className="font-medium">{l.name}</span>,
-    },
-    {
-      key: "type",
-      header: "Type",
-      cell: (l) => <TypeBadge type={l.type} />,
-    },
-    {
-      key: "address",
-      header: "Address",
-      cell: (l) => (
-        <span className="text-muted-foreground max-w-[250px] truncate block">
-          {l.address ?? "—"}
-        </span>
-      ),
-      className: "max-w-[250px]",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (l) => (
-        <Badge
-          variant={l.status === "ACTIVE" ? "outline" : "secondary"}
-          className={cn(
-            "h-4 px-1.5 py-0 text-micro",
-            l.status === "ACTIVE"
-              ? "text-status-success-ink border-status-success-rule bg-status-success-surface"
-              : l.status === "ARCHIVED"
-                ? "text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
-                : "",
-          )}
-        >
-          {l.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-28",
-      cell: (l) =>
-        canManage ? <div className="flex items-center gap-1">
-          {l.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore" aria-label="Restore">
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit" aria-label="Edit">
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive" aria-label="Archive">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null,
-    },
-  ];
+  const columns = buildLocationColumns({
+    canManage,
+    onEdit: setEditing,
+    onArchive: archiveFlow.requestArchive,
+    onRestore: handleRestore,
+  });
 
   const emptyState = showArchived ? (
     <EmptyState
@@ -370,7 +190,7 @@ export function OrgLocationsPage() {
         </div>
       }
       filters={
-        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
+        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchChange} />
       }
     >
       {isError ? (

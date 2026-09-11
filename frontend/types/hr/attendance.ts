@@ -1,4 +1,4 @@
-export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+export type AttendanceStatus = string;
 export type WfhRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface BreakEntry {
@@ -133,14 +133,14 @@ export interface TeamAttendanceEntry {
   email: string;
   image: string | null;
   department: string | null;
-  status: "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+  status: string;
   checkIn: string | null;
   checkOut: string | null;
   workHours: string | null;
 }
 
 export interface TeamAttendanceStatusQuery {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: TeamAttendanceEntry["status"];
@@ -151,9 +151,9 @@ export interface TeamAttendanceStatusResponse {
   data: TeamAttendanceEntry[];
   counts: Record<TeamAttendanceEntry["status"], number>;
   pagination: {
-    page: number;
     limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
     total: number;
-    totalPages: number;
   };
 }

@@ -2,7 +2,6 @@
 
 import {
   useQuery,
-  useMutation,
   useQueryClient,
   keepPreviousData,
   type UseQueryOptions,
@@ -10,6 +9,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   InventoryVendor,
   CreateVendorInput,
@@ -17,7 +17,7 @@ import type {
   VendorScorecard,
   VendorDeliveriesResponse,
 } from "@/types/inventory";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 type VendorFilters = {
   search?: string;
@@ -41,13 +41,13 @@ export function useVendors(filters?: VendorFilters) {
   const limit = filters?.pageSize ?? filters?.limit;
   return useQuery<VendorListResponse, Error>({
     queryKey: queryKeys.inventory.vendors(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<VendorListResponse>("/inventory/vendors", {
         ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.isActive !== undefined ? { isActive: String(filters.isActive) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(limit ? { limit: String(limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -58,7 +58,7 @@ export function useVendor(vendorId: number) {
   const canView = useCan("inventory:vendors:read");
   return useQuery<InventoryVendor, Error>({
     queryKey: queryKeys.inventory.vendor(vendorId),
-    queryFn: () => apiClient.get<InventoryVendor>(`/inventory/vendors/${vendorId}`),
+    queryFn: ({ signal }) => apiClient.get<InventoryVendor>(`/inventory/vendors/${vendorId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && vendorId > 0,
   });
@@ -66,7 +66,7 @@ export function useVendor(vendorId: number) {
 
 export function useCreateVendor() {
   const qc = useQueryClient();
-  return useIdempotentMutation<InventoryVendor, Error, CreateVendorInput>({
+  return useAuthorizedIdempotentMutation<InventoryVendor, Error, CreateVendorInput>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "create"],
     mutationFn: (data, idempotencyKey) => apiClient.post<InventoryVendor>("/inventory/vendors", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
@@ -77,7 +77,7 @@ export function useCreateVendor() {
 
 export function useUpdateVendor(vendorId?: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, UpdateVendorPayload>({
+  return useAuthorizedMutation<InventoryVendor, Error, UpdateVendorPayload>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "update", vendorId],
     mutationFn: ({ id, ...data }) => {
       const targetId = vendorId ?? id;
@@ -108,7 +108,7 @@ export function useVendorPerformance(
   return useQuery<VendorScorecard, Error>({
     ...options,
     queryKey: queryKeys.vendorScorecard.card(vendorId),
-    queryFn: () => apiClient.get<VendorScorecard>(`/inventory/vendors/${vendorId}/performance`),
+    queryFn: ({ signal }) => apiClient.get<VendorScorecard>(`/inventory/vendors/${vendorId}/performance`, undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && vendorId > 0 && (options?.enabled ?? true),
   });
@@ -124,11 +124,11 @@ export function useVendorDeliveries(
   return useQuery<VendorDeliveriesResponse, Error>({
     ...options,
     queryKey: queryKeys.vendorScorecard.deliveries(vendorId, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<VendorDeliveriesResponse>(`/inventory/vendors/${vendorId}/deliveries`, {
         page: String(params.page),
         limit: String(params.limit),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView && vendorId > 0 && (options?.enabled ?? true),
@@ -137,7 +137,7 @@ export function useVendorDeliveries(
 
 export function useToggleVendorActive(vendorId?: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, { id: number; isActive: boolean }>({
+  return useAuthorizedMutation<InventoryVendor, Error, { id: number; isActive: boolean }>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "toggle-active", vendorId],
     mutationFn: ({ id, isActive }) =>
       apiClient.patch<InventoryVendor>(`/inventory/vendors/${id}`, { isActive }),

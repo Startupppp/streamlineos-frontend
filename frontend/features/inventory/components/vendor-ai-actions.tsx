@@ -58,10 +58,11 @@ export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) 
         key: "supplier-delay",
         label: "Supplier-delay briefing",
         description: "AI narrates delivery performance evidence",
-        run: async () => {
+        run: async (signal?: AbortSignal) => {
           const briefing = await apiClient.get<SupplierDelayBriefing>(
             "/inventory/ai/supplier-delay",
             { vendorId: String(vendorId) },
+            signal,
           );
           return { text: briefingToText(briefing) };
         },

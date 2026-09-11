@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -28,7 +29,7 @@ import {
   type NotificationSection,
   type NotificationCategory,
   type NotificationPriority,
-} from "@/features/notifications/notification-types";
+} from "@/lib/notification-types";
 import { cn } from "@/lib/utils";
 
 interface NotificationFilterBarProps {
@@ -118,6 +119,7 @@ export function NotificationFilterBar({
   unreadCount,
 }: NotificationFilterBarProps) {
   const [filterOpen, setFilterOpen] = useState(false);
+  const shellVariant = useShellVariant();
   const hasFilters = !!activeCategory || !!activePriority;
   const activeSectionLabel = SECTION_TABS.find((t) => t.value === activeSection)?.label ?? "All";
 
@@ -129,17 +131,22 @@ export function NotificationFilterBar({
   }, [activeSectionLabel, activeCategory, activePriority]);
 
   const handleSectionSelect = useCallback(
-    (value: string) => onSectionChange(value as NotificationSection),
+    (value: string) => {
+      const next = SECTION_TABS.find((tab) => tab.value === value);
+      if (next) onSectionChange(next.value);
+    },
     [onSectionChange],
   );
 
   const handleCategorySelect = useCallback(
-    (value: string) => onCategoryChange(value === "ALL" ? undefined : (value as NotificationCategory)),
+    (value: string) =>
+      onCategoryChange(value === "ALL" ? undefined : NOTIFICATION_CATEGORIES.find((c) => c === value)),
     [onCategoryChange],
   );
 
   const handlePrioritySelect = useCallback(
-    (value: string) => onPriorityChange(value === "ALL" ? undefined : (value as NotificationPriority)),
+    (value: string) =>
+      onPriorityChange(value === "ALL" ? undefined : NOTIFICATION_PRIORITIES.find((p) => p === value)),
     [onPriorityChange],
   );
 
@@ -247,56 +254,63 @@ export function NotificationFilterBar({
         </ResponsivePopoverContent>
       </ResponsivePopover>
 
-      <Select value={activeSection} onValueChange={handleSectionSelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SECTION_TABS.map((tab) => (
-            <SelectItem key={tab.value} value={tab.value} className="text-xs">
-              <span className="flex items-center gap-1.5">
-                {tab.label}
-                {tab.value === "UNREAD" && unreadCount > 0 && (
-                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-primary-foreground">
-                    {unreadCount}
+      {shellVariant === "desktop" && (
+        <>
+          <Select value={activeSection} onValueChange={handleSectionSelect}>
+            <SelectTrigger
+              aria-label="Notification section"
+              className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SECTION_TABS.map((tab) => (
+                <SelectItem key={tab.value} value={tab.value} className="text-xs">
+                  <span className="flex items-center gap-1.5">
+                    {tab.label}
+                    {tab.value === "UNREAD" && unreadCount > 0 && (
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-primary-foreground">
+                        {unreadCount}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      <Select value={activeCategory ?? "ALL"} onValueChange={handleCategorySelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[140px] shrink-0", FILTER_SELECT_TRIGGER)}>
-          <SelectValue placeholder="Category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL" className="text-xs">All Categories</SelectItem>
-          {NOTIFICATION_CATEGORIES.map((cat) => (
-            <SelectItem key={cat} value={cat} className="text-xs">
-              {NOTIFICATION_CATEGORY_CONFIG[cat].label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          <Select value={activeCategory ?? "ALL"} onValueChange={handleCategorySelect}>
+            <SelectTrigger className={cn("hidden sm:flex w-[140px] shrink-0", FILTER_SELECT_TRIGGER)}>
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL" className="text-xs">All Categories</SelectItem>
+              {NOTIFICATION_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat} className="text-xs">
+                  {NOTIFICATION_CATEGORY_CONFIG[cat].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      <Select value={activePriority ?? "ALL"} onValueChange={handlePrioritySelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[130px] shrink-0", FILTER_SELECT_TRIGGER)}>
-          <SelectValue placeholder="Priority" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL" className="text-xs">All Priorities</SelectItem>
-          {NOTIFICATION_PRIORITIES.map((p) => (
-            <SelectItem key={p} value={p} className="text-xs">
-              {NOTIFICATION_PRIORITY_CONFIG[p].label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          <Select value={activePriority ?? "ALL"} onValueChange={handlePrioritySelect}>
+            <SelectTrigger className={cn("hidden sm:flex w-[130px] shrink-0", FILTER_SELECT_TRIGGER)}>
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL" className="text-xs">All Priorities</SelectItem>
+              {NOTIFICATION_PRIORITIES.map((p) => (
+                <SelectItem key={p} value={p} className="text-xs">
+                  {NOTIFICATION_PRIORITY_CONFIG[p].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      {hasFilters && (
-        <ClearFiltersButton onClick={onClearFilters} />
+          {hasFilters && (
+            <ClearFiltersButton onClick={onClearFilters} />
+          )}
+        </>
       )}
     </div>
   );

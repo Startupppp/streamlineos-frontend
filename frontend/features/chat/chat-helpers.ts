@@ -1,12 +1,9 @@
-﻿import { format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import {
-  getInitials as _getInitials,
-  formatFileSize as _formatFileSize,
-} from "@/lib/format-utils";
+import { isStorageObjectKey } from "@/lib/utils";
 
 export type ChatOrgUser = {
   id: string;
@@ -24,19 +21,20 @@ export function buildChatUserMap(
   return map;
 }
 
+/**
+ * `userId` is nullable because a message whose `organization_members` row is gone
+ * arrives with `senderId: null`. Declared non-nullable, this signature forced
+ * every caller to lie about a value the wire has always been able to omit.
+ */
 export function resolveChatUserName(
-  userId: string,
+  userId: string | null,
   embedded: { name?: string | null; email?: string | null } | null | undefined,
   userMap: Map<string, NamedUser>,
 ): string {
   if (embedded?.name?.trim()) return embedded.name.trim();
-  const mapped = userMap.get(userId);
+  const mapped = userId === null ? undefined : userMap.get(userId);
   if (mapped) return getUserDisplayName(mapped);
   return "Unknown";
-}
-
-export function getInitials(name: string | null | undefined): string {
-  return _getInitials(name);
 }
 
 function toDate(date: Date | string | null): Date | null {
@@ -71,10 +69,6 @@ export function formatChannelTime(date: Date | string | null) {
   return format(d, "MMM d");
 }
 
-export function formatFileSize(bytes: number): string {
-  return _formatFileSize(bytes);
-}
-
 export function getFileExt(name: string) {
   return name.split(".").pop()?.toUpperCase() || "FILE";
 }
@@ -93,16 +87,6 @@ export function getFileColor(name: string) {
 
 export function isImageMime(mime: string) {
   return mime.startsWith("image/");
-}
-
-export function resolveFileUrl(url: string, mime?: string): string {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
-  if (mime && !mime.startsWith("image/")) {
-    return `${apiBase}/storage/download?key=${encodeURIComponent(url)}&attachment=1`;
-  }
-  return `${apiBase}/storage/image?key=${encodeURIComponent(url)}`;
 }
 
 export function getDateLabel(date: Date | string | null) {

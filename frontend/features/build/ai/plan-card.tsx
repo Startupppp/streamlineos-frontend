@@ -6,7 +6,7 @@ import { SparklesIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiFailureBody } from "@/components/ai";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { usePlanFromPrompt } from "@/hooks/api/build/ai";
@@ -88,9 +88,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
       ) : null}
 
       {mutation.isError ? (
-        <p className="text-label leading-snug text-destructive">
-          {getErrorMessage(mutation.error)}
-        </p>
+        <AiFailureBody error={mutation.error} onRetry={handleRun} />
       ) : null}
 
       {result ? (

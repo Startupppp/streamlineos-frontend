@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Script from "next/script";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { Check, Loader2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateTestTransaction,
@@ -31,9 +33,19 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
     setRazorpayLoaded(true);
   }
 
+  const canRunTest = useCan("payments:test:run");
   const createTransaction = useCreateTestTransaction(providerKey);
   const verifyTransaction = useVerifyTestTransaction(providerKey);
-  const { data: transactions } = useTestTransactions(providerKey);
+  const {
+    data: transactions,
+    isError: historyFailed,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useTestTransactions(providerKey);
+
+  function handleRetryHistory() {
+    void refetchHistory();
+  }
 
   function runTestPayment() {
     setFailed(false);
@@ -110,14 +122,16 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
             className="text-sm w-32"
           />
         </div>
-        <Button
-          size="sm"
-          className="h-9 text-xs gap-1.5"
-          onClick={runTestPayment}
-          disabled={createTransaction.isPending || verifyTransaction.isPending}
-        >
-          <PlayCircle className="h-3.5 w-3.5" /> Run test payment
-        </Button>
+        {canRunTest ? (
+          <Button
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={runTestPayment}
+            disabled={createTransaction.isPending || verifyTransaction.isPending}
+          >
+            <PlayCircle className="h-3.5 w-3.5" /> Run test payment
+          </Button>
+        ) : null}
       </div>
 
       {(createTransaction.isPending || timelineStep > 0) && (
@@ -147,7 +161,16 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
         </ol>
       )}
 
-      {transactions && transactions.length > 0 && (
+      {historyFailed && (
+        <ErrorState
+          compact
+          title="Failed to load recent test payments"
+          description={getErrorMessage(historyError)}
+          onRetry={handleRetryHistory}
+        />
+      )}
+
+      {!historyFailed && transactions && transactions.length > 0 && (
         <div>
           <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
             Recent test payments

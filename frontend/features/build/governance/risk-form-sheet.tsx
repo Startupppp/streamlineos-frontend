@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Risk, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 
@@ -46,13 +46,17 @@ const CREATE_DEFAULTS: RiskFormValues = {
   status: "open", ownerId: "", mitigation: "", linkedTicketId: "",
 };
 
+const RISK_PROBABILITIES: ReadonlyArray<"low" | "medium" | "high"> = ["low", "medium", "high"];
+const RISK_IMPACTS: ReadonlyArray<"low" | "medium" | "high"> = ["low", "medium", "high"];
+const RISK_STATUSES: ReadonlyArray<"open" | "mitigating" | "monitoring" | "accepted" | "closed"> = ["open", "mitigating", "monitoring", "accepted", "closed"];
+
 function riskToFormValues(r: Risk): RiskFormValues {
   return {
     title: r.title,
     description: r.description ?? "",
-    probability: r.probability,
-    impact: r.impact,
-    status: r.status,
+    probability: RISK_PROBABILITIES.find((v) => v === r.probability) ?? "medium",
+    impact: RISK_IMPACTS.find((v) => v === r.impact) ?? "medium",
+    status: RISK_STATUSES.find((v) => v === r.status) ?? "open",
     ownerId: r.ownerId ?? "",
     mitigation: r.mitigation ?? "",
     linkedTicketId: r.linkedTicketId != null ? String(r.linkedTicketId) : "",

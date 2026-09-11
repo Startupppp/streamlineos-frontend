@@ -83,7 +83,7 @@ interface PublicArticleContentProps {
 }
 
 export function PublicArticleContent({ article, orgId }: PublicArticleContentProps) {
-  const { html: withIds, toc } = extractToc(article.content);
+  const { html: withIds, toc } = extractToc(article.content ?? "");
   const tocItems: TocItem[] = toc
     .filter((h) => h.level === 2 || h.level === 3)
     .map((h) => ({ id: h.id, text: h.text, level: h.level === 3 ? 3 : 2 }));

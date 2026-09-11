@@ -2,11 +2,17 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import type {
   BlogPostWithRelations,
   FeedResponse,
 } from "@/types/blog";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+const blogFeedContract = lazyContract(() =>
+  import("@/hooks/api/blog-schema").then((m) => m.blogFeedContract),
+);
 
 interface BlogFeedParams {
   category?: string;
@@ -20,17 +26,17 @@ export function useInfiniteBlogFeed(
   initial?: { posts: BlogPostWithRelations[]; nextCursor: string | null; hasMore: boolean },
 ) {
   return useInfiniteQuery<FeedResponse, Error>({
-    queryKey: queryKeys.blog.feed(params),
-    queryFn: ({ pageParam }) => {
+    queryKey: accessAndCrmQueryKeys.blog.feed(params),
+    queryFn: ({ pageParam , signal }) => {
       const query: Record<string, unknown> = {};
-      if (pageParam) query.cursor = pageParam;
+      if (pageParam !== null) query.cursor = pageParam;
       if (params.category) query.category = params.category;
       if (params.tag) query.tag = params.tag;
       if (params.search) query.search = params.search;
       if (params.limit) query.limit = params.limit;
-      return apiClient.get<FeedResponse>("/blog/feed", query);
+      return apiClient.get<FeedResponse>("/blog/feed", query, signal, blogFeedContract);
     },
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     getNextPageParam: (last) => (last.hasMore ? last.nextCursor : undefined),
     initialData: initial
       ? {

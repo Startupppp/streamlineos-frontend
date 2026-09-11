@@ -11,13 +11,23 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 
-type ActiveTab = "policies" | "requests";
+const ACTIVE_TABS = ["policies", "requests"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 export function RetentionPageContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("policies");
 
+  function handleActiveTabChange(v: string) {
+    const tab = ACTIVE_TABS.find((candidate) => candidate === v);
+    if (tab) setActiveTab(tab);
+  }
+
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="flex flex-1 min-h-0 flex-col gap-4">
+    <Tabs
+      value={activeTab}
+      onValueChange={handleActiveTabChange}
+      className="flex flex-1 min-h-0 flex-col gap-4"
+    >
       <TabsList className="shrink-0">
         <TabsTrigger value="policies">Retention Policies</TabsTrigger>
         <TabsTrigger value="requests">Data Requests</TabsTrigger>

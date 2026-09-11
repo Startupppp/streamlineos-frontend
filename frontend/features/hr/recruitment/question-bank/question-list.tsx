@@ -20,7 +20,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { QuestionFormDialog } from "./question-form-dialog";
 import { QuestionViewSheet, DIFFICULTY_VARIANT } from "./question-view-sheet";
 
-function stopRowClick(e: React.MouseEvent) {
+function stopRowClick(e: React.MouseEvent | React.KeyboardEvent) {
   e.stopPropagation();
 }
 
@@ -36,7 +36,7 @@ function QuestionActionsCell({ question, onView, onEdit, onDelete }: QuestionAct
   function handleEditClick() { onEdit(question); }
   function handleDeleteClick() { onDelete(question.id); }
   return (
-    <div onClick={stopRowClick}>
+    <div onClick={stopRowClick} onKeyDown={stopRowClick}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />

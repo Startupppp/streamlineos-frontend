@@ -13,9 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
@@ -64,7 +68,20 @@ const SEVERITY_OPTIONS: { value: IncidentSeverity | typeof SENTINEL; label: stri
   { value: "critical", label: "Critical" },
 ];
 
-type ActiveTab = "incidents" | "wellness";
+function isIncidentStatus(value: string): value is IncidentStatus {
+  return STATUS_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
+function isIncidentType(value: string): value is IncidentType {
+  return TYPE_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
+function isIncidentSeverity(value: string): value is IncidentSeverity {
+  return SEVERITY_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
+const ACTIVE_TABS = ["incidents", "wellness"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 function WellnessPulseCard() {
   const { data, isLoading } = useWellnessPulse(true);
@@ -105,22 +122,62 @@ export function SafetyPageContent() {
   const [status, setStatus] = useState<IncidentStatus | "">("");
   const [type, setType] = useState<IncidentType | "">("");
   const [severity, setSeverity] = useState<IncidentSeverity | "">("");
-  const [page, setPage] = useState(1);
+  const pagination = useCursorPageStack();
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
+  const resetToFirstPage = pagination.resetToFirstPage;
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
-  }, []);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
 
-  const { data, isLoading } = useSafetyIncidents({
-    page,
+  const handleStatusChange = useCallback((value: string) => {
+    setStatus(value === SENTINEL || !isIncidentStatus(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleTypeChange = useCallback((value: string) => {
+    setType(value === SENTINEL || !isIncidentType(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleSeverityChange = useCallback((value: string) => {
+    setSeverity(value === SENTINEL || !isIncidentSeverity(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const { data, isLoading, isFetching, isError, error, refetch } = useSafetyIncidents({
+    cursor: pagination.cursor,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     type: type || undefined,
     severity: severity || undefined,
   });
+
+  const filtersActive =
+    search.trim() !== "" || status !== "" || type !== "" || severity !== "";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("");
+    setType("");
+    setSeverity("");
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    pagination.goToNextPage(nextCursor);
+  }, [data, pagination]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleOpenReport = useCallback(() => setShowReport(true), []);
 
   const columns: DataTableColumn<SafetyIncident>[] = [
     {
@@ -171,7 +228,7 @@ export function SafetyPageContent() {
       />
       <Select
         value={status || SENTINEL}
-        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}
+        onValueChange={handleStatusChange}
       >
         <SelectTrigger
           aria-label="Filter by status"
@@ -187,7 +244,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={type || SENTINEL}
-        onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setPage(1); }}
+        onValueChange={handleTypeChange}
       >
         <SelectTrigger
           aria-label="Filter by type"
@@ -203,7 +260,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={severity || SENTINEL}
-        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setPage(1); }}
+        onValueChange={handleSeverityChange}
       >
         <SelectTrigger
           aria-label="Filter by severity"
@@ -242,7 +299,7 @@ export function SafetyPageContent() {
     >
       <div className="flex min-h-0 flex-1 flex-col pb-6">
         <div className="flex items-center gap-1 border-b mb-4" role="tablist" aria-label="Safety view">
-          {(["incidents", "wellness"] as ActiveTab[]).map((tab) => (
+          {ACTIVE_TABS.map((tab) => (
             <button
               key={tab}
               type="button"
@@ -261,22 +318,52 @@ export function SafetyPageContent() {
         </div>
 
         {activeTab === "incidents" && (
-          <DataTable
-            className="flex-1 min-h-0"
-            columns={columns}
-            data={data?.data ?? []}
-            isLoading={isLoading}
-            getRowKey={(row) => row.id}
-            emptyState={
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
-                title="No safety incidents reported"
-                description="Report workplace incidents, accidents, near-misses, and hazards here."
-                action={{ label: "Report Incident", onClick: () => setShowReport(true) }}
+          <div className="flex min-h-0 flex-1 flex-col gap-2">
+            {isError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load safety incidents"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
               />
-            }
-          />
+            ) : (
+              <DataTable
+                className="flex-1 min-h-0"
+                columns={columns}
+                data={data?.data ?? []}
+                isLoading={isLoading}
+                getRowKey={(row) => row.id}
+                emptyState={
+                  <EmptyState
+                    className="border-0 bg-transparent min-h-[40vh]"
+                    illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                    title="No safety incidents reported"
+                    description={
+                      filtersActive
+                        ? undefined
+                        : "Report workplace incidents, accidents, near-misses, and hazards here."
+                    }
+                    filtersActive={filtersActive}
+                    onClearFilters={handleClearFilters}
+                    action={
+                      filtersActive
+                        ? undefined
+                        : { label: "Report Incident", onClick: handleOpenReport }
+                    }
+                  />
+                }
+              />
+            )}
+            {!isError && (pagination.hasPrevious || data?.pagination.hasMore) ? (
+              <CursorPageControls
+                page={pagination.page}
+                hasNext={data?.pagination.hasMore ?? false}
+                disabled={isFetching}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
+              />
+            ) : null}
+          </div>
         )}
 
         {activeTab === "wellness" && (

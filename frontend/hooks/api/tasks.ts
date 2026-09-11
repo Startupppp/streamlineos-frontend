@@ -1,8 +1,26 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+
+const taskRowContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskRowContract),
+);
+const taskSuccessContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskSuccessContract),
+);
+const taskAnalyticsContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.taskAnalyticsContract),
+);
+const tasksListContract = lazyContract(() =>
+  import("@/hooks/api/tasks-schema").then((m) => m.tasksListContract),
+);
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { z } from "zod";
+import type { tasksListContract as tasksListContractDef } from "@/hooks/api/tasks-schema";
 
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
@@ -33,12 +51,7 @@ export interface TaskWithBucket extends Task {
   bucket: TaskBucket;
 }
 
-interface TasksListResponse {
-  tasks: Task[];
-  total: number;
-  page: number;
-  limit: number;
-}
+type TasksListResponse = z.infer<typeof tasksListContractDef>;
 
 export interface CreateTaskInput {
   title: string;
@@ -75,70 +88,70 @@ export interface TasksFilters {
 
 
 export function useTasks(filters?: TasksFilters) {
-  return useQuery({
-    queryKey: queryKeys.tasks.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>),
+  return useGatedQuery("tasks:read", {
+    queryKey: accessAndCrmQueryKeys.tasks.list(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<TasksListResponse>("/tasks", filters, signal, tasksListContract),
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "create"],
-    mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input),
+    mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input, undefined, taskRowContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
   });
 }
 
 export function useUpdateTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "update"],
     mutationFn: ({ taskId, input }: { taskId: number; input: UpdateTaskInput }) =>
-      apiClient.patch<Task>(`/tasks/${taskId}`, input),
+      apiClient.patch<Task>(`/tasks/${taskId}`, input, undefined, taskRowContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
   });
 }
 
 export function useDeleteTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "delete"],
     mutationFn: (taskId: number) =>
-      apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`),
+      apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`, undefined, undefined, taskSuccessContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
   });
 }
 
 export function useCompleteTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "complete"],
     mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt?: string }) =>
-      apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }),
+      apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }, undefined, taskRowContract),
     onMutate: async ({ taskId }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.tasks.myQueue() });
-      const prev = qc.getQueryData<TaskWithBucket[]>(queryKeys.tasks.myQueue());
-      qc.setQueryData<TaskWithBucket[]>(queryKeys.tasks.myQueue(), (old) =>
+      await qc.cancelQueries({ queryKey: accessAndCrmQueryKeys.tasks.myQueue() });
+      const prev = qc.getQueryData<TaskWithBucket[]>(accessAndCrmQueryKeys.tasks.myQueue());
+      qc.setQueryData<TaskWithBucket[]>(accessAndCrmQueryKeys.tasks.myQueue(), (old) =>
         (old ?? []).filter((t) => t.id !== taskId),
       );
       return { prev };
     },
     onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.tasks.myQueue(), ctx.prev);
+        qc.setQueryData(accessAndCrmQueryKeys.tasks.myQueue(), ctx.prev);
       }
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
     },
   });
 }
@@ -162,9 +175,9 @@ interface TaskAnalytics {
 }
 
 export function useTaskAnalytics(days = 30) {
-  return useQuery({
-    queryKey: [...queryKeys.tasks.all, "analytics", days] as const,
-    queryFn: () => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`),
+  return useGatedQuery("tasks:read", {
+    queryKey: [...accessAndCrmQueryKeys.tasks.all, "analytics", days] as const,
+    queryFn: ({ signal }) => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`, undefined, signal, taskAnalyticsContract),
     staleTime: 120_000,
   });
 }

@@ -45,7 +45,9 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
     }
   }, [data?.documents, selectedDocumentId, setSelectedDocumentId]);
 
-  const { data: preview } = useSignDocumentPreview(selectedDocumentId ?? undefined);
+  // Derived, not effect-set, so the preview starts in the envelope's own render.
+  const previewDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
+  const { data: preview } = useSignDocumentPreview(previewDocumentId ?? undefined);
 
   if (isLoading || !data) {
     return (

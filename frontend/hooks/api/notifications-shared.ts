@@ -2,7 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { QueryParams } from "@/lib/api-client";
 import type { NotificationListParams } from "@/types/notifications";
 
 export const SHARED_UNREAD_PARAMS: NotificationListParams = {
@@ -17,23 +18,24 @@ export function useNotificationInboxInvalidation() {
 
   function invalidateInbox() {
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.lists(),
+      queryKey: platformCoreQueryKeys.notifications.lists(),
     });
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.unreadCount(),
+      queryKey: platformCoreQueryKeys.notifications.unreadCount(),
       exact: true,
     });
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.inbox.all,
+      queryKey: platformCoreQueryKeys.inbox.all,
     });
   }
 
   return { invalidateInbox, orgId, queryClient };
 }
 
-export function toStringParams(params: Record<string, unknown>): Record<string, string> {
+export function toStringParams(params: QueryParams): Record<string, string> {
+  const entries: Array<[string, unknown]> = Object.entries(params);
   return Object.fromEntries(
-    Object.entries(params)
+    entries
       .filter(([, v]) => v !== undefined && v !== null)
       .map(([k, v]) => [k, String(v)]),
   );

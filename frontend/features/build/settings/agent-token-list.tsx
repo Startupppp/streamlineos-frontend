@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AgentToken } from "@/hooks/api/build/agent-tokens";
-import { PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
 
 interface TokenRowProps {
   token: AgentToken;
-  onRevoke: (id: string | number) => void;
+  onRevoke: (id: number) => void;
 }
 
 export function TokenRow({ token, onRevoke }: TokenRowProps) {

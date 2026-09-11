@@ -1,8 +1,32 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const externalReferralListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
+    (m) => m.externalReferralListSchema,
+  ),
+);
+const externalReferralRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
+    (m) => m.externalReferralWithRelationsSchema,
+  ),
+);
+const externalReferrerListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
+    (m) => m.externalReferrerListSchema,
+  ),
+);
+const externalReferrerRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
+    (m) => m.externalReferrerRowSchema,
+  ),
+);
 
 export type ExternalReferralStatus =
   | "SUBMITTED"
@@ -42,42 +66,42 @@ export interface UpdateExternalReferralInput {
 }
 
 export function useExternalReferrals() {
-  return useQuery({
-    queryKey: queryKeys.hr.externalReferrals(),
-    queryFn: () => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals"),
+  return useGatedQuery("hr:employees:view", {
+    queryKey: humanResourcesQueryKeys.hr.externalReferrals(),
+    queryFn: ({ signal }) => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals", undefined, signal, externalReferralListContract),
     staleTime: 60_000,
   });
 }
 
 export function useUpdateExternalReferral() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrals", "update"],
     mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
-      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data),
+      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data, undefined, externalReferralRowContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },
   });
 }
 
 export function useExternalReferrers() {
-  return useQuery({
-    queryKey: queryKeys.hr.externalReferrers(),
-    queryFn: () => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers"),
+  return useGatedQuery("hr:employees:view", {
+    queryKey: humanResourcesQueryKeys.hr.externalReferrers(),
+    queryFn: ({ signal }) => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers", undefined, signal, externalReferrerListContract),
     staleTime: 60_000,
   });
 }
 
 export function useUpdateExternalReferrerStatus(referrerId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrers", "update-status", referrerId],
     mutationFn: (status: ExternalReferrerStatus) =>
-      apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }),
+      apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }, undefined, externalReferrerRowContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrers() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrers() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },
   });
 }

@@ -16,6 +16,11 @@ import { getGroupStatus } from "./list-view-shared";
 import type { OuterGroupHeaderProps, NestedGroupProps, DroppableGroupProps } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
+import {
+  GroupRows,
+  ShowMoreRowsButton,
+  useGroupRenderLimit,
+} from "./list-view-group-rows";
 
 export function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroupHeaderProps) {
   if (rowBy === "assignee") {
@@ -76,19 +81,14 @@ export function NestedGroup({
         )}
       </div>
       <AccordionContent className="pb-0">
-        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-          {items.map((ticket) => (
-            <ListViewItem
-              key={ticket.id}
-              ticket={ticket}
-              projectKey={projectKey}
-              projectId={projectId}
-              projectStatuses={projectStatuses}
-              onClick={onTicketClick}
-              displayOptions={displayOptions}
-            />
-          ))}
-        </div>
+        <GroupRows
+          items={items}
+          projectKey={projectKey}
+          projectId={projectId}
+          projectStatuses={projectStatuses}
+          displayOptions={displayOptions}
+          onTicketClick={onTicketClick}
+        />
       </AccordionContent>
     </AccordionItem>
   );
@@ -104,6 +104,11 @@ export function DroppableGroup({
   onTicketClick,
   shouldReduceMotion,
 }: DroppableGroupProps) {
+  const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
+    items.length,
+  );
+  const visibleItems = items.slice(0, visibleCount);
+
   return (
     <Droppable droppableId={groupKey} type="LIST_TICKET">
       {(provided, snapshot) => (
@@ -125,7 +130,7 @@ export function DroppableGroup({
             snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/20",
           )}
         >
-          {items.map((ticket, index) => (
+          {visibleItems.map((ticket, index) => (
             <Draggable key={ticket.id} draggableId={String(ticket.id)} index={index}>
               {(dragProvided, dragSnapshot) => (
                 <div
@@ -148,6 +153,13 @@ export function DroppableGroup({
             </Draggable>
           ))}
           {provided.placeholder}
+          {hiddenCount > 0 && (
+            <ShowMoreRowsButton
+              visibleCount={visibleCount}
+              total={items.length}
+              onShowMore={showMore}
+            />
+          )}
           {items.length === 0 && !snapshot.isDraggingOver && (
             <div className="py-4 text-center text-xs text-muted-foreground">Drop tickets here</div>
           )}

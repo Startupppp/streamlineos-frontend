@@ -22,7 +22,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const expenseEmailReportContract = lazyContract(() =>
+  import("@/components/expenses/expense-export/expense-export-schema").then(
+    (m) => m.expenseExportJobContract,
+  ),
+);
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import {
   useCreateExpenseExportJob,
@@ -42,7 +49,7 @@ async function emailExpenseReport(
   sendTo: ExpenseReportEmailTarget,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await apiClient.post("/hr/expenses/email-report", { filters, sendTo });
+    await apiClient.post("/hr/expenses/email-report", { filters, sendTo }, undefined, expenseEmailReportContract);
     return { success: true };
   } catch (error) {
     return { success: false, error: getErrorMessage(error) };
@@ -252,7 +259,7 @@ export function ExpenseExportDialog({
               </div>
             )}
             {job?.truncated && job.status === "completed" && (
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink-strong">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
                   The export was capped at {job.rowCount?.toLocaleString()} rows.

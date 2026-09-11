@@ -2,18 +2,38 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const kpiListC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.kpiListContract),
+);
+const kpiArrayC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.kpiArrayContract),
+);
+const frameworkListC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.frameworkListContract),
+);
+const frameworkArrayC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.frameworkArrayContract),
+);
+const competencyArrayC = lazyContract(() =>
+  import("@/hooks/api/hr/kpis-schema").then((m) => m.competencyArrayContract),
+);
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 export interface KpiDefinition {
   id: number;
   orgId: string;
   name: string;
-  description?: string;
+  description?: string | null;
   category: string;
-  unit?: string;
-  target?: string;
+  unit?: string | null;
+  target?: string | null;
   weight: string;
   isActive: boolean;
   createdAt: string;
@@ -23,7 +43,7 @@ export interface CompetencyFramework {
   id: number;
   orgId: string;
   name: string;
-  description?: string;
+  description?: string | null;
   ratingScale: number;
   levels: { level: number; label: string; description: string }[];
   isActive: boolean;
@@ -35,7 +55,7 @@ export interface Competency {
   id: number;
   frameworkId: number;
   name: string;
-  description?: string;
+  description?: string | null;
   category: string;
   weight: string;
   createdAt: string;
@@ -45,8 +65,8 @@ export function useKpis() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.kpis(),
-    queryFn: () => apiClient.get<KpiDefinition[]>("/hr/kpis"),
+    queryKey: humanResourcesQueryKeys.hr.kpis(),
+    queryFn: ({ signal }) => apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal, kpiListC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -57,8 +77,8 @@ export function useCreateKpi() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "create"],
     mutationFn: (data: Omit<KpiDefinition, "id" | "orgId" | "isActive" | "createdAt">) =>
-      apiClient.post<KpiDefinition>("/hr/kpis", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.kpis() }),
+      apiClient.post<KpiDefinition[]>("/hr/kpis", data, undefined, kpiArrayC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }
 
@@ -67,8 +87,8 @@ export function useUpdateKpi() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "update"],
     mutationFn: ({ id, ...data }: Partial<KpiDefinition> & { id: number }) =>
-      apiClient.patch<KpiDefinition>(`/hr/kpis/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.kpis() }),
+      apiClient.patch<KpiDefinition[]>(`/hr/kpis/${id}`, data, undefined, kpiArrayC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }
 
@@ -77,8 +97,8 @@ export function useDeleteKpi() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/kpis/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.kpis() }),
+      apiClient.delete<void>(`/hr/kpis/${id}`, undefined, undefined, noContentC),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }
 
@@ -86,8 +106,8 @@ export function useCompetencyFrameworks() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.competencyFrameworks(),
-    queryFn: () => apiClient.get<CompetencyFramework[]>("/hr/kpis/frameworks"),
+    queryKey: humanResourcesQueryKeys.hr.competencyFrameworks(),
+    queryFn: ({ signal }) => apiClient.get<CompetencyFramework[]>("/hr/kpis/frameworks", undefined, signal, frameworkListC),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -102,9 +122,9 @@ export function useCreateCompetencyFramework() {
         CompetencyFramework,
         "id" | "orgId" | "isActive" | "createdAt" | "competencies"
       >,
-    ) => apiClient.post<CompetencyFramework>("/hr/kpis/frameworks", data),
+    ) => apiClient.post<CompetencyFramework[]>("/hr/kpis/frameworks", data, undefined, frameworkArrayC),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.competencyFrameworks() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.competencyFrameworks() }),
   });
 }
 
@@ -116,11 +136,13 @@ export function useCreateCompetency() {
       frameworkId,
       ...data
     }: Omit<Competency, "id" | "createdAt"> & { frameworkId: number }) =>
-      apiClient.post<Competency>(
+      apiClient.post<Competency[]>(
         `/hr/kpis/frameworks/${frameworkId}/competencies`,
         data,
+        undefined,
+        competencyArrayC,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.competencyFrameworks() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.competencyFrameworks() }),
   });
 }

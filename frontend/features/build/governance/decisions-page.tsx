@@ -26,14 +26,14 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
+const DEC_STATUS_LABEL: Record<string, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
 };
-const DEC_STATUS_STYLE: Record<DecisionStatus, string> = {
+const DEC_STATUS_STYLE: Record<string, string> = {
   proposed: "text-status-info-ink border-status-info-rule bg-status-info-surface",
   accepted: "text-status-success-ink border-status-success-rule bg-status-success-surface",
   superseded: "text-muted-foreground border-border",

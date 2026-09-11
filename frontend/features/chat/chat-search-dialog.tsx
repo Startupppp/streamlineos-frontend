@@ -49,7 +49,12 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground"
               autoFocus
             />
-            {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />}
+            {isLoading && (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" aria-hidden="true" />
+                <span role="status" className="sr-only">Searching…</span>
+              </>
+            )}
           </div>
         </DialogHeader>
 

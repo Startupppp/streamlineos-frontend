@@ -2,8 +2,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   DealCompetitor,
   CreateDealCompetitorInput,
@@ -13,10 +15,14 @@ import type {
   DismissDealCompetitorSuggestionInput,
 } from "@/types/crm";
 
+const dealCompetitorsListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealCompetitorsListContract));
+const dealCompetitorLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealCompetitorContract));
+const dealDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealDeleteContract));
+
 export function useDealCompetitors(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.competitors(dealId),
-    queryFn: () => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`),
+    queryFn: ({ signal }) => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`, undefined, signal, dealCompetitorsListLazy),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
@@ -24,10 +30,10 @@ export function useDealCompetitors(dealId: number) {
 
 export function useAddDealCompetitor(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitors", "create", dealId] as const,
     mutationFn: (input: CreateDealCompetitorInput) =>
-      apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input),
+      apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input, undefined, dealCompetitorLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
     },
@@ -36,10 +42,10 @@ export function useAddDealCompetitor(dealId: number) {
 
 export function useDeleteDealCompetitor(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitors", "delete", dealId] as const,
     mutationFn: (competitorId: string) =>
-      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`),
+      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`, undefined, undefined, dealDeleteLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
     },

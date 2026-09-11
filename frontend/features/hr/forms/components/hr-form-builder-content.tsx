@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -13,8 +15,12 @@ interface HrFormBuilderContentProps {
 }
 
 export function HrFormBuilderContent({ formId }: HrFormBuilderContentProps) {
-  const { data: form, isLoading } = useHrForm(formId);
+  const { data: form, isLoading, isError, error, refetch } = useHrForm(formId);
   const update = useUpdateHrForm(formId);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   async function handleSave(payload: CreateHrFormPayload) {
     try {
@@ -37,10 +43,28 @@ export function HrFormBuilderContent({ formId }: HrFormBuilderContentProps) {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Form Builder" backHref="/hr/settings/forms">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this form"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
   if (!form) {
     return (
       <PageWrapper title="Form Builder" backHref="/hr/settings/forms">
-        <p className="text-sm text-muted-foreground pt-4">Form not found.</p>
+        <EmptyState
+          illustrationPreset="documents"
+          title="Form not found"
+          description="This form no longer exists. It may have been deleted."
+          action={{ label: "Back to forms", href: "/hr/settings/forms" }}
+        />
       </PageWrapper>
     );
   }

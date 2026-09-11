@@ -24,7 +24,13 @@ const FILTER_CATEGORIES = [
 
 type FilterKey = (typeof FILTER_CATEGORIES)[number]["key"];
 
-const SIZE_OPTIONS: OrgSize[] = ["1-10", "11-50", "51-200", "201-1000", "1000+"];
+export const SIZE_OPTIONS = [
+  "1-10",
+  "11-50",
+  "51-200",
+  "201-1000",
+  "1000+",
+] as const satisfies readonly OrgSize[];
 
 const INDUSTRY_OPTIONS = [
   "Technology",

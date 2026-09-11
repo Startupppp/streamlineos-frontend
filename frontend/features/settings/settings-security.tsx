@@ -14,8 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
 import { useLoginHistory } from "@/hooks/api/auth";
+import { ACCOUNT_LOGIN_HISTORY_PARAMS } from "@/lib/settings-initial-reads";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function getDeviceIcon(session: { os: string | null; platform: string | null }) {
   const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
@@ -77,9 +79,13 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
 }
 
 function SessionsSection() {
-  const { data: sessions, isLoading } = useSessions();
+  const { data: sessions, isLoading, isError, error, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
+
+  const handleRetrySessions = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleRevokeOne = useCallback((sessionId: string) => {
     revokeOne.mutate(sessionId, {
@@ -90,15 +96,10 @@ function SessionsSection() {
 
   const handleRevokeAll = useCallback(() => {
     revokeAll.mutate(undefined, {
-      onSuccess: (data) => {
-        const count =
-          data !== null &&
-          typeof data === "object" &&
-          "revokedCount" in data &&
-          typeof (data as Record<string, unknown>).revokedCount === "number"
-            ? (data as Record<string, unknown>).revokedCount as number
-            : 0;
-        toast.success(`Signed out ${count} other session${count !== 1 ? "s" : ""}`);
+      onSuccess: ({ revokedCount }) => {
+        toast.success(
+          `Signed out ${revokedCount} other session${revokedCount !== 1 ? "s" : ""}`,
+        );
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
@@ -153,8 +154,20 @@ function SessionsSection() {
             <div key={i} className="h-14 rounded-md bg-muted/50 animate-pulse" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          description={getErrorMessage(error)}
+          onRetry={handleRetrySessions}
+          className="mt-3"
+        />
       ) : !sessions?.length ? (
-        <p className="text-xs text-muted-foreground text-center py-4">No active sessions found.</p>
+        <EmptyState
+          compact
+          illustrationPreset="security"
+          title="No active sessions"
+          description="Signed-in devices appear here. Sign in on another device to see it listed."
+        />
       ) : (
         <div className="space-y-2">
           {sessions.map((s) => (
@@ -199,7 +212,7 @@ function SignInRow({ entry }: { entry: LoginEntry }) {
 }
 
 function RecentSignInsSection() {
-  const { data, isLoading, isError, error, refetch } = useLoginHistory({ page: 1, limit: 5 });
+  const { data, isLoading, isError, error, refetch } = useLoginHistory(ACCOUNT_LOGIN_HISTORY_PARAMS);
   const entries = data?.data ?? [];
 
   function handleRetry() {
@@ -235,9 +248,12 @@ function RecentSignInsSection() {
             className="mt-3"
           />
         ) : entries.length === 0 ? (
-          <p className="py-4 text-center text-xs text-muted-foreground">
-            No sign-in activity has been recorded yet.
-          </p>
+          <EmptyState
+            compact
+            illustrationPreset="security"
+            title="No sign-in activity yet"
+            description="Successful and failed access attempts are recorded here as they happen."
+          />
         ) : (
           entries.map((entry) => <SignInRow key={entry.id} entry={entry} />)
         )}

@@ -2,7 +2,8 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Expense,
@@ -14,6 +15,7 @@ import type {
   ExpenseCategoryRecord,
   ExpenseStats,
 } from "@/types/hr/expenses";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ExpensePageFilters {
   page?: number;
@@ -33,6 +35,19 @@ interface ExpensePageFilters {
   maxAmount?: number;
 }
 
+const _expensePageDataContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expensePageDataContract),
+);
+const _expenseRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseRowContract),
+);
+const _successContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.successContract),
+);
+const _expenseExportJobContract = lazyContract(() =>
+  import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseExportJobContract),
+);
+
 export function useExpensePageData(
   filters: ExpensePageFilters = {},
   options?: { enabled?: boolean; selfService?: boolean },
@@ -45,24 +60,24 @@ export function useExpensePageData(
   }
   return useQuery({
     enabled: (options?.selfService === true || (canExpenses && accountingEnabled)) && (options?.enabled ?? true),
-    queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
-    queryFn: () =>
-      apiClient.get<{
-        expenses: ExpenseWithRelations[];
-        pendingExpenses: ExpenseWithRelations[];
-        stats: ExpenseStats | null;
-        categories: ExpenseCategoryRecord[];
-        pagination: {
-          page: number;
-          pageSize: number;
-          total: number;
-          totalPages: number;
-        };
-        isAdmin: boolean;
-      }>(
-        options?.selfService ? "/me/expenses" : "/hr/expenses/page-data",
-        Object.keys(params).length ? params : undefined,
-      ),
+    // The scope segment is load-bearing: `selfService` selects between a
+    // one-person endpoint and an org-wide one, and without it in the key the
+    // approver's first render (permissions still in flight -> selfService true)
+    // parks `/me/expenses` under the key the org read then reuses.
+    // It sits INSIDE the `hr.expenses()` prefix so both entries still answer to
+    // the invalidation every expense mutation issues.
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.expenses(),
+      "pageData",
+      options?.selfService ? "self" : "org",
+      params,
+    ] as const,
+    queryFn: ({ signal }) => {
+      const qData = Object.keys(params).length ? params : undefined;
+      if (options?.selfService)
+        return apiClient.get("/me/expenses", qData, signal, _expensePageDataContract);
+      return apiClient.get("/hr/expenses/page-data", qData, signal, _expensePageDataContract);
+    },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -70,23 +85,23 @@ export function useExpensePageData(
 
 export function useCreateExpense() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:expenses", {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
-      apiClient.post<Expense>("/me/expenses", data),
+      apiClient.post("/me/expenses", data, undefined, _expenseRowContract),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
 export function useUpdateExpenseStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
+      apiClient.patch(`/hr/expenses/${expenseId}`, data, undefined, _successContract),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
@@ -108,12 +123,14 @@ export function useUpdateExpense(options?: { selfService?: boolean }) {
       receiptUrl?: string;
       receiptFileName?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch(
         `${options?.selfService ? "/me/expenses" : "/hr/expenses"}/${expenseId}`,
         data,
+        undefined,
+        _successContract,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
@@ -145,25 +162,25 @@ export interface CreateExpenseExportJobInput {
 }
 
 export function useCreateExpenseExportJob() {
-  return useMutation<
+  return useAuthorizedMutation<
     ExpenseExportJob,
     Error,
     { input: CreateExpenseExportJobInput; idempotencyKey: string }
-  >({
+  >("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "create"],
     mutationFn: ({ input, idempotencyKey }) =>
-      apiClient.post<ExpenseExportJob>("/hr/expenses/export/jobs", input, {
+      apiClient.post("/hr/expenses/export/jobs", input, {
         headers: { "Idempotency-Key": idempotencyKey },
-      }),
+      }, _expenseExportJobContract),
   });
 }
 
 export function useExpenseExportJob(jobId: string | null) {
   const canRead = useCan("hr:expenses:read");
   return useQuery<ExpenseExportJob, Error>({
-    queryKey: queryKeys.hr.expenseExportJob(jobId ?? ""),
-    queryFn: () =>
-      apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`),
+    queryKey: humanResourcesQueryKeys.hr.expenseExportJob(jobId ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/hr/expenses/export/jobs/${jobId}`, undefined, signal, _expenseExportJobContract),
     enabled: canRead && !!jobId,
     staleTime: 1_000,
     refetchInterval: (query) => {
@@ -175,7 +192,7 @@ export function useExpenseExportJob(jobId: string | null) {
 
 export function useDownloadExpenseExportJob() {
   const canRead = useCan("hr:expenses:read");
-  return useMutation<Blob, Error, string>({
+  return useAuthorizedMutation<Blob, Error, string>("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "download"],
     mutationFn: (jobId) => {
       if (!canRead)

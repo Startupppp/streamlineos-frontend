@@ -1,13 +1,28 @@
 "use client";
 
-import {
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+
+const chatLinkPreviewContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatLinkPreviewContract),
+);
+const chatEntityActionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatEntityActionsContract),
+);
+const chatSubmitActionContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSubmitActionContract),
+);
+const chatCreateTaskContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatCreateTaskContract),
+);
+const chatEntityActionOptionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatEntityActionOptionsContract),
+);
 
 interface LinkMeta {
   url: string;
@@ -19,10 +34,14 @@ interface LinkMeta {
 
 export function useLinkPreview(url: string | null) {
   const canRead = useCan("chat:messages:read");
+  const httpUrl = url !== null && url.startsWith("http") ? url : null;
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
-    queryFn: () => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }),
-    enabled: canRead && Boolean(url) && url!.startsWith("http"),
+    queryKey: [...collaborationQueryKeys.chat.all, "linkPreview", url] as const,
+    queryFn: ({ signal }) => {
+      if (httpUrl === null) throw new Error("useLinkPreview ran without an http url");
+      return apiClient.get<LinkMeta>("/chat/link-preview", { url: httpUrl }, signal, chatLinkPreviewContract);
+    },
+    enabled: canRead && httpUrl !== null,
     staleTime: 10 * 60_000,
     retry: false,
   });
@@ -80,12 +99,12 @@ export function useEntityActions(
 ) {
   const referenceKeys = references.map(entityReferenceKey).sort().join(",");
   return useQuery({
-    queryKey: queryKeys.chat.entityActions(channelId, referenceKeys),
-    queryFn: () =>
+    queryKey: collaborationQueryKeys.chat.entityActions(channelId, referenceKeys),
+    queryFn: ({ signal }) =>
       apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
         channelId,
         references,
-      }),
+      }, { signal }, chatEntityActionsContract),
     enabled: channelId > 0 && references.length > 0,
     staleTime: 30_000,
     select: (data) => {
@@ -104,18 +123,27 @@ export function useEntityActions(
  */
 export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "entity-actions", "submit"],
-    mutationFn: (variables: SubmitEntityActionInput) =>
-      apiClient.post<Record<string, unknown>>("/chat/entity-actions/submit", {
+    mutationFn: (variables: SubmitEntityActionInput) => {
+      const body = {
         channelId: variables.channelId,
         reference: variables.reference,
         actionId: variables.actionId,
         input: variables.input ?? {},
-      }),
+      };
+      return apiClient.post<Record<string, unknown>>(
+        "/chat/entity-actions/submit",
+        body,
+        operation.configFor(body),
+        chatSubmitActionContract,
+      );
+    },
     onSuccess: (_, variables) => {
+      operation.settle();
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
     },
   });
@@ -125,19 +153,32 @@ export function useSubmitEntityAction() {
  * Stays chat-specific on purpose: the server reads the message's own text to
  * fill the new record's description, which the generic entity-action route
  * cannot do without knowing what a chat message is.
+ *
+ * Both action routes are `@Idempotent` on the backend and the interceptor
+ * REJECTS a request without an `Idempotency-Key` header with a 400 before the
+ * handler runs, so the header is part of the contract, not an optimisation.
+ * `/chat/entity-actions/submit` has carried `@Idempotent("chat.action.submit")`
+ * while this file sent no header, which 400s every entity action the UI submits.
+ * `useIdempotentOperation` holds one key for the life of a retried attempt, so a
+ * Retry after a timeout replays the first result instead of filing a second
+ * ticket, and releases it on success so the next click is a new operation.
  */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "actions", "create-task-from-message"],
     mutationFn: (input: CreateTaskFromMessageInput) =>
       apiClient.post<{ ticketId: number; ticketNumber: number }>(
         "/chat/actions/create-task-from-message",
         input,
+        operation.configFor(input),
+        chatCreateTaskContract,
       ),
     onSuccess: (_, variables) => {
+      operation.settle();
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
     },
   });
@@ -159,14 +200,16 @@ export function useEntityActionOptions(
   source: EntityReferenceInput | null | undefined,
 ) {
   return useQuery({
-    queryKey: queryKeys.chat.entityActionOptions(
+    queryKey: collaborationQueryKeys.chat.entityActionOptions(
       channelId,
       source ? entityReferenceKey(source) : "",
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.post<{ options: EntityOption[] }>(
         "/chat/entity-actions/options",
         { channelId, reference: source },
+        { signal },
+        chatEntityActionOptionsContract,
       ),
     enabled: channelId > 0 && Boolean(source),
     staleTime: 60_000,

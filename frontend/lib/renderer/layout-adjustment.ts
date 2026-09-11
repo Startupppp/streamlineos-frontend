@@ -145,7 +145,10 @@ export function applyAdjustment(
   const columns = applyOrder(
     layout.list.columns.filter((column) => !hidden.has(column.field)).map((c) => c.field),
     order,
-  ).map((name) => layout.list.columns.find((column) => column.field === name)!);
+  ).flatMap((name) => {
+    const column = layout.list.columns.find((candidate) => candidate.field === name);
+    return column ? [column] : [];
+  });
 
   /*
     The mobile card titles itself from the primary column. If the column that

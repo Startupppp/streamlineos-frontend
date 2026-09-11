@@ -1,11 +1,44 @@
 "use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  PayrollSnapshotItem,
+  PayrollAdjustmentListItem as SchemaAdjustmentListItem,
+  PayrollAdjustment as SchemaAdjustmentMutation,
+  PayrollPeriod as SchemaPeriod,
+} from "@/hooks/api/payroll/payroll-inputs-schema";
+
+const payrollPeriodListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then(
+    (m) => m.payrollPeriodListContract,
+  ),
+);
+const payrollPeriodC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then(
+    (m) => m.payrollPeriodContract,
+  ),
+);
+const payrollSnapshotListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then(
+    (m) => m.payrollSnapshotListContract,
+  ),
+);
+const payrollAdjustmentListC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then(
+    (m) => m.payrollAdjustmentListContract,
+  ),
+);
+const payrollAdjustmentC = lazyContract(() =>
+  import("@/hooks/api/payroll/payroll-inputs-schema").then(
+    (m) => m.payrollAdjustmentContract,
+  ),
+);
 
 export type HrPayrollInputStatus = "open" | "building" | "built" | "locked";
 
@@ -22,83 +55,54 @@ export type HrPayrollInputSection =
 export type HrPayrollAdjustmentType = "arrears" | "recovery" | "correction";
 export type HrPayrollAdjustmentStatus = "pending" | "approved" | "applied";
 
-export interface PayrollInputPeriod {
-  id: number;
-  orgId: string;
-  periodKey: string;
-  status: HrPayrollInputStatus;
-  cutoffDate: string | null;
-  builtAt: string | null;
-  lockedAt: string | null;
-  lockedBy: string | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PayrollInputSnapshot {
-  id: number;
-  userId: string;
-  section: HrPayrollInputSection;
-  payload: Record<string, unknown>;
-  sourceRefs: Array<{ table: string; id: number | string }> | null;
-  createdAt: string;
-  userName: string | null;
-  userFirstName: string | null;
-  userLastName: string | null;
-  userEmail: string;
-}
-
-export interface PayrollAdjustment {
-  id: number;
-  userId: string;
-  adjustmentType: HrPayrollAdjustmentType;
-  section: HrPayrollInputSection;
-  amountCents: number | null;
-  days: string | null;
-  reason: string;
-  status: HrPayrollAdjustmentStatus;
-  createdAt: string;
-  userName: string | null;
-  userFirstName: string | null;
-  userLastName: string | null;
-  userEmail: string;
-}
+export type PayrollInputPeriod = SchemaPeriod;
+export type PayrollInputSnapshot = PayrollSnapshotItem;
+export type PayrollAdjustment = SchemaAdjustmentMutation;
+export type PayrollAdjustmentListItem = SchemaAdjustmentListItem;
 
 interface Pagination {
-  page: number;
   limit: number;
-  total: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 interface PaginatedPeriods {
-  data: PayrollInputPeriod[];
+  data: SchemaPeriod[];
   pagination: Pagination;
 }
 
 interface PaginatedSnapshots {
-  data: PayrollInputSnapshot[];
+  data: PayrollSnapshotItem[];
   pagination: Pagination;
 }
 
 interface PaginatedAdjustments {
-  data: PayrollAdjustment[];
+  data: SchemaAdjustmentListItem[];
   pagination: Pagination;
 }
 
 interface SectionParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
-  preview?: boolean;
 }
 
-export function usePayrollInputPeriods(params?: { page?: number; limit?: number; status?: HrPayrollInputStatus }) {
+export function usePayrollInputPeriods(params?: {
+  cursor?: string;
+  limit?: number;
+  status?: HrPayrollInputStatus;
+}) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<PaginatedPeriods>("/hr/payroll-inputs/periods", params as Record<string, string | number> | undefined),
+    queryKey: payrollQueryKeys.hrPayrollInputs.periods(
+      params,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PaginatedPeriods>(
+        "/hr/payroll-inputs/periods",
+        params,
+        signal,
+        payrollPeriodListC,
+      ),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -106,12 +110,19 @@ export function usePayrollInputPeriods(params?: { page?: number; limit?: number;
 
 export function useCreatePayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "create"],
     mutationFn: (data: { periodKey: string; cutoffDate?: string }) =>
-      apiClient.post<PayrollInputPeriod>("/hr/payroll-inputs/periods", data),
+      apiClient.post<PayrollInputPeriod>(
+        "/hr/payroll-inputs/periods",
+        data,
+        undefined,
+        payrollPeriodC,
+      ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.periods(),
+      });
       toast.success("Period created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -120,13 +131,22 @@ export function useCreatePayrollInputPeriod() {
 
 export function useBuildPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "build"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/build`),
+      apiClient.post<PayrollInputPeriod>(
+        `/hr/payroll-inputs/periods/${periodId}/build`,
+        undefined,
+        undefined,
+        payrollPeriodC,
+      ),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId),
+      });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.periods(),
+      });
       toast.success("Period built — snapshots captured");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -135,13 +155,22 @@ export function useBuildPayrollInputPeriod() {
 
 export function useLockPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:lock", {
     mutationKey: ["hr-payroll-inputs", "periods", "lock"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/lock`),
+      apiClient.post<PayrollInputPeriod>(
+        `/hr/payroll-inputs/periods/${periodId}/lock`,
+        undefined,
+        undefined,
+        payrollPeriodC,
+      ),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId),
+      });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.periods(),
+      });
       toast.success("Period locked");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -150,13 +179,22 @@ export function useLockPayrollInputPeriod() {
 
 export function useUnlockPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:reopen", {
     mutationKey: ["hr-payroll-inputs", "periods", "unlock"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/unlock`),
+      apiClient.post<PayrollInputPeriod>(
+        `/hr/payroll-inputs/periods/${periodId}/unlock`,
+        undefined,
+        undefined,
+        payrollPeriodC,
+      ),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId),
+      });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.periods(),
+      });
       toast.success("Period unlocked");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -164,17 +202,29 @@ export function useUnlockPayrollInputPeriod() {
 }
 
 function makeSectionHook(section: string) {
-  return function useSectionSnapshot(periodId: number, params?: SectionParams, enabled = true) {
+  return function useSectionSnapshot(
+    periodId: number,
+    params?: SectionParams,
+    enabled = true,
+  ) {
     const canView = useCan("hr:payroll:view");
     const queryParams = {
-      ...(params?.page !== undefined && { page: params.page }),
+      ...(params?.cursor !== undefined && { cursor: params.cursor }),
       ...(params?.limit !== undefined && { limit: params.limit }),
-      ...(params?.preview && { preview: "true" }),
     };
     return useQuery({
-      queryKey: queryKeys.hrPayrollInputs.section(periodId, section, queryParams),
-      queryFn: () =>
-        apiClient.get<PaginatedSnapshots>(`/hr/payroll-inputs/periods/${periodId}/${section}`, queryParams as Record<string, string | number>),
+      queryKey: payrollQueryKeys.hrPayrollInputs.section(
+        periodId,
+        section,
+        queryParams,
+      ),
+      queryFn: ({ signal }) =>
+        apiClient.get<PaginatedSnapshots>(
+          `/hr/payroll-inputs/periods/${periodId}/${section}`,
+          queryParams,
+          signal,
+          payrollSnapshotListC,
+        ),
       staleTime: 60_000,
       enabled: enabled && periodId > 0 && canView,
     });
@@ -186,14 +236,22 @@ export const useLeaveSnapshot = makeSectionHook("leaves");
 export const useOvertimeSnapshot = makeSectionHook("overtime");
 export const useReimbursementSnapshot = makeSectionHook("reimbursements");
 
-export function usePayrollAdjustments(periodId: number, params?: { page?: number; limit?: number }) {
+export function usePayrollAdjustments(
+  periodId: number,
+  params?: { cursor?: string; limit?: number },
+) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.hrPayrollInputs.adjustments(periodId, params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryKey: payrollQueryKeys.hrPayrollInputs.adjustments(
+      periodId,
+      params,
+    ),
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedAdjustments>(
         `/hr/payroll-inputs/periods/${periodId}/adjustments`,
-        params as Record<string, string | number> | undefined,
+        params,
+        signal,
+        payrollAdjustmentListC,
       ),
     staleTime: 30_000,
     enabled: canView && periodId > 0,
@@ -202,7 +260,7 @@ export function usePayrollAdjustments(periodId: number, params?: { page?: number
 
 export function useCreatePayrollAdjustment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "adjustments", "create"],
     mutationFn: (data: {
       periodId?: number;
@@ -213,12 +271,17 @@ export function useCreatePayrollAdjustment() {
       days?: number;
       reason: string;
       sourceChangeRef?: Record<string, unknown>;
-    }) => apiClient.post<PayrollAdjustment>("/hr/payroll-inputs/adjustments", data),
+    }) =>
+      apiClient.post<PayrollAdjustment>("/hr/payroll-inputs/adjustments", data, undefined, payrollAdjustmentC),
     onSuccess: (_, vars) => {
       if (vars.periodId) {
-        void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.adjustments(vars.periodId) });
+        void qc.invalidateQueries({
+          queryKey: payrollQueryKeys.hrPayrollInputs.adjustments(vars.periodId),
+        });
       }
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.all });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.all,
+      });
       toast.success("Adjustment created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -227,12 +290,19 @@ export function useCreatePayrollAdjustment() {
 
 export function useApprovePayrollAdjustment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["hr-payroll-inputs", "adjustments", "approve"],
     mutationFn: (adjustmentId: number) =>
-      apiClient.patch<PayrollAdjustment>(`/hr/payroll-inputs/adjustments/${adjustmentId}/approve`),
+      apiClient.patch<PayrollAdjustment>(
+        `/hr/payroll-inputs/adjustments/${adjustmentId}/approve`,
+        undefined,
+        undefined,
+        payrollAdjustmentC,
+      ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.all });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.hrPayrollInputs.all,
+      });
       toast.success("Adjustment approved");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

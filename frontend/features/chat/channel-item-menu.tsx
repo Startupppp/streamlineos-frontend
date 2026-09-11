@@ -34,7 +34,7 @@ import {
   useSetNotificationPreference,
   useUnfavoriteChannel,
   useUnmuteChannel,
-} from "@/hooks/api";
+} from "@/hooks/api/chat-personal-b";
 import type { ChatNotificationPreference } from "@/types/chat";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "./chat-types";

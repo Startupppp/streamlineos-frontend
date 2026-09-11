@@ -25,6 +25,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function WorkflowSimulateDialog({
   workflowId,
   workflowName,
@@ -42,7 +46,9 @@ export function WorkflowSimulateDialog({
     }
     let context: Record<string, unknown> = {};
     try {
-      context = JSON.parse(contextJson || "{}") as Record<string, unknown>;
+      const raw: unknown = JSON.parse(contextJson || "{}");
+      if (!isRecord(raw)) throw new Error("not an object");
+      context = raw;
     } catch {
       toast.error("Context must be valid JSON");
       return;

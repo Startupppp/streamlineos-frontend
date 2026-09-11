@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   PersonaChipStrip,
   type PersonaId,
-} from "@/features/ai-summaries/components/persona-chip-strip";
+} from "./persona-chip-strip";
 
 interface AskOsChatComposerProps {
   input: string;

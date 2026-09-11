@@ -1,9 +1,13 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type AccommodationType = "equipment" | "schedule" | "workspace" | "medical_restriction" | "other";
 export type AccommodationStatus = "requested" | "under_review" | "approved" | "denied" | "implemented";
@@ -13,6 +17,7 @@ export interface AccommodationRequest {
   id: string;
   orgId: string;
   userId: string;
+  userMembershipId: number | null;
   type: AccommodationType;
   description: string;
   confidentialMedicalNote: string | null;
@@ -22,6 +27,7 @@ export interface AccommodationRequest {
   note: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface AccommodationTask {
@@ -30,6 +36,7 @@ export interface AccommodationTask {
   requestId: string;
   title: string;
   assigneeUserId: string | null;
+  assigneeMembershipId: number | null;
   status: AccommodationTaskStatus;
   dueDate: string | null;
   createdAt: string;
@@ -38,11 +45,11 @@ export interface AccommodationTask {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface ListAccommodationsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   userId?: string;
   status?: AccommodationStatus;
@@ -52,33 +59,49 @@ export interface ListAccommodationsParams {
 const BASE = "/hr/enterprise/ops/accommodations";
 
 const accKeys = {
-  all: ["streamlineos", "hr-accommodations"] as const,
-  list: (p: ListAccommodationsParams) => ["streamlineos", "hr-accommodations", "list", p] as const,
-  detail: (id: string) => ["streamlineos", "hr-accommodations", "detail", id] as const,
-  tasks: (id: string) => ["streamlineos", "hr-accommodations", "tasks", id] as const,
+  all: [...queryKeyBase, "hr-accommodations"] as const,
+  list: (p: ListAccommodationsParams) => [...queryKeyBase, "hr-accommodations", "list", p] as const,
+  detail: (id: string) => [...queryKeyBase, "hr-accommodations", "detail", id] as const,
+  tasks: (id: string) => [...queryKeyBase, "hr-accommodations", "tasks", id] as const,
 };
 
+const _listAccommodationsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listAccommodationsContract),
+);
+const _getAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getAccommodationContract),
+);
+const _listAccommodationTasksContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listAccommodationTasksContract),
+);
+const _createAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createAccommodationContract),
+);
+const _approveAccommodationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.approveAccommodationContract),
+);
+
 export function useAccommodations(params: ListAccommodationsParams = {}) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/ops/accommodations", params, signal, _listAccommodationsContract),
     staleTime: 30_000,
   });
 }
 
 export function useAccommodation(id: string) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.detail(id),
-    queryFn: () => apiClient.get<AccommodationRequest>(`${BASE}/${id}`),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/${id}`, undefined, signal, _getAccommodationContract),
     enabled: !!id,
     staleTime: 30_000,
   });
 }
 
 export function useAccommodationTasks(requestId: string) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.tasks(requestId),
-    queryFn: () => apiClient.get<AccommodationTask[]>(`${BASE}/${requestId}/tasks`),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/${requestId}/tasks`, undefined, signal, _listAccommodationTasksContract),
     enabled: !!requestId,
     staleTime: 30_000,
   });
@@ -86,14 +109,14 @@ export function useAccommodationTasks(requestId: string) {
 
 export function useCreateAccommodation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "create"],
     mutationFn: (body: {
       userId: string;
       type: AccommodationType;
       description: string;
       confidentialMedicalNote?: string;
-    }) => apiClient.post<AccommodationRequest>(BASE, body),
+    }) => apiClient.post("/hr/enterprise/ops/accommodations", body, undefined, _createAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.all });
       toast.success("Accommodation request created");
@@ -104,12 +127,12 @@ export function useCreateAccommodation() {
 
 export function useApproveAccommodation(id: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "approve", id],
     mutationFn: (body: {
       note?: string;
       tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
-    }) => apiClient.post<AccommodationRequest>(`${BASE}/${id}/approve`, body),
+    }) => apiClient.post(`${BASE}/${id}/approve`, body, undefined, _approveAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.detail(id) });
       void qc.invalidateQueries({ queryKey: accKeys.all });
@@ -118,4 +141,3 @@ export function useApproveAccommodation(id: string) {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
-

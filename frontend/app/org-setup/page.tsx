@@ -9,7 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
-import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import {
+  signInWithMagicToken,
+  useSessionClaimsRefresh,
+} from "@/hooks/common/auth-hooks";
 import {
   useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
@@ -40,7 +43,7 @@ import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepBasics } from "@/features/org-setup/components/step-basics";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
-import { ArchivedOrgsRestore } from "@/features/settings/organization/archived-orgs-restore";
+import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
 
 function syncAppsFromGoals(data: WizardData): WizardData {
   const derived = deriveAppsFromGoals(data.goals);
@@ -48,7 +51,8 @@ function syncAppsFromGoals(data: WizardData): WizardData {
 }
 
 export default function OrgSetupPage() {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const { data: serverSession } = useOrgSetupSessionQuery();
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
@@ -60,8 +64,6 @@ export default function OrgSetupPage() {
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
-  const exitedRef = useRef(false);
-  const completionStartedRef = useRef(false);
   const hydratedFromServerRef = useRef(false);
   const mountedOnceRef = useRef(false);
 
@@ -127,18 +129,18 @@ export default function OrgSetupPage() {
       if (res?.autoLoginToken) {
         await signInWithMagicToken(res.autoLoginToken);
       }
-      await completeOnboardingGate("org-setup-done", res.orgId, update);
+      await completeOnboardingGate(
+        "org-setup-done",
+        res.orgId,
+        refreshSessionClaims,
+      );
       clearAll(userId);
       window.location.replace("/dashboard");
     } catch (err) {
       setIsSkipping(false);
       toast.error(getErrorMessage(err));
     }
-  }, [skipOrgSetup, update, userId]);
-
-  const handleCompletionStarted = useCallback(() => {
-    completionStartedRef.current = true;
-  }, []);
+  }, [skipOrgSetup, refreshSessionClaims, userId]);
 
   useEffect(() => {
     if (!userId || mountedOnceRef.current) return;
@@ -179,17 +181,6 @@ export default function OrgSetupPage() {
     setStep(restoredStep);
     saveStep(restoredStep, userId);
   }, [mounted, serverSession, userId]);
-
-  useEffect(() => {
-    if (exitedRef.current) return;
-    if (!session?.orgId || !session?.orgOnboardingCompletedAt) return;
-    if (completionStartedRef.current) return;
-    exitedRef.current = true;
-    const orgId = session?.orgId ?? "";
-    clearAll(userId);
-    void completeOnboardingGate("org-setup-done", orgId, update);
-    window.location.replace("/dashboard");
-  }, [session?.orgId, session?.orgOnboardingCompletedAt, update, userId]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -259,7 +250,6 @@ export default function OrgSetupPage() {
           data={data}
           onBack={goBack}
           onChangeInvitees={(invitees) => patch({ invitees })}
-          onCompletionStarted={handleCompletionStarted}
         />
       )}
     </OrgSetupShell>

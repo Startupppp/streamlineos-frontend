@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { useMemo, memo } from "react";
+import { useCallback, useMemo, memo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { ExternalLink, BarChart2, CheckCircle, Star, Target } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useReviewCycles, useHrPerformanceReviews } from "@/hooks/api/hr";
 
@@ -88,8 +89,12 @@ const PerformanceAnalyticsStats = memo(function PerformanceAnalyticsStats({
 });
 
 export default function PerformanceAnalyticsPage() {
-  const { data: cycles = [], isLoading } = useReviewCycles();
+  const { data: cycles = [], isLoading, isError, refetch } = useReviewCycles();
   const { data: reviews } = useHrPerformanceReviews();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const activeCycles = cycles.filter((c: ReviewCycle) => c.status === "ACTIVE").length;
 
@@ -144,6 +149,12 @@ export default function PerformanceAnalyticsPage() {
             <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
           </div>
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load performance analytics"
+          description="The review cycles behind this page could not be read. Please try again."
+          onRetry={handleRetry}
+        />
       ) : (
         <div className="space-y-4">
           <PerformanceAnalyticsStats totalCycles={cycles.length} activeCycles={activeCycles} />

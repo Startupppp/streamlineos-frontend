@@ -42,14 +42,17 @@ function sanitizeEmail(html: string, allowImages: boolean): string {
     });
   }
 
-  const clean = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    FORCE_BODY: true,
-    ALLOW_UNKNOWN_PROTOCOLS: false,
-  });
-
-  DOMPurify.removeHook("afterSanitizeAttributes");
+  let clean: string;
+  try {
+    clean = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS,
+      ALLOWED_ATTR,
+      FORCE_BODY: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+    });
+  } finally {
+    if (!allowImages) DOMPurify.removeHook("afterSanitizeAttributes");
+  }
 
   return clean.replace(
     /<a(\s)/gi,

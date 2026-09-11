@@ -24,7 +24,7 @@ import {
   getUserInitials,
 } from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
-import { getStatusDotClass, getStatusBadgeClass } from "@/features/build/shared/status-badge";
+import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";
 import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
 
@@ -43,10 +43,16 @@ const PRIORITY_ICONS = {
 
 type PriorityKey = keyof typeof PRIORITY_ICONS;
 
+const PRIORITY_KEYS = [
+  "URGENT",
+  "HIGH",
+  "MEDIUM",
+  "LOW",
+] as const satisfies readonly PriorityKey[];
+
 function resolvePriorityKey(priority: string): PriorityKey {
   const key = priority.toUpperCase();
-  if (key in PRIORITY_ICONS) return key as PriorityKey;
-  return "MEDIUM";
+  return PRIORITY_KEYS.find((candidate) => candidate === key) ?? "MEDIUM";
 }
 
 function getCategoryIcon(
@@ -77,7 +83,7 @@ function formatStatusLabel(status: string): string {
   return statusConfig[status]?.label ?? status.replace(/_/g, " ");
 }
 
-export function InboxNotificationItem({
+export const InboxNotificationItem = React.memo(function InboxNotificationItem({
   notification,
   isSelected,
   onSelect,
@@ -230,4 +236,4 @@ export function InboxNotificationItem({
       </div>
     </div>
   );
-}
+});

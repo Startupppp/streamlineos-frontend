@@ -148,8 +148,8 @@ export function useInventoryDashboard() {
   const canView = useCan("inventory:reports:read");
   return useQuery<InventoryDashboard, Error>({
     queryKey: queryKeys.inventory.dashboard(),
-    queryFn: async () => {
-      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard");
+    queryFn: async ({ signal }) => {
+      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard", undefined, signal);
       const summary = data.stockSummary;
       return {
         totalSkus: summary?.totalSkus ?? 0,
@@ -179,11 +179,11 @@ export function useStockSummary(params?: { page?: number; limit?: number }) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<StockSummaryRow>, Error>({
     queryKey: queryKeys.inventory.stockSummary(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/stock-summary", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       const items = (data.items ?? []).map(toStockSummaryRow);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -196,11 +196,11 @@ export function useReorderReport(params?: { page?: number; limit?: number }) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
     queryKey: queryKeys.inventory.reorderReport(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       const items = (data.items ?? []).map(toReorderRowFromFlat);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -213,7 +213,7 @@ export function useMovementsReport(params?: MovementsParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<CursorResponse<MovementReportRow>, Error>({
     queryKey: queryKeys.inventory.movementsReport(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const data = await apiClient.get<RawMovementsEnvelope>("/inventory/reports/movements", {
         ...(params?.dateFrom !== undefined ? { fromDate: params.dateFrom } : {}),
         ...(params?.dateTo !== undefined ? { toDate: params.dateTo } : {}),
@@ -222,7 +222,7 @@ export function useMovementsReport(params?: MovementsParams) {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
         ...(params?.cursor !== undefined ? { cursor: params.cursor } : {}),
-      });
+      }, signal);
       const items = (data.items ?? []).map(toMovementRow);
       return {
         items,
@@ -243,12 +243,12 @@ export function useSlowMovingReport(params?: SlowMovingParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<SlowMovingRow>, Error>({
     queryKey: queryKeys.inventory.slowMovingReport(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const data = await apiClient.get<PaginatedResponse<SlowMovingRow>>("/inventory/reports/slow-moving", {
         ...(params?.days !== undefined ? { days: String(params.days) } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       return data;
     },
     staleTime: 5 * 60_000,
@@ -260,14 +260,14 @@ export function useExpiryReport(params?: ExpiryReportParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<ExpiryReportRow>, Error>({
     queryKey: queryKeys.inventory.expiryReport(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const data = await apiClient.get<PaginatedResponse<ExpiryReportRow>>("/inventory/reports/expiry", {
         ...(params?.withinDays !== undefined ? { withinDays: String(params.withinDays) } : {}),
         ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.status !== undefined ? { status: params.status } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       return data;
     },
     staleTime: 5 * 60_000,

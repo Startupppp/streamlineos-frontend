@@ -145,7 +145,6 @@ export function ResignationCard({
             )}
           </div>
           <div className="flex items-center gap-3 text-micro text-muted-foreground mt-0.5 flex-wrap">
-            {r.user?.designation && <span>{r.user.designation}</span>}
             {r.lastWorkingDate && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
@@ -220,7 +219,7 @@ export function ResignationCard({
             </Button>
           )}
 
-          {r.hasResignationLetter && (
+          {r.resignationLetterUrl && (
             <button
               type="button"
               onClick={handleViewUploadedLetter}

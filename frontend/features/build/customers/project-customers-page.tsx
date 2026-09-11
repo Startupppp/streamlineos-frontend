@@ -7,7 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
 import { useCan } from "@/hooks/api/access";
@@ -19,6 +19,7 @@ import { CustomerDisplayPrefsPopover } from "./customer-display-prefs-popover";
 import {
   CustomerFilterPopover,
   ActiveCustomerFilterChips,
+  SIZE_OPTIONS,
   type CustomerFilters,
 } from "./customer-filter-popover";
 import { CustomerTable } from "./customer-table";
@@ -38,7 +39,7 @@ export function ProjectCustomersPage() {
 
   const [filters, setFilters] = useState<CustomerFilters>({
     industry: searchParams.get("industry") ?? undefined,
-    size: (searchParams.get("size") as CustomerFilters["size"]) ?? undefined,
+    size: SIZE_OPTIONS.find((candidate) => candidate === searchParams.get("size")),
   });
 
   const debouncedSearch = useDebouncedValue(search, 300);

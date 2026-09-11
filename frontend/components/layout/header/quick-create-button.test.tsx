@@ -38,7 +38,7 @@ jest.mock("@/hooks/api/access/org-modules", () => ({
   useEnabledModules: () => [],
 }))
 
-jest.mock("@/features/command-palette/hooks/use-command-palette", () => ({
+jest.mock("@/components/command-palette/hooks/use-command-palette", () => ({
   useCommandPalette: () => ({ openCreateTicket: jest.fn() }),
 }))
 

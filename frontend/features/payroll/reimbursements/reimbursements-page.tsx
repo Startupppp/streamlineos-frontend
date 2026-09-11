@@ -2,9 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -18,17 +17,11 @@ import {
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ReimbursementStatusBadge } from "./reimbursement-status-badge";
-import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
-import { formatShortDate } from "@/lib/date-utils";
-import {
-  useReimbursements,
-  useProcessReimbursement,
-  type Reimbursement,
-} from "@/hooks/api/hr/reimbursements";
+import { buildReimbursementColumns } from "./reimbursement-columns";
+import { formatMonth } from "@/features/payroll/shared/payroll-format";
+import { useReimbursements, useProcessReimbursement } from "@/hooks/api/hr/reimbursements";
 import { useCan } from "@/hooks/api/access";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { ApprovalActions } from "@/features/hr/shared/approval-actions";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -93,30 +86,35 @@ export function ReimbursementsPageContent() {
     updateParam("category", value);
   }
 
-  function makeApproveHandler(id: number) {
-    function handleApprove() {
-      processReimbursement.mutate(
-        { id, status: "APPROVED" },
-        {
-          onSuccess: () => toast.success("Claim approved"),
-          onError: () => toast.error("Failed to approve claim"),
-        },
-      );
-    }
-    return handleApprove;
+  function handleClearFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("month");
+    params.delete("status");
+    params.delete("category");
+    router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  function makeRejectHandler(id: number) {
-    function handleReject(reason: string) {
-      processReimbursement.mutate(
-        { id, status: "REJECTED", rejectionReason: reason },
-        {
-          onSuccess: () => toast.success("Claim rejected"),
-          onError: () => toast.error("Failed to reject claim"),
-        },
-      );
-    }
-    return handleReject;
+  const filtersActive =
+    month !== getCurrentMonth() || status !== "all" || category !== "all";
+
+  function handleApprove(claimId: number) {
+    processReimbursement.mutate(
+      { id: claimId, status: "APPROVED" },
+      {
+        onSuccess: () => toast.success("Claim approved"),
+        onError: () => toast.error("Failed to approve claim"),
+      },
+    );
+  }
+
+  function handleReject(claimId: number, reason: string) {
+    processReimbursement.mutate(
+      { id: claimId, status: "REJECTED", rejectionReason: reason },
+      {
+        onSuccess: () => toast.success("Claim rejected"),
+        onError: () => toast.error("Failed to reject claim"),
+      },
+    );
   }
 
   const filtered = (data ?? []).filter((r) => {
@@ -127,85 +125,12 @@ export function ReimbursementsPageContent() {
     return monthMatch && statusMatch && categoryMatch;
   });
 
-  const actionColumn: DataTableColumn<Reimbursement> = {
-    key: "actions",
-    header: "",
-    cell: (row) =>
-      row.status === "PENDING" ? (
-        <ApprovalActions
-          onApprove={makeApproveHandler(row.id)}
-          onReject={makeRejectHandler(row.id)}
-          isApproving={processReimbursement.isPending}
-          isRejecting={processReimbursement.isPending}
-          rejectTitle="Reject Claim"
-          rejectDescription="Provide a reason for rejecting this reimbursement claim."
-          approveLabel="Approve"
-          rejectLabel="Reject Claim"
-          size="sm"
-          className="[&_button]:h-6 [&_button]:text-micro [&_button]:px-2"
-        />
-      ) : null,
-  };
-
-  const columns: DataTableColumn<Reimbursement>[] = [
-    {
-      key: "employee",
-      header: "Employee",
-      cell: (row) => (
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.user?.name ?? "—"} className="text-dense font-medium" />
-          <TruncatedText text={row.user?.email ?? "Unknown user"} className="text-micro text-muted-foreground" />
-        </div>
-      ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      cell: (row) => (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border bg-muted text-muted-foreground border-border">
-          {row.category}
-        </span>
-      ),
-    },
-    {
-      key: "amount",
-      header: "Amount",
-      className: "text-right",
-      cell: (row) => (
-        <span className="font-mono text-dense tabular-nums">{formatMoney(row.amount)}</span>
-      ),
-    },
-    {
-      key: "receipt",
-      header: "Receipt",
-      cell: (row) =>
-        row.receiptUrl ? (
-          <a
-            href={row.receiptUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-micro text-primary hover:underline"
-          >
-            View
-          </a>
-        ) : (
-          <span className="text-micro text-muted-foreground">—</span>
-        ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <ReimbursementStatusBadge status={row.status} />,
-    },
-    {
-      key: "submitted",
-      header: "Submitted",
-      cell: (row) => (
-        <span className="text-micro text-muted-foreground">{formatShortDate(row.createdAt)}</span>
-      ),
-    },
-    ...(canApprove ? [actionColumn] : []),
-  ];
+  const columns = buildReimbursementColumns({
+    canApprove,
+    isProcessing: processReimbursement.isPending,
+    onApprove: handleApprove,
+    onReject: handleReject,
+  });
 
   const filterBar = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -274,8 +199,14 @@ export function ReimbursementsPageContent() {
             emptyState={
               <EmptyState
                 illustration={<EmptyExpensesIllustration />}
-                title="No claims found"
-                description="No reimbursement claims match the current filters."
+                title="No claims yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Expense claims submitted by employees will appear here."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
               />
             }
           />

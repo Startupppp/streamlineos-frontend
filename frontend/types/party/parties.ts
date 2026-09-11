@@ -1,22 +1,9 @@
+import type { z } from "zod";
+import type { partyRowContract } from "@/hooks/api/party/party-schema";
+
 export type PartyType = "CUSTOMER" | "VENDOR" | "PARTNER" | "BOTH";
 
-export interface BusinessParty {
-  partyId: string;
-  organizationId: string;
-  partyType: PartyType;
-  name: string;
-  legalName: string | null;
-  displayName: string | null;
-  taxNumber: string | null;
-  website: string | null;
-  email: string | null;
-  phone: string | null;
-  status: string;
-  notes: string | null;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type BusinessParty = z.infer<typeof partyRowContract>;
 
 export interface PartiesPagination {
   page: number;

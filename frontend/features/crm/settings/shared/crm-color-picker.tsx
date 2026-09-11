@@ -22,7 +22,7 @@ const COLOR_TOKENS = [
 type CrmColorToken = (typeof COLOR_TOKENS)[number];
 
 interface CrmColorPickerProps {
-  value: string;
+  value: string | null;
   onChange: (token: string) => void;
   className?: string;
 }

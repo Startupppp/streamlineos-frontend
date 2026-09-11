@@ -4,6 +4,8 @@ import { MessageSquare, Send, Percent, Star, Megaphone, Info } from "lucide-reac
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCsatReport } from "@/hooks/api/support/csat";
 import { formatRatioPercent } from "@/features/support/reports/lib/format";
 
@@ -12,11 +14,18 @@ function formatScore(score: number | null | undefined): string {
 }
 
 export default function SupportCsatReportPage() {
-  const { data, isLoading, isError, refetch } = useCsatReport();
+  const { data, isLoading, isError, error, refetch } = useCsatReport();
 
   function handleRetry() {
     void refetch();
   }
+
+  const hasNoResponses =
+    !isLoading &&
+    !isError &&
+    data !== undefined &&
+    data.totalRequests === 0 &&
+    data.sources.crmCampaigns === null;
 
   return (
     <PageWrapper
@@ -24,7 +33,19 @@ export default function SupportCsatReportPage() {
       subtitle="Customer satisfaction across every source — per-ticket surveys and CRM campaigns."
     >
       {isError ? (
-        <ErrorState title="Could not load CSAT report" onRetry={handleRetry} />
+        <ErrorState
+          className="flex-1"
+          title="Could not load CSAT report"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : hasNoResponses ? (
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="chart"
+          title="No satisfaction scores yet"
+          description="A CSAT survey goes out when a ticket is resolved. Scores show up here as customers answer them."
+        />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div>
@@ -92,7 +113,7 @@ export default function SupportCsatReportPage() {
             )}
           </div>
 
-          {data?.sources.generalSurveys && (
+          {data?.sources.generalSurveys && "excluded" in data.sources.generalSurveys && (
             <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <p>{data.sources.generalSurveys.reason}</p>

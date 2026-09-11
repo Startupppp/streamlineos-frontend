@@ -1,16 +1,16 @@
 "use client";
 
-import { Loader2, MicOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { UserMinusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import type { ChannelMember } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
+import { getInitials } from "@/lib/format-utils";
 
 const RemoveMemberButton = React.forwardRef<
   HTMLButtonElement,
@@ -31,7 +31,6 @@ const RemoveMemberButton = React.forwardRef<
 export function ChannelMemberRow({
   member,
   isOnline,
-  isMutedInCall,
   currentUserId,
   isAdmin,
   isMultiMemberChannel,
@@ -40,7 +39,6 @@ export function ChannelMemberRow({
 }: {
   member: ChannelMember;
   isOnline: boolean;
-  isMutedInCall: boolean;
   currentUserId: string;
   isAdmin: boolean | undefined;
   isMultiMemberChannel: boolean;
@@ -61,11 +59,6 @@ export function ChannelMemberRow({
         </Avatar>
         {isOnline && (
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-status-success-fill border-2 border-background" />
-        )}
-        {isMutedInCall && (
-          <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-muted-foreground/80 border-2 border-background flex items-center justify-center">
-            <MicOff className="h-2 w-2 text-background" />
-          </span>
         )}
       </div>
       <div className="min-w-0 flex-1 overflow-hidden">

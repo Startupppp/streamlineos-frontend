@@ -1,12 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
+import { useQueryClient, queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CrmMetadataRaw,
   CrmMetadataResponse,
+  CrmPipeline,
   CrmPipelineWithStages,
   CrmPipelineStage,
   CrmOption,
@@ -16,7 +17,17 @@ import type {
   CrmBlueprint,
   CrmBlueprintTransition,
 } from "@/types/crm/metadata";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
 import { CRM_METADATA_STALE_TIME } from "./metadata-stale-time";
+
+const crmAggregateLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.crmAggregateContract));
+const pipelineLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.pipelineContract));
+const pipelineStageLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.pipelineStageContract));
+const crmOptionLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.crmOptionContract));
+const deleteSuccessLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.deleteSuccessContract));
+const reorderSuccessLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.reorderSuccessContract));
+
 
 type CrmColorFallback = { key: string; label: string; color: string };
 
@@ -51,9 +62,9 @@ function normalizeRaw(raw: CrmMetadataRaw): CrmMetadataResponse {
 
 export function crmMetadataQueryOptions() {
   return queryOptions({
-    queryKey: queryKeys.crmMetadata.detail(),
-    queryFn: async () => {
-      const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata");
+    queryKey: growthAndSignQueryKeys.crmMetadata.detail(),
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata", undefined, signal, crmAggregateLazy);
       return normalizeRaw(raw);
     },
     staleTime: CRM_METADATA_STALE_TIME,
@@ -112,70 +123,70 @@ export function useCrmOptions(type: CrmOptionType) {
 
 export function useCreatePipeline() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "create"] as const,
     mutationFn: (input: Omit<CrmPipelineWithStages, "id" | "stages">) =>
-      apiClient.post<CrmPipelineWithStages>("/crm/pipelines", input),
+      apiClient.post<CrmPipeline>("/crm/pipelines", input, undefined, pipelineLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useUpdatePipeline() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
-      apiClient.patch<CrmPipelineWithStages>(`/crm/pipelines/${id}`, data),
+      apiClient.patch<CrmPipeline>(`/crm/pipelines/${id}`, data, undefined, pipelineLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useCreateStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "create"] as const,
     mutationFn: ({
       pipelineId,
       ...data
     }: { pipelineId: string } & Omit<CrmPipelineStage, "id" | "pipelineId">) =>
-      apiClient.post<CrmPipelineStage>(`/crm/pipelines/${pipelineId}/stages`, data),
+      apiClient.post<CrmPipelineStage>(`/crm/pipelines/${pipelineId}/stages`, data, undefined, pipelineStageLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useUpdateStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineStage, "id">>) =>
-      apiClient.patch<CrmPipelineStage>(`/crm/stages/${id}`, data),
+      apiClient.patch<CrmPipelineStage>(`/crm/stages/${id}`, data, undefined, pipelineStageLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useDeleteStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "delete"] as const,
     mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/stages/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/stages/${id}`, undefined, undefined, deleteSuccessLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useReorderStages() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "reorder"] as const,
     mutationFn: ({
       pipelineId,
@@ -186,53 +197,55 @@ export function useReorderStages() {
     }) =>
       apiClient.post<{ success: boolean }>(
         `/crm/pipelines/${pipelineId}/stages/reorder`,
-        { stageIds }
+        { stageIds },
+        undefined,
+        reorderSuccessLazy,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useCreateOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "create"] as const,
     mutationFn: ({
       type,
       ...data
     }: { type: CrmOptionType } & Omit<CrmOption, "id" | "type">) =>
-      apiClient.post<CrmOption>(`/crm/options/${type}`, data),
+      apiClient.post<CrmOption>(`/crm/options/${type}`, data, undefined, crmOptionLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useUpdateOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "update"] as const,
     mutationFn: ({
       type,
       id,
       ...data
     }: { type: CrmOptionType; id: string } & Partial<Omit<CrmOption, "id" | "type">>) =>
-      apiClient.patch<CrmOption>(`/crm/options/${type}/${id}`, data),
+      apiClient.patch<CrmOption>(`/crm/options/${type}/${id}`, data, undefined, crmOptionLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }
 
 export function useDeleteOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "delete"] as const,
     mutationFn: ({ type, id }: { type: CrmOptionType; id: string }) =>
-      apiClient.delete<{ success: boolean }>(`/crm/options/${type}/${id}`),
+      apiClient.delete<{ success: boolean }>(`/crm/options/${type}/${id}`, undefined, undefined, deleteSuccessLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.all });
     },
   });
 }

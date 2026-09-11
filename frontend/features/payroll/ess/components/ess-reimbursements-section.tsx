@@ -90,7 +90,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
       { file, folder: "reimbursements" },
       {
         onSuccess: (result) => {
-          setReceiptUrl(result.url);
+          setReceiptUrl(result.key);
           setReceiptName(file.name);
         },
         onError: () => toast.error("Failed to upload receipt"),

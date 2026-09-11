@@ -1,9 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignBulkSendErrorReport, SignBulkSendJob, SignBulkSendJobDetail } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateBulkSendJobInput {
   templateId: number;
@@ -14,7 +17,7 @@ export interface CreateBulkSendJobInput {
 
 export interface BulkSendJobResult {
   job: SignBulkSendJob;
-  preview?: { rowNumber: number; name?: string; email?: string; error?: string }[];
+  preview?: unknown;
   dryRun: boolean;
   /**
    * True since the backend stopped sending inside the request (SIGN-P0-05).
@@ -24,6 +27,18 @@ export interface BulkSendJobResult {
    */
   queued?: boolean;
 }
+
+const signBulkJobCreateContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signBulkJobCreateContract),
+);
+
+const signBulkJobListContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signBulkJobListContract),
+);
+
+const signBulkJobCancelContract = lazyContract(() =>
+  import("@/hooks/api/sign/sign-schema").then((m) => m.signBulkJobCancelContract),
+);
 
 /**
  * The statuses that mean work is still outstanding.
@@ -63,20 +78,20 @@ export function bulkSendPollInterval(
 
 export function useCreateBulkSendJob() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:bulk_send:run", {
     mutationKey: ["signBulkSend", "create"],
-    mutationFn: (input: CreateBulkSendJobInput) => apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input),
+    mutationFn: (input: CreateBulkSendJobInput) => apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input, undefined, signBulkJobCreateContract),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.job.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.job(data.job.id) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.all });
     },
   });
 }
 
 export function useBulkSendJobs() {
-  return useQuery({
-    queryKey: queryKeys.signBulkSend.all,
-    queryFn: () => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs"),
+  return useGatedQuery("sign:bulk_send:run", {
+    queryKey: growthAndSignQueryKeys.signBulkSend.all,
+    queryFn: ({ signal }) => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs", undefined, signal, signBulkJobListContract),
     staleTime: 15_000,
     /**
      * Polls only while something is actually running, and stops on its own
@@ -97,9 +112,10 @@ export function useBulkSendJob(
   jobId: number | undefined,
   options?: Omit<UseQueryOptions<SignBulkSendJobDetail, Error>, "queryKey" | "queryFn">,
 ) {
-  return useQuery({
-    queryKey: queryKeys.signBulkSend.job(jobId ?? 0),
-    queryFn: () => apiClient.get<SignBulkSendJobDetail>(`/sign/bulk-send/jobs/${jobId}`),
+  return useGatedQuery("sign:bulk_send:run", {
+    queryKey: growthAndSignQueryKeys.signBulkSend.job(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<SignBulkSendJobDetail>(`/sign/bulk-send/jobs/${jobId}`, undefined, signal),
     staleTime: 0,
     refetchInterval: (query) => {
       const job = query.state.data?.job;
@@ -114,9 +130,10 @@ export function useBulkSendJobErrorReport(
   jobId: number | undefined,
   options?: Omit<UseQueryOptions<SignBulkSendErrorReport, Error>, "queryKey" | "queryFn">,
 ) {
-  return useQuery({
-    queryKey: queryKeys.signBulkSend.errorReport(jobId ?? 0),
-    queryFn: () => apiClient.get<SignBulkSendErrorReport>(`/sign/bulk-send/jobs/${jobId}/error-report`),
+  return useGatedQuery("sign:bulk_send:run", {
+    queryKey: growthAndSignQueryKeys.signBulkSend.errorReport(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<SignBulkSendErrorReport>(`/sign/bulk-send/jobs/${jobId}/error-report`, undefined, signal),
     staleTime: 15_000,
     ...options,
     enabled: jobId !== undefined && (options?.enabled ?? true),
@@ -125,12 +142,12 @@ export function useBulkSendJobErrorReport(
 
 export function useCancelBulkSendJob() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:bulk_send:run", {
     mutationKey: ["signBulkSend", "cancel"],
-    mutationFn: (id: number) => apiClient.post<SignBulkSendJob>(`/sign/bulk-send/jobs/${id}/cancel`),
+    mutationFn: (id: number) => apiClient.post<SignBulkSendJob>(`/sign/bulk-send/jobs/${id}/cancel`, undefined, undefined, signBulkJobCancelContract),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.job(data.id) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.all });
     },
   });
 }

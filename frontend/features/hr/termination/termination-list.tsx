@@ -19,7 +19,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { Termination, TerminationStatus, TerminationPagination } from "@/hooks/api/hr";
@@ -250,8 +250,8 @@ type StatusFilter = "ALL" | TerminationStatus;
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "All" },
-  ...TERMINATION_STATUSES.map((terminationStatus) => ({
-    value: terminationStatus as StatusFilter,
+  ...TERMINATION_STATUSES.map<{ value: StatusFilter; label: string }>((terminationStatus) => ({
+    value: terminationStatus,
     label: TERMINATION_STATUS_LABELS[terminationStatus],
   })),
 ];
@@ -260,7 +260,10 @@ interface TerminationListProps {
   terminations: Termination[];
   statusCounts?: Record<string, number>;
   pagination?: TerminationPagination;
-  onPageChange: (page: number) => void;
+  page: number;
+  isFetching: boolean;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
   canManageExit: boolean;
   canApproveExit: boolean;
   statusFilter: StatusFilter;
@@ -279,7 +282,10 @@ export function TerminationList({
   terminations,
   statusCounts,
   pagination,
-  onPageChange,
+  page,
+  isFetching,
+  onPreviousPage,
+  onNextPage,
   canManageExit,
   canApproveExit,
   statusFilter,
@@ -350,12 +356,13 @@ export function TerminationList({
         </div>
       )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <TablePagination
-          page={pagination.page}
-          pageSize={pagination.limit}
-          total={pagination.total}
-          onPageChange={onPageChange}
+      {pagination && (page > 1 || pagination.hasMore) && (
+        <CursorPageControls
+          page={page}
+          hasNext={pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={onPreviousPage}
+          onNext={onNextPage}
           className="mt-4 rounded-xl"
         />
       )}

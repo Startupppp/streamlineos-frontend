@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   Sheet,
   SheetContent,
@@ -132,18 +132,49 @@ export function WebhookDeliveryLogSheet({
   onOpenChange,
   canManage,
 }: WebhookDeliveryLogSheetProps) {
-  const [page, setPage] = useState(1);
   const endpointId = webhook !== null ? webhook.id : 0;
+  const cursorResetKey = String(webhook?.id ?? "");
+  const [cursorState, setCursorState] = useState<{
+    key: string;
+    history: Array<string | undefined>;
+  }>({ key: cursorResetKey, history: [undefined] });
+  const cursorHistory =
+    cursorState.key === cursorResetKey ? cursorState.history : [undefined];
+  const cursor = cursorHistory.at(-1);
 
-  const { data, isLoading, isError, error, refetch } = useWebhookLogs(
+  const { data, isLoading, isPlaceholderData, isError, error, refetch } = useWebhookLogs(
     webhook !== null ? webhook.id : null,
-    { page, limit: LOG_PAGE_SIZE },
+    { cursor, limit: LOG_PAGE_SIZE },
   );
 
   const logs = data?.data ?? [];
   const pagination = data?.pagination;
 
-  const handlePageChange = useCallback((next: number) => setPage(next), []);
+  useEffect(() => {
+    setCursorState((current) =>
+      current.key === cursorResetKey
+        ? current
+        : { key: cursorResetKey, history: [undefined] },
+    );
+  }, [cursorResetKey]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return { key: cursorResetKey, history: history.slice(0, -1) };
+    });
+  }, [cursorResetKey]);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = pagination?.nextCursor;
+    if (!nextCursor) return;
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return history.at(-1) === nextCursor
+        ? { key: cursorResetKey, history }
+        : { key: cursorResetKey, history: [...history, nextCursor] };
+    });
+  }, [cursorResetKey, pagination?.nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -151,10 +182,12 @@ export function WebhookDeliveryLogSheet({
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (!nextOpen) setPage(1);
+      if (!nextOpen) {
+        setCursorState({ key: cursorResetKey, history: [undefined] });
+      }
       onOpenChange(nextOpen);
     },
-    [onOpenChange],
+    [cursorResetKey, onOpenChange],
   );
 
   return (
@@ -175,7 +208,7 @@ export function WebhookDeliveryLogSheet({
               />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-4">
-              {isLoading ? (
+              {isLoading || isPlaceholderData ? (
                 <div>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <LogRowSkeleton key={i} />
@@ -209,12 +242,14 @@ export function WebhookDeliveryLogSheet({
                 </div>
               )}
             </div>
-            {!isLoading && !isError && logs.length > 0 && pagination && (
-              <TablePagination
-                page={page}
-                pageSize={LOG_PAGE_SIZE}
-                total={pagination.total}
-                onPageChange={handlePageChange}
+            {!isLoading && !isPlaceholderData && !isError && (cursorHistory.length > 1 || pagination?.hasMore) && (
+              <CursorPageControls
+                page={cursorHistory.length}
+                hasNext={pagination?.hasMore ?? false}
+                disabled={isLoading || isPlaceholderData}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mx-4 mb-4"
               />
             )}
           </RichPanel>

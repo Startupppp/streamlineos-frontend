@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { AgentToken } from "@/types/projects";
+import type { AgentToken } from "@/types/projects/agent-tokens";
 import { CrmMcpSettings } from "./mcp-settings";
 
 const mockAccess = jest.fn();
@@ -34,7 +34,7 @@ jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
  * arrangement leaves a description valid is `lib/renderer/registry.test.ts`'s
  * job, for every layout at once.
  */
-jest.mock("@/features/renderer/use-tenant-layout", () => ({
+jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 

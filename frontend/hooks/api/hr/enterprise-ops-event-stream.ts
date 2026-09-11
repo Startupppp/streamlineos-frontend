@@ -1,9 +1,12 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface HrEvent {
   id: string;
@@ -24,11 +27,11 @@ export interface EventCatalogEntry {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface ListEventsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   eventType?: string;
   entityType?: string;
@@ -40,47 +43,60 @@ export interface ListEventsParams {
 const BASE = "/hr/enterprise/ops/event-stream";
 
 const streamKeys = {
-  all: ["streamlineos", "hr-event-stream"] as const,
-  list: (p: ListEventsParams) => ["streamlineos", "hr-event-stream", "list", p] as const,
-  dictionary: ["streamlineos", "hr-event-stream", "dictionary"] as const,
-  metrics: ["streamlineos", "hr-event-stream", "metrics"] as const,
+  all: [...queryKeyBase, "hr-event-stream"] as const,
+  list: (p: ListEventsParams) => [...queryKeyBase, "hr-event-stream", "list", p] as const,
+  dictionary: [...queryKeyBase, "hr-event-stream", "dictionary"] as const,
+  metrics: [...queryKeyBase, "hr-event-stream", "metrics"] as const,
 };
 
+const _listHrEventsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listHrEventsContract),
+);
+const _getDataDictionaryContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getDataDictionaryContract),
+);
+const _hrMetricDefinitionsContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrMetricDefinitionsContract),
+);
+const _hrEventsExportContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrEventsExportContract),
+);
+
 export function useHrEvents(params: ListEventsParams = {}) {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params, signal, _listHrEventsContract),
     staleTime: 30_000,
   });
 }
 
 export function useHrEventDataDictionary() {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.dictionary,
-    queryFn: () => apiClient.get<{ catalog: EventCatalogEntry[]; immutable: boolean }>(`${BASE}/data-dictionary`),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/data-dictionary`, undefined, signal, _getDataDictionaryContract),
     staleTime: 300_000,
   });
 }
 
 export function useHrMetricDefinitions() {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.metrics,
-    queryFn: () => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/metric-definitions`, undefined, signal, _hrMetricDefinitionsContract),
     staleTime: 300_000,
   });
 }
 
 export function useExportHrEvents() {
-  return useMutation({
+  return useAuthorizedMutation("hr:analytics:read", {
     mutationKey: ["hr-event-stream", "export"],
     mutationFn: (body: {
-      page?: number;
+      cursor?: string;
       limit?: number;
       eventType?: string;
       entityType?: string;
       fromDate?: string;
       toDate?: string;
-    }) => apiClient.post<{ exportedAt: string; data: HrEvent[]; pagination: unknown }>(`${BASE}/export`, body),
+    }) => apiClient.post(`${BASE}/export`, body, undefined, _hrEventsExportContract),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }

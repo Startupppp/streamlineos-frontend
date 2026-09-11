@@ -8,7 +8,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
 import { useCan } from "@/hooks/api/access";
 import type { Journal } from "@/types/accounting-kernel";
 import type {
@@ -94,7 +94,7 @@ export function useArInvoices(
 ) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArDocumentPage, Error>({
-    queryKey: queryKeys.accountingAr.invoices(documentParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.invoices(documentParams(query)),
     queryFn: () => apiClient.get<ArDocumentPage>(INVOICES_PATH, documentParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
@@ -106,7 +106,7 @@ export function useArInvoices(
 export function useArInvoice(invoiceId: string, options?: QueryOpts<ArDocumentView>) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArDocumentView, Error>({
-    queryKey: queryKeys.accountingAr.invoice(invoiceId),
+    queryKey: accountingArQueryKeys.accountingAr.invoice(invoiceId),
     queryFn: () => apiClient.get<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -121,7 +121,7 @@ export function useArInvoiceTaxPreview(
 ) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<TaxPreview, Error>({
-    queryKey: queryKeys.accountingAr.invoiceTaxPreview(invoiceId, revision),
+    queryKey: accountingArQueryKeys.accountingAr.invoiceTaxPreview(invoiceId, revision),
     queryFn: () => apiClient.get<TaxPreview>(`${INVOICES_PATH}/${invoiceId}/tax-preview`),
     staleTime: LIVE_STALE,
     placeholderData: keepPreviousData,
@@ -134,7 +134,7 @@ export function useArInvoiceTaxPreview(
 export function useArInvoiceTaxLines(invoiceId: string, options?: QueryOpts<FrozenTaxLine[]>) {
   const canRead = useCan(TAXES_READ);
   return useQuery<FrozenTaxLine[], Error>({
-    queryKey: queryKeys.accountingAr.invoiceTaxLines(invoiceId),
+    queryKey: accountingArQueryKeys.accountingAr.invoiceTaxLines(invoiceId),
     queryFn: () => apiClient.get<FrozenTaxLine[]>(`${INVOICES_PATH}/${invoiceId}/tax-lines`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -148,7 +148,7 @@ export function useCreateArInvoice() {
     mutationKey: ["accounting", "ar", "invoices", "create"],
     mutationFn: (input) => apiClient.post<ArDocumentView>(INVOICES_PATH, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -160,8 +160,8 @@ export function useUpdateArInvoiceDraft() {
     mutationFn: ({ invoiceId, input }) =>
       apiClient.patch<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.invoice(variables.invoiceId) });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "invoices"] });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.invoice(variables.invoiceId) });
+      queryClient.invalidateQueries({ queryKey: [...accountingArQueryKeys.accountingAr.all, "invoices"] });
     },
   });
 }
@@ -172,7 +172,7 @@ export function useDeleteArInvoiceDraft() {
     mutationKey: ["accounting", "ar", "invoices", "delete"],
     mutationFn: (invoiceId) => apiClient.delete<DeletedResult>(`${INVOICES_PATH}/${invoiceId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -187,7 +187,7 @@ export function usePostArInvoice() {
         {},
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -203,7 +203,7 @@ export function useCreditNoteFromInvoice() {
     mutationFn: ({ invoiceId, input }) =>
       apiClient.post<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}/credit-note`, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -214,7 +214,7 @@ export function useCreditNotes(
 ) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<ArDocumentPage, Error>({
-    queryKey: queryKeys.accountingAr.creditNotes(documentParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.creditNotes(documentParams(query)),
     queryFn: () => apiClient.get<ArDocumentPage>(CREDIT_NOTES_PATH, documentParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
@@ -226,7 +226,7 @@ export function useCreditNotes(
 export function useCreditNote(creditNoteId: string, options?: QueryOpts<ArDocumentView>) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<ArDocumentView, Error>({
-    queryKey: queryKeys.accountingAr.creditNote(creditNoteId),
+    queryKey: accountingArQueryKeys.accountingAr.creditNote(creditNoteId),
     queryFn: () => apiClient.get<ArDocumentView>(`${CREDIT_NOTES_PATH}/${creditNoteId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -241,7 +241,7 @@ export function useCreditNoteTaxPreview(
 ) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<TaxPreview, Error>({
-    queryKey: queryKeys.accountingAr.creditNoteTaxPreview(creditNoteId, revision),
+    queryKey: accountingArQueryKeys.accountingAr.creditNoteTaxPreview(creditNoteId, revision),
     queryFn: () => apiClient.get<TaxPreview>(`${CREDIT_NOTES_PATH}/${creditNoteId}/tax-preview`),
     staleTime: LIVE_STALE,
     placeholderData: keepPreviousData,
@@ -257,7 +257,7 @@ export function useCreateCreditNote() {
     mutationKey: ["accounting", "ar", "creditNotes", "create"],
     mutationFn: (input) => apiClient.post<ArDocumentView>(CREDIT_NOTES_PATH, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -270,9 +270,9 @@ export function useUpdateCreditNoteDraft() {
       apiClient.patch<ArDocumentView>(`${CREDIT_NOTES_PATH}/${creditNoteId}`, input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.accountingAr.creditNote(variables.creditNoteId),
+        queryKey: accountingArQueryKeys.accountingAr.creditNote(variables.creditNoteId),
       });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "creditNotes"] });
+      queryClient.invalidateQueries({ queryKey: [...accountingArQueryKeys.accountingAr.all, "creditNotes"] });
     },
   });
 }
@@ -284,7 +284,7 @@ export function useDeleteCreditNoteDraft() {
     mutationFn: (creditNoteId) =>
       apiClient.delete<DeletedResult>(`${CREDIT_NOTES_PATH}/${creditNoteId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -299,7 +299,7 @@ export function usePostCreditNote() {
         {},
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -318,7 +318,7 @@ export function useAllocateCreditNote() {
         { allocations },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -326,7 +326,7 @@ export function useAllocateCreditNote() {
 export function useArReceipts(query: ListReceiptsQuery = {}, options?: QueryOpts<ArReceiptPage>) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArReceiptPage, Error>({
-    queryKey: queryKeys.accountingAr.receipts(receiptParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.receipts(receiptParams(query)),
     queryFn: () => apiClient.get<ArReceiptPage>(RECEIPTS_PATH, receiptParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
@@ -338,7 +338,7 @@ export function useArReceipts(query: ListReceiptsQuery = {}, options?: QueryOpts
 export function useArReceipt(receiptId: string, options?: QueryOpts<ArReceiptView>) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArReceiptView, Error>({
-    queryKey: queryKeys.accountingAr.receipt(receiptId),
+    queryKey: accountingArQueryKeys.accountingAr.receipt(receiptId),
     queryFn: () => apiClient.get<ArReceiptView>(`${RECEIPTS_PATH}/${receiptId}`),
     staleTime: ENTITY_STALE,
     ...options,
@@ -353,7 +353,7 @@ export function useCreateArReceipt() {
     mutationFn: (input) =>
       apiClient.post<{ receipt: ArReceiptView; journal: Journal }>(RECEIPTS_PATH, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -369,7 +369,7 @@ export function useAllocateArReceipt() {
     mutationFn: ({ receiptId, allocations }) =>
       apiClient.post<ArReceiptView>(`${RECEIPTS_PATH}/${receiptId}/allocations`, { allocations }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -384,7 +384,7 @@ export function useAllocateArReceiptFifo() {
         maxAmountMinor === undefined ? {} : { maxAmountMinor },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -403,7 +403,7 @@ export function useReverseArReceipt() {
         input,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
     },
   });
 }
@@ -411,7 +411,7 @@ export function useReverseArReceipt() {
 export function useArAging(query: AgingQuery = {}, options?: QueryOpts<AgingReport>) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<AgingReport, Error>({
-    queryKey: queryKeys.accountingAr.aging(agingParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.aging(agingParams(query)),
     queryFn: () => apiClient.get<AgingReport>(AGING_PATH, agingParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
@@ -423,7 +423,7 @@ export function useArAging(query: AgingQuery = {}, options?: QueryOpts<AgingRepo
 export function useArOpenItems(query: AgingQuery = {}, options?: QueryOpts<AgingOpenItem[]>) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<AgingOpenItem[], Error>({
-    queryKey: queryKeys.accountingAr.openItems(agingParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.openItems(agingParams(query)),
     queryFn: () => apiClient.get<AgingOpenItem[]>(`${AGING_PATH}/open-items`, agingParams(query)),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,

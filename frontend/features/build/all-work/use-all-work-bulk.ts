@@ -1,11 +1,19 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AllWorkTicket } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+
+const bulkUpdateResultLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+);
 
 type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -41,6 +49,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const ticketsByProject = useMemo(() => {
     const map = new Map<number, number[]>();
     for (const t of selectedTickets) {
+      if (t.projectId === null) continue;
       const existing = map.get(t.projectId);
       if (existing) {
         existing.push(t.id);
@@ -51,7 +60,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     return map;
   }, [selectedTickets]);
 
-  const crossProjectBulkMutation = useMutation({
+  const crossProjectBulkMutation = useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "all-work", "bulk-update"],
     mutationFn: async (payload: {
       ticketsByProject: Map<number, number[]>;
@@ -62,7 +71,9 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
       const calls = [...payload.ticketsByProject.entries()].map(([projectId, ticketIds]) =>
         apiClient.post<{ updated: number; ticketIds: number[] }>(
           `/build/${projectId}/tickets/bulk`,
-          { ticketIds, status: payload.status, priority: payload.priority, assigneeId: payload.assigneeId }
+          { ticketIds, status: payload.status, priority: payload.priority, assigneeId: payload.assigneeId },
+          undefined,
+          bulkUpdateResultLazy,
         )
       );
       const results = await Promise.all(calls);
@@ -70,7 +81,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     },
     onSuccess: (totalUpdated) => {
       toast.success(`${totalUpdated} ticket${totalUpdated === 1 ? "" : "s"} updated`);
-      queryClient.invalidateQueries({ queryKey: ["streamlineos", "projects", "all-work"] });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.allWorkAll });
       setTableSelection(new Set());
     },
     onError: (err) => {

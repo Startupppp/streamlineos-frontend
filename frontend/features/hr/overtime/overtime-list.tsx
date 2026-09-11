@@ -3,8 +3,10 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
@@ -25,8 +27,10 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 const PAGE_SIZE = 20;
 
 export function OvertimeList({ canManage }: Props) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useOvertimeRequests({ page, pageSize: PAGE_SIZE });
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const cursor = cursorHistory.at(-1);
+  const page = cursorHistory.length;
+  const { data, isLoading, isFetching, isError, error, refetch } = useOvertimeRequests({ cursor, pageSize: PAGE_SIZE });
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
@@ -58,6 +62,22 @@ export function OvertimeList({ canManage }: Props) {
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [reject]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor)
+      setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   type OvertimeRequest = NonNullable<typeof requests>[number];
 
@@ -141,29 +161,42 @@ export function OvertimeList({ canManage }: Props) {
     return cols;
   }, [canManage, approve.isPending, reject.isPending, memberById, handleApprove, handleReject]);
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load overtime requests"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={requests ?? []}
-      columns={columns}
-      getRowKey={(req) => req.id}
-      isLoading={isLoading}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: PAGE_SIZE,
-        total: data?.total ?? 0,
-        onPageChange: setPage,
-      }}
-      emptyState={
-        <EmptyState
-          illustrationPreset="approval"
-          title="No overtime requests"
-          description="Submit your first overtime request using the button above"
-          className="border-0 bg-transparent shadow-none h-64"
-          compact
-        />
-      }
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={requests ?? []}
+        columns={columns}
+        getRowKey={(req) => req.id}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            illustrationPreset="approval"
+            title="No overtime requests"
+            description="Submit your first overtime request using the button above"
+            className="border-0 bg-transparent shadow-none h-64"
+            compact
+          />
+        }
+      />
+      <CursorPageControls
+        page={page}
+        hasNext={data?.pagination.hasMore ?? false}
+        disabled={isFetching}
+        onPrevious={handlePreviousPage}
+        onNext={handleNextPage}
+      />
+    </div>
   );
 }

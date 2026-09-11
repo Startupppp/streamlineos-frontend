@@ -4,6 +4,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { useProjectBoardTickets } from "./ticket-queries";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   useInfiniteQuery: jest.fn((options: unknown) => options),
   useMemo: jest.requireActual("react").useMemo,
@@ -23,12 +25,12 @@ jest.mock("@/lib/api-client", () => ({
 const mockInfiniteQuery = useInfiniteQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function captureQueryOptions(projectId: number, filters?: Parameters<typeof useProjectBoardTickets>[1]) {
+function useCaptureQueryOptions(projectId: number, filters?: Parameters<typeof useProjectBoardTickets>[1]) {
   mockInfiniteQuery.mockImplementation((opts: unknown) => opts);
   useProjectBoardTickets(projectId, filters);
   return mockInfiniteQuery.mock.calls.at(-1)?.[0] as {
     queryKey: unknown[];
-    queryFn: (ctx: { pageParam: unknown }) => unknown;
+    queryFn: (ctx: { pageParam: unknown; signal?: AbortSignal }) => unknown;
   };
 }
 
@@ -39,7 +41,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
   });
 
   it("carries status filter in the query key so different filter states get separate cache entries", () => {
-    const opts = captureQueryOptions(42, { status: "OPEN" });
+    const opts = useCaptureQueryOptions(42, { status: "OPEN" });
 
     const keyStr = JSON.stringify(opts.queryKey);
     expect(keyStr).toContain("OPEN");
@@ -49,12 +51,14 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(42, { status: "OPEN,IN_PROGRESS" });
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(42, { status: "OPEN,IN_PROGRESS" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/42/tickets",
       expect.objectContaining({ status: "OPEN,IN_PROGRESS" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -62,12 +66,14 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(7, { q: "login bug" });
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(7, { q: "login bug" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/7/tickets",
       expect.objectContaining({ search: "login bug" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -75,12 +81,14 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(7, { assigneeId: "user-1,user-2" });
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(7, { assigneeId: "user-1,user-2" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/7/tickets",
       expect.objectContaining({ assigneeId: "user-1,user-2" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -88,12 +96,14 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(5, { sprint: "3,4" });
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(5, { sprint: "3,4" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/5/tickets",
       expect.objectContaining({ sprintIds: "3,4" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -101,12 +111,14 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(5, { module: "10,11" });
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(5, { module: "10,11" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/5/tickets",
       expect.objectContaining({ moduleIds: "10,11" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -114,8 +126,8 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(3);
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(3);
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     const call = (apiClient.get as jest.Mock).mock.calls[0]?.[1] as Record<string, unknown>;
     expect(call).not.toHaveProperty("status");
@@ -123,16 +135,18 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     expect(call).not.toHaveProperty("assigneeId");
   });
 
-  it("uses paging=cursor and orderBy=rank for the board endpoint", () => {
+  it("uses orderBy=rank and the board page size for the board endpoint", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(1);
-    void opts.queryFn({ pageParam: undefined });
+    const opts = useCaptureQueryOptions(1);
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/1/tickets",
-      expect.objectContaining({ paging: "cursor", orderBy: "rank", limit: 100 }),
+      expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 });

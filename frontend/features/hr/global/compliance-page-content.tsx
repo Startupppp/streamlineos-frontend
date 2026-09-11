@@ -26,6 +26,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon, GlobeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useComplianceRequirements,
   useDeleteComplianceRequirement,
@@ -58,12 +60,32 @@ export function CompliancePageContent() {
   const [seedCountry, setSeedCountry] = useState("IN");
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
 
-  const { data: reqData, isLoading: reqLoading } = useComplianceRequirements();
-  const { data: authData, isLoading: authLoading } = useWorkAuthorizations();
+  const {
+    data: reqData,
+    isLoading: reqLoading,
+    isError: reqIsError,
+    error: reqError,
+    refetch: refetchRequirements,
+  } = useComplianceRequirements();
+  const {
+    data: authData,
+    isLoading: authLoading,
+    isError: authIsError,
+    error: authError,
+    refetch: refetchWorkAuth,
+  } = useWorkAuthorizations();
   const deleteReq = useDeleteComplianceRequirement();
   const deleteAuth = useDeleteWorkAuth();
   const generateEvents = useGenerateComplianceEvents();
   const seedPack = useSeedCountryPack();
+
+  const handleRetryRequirements = useCallback(() => {
+    void refetchRequirements();
+  }, [refetchRequirements]);
+
+  const handleRetryWorkAuth = useCallback(() => {
+    void refetchWorkAuth();
+  }, [refetchWorkAuth]);
 
   const handleOpenEditReq = useCallback((req: ComplianceRequirement) => {
     setEditingReq(req);
@@ -75,12 +97,36 @@ export function CompliancePageContent() {
     setAuthSheetOpen(true);
   }, []);
 
+  function handleOpenNewReq() {
+    setEditingReq(undefined);
+    setReqSheetOpen(true);
+  }
+
+  function handleOpenNewAuth() {
+    setEditingAuth(undefined);
+    setAuthSheetOpen(true);
+  }
+
+  function handleDeleteRequirement() {
+    if (!deleteReqId) return;
+    deleteReq.mutate(deleteReqId, { onSuccess: () => setDeleteReqId(null) });
+  }
+
+  function handleDeleteAuth() {
+    if (!deleteAuthId) return;
+    deleteAuth.mutate(deleteAuthId, { onSuccess: () => setDeleteAuthId(null) });
+  }
+
+  function handleSeedPack() {
+    seedPack.mutate({ country: seedCountry }, { onSuccess: () => setSeedDialogOpen(false) });
+  }
+
   return (
     <PageWrapper
       title="Compliance"
       subtitle="Manage labor law requirements, work authorizations, and compliance calendars."
       actions={
-        <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="gap-1.5 h-8">
+        <Button size="sm" onClick={handleOpenNewReq} className="gap-1.5 h-8">
           <PlusIcon size={14} />
           Add requirement
         </Button>
@@ -135,6 +181,13 @@ export function CompliancePageContent() {
 
           {reqLoading ? (
             <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+          ) : reqIsError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load compliance requirements"
+              description={getErrorMessage(reqError)}
+              onRetry={handleRetryRequirements}
+            />
           ) : (reqData?.data ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
@@ -142,7 +195,7 @@ export function CompliancePageContent() {
                 <p className="text-sm font-medium text-foreground">No compliance requirements</p>
                 <p className="text-xs text-muted-foreground">Add a requirement manually or seed a country compliance pack.</p>
               </div>
-              <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+              <Button size="sm" onClick={handleOpenNewReq} className="mt-1 gap-1.5 h-8">
                 <PlusIcon size={14} />
                 Add requirement
               </Button>
@@ -173,7 +226,7 @@ export function CompliancePageContent() {
 
         <TabsContent value="work-auth" className="mt-0">
           <div className="flex justify-end mb-4">
-            <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="gap-1.5 h-8">
+            <Button size="sm" onClick={handleOpenNewAuth} className="gap-1.5 h-8">
               <PlusIcon size={14} />
               Add authorization
             </Button>
@@ -181,6 +234,13 @@ export function CompliancePageContent() {
 
           {authLoading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+          ) : authIsError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load work authorizations"
+              description={getErrorMessage(authError)}
+              onRetry={handleRetryWorkAuth}
+            />
           ) : (authData?.data ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
@@ -188,7 +248,7 @@ export function CompliancePageContent() {
                 <p className="text-sm font-medium text-foreground">No work authorizations on record</p>
                 <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
               </div>
-              <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+              <Button size="sm" onClick={handleOpenNewAuth} className="mt-1 gap-1.5 h-8">
                 <PlusIcon size={14} />
                 Add authorization
               </Button>
@@ -237,7 +297,7 @@ export function CompliancePageContent() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => { if (deleteReqId) deleteReq.mutate(deleteReqId, { onSuccess: () => setDeleteReqId(null) }); }}
+              onClick={handleDeleteRequirement}
             >
               Delete
             </AlertDialogAction>
@@ -255,7 +315,7 @@ export function CompliancePageContent() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => { if (deleteAuthId) deleteAuth.mutate(deleteAuthId, { onSuccess: () => setDeleteAuthId(null) }); }}
+              onClick={handleDeleteAuth}
             >
               Delete
             </AlertDialogAction>
@@ -274,7 +334,7 @@ export function CompliancePageContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => seedPack.mutate({ country: seedCountry }, { onSuccess: () => setSeedDialogOpen(false) })}
+              onClick={handleSeedPack}
             >
               Seed
             </AlertDialogAction>

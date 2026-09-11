@@ -16,8 +16,22 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { latinNameFieldChange } from "./restricted-field-change";
+
+const checkEmailContract = lazyContract(() =>
+  import("@/components/hr/check-email-schema").then((m) => m.checkEmailContract),
+);
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+function dateOfBirthChange(
+  onChange: (value: Date | null) => void,
+): (value: string) => void {
+  return function handleDateOfBirthChange(value) {
+    onChange(value ? new Date(value) : null);
+  };
+}
 
 interface StepPersonalInfoProps {
   form: UseFormReturn<FormValues>;
@@ -34,7 +48,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!isValidEmail) return;
     try {
-      const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
+      const res = await apiClient.get(`/hr/employees/check-email?email=${encodeURIComponent(email)}`, undefined, undefined, checkEmailContract);
       checkedEmailRef.current = email;
       if (res.exists) {
         form.setError("email", { type: "manual", message: "This email already belongs to an employee in your organization" });
@@ -52,9 +66,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input placeholder="John" {...field} onChange={latinNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -67,9 +79,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input placeholder="Doe" {...field} onChange={latinNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -141,7 +151,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(v) => field.onChange(v ? new Date(v) : null)}
+                onChange={dateOfBirthChange(field.onChange)}
                 fromYear={1940}
                 toDate={minDob}
                 placeholder="Select DOB"

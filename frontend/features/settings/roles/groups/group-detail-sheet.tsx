@@ -43,6 +43,7 @@ import {
   type PrincipalGroup,
 } from "@/hooks/api/principal-groups";
 import { getInitials } from "@/lib/format-utils";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface GroupDetailSheetProps {
   group: PrincipalGroup | null;
@@ -87,7 +88,7 @@ function MemberSearch({ groupId, existingIds }: { groupId: string; existingIds: 
                 className="flex items-center gap-2"
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  {m.image && <AvatarImage src={m.image} alt={m.name ?? ""} />}
+                  {m.image && <AvatarImage src={resolveImageUrl(m.image)} alt={m.name ?? ""} />}
                   <AvatarFallback className="text-micro">
                     {getInitials(m.name ?? m.email)}
                   </AvatarFallback>
@@ -231,7 +232,7 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                       className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/50"
                     >
                       <Avatar className="h-7 w-7 shrink-0">
-                        {m.image && <AvatarImage src={m.image} alt={m.name ?? ""} />}
+                        {m.image && <AvatarImage src={resolveImageUrl(m.image)} alt={m.name ?? ""} />}
                         <AvatarFallback className="text-micro">
                           {getInitials(m.name ?? m.email ?? "")}
                         </AvatarFallback>

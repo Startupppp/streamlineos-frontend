@@ -5,17 +5,32 @@ import { TrendingUp, Users, Clock } from "lucide-react";
 
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations/illustration-image";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useHrAnalytics } from "@/hooks/api/hr/analytics";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export function LeaveAnalyticsClient() {
-  const { data, isLoading } = useHrAnalytics();
+  const { data, isLoading, isError, error, refetch } = useHrAnalytics();
 
   const leavesByStatus = Object.entries(data?.leaves?.byStatus ?? {}).map(([status, count]) => ({ status, count }));
   const leavesByMonth = data?.leaves?.byMonth ?? [];
   const totalLeaves = leavesByStatus.reduce((sum, s) => sum + s.count, 0);
   const pendingLeaves = leavesByStatus.find((s) => s.status === "PENDING")?.count ?? 0;
+
+  function handleRetry() { void refetch(); }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't load leave analytics"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -2,7 +2,16 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const surveyLogicRuleRowC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.surveyLogicRuleRowContract),
+);
+const builderSuccessC = lazyContract(() =>
+  import("./survey-builder-schema").then((m) => m.builderSuccessContract),
+);
 
 export type LogicConditionOp =
   | "answer_equals"
@@ -47,23 +56,23 @@ export interface CreateLogicRuleInput {
 
 function useInvalidateBuilder(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.builder(surveyId) });
+  return () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.builder(surveyId) });
 }
 
 export function useCreateLogicRule(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "logic", "create", surveyId] as const,
-    mutationFn: (input: CreateLogicRuleInput) => apiClient.post(`/surveys/${surveyId}/logic`, input),
+    mutationFn: (input: CreateLogicRuleInput) => apiClient.post(`/surveys/${surveyId}/logic`, input, undefined, surveyLogicRuleRowC),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteLogicRule(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "logic", "delete", surveyId] as const,
-    mutationFn: (ruleId: number) => apiClient.delete(`/surveys/${surveyId}/logic/${ruleId}`),
+    mutationFn: (ruleId: number) => apiClient.delete(`/surveys/${surveyId}/logic/${ruleId}`, undefined, undefined, builderSuccessC),
     onSuccess: invalidate,
   });
 }

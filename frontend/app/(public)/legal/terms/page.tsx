@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LegalShell, LegalSection, PlainEnglish } from "@/features/legal/legal-shell";
+import { LegalShell, LegalSection, PlainEnglish } from "@/features/landing/legal-shell";
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import { PRICING } from "@/lib/pricing";
 

@@ -4,8 +4,8 @@ import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { MemberPicker } from "@/components/shared";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { TASK_LAYOUT, taskLayoutWithLinkedEntity } from "@/lib/renderer/crm/task-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {

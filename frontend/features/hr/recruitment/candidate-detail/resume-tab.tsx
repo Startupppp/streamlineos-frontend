@@ -7,13 +7,12 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface Props {
   resumeUrl: string | null;
-  resumeText: string | null;
 }
 
-export function ResumeTab({ resumeUrl, resumeText }: Props) {
+export function ResumeTab({ resumeUrl }: Props) {
   const { iconRef: externalLinkIconRef, hoverHandlers: externalLinkHoverHandlers } = useAnimatedIcon();
 
-  if (!resumeUrl && !resumeText) {
+  if (!resumeUrl) {
     return (
       <RecruitmentEmptyState
         illustrationPreset="documents"
@@ -38,12 +37,6 @@ export function ResumeTab({ resumeUrl, resumeText }: Props) {
             </Button>
           </div>
           <iframe src={resumeUrl} className="w-full h-[600px]" title="Resume" />
-        </div>
-      )}
-      {resumeText && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs font-semibold text-foreground mb-2">Extracted text</p>
-          <p className="text-xs text-muted-foreground whitespace-pre-wrap max-h-64 overflow-y-auto">{resumeText}</p>
         </div>
       )}
     </div>

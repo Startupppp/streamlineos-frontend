@@ -3,7 +3,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import {
+  notificationTemplatesListContract,
+  notificationTemplateContract,
+  notificationSuccessContract,
+  templatePreviewContract,
+} from "@/hooks/api/notifications-schema";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationTemplate,
   SetTemplateApprovalInput,
@@ -13,6 +20,7 @@ import type {
 } from "@/types/notifications";
 import { toStringParams } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useNotificationTemplates = (
   params?: Record<string, unknown>,
@@ -21,12 +29,14 @@ export const useNotificationTemplates = (
   const canView = useCan("notifications:templates:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
-    queryKey: queryKeys.notifications.templates(params),
-    queryFn: () =>
-      apiClient.get<NotificationTemplate[]>(
+    queryKey: platformCoreQueryKeys.notifications.templates(params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<NotificationTemplate>>(
         "/notification-templates",
         params ? toStringParams(params) : undefined,
-      ),
+        signal,
+        notificationTemplatesListContract,
+      )).items,
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
@@ -35,56 +45,56 @@ export const useNotificationTemplates = (
 
 export const useCreateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, CreateTemplateInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, CreateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "create"],
-    mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto),
+    mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto, undefined, notificationTemplateContract),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
   });
 };
 
 export const useUpdateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
+      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto, undefined, notificationTemplateContract),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
     },
   });
 };
 
 export const useSetTemplateApproval = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "approval"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto),
+      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto, undefined, notificationTemplateContract),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
     },
   });
 };
 
 export const useDeleteNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "delete"],
-    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`),
+    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`, undefined, undefined, notificationSuccessContract),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
   });
 };
 
 export const usePreviewTemplate = () => {
-  return useMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>({
+  return useAuthorizedMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>("notifications:templates:view", {
     mutationKey: ["notifications", "templates", "preview"],
     mutationFn: ({ id, variables }) =>
-      apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),
+      apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }, undefined, templatePreviewContract),
   });
 };

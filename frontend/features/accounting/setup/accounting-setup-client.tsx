@@ -84,7 +84,7 @@ function TaxRegistrationCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <ReceiptText className="h-5 w-5 text-muted-foreground" />
+          <ReceiptText className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           <CardTitle>Tax registration</CardTitle>
         </div>
         <CardDescription>
@@ -289,7 +289,7 @@ export function AccountingSetupClient() {
               <ul className="space-y-2">
                 {status.nextSteps.map((step) => (
                   <li key={step} className="flex items-start gap-2 text-sm">
-                    <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                     <span>{step}</span>
                   </li>
                 ))}
@@ -299,7 +299,7 @@ export function AccountingSetupClient() {
         ) : (
           <Card>
             <CardContent className="flex items-center gap-2 p-4 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-status-success-ink" />
+              <CheckCircle2 className="h-4 w-4 text-status-success-ink" aria-hidden="true" />
               Setup is complete.
             </CardContent>
           </Card>

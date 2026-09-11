@@ -1,10 +1,12 @@
 "use client";
 
+import { useCallback, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 interface RouteErrorBoundaryProps {
   error: Error & { digest?: string };
   reset: () => void;
+  onBeforeReset?: () => void;
   title?: string;
   fallbackMessage?: string;
   layout?: "centered" | "inline" | "fullscreen";
@@ -13,11 +15,19 @@ interface RouteErrorBoundaryProps {
 export function RouteErrorBoundary({
   error: _,
   reset,
+  onBeforeReset,
   title = "Something went wrong",
   fallbackMessage = "An unexpected error occurred. Please try again.",
   layout = "inline",
 }: RouteErrorBoundaryProps) {
   const displayMessage = fallbackMessage;
+  const headingId = useId();
+  const isWholePage = layout === "fullscreen";
+
+  const handleRetry = useCallback(() => {
+    onBeforeReset?.();
+    reset();
+  }, [onBeforeReset, reset]);
 
   const content = (
     <div
@@ -30,20 +40,35 @@ export function RouteErrorBoundary({
           aria-hidden="true"
         />
       </div>
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <h1 id={headingId} className="text-xl font-bold text-foreground">
+        {title}
+      </h1>
       <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
-      <Button onClick={reset} variant="outline">
+      <Button onClick={handleRetry} variant="outline">
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
         Try Again
       </Button>
     </div>
   );
 
-  if (layout === "fullscreen")
+  /**
+   * Every one of the 175 route `error.tsx` files replaces its segment's whole
+   * body, and the page heading lives in `PageWrapper` inside that body — no
+   * layout supplies one. So a boundary always owns the `h1`; the document had
+   * none at all while this rendered an `h2`.
+   *
+   * `main` is different. Fullscreen means the boundary replaced the shell too,
+   * so it must supply the landmark the shell would have; inline and centred sit
+   * inside the shell's `main` and must not claim a second one.
+   */
+  if (isWholePage)
     return (
-      <div className="min-h-dvh w-full noir-mesh flex items-center justify-center p-4">
+      <main
+        aria-labelledby={headingId}
+        className="min-h-dvh w-full noir-mesh flex items-center justify-center p-4"
+      >
         <div className="max-w-md">{content}</div>
-      </div>
+      </main>
     );
 
   if (layout === "centered")

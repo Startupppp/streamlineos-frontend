@@ -14,10 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   AlertDialog,
@@ -35,9 +36,9 @@ import {
   FILTER_TOOLBAR_ROW,
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
-import { RecordList, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
 import { useSendQuote } from "@/hooks/api/crm/quotes";

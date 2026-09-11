@@ -25,17 +25,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
   FILTER_TOOLBAR_ROW,
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   DEAL_APPROVAL_LAYOUT,
   dealApprovalRecordFields,

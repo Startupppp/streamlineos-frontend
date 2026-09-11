@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Globe, Hash, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { PublicChannel } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -24,18 +23,10 @@ export function PublicChannelRow({
 }) {
   const handleJoin = useCallback(() => onJoin(channel.id), [channel.id, onJoin]);
   const handleLeave = useCallback(() => onLeave(channel.id), [channel.id, onLeave]);
-  const handleRowClick = useCallback(() => {
-    if (channel.isMember) onSelect(channel.id);
-  }, [channel.id, channel.isMember, onSelect]);
+  const handleRowClick = useCallback(() => onSelect(channel.id), [channel.id, onSelect]);
 
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/30 transition-colors",
-        channel.isMember && "cursor-pointer"
-      )}
-      onClick={handleRowClick}
-    >
+  const details = (
+    <>
       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gradient-success-wash-from to-gradient-success-wash-to flex items-center justify-center border border-border/40 shrink-0">
         <Hash className="h-4 w-4 text-status-success-ink" />
       </div>
@@ -51,13 +42,30 @@ export function PublicChannelRow({
           <span className="text-dense text-muted-foreground/60">Public</span>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/30 transition-colors">
+      {channel.isMember ? (
+        <button
+          type="button"
+          onClick={handleRowClick}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          aria-label={`Open ${channel.name}`}
+        >
+          {details}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-3">{details}</div>
+      )}
       <div className="shrink-0">
         {channel.isMember ? (
           <LoadingButton
             variant="outline"
             size="sm"
             className="text-xs"
-            onClick={(e) => { e.stopPropagation(); handleLeave(); }}
+            onClick={handleLeave}
             isPending={leavingId === channel.id}
             loadingText="Leaving…"
           >
@@ -67,7 +75,7 @@ export function PublicChannelRow({
           <LoadingButton
             size="sm"
             className="text-xs"
-            onClick={(e) => { e.stopPropagation(); handleJoin(); }}
+            onClick={handleJoin}
             isPending={joiningId === channel.id}
             loadingText="Joining…"
           >

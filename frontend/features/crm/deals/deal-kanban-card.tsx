@@ -92,7 +92,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {dealStages.filter(s => s.key !== deal.stage).map(s => {
-                const { dotClass } = getCrmTokenClasses(s.color);
+                const { dotClass } = getCrmTokenClasses(s.color ?? "");
                 return (
                   <StageMenuItem
                     key={s.key}

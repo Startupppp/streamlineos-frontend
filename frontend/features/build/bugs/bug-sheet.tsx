@@ -42,7 +42,7 @@ const TiptapEditor = dynamic(
 import { useCreateBug, useUpdateBug } from "@/hooks/api/build/bugs";
 import { useProject } from "@/hooks/api/build/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { ReleaseCombobox } from "@/components/ui/release-combobox";
 import type { Bug, BugSeverity, BugPriority, BugStatus } from "@/types/projects";
 
@@ -110,9 +110,9 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
       form.reset({
         title: editBug.title,
         description: editBug.description ?? "",
-        severity: editBug.severity,
-        priority: editBug.priority,
-        status: editBug.status,
+        severity: SEVERITIES.find((v) => v === editBug.severity) ?? "major",
+        priority: PRIORITIES.find((v) => v === editBug.priority) ?? "medium",
+        status: STATUSES.find((v) => v === editBug.status) ?? "new",
         stepsToReproduce: editBug.stepsToReproduce ?? "",
         expectedResult: editBug.expectedResult ?? "",
         actualResult: editBug.actualResult ?? "",
@@ -120,7 +120,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
         browserDevice: editBug.browserDevice ?? "",
         affectedReleaseId: editBug.affectedReleaseId != null ? String(editBug.affectedReleaseId) : "",
         fixedReleaseId: editBug.fixedReleaseId != null ? String(editBug.fixedReleaseId) : "",
-        assigneeId: editBug.assigneeId ?? "none",
+        assigneeId: "none",
         qaOwnerId: editBug.qaOwnerId ?? "none",
         linkedTicketId: editBug.linkedTicketId != null ? String(editBug.linkedTicketId) : "",
       });

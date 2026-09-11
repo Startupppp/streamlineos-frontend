@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { REP_CALL_METRICS_LAYOUT } from "@/lib/renderer/crm/rep-call-metrics-layout";
 import type { RepCallMetrics, RepCallMetricsResponse } from "@/types/crm/call-intelligence";
 import { formatBpsPercent, formatQuestionsPerTenTurns } from "./call-metric-format";

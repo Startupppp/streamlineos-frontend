@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "../quotes";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
   useQuery: jest.fn((options: unknown) => options),
@@ -35,7 +37,7 @@ const mockGatedQuery = jest.requireMock("@/hooks/api/gated-query").useGatedQuery
 function captureQuotesOptions(params?: Parameters<typeof useQuotes>[0]) {
   mockGatedQuery.mockImplementation((_key: unknown, opts: unknown) => opts);
   useQuotes(params);
-  return mockGatedQuery.mock.calls.at(-1)?.[1] as { queryFn: () => unknown };
+  return mockGatedQuery.mock.calls.at(-1)?.[1] as { queryFn: (ctx: { signal: AbortSignal }) => unknown };
 }
 
 describe("useQuotes — cursor pagination contract", () => {
@@ -52,11 +54,13 @@ describe("useQuotes — cursor pagination contract", () => {
     });
 
     const opts = captureQuotesOptions({ cursor: "eyJpZCI6MjB9", pageSize: 20 });
-    void opts.queryFn();
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/quotes",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -69,11 +73,13 @@ describe("useQuotes — cursor pagination contract", () => {
     });
 
     const opts = captureQuotesOptions({ pageSize: 20 });
-    void opts.queryFn();
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/quotes",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -86,11 +92,13 @@ describe("useQuotes — cursor pagination contract", () => {
     });
 
     const opts = captureQuotesOptions({ pageSize: 20 });
-    void opts.queryFn();
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/quotes",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 
@@ -103,11 +111,13 @@ describe("useQuotes — cursor pagination contract", () => {
     });
 
     const opts = captureQuotesOptions({ pageSize: 20 });
-    void opts.queryFn();
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/quotes",
       expect.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
+      expect.any(Function),
     );
   });
 });

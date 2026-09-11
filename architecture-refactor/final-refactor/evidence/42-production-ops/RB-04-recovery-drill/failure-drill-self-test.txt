@@ -1,0 +1,8 @@
+$ cd backend && npm run failure-drill:self-test
+  (node src/scripts/failure-drill.mjs --self-test)
+RB-04's pass threshold cites this run by name.
+run_at: 2026-09-03T16:33:45Z
+---
+◇ injected env (56) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"selfTest":true,"pass":true,"checks":{"allFiveDrillsPresent":true,"allDrillsReturnDryRunWithoutExecuteFlag":true,"cacheLossBlockedInExecuteMode":true,"badReleaseBlockedInExecuteMode":true,"badReleaseNotFakePass":true},"drills":["provider-outage","queue-backlog","cache-loss","database-cell-failure","bad-release"]}
+--- exit code: 0

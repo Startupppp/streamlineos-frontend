@@ -16,6 +16,16 @@ import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
 
+const COLLECTOR_TYPES = [
+  "public_link",
+  "email",
+  "qr",
+  "embed",
+  "popup",
+  "crm_campaign",
+  "hr_audience",
+] as const satisfies readonly CollectorType[];
+
 const COLLECTOR_TYPE_LABELS: Record<CollectorType, string> = {
   public_link: "Public link",
   email: "Email invitation",
@@ -61,6 +71,11 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
     toast.success("Link copied");
   }
 
+  function handleNewTypeChange(v: string): void {
+    const next = COLLECTOR_TYPES.find((candidate) => candidate === v);
+    if (next) setNewType(next);
+  }
+
   async function handleToggleStatus(collectorId: number, status: CollectorStatus) {
     try {
       await patchCollector.mutateAsync({ collectorId, input: { status: status === "active" ? "paused" : "active" } });
@@ -103,10 +118,13 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
         )}
 
         <div className="flex items-center gap-2">
-          <Select value={newType} onValueChange={(v) => setNewType(v as CollectorType)}>
+          <Select
+            value={newType}
+            onValueChange={handleNewTypeChange}
+          >
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[200px]")}><SelectValue /></SelectTrigger>
             <SelectContent>
-              {(Object.keys(COLLECTOR_TYPE_LABELS) as CollectorType[]).map((type) => (
+              {COLLECTOR_TYPES.map((type) => (
                 <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>
               ))}
             </SelectContent>

@@ -1,10 +1,26 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { lazyContract } from "@/lib/api-envelope";
+
+const initiateTransferContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.initiateTransferContract),
+);
+const transfersPageContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.transfersPageContract),
+);
+const incomingTransfersContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.incomingTransfersContract),
+);
+const ownershipMutationContract = lazyContract(() =>
+  import("@/hooks/api/ownership-schema").then((m) => m.ownershipMutationContract),
+);
 
 export interface OrgTransferRecord {
   id: string;
@@ -22,10 +38,9 @@ export interface OrgTransferRecord {
 interface OrgTransfersResponse {
   data: OrgTransferRecord[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
@@ -46,39 +61,39 @@ interface InitiateOrgTransferResult {
 
 export function useInitiateOrgTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     InitiateOrgTransferResult,
     Error,
     { toMembershipId: number; expiresInHours?: number; reason?: string }
-  >({
+  >("ownership:org:transfer", {
     mutationKey: ["ownership", "org", "transfer", "initiate"],
     mutationFn: (body) =>
       apiClient.post<InitiateOrgTransferResult>(
         "/ownership/org/transfer",
         body,
+        undefined,
+        initiateTransferContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.orgTransfers(),
+        queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
       });
     },
   });
 }
 
 export function usePendingOrgTransfers() {
-  const { data: access } = useAccess();
-  const isOwner =
-    (access?.isOrgOwner ?? false);
+  const canView = useCan("ownership:modules:view");
 
   return useQuery<OrgTransfersResponse, Error>({
-    queryKey: queryKeys.ownership.orgTransfers(),
-    queryFn: () =>
+    queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
+    queryFn: ({ signal }) =>
       apiClient.get<OrgTransfersResponse>("/ownership/transfers", {
         scope: "ORGANIZATION",
         status: "PENDING",
         limit: "5",
-      }),
-    enabled: isOwner,
+      }, signal, transfersPageContract),
+    enabled: canView,
     staleTime: 30_000,
   });
 }
@@ -88,9 +103,9 @@ export function useIncomingOrgTransfers() {
   const canRespond = useCan("ownership:transfer:respond");
 
   return useQuery<IncomingTransfersResponse, Error>({
-    queryKey: queryKeys.ownership.incomingTransfers(),
-    queryFn: () =>
-      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming"),
+    queryKey: directoryAndOwnershipQueryKeys.ownership.incomingTransfers(),
+    queryFn: ({ signal }) =>
+      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming", undefined, signal, incomingTransfersContract),
     enabled: !accessPending && canRespond,
     staleTime: 0,
     refetchOnMount: "always",
@@ -99,13 +114,13 @@ export function useIncomingOrgTransfers() {
 
 export function useCancelOrgTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<{ success: true }, Error, string>({
+  return useAuthorizedMutation<{ success: true }, Error, string>("ownership:modules:manage", {
     mutationKey: ["ownership", "org", "transfer", "cancel"],
     mutationFn: (transferId) =>
-      apiClient.delete<{ success: true }>(`/ownership/transfers/${transferId}`),
+      apiClient.delete(`/ownership/transfers/${transferId}`, undefined, undefined, ownershipMutationContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.orgTransfers(),
+        queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
       });
     },
   });
@@ -113,42 +128,47 @@ export function useCancelOrgTransfer() {
 
 export function useAcceptTransfer() {
   const queryClient = useQueryClient();
-  const { update } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
 
-  return useMutation<{ success: true }, Error, string>({
+  return useAuthorizedMutation<{ success: true }, Error, string>("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "accept"],
     mutationFn: (transferId) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/ownership/transfers/${transferId}/accept`,
+        undefined,
+        undefined,
+        ownershipMutationContract,
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.all,
+        queryKey: directoryAndOwnershipQueryKeys.ownership.all,
       });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-      void update();
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      void refreshSessionClaims();
     },
   });
 }
 
 export function useDeclineTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: true },
     Error,
     { transferId: string; reason?: string }
-  >({
+  >("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "decline"],
     mutationFn: ({ transferId, reason }) =>
-      apiClient.post<{ success: true }>(
+      apiClient.post(
         `/ownership/transfers/${transferId}/decline`,
         { reason },
+        undefined,
+        ownershipMutationContract,
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.all,
+        queryKey: directoryAndOwnershipQueryKeys.ownership.all,
       });
     },
   });

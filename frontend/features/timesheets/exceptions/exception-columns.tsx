@@ -13,7 +13,7 @@ import {
   EXCEPTION_STATUS_BADGE,
   EXCEPTION_STATUS_LABEL,
   type TimesheetException,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 import { cn } from "@/lib/utils";
 
 function memberName(row: TimesheetException): string {

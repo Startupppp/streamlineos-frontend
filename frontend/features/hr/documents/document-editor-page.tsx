@@ -4,19 +4,23 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
-import { TiptapEditor } from "@/components/editor/tiptap-editor";
+import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Save, Globe, GlobeLock } from "lucide-react";
-import Link from "next/link";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-lg" /> },
+);
 
 export function DocumentEditorPage() {
   const params = useParams<{ documentId: string }>();
@@ -48,16 +52,18 @@ export function DocumentEditorPage() {
     toast.success("Document saved");
   }, [documentId, title, contentJson, isDirty, updateDoc]);
 
+  const saveAndReportFailure = useCallback((): void => {
+    void handleSave().catch((error) => toast.error(getErrorMessage(error)));
+  }, [handleSave]);
+
   useEffect(() => {
     if (!isDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      void handleSave().catch((e) => toast.error(getErrorMessage(e)));
-    }, 30_000);
+    autoSaveTimer.current = setTimeout(saveAndReportFailure, 30_000);
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
-  }, [isDirty, handleSave]);
+  }, [isDirty, saveAndReportFailure]);
 
   const handleContentChange = useCallback((json: Record<string, unknown>) => {
     setContentJson(json);
@@ -93,6 +99,10 @@ export function DocumentEditorPage() {
     },
   });
 
+  const handleBackToDocuments = useCallback(() => {
+    requestLeave(() => router.push("/hr/documents"));
+  }, [requestLeave, router]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Document Editor" subtitle="Loading...">
@@ -119,8 +129,14 @@ export function DocumentEditorPage() {
 
   if (!doc) {
     return (
-      <PageWrapper title="Document Not Found" subtitle="The requested document could not be found.">
-        <Button asChild><Link href="/hr/documents">Back to Documents</Link></Button>
+      <PageWrapper title="Document Editor" backHref="/hr/documents">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="documents"
+          title="Document not found"
+          description="This document no longer exists or has been removed."
+          action={{ label: "Back to Documents", href: "/hr/documents" }}
+        />
       </PageWrapper>
     );
   }
@@ -130,7 +146,7 @@ export function DocumentEditorPage() {
       <PageWrapper
         title="Document Editor"
         subtitle={doc.templateType ? `Template: ${doc.templateType}` : undefined}
-        onBack={() => requestLeave(() => router.push("/hr/documents"))}
+        onBack={handleBackToDocuments}
         actions={
           <div className="flex items-center gap-2">
             {isDirty && (
@@ -154,9 +170,7 @@ export function DocumentEditorPage() {
             </LoadingButton>
             <LoadingButton
               size="sm"
-              onClick={() => {
-                void handleSave().catch((e) => toast.error(getErrorMessage(e)));
-              }}
+              onClick={saveAndReportFailure}
               disabled={!isDirty}
               isPending={updateDoc.isPending}
               loadingText="Saving..."

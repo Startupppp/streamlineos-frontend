@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import type { GitConnection, GitProvider } from "@/hooks/api/git-integration";
+import type { GitConnection } from "@/hooks/api/git-integration";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { SetupInstructions } from "./git-setup-instructions";
@@ -20,7 +20,7 @@ export function ProviderIcon({
   provider,
   className,
 }: {
-  provider: GitProvider;
+  provider: string;
   className?: string;
 }) {
   if (provider === "github") return <Github className={className} />;
@@ -136,7 +136,7 @@ export const ConnectionRow = memo(function ConnectionRow({
             <code className={cn(TEXT_ONE_LINE, "flex-1 font-mono text-xs")}>
               {connection.webhookUrl}
             </code>
-            <CopyButton value={connection.webhookUrl} label="Webhook URL" />
+            <CopyButton value={connection.webhookUrl ?? ""} label="Webhook URL" />
           </div>
         </div>
         <div className="space-y-1.5">

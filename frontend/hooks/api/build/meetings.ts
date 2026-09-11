@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Meeting,
   MeetingDetail,
@@ -17,6 +18,36 @@ import type {
   UpsertStandupInput,
   AddAttendeeInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+
+const meetingListContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingListContract),
+);
+const meetingRowContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingRowContract),
+);
+const meetingDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingDetailContract),
+);
+const addAttendeeResultContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.addAttendeeResultContract),
+);
+const actionItemRowContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.actionItemRowContract),
+);
+const convertToTaskResultContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.convertToTaskResultContract),
+);
+const meetingsSuccessContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingsSuccessContract),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const standupEntryContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.standupEntryContract),
+);
 
 interface MeetingFilters {
   status?: string;
@@ -41,8 +72,8 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   const hasParams = Object.keys(params).length > 0;
 
   return useQuery<Meeting[]>({
-    queryKey: queryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    queryFn: () => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined),
+    queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined, signal, meetingListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -51,8 +82,8 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
 export function useMeeting(projectId: number, meetingId: number) {
   const canView = useCan("build:meetings:view");
   return useQuery<MeetingDetail>({
-    queryKey: queryKeys.projects.meetings.detail(projectId, meetingId),
-    queryFn: () => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`),
+    queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId),
+    queryFn: ({ signal }) => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`, undefined, signal, meetingDetailContract),
     enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
   });
@@ -60,124 +91,126 @@ export function useMeeting(projectId: number, meetingId: number) {
 
 export function useCreateMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "create"],
     mutationFn: (data: CreateMeetingInput) =>
-      apiClient.post<Meeting>(`/build/${projectId}/meetings`, data),
+      apiClient.post<Meeting>(`/build/${projectId}/meetings`, data, undefined, meetingRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
   });
 }
 
 export function useUpdateMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "update"],
     mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
-      apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data),
+      apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data, undefined, meetingRowContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, vars.id) });
     },
   });
 }
 
 export function useDeleteMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${id}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
   });
 }
 
 export function useAddAttendee(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "add"],
     mutationFn: (data: AddAttendeeInput) =>
-      apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data),
+      apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data, undefined, addAttendeeResultContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useRemoveAttendee(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "remove"],
     mutationFn: (userId: string) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useUpsertStandup(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "standup"],
     mutationFn: (data: UpsertStandupInput) =>
-      apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data),
+      apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data, undefined, standupEntryContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useCreateActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "create"],
     mutationFn: (data: CreateActionItemInput) =>
-      apiClient.post<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items`, data),
+      apiClient.post<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items`, data, undefined, actionItemRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useUpdateActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "update"],
     mutationFn: ({ id, ...data }: UpdateActionItemInput) =>
-      apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${id}`, data),
+      apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${id}`, data, undefined, actionItemRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useDeleteActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "delete"],
     mutationFn: (itemId: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`),
+      apiClient.delete<void>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
 
 export function useConvertActionItemToTask(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "convert"],
     mutationFn: (itemId: number) =>
-      apiClient.post<ActionItem>(
+      apiClient.post<{ actionItem: ActionItem; ticketId: number }>(
         `/build/${projectId}/meetings/${meetingId}/action-items/${itemId}/convert-to-task`,
         {},
+        undefined,
+        convertToTaskResultContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }

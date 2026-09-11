@@ -1,13 +1,15 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney, formatMonth } from "@/features/payroll/shared";
 import { ValidationPanel } from "@/features/payroll/payout/bank-transfers/validation-panel";
 import { BatchesTable } from "@/features/payroll/payout/bank-transfers/batches-table";
@@ -24,6 +26,8 @@ const RUN_STATUS_STYLES: Record<string, string> = {
 };
 
 export function BankTransfersContent() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const rawRunId = searchParams.get("runId");
   const paramRunId = rawRunId ? parseInt(rawRunId, 10) : null;
@@ -33,7 +37,12 @@ export function BankTransfersContent() {
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
 
-  const { data: runsData } = usePayrollRuns({ limit: 10 });
+  const {
+    data: runsData,
+    isError,
+    error,
+    refetch,
+  } = usePayrollRuns({ limit: 10 });
 
   const eligibleRun = useMemo(() => {
     if (!runsData?.data) return null;
@@ -48,6 +57,19 @@ export function BankTransfersContent() {
 
   const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
 
+  const runFilterActive = paramRunId !== null;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("runId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   function handleCloseBatchSheet() {
     setSelectedBatchId(null);
   }
@@ -55,12 +77,28 @@ export function BankTransfersContent() {
   return (
     <>
       <PageWrapper title="Bank Transfers" subtitle="Generate and track salary payments">
-        {!run || runId === null ? (
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load payroll runs"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : !run || runId === null ? (
           <EmptyState
             illustration={<EmptyTransferIllustration />}
             title="No approved run found"
-            description="Approve a payroll run first to generate payment batches"
-            action={{ label: "Go to Runs", href: "/payroll/runs" }}
+            description={
+              runFilterActive
+                ? undefined
+                : "Approve a payroll run first to generate payment batches"
+            }
+            filtersActive={runFilterActive}
+            filteredTitle="No run matches this link."
+            onClearFilters={handleClearFilters}
+            action={
+              runFilterActive ? undefined : { label: "Go to Runs", href: "/payroll/runs" }
+            }
           />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col space-y-4">

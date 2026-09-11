@@ -2,36 +2,32 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { SalaryTemplateList, SalaryTemplateRow } from "@/hooks/api/hr/salary-structures-schema";
 
-export interface SalaryStructureTemplate {
-  id: number;
-  orgId: string;
-  name: string;
-  basicSalary: string;
-  hraPercent: string;
-  specialAllowance: string | null;
-  medicalAllowance: string | null;
-  travelAllowance: string | null;
-  otherAllowances: string | null;
-  pfDeductionPercent: string | null;
-  professionalTax: string | null;
-  effectiveFrom: string;
-  effectiveTo: string | null;
-  isActive: boolean;
-  createdAt: string;
-}
+export type { SalaryTemplateRow as SalaryStructureTemplate };
 
-export type CreateSalaryTemplateInput = Omit<SalaryStructureTemplate, "id" | "orgId" | "createdAt">;
+export type CreateSalaryTemplateInput = Omit<SalaryTemplateRow, "id" | "orgId" | "createdAt" | "updatedAt">;
+
+const salaryListContract = lazyContract(() =>
+  import("@/hooks/api/hr/salary-structures-schema").then((m) => m.salaryTemplateListContract),
+);
+const salaryRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/salary-structures-schema").then((m) => m.salaryTemplateRowContract),
+);
+const salaryDeleteContract = lazyContract(() =>
+  import("@/hooks/api/hr/salary-structures-schema").then((m) => m.salaryDeleteContract),
+);
 
 export function useSalaryStructureTemplates(options?: { enabled?: boolean }) {
   const canView = useCan("hr:salary:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<SalaryStructureTemplate[]>({
-    queryKey: queryKeys.hr.salaryStructureTemplates(),
-    queryFn: () => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures"),
+  return useQuery<SalaryTemplateList>({
+    queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates(),
+    queryFn: ({ signal }) => apiClient.get("/hr/payroll/salary-structures", undefined, signal, salaryListContract),
     staleTime: 120_000,
     enabled: canView && hrEnabled && (options?.enabled ?? true),
   });
@@ -42,8 +38,8 @@ export function useCreateSalaryTemplate() {
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "create"],
     mutationFn: (data: CreateSalaryTemplateInput) =>
-      apiClient.post<SalaryStructureTemplate>("/hr/payroll/salary-structures", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+      apiClient.post("/hr/payroll/salary-structures", data, undefined, salaryRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -52,8 +48,8 @@ export function useUpdateSalaryTemplate() {
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateSalaryTemplateInput> & { id: number }) =>
-      apiClient.patch<SalaryStructureTemplate>(`/hr/payroll/salary-structures/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+      apiClient.patch(`/hr/payroll/salary-structures/${id}`, data, undefined, salaryRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -61,7 +57,7 @@ export function useDeleteSalaryTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "delete"],
-    mutationFn: (id: number) => apiClient.delete<void>(`/hr/payroll/salary-structures/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+    mutationFn: (id: number) => apiClient.delete(`/hr/payroll/salary-structures/${id}`, undefined, undefined, salaryDeleteContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }

@@ -10,10 +10,8 @@ import {
   useRolePermissionGrants,
 } from "@/hooks/api/roles";
 import { useSimulateAccess, useSimulationCandidates } from "./simulate";
-import {
-  normalizeOrgModulesResponse,
-  useOrgModules,
-} from "./org-modules";
+import { useOrgModules } from "./org-modules";
+import { normalizeOrgModulesResponse } from "./org-modules-normalize";
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options: unknown) => options),
@@ -59,11 +57,15 @@ describe("RBAC administration query gates", () => {
     expect(query.mock.calls[1][0].enabled).toBe(true);
   });
 
-  it("keeps audit pagination server-side and permission-gated", () => {
+  it("keeps audit pagination server-side and permission-gated", async () => {
     can.mockReturnValue(true);
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      logs: [],
+      pagination: { limit: 25, hasMore: false, nextCursor: null },
+    });
 
     useAuditLogs({
-      cursor: "cursor-3",
+      cursor: "eyJpZCI6MjB9",
       limit: 25,
       actions: ["role.created", "role.deleted"],
     });
@@ -73,8 +75,16 @@ describe("RBAC administration query gates", () => {
     expect(options.enabled).toBe(true);
     expect(options.queryKey).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ cursor: "cursor-3", limit: 25 }),
+        expect.objectContaining({ cursor: "eyJpZCI6MjB9", limit: 25 }),
       ]),
+    );
+
+    await options.queryFn({ signal: undefined });
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/audit-log",
+      expect.objectContaining({ cursor: "eyJpZCI6MjB9", limit: "25" }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -112,7 +122,7 @@ describe("RBAC administration query gates", () => {
     useOrgModules();
 
     const options = query.mock.calls[0][0];
-    await expect(options.queryFn()).resolves.toEqual(modules);
+    await expect(options.queryFn({ signal: undefined })).resolves.toEqual(modules);
     expect(normalizeOrgModulesResponse(modules)).toBe(modules);
     expect(options.select({ success: true, data: modules })).toEqual(modules);
   });

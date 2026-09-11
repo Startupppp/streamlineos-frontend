@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   Approval,
@@ -11,6 +12,20 @@ import type {
   DecideApprovalInput,
   UpdateApprovalInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const approvalInboxListContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxListContract),
+);
+const approvalListContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalListContract),
+);
+const approvalRowContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface ApprovalFilters {
   status?: string;
@@ -20,8 +35,8 @@ interface ApprovalFilters {
 export function useApprovalInbox() {
   const canView = useCan("build:approvals:view");
   return useQuery<ApprovalInboxItem[]>({
-    queryKey: queryKeys.projects.approvals.inbox(),
-    queryFn: () => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox"),
+    queryKey: buildWorkQueryKeys.projects.approvals.inbox(),
+    queryFn: ({ signal }) => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox", undefined, signal, approvalInboxListContract),
     enabled: canView,
     staleTime: 120_000,
     refetchInterval: 120_000,
@@ -36,11 +51,11 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   if (filters?.entityType) params["entityType"] = filters.entityType;
 
   return useQuery<Approval[]>({
-    queryKey: queryKeys.projects.approvals.list(
+    queryKey: buildWorkQueryKeys.projects.approvals.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params),
+    queryFn: ({ signal }) => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params, signal, approvalListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -48,54 +63,54 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
 
 export function useCreateApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:request", {
     mutationKey: ["projects", projectId, "approvals", "create"],
     mutationFn: (data: CreateApprovalInput) =>
-      apiClient.post<Approval>(`/build/${projectId}/approvals`, data),
+      apiClient.post<Approval>(`/build/${projectId}/approvals`, data, undefined, approvalRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }
 
 export function useDecideApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:decide", {
     mutationKey: ["projects", projectId, "approvals", "decide"],
     mutationFn: ({ id, ...data }: DecideApprovalInput & { id: number }) =>
-      apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}/decide`, data),
+      apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}/decide`, data, undefined, approvalRowContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.detail(projectId, vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }
 
 export function useUpdateApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:manage", {
     mutationKey: ["projects", projectId, "approvals", "update"],
     mutationFn: ({ id, ...data }: UpdateApprovalInput & { id: number }) =>
-      apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}`, data),
+      apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}`, data, undefined, approvalRowContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.detail(projectId, vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }
 
 export function useDeleteApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:manage", {
     mutationKey: ["projects", projectId, "approvals", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/approvals/${id}`),
+      apiClient.delete<void>(`/build/${projectId}/approvals/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }

@@ -1,7 +1,7 @@
 ﻿import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell } from "@/features/build/shared/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome";
 
 export default function EpicsLoading() {
   return (

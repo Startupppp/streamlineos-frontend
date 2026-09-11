@@ -1,11 +1,15 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import type { OrgSettings, OrgMember } from "@/types/organization";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
+import type { OrgSettings } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import type { OrgMembersPage as MembersResponse } from "@/hooks/api/organization-schema";
 
 export {
   useArchivedOrganizations,
@@ -16,15 +20,29 @@ export {
   useDeleteOrg,
 } from "./organization-lifecycle";
 
-interface MembersResponse {
-  data: OrgMember[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+/**
+ * Deferred: `leave-organization-control.tsx` sits in the shell's org switcher,
+ * so this module is eager on every authenticated route. The contract is
+ * unchanged and still passed to the seam — `GET /organization/members` is
+ * keyset paginated and the client once declared `{ page, total, totalPages }`,
+ * a shape the server has never sent.
+ */
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const membersPageContract = lazyContract(() =>
+  import("@/hooks/api/organization-schema").then(
+    (m) => m.orgMembersPageContract,
+  ),
+);
+const orgSettingsContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.orgSettingsContract),
+);
+const orgSuccessContract = lazyContract(() =>
+  import("@/hooks/api/org-settings-schema").then((m) => m.orgSuccessContract),
+);
+
+export type { OrgMember, OrgMembersPage } from "@/hooks/api/organization-schema";
 
 export const useOrgSettings = (
   options?: Omit<UseQueryOptions<OrgSettings, Error>, "queryKey" | "queryFn">,
@@ -32,14 +50,21 @@ export const useOrgSettings = (
   const canViewSettings = useCan("settings:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<OrgSettings, Error>({
-    queryKey: queryKeys.organization.settings(),
-    queryFn: () => apiClient.get<OrgSettings>("/organization/settings"),
+    queryKey: platformCoreQueryKeys.organization.settings(),
+    queryFn: ({ signal }) => apiClient.get<OrgSettings>("/organization/settings", undefined, signal, orgSettingsContract),
     staleTime: 30 * 60_000,
     ...restOptions,
     enabled: canViewSettings && (callerEnabled ?? true),
   });
 };
 
+/**
+ * `page` is inert and kept only so the ~50 existing call sites compile.
+ * `GET /organization/members` is keyset paginated and its query DTO is
+ * `.strict()`, so sending `page` was a 400 rather than a no-op. Page 2 comes
+ * from `pagination.nextCursor`, and the cursor is invalidated by a filter
+ * change.
+ */
 export const useOrgMembers = (
   page = 1,
   limit = 20,
@@ -54,15 +79,14 @@ export const useOrgMembers = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [
-      ...queryKeys.organization.members(),
+      ...platformCoreQueryKeys.organization.members(),
       { page, limit: safeLimit, search, includeInactive: false },
     ] as const,
-    queryFn: () =>
-      apiClient.get<MembersResponse>("/organization/members", {
-        page: String(page),
+    queryFn: ({ signal }) =>
+      apiClient.get("/organization/members", {
         limit: String(safeLimit),
         ...(search ? { search } : {}),
-      }),
+      }, signal, membersPageContract),
     staleTime: 30_000,
     ...restOptions,
     enabled: canViewMembers && (callerEnabled ?? true),
@@ -81,16 +105,15 @@ export const useOrgMembersByIds = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [
-      ...queryKeys.organization.members(),
+      ...platformCoreQueryKeys.organization.members(),
       { userIds: ids, includeInactive: true },
     ] as const,
-    queryFn: () =>
-      apiClient.get<MembersResponse>("/organization/members", {
-        page: "1",
+    queryFn: ({ signal }) =>
+      apiClient.get("/organization/members", {
         limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
         includeInactive: "true",
-      }),
+      }, signal, membersPageContract),
     staleTime: 5 * 60_000,
     ...restOptions,
     enabled: canViewMembers && ids.length > 0 && (callerEnabled ?? true),
@@ -99,22 +122,23 @@ export const useOrgMembersByIds = (
 
 export const useRemoveOrgMember = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, string>({
+  return useAuthorizedMutation<void, Error, string>("settings:organization:manage", {
     mutationKey: ["organization", "remove-member"],
-    mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
+    mutationFn: (userId) =>
+      apiClient.delete<void>(`/organization/members/${userId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.members(),
+        queryKey: platformCoreQueryKeys.organization.members(),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
     },
   });
 };
 
 export const useUpdateOrgSettings = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     {
@@ -127,7 +151,6 @@ export const useUpdateOrgSettings = () => {
       directoryPublic?: boolean;
       primaryColor?: string | null;
       loginBgUrl?: string | null;
-      ipAllowlist?: string[];
       industry?: string | null;
       website?: string | null;
       legalName?: string | null;
@@ -150,16 +173,16 @@ export const useUpdateOrgSettings = () => {
       companySize?: string | null;
       country?: string | null;
     }
-  >({
+  >("settings:manage", {
     mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/settings", data),
+      apiClient.patch<{ success: boolean }>("/organization/settings", data, undefined, orgSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
+        queryKey: platformCoreQueryKeys.organization.settings(),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.display(),
+        queryKey: platformCoreQueryKeys.organization.display(),
       });
     },
   });
@@ -174,13 +197,13 @@ export interface UpdateOrgSecurityInput {
 
 export const useUpdateOrgSecurity = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>("settings:manage", {
     mutationKey: ["organization", "security", "update"],
     mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/security", data),
+      apiClient.patch<{ success: boolean }>("/organization/security", data, undefined, orgSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
+        queryKey: platformCoreQueryKeys.organization.settings(),
       });
     },
   });

@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useState } from "react";
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCheck, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
 import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
@@ -19,30 +19,61 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  getInitials,
   formatMessageTime,
   formatMessageTimeFull,
-  formatFileSize,
-  getFileExt,
-  getFileColor,
-  isImageMime,
-  resolveFileUrl,
   getForwardedDisplay,
 } from "./chat-helpers";
+import { ChatAttachment } from "./chat-attachment";
 import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
-import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { EntityActionDialog } from "./entity-action-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
-import { InternalLinkPreview } from "./internal-link-preview";
-import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import {
+  ChatInlineFallback,
+  ChatOverlayFallback,
+} from "./chat-lazy-fallbacks";
+import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 import { TicketPill, CommentPill } from "./chat-entity-pills";
-import { MessageActions } from "./chat-message-actions";
+import { getInitials } from "@/lib/format-utils";
+/**
+ * The hover toolbar renders for every message on the screen but its root is
+ * `absolute … opacity-0 group-hover:opacity-100 pointer-events-none`, so it
+ * occupies no layout box and is invisible until the row is hovered. That makes
+ * `loading: null` free of both layout shift and visible flash, while taking the
+ * toolbar out of the eager message-rendering path.
+ */
+const MessageActions = dynamic(
+  () => import("./chat-message-actions").then((m) => ({ default: m.MessageActions })),
+  { ssr: false, loading: () => null },
+);
+
+const ConvertToTaskDialog = dynamic(
+  () =>
+    import("./convert-to-task-dialog").then((m) => ({
+      default: m.ConvertToTaskDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading convert to task" /> },
+);
+
+const EntityActionDialog = dynamic(
+  () =>
+    import("./entity-action-dialog").then((m) => ({
+      default: m.EntityActionDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading ticket action" /> },
+);
+
+const InternalLinkPreview = dynamic(
+  () =>
+    import("./internal-link-preview").then((m) => ({
+      default: m.InternalLinkPreview,
+    })),
+  { ssr: false, loading: () => <ChatInlineFallback label="Loading link preview" /> },
+);
 
 export function ChatBubble({
   message,
@@ -92,7 +123,7 @@ export function ChatBubble({
   onUnsaveMsg?: () => void;
   onForward?: () => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {
@@ -132,7 +163,7 @@ export function ChatBubble({
     if (e.key === "Escape") onCancelEdit();
   }, [onSaveEdit, onCancelEdit]);
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(message.content!);
+    navigator.clipboard.writeText(message.content ?? "");
     toast.success("Copied");
   }, [message.content]);
   const handleCopyLink = useCallback(() => {
@@ -225,6 +256,7 @@ export function ChatBubble({
           <div className="mx-1">
             <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-ring/50">
               <textarea
+                aria-label="Edit message"
                 value={editInput}
                 onChange={handleEditInputChange}
                 onKeyDown={handleEditKeyDown}
@@ -294,63 +326,17 @@ export function ChatBubble({
 
             {message.attachments.length > 0 && (
               <div className="mt-1.5 space-y-1.5">
-                {message.attachments.map((att) => {
-                  const url = resolveFileUrl(att.fileUrl, att.mimeType);
-                  return isImageMime(att.mimeType) ? (
-                    <a
-                      key={att.id}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block rounded-lg overflow-hidden"
-                    >
-                      <Image
-                        src={url}
-                        alt={att.fileName}
-                        width={280}
-                        height={200}
-                        unoptimized
-                        className="max-w-[280px] max-h-[200px] object-cover rounded-lg"
-                      />
-                    </a>
-                  ) : (() => {
-                    const colors = getFileColor(att.fileName);
-                    return (
-                      <a
-                        key={att.id}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors min-w-0 max-w-full",
-                          isOwn
-                            ? "bg-primary-foreground/10 border-primary-foreground/15 hover:bg-primary-foreground/15"
-                            : "bg-background border-border/50 hover:bg-muted/30 shadow-sm"
-                        )}
-                      >
-                        <div className={cn(
-                          "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
-                          isOwn ? "bg-primary-foreground/15" : colors.bg
-                        )}>
-                          <FileText className={cn("h-4 w-4", isOwn ? "text-primary-foreground/80" : colors.text)} />
-                          <span className={cn(
-                            "text-micro font-bold px-1 rounded mt-0.5",
-                            isOwn ? "bg-primary-foreground/25 text-primary-foreground" : cn("text-white", colors.badge)
-                          )}>
-                            {getFileExt(att.fileName)}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <TruncatedText text={att.fileName} className="text-xs font-semibold" />
-                          <p className={cn("text-micro mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
-                            {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
-                          </p>
-                        </div>
-                        <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-primary-foreground/50" : "text-muted-foreground/50")} />
-                      </a>
-                    );
-                  })();
-                })}
+                {message.attachments.map((att) => (
+                  <ChatAttachment
+                    key={att.id}
+                    channelId={message.channelId}
+                    attachmentId={att.id}
+                    fileName={att.fileName}
+                    mimeType={att.mimeType}
+                    fileSize={att.fileSize}
+                    isOwn={isOwn}
+                  />
+                ))}
               </div>
             )}
 
@@ -408,27 +394,27 @@ export function ChatBubble({
           </div>
         )}
 
-        {canConvertToTask && (
+        {canConvertToTask && convertDialogOpen && (
           <ConvertToTaskDialog
-            open={convertDialogOpen}
+            open
             onOpenChange={setConvertDialogOpen}
             channelId={message.channelId}
             messageId={message.id}
             defaultTitle={(message.content ?? "").slice(0, 80)}
           />
         )}
-        {assignAction && (
+        {assignAction && assignDialogOpen && (
           <EntityActionDialog
-            open={assignDialogOpen}
+            open
             onOpenChange={setAssignDialogOpen}
             channelId={message.channelId}
             reference={ticketReference}
             action={assignAction}
           />
         )}
-        {dueDateAction && (
+        {dueDateAction && dueDateDialogOpen && (
           <EntityActionDialog
-            open={dueDateDialogOpen}
+            open
             onOpenChange={setDueDateDialogOpen}
             channelId={message.channelId}
             reference={ticketReference}

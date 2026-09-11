@@ -2,23 +2,30 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
+import type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
 
-interface CreateAgentTokenPayload {
-  name: string;
-  expiresInDays?: number;
-  scopes?: string[];
-}
+const agentTokenListContract = lazyContract(() =>
+  import("@/hooks/api/build/agent-tokens-schema").then((m) => m.agentTokenListContract),
+);
+const agentTokenCreateContract = lazyContract(() =>
+  import("@/hooks/api/build/agent-tokens-schema").then((m) => m.agentTokenCreateContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+export type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");
   return useQuery<AgentToken[]>({
-    queryKey: queryKeys.projects.agentTokens(),
-    queryFn: () => apiClient.get<AgentToken[]>("/agent-tokens"),
+    queryKey: buildWorkQueryKeys.projects.agentTokens(),
+    queryFn: ({ signal }) => apiClient.get<AgentToken[]>("/agent-tokens", undefined, signal, agentTokenListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -26,24 +33,24 @@ export function useAgentTokens() {
 
 export function useCreateAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "create"],
-    mutationFn: (data: CreateAgentTokenPayload) =>
-      apiClient.post<CreateAgentTokenResponse>("/agent-tokens", data),
+    mutationFn: (data: { name: string; expiresInDays?: number }) =>
+      apiClient.post<CreateAgentTokenResponse>("/agent-tokens", data, undefined, agentTokenCreateContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.projects.agentTokens() });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentTokens() });
     },
   });
 }
 
 export function useRevokeAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "revoke"],
-    mutationFn: (tokenId: string | number) =>
-      apiClient.delete<{ success: boolean }>(`/agent-tokens/${tokenId}`),
+    mutationFn: (tokenId: number) =>
+      apiClient.delete<void>(`/agent-tokens/${tokenId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.projects.agentTokens() });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentTokens() });
     },
   });
 }

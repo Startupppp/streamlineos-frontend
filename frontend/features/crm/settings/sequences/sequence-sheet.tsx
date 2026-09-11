@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState, NoPermissionState } from "@/components/shared";
-import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   useCreateCrmSequence,
   useCreateCrmSequenceStep,
@@ -285,7 +285,7 @@ function SequenceSteps({ sequenceId }: { sequenceId: string }) {
 
 function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
   const layout = useTenantLayout(SEQUENCE_ENROLLMENT_LAYOUT);
-  const { data, isLoading, isError, refetch, access } = useCrmSequenceEnrollments(sequenceId, 1);
+  const { data, isLoading, isError, refetch, access } = useCrmSequenceEnrollments(sequenceId);
   const stopEnrollment = useStopEnrollment(sequenceId);
 
   const enrolments = data?.enrollments ?? [];

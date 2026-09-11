@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { useSession } from "next-auth/react";
 import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
 import {
   APPROVALS_PAGE_SIZE,
@@ -23,7 +22,7 @@ import {
 } from "@/hooks/api/timesheets-core/approvals";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
@@ -43,9 +42,19 @@ export function ApprovalsView() {
    */
   const access = usePermissionGate("timesheets:approvals:view");
   const { data: accessData } = useAccess();
-  const { data: session } = useSession();
-  const viewerId = session?.user?.id;
   const isOrgOwner = accessData?.isOrgOwner ?? false;
+  /**
+   * Whose authority the viewer would be using is decided on membership ids: a
+   * period names its owner and its assigned approver by `organization_members.id`
+   * on both backends, and the period contract parses nothing else. So the
+   * comparison needs the viewer's own membership id, and no read this page can
+   * make carries one yet — `/me/access` has none and `/organization/members`
+   * needs `settings:view`, which a line manager's delegate does not hold. The
+   * session's `users.id` would never match, and would mark every assigned row
+   * as borrowed. Until a membership id is exposed the banner stays silent rather
+   * than claiming authority it cannot evidence.
+   */
+  const viewerMembershipId: string | null = null;
   const shouldReduceMotion = useReducedMotion();
 
   const [activeTab, setActiveTab] = useState<ApprovalTab>("SUBMITTED");
@@ -78,7 +87,7 @@ export function ApprovalsView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: Employee[] = useMemo(
+  const employees: EmployeeListItem[] = useMemo(
     () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
@@ -95,8 +104,13 @@ export function ApprovalsView() {
   );
 
   const borrowedAuthority = useMemo(
-    () => summarizeBorrowedAuthority(viewerId, isOrgOwner, pendingData?.pages.flatMap((p) => p.data) ?? []),
-    [viewerId, isOrgOwner, pendingData],
+    () =>
+      summarizeBorrowedAuthority(
+        viewerMembershipId,
+        isOrgOwner,
+        pendingData?.pages.flatMap((p) => p.data) ?? [],
+      ),
+    [viewerMembershipId, isOrgOwner, pendingData],
   );
 
   const bulkApproveMutation = useBulkApprove();
@@ -149,6 +163,13 @@ export function ApprovalsView() {
 
   const handleTabSelect = useCallback((tab: ApprovalTab) => {
     setActiveTab(tab);
+    setSelection(new Set());
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setMemberFilter("all");
+    setDateFrom("");
+    setDateTo("");
     setSelection(new Set());
   }, []);
 
@@ -219,6 +240,7 @@ export function ApprovalsView() {
     onBulkApprove: handleBulkApprove,
     onBulkReject: handleBulkRejectOpen,
     isBulkPending,
+    onClearFilters: handleClearFilters,
   };
 
   return (

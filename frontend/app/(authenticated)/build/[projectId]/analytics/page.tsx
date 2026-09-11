@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import { use, useMemo } from "react";
+import { use, useCallback, useMemo } from "react";
 import { useProjectAnalytics } from "@/hooks/api/build";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   AnalyticsKpiStrip,
@@ -24,7 +25,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 export default function AnalyticsPage({
@@ -35,7 +36,16 @@ export default function AnalyticsPage({
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr, 10);
 
-  const { data: analytics, isLoading } = useProjectAnalytics(projectId);
+  const {
+    data: analytics,
+    isLoading,
+    isError,
+    refetch,
+  } = useProjectAnalytics(projectId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const stateData = useMemo(() => {
     if (!analytics?.stateDistribution) return [];
@@ -112,6 +122,24 @@ export default function AnalyticsPage({
               <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
             ))}
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Analytics"
+        subtitle="Velocity, health, and ticket insights"
+      >
+        <PmPageShell>
+          <ErrorState
+            className={PM_FILL_PANEL}
+            title="Couldn't load analytics"
+            description="The analytics for this project could not be read. Please try again."
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

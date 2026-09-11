@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EyeIcon } from "@animateicons/react/lucide";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   useReorgScenarios,
@@ -21,7 +23,7 @@ export function ReorgScenariosTab() {
   const [page, setPage] = useState(1);
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | undefined>(undefined);
 
-  const { data, isLoading } = useReorgScenarios({ page, limit: 20 });
+  const { data, isLoading, isError, error, refetch } = useReorgScenarios({ page, limit: 20 });
   const { data: simulation, isLoading: simLoading } = useSimulateScenario(selectedScenarioId);
   const deleteScenario = useDeleteReorgScenario();
 
@@ -35,6 +37,10 @@ export function ReorgScenariosTab() {
 
   function handleCloseSimulation() {
     setSelectedScenarioId(undefined);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   const columns: DataTableColumn<ReorgScenario>[] = [
@@ -90,6 +96,17 @@ export function ReorgScenariosTab() {
     );
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load reorg scenarios"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <>
       {selectedScenarioId && (
@@ -125,7 +142,7 @@ export function ReorgScenariosTab() {
             compact
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
+        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
     </>
   );

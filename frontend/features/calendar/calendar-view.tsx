@@ -21,18 +21,16 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
-import { EventCreateDialog } from "./event-create-dialog";
-import { EventDetailSheet } from "./event-detail-sheet";
-import { CalendarEventsPanel } from "./calendar-events-panel";
-import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
-import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
-import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
-import { HrEventDetailSheet } from "./hr-event-detail-sheet";
+import {
+  CalendarAgendaPreview,
+  CalendarListFallback,
+  CalendarOverlayFallback,
+  CalendarSheetFallback,
+} from "./calendar-lazy-fallbacks";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
-import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
-import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
+import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
@@ -41,17 +39,77 @@ import {
   CalendarToolbarPrimaryActions,
 } from "./calendar-toolbar";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
-import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 import { useCalendarViewState } from "./use-calendar-view-state";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
-const BigCalendarWrapper = dynamic(
+const CalendarGridLayer = dynamic(
   () =>
-    import("./big-calendar-wrapper").then((m) => ({
-      default: m.BigCalendarWrapper,
+    import("./calendar-grid-layer").then((m) => ({
+      default: m.CalendarGridLayer,
     })),
-  { ssr: false },
+  { ssr: false, loading: () => <CalendarListFallback label="Loading calendar" /> },
 );
+
+const CalendarEventsPanel = dynamic(
+  () =>
+    import("./calendar-events-panel").then((m) => ({
+      default: m.CalendarEventsPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading events" /> },
+);
+
+const EventCreateDialog = dynamic(
+  () =>
+    import("./event-create-dialog").then((m) => ({
+      default: m.EventCreateDialog,
+    })),
+  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading event form" /> },
+);
+
+const CreateTicketFromCalendarDialog = dynamic(
+  () =>
+    import("./create-ticket-from-calendar-dialog").then((m) => ({
+      default: m.CreateTicketFromCalendarDialog,
+    })),
+  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading ticket form" /> },
+);
+
+const EventDetailSheet = dynamic(
+  () =>
+    import("./event-detail-sheet").then((m) => ({
+      default: m.EventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const ExternalEventDetailSheet = dynamic(
+  () =>
+    import("./external-event-detail-sheet").then((m) => ({
+      default: m.ExternalEventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const HrEventDetailSheet = dynamic(
+  () =>
+    import("./hr-event-detail-sheet").then((m) => ({
+      default: m.HrEventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const CalendarAccountsSheet = dynamic(
+  () =>
+    import("./calendar-accounts-sheet").then((m) => ({
+      default: m.CalendarAccountsSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading calendar accounts" /> },
+);
+
+const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
+const NO_HR_EVENTS: import("./big-calendar-wrapper").BigCalEvent[] = [];
 
 export function CalendarView() {
   const router = useRouter();
@@ -111,10 +169,11 @@ export function CalendarView() {
     error: eventsError,
     refetch: refetchEvents,
   } = useCalendarEvents(rangeStart, rangeEnd);
-  const events = eventsResponse?.events ?? [];
+  const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
-  const { data: connections = [] } = useCalendarConnections();
+  const { data: connections = [], isLoading: connectionsLoading } =
+    useCalendarConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
 
@@ -123,60 +182,64 @@ export function CalendarView() {
     [connections],
   );
 
+  useCalendarSourceDeepLink();
+
+  const afterLoad = useAfterLoad();
+
+  const shellVariant = useShellVariant();
+  const isMobile = shellVariant === "mobile";
+  useEffect(() => {
+    if (isMobile) setViewMode("list");
+  }, [isMobile, setViewMode]);
+
   const { hiddenIds } = useCalendarAccountFilters();
-  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
+  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);
   const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
   const {
     visible: attendanceEventsVisible,
     toggle: toggleAttendanceEvents,
   } = useCalendarSourceVisibility("attendance", true);
-  const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd, hrEventsVisible);
-  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd, attendanceEventsVisible);
-  const calendarEvents = useMemo(() => {
-    const aggregateAttendanceDates = new Set(
-      events
-        .filter((event) => event.source === "attendance")
-        .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
-    );
-    return [
-      ...events,
-      ...selfAttendanceEvents.filter(
-        (event) =>
-          !aggregateAttendanceDates.has(
-            format(new Date(event.start), "yyyy-MM-dd"),
-          ),
-      ),
-    ];
-  }, [events, selfAttendanceEvents]);
+
+  const [gridCalendarEvents, setGridCalendarEvents] = useState<CalendarListItem[]>([]);
+  const handleGridCalendarEventsChange = useCallback(
+    (evts: CalendarListItem[]) => setGridCalendarEvents(evts),
+    [],
+  );
+  // External events take only the date range, so waiting for the connection
+  // list before asking is a pure waterfall. Ask optimistically and stop only
+  // once we know the org has no active connection.
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
-    activeConnectionCount > 0,
+    connectionsLoading || activeConnectionCount > 0,
   );
 
   const selectedEvent = useMemo<CalendarListItem | null>(
-    () =>
-      selectedEventId !== null
-        ? (calendarEvents.find((e) => e.id === selectedEventId) ?? null)
-        : null,
-    [selectedEventId, calendarEvents],
+    () => {
+      if (selectedEventId === null) return null;
+      return (
+        events.find((e) => e.id === selectedEventId) ??
+        gridCalendarEvents.find((e) => e.id === selectedEventId) ??
+        null
+      );
+    },
+    [selectedEventId, events, gridCalendarEvents],
   );
 
-  const { allCalEvents, visibleEvents, visibleRange } = useCalendarComputed({
-    events: calendarEvents,
+  const { visibleEvents, visibleRange } = useCalendarComputed({
+    events,
     externalData,
     hiddenIds,
     connections,
     currentDate,
     view,
-    hrCalEvents,
+    hrCalEvents: NO_HR_EVENTS,
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
 
   const handleRetryEvents = useCallback(() => { void refetchEvents(); }, [refetchEvents]);
-  const eventPropGetter = useEventPropGetter();
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -237,6 +300,59 @@ export function CalendarView() {
           hidePrimaryActions
         />
 
+        <div className="flex min-h-0 flex-1 gap-4">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div
+              ref={calContainerRef}
+              className={cn(
+                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
+                viewMode === "calendar" && view === "month"
+                  ? "overflow-y-scroll"
+                  : "overflow-hidden",
+              )}
+            >
+              {viewMode === "calendar" ? (
+                afterLoad ? (
+                  <CalendarGridLayer
+                    events={events}
+                    externalData={externalData}
+                    hiddenIds={hiddenIds}
+                    connections={connections}
+                    currentDate={currentDate}
+                    view={view}
+                    rangeStart={rangeStart}
+                    rangeEnd={rangeEnd}
+                    hrEventsVisible={hrEventsVisible}
+                    crmEventsVisible={crmEventsVisible}
+                    attendanceEventsVisible={attendanceEventsVisible}
+                    calHeight={calHeight}
+                    onView={setView}
+                    onNavigate={setCurrentDate}
+                    onSelectSlot={
+                      isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                    }
+                    onSelectEvent={handleSelectEvent}
+                    onCalendarEventsChange={handleGridCalendarEventsChange}
+                  />
+                ) : (
+                  <CalendarAgendaPreview events={visibleEvents} />
+                )
+              ) : isMobile ? (
+                <CalendarAgendaPreview events={visibleEvents} maxEvents={50} />
+              ) : afterLoad ? (
+                <CalendarEventsPanel
+                  mode={viewMode}
+                  events={visibleEvents}
+                  range={viewMode === "list" ? visibleRange : undefined}
+                  onSelectEvent={handleSelectEventById}
+                />
+              ) : (
+                <CalendarAgendaPreview events={visibleEvents} maxEvents={20} />
+              )}
+            </div>
+          </div>
+        </div>
+
         {eventsIsError && (
           <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
@@ -277,54 +393,21 @@ export function CalendarView() {
           </div>
         )}
 
-        <div className="flex min-h-0 flex-1 gap-4">
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div
-              ref={calContainerRef}
-              className={cn(
-                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
-                viewMode === "calendar" && view === "month"
-                  ? "overflow-y-scroll"
-                  : "overflow-hidden",
-              )}
-            >
-              {viewMode === "calendar" ? (
-                <BigCalendarWrapper
-                  events={allCalEvents}
-                  date={currentDate}
-                  view={view}
-                  calHeight={calHeight}
-                  onView={setView}
-                  onNavigate={setCurrentDate}
-                  onSelectSlot={
-                    isCalendarOverlayOpen ? undefined : guardedSelectSlot
-                  }
-                  onSelectEvent={handleSelectEvent}
-                  eventPropGetter={eventPropGetter}
-                />
-              ) : (
-                <CalendarEventsPanel
-                  mode={viewMode}
-                  events={visibleEvents}
-                  range={viewMode === "list" ? visibleRange : undefined}
-                  onSelectEvent={handleSelectEventById}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        {isCreateOpen && (
+          <EventCreateDialog
+            open
+            onOpenChange={setIsCreateOpen}
+            defaultSlot={createSlot}
+          />
+        )}
 
-        <EventCreateDialog
-          open={isCreateOpen}
-          onOpenChange={setIsCreateOpen}
-          defaultSlot={createSlot}
-        />
-
-        <CreateTicketFromCalendarDialog
-          open={isCreateTicketOpen}
-          onClose={handleCloseCreateTicket}
-          defaultSlot={createTicketSlot}
-        />
+        {isCreateTicketOpen && (
+          <CreateTicketFromCalendarDialog
+            open
+            onClose={handleCloseCreateTicket}
+            defaultSlot={createTicketSlot}
+          />
+        )}
 
         <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
           <DialogContent
@@ -360,19 +443,24 @@ export function CalendarView() {
           </DialogContent>
         </Dialog>
 
-        <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
-        <ExternalEventDetailSheet
-          event={selectedExternal}
-          onClose={handleCloseExternal}
-        />
-        <HrEventDetailSheet
-          event={selectedHrEvent}
-          onClose={handleCloseHrEvent}
-        />
-        <CalendarAccountsSheet
-          open={accountsOpen}
-          onClose={handleCloseAccounts}
-        />
+        {selectedEvent !== null && (
+          <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+        )}
+        {selectedExternal !== null && (
+          <ExternalEventDetailSheet
+            event={selectedExternal}
+            onClose={handleCloseExternal}
+          />
+        )}
+        {selectedHrEvent !== null && (
+          <HrEventDetailSheet
+            event={selectedHrEvent}
+            onClose={handleCloseHrEvent}
+          />
+        )}
+        {accountsOpen && (
+          <CalendarAccountsSheet open onClose={handleCloseAccounts} />
+        )}
       </div>
     </PageWrapper>
   );

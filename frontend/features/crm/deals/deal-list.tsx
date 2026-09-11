@@ -5,7 +5,7 @@ import { useCanState } from "@/hooks/api/access";
 import { useRouter } from "next/navigation";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   DropdownMenu,
@@ -18,7 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ErrorState, NoPermissionState } from "@/components/shared";
-import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { useOrgDisplay } from "@/hooks/api/org-display";

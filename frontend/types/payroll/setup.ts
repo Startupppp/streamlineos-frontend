@@ -1,3 +1,17 @@
+/**
+ * Every preview shape is inferred from the runtime contract that parses it, so a type here can
+ * never disagree with what the seam accepts.
+ */
+import type {
+  PreviewLine,
+  TemplatePreviewResult,
+  PolicyPreviewComponent,
+  PolicyPreviewResult,
+  ComplianceChecklistItem,
+  StatutoryPackItem,
+  StatutoryPackPreview,
+} from "@/hooks/api/payroll/setup-preview-schema";
+
 export const TOGGLE_KEYS = [
   "pf",
   "esi",
@@ -96,27 +110,14 @@ export type TemplateRow = {
   updatedAt: string;
 };
 
-export type PreviewLine = {
-  code: string;
-  name: string;
-  type: ComponentType;
-  calcMethod: CalcMethod;
-  monthlyAmount: string;
-  explain: string;
-};
-
-export type TemplatePreviewResult = {
-  template: TemplateRow;
-  effectiveToggles: Record<ToggleKey, boolean>;
-  annualCtc: string;
-  monthlyCtc: string;
-  components: PreviewLine[];
-  totals: {
-    grossEarnings: string;
-    totalDeductions: string;
-    employerContributions: string;
-    netTakeHome: string;
-  };
+export type {
+  PreviewLine,
+  TemplatePreviewResult,
+  PolicyPreviewComponent,
+  PolicyPreviewResult,
+  ComplianceChecklistItem,
+  StatutoryPackItem,
+  StatutoryPackPreview,
 };
 
 export type PolicyConfig = {
@@ -148,36 +149,6 @@ export type VersionRow = {
   reason: string;
 };
 
-export type ComplianceChecklistItem = {
-  key: string;
-  label: string;
-  detail: string;
-};
-
-export type StatutoryPackItemKind =
-  | "EMPLOYEE_DEDUCTION"
-  | "EMPLOYER_CONTRIBUTION"
-  | "WITHHOLDING";
-
-export type StatutoryPackItem = {
-  key: string;
-  label: string;
-  kind: StatutoryPackItemKind;
-  componentCode: string;
-  enabled: boolean;
-  calc: Record<string, unknown>;
-  note?: string;
-};
-
-export type StatutoryPackPreview = {
-  country: string;
-  countryName: string;
-  currency: string;
-  taxRegimeApplicable: boolean;
-  items: StatutoryPackItem[];
-  complianceChecklist: ComplianceChecklistItem[];
-};
-
 export type StatutoryPackConfig = {
   country: string;
   items: { key: string; enabled: boolean; percentOverride?: number; label?: string; kind?: string | null }[];
@@ -195,29 +166,6 @@ export type ToggleImpactResult = {
   toggle: ToggleKey;
   affectedEmployeeCount: number;
   affectedStatutoryCodes: string[];
-};
-
-export type ApprovalStage = {
-  stage: number;
-  stageName: string;
-  requiredPermission: string;
-};
-
-export type CalendarPlanEvent = {
-  type: string;
-  date: string;
-  title: string;
-};
-
-export type CalendarPlan = CalendarPlanEvent[];
-
-export type PolicyPreviewResult = {
-  toggles: Record<ToggleKey, boolean>;
-  components: PreviewLine[];
-  approvalChain: ApprovalStage[];
-  calendarPlan: CalendarPlan | null;
-  essOptions: Record<string, unknown>;
-  statutoryPack: StatutoryPackPreview;
 };
 
 export type ActivateChecklistItem = {

@@ -4,7 +4,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 

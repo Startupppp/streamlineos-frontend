@@ -1,13 +1,25 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-type StockoutRisk = "HIGH" | "MEDIUM" | "LOW";
+/** `NONE` is a variant with no demand, so no stockout date to project. */
+type StockoutRisk = "HIGH" | "MEDIUM" | "LOW" | "NONE";
+
+function toStockoutRisk(value: string): StockoutRisk {
+  return value === "HIGH" || value === "MEDIUM" || value === "LOW" ? value : "NONE";
+}
+
+function toNumber(value: string | number | null | undefined): number {
+  if (value == null) return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 export interface ReplenishmentRule {
   id: number;
@@ -15,7 +27,8 @@ export interface ReplenishmentRule {
   variantSku: string;
   productName: string;
   warehouseId: number;
-  warehouseName: string;
+  /** Null for a rule that applies to every warehouse. */
+  warehouseName: string | null;
   minQty: number;
   maxQty: number;
   reorderQty: number;
@@ -25,6 +38,60 @@ export interface ReplenishmentRule {
   vendorName: string | null;
   isActive: boolean;
   createdAt: string;
+}
+
+/**
+ * A rule as `GET /inventory/replenishment/rules` returns it: the row with its
+ * variant and warehouse nested and its quantities as decimal strings. The
+ * screens read the flattened `ReplenishmentRule`, so the list rendered blanks
+ * for SKU, product and warehouse until this was mapped.
+ */
+interface RawReplenishmentRule {
+  id: number;
+  orgId: string;
+  productVariantId: number;
+  warehouseId: number | null;
+  minQty: string;
+  maxQty: string | null;
+  reorderQty: string | null;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+  safetyStock: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  productVariant: { id: number; name: string; sku: string; product: { id: number; name: string; sku: string } };
+  warehouse: { id: number; name: string } | null;
+}
+
+/** What a create or update answers with: the stored row, relations not loaded. */
+type RawReplenishmentRuleDetail = Omit<RawReplenishmentRule, "productVariant" | "warehouse">;
+
+function mapRule(raw: RawReplenishmentRule): ReplenishmentRule {
+  return {
+    id: raw.id,
+    variantId: raw.productVariantId,
+    variantSku: raw.productVariant.sku,
+    productName: raw.productVariant.product.name,
+    warehouseId: raw.warehouseId ?? 0,
+    warehouseName: raw.warehouse?.name ?? null,
+    minQty: toNumber(raw.minQty),
+    maxQty: toNumber(raw.maxQty),
+    reorderQty: toNumber(raw.reorderQty),
+    safetyStock: raw.safetyStock != null ? toNumber(raw.safetyStock) : null,
+    leadTimeDays: raw.leadTimeDays,
+    vendorId: raw.vendorId,
+    vendorName: null,
+    isActive: raw.isActive,
+    createdAt: raw.createdAt,
+  };
+}
+
+interface RawReplenishmentRuleListResponse {
+  items: RawReplenishmentRule[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 interface ReplenishmentRuleListResponse {
@@ -55,6 +122,43 @@ export interface ForecastRow {
   currentStock: number;
 }
 
+/**
+ * A row as `GET /inventory/forecasting` returns it. `ForecastRow` is the shape
+ * the screen reads; the names differ (`avgWeeklyDemand`, `projectedWeeks`,
+ * `onHand`), so unmapped the demand, projection and stock columns were empty.
+ */
+interface RawForecastItem {
+  variantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  onHand: number;
+  onOrder: number;
+  avgWeeklyDemand: number;
+  weeksOfStock: number | null;
+  stockoutRisk: string;
+  projectedWeeks: { week: number; projectedDemand: number; projectedStock: number }[];
+}
+
+interface RawForecastListResponse {
+  items: RawForecastItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function mapForecastRow(raw: RawForecastItem): ForecastRow {
+  return {
+    variantId: raw.variantId,
+    variantSku: raw.variantSku,
+    productName: raw.productName,
+    weeklyDemand: raw.avgWeeklyDemand,
+    projection: raw.projectedWeeks.map((w) => ({ week: w.week, projectedQty: w.projectedStock })),
+    stockoutRisk: toStockoutRisk(raw.stockoutRisk),
+    currentStock: raw.onHand,
+  };
+}
+
 interface ForecastListResponse {
   items: ForecastRow[];
   total: number;
@@ -79,12 +183,14 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
   const canView = useCan("inventory:replenishment:manage");
   return useQuery<ReplenishmentRuleListResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentRules(params),
-    queryFn: () =>
-      apiClient.get<ReplenishmentRuleListResponse>("/inventory/replenishment/rules", {
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<RawReplenishmentRuleListResponse>("/inventory/replenishment/rules", {
         ...(params?.isActive !== undefined ? { isActive: String(params.isActive) } : {}),
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal);
+      return { items: raw.items.map(mapRule), total: raw.total, page: raw.page, totalPages: raw.totalPages };
+    },
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -92,10 +198,10 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
 
 export function useCreateReplenishmentRule() {
   const qc = useQueryClient();
-  return useIdempotentMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>({
+  return useAuthorizedIdempotentMutation<RawReplenishmentRuleDetail, Error, CreateReplenishmentRuleInput>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "create"],
     mutationFn: (data, idempotencyKey) =>
-      apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post<RawReplenishmentRuleDetail>("/inventory/replenishment/rules", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -104,14 +210,14 @@ export function useCreateReplenishmentRule() {
 
 export function useUpdateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<
-    ReplenishmentRule,
+  return useAuthorizedMutation<
+    RawReplenishmentRuleDetail,
     Error,
     { ruleId: number; data: Partial<CreateReplenishmentRuleInput> }
-  >({
+  >("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "update"],
     mutationFn: ({ ruleId, data }) =>
-      apiClient.patch<ReplenishmentRule>(`/inventory/replenishment/rules/${ruleId}`, data),
+      apiClient.patch<RawReplenishmentRuleDetail>(`/inventory/replenishment/rules/${ruleId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
     },
@@ -120,7 +226,7 @@ export function useUpdateReplenishmentRule() {
 
 export function useDeactivateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "deactivate"],
     mutationFn: (ruleId) =>
       apiClient.delete<void>(`/inventory/replenishment/rules/${ruleId}`),
@@ -134,11 +240,13 @@ export function useForecasting(params?: ForecastParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<ForecastListResponse, Error>({
     queryKey: queryKeys.inventory.forecasting(params),
-    queryFn: () =>
-      apiClient.get<ForecastListResponse>("/inventory/forecasting", {
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<RawForecastListResponse>("/inventory/forecasting", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal);
+      return { items: raw.items.map(mapForecastRow), total: raw.total, page: raw.page, totalPages: raw.totalPages };
+    },
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -289,9 +397,9 @@ export function useForecastReorderProposal(
   const canManage = useCan("inventory:replenishment:manage");
   return useQuery<ReorderProposal, Error>({
     queryKey: reorderProposalKey(productVariantId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ReorderProposal>(
-        `/inventory/forecasting/reorder-proposal/${productVariantId}`,
+        `/inventory/forecasting/reorder-proposal/${productVariantId}`, undefined, signal,
       ),
     staleTime: 60_000,
     ...options,
@@ -308,8 +416,8 @@ export function useDemandBaseline(
     // The query is disabled while the id is null, so the key only has to be
     // stable and distinct for that state rather than meaningful.
     queryKey: queryKeys.inventory.demandBaseline(productVariantId ?? 0),
-    queryFn: () =>
-      apiClient.get<DemandBaselineReport>(`/inventory/forecasting/baseline/${productVariantId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<DemandBaselineReport>(`/inventory/forecasting/baseline/${productVariantId}`, undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canManage && productVariantId !== null && (options?.enabled ?? true),
@@ -317,7 +425,7 @@ export function useDemandBaseline(
 }
 
 export function useSimulateReplenishment() {
-  return useMutation<SimulationResult, Error, SimulateInput>({
+  return useAuthorizedMutation<SimulationResult, Error, SimulateInput>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "forecasting", "simulate"],
     mutationFn: ({ productVariantId, scenarios, serviceLevel }) =>
       apiClient.post<SimulationResult>(

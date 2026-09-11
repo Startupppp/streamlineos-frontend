@@ -2,9 +2,8 @@
 
 import { useReducer, useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ChevronLeft, History, FlaskConical } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from "framer-motion";
-import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { History, FlaskConical } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCrmAutomationRules,
   useCreateCrmAutomationRule,
   useUpdateCrmAutomationRule,
-  useTestCrmAutomationRule,
   useAutomationEvents,
   useAutomationActions,
 } from "@/hooks/api/crm";
@@ -28,38 +28,48 @@ import {
   initialBuilderState,
   serializeToGraph,
 } from "./builder-types";
-import { TriggerCard, ConditionRowCard, ActionNodeCard, WaitCard } from "./node-cards";
-import { BranchNodeCard, ExitNodeCard } from "./branch-exit-cards";
+import { AutomationFlowCanvas } from "./automation-flow-canvas";
+import { AutomationTestPanel } from "./automation-test-panel";
 import { RunHistoryDrawer } from "./run-history-drawer";
 
 interface AutomationBuilderProps {
   automationId: string;
 }
 
-const CONNECTOR_VARIANTS = {
-  hidden: { opacity: 0, scaleY: 0 },
-  visible: { opacity: 1, scaleY: 1 },
-};
-
 export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
   const isNew = automationId === "new";
 
   const [state, dispatch] = useReducer(builderReducer, initialBuilderState);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [testPayload, setTestPayload] = useState<Array<{ key: string; value: string }>>([{ key: "", value: "" }]);
   const [testPanelOpen, setTestPanelOpen] = useState(false);
-  const [testResult, setTestResult] = useState<{ matched: boolean; nodes: Array<{ nodeId: string; type: string; result: string }> } | null>(null);
   const loadedRef = useRef(false);
 
-  const { data: rulesData, isLoading: rulesLoading } = useCrmAutomationRules();
-  const { data: eventsData, isLoading: eventsLoading } = useAutomationEvents();
-  const { data: actionsData, isLoading: actionsLoading } = useAutomationActions();
+  const {
+    data: rulesData,
+    isLoading: rulesLoading,
+    isError: rulesFailed,
+    error: rulesError,
+    refetch: refetchRules,
+    access: rulesAccess,
+  } = useCrmAutomationRules();
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    isError: eventsFailed,
+    error: eventsError,
+    refetch: refetchEvents,
+  } = useAutomationEvents();
+  const {
+    data: actionsData,
+    isLoading: actionsLoading,
+    isError: actionsFailed,
+    error: actionsError,
+    refetch: refetchActions,
+  } = useAutomationActions();
 
   const createRule = useCreateCrmAutomationRule();
   const updateRule = useUpdateCrmAutomationRule();
-  const testRule = useTestCrmAutomationRule();
 
   const events = eventsData?.events ?? [];
   const actions = actionsData?.actions ?? [];
@@ -87,43 +97,21 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
     }
   }, [isNew, rulesData, automationId]);
 
+  const handleRetryRules = useCallback(() => {
+    void refetchRules();
+  }, [refetchRules]);
+
+  const handleRetryRegistry = useCallback(() => {
+    void refetchEvents();
+    void refetchActions();
+  }, [refetchEvents, refetchActions]);
+
   const handleToggleTestPanel = useCallback(() => setTestPanelOpen((v) => !v), []);
+  const handleCloseTestPanel = useCallback(() => setTestPanelOpen(false), []);
   const handleToggleHistory = useCallback(() => setHistoryOpen((v) => !v), []);
 
-  const handleTriggerChange = useCallback((event: string) => dispatch({ type: "SET_TRIGGER", event }), []);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => dispatch({ type: "SET_NAME", name: e.target.value }), []);
   const handleActiveChange = useCallback((isActive: boolean) => dispatch({ type: "SET_ACTIVE", isActive }), []);
-
-  const handleAddCondition = useCallback(() => dispatch({ type: "ADD_CONDITION" }), []);
-  const handleUpdateCondition = useCallback((index: number, field: "field" | "operator" | "value", val: string) => {
-    dispatch({ type: "UPDATE_CONDITION", index, field, value: val });
-  }, []);
-  const handleRemoveCondition = useCallback((index: number) => dispatch({ type: "REMOVE_CONDITION", index }), []);
-
-  const handleAddActionNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "action" }), []);
-  const handleAddWaitNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "wait" }), []);
-  const handleUpdateNodeAction = useCallback((nodeId: string, actionKey: string) => dispatch({ type: "UPDATE_NODE_ACTION", nodeId, actionKey }), []);
-  const handleUpdateNodeConfig = useCallback((nodeId: string, configKey: string, val: string) => dispatch({ type: "UPDATE_NODE_CONFIG", nodeId, configKey, value: val }), []);
-  const handleUpdateWaitHours = useCallback((nodeId: string, hours: number) => dispatch({ type: "UPDATE_NODE_WAIT_HOURS", nodeId, hours }), []);
-  const handleRemoveNode = useCallback((nodeId: string) => dispatch({ type: "REMOVE_NODE", nodeId }), []);
-
-  const handleAddBranchBranch = useCallback((nodeId: string) => dispatch({ type: "ADD_BRANCH_BRANCH", nodeId }), []);
-  const handleUpdateBranchCondition = useCallback((nodeId: string, branchIndex: number, field: "field" | "operator" | "value", val: string) => {
-    dispatch({ type: "UPDATE_BRANCH_CONDITION", nodeId, branchIndex, field, value: val });
-  }, []);
-  const handleRemoveBranchBranch = useCallback((nodeId: string, branchIndex: number) => dispatch({ type: "REMOVE_BRANCH_BRANCH", nodeId, branchIndex }), []);
-  const handleAddBranchNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "branch" }), []);
-  const handleAddExitNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "exit" }), []);
-
-  const handleDragEnd = useCallback((result: DropResult) => {
-    if (!result.destination) return;
-    const reordered = Array.from(state.nodes);
-    const [moved] = reordered.splice(result.source.index, 1);
-    if (moved) {
-      reordered.splice(result.destination.index, 0, moved);
-      dispatch({ type: "REORDER_NODES", nodes: reordered });
-    }
-  }, [state.nodes]);
 
   const handleSave = useCallback(() => {
     if (!state.name.trim()) {
@@ -134,14 +122,14 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
       toast.error("Please select a trigger event");
       return;
     }
-    const actions: string[] = state.nodes
+    const actionKeys: string[] = state.nodes
       .filter((n) => n.nodeType === "action" && n.type)
       .map((n) => n.type);
     const payload = {
       name: state.name,
       trigger: state.triggerEvent,
       conditions: state.conditions.map((c) => ({ field: c.field, operator: "equals" as const, value: c.value })),
-      actions,
+      actions: actionKeys,
       isActive: state.isActive,
       isDraft: false,
       graph: serializeToGraph(state.nodes),
@@ -163,33 +151,16 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
     }
   }, [state, isNew, createRule, updateRule, automationId, router]);
 
-  const handleRunTest = useCallback(() => {
-    const samplePayload = Object.fromEntries(
-      testPayload.filter((p) => p.key.trim()).map((p) => [p.key, p.value]),
-    );
-    if (isNew) {
-      toast.info("Save the automation first to run a test");
-      return;
-    }
-    testRule.mutate(
-      { id: parseInt(automationId, 10), payload: samplePayload },
-      {
-        onSuccess: (data) => {
-          setTestResult(data as { matched: boolean; nodes: Array<{ nodeId: string; type: string; result: string }> });
-          toast.success("Test complete");
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [testPayload, isNew, testRule, automationId]);
-
-  const handleAddTestPayloadRow = useCallback(() => setTestPayload((p) => [...p, { key: "", value: "" }]), []);
-
   const isPending = createRule.isPending || updateRule.isPending;
   const ruleId = isNew ? 0 : parseInt(automationId, 10);
 
   const isPageLoading = !isNew && rulesLoading;
   const registryLoading = eventsLoading || actionsLoading;
+  const registryFailed = eventsFailed || actionsFailed;
+  const registryError = eventsError ?? actionsError;
+  const existingRule = isNew
+    ? undefined
+    : rulesData?.rules.find((rule) => rule.id === ruleId);
 
   if (isPageLoading) {
     return (
@@ -201,13 +172,33 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
     );
   }
 
-  const containerVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
+  if (!isNew && rulesFailed) {
+    return (
+      <PageWrapper title="Automation" backHref="/crm/settings/automations">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this automation"
+          description={getErrorMessage(rulesError)}
+          onRetry={handleRetryRules}
+        />
+      </PageWrapper>
+    );
+  }
 
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
+  if (!isNew && !existingRule) {
+    return (
+      <PageWrapper title="Automation" backHref="/crm/settings/automations">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="automations"
+          title="Automation not found"
+          description="This automation no longer exists, or it was removed by someone else."
+          action={{ label: "Back to automations", href: "/crm/settings/automations" }}
+          access={rulesAccess}
+        />
+      </PageWrapper>
+    );
+  }
 
   return (
     <>
@@ -220,7 +211,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
         subtitle={!isNew ? (
           <span className="flex items-center gap-1.5">
             <Badge variant="outline" className="text-micro h-4 px-1.5">
-              v{(rulesData?.rules.find((r) => r.id === ruleId)?.version ?? 1)}{(rulesData?.rules.find((r) => r.id === ruleId)?.isDraft) ? " · draft" : ""}
+              v{existingRule?.version ?? 1}{existingRule?.isDraft ? " · draft" : ""}
             </Badge>
           </span>
         ) : undefined}
@@ -261,234 +252,25 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
               </div>
             </div>
 
-            <LayoutGroup>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-2"
-              >
-                <motion.div variants={itemVariants}>
-                  {registryLoading ? (
-                    <Skeleton className="h-20 w-full rounded-xl" />
-                  ) : (
-                    <TriggerCard value={state.triggerEvent} events={events} onChange={handleTriggerChange} />
-                  )}
-                </motion.div>
-
-                {state.conditions.length > 0 && (
-                  <motion.div variants={itemVariants} className="rounded-xl border border-border bg-muted/10 p-3 space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground">Conditions (all must match)</span>
-                    <AnimatePresence>
-                      {state.conditions.map((cond, i) => (
-                        <ConditionRowCard
-                          key={i}
-                          condition={cond}
-                          index={i}
-                          onUpdate={handleUpdateCondition}
-                          onRemove={handleRemoveCondition}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-
-                <motion.div variants={itemVariants}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs w-full border-dashed"
-                    onClick={handleAddCondition}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Add Condition
-                  </Button>
-                </motion.div>
-
-                <Connector shouldReduceMotion={shouldReduceMotion} />
-
-                <motion.div variants={itemVariants}>
-                  <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="nodes">
-                      {(droppableProvided) => (
-                        <div
-                          ref={droppableProvided.innerRef}
-                          {...droppableProvided.droppableProps}
-                          className="space-y-2"
-                        >
-                          <AnimatePresence>
-                            {state.nodes.map((node, index) => (
-                              <Draggable key={node.id} draggableId={node.id} index={index}>
-                                {(draggableProvided) => (
-                                  <div
-                                    ref={draggableProvided.innerRef}
-                                    {...draggableProvided.draggableProps}
-                                  >
-                                    {node.nodeType === "wait" ? (
-                                      <WaitCard
-                                        waitHours={node.waitHours ?? 24}
-                                        onChangeHours={(h) => handleUpdateWaitHours(node.id, h)}
-                                        onRemove={() => handleRemoveNode(node.id)}
-                                      />
-                                    ) : node.nodeType === "branch" ? (
-                                      <BranchNodeCard
-                                        node={node}
-                                        dragHandleProps={draggableProvided.dragHandleProps ?? undefined}
-                                        onAddBranch={handleAddBranchBranch}
-                                        onUpdateBranchCondition={handleUpdateBranchCondition}
-                                        onRemoveBranch={handleRemoveBranchBranch}
-                                        onRemoveNode={handleRemoveNode}
-                                      />
-                                    ) : node.nodeType === "exit" ? (
-                                      <ExitNodeCard
-                                        nodeId={node.id}
-                                        dragHandleProps={draggableProvided.dragHandleProps ?? undefined}
-                                        onRemove={handleRemoveNode}
-                                      />
-                                    ) : (
-                                      <ActionNodeCard
-                                        node={node}
-                                        actions={actions}
-                                        dragHandleProps={draggableProvided.dragHandleProps ?? undefined}
-                                        onUpdateAction={handleUpdateNodeAction}
-                                        onUpdateConfig={handleUpdateNodeConfig}
-                                        onRemove={handleRemoveNode}
-                                      />
-                                    )}
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                          </AnimatePresence>
-                          {droppableProvided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs flex-1 border-dashed"
-                    onClick={handleAddActionNode}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Add Action
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs border-dashed border-status-warning-rule text-status-warning-ink hover:bg-status-warning-surface"
-                    onClick={handleAddWaitNode}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Wait
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs border-dashed border-primary/30 text-primary hover:bg-primary/5"
-                    onClick={handleAddBranchNode}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Branch
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs border-dashed border-destructive/30 text-destructive hover:bg-destructive/10"
-                    onClick={handleAddExitNode}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Exit
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </LayoutGroup>
+            <AutomationFlowCanvas
+              state={state}
+              dispatch={dispatch}
+              events={events}
+              actions={actions}
+              registryLoading={registryLoading}
+              registryFailed={registryFailed}
+              registryError={registryError}
+              onRetryRegistry={handleRetryRegistry}
+            />
           </div>
 
           <AnimatePresence>
             {testPanelOpen && (
-              <motion.aside
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 24 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-72 shrink-0 rounded-xl border border-border bg-card p-4 space-y-3 self-start sticky top-4"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Test Panel</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    aria-label="Close test panel"
-                    onClick={handleToggleTestPanel}
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Sample Payload</Label>
-                  {testPayload.map((row, i) => (
-                    <div key={i} className="flex gap-1.5">
-                      <Input
-                        className="text-xs"
-                        placeholder="key"
-                        value={row.key}
-                        onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, key: e.target.value } : r))}
-                      />
-                      <Input
-                        className="text-xs"
-                        placeholder="value"
-                        value={row.value}
-                        onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, value: e.target.value } : r))}
-                      />
-                    </div>
-                  ))}
-                  <Button variant="outline" size="sm" className="text-xs w-full" onClick={handleAddTestPayloadRow}>
-                    <Plus className="h-3 w-3 mr-1" /> Row
-                  </Button>
-                </div>
-                <LoadingButton
-                  size="sm"
-                  className="text-xs w-full"
-                  onClick={handleRunTest}
-                  isPending={testRule.isPending}
-                  loadingText="Running..."
-                >
-                  Run Test
-                </LoadingButton>
-                {testResult && (
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <div className={`text-xs font-medium ${testResult.matched ? "text-status-success-ink" : "text-status-danger-ink"}`}>
-                      {testResult.matched ? "Conditions matched" : "Conditions did not match"}
-                    </div>
-                    <div className="space-y-1">
-                      {testResult.nodes.map((n) => (
-                        <div key={n.nodeId} className={`flex items-center gap-1.5 text-dense rounded px-2 py-1 ${n.result === "pass" || n.result === "ok" ? "bg-status-success-surface text-status-success-ink" : "bg-status-danger-surface text-status-danger-ink"}`}>
-                          <span className="font-medium">{n.type}</span>
-                          <span className="text-micro opacity-70">{n.result}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </motion.aside>
+              <AutomationTestPanel ruleId={ruleId} isNew={isNew} onClose={handleCloseTestPanel} />
             )}
           </AnimatePresence>
         </div>
       </PageWrapper>
     </>
-  );
-}
-
-function Connector({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
-  return (
-    <motion.div
-      variants={CONNECTOR_VARIANTS}
-      className="flex items-center justify-center py-1"
-      style={{ transformOrigin: "top" }}
-      transition={shouldReduceMotion ? { duration: 0 } : undefined}
-    >
-      <div className="w-0.5 h-6 bg-border rounded-full" />
-    </motion.div>
   );
 }

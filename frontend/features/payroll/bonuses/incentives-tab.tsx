@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_OPTIONS = [
@@ -63,7 +65,7 @@ export function IncentivesTab() {
   const [approveTarget, setApproveTarget] = useState<Incentive | null>(null);
   const [approvedAmount, setApprovedAmount] = useState("");
 
-  const { data, isLoading } = useIncentives({
+  const { data, isLoading, isError, error, refetch } = useIncentives({
     status: istatus === "all" ? undefined : istatus,
     page,
     limit: 20,
@@ -72,6 +74,19 @@ export function IncentivesTab() {
   const approveIncentive = useApproveIncentive();
   const rejectIncentive = useRejectIncentive();
   const canApprove = useCan("crm:incentives:approve");
+
+  const filtersActive = istatus !== "all";
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("i_status");
+    router.replace(`?${params.toString()}`, { scroll: false });
+    setPage(1);
+  }, [router, searchParams]);
 
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -247,28 +262,43 @@ export function IncentivesTab() {
             </SelectContent>
           </Select>
         </div>
-        <DataTable
-          className="flex-1 min-h-0"
-          data={data?.incentives ?? []}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          minWidth="800px"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total: data?.total ?? 0,
-            onPageChange: setPage,
-          }}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyTargetIllustration />}
-              title="No incentives found"
-              description="No sales incentives match the current filters."
-            />
-          }
-        />
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load incentives"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={data?.incentives ?? []}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="800px"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: data?.incentives.length ?? 0,
+              onPageChange: setPage,
+            }}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyTargetIllustration />}
+                title="No incentives yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Sales incentives raised for your reps will appear here."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+              />
+            }
+          />
+        )}
       </div>
 
       <Dialog open={approveTarget !== null} onOpenChange={handleApproveDialogChange}>

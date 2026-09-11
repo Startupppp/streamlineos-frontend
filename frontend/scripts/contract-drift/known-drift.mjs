@@ -5,6 +5,7 @@ export function driftKeyForEntry(entry) {
     const sorted = [...entry.offendingMembers].sort();
     return `ENUM:${entry.method} ${entry.path}:${entry.field}:[${sorted.join(",")}]`;
   }
+  if (entry.type === "query-extra") return `EXTRAQ:${entry.method} ${entry.path}:${entry.field}`;
   return `EXTRA:${entry.method} ${entry.path}:${entry.field}`;
 }
 
@@ -32,10 +33,12 @@ export function extractDriftKeysFromViolation(violation) {
     }
     return keys;
   }
-  const extraPrefix = "extra body fields on ";
-  if (violation.startsWith(extraPrefix)) {
-    const rest = violation.slice(extraPrefix.length);
-    const suffix = " not in contract schema: ";
+  for (const [prefix, suffix, keyPrefix] of [
+    ["extra body fields on ", " not in contract schema: ", "EXTRA"],
+    ["extra query params on ", " not in contract parameters: ", "EXTRAQ"],
+  ]) {
+    if (!violation.startsWith(prefix)) continue;
+    const rest = violation.slice(prefix.length);
     const suffixIdx = rest.indexOf(suffix);
     if (suffixIdx < 0) return keys;
     const endpointStr = rest.slice(0, suffixIdx);
@@ -45,7 +48,7 @@ export function extractDriftKeysFromViolation(violation) {
     const method = endpointStr.slice(0, spaceIdx);
     const path = endpointStr.slice(spaceIdx + 1);
     for (const field of fieldsPart.split(", ").map((s) => s.trim()).filter(Boolean)) {
-      keys.add(`EXTRA:${method} ${path}:${field}`);
+      keys.add(`${keyPrefix}:${method} ${path}:${field}`);
     }
     return keys;
   }

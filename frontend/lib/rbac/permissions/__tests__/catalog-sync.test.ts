@@ -1,49 +1,24 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
-import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
-import { backendPath } from "@/lib/test-support/backend-path";
+import {
+  ACCESS_MANAGED_MODULES,
+  MODULE_ACCESS_PERMISSIONS,
+} from "../module-access";
+import {
+  PERMISSION_CATALOG_PATH,
+  backendPermissionNames,
+  delegableModuleIds,
+} from "@/test-utils/permission-catalog";
 
 /**
- * `backend/` and `frontend/` are siblings inside one checkout, so this walks up
- * five levels — `__tests__` → `permissions` → `rbac` → `lib` → `frontend` — and
- * then down into the backend.
- *
- * It has been wrong twice, in both directions: once resolving to
- * `streamlineos-frontend/backend/...`, and once to a `streamlineos-backend`
- * sibling repository. Neither has ever existed here. Each time,
- * `backendAvailable` was false and all five cross-repo assertions returned
- * before asserting anything — including the ghost-key check this file exists to
- * provide. The first test below is the guard against a third time: it fails
- * loudly rather than letting the suite pass while proving nothing.
+ * The backend checkout sits at a different relative path on different machines,
+ * and a hardcoded guess here was wrong twice in both directions; in CI, which
+ * clones one repository, it was wrong every time and all five cross-repo
+ * assertions returned before asserting anything. The catalogue is now vendored
+ * as contracts/permission-catalog.json, so these checks run everywhere and
+ * `check:permission-catalog` is what keeps the copy honest.
  */
-/**
- * Resolved by looking, not by counting `..` segments.
- *
- * The comment above documents two wrong guesses; the hardcoded path was a third,
- * resolving to `streamlineos-frontend/backend/...` on the checkout this actually
- * runs in. Each time the five cross-repo assertions below returned before
- * asserting anything, and the suite stayed green while the drift guard it exists
- * to be was switched off.
- *
- * A list of candidates ends that argument: the layout may be `backend/` beside
- * `frontend/` in one checkout or `streamlineos-backend/` beside
- * `streamlineos-frontend/` in another, and this finds whichever is there. The
- * first test still fails loudly if none of them is, because a fourth layout is
- * likelier than this list being complete.
- */
-const BACKEND_PERMS_DIR = backendPath("src/modules/rbac/permissions");
-
-const EXCLUDED_BACKEND_FILES = new Set([
-  "index.ts",
-  "catalog.ts",
-  "role-defaults.ts",
-  "types.ts",
-]);
-
-function extractNamesFromSource(source: string): string[] {
-  return [...source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)].map((m) => m[1]);
-}
 
 function readPermissionKeyValues(): Set<string> {
   const permissionDirectory = path.resolve(__dirname, "..");
@@ -71,17 +46,22 @@ describe("permission catalog sync", () => {
 
   beforeAll(() => {
     try {
-      const files = fs
-        .readdirSync(BACKEND_PERMS_DIR)
-        .filter((f) => f.endsWith(".ts") && !EXCLUDED_BACKEND_FILES.has(f));
-      const names = files.flatMap((f) =>
-        extractNamesFromSource(fs.readFileSync(path.join(BACKEND_PERMS_DIR, f), "utf8")),
-      );
-      backendNames = new Set([
-        ...names.filter((name) => !name.includes("${")),
-        ...MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
-      ]);
-      backendAvailable = true;
+      /**
+       * The comparison set is the vendored backend catalogue verbatim, generated
+       * `<module>:access:view|manage` keys included.
+       *
+       * It used to subtract those keys on both sides and substitute the
+       * frontend's own `MODULE_ACCESS_PERMISSIONS` for them. That subtraction was
+       * load-bearing: `ACCESS_MANAGED_MODULES` listed 10 of the backend's 14
+       * delegable modules and `feedbucket:access:view|manage` were absent from
+       * the `PermissionKey` union, and cancelling the generated keys out of both
+       * sides is exactly what stopped the phantom, union-coverage and ghost
+       * assertions below from seeing any of it. The list is now complete, so the
+       * subtraction is gone and those three assertions cover the module-access
+       * half of the catalogue for the first time.
+       */
+      backendNames = backendPermissionNames();
+      backendAvailable = backendNames.size > 400;
     } catch {
       backendNames = new Set();
       backendAvailable = false;
@@ -89,10 +69,40 @@ describe("permission catalog sync", () => {
   });
 
   it("can reach the backend catalog — the cross-repo checks below assert nothing without it", () => {
-    expect({ backendAvailable, dir: BACKEND_PERMS_DIR }).toEqual({
+    expect({ backendAvailable, artifact: PERMISSION_CATALOG_PATH }).toEqual({
       backendAvailable: true,
-      dir: BACKEND_PERMS_DIR,
+      artifact: PERMISSION_CATALOG_PATH,
     });
+    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
+  });
+
+  /**
+   * The module-access half of the catalogue is GENERATED from a list of module
+   * ids rather than declared key by key, so a missing id silently removes two
+   * real permissions instead of failing to compile. Asserting the list itself
+   * against the vendored `delegableModuleIds()` is the only place that drift is
+   * visible: it was 10 against the backend's 14 and every other assertion in
+   * this file was arranged around it.
+   */
+  it("ACCESS_MANAGED_MODULES is exactly the backend's delegable modules", () => {
+    if (!backendAvailable) return;
+    expect([...ACCESS_MANAGED_MODULES].sort()).toEqual(
+      [...delegableModuleIds()].sort(),
+    );
+  });
+
+  it("generates both access keys for every delegable module", () => {
+    if (!backendAvailable) return;
+    const generated = new Set(
+      MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
+    );
+    const missing = delegableModuleIds()
+      .flatMap((moduleId) => [
+        `${moduleId}:access:view`,
+        `${moduleId}:access:manage`,
+      ])
+      .filter((name) => !generated.has(name));
+    expect(missing).toEqual([]);
   });
 
   it("has no duplicate permission names in the frontend catalog", () => {
@@ -124,7 +134,12 @@ describe("permission catalog sync", () => {
    * The reverse of the phantom check above, and the direction that was unguarded:
    * a key in the union with no backing catalog entry type-checks everywhere and
    * makes `useCan` false forever, silently hiding the control it gates.
-   * `*:access:*` keys are generated per managed module rather than declared.
+   *
+   * `*:access:*` keys used to be exempted here, which is why nothing noticed
+   * that the union carried thirteen modules' access keys against the backend's
+   * fourteen. They are ordinary catalogue entries in the vendored artifact, so
+   * the exemption is gone and a `kb:access:view` — a key for a module with no
+   * ladder — now fails instead of passing.
    */
   it("has no union-only ghosts — every PermissionKey exists in the backend catalog", () => {
     if (!backendAvailable) return;
@@ -133,9 +148,7 @@ describe("permission catalog sync", () => {
       // non-key unions such as baselineScope's "own" | "all". A permission key
       // always contains a colon.
       .filter((name) => name.includes(":"))
-      .filter(
-        (name) => !backendNames.has(name) && !/^[a-z0-9-]+:access:(view|manage)$/.test(name),
-      );
+      .filter((name) => !backendNames.has(name));
     expect(ghosts).toEqual([]);
   });
 

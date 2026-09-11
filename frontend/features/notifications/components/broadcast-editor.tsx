@@ -26,7 +26,7 @@ import {
   NOTIFICATION_CATEGORY_CONFIG,
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_PRIORITY_CONFIG,
-} from "@/features/notifications/notification-types";
+} from "@/lib/notification-types";
 import { broadcastSchema, type BroadcastFormValues } from "@/features/notifications/broadcast-schema";
 import type { Broadcast } from "@/types/notifications";
 

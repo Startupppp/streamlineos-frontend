@@ -1,10 +1,17 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  workerContract,
+  workerEngagementContract,
+  workerEngagementListContract,
+  workersPageContract,
+} from "@/hooks/api/directory/workers-schema";
 import type {
   CreateEngagementInput,
   CreateWorkerInput,
@@ -28,9 +35,9 @@ export function useWorkers(params: UseWorkersParams = {}) {
   const { cursor, limit = 20, status, search, organizationPersonId } = params;
   const queryParams = workersListParams(params);
 
-  return useQuery({
-    queryKey: queryKeys.directory.workers(queryParams),
-    queryFn: () => {
+  return useQuery<WorkersPage, Error>({
+    queryKey: directoryAndOwnershipQueryKeys.directory.workers(queryParams),
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
       });
@@ -38,7 +45,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
       if (status) searchParams.set("status", status);
       if (search) searchParams.set("search", search);
       if (organizationPersonId) searchParams.set("organizationPersonId", organizationPersonId);
-      return apiClient.get<WorkersPage>(`/directory/workers?${searchParams.toString()}`);
+      return apiClient.get(`/directory/workers?${searchParams.toString()}`, undefined, signal, workersPageContract);
     },
     staleTime: 60_000,
     enabled: canView,
@@ -47,13 +54,13 @@ export function useWorkers(params: UseWorkersParams = {}) {
 
 export function useCreateWorker() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "workers", "create"],
     mutationFn: (input: CreateWorkerInput) =>
-      apiClient.post<Worker>("/directory/workers", input),
+      apiClient.post<Worker>("/directory/workers", input, undefined, workerContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.directory.workersAll });
-      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.workersAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
     },
   });
 }
@@ -61,9 +68,14 @@ export function useCreateWorker() {
 export function useWorkerEngagements(workerId: string) {
   const canView = useCan("directory:workers:view");
   return useQuery({
-    queryKey: queryKeys.directory.engagements(workerId),
-    queryFn: () =>
-      apiClient.get<WorkerEngagement[]>(`/directory/workers/${workerId}/engagements`),
+    queryKey: directoryAndOwnershipQueryKeys.directory.engagements(workerId),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkerEngagement[]>(
+        `/directory/workers/${workerId}/engagements`,
+        undefined,
+        signal,
+        workerEngagementListContract,
+      ),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });
@@ -71,24 +83,26 @@ export function useWorkerEngagements(workerId: string) {
 
 export function useCreateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "create"],
     mutationFn: ({ workerId, ...input }: CreateEngagementInput) =>
       apiClient.post<WorkerEngagement>(
         `/directory/workers/${workerId}/engagements`,
         { ...input, workerId },
+        undefined,
+        workerEngagementContract,
       ),
     onSuccess: (created, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) => (old ? [...old, created] : old),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.engagements(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         refetchType: "none",
       });
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -96,7 +110,7 @@ export function useCreateEngagement() {
 
 export function useUpdateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "update"],
     mutationFn: ({
       workerEngagementId,
@@ -104,12 +118,14 @@ export function useUpdateEngagement() {
       ...input
     }: UpdateEngagementInput) =>
       apiClient.patch<WorkerEngagement>(
-        "/directory/engagements/" + workerEngagementId,
+        `/directory/engagements/${workerEngagementId}`,
         input,
+        undefined,
+        workerEngagementContract,
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((engagement) =>
             engagement.workerEngagementId === variables.workerEngagementId
@@ -118,7 +134,7 @@ export function useUpdateEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -126,7 +142,7 @@ export function useUpdateEngagement() {
 
 export function useTerminateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:terminate", {
     mutationKey: ["directory", "engagements", "terminate"],
     mutationFn: ({
       workerEngagementId,
@@ -136,10 +152,12 @@ export function useTerminateEngagement() {
       apiClient.post<WorkerEngagement>(
         `/directory/engagements/${workerEngagementId}/terminate`,
         input,
+        undefined,
+        workerEngagementContract,
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((e) =>
             e.workerEngagementId === variables.workerEngagementId
@@ -148,7 +166,7 @@ export function useTerminateEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -156,7 +174,7 @@ export function useTerminateEngagement() {
 
 export function useCancelEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "cancel"],
     mutationFn: ({
       workerEngagementId,
@@ -166,10 +184,13 @@ export function useCancelEngagement() {
     }) =>
       apiClient.post<WorkerEngagement>(
         `/directory/engagements/${workerEngagementId}/cancel`,
+        undefined,
+        undefined,
+        workerEngagementContract,
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((engagement) =>
             engagement.workerEngagementId === variables.workerEngagementId
@@ -178,7 +199,7 @@ export function useCancelEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });

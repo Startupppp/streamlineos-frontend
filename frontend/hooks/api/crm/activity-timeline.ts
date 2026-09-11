@@ -12,6 +12,24 @@ import type {
   TimelineAnchor,
   TimelinePage,
 } from "@/types/crm/activities";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const timelinePageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.timelinePageContract),
+);
+const myTasksPageLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.myTasksPageContract),
+);
+const activityParticipantsLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.activityParticipantsContract),
+);
+const logActivityLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.logActivityContract),
+);
+const completeTaskLazy = lazyContract(() =>
+  import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.completeTaskContract),
+);
 
 /** The anchor as the API takes it — exactly one identifier. */
 function anchorParams(anchor: TimelineAnchor): Record<string, string> {
@@ -38,13 +56,16 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.activityTimeline({ ...params, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<TimelinePage>(
           `/crm/activities/timeline?${new URLSearchParams({
             ...params,
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam } : {}),
+            ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
           }).toString()}`,
+          undefined,
+          signal,
+          timelinePageLazy,
         ),
       getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -65,13 +86,16 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.myActivityTasks({ includeCompleted, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<TaskPage>(
           `/crm/activities/my-tasks?${new URLSearchParams({
             includeCompleted: String(includeCompleted),
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam } : {}),
+            ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
           }).toString()}`,
+          undefined,
+          signal,
+          myTasksPageLazy,
         ),
       getNextPageParam: (lastPage: TaskPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -85,9 +109,9 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
 export function useActivityParticipants(activityId: string | null) {
   return useGatedQuery("crm:activities:view", {
     queryKey: queryKeys.crm.activityParticipants(activityId ?? ""),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ data: ActivityParticipant[] }>(
-        `/crm/activities/${activityId}/participants`,
+        `/crm/activities/${activityId}/participants`, undefined, signal, activityParticipantsLazy,
       ),
     staleTime: 60_000,
     enabled: !!activityId,
@@ -96,9 +120,9 @@ export function useActivityParticipants(activityId: string | null) {
 
 export function useLogActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "create"],
-    mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input),
+    mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input, undefined, logActivityLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });
     },
@@ -107,10 +131,10 @@ export function useLogActivity() {
 
 export function useCompleteActivityTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "complete"],
     mutationFn: (activityId: string) =>
-      apiClient.post(`/crm/activities/${activityId}/complete`, {}),
+      apiClient.post(`/crm/activities/${activityId}/complete`, {}, undefined, completeTaskLazy),
     onSuccess: () => {
       // The same row appears on a timeline and in the person's own task list.
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });

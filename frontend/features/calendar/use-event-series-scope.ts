@@ -1,7 +1,7 @@
 import type { CreateCalendarEventPayload } from "@/hooks/api/calendar";
 import { useState, useCallback } from "react";
 import {
-  extractEventNumericId,
+  parseCalendarEventId,
   useUpdateCalendarEvent,
   useUpsertOccurrenceException,
 } from "@/hooks/api/calendar";
@@ -35,8 +35,8 @@ export function useEventSeriesScope({
   const handleSeriesScopeConfirm = useCallback(
     async (scope: SeriesScope) => {
       if (!pendingPayload || !event) return;
-      const numericId = extractEventNumericId(event.id);
-      if (numericId === null) {
+      const parsed = parseCalendarEventId(event.id);
+      if (parsed === null) {
         toast.error("Cannot edit this event type");
         setSeriesScopeOpen(false);
         return;
@@ -44,8 +44,9 @@ export function useEventSeriesScope({
       try {
         if (scope === "occurrence") {
           await upsertOccurrenceException.mutateAsync({
-            eventId: numericId,
-            occurrenceStart: event.start,
+            eventId: parsed.eventId,
+            // Keyed on the NOMINAL start the id carries, not the moved `start`.
+            occurrenceStart: parsed.occurrenceStart ?? event.start,
             modifiedTitle: pendingPayload.title,
             modifiedStart: pendingPayload.startDate,
             modifiedEnd: pendingPayload.endDate,
@@ -53,7 +54,7 @@ export function useEventSeriesScope({
           toast.success("Occurrence updated");
         } else {
           const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = pendingPayload;
-          await updateEvent.mutateAsync({ id: numericId, ...editPayload });
+          await updateEvent.mutateAsync({ id: parsed.eventId, ...editPayload });
           toast.success("Event updated");
         }
         setSeriesScopeOpen(false);

@@ -1,14 +1,19 @@
-﻿import { fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
+import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
+import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
 
 jest.mock("next/dynamic", () => () => () => null);
 
-jest.mock("next/link", () => {
-  return function Link({
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: function Link({
     children,
     href,
     ...props
@@ -18,11 +23,39 @@ jest.mock("next/link", () => {
         {children}
       </a>
     );
-  };
-});
+  },
+  useLinkStatus: () => ({ pending: false }),
+}));
+
+let currentPathname = "/build";
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/build",
+  usePathname: () => currentPathname,
+}));
+
+jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
+  ChatMobileBottomNav: function MockChatMobileBottomNav({
+    onOpenMobileMenu,
+  }: {
+    onOpenMobileMenu: () => void;
+  }) {
+    return (
+      <nav aria-label="Chat navigation" data-testid="chat-mobile-nav">
+        <button type="button" onClick={onOpenMobileMenu} aria-label="Menu">
+          Menu
+        </button>
+        <button type="button" aria-label="Search conversations">
+          Search
+        </button>
+        <button type="button" aria-label="Explore channels">
+          Explore
+        </button>
+        <button type="button" aria-label="Create">
+          Create
+        </button>
+      </nav>
+    );
+  },
 }));
 
 jest.mock("./app-sidebar", () => ({
@@ -55,10 +88,6 @@ jest.mock("./mobile/mobile-shell-fab", () => ({
       Open menu
     </button>
   ),
-}));
-
-jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
-  ChatMobileBottomNav: () => null,
 }));
 
 jest.mock("./command-palette", () => ({
@@ -122,12 +151,13 @@ jest.mock("@/components/assistant/ask-os-provider", () => ({
   AskOsProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
-jest.mock("@/features/command-palette", () => ({
+jest.mock("@/components/command-palette", () => ({
   CommandPaletteProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
 describe("DashboardShell mobile navigation", () => {
   beforeEach(() => {
+    currentPathname = "/build";
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
   });
@@ -137,6 +167,7 @@ describe("DashboardShell mobile navigation", () => {
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
+        shellVariant="desktop"
       >
         <div>Content</div>
       </DashboardShell>,
@@ -163,11 +194,145 @@ describe("DashboardShell mobile navigation", () => {
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
+        shellVariant="desktop"
       >
         <div>Content</div>
       </DashboardShell>,
     );
 
     expect(productSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
+  });
+});
+
+describe("DashboardShell shell variant", () => {
+  beforeEach(() => {
+    currentPathname = "/build";
+    drawerCalls.length = 0;
+    productSwitcherCalls.length = 0;
+  });
+
+  it("desktop variant renders both the desktop aside and the mobile drawer AppSidebar", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="desktop"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    // Mock AppSidebar renders a "Navigate" button in each location.
+    // Desktop: aside (desktop) + Drawer (mobile menu) = 2 buttons.
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
+  });
+
+  it("mobile variant renders only the mobile drawer AppSidebar, not the desktop aside", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="mobile"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    // Only the Drawer AppSidebar is mounted; the desktop aside is skipped.
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(1);
+  });
+
+  it("defaults to desktop behaviour when shellVariant is omitted", () => {
+    render(
+      <DashboardShell userId="user-1" defaultCollapsed={false}>
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
+  });
+});
+
+function renderChatMobileNav(onOpenMobileMenu: () => void) {
+  return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
+}
+
+describe("DashboardShell /chat mobile bottom nav", () => {
+  beforeEach(() => {
+    currentPathname = "/chat";
+    drawerCalls.length = 0;
+    productSwitcherCalls.length = 0;
+  });
+
+  afterEach(() => {
+    currentPathname = "/build";
+  });
+
+  it("mobile variant on /chat renders ChatMobileBottomNav synchronously with ≥ 3 in-app nav links", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="mobile"
+        chatMobileNavSlot={renderChatMobileNav}
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    const chatNav = screen.queryByTestId("chat-mobile-nav");
+    expect(chatNav).not.toBeNull();
+    const buttons = chatNav?.querySelectorAll("button, a[href]") ?? [];
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("desktop variant on /chat still mounts the slot — the sm: breakpoint hides it, not the variant", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="desktop"
+        chatMobileNavSlot={renderChatMobileNav}
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    expect(screen.queryByTestId("chat-mobile-nav")).not.toBeNull();
+    expect(getChatMobileBottomNavClassName()).toContain("sm:hidden");
+  });
+
+  it("off /chat the slot is never called, in either variant", () => {
+    currentPathname = "/build";
+    const chatSlot = jest.fn(renderChatMobileNav);
+
+    for (const shellVariant of ["mobile", "desktop"] as const) {
+      const { unmount } = render(
+        <DashboardShell
+          userId="user-1"
+          defaultCollapsed={false}
+          shellVariant={shellVariant}
+          chatMobileNavSlot={chatSlot}
+        >
+          <div>Content</div>
+        </DashboardShell>,
+      );
+      unmount();
+    }
+
+    expect(chatSlot).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("chat-mobile-nav")).toBeNull();
+  });
+
+  it("the authenticated layout hands the shell that slot, so the mount is not test-only", () => {
+    const layoutClient = readFileSync(
+      join(process.cwd(), "app", "(authenticated)", "layout-client.tsx"),
+      "utf8",
+    );
+
+    expect(layoutClient).toContain(
+      'import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";',
+    );
+    expect(layoutClient).toContain("chatMobileNavSlot={renderChatMobileNav}");
+    expect(layoutClient).toMatch(
+      /function renderChatMobileNav\([\s\S]*?<ChatMobileBottomNav onOpenMobileMenu=\{onOpenMobileMenu\} \/>/,
+    );
   });
 });

@@ -1,9 +1,22 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import type { HrProbationReviewRow } from "@/hooks/api/hr/probation-schema";
+
+const probationListC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.probationListContract),
+);
+const extendProbationC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.extendProbationContract),
+);
+const confirmProbationC = lazyContract(() =>
+  import("@/hooks/api/hr/probation-schema").then((m) => m.confirmProbationContract),
+);
 
 export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
 
@@ -13,19 +26,19 @@ export interface ProbationReview {
   employmentId: number;
   personId: number;
   probationEndDate: string;
-  status: ProbationStatus;
+  status: string;
   extensionCount: number;
   extendedUntil: string | null;
   confirmedAt: string | null;
   createdAt: string;
-  firstName: string;
-  lastName: string;
-  workEmail: string;
+  firstName: string | null;
+  lastName: string | null;
+  workEmail: string | null;
 }
 
 const probationKeys = {
-  all: [...queryKeys.hr.all, "probation"] as const,
-  list: (params: ProbationListParams) => [...queryKeys.hr.all, "probation", "list", params] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "probation"] as const,
+  list: (params: ProbationListParams) => [...humanResourcesQueryKeys.hr.all, "probation", "list", params] as const,
 };
 
 export interface ProbationListParams {
@@ -47,11 +60,11 @@ export function useProbationList(params: ProbationListParams = {}) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<ProbationListResponse>({
     queryKey: probationKeys.list(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams();
       searchParams.set("limit", String(params.limit ?? 20));
       if (params.cursor) searchParams.set("cursor", params.cursor);
-      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`);
+      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`, undefined, signal, probationListC);
     },
     staleTime: 60_000,
     enabled: hrEnabled && canProbation,
@@ -60,7 +73,7 @@ export function useProbationList(params: ProbationListParams = {}) {
 
 export function useExtendProbation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:probation:manage", {
     mutationKey: ["hr", "probation", "extend"],
     mutationFn: ({
       reviewId,
@@ -71,10 +84,10 @@ export function useExtendProbation() {
       extendedUntil: string;
       reason?: string;
     }) =>
-      apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/extend`, {
+      apiClient.post<HrProbationReviewRow>(`/hr/probation/${reviewId}/extend`, {
         extendedUntil,
         reason,
-      }),
+      }, undefined, extendProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },
@@ -83,7 +96,7 @@ export function useExtendProbation() {
 
 export function useConfirmProbation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:probation:manage", {
     mutationKey: ["hr", "probation", "confirm"],
     mutationFn: ({
       reviewId,
@@ -94,10 +107,10 @@ export function useConfirmProbation() {
       confirmedAt?: string;
       notes?: string;
     }) =>
-      apiClient.post<ProbationReview>(`/hr/probation/${reviewId}/confirm`, {
+      apiClient.post<HrProbationReviewRow>(`/hr/probation/${reviewId}/confirm`, {
         confirmedAt,
         notes,
-      }),
+      }, undefined, confirmProbationC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: probationKeys.all });
     },

@@ -42,7 +42,7 @@ import {
   EXCEPTION_STATUS_LABEL,
   type ExceptionRule,
   type TimesheetException,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -253,22 +253,18 @@ export function ExceptionsView() {
     </LoadingButton>
   ) : undefined;
 
-  const emptyState = filters.isDefault ? (
+  const emptyState = (
     <EmptyState
       illustrationPreset="alert"
       access={access}
       title="No open exceptions"
-      description="Great data hygiene — nothing needs your attention right now."
-      compact
-    />
-  ) : (
-    <EmptyState
-      illustrationPreset="alert"
-      access={access}
-      title="No exceptions found"
-      description="No exceptions match the current filters."
-      action={{ label: "Clear filters", onClick: filters.clear }}
-      actionVariant="outline"
+      description={
+        filters.isDefault
+          ? "Great data hygiene — nothing needs your attention right now."
+          : undefined
+      }
+      filtersActive={!filters.isDefault}
+      onClearFilters={filters.clear}
       compact
     />
   );

@@ -4,12 +4,18 @@ import { useCallback, forwardRef } from "react";
 import { format, parseISO, isToday, isThisYear } from "date-fns";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { Paperclip, ChevronDown, ChevronRight } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const mailDownloadContract = lazyContract(() =>
+  import("@/hooks/api/mail-schema").then((m) => m.mailDownloadContract),
+);
 import { MailHtmlViewer } from "./mail-html-viewer";
 import type { MailMessageDetail } from "@/types/mail";
 
@@ -49,6 +55,9 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
           fileName: string;
         }>(
           `/mail/messages/${messageId}/attachments/${attachmentId}?accountId=${accountId}&fileName=${encodeURIComponent(fileName)}`,
+          undefined,
+          undefined,
+          mailDownloadContract,
         );
         window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
       } catch (err) {
@@ -92,13 +101,30 @@ interface MailThreadMessageProps {
   message: MailMessageDetail;
   isExpanded: boolean;
   isLatest: boolean;
+  isHydrating?: boolean;
   onToggle: (id: string) => void;
+}
+
+function MailBodySkeleton() {
+  return (
+    <div
+      className="mt-1 flex flex-col gap-2 rounded-lg border border-border/50 px-4 py-3"
+      aria-hidden
+      data-testid="mail-body-skeleton"
+    >
+      <Skeleton className="h-4 w-full rounded" />
+      <Skeleton className="h-4 w-5/6 rounded" />
+      <Skeleton className="h-4 w-4/5 rounded" />
+      <Skeleton className="h-4 w-2/3 rounded" />
+    </div>
+  );
 }
 
 export function MailThreadMessage({
   message,
   isExpanded,
   isLatest,
+  isHydrating,
   onToggle,
 }: MailThreadMessageProps) {
   const senderLabel = message.from.name ?? message.from.email;
@@ -186,6 +212,8 @@ export function MailThreadMessage({
               {message.bodyText}
             </pre>
           </div>
+        ) : isHydrating ? (
+          <MailBodySkeleton />
         ) : (
           <p className="text-xs text-muted-foreground italic">No content</p>
         )}

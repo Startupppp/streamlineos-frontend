@@ -1,8 +1,27 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const onboardingSessionContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.onboardingFlowSessionContract),
+);
+const moduleChecklistListContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.moduleChecklistListContract),
+);
+const checklistProgressContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.checklistProgressContract),
+);
+const guidedTourListContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.guidedTourListContract),
+);
+const tourProgressRowContract = lazyContract(() =>
+  import("@/hooks/api/onboarding-flow-schema").then((m) => m.tourProgressRowContract),
+);
 
 export type OnboardingFlowSession = {
   id: number;
@@ -20,8 +39,8 @@ export type OnboardingSessionPatch = {
 
 export function useOnboardingSessionQuery(enabled = true) {
   return useQuery({
-    queryKey: queryKeys.onboardingFlow.session(),
-    queryFn: () => apiClient.get<OnboardingFlowSession>("/onboarding/session"),
+    queryKey: platformCoreQueryKeys.onboardingFlow.session(),
+    queryFn: ({ signal }) => apiClient.get<OnboardingFlowSession>("/onboarding/session", undefined, signal, onboardingSessionContract),
     staleTime: 30_000,
     retry: false,
     enabled,
@@ -33,10 +52,10 @@ export function usePatchOnboardingSessionMutation() {
   return useMutation({
     mutationKey: ["onboarding", "session", "patch"],
     mutationFn: (payload: OnboardingSessionPatch) =>
-      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload),
+      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload, undefined, onboardingSessionContract),
     retry: false,
     onSuccess: (session) => {
-      queryClient.setQueryData(queryKeys.onboardingFlow.session(), session);
+      queryClient.setQueryData(platformCoreQueryKeys.onboardingFlow.session(), session);
     },
   });
 }
@@ -65,64 +84,35 @@ export type ModuleChecklist = {
 };
 
 export function useModuleChecklists(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.onboardingFlow.moduleChecklists(),
-    queryFn: () => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists"),
-    staleTime: 30_000,
-    enabled,
-  });
-}
-
-export function useModuleChecklist(moduleKey: string, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey),
-    queryFn: () => apiClient.get<ModuleChecklist>(`/onboarding/module-checklists/${moduleKey}`),
+  return useGatedQuery("onboarding:module-checklists:view", {
+    queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists(),
+    queryFn: ({ signal }) => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists", undefined, signal, moduleChecklistListContract),
     staleTime: 30_000,
     enabled,
   });
 }
 
 function invalidateChecklist(queryClient: ReturnType<typeof useQueryClient>, moduleKey: string) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklists() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey) });
+  void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists() });
+  void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklist(moduleKey) });
 }
 
 export function useCompleteChecklistItem() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "complete-item"],
     mutationFn: ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}),
-    onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
-  });
-}
-
-export function useSkipChecklistItem() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "module-checklists", "skip-item"],
-    mutationFn: ({ moduleKey, itemKey, reason }: { moduleKey: string; itemKey: string; reason?: string }) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/skip`, { reason }),
+      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}, undefined, checklistProgressContract),
     onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 
 export function useDismissModuleChecklist() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "dismiss"],
     mutationFn: (moduleKey: string) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}),
-    onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
-  });
-}
-
-export function useRestartModuleChecklist() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "module-checklists", "restart"],
-    mutationFn: (moduleKey: string) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/restart`, {}),
+      apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}, undefined, checklistProgressContract),
     onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }
@@ -144,9 +134,9 @@ export type GuidedTour = {
 };
 
 export function useGuidedTours(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.onboardingFlow.tours(),
-    queryFn: () => apiClient.get<GuidedTour[]>("/onboarding/tours"),
+  return useGatedQuery("onboarding:tours:view", {
+    queryKey: platformCoreQueryKeys.onboardingFlow.tours(),
+    queryFn: ({ signal }) => apiClient.get<GuidedTour[]>("/onboarding/tours", undefined, signal, guidedTourListContract),
     staleTime: 30_000,
     enabled,
   });
@@ -154,24 +144,24 @@ export function useGuidedTours(enabled = true) {
 
 export function useSaveTourProgress() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "save-progress"],
     mutationFn: ({ tourKey, currentStep }: { tourKey: string; currentStep: number }) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }),
+      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }, undefined, tourProgressRowContract),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },
   });
 }
 
 export function useDismissTour() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "dismiss"],
     mutationFn: (tourKey: string) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}),
+      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}, undefined, tourProgressRowContract),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },
   });
 }

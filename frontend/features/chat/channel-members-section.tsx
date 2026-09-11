@@ -6,9 +6,14 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useActiveHuddle, useRemoveChannelMember } from "@/hooks/api";
+import { useRemoveChannelMember } from "@/hooks/api";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
+import {
+  NO_CURSOR_PAGE,
+  panelRevealLabel,
+  usePanelRenderWindow,
+} from "./panel-render-window";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 
 const AddMemberButton = React.forwardRef<
@@ -47,18 +52,7 @@ export function ChannelMembersSection({
 }: ChannelMembersSectionProps) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
-  const { data: activeHuddle } = useActiveHuddle(channelId);
   const removeMember = useRemoveChannelMember();
-
-  const mutedInCallUserIds = useMemo(
-    () =>
-      new Set(
-        (activeHuddle?.participants ?? [])
-          .filter((p) => !p.leftAt && p.isMuted)
-          .map((p) => p.userId),
-      ),
-    [activeHuddle],
-  );
 
   const { onlineMembers, offlineMembers } = useMemo(() => {
     const byName = (a: ChannelMember, b: ChannelMember) =>
@@ -68,8 +62,21 @@ export function ChannelMembersSection({
     return { onlineMembers: online, offlineMembers: offline };
   }, [members, onlineUserIds]);
 
+  const onlineWindow = usePanelRenderWindow(
+    onlineMembers.length,
+    false,
+    NO_CURSOR_PAGE,
+    channelId,
+  );
+  const offlineWindow = usePanelRenderWindow(
+    offlineMembers.length,
+    false,
+    NO_CURSOR_PAGE,
+    channelId,
+  );
+
   const existingMemberIds = useMemo(
-    () => new Set(members.map((m) => m.user?.id).filter(Boolean) as string[]),
+    () => new Set(members.flatMap((m) => (m.user?.id ? [m.user.id] : []))),
     [members],
   );
 
@@ -114,21 +121,35 @@ export function ChannelMembersSection({
           <p className="text-micro font-bold text-status-success-ink uppercase tracking-wider px-2 mb-1">
             Online — {onlineMembers.length}
           </p>
-          <div className="space-y-0.5">
-            {onlineMembers.map((m) => (
-              <ChannelMemberRow
+          <div role="list" aria-label="Online members" className="space-y-0.5">
+            {onlineMembers.slice(0, onlineWindow.visibleCount).map((m, index) => (
+              <div
                 key={m.user?.id}
-                member={m}
-                isOnline
-                isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
-                currentUserId={currentUserId}
-                isAdmin={isAdmin}
-                isMultiMemberChannel={isMultiMemberChannel}
-                isRemoving={removingUserId === m.user?.id}
-                onRemove={handleRemoveMember}
-              />
+                role="listitem"
+                aria-posinset={index + 1}
+                aria-setsize={onlineMembers.length}
+              >
+                <ChannelMemberRow
+                  member={m}
+                  isOnline
+                  currentUserId={currentUserId}
+                  isAdmin={isAdmin}
+                  isMultiMemberChannel={isMultiMemberChannel}
+                  isRemoving={removingUserId === m.user?.id}
+                  onRemove={handleRemoveMember}
+                />
+              </div>
             ))}
           </div>
+          {onlineWindow.hasMore ? (
+            <button
+              type="button"
+              onClick={onlineWindow.onLoadMore}
+              className="w-full rounded-lg px-2 py-1.5 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+            >
+              {panelRevealLabel(onlineWindow, onlineMembers.length, false, "Show all")}
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -137,21 +158,35 @@ export function ChannelMembersSection({
           <p className="text-micro font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
             Offline — {offlineMembers.length}
           </p>
-          <div className="space-y-0.5">
-            {offlineMembers.map((m) => (
-              <ChannelMemberRow
+          <div role="list" aria-label="Offline members" className="space-y-0.5">
+            {offlineMembers.slice(0, offlineWindow.visibleCount).map((m, index) => (
+              <div
                 key={m.user?.id}
-                member={m}
-                isOnline={false}
-                isMutedInCall={mutedInCallUserIds.has(m.user?.id ?? "")}
-                currentUserId={currentUserId}
-                isAdmin={isAdmin}
-                isMultiMemberChannel={isMultiMemberChannel}
-                isRemoving={removingUserId === m.user?.id}
-                onRemove={handleRemoveMember}
-              />
+                role="listitem"
+                aria-posinset={index + 1}
+                aria-setsize={offlineMembers.length}
+              >
+                <ChannelMemberRow
+                  member={m}
+                  isOnline={false}
+                  currentUserId={currentUserId}
+                  isAdmin={isAdmin}
+                  isMultiMemberChannel={isMultiMemberChannel}
+                  isRemoving={removingUserId === m.user?.id}
+                  onRemove={handleRemoveMember}
+                />
+              </div>
             ))}
           </div>
+          {offlineWindow.hasMore ? (
+            <button
+              type="button"
+              onClick={offlineWindow.onLoadMore}
+              className="w-full rounded-lg px-2 py-1.5 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+            >
+              {panelRevealLabel(offlineWindow, offlineMembers.length, false, "Show all")}
+            </button>
+          ) : null}
         </div>
       )}
 

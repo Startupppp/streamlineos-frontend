@@ -10,10 +10,16 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateChannel } from "@/hooks/api";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Channel } from "@/types/chat";
 import { ChannelAvatar } from "./channel-avatar";
+import { resolveDirectPartner } from "./channel-member-lookup";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ChannelInfoPanelProfileProps {
@@ -42,9 +48,7 @@ export function ChannelInfoPanelProfile({
   const quickAvatarRef = useRef<HTMLInputElement>(null);
   const wasEditingRef = useRef(false);
   const otherMember =
-    channel?.type === "DIRECT"
-      ? channel.members.find((member) => member.user?.id !== currentUserId)?.user
-      : null;
+    channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
     channel?.type === "DIRECT"
       ? (otherMember?.name ?? "Unknown")
@@ -88,16 +92,16 @@ export function ChannelInfoPanelProfile({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "chat-avatars");
-        const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
-        if (!data.url) {
+        const data = await apiClient.upload<{ key: string }>("/storage/upload", formData, storageUploadContract);
+        if (!data.key) {
           toast.error("Upload failed");
           return;
         }
         if (saveImmediately && channel) {
-          await updateChannel.mutateAsync({ channelId: channel.id, avatarUrl: data.url });
+          await updateChannel.mutateAsync({ channelId: channel.id, avatarUrl: data.key });
           toast.success("Channel photo updated");
         } else {
-          setEditAvatar(data.url);
+          setEditAvatar(data.key);
         }
       } catch (error) {
         toast.error(getErrorMessage(error));

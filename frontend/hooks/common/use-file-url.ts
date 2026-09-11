@@ -2,29 +2,59 @@
 
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isStorageObjectKey, storageKeyFromUrl } from "@/lib/utils";
 
-function isLocalUrl(url: string): boolean {
+const signedUrlC = lazyContract(() =>
+  import("@/hooks/common/file-url-schema").then((m) => m.signedUrlContract),
+);
+
+/**
+ * The `/uploads/` test used to live here and it read a TENANT OBJECT KEY as a
+ * local asset: every key minted for the default folder is
+ * `<orgId>/uploads/<file>`, so any such reference that `isStorageObjectKey` did
+ * not recognise — a legacy `uploads/…` row, a region-prefixed key — was handed
+ * straight back to the caller as a relative URL instead of being exchanged for a
+ * signed one. The result is a broken image rather than a re-authorized read, and
+ * the substring can never distinguish the two cases because the folder name is
+ * the same on both sides.
+ */
+export function isLocalUrl(url: string): boolean {
   if (!url) return false;
-  if (url.startsWith("/uploads/") || url.startsWith("/")) return true;
-  if (url.includes("/uploads/")) return true;
+  if (isStorageObjectKey(url)) return false;
+  if (url.startsWith("/")) return true;
   if (url.includes("dicebear.com") || url.includes("avataaars")) return true;
   return false;
+}
+
+/**
+ * `/storage/download` validates `url` as a URL, so an object key has to travel
+ * in `key`. Sending a key as `url` is a 400, not a lookup miss.
+ */
+export function storageReferenceParams(reference: string): { url: string } | { key: string } {
+  return /^https?:\/\//i.test(reference) ? { url: reference } : { key: reference };
 }
 
 export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   if (!fileUrl) {
     throw new Error("No file URL provided");
   }
-  if (isLocalUrl(fileUrl)) {
-    return fileUrl;
+  const reference = storageKeyFromUrl(fileUrl);
+  if (isLocalUrl(reference)) {
+    return reference;
   }
-  const data = await apiClient.get<{ url: string }>("/storage/download", { url: fileUrl });
+  const data = await apiClient.get<{ url: string }>(
+    "/storage/download",
+    storageReferenceParams(reference),
+    undefined,
+    signedUrlC,
+  );
   return data.url;
 }
 
 export async function getProtectedFileUrl(endpoint: string): Promise<string> {
-  const data = await apiClient.get<{ url: string }>(endpoint);
+  const data = await apiClient.get<{ url: string }>(endpoint, undefined, undefined, signedUrlC);
   return data.url;
 }
 
@@ -60,7 +90,7 @@ export async function downloadProtectedFile(
 export async function viewFile(fileUrl: string): Promise<void> {
   try {
     const url = await getSignedFileUrl(fileUrl);
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener,noreferrer");
   } catch {
     toast.error("Failed to open file");
   }
@@ -68,12 +98,16 @@ export async function viewFile(fileUrl: string): Promise<void> {
 
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
-    const downloadFileName = fileName || extractFileName(fileUrl);
+    const reference = storageKeyFromUrl(fileUrl);
+    const downloadFileName = fileName || extractFileName(reference);
     let blob: Blob;
-    if (!isLocalUrl(fileUrl)) {
-      blob = await apiClient.download("/storage/download", { url: fileUrl, attachment: 1 });
+    if (!isLocalUrl(reference)) {
+      blob = await apiClient.download("/storage/download", {
+        ...storageReferenceParams(reference),
+        attachment: 1,
+      });
     } else {
-      const url = await getSignedFileUrl(fileUrl);
+      const url = await getSignedFileUrl(reference);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to download file");

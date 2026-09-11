@@ -81,8 +81,9 @@ function buildDescription(data: CreateJobFormValues): string {
   if ((data.requiredSkills ?? []).length > 0) {
     lines.push(`=== REQUIRED SKILLS ===\n${data.requiredSkills.join(", ")}`);
   }
-  if ((data.preferredSkills ?? []).length > 0) {
-    lines.push(`=== PREFERRED SKILLS ===\n${data.preferredSkills!.join(", ")}`);
+  const preferredSkills = data.preferredSkills ?? [];
+  if (preferredSkills.length > 0) {
+    lines.push(`=== PREFERRED SKILLS ===\n${preferredSkills.join(", ")}`);
   }
   lines.push(`=== HIRING MANAGER ===\n${data.hiringManager}`);
   lines.push(`=== INTERVIEW ROUNDS ===\n${data.interviewRounds.join(", ")}`);
@@ -94,7 +95,8 @@ function buildDescription(data: CreateJobFormValues): string {
 function buildRequirements(data: CreateJobFormValues): string {
   const parts: string[] = [data.jobRequirements];
   if (data.educationLevel) parts.push(`Education: ${data.educationLevel}`);
-  if ((data.tags ?? []).length > 0) parts.push(`Tags: ${data.tags!.join(", ")}`);
+  const tags = data.tags ?? [];
+  if (tags.length > 0) parts.push(`Tags: ${tags.join(", ")}`);
   return parts.join("\n\n");
 }
 

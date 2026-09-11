@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import {
   useCreateUserApiToken,
@@ -33,32 +32,11 @@ import {
 } from "@/components/ui/form";
 import { PermissionScopeSelector } from "./permission-scope-selector";
 import { TokenExpiresAtField } from "./token-expires-at-field";
-
-const userTokenFormSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  scopes: z.array(z.string()).min(1, "Select at least one permission"),
-  expiresAt: z
-    .string()
-    .min(1, "Expiration is required")
-    .refine((value) => new Date(value).getTime() > Date.now(), {
-      message: "Expiration must be in the future",
-    })
-    .refine(
-      (value) =>
-        new Date(value).getTime() <=
-        Date.now() + 366 * 24 * 60 * 60 * 1000,
-      { message: "Personal tokens cannot exceed one year" },
-    ),
-});
-
-function defaultExpiry(days: number): string {
-  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
-}
-
-type UserTokenFormValues = z.infer<typeof userTokenFormSchema>;
+import { datetimeLocalAfterDays } from "@/lib/date-utils";
+import {
+  userTokenFormSchema,
+  type UserTokenFormValues,
+} from "./create-user-token-schema";
 
 interface CreateUserTokenSheetProps {
   open: boolean;
@@ -75,7 +53,7 @@ export function CreateUserTokenSheet({
 
   const form = useForm<UserTokenFormValues>({
     resolver: zodResolver(userTokenFormSchema),
-    defaultValues: { name: "", scopes: [], expiresAt: defaultExpiry(30) },
+    defaultValues: { name: "", scopes: [], expiresAt: datetimeLocalAfterDays(30) },
   });
 
   const handleSubmit = useCallback(

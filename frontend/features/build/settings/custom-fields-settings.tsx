@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sliders } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -163,7 +164,13 @@ interface CustomFieldsSettingsProps {
 export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
   const [showForm, setShowForm] = useState(false);
 
-  const { data: fields = [], isLoading } = useProjectCustomFields(projectId);
+  const {
+    data: fields = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectCustomFields(projectId);
   const createField = useCreateProjectCustomField(projectId);
   const deleteField = useDeleteProjectCustomField(projectId);
 
@@ -210,6 +217,10 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
 
   const handleShowForm = useCallback(() => setShowForm(true), []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
@@ -240,22 +251,25 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
           <Skeleton className="h-9 w-full" />
           <Skeleton className="h-9 w-full" />
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load custom fields"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : (
         <div className="space-y-3">
           <AnimatePresence initial={false}>
             {fields.length === 0 && !showForm && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-2 py-4 text-center"
-              >
-                <Sliders className="w-8 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">
-                  No custom fields yet
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Add fields to capture additional ticket data
-                </p>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <EmptyState
+                  compact
+                  illustrationPreset="settings"
+                  title="No custom fields yet"
+                  description="Add fields to capture additional ticket data."
+                  action={{ label: "Add Custom Field", onClick: handleShowForm }}
+                />
               </motion.div>
             )}
 

@@ -23,7 +23,8 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { cn } from "@/lib/utils";
 
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";

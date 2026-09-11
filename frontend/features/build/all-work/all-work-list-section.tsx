@@ -4,11 +4,11 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ListView } from "@/features/build/views/list-view";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface ProjectGroup {
   projectId: number;
@@ -30,7 +30,7 @@ function toListTicket(t: AllWorkTicket) {
     priority: t.priority,
     points: t.points,
     ticketNumber: t.ticketNumber,
-    sequenceId: t.sequenceId,
+    sequenceId: undefined,
     assigneeId: t.assigneeId,
     cycleId: t.cycleId,
     sprintId: t.sprintId,

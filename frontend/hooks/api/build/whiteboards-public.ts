@@ -1,9 +1,17 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import type { ExcalidrawSceneData } from "./whiteboards";
+
+const publicWhiteboardContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.publicWhiteboardContract),
+);
+const publicWhiteboardUpdateContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.publicWhiteboardUpdateContract),
+);
 
 export interface PublicWhiteboard {
   name: string;
@@ -15,21 +23,39 @@ export interface PublicWhiteboard {
 
 export function usePublicWhiteboard(token: string) {
   return useQuery({
-    queryKey: queryKeys.whiteboards.publicLink(token),
-    queryFn: () => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`),
+    queryKey: accountingAndSupportQueryKeys.whiteboards.publicLink(token),
+    queryFn: ({ signal }) => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`, undefined, signal, publicWhiteboardContract),
     enabled: !!token,
     staleTime: 30_000,
     retry: false,
   });
 }
 
+/**
+ * The save writes the scene the caller already holds, and the read that seeded
+ * the canvas sits at a 30s staleTime under the same key. Without this the cache
+ * keeps the pre-save scene: a remount inside the window re-seeds Excalidraw from
+ * it, and a refetch after the window races the 3s debounce. The server confirms
+ * the write and returns its own `updatedAt`, so this is a settled self-write —
+ * no onMutate, no rollback.
+ */
 export function useUpdatePublicWhiteboard(token: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["whiteboards", "public", "update"],
     mutationFn: (data: ExcalidrawSceneData) =>
       apiClient.patch<{ success: boolean; updatedAt: string | null }>(
         `/public/whiteboard-links/${token}`,
         { data },
+        undefined,
+        publicWhiteboardUpdateContract,
       ),
+    onSuccess: (result, data) => {
+      queryClient.setQueryData<PublicWhiteboard>(
+        accountingAndSupportQueryKeys.whiteboards.publicLink(token),
+        (previous) =>
+          previous ? { ...previous, data, updatedAt: result.updatedAt } : previous,
+      );
+    },
   });
 }

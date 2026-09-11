@@ -59,7 +59,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
 import { SetupInstructions } from "./git-setup-instructions";
@@ -235,7 +235,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
                 />
-              ) : !connections || connections.length === 0 ? (
+              ) : !connections || connections.data.length === 0 ? (
                 <EmptyState
                   className={PM_FILL_PANEL}
                   illustration={<EmptyDevicesIllustration />}
@@ -245,7 +245,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 />
               ) : (
                 <PmStaggerList className="space-y-3">
-                  {connections.map((connection) => (
+                  {connections.data.map((connection) => (
                     <ConnectionRow
                       key={connection.id}
                       connection={connection}

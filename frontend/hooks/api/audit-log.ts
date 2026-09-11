@@ -3,13 +3,24 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useCan } from "@/hooks/api/access";
+import { lazyContract } from "@/lib/api-envelope";
+
+const auditLogListContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogListContract),
+);
+const auditLogActionsContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogActionsContract),
+);
+const auditLogTargetTypesContract = lazyContract(() =>
+  import("@/hooks/api/audit-log-schema").then((m) => m.auditLogTargetTypesContract),
+);
 
 export interface AuditLogRow {
   id: number;
   action: string;
-  userId: string;
+  userId: string | null;
   userName: string | null;
   userEmail: string | null;
   userImage: string | null;
@@ -17,7 +28,7 @@ export interface AuditLogRow {
   targetType: string | null;
   metadata: Record<string, unknown> | null;
   ipAddress: string | null;
-  createdAt: Date;
+  createdAt: string;
 }
 
 interface AuditLogPagination {
@@ -31,7 +42,7 @@ interface AuditLogListResponse {
   pagination: AuditLogPagination;
 }
 
-interface AuditLogFilters {
+export interface AuditLogFilters {
   cursor?: string;
   limit?: number;
   action?: string;
@@ -53,8 +64,8 @@ export const useAuditLogs = (
 ) => {
   const canView = useCan("audit-log:read");
   return useQuery<AuditLogListResponse, Error>({
-    queryKey: queryKeys.auditLog.list(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryKey: accessAndCrmQueryKeys.auditLog.list(filters),
+    queryFn: ({ signal }) =>
       apiClient.get<AuditLogListResponse>("/audit-log", {
         ...(filters?.cursor ? { cursor: filters.cursor } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
@@ -64,7 +75,7 @@ export const useAuditLogs = (
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.userSearch ? { userSearch: filters.userSearch } : {}),
-      }),
+      }, signal, auditLogListContract),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -76,8 +87,8 @@ export const useAuditLogActions = (
 ) => {
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
-    queryKey: queryKeys.auditLog.actions(),
-    queryFn: () => apiClient.get<string[]>("/audit-log/actions"),
+    queryKey: accessAndCrmQueryKeys.auditLog.actions(),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/actions", undefined, signal, auditLogActionsContract),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -89,8 +100,8 @@ export const useAuditLogTargetTypes = (
 ) => {
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
-    queryKey: queryKeys.auditLog.targetTypes(),
-    queryFn: () => apiClient.get<string[]>("/audit-log/target-types"),
+    queryKey: accessAndCrmQueryKeys.auditLog.targetTypes(),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/target-types", undefined, signal, auditLogTargetTypesContract),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

@@ -7,19 +7,18 @@ export const employeeFormSchema = z.object({
     .string()
     .trim()
     .min(1, "First name is required")
-    .max(80, "First name must be at most 80 characters")
+    .max(100, "First name must be at most 100 characters")
     .refine(hasLetterOrDigit, "First name must contain a letter or number"),
   lastName: z
     .string()
     .trim()
     .min(1, "Last name is required")
-    .max(80, "Last name must be at most 80 characters")
+    .max(100, "Last name must be at most 100 characters")
     .refine(hasLetterOrDigit, "Last name must contain a letter or number"),
-  role: z.string(),
   designation: z
     .string()
     .trim()
-    .max(120, "Designation must be at most 120 characters")
+    .max(200, "Designation must be at most 200 characters")
     .refine(
       (value) => value === "" || hasLetterOrDigit(value),
       "Designation must contain a letter or number",

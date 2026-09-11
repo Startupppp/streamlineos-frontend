@@ -1,67 +1,12 @@
-export type PersonAccountAccess =
-  | { state: "MEMBER" }
-  | {
-      state: "INVITED";
-      invitationId: string;
-      invitationStatus: "PENDING" | "EXPIRED";
-      email: string;
-      role: string;
-      expiresAt: string;
-    }
-  | { state: "NONE" };
-
-export interface OrganizationPerson {
-  organizationPersonId: string;
-  organizationId: string;
-  userId: string | null;
-  organizationMembershipId: number | null;
-  accountAccess?: PersonAccountAccess;
-  firstName: string;
-  lastName: string;
-  displayName: string | null;
-  preferredName: string | null;
-  workEmail: string | null;
-  personalEmail: string | null;
-  phone: string | null;
-  whatsappNumber: string | null;
-  avatarUrl: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  nationality: string | null;
-  timezone: string | null;
-  languageCode: string | null;
-  address: {
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postalCode?: string;
-  } | null;
-  emergencyContact: {
-    name?: string;
-    relationship?: string;
-    phone?: string;
-    email?: string;
-  } | null;
-  linkedinUrl: string | null;
-  githubUrl: string | null;
-  bio: string | null;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PeoplePageInfo {
-  limit: number;
-  hasMore: boolean;
-  nextCursor: string | null;
-}
-
-export interface PeoplePage {
-  data: OrganizationPerson[];
-  pageInfo: PeoplePageInfo;
-}
+/**
+ * The response shapes are `z.infer`red from the contracts that validate them at
+ * the fetch seam (`hooks/api/directory/people-schema.ts`), so there is one
+ * definition of each and it is the one enforced at runtime.
+ */
+export type {
+  OrganizationPerson,
+  PersonAccountAccess,
+} from "@/hooks/api/directory/people-schema";
 
 export interface CreatePersonInput {
   firstName: string;

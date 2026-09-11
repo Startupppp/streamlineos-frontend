@@ -7,6 +7,7 @@ import { PlateElement } from 'platejs/react';
 import type { PlateElementProps } from 'platejs/react';
 import { Caption, CaptionTextarea, useCaptionState } from '@platejs/caption/react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { resolveImageUrl } from '@/lib/utils';
 
 function humanSize(bytes: unknown): string {
   const n = typeof bytes === 'number' ? bytes : 0;
@@ -16,7 +17,7 @@ function humanSize(bytes: unknown): string {
 }
 
 export function VideoElement({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
+  const url = resolveImageUrl(element['url'] as string | undefined);
   const captionState = useCaptionState();
 
   return (
@@ -43,7 +44,7 @@ export function VideoElement({ element, children, ...props }: PlateElementProps)
 }
 
 export function AudioElement({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
+  const url = resolveImageUrl(element['url'] as string | undefined);
 
   return (
     <PlateElement {...props} element={element} className="my-3 w-full">
@@ -62,7 +63,7 @@ export function AudioElement({ element, children, ...props }: PlateElementProps)
 }
 
 export function FileElement({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
+  const url = resolveImageUrl(element['url'] as string | undefined);
   const name = element['name'] as string | undefined;
   const size = element['size'];
 
@@ -119,7 +120,7 @@ export function PlaceholderElement({ element, children, ...props }: PlateElement
 }
 
 export function ImageElementWithCaption({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
+  const url = resolveImageUrl(element['url'] as string | undefined);
   const captionState = useCaptionState();
 
   return (

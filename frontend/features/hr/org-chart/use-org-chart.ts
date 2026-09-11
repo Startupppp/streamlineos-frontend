@@ -4,8 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { OrgChartCursorPage, OrgChartQuery } from "./types";
+
+const orgChartPageContract = lazyContract(() =>
+  import("@/features/hr/org-chart/org-chart-schema").then((m) => m.orgChartPageContract),
+);
 
 function toRequestParams(params: OrgChartQuery): Record<string, unknown> {
   return {
@@ -27,9 +32,9 @@ export function useHrOrgChart(
   const requestParams = toRequestParams(params);
 
   return useQuery({
-    queryKey: [...queryKeys.hr.orgChart(), orgId, userId, requestParams] as const,
-    queryFn: (): Promise<OrgChartCursorPage> =>
-      apiClient.get<OrgChartCursorPage>("/hr/org-chart", requestParams),
+    queryKey: [...humanResourcesQueryKeys.hr.orgChart(), orgId, userId, requestParams] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/org-chart", requestParams, signal, orgChartPageContract),
     staleTime: 2 * 60_000,
     enabled: !!orgId && !!userId && canView && (options?.enabled ?? true),
   });

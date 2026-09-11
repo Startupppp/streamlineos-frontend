@@ -1,5 +1,0 @@
-
-> streamlineos@0.1.0 check:routes D:\projects\personal\Streamlineos\frontend
-> node scripts/check-no-business-routes.mjs
-
-✔  No business route handlers found.

@@ -62,7 +62,7 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
 ];
 
 function getUtilizationRowKey(row: UtilizationReportUser): string {
-  return row.userId;
+  return row.userId ?? row.email ?? String(row.totalHours);
 }
 
 function renderUtilizationMobileCard(row: UtilizationReportUser) {

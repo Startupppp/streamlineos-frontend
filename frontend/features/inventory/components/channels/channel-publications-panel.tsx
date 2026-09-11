@@ -21,6 +21,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
+const PUBLICATION_TABS = ["all", "failed"] as const;
+
 const PUBLICATION_STATUS_BADGE: Record<PublicationStatus, string> = {
   PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   PUBLISHED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -167,7 +169,8 @@ export function ChannelPublicationsPanel({
   const isExternal = channel !== null && EXTERNAL_CHANNEL_TYPES.has(channel.channelType);
 
   function handleTabChange(value: string): void {
-    setActiveTab(value as "all" | "failed");
+    const tab = PUBLICATION_TABS.find((candidate) => candidate === value);
+    if (tab) setActiveTab(tab);
   }
 
   return (

@@ -1,5 +1,11 @@
 name: Frontend CI/CD
 
+# 2026-09-02 (ticket 35b) — the gates moved out of the `frontend` job into their
+# own `gates` job. Measured on run 33622293615: `frontend` failed at step 6
+# (Lint) and every one of the 10 gate steps below it reported `-`, i.e. never
+# executed. A gate sequenced after a red step is not a gate. `gates` carries no
+# `needs:`, so a lint regression can no longer mask the enforcement surface.
+#
 # 2026-09-05 (ticket 20) — WHY `feat/**` IS HERE.
 #
 # `push` was `[main]` only, so a feature branch's sole trigger was `pull_request`,
@@ -24,6 +30,14 @@ on:
       - main
 
 jobs:
+  # 2026-09-02 (ticket 36) — `Type Check` and `Build` used to sit in this job
+  # BELOW `Lint`, which is the same masking defect 35b fixed for `gates` and 35
+  # fixed for `tests`, one costume further down. Lint is red, so neither the
+  # frontend type check nor the frontend build had ever executed in CI: both
+  # reported `-`. They are now their own jobs, each with no `needs:`.
+  #
+  # This job is therefore Lint and nothing else. Its id is left as `frontend`,
+  # unrenamed, so any branch-protection rule naming that check still resolves.
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -52,6 +66,33 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+  # No `needs:`. Measured at head through the release mutex: `pnpm run
+  # type-check` (tsc --noEmit) exit 0, 0 errors. It needs no environment.
+  type-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
       - name: Type Check
         run: pnpm run type-check
 
@@ -66,45 +107,74 @@ jobs:
       - name: Type Check (e2e)
         run: pnpm run type-check:e2e
 
-      - name: Query keys and caches stay tenant-scoped
-        run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
+  # No `needs:`. The env block is NOT decoration: `next build` runs with
+  # NODE_ENV=production, and `frontend/lib/env.ts` parses process.env at import
+  # from `app/layout.tsx` and THROWS in production when it fails. Measured with
+  # the schema in isolation under a scrubbed environment:
+  #   - NODE_ENV=production, neither variable set -> FAILS on NEXTAUTH_SECRET
+  #     and NEXT_PUBLIC_API_URL, "would THROW at build". That is the state this
+  #     step was in, which the Lint mask had been hiding.
+  #   - the secret alone (the shape the deleted frontend/.github copies used)
+  #     -> still FAILS on NEXT_PUBLIC_API_URL.
+  #   - both, as below -> PASSES.
+  # The secret is a build-only placeholder, never a real credential; it is 50
+  # characters because lib/env.ts requires >= 44 in production.
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Client contract has not drifted from the API (timesheets)
-        run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
 
-      - name: Vendored contract is byte-identical to the backend artifact
-        run: pnpm run check:contract-vendor:self-test && pnpm run check:contract-vendor
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
-      - name: Module manifest agrees with the sidebar and vocabulary
-        run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
+      - name: Install
+        run: pnpm install --frozen-lockfile
 
-      - name: Files over 300 lines do not increase
-        run: pnpm run check:over-300:self-test && pnpm run check:over-300
-
-      # Every export carries a verdict. UNPROVEN is no longer an accepted resting state, and
-      # a verdict naming an export that no longer exists fails too — a stale allowlist that
-      # silently passes is what makes allowlists worthless.
-      - name: Every export is classified and no classification is stale
-        run: pnpm run check:dead-code:self-test && pnpm run check:dead-code
-
-      # An authenticated layout without robots noindex inherits index:true from the root
-      # layout, which is how three session-gated shells became crawlable.
-      - name: Authenticated shells are noindex and public pages carry canonical metadata
-        run: pnpm run check:seo-metadata:self-test && pnpm run check:seo-metadata
-
-      # Budgets only; no measurement runs in CI yet. Swap --self-test for --results=<file>
-      # once a Lighthouse step produces one. See architecture-refactor/WEB-VITALS-EVIDENCE.md.
-      - name: Web Vitals budgets are enforceable
-        run: pnpm run check:web-vitals-budget:self-test
-
-      # `Run Tests` used to sit here, below `Lint`. Lint is red with debt inherited
-      # from main, so the suite reported `-` on every run it was ever part of. It
-      # is the `tests` job below now, with no `needs:`.
       - name: Build
         run: pnpm run build
+        env:
+          # 2026-09-03 — `next build` died with "Ineffective mark-compacts near
+          # heap limit" on run 33718207435. The runner's default heap is ~2GB and
+          # the build reached it; ubuntu-latest has 16GB of RAM, so 8GB is safe.
+          NODE_OPTIONS: --max-old-space-size=8192
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-only-placeholder-not-a-real-secret-abc123' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
 
-  # No `needs:` — that is the point. Unfiltered on purpose: a `--testPathPattern`
-  # run reports green while every suite outside the filter is red.
+      # `verify:server-data-seam` was defined in package.json and named by no workflow step —
+      # its self-test-only half is wired hermetically in the `gates` job above, but the checks
+      # that matter most (every authenticated route in root §2's list actually gates with
+      # `requirePermission` before it prefetches, hydrates from `HydrationBoundary`, and the
+      # resulting route is present in the production build's `app-paths-manifest.json`) can only
+      # run against a real `next build` output, which only this job produces. It belongs here,
+      # immediately after Build, and nowhere in `gates` (deliberately hermetic, no build step).
+      - name: Server-data seam is intact in the production build
+        if: ${{ !cancelled() }}
+        run: pnpm run verify:server-data-seam:self-test && pnpm run verify:server-data-seam
+
+  # The unit suite, in its OWN job for exactly the reason `gates` is in its own
+  # job. 2026-09-02 (ticket 35): `Run Tests` sat below `Lint` inside `frontend`,
+  # and `Lint` is red, so the suite had never executed in CI either — the same
+  # masking defect 35b found for the gates, one step lower down. A suite whose
+  # result is "-" is not a passing suite.
+  #
+  # Unfiltered on purpose. `jest --testPathPattern=<x>` reports green while every
+  # suite outside the filter is red, which is the false pass this job exists to
+  # make impossible.
   tests:
     runs-on: ubuntu-latest
     defaults:
@@ -130,18 +200,633 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # 2026-09-03 — the `tests` job had NO env at all, while `build` has carried
+      # NEXTAUTH_SECRET/NEXT_PUBLIC_API_URL since it was split out. Five suites
+      # therefore failed at MODULE LOAD, not on an assertion:
+      # `components/ai/ai-error-state.ts:19` throws "NEXT_PUBLIC_API_URL is not
+      # set" when it is imported. Measured on run 33718207435. The placeholder
+      # is local-only and is never a real credential; NEXTAUTH_SECRET must be
+      # >= 44 chars or `lib/env.ts` rejects it.
       - name: Run Tests
         run: pnpm test --runInBand
+        env:
+          TZ: UTC
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
+
+  # The same unfiltered suite, at zones that are NOT UTC.
+  #
+  # 2026-09-03 — nothing pins TZ for the test run (not jest.config.cjs, not
+  # jest.setup.js) and a GitHub runner is UTC, so every date assertion in this
+  # package had only ever been checked against ONE zone and a whole class of
+  # defect could not fail CI. Backend d01b3c41 is what that costs: recurrence
+  # expansion tracked the HOST's zone, a weekly all-day Monday series landed on
+  # TUESDAY at +05:30, and 43 suites / 406 tests were green throughout. Running
+  # THIS suite off UTC on 2026-09-03 found two more of the shape at once:
+  # `lib/date-utils.relative.test.ts` failed at Pacific/Auckland, and
+  # `formatShortDate` rendered every date-only column a day early for readers
+  # west of UTC.
+  #
+  # Pinning `TZ: UTC` everywhere would have CEMENTED that blind spot while
+  # looking like a fix. `TZ: UTC` above is the other half of a deliberate pair,
+  # not the fix on its own.
+  #
+  # Unfiltered for exactly the reason the `tests` job is: `--testPathPattern`
+  # reports green while every suite outside the filter is red, and a maintained
+  # list of "date-sensitive" suites is wrong the moment someone adds a
+  # `new Date()` to a suite nobody classified — which is how this class hides.
+  # The whole suite is 25s locally, so scoping would buy nothing.
+  #
+  # Three zones, three independent axes: a NEGATIVE offset with northern DST, a
+  # large POSITIVE offset with southern DST, and a HALF-HOUR offset (the case
+  # that breaks integer-hour arithmetic). `fail-fast: false` so one red zone
+  # still reports the other two — a matrix that stops at the first failure
+  # reports on a prefix, the same masking defect ticket 35 fixed at job level.
+  tests-non-utc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    strategy:
+      fail-fast: false
+      matrix:
+        tz:
+          - America/New_York
+          - Pacific/Auckland
+          - Australia/Adelaide
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Tests at ${{ matrix.tz }}
+        run: pnpm test --runInBand
+        env:
+          TZ: ${{ matrix.tz }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
+
+  # Every static gate in the frontend package. Hermetic: no database, no
+  # network, no sibling checkout. A step marked `continue-on-error` names the
+  # measured reason it cannot block yet — a gate wired so that it always fails
+  # gets muted within a week, which is worse than not wiring it.
+  #
+  # 2026-09-03 (ticket 35) — EVERY gate step carries `if: ${{ !cancelled() }}`.
+  # Without it a single red gate skips every gate below it, so the job reports
+  # on a PREFIX of the suite rather than on the suite. Measured at head in a
+  # frontend-only checkout: `check:command-catalog` is red for a real reason,
+  # and it alone turned the 18 gates after it into "skipped". The condition
+  # does NOT weaken anything — a failed step without continue-on-error still
+  # fails the job, it simply no longer hides its successors.
+  gates:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # 2026-09-03 (ticket 35) — MEASURED: this step exited 1 in a frontend-only
+      # checkout ("3 failed, 15 passed"), and as the FIRST step of this job it
+      # would have skipped all 26 gate steps below it. 35b moved the gates out
+      # from under a red Lint; this was the same masking defect one step lower,
+      # and it made the whole `gates` job a badge over nothing.
+      # Four of its 18 assertions need the backend repository checked out
+      # beside this one, which this job deliberately does not do (see the
+      # header). Those four are now reported NOT RUN and the run ends
+      # INCONCLUSIVE (exit 2); the opt-in below downgrades that to a labelled
+      # PARTIAL (exit 0). The step stays BLOCKING because the opt-in does not
+      # mask a defect — bite-proved in a hermetic tree: neutering the marker
+      # test, making `backendPath` compose onto a null root, or narrowing the
+      # dot-directory scan exclusion each exits 1 WITH the opt-in set and names
+      # the failing assertion.
+      - name: Repo path resolvers still resolve
+        if: ${{ !cancelled() }}
+        env:
+          STREAMLINE_ALLOW_FRONTEND_ONLY: "1"
+        run: pnpm run check:repo-paths:self-test
+
+      # Root CLAUDE.md §9 says both repos are at zero circular dependencies and
+      # that madge proves it. The BACKEND workflow has run `check:cycles` since
+      # 35b; the frontend never has, so the claim was unenforced on the half with
+      # 5,243 files. Measured here before wiring: rc=0, "No circular dependency
+      # found!", 5,243 files processed in 13.5s. Blocking because it is green.
+      #
+      # `check:cycles:self-test` existed in package.json and was named by no
+      # workflow step at all — the gate itself was wired (this step, since
+      # 35b/36), but its own bite-proof never ran, which is exactly the shape
+      # `check-gate-wiring.mjs` cannot see: its `HELPER` regex excludes every
+      # `:self-test` name by construction, because a self-test is not itself a
+      # `check:*` gate requiring wiring. Hermetic — plants two files that import
+      # each other in a temp dir and asserts madge exits non-zero and names them.
+      # MEASURED locally: 2/2 checks passed.
+      - name: Import graph is acyclic
+        if: ${{ !cancelled() }}
+        run: pnpm run check:cycles:self-test && pnpm run check:cycles
+
+      # `check:cycles` above runs madge over FILES and has always reported zero,
+      # which is correct at that granularity: no single file is in a loop. The
+      # criterion it is read as certifying (PRD-C024) names "frontend features",
+      # and at THAT granularity two loops stood at head — features/chat <->
+      # features/build through `status-badge`/`format-ticket-key`, and
+      # features/candidates <-> features/hr through `hr-sheet`. Both were cut by
+      # promoting the shared leaf to components/shared; this gate is what keeps
+      # them cut. MEASURED before wiring: PASS at 49 features / 36 cross-feature
+      # edges / 2,812 files, and FAIL naming `build -> chat -> build` with a
+      # single chat->build import planted back. Blocking because it is green.
+      - name: Feature graph is acyclic
+        if: ${{ !cancelled() }}
+        run: pnpm run check:feature-cycles
+
+      - name: Feature-cycle detector still detects
+        if: ${{ !cancelled() }}
+        run: pnpm run check:feature-cycles:self-test
+
+      # 2026-09-03 (ticket: test typecheck) — the frontend twin of the backend's
+      # `check:test-typecheck`. `tsconfig.json` excludes `**/__tests__/**`,
+      # `*.test.ts(x)` and `*.spec.ts(x)`, and `type-check` is a bare `tsc
+      # --noEmit`, so the `type-check` job above has never compiled a single one
+      # of this package's 338 test files. next/jest cannot substitute: it
+      # transpiles through SWC, which erases types with no diagnostics switch, so
+      # the `tests` job stays green over a spec calling a method that no longer
+      # exists. MEASURED at head before wiring: 842 errors over 338 test files,
+      # 703 of them one missing jest-dom type registration (fixed by putting
+      # jest.setup.js in the program) and 139 genuine across 45 files. All 139
+      # were fixed, so this is a HARD GATE at zero, not a ratchet.
+      - name: Test files typecheck
+        if: ${{ !cancelled() }}
+        run: pnpm run check:test-typecheck:self-test && pnpm run check:test-typecheck
+
+      # 2026-09-03 (ticket 35, box 5) — the frontend half of the backend's four
+      # test-honesty gates (check:test-suppressions, check:vacuous-assertions,
+      # check:bare-throw, check:transaction-callbacks). The frontend carried NONE
+      # of them, on the recorded ground that it "measures 0 in every class". That
+      # ground was WRONG: running the backend detector against this package found
+      # two live COND_ASSERT tests in hooks/api/notifications-inbox.test.ts, both
+      # behind `if (apiClient.get.mock.calls.length > 0)` — a guard on the very
+      # fact each test exists to prove. Proved by EXECUTION: with both hooks
+      # mutated to `enabled: false` so they never fetch, the pre-fix spec passed
+      # 2/2. Repaired, then gated. MEASURED at head after the repair: rc=0, 346
+      # test files, 2,722 test callbacks, 9,197 expect() calls, 24 .toThrow()
+      # matchers -> all seven classes 0, all seven ratchets 0. A HARD ZERO, not a
+      # ratchet, because the package genuinely measures zero. Four vacuity floors
+      # exit 2 INCONCLUSIVE rather than 0 if the walk, the test-callback matcher,
+      # the expect() matcher or the .toThrow() matcher measures nothing.
+      - name: No frontend test is skipped, focused, or unable to fail
+        if: ${{ !cancelled() }}
+        run: pnpm run check:test-integrity:self-test && pnpm run check:test-integrity
+
+      - name: Query keys and caches stay tenant-scoped
+        if: ${{ !cancelled() }}
+        run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
+
+      - name: Every queryFn forwards the abort signal
+        if: ${{ !cancelled() }}
+        run: pnpm run check:query-signal:self-test && pnpm run check:query-signal
+
+      - name: Client contract has not drifted from the API (timesheets)
+        if: ${{ !cancelled() }}
+        run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
+
+      # CANNOT RUN IN CI — named prerequisite: a checkout of
+      # Startupppp/streamlineos-backend beside this repository. Rule 1 of this
+      # gate compares the manifest against the BACKEND module registry, so a
+      # frontend-only half proves nothing about the rule the gate exists for.
+      # MEASURED 2026-09-03: frontend-only checkout exit 2, "INCONCLUSIVE —
+      # rule-1 (backend registry agreement) could not run"; two-repo layout at
+      # the same commit exit 0. Allow-failure so the INCONCLUSIVE is visible in
+      # the step list instead of skipping the 21 gates below it. It is
+      # deliberately NOT given STREAMLINE_ALLOW_FRONTEND_ONLY=1: that would turn
+      # a comparison that never happened into a green tick, which is the exact
+      # defect this ticket exists to remove. To make it blocking, add a checkout
+      # of the backend repository and set STREAMLINE_BACKEND_ROOT to it.
+      #
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED. It swallowed exit 2
+      # (prerequisite absent) and exit 1 (rule-2/3 violated, which need no sibling) alike, so a
+      # real disagreement between the manifest and the sidebar could never fail this job.
+      # `run-gate.mjs` keeps the tolerance for the absent checkout and restores the bite.
+      # MEASURED 2026-09-03: two-repo layout exit 0; STREAMLINE_BACKEND_ROOT pointed at a
+      # nonexistent directory exit 2, and run-gate turns that into a warning annotation + exit 0.
+      - name: Module manifest agrees with the sidebar and vocabulary
+        if: ${{ !cancelled() }}
+        run: >-
+          node scripts/run-gate.mjs check:module-manifest:self-test check:module-manifest
+          --prerequisite "a checkout of Startupppp/streamlineos-backend beside this repository (set STREAMLINE_BACKEND_ROOT)"
+
+      # CANNOT RUN IN CI — same named prerequisite as the step above. MEASURED
+      # 2026-09-03: frontend-only checkout exit 2, "INCONCLUSIVE — the
+      # manifest-vs-controller comparison — the entire point of this gate could
+      # not run"; two-repo layout exit 0.
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED, same reasoning and same
+      # measurement as the step above: exit 0 in a two-repo layout, exit 2 with no sibling.
+      - name: Home manifest agrees with the dashboard controller
+        if: ${{ !cancelled() }}
+        run: >-
+          node scripts/run-gate.mjs check:home-manifest:self-test check:home-manifest
+          --prerequisite "a checkout of Startupppp/streamlineos-backend beside this repository (set STREAMLINE_BACKEND_ROOT)"
+
+      - name: Every route-access permission names a real endpoint
+        if: ${{ !cancelled() }}
+        run: pnpm run check:route-access-contract:self-test && pnpm run check:route-access-contract
+
+      # BLOCKING AND CURRENTLY RED, deliberately. MEASURED 2026-09-03 at head in
+      # both layouts: exit 1, 1,504 mutation hooks scanned, 4 above a baseline of
+      # 0 — hooks/api/ai.ts:175 useGenerateJobDescription (UNCLASSIFIED, no
+      # apiClient call in the hook body) and hooks/api/git-integration.ts:59/69/79
+      # (WRONG-KEY: they declare "integrations:git:manage" where the contract
+      # requires "settings:manage"). Those are real defects in frontend hook
+      # territory, not gate noise; the gate is left blocking so they cannot be
+      # merged past, and the baseline is deliberately NOT raised to absorb them.
+      - name: Every mutation is classified as permissioned or self
+        if: ${{ !cancelled() }}
+        run: pnpm run check:command-catalog:self-test && pnpm run check:command-catalog
+
+      # An authenticated layout without robots noindex inherits index:true from the root
+      # layout, which is how three session-gated shells became crawlable.
+      - name: Authenticated shells are noindex and public pages carry canonical metadata
+        if: ${{ !cancelled() }}
+        run: pnpm run check:seo-metadata:self-test && pnpm run check:seo-metadata
+
+      - name: No arbitrary hex colour classes
+        if: ${{ !cancelled() }}
+        run: pnpm run check:colors:self-test && pnpm run check:colors
+
+      # BLOCKING AND NEWLY RED, deliberately. 2026-09-03 (ticket 35) bite-proved
+      # this gate and it did not bite: it reported "No useEffect-driven API
+      # fetches found (5,278 files scanned)" over a real one, because both of
+      # its rules needed a shape the common case does not have. With rule 3
+      # added it measures ONE violation —
+      # components/layout/command-palette.tsx:177, a debounced search calling
+      # apiClient.get("/search") inside useEffect with a hand-rolled `cancelled`
+      # flag instead of useQuery. Frontend component territory, not a gate
+      # defect. The step is left blocking and red rather than muted: the code is
+      # what is wrong, and `if: !cancelled()` above means a red step no longer
+      # hides the ones after it.
+      - name: No useEffect-driven API fetches
+        if: ${{ !cancelled() }}
+        run: pnpm run check:effect-fetches:self-test && pnpm run check:effect-fetches
+
+      - name: No local Intl formatters outside lib/format-utils.ts
+        if: ${{ !cancelled() }}
+        run: pnpm run check:formatters:self-test && pnpm run check:formatters
+
+      - name: Icon-only buttons carry an accessible name
+        if: ${{ !cancelled() }}
+        run: pnpm run check:icon-labels:self-test && pnpm run check:icon-labels
+
+      - name: Client-page ratio stays within its ceiling
+        if: ${{ !cancelled() }}
+        run: pnpm run check:client-pages:self-test && pnpm run check:client-pages
+
+      - name: Authenticated route modules stay thin
+        if: ${{ !cancelled() }}
+        run: pnpm run check:route-thinness:self-test && pnpm run check:route-thinness
+
+      - name: No hand-rolled empty states
+        if: ${{ !cancelled() }}
+        run: pnpm run check:empty-states:self-test && pnpm run check:empty-states
+
+      # Budgets only; no measurement runs in CI yet. Swap --self-test for --results=<file>
+      # once a capture step produces one. Budgets live in scripts/check-web-vitals-budget.mjs
+      # and the capture is scripts/measure-web-vitals.mjs, which needs a quiet host.
+      - name: Web Vitals budgets are enforceable
+        if: ${{ !cancelled() }}
+        run: pnpm run check:web-vitals-budget:self-test
+
+      # `verify:server-data-seam:self-test` and `browser:journeys:self-test` existed in
+      # package.json and were named by no workflow step at all — the two gates behind them
+      # had never been invoked in any form. Both fall outside `check-gate-wiring.mjs`
+      # entirely: it only resolves scripts named `check:*`, and neither of these two is.
+      #
+      # `verify:server-data-seam` (root §2's server-fetch/cache() memoization contract) proves
+      # the AST shape of `lib/server-fetch.ts` here — hermetic, no build required — but its
+      # remaining assertions read `.next/BUILD_ID` and `.next/server/app-paths-manifest.json`,
+      # which do not exist in this job (it runs no `next build`). Self-test only here;
+      # the full gate (self-test + live) is wired into the `build` job below, immediately
+      # after the step that produces those two files. MEASURED locally: 5/5 checks passed.
+      - name: Server-fetch cache() seam detector still detects
+        if: ${{ !cancelled() }}
+        run: pnpm run verify:server-data-seam:self-test
+
+      # `browser:journeys` drives a real headless Chrome against a running, authenticated
+      # build (root §11.18-class UX assertions jsdom cannot answer: 375/768/1280 overflow,
+      # painted-pixel contrast, axe-core against the rendered tree, a write surviving a
+      # reload) — it needs a Chrome/Chromium binary, a live `next start` on a real port, and
+      # an authenticated session cookie file, none of which this workflow provisions. Wiring
+      # the live gate here would be a permanently red step for an environmental reason, which
+      # root's own instruction is explicit is worse than the honest gap. Its self-test carries
+      # no such dependency: every assertion below is pure JS logic (contrast math, state-machine
+      # verdicts, token/step-expansion, the write-journey fixtures) plus one filesystem check
+      # that `axe-core` resolves through the `jest-axe` dependency already installed for the
+      # unit suite. MEASURED locally: 66/66 checks passed.
+      - name: Browser-journey harness logic still detects
+        if: ${{ !cancelled() }}
+        run: pnpm run browser:journeys:self-test
+
+      # ---------------------------------------------------------------------
+      # Reported, not blocking. Each of these has a MEASURED reason, recorded
+      # 2026-09-02. Delete the continue-on-error when the named number is zero.
+      # ---------------------------------------------------------------------
+
+      # BLOCKING as of 2026-09-02. Re-measured after ticket 37's splits: rc=0,
+      # 519 of 5228 production files exceed 300 lines against a baseline of 519 —
+      # at the ratchet with no headroom, which is what a ratchet is for. The
+      # workflow's own rule is to delete continue-on-error when the number is no
+      # longer above the line, so it is deleted.
+      - name: Files over 300 lines do not increase
+        if: ${{ !cancelled() }}
+        run: pnpm run check:over-300:self-test && pnpm run check:over-300
+
+      # Measured rc=1: 3 files over 500 lines — features/hr/cases/cases-page-content.tsx
+      # 501, hooks/api/notifications-inbox.ts 534, hooks/api/notifications-inbox.test.ts
+      # 663. The third is newly visible: ticket 35 stopped this gate excluding
+      # *.test.ts(x), because check-over-300 scanned them and this one did not, so
+      # a 663-line test file inflated the 300-line ratchet while being exempt from
+      # the 500-line ceiling. Measured both directions before choosing — exempting
+      # tests from over-300 instead would have dropped 519 to 509 with no file
+      # getting shorter, which is a ratchet moved to make a number smaller.
+      # Aligning by tightening costs exactly one new row. §7 lists its exceptions
+      # and tests are not among them. All three are other tickets' files.
+      # BLOCKING as of 2026-09-03 (v2 ticket 30). The three files the note above named are all
+      # under the limit now. RE-MEASURED at head, hermetically (this gate reads no sibling
+      # repository): self-test exit 0, gate exit 0 — "5342 files scanned — all within 500 lines
+      # (0 exceptions registered)", plus two CRM/Inventory files reported informationally and
+      # excluded from the count by PRD scope. This file's own rule is to delete the
+      # continue-on-error when the number is no longer above the line, so it is deleted.
+      - name: Files over 500 lines
+        if: ${{ !cancelled() }}
+        run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes
+
+      # v2 ticket 01 / PRD-C017. The traceability manifest, enforced rather than
+      # asserted in prose. The previous ticket set kept its PRD-to-ticket mapping
+      # as text and it silently drifted: five PRD boxes ended with no owner, four
+      # ticket boxes with no PRD counterpart, three partial boxes unrepresented.
+      # This makes the mapping total and injective, requires ticket criteria to
+      # quote the PRD verbatim, and requires both checkbox states to move together
+      # so a ticket cannot report completion the source never recorded.
+      # It also pins the ten module-evidence criteria restored on 2026-09-03 —
+      # Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/Payments,
+      # Accounting/Finance, Chat, Notifications, shared adapters. Those were once
+      # 60 carried "Proven" boxes resting entirely on deleted text, and the PRD's
+      # own header says completed items get removed, so the mechanism that erased
+      # them is still live. A completed criterion is recorded `[x]`, never deleted.
+      # Measured at head: rc=0, 195 criteria, 36 tickets, 195 manifest rows.
+      # Self-test: 10/10, including a control proving the real tree still passes.
+      - name: Every PRD criterion has exactly one ticket owner
+        if: ${{ !cancelled() }}
+        run: pnpm run check:prd-traceability:self-test && pnpm run check:prd-traceability
+
+      # Ticket 36. The frontend half of the backend's `check:type-assertions`.
+      # Hard zero for `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`
+      # in application code, and a zero-GROWTH ledger for `as unknown as` where
+      # every file carries its count, its seam kind and a written invariant.
+      # Generated output cannot enter the count: every directory whose name
+      # begins `.next` is skipped, which is where the phantom "661 @ts-ignore"
+      # came from. Measured at head: rc=0, 4,258 application files, 7 sites in
+      # 6 files, 0 banned escapes.
+      - name: Type assertions stay at a proven seam
+        if: ${{ !cancelled() }}
+        run: pnpm run check:type-assertions:self-test && pnpm run check:type-assertions
+
+      # RE-MEASURED 2026-09-03 (ticket 35), hermetically at head in a
+      # frontend-only checkout: rc=1, ONE unclassified export —
+      # types/projects/shared.ts:PaginatedResponse. Baseline files=0 exports=0
+      # and current files=0 exports=0, so the ratchet itself is clean; the
+      # failure is the missing WIRE/KEEP verdict. The previous note here named
+      # three exports (project-charts CHART_COLORS, mail-compose-sheet
+      # MailComposeMode, media-image-schema MediaImageQuery) and all three are
+      # gone — the number is one, and the step comment now says one.
+      # 2026-09-03 (v2 ticket 30) — TWO LAYERS OF "CANNOT FAIL" ARE STACKED HERE. This step is
+      # allow-failure, AND the knip run underneath it is blind: knip.json lists
+      # `**/*.test.{ts,tsx}`, `**/*.spec.{ts,tsx}` and `**/__tests__/**` as `entry`, so any
+      # production file kept alive only by its own test is reachable and cannot be reported.
+      # MEASURED at head: knip as configured reports 2 unused files; with the spec globs out of
+      # `entry`/`project` and `jest: false` it reports 8. Corrected config and the classified
+      # list: .scratch/code-release-10-10-v2/reports/30-knip-reach/.
+      # NOT FIXED HERE — the reach fix and the 8-file classification are one atomic change and
+      # the files belong to other lanes.
+      #
+      # RE-MEASURED and the flag KEPT. rc=1, still exactly ONE
+      # unclassified export, and it is the same one: features/chat/chat-helpers.ts:resolveFileUrl
+      # (types/projects/shared.ts:PaginatedResponse named above is resolved). Baseline files=0
+      # exports=0, current files=0 exports=0 — the ratchet is clean and was NOT raised to absorb
+      # this. OWNER: the chat feature lane; features/** is outside the gates territory, so
+      # ticket 30 may not record the verdict itself. Registered in NON_BLOCKING_BY_DESIGN in
+      # check-gate-wiring.mjs, which now fails if this entry outlives the failure.
+      - name: Every export is classified and no classification is stale
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: pnpm run check:dead-code:self-test && pnpm run check:dead-code
+
+      # RE-MEASURED 2026-09-03 (ticket 35): rc=1, 17 BREACHES — not the "6 routes
+      # never measured" the previous note claimed. The measurement set landed
+      # since, so these are measured bytes over declared ceilings, e.g.
+      # /build/my-work measuredScriptBytes=817721 over 524288, /crm/leads
+      # 807617 over 524288, /calendar 728786 over 524288, /chat
+      # measuredPageChunkBytes=224885 over 204800. Real findings, ticket 22/26
+      # territory. Still allow-failure because 17 is not zero.
+      # 2026-09-03 (v2 ticket 30) — RE-MEASURED and the flag KEPT. rc=1, 15 breaches (was 17),
+      # e.g. /crm/leads measuredScriptBytes=773117 over 524288, /parties 618550 over 524288.
+      # Measured bytes over declared budgets. OWNER: tickets 22/26. Registered in
+      # NON_BLOCKING_BY_DESIGN.
+      - name: Route bundle bytes stay within their declared ceiling
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: pnpm run check:route-bundle-budget:self-test && pnpm run check:route-bundle-budget
+
+      # Measured rc=1: 1 business route handler, app/api/media/image/route.ts.
+      # Root CLAUDE.md §5 permits only the NextAuth route. Real finding.
+      # BLOCKING as of 2026-09-03 (v2 ticket 30). The note above recorded one business route
+      # handler, app/api/media/image/route.ts; it is allowlisted now and the gate re-checks the
+      # allowlist rather than trusting it. RE-MEASURED at head, hermetically: self-test exit 0,
+      # gate exit 0 — "No business route handlers found (655 route directories walked, 2
+      # allowlisted handlers re-checked)". Deleted per this file's own rule.
+      - name: The only route.ts is NextAuth
+        if: ${{ !cancelled() }}
+        run: pnpm run check:routes:self-test && pnpm run check:routes
+
+      # The LIVE budget check, against the committed measurement set.
+      # RE-MEASURED 2026-09-03 (ticket 35): rc=1, TWO breaches, both TTFB and
+      # both carrying a recorded ticket-26 exception that the gate still counts
+      # as a failure — mobile TTFB p95 932ms > 600 (was 3727) and desktop TTFB
+      # p95 1669ms > 400 (was 1430). The mobile FCP breach the previous note
+      # named is gone. Real findings, ticket 26/28. The self-test above stays
+      # blocking; this reports the numbers.
+      # 2026-09-03 (v2 ticket 30) — RE-MEASURED and the flag KEPT. rc=1, ONE violation now, not
+      # two: mobile /crm/inbox CLS p75 0.109 over 0.100. Both TTFB breaches named above are gone.
+      # The route carries a written ticket-26 exception and the gate still counts it as a
+      # failure, which is the honest arrangement. OWNER: the CRM lane. The hermetic half,
+      # "Web Vitals budgets are enforceable", is a separate step and is BLOCKING.
+      # Registered in NON_BLOCKING_BY_DESIGN.
+      - name: Web Vitals budgets (measured)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: pnpm run check:web-vitals-budget
+
+      # BLOCKING as of 2026-09-03 (ticket 35). The note here recorded rc=1 at
+      # cross-feature-import 222/210 and shared-imports-feature 20/19. Both are
+      # closed: S10 narrowed the corpus and lowered the cross-feature baseline
+      # 210 -> 194 in the same change, and the org-switcher violation that made
+      # the shared count 20 is gone. RE-MEASURED hermetically at head in a
+      # frontend-only checkout: rc=0, shared-imports-feature 19/19 and
+      # cross-feature-import 182/182, both AT the ratchet with no headroom.
+      # This file's own rule is to delete continue-on-error when the number is no
+      # longer above the line, so it is deleted.
+      - name: Import direction (features -> shared, never the reverse)
+        if: ${{ !cancelled() }}
+        run: pnpm run check:import-direction:self-test && pnpm run check:import-direction
+
+      # 2026-09-03 — these five gates existed in package.json and were referenced by NO
+      # workflow, so they could never run. Two of them had already found real defects on the
+      # day they were written (check:permission-binding: 27 permission/route mismatches;
+      # check:response-contracts: the runtime-parsing ratchet). A gate that cannot run is
+      # indistinguishable from a gate that passes, which is the defect class this release has
+      # spent itself finding. `check:gate-wiring` below now makes recurrence impossible.
+      - name: Gated reads consult a permission
+        if: ${{ !cancelled() }}
+        run: pnpm run check:gated-reads:self-test && pnpm run check:gated-reads
+
+      - name: Handlers in JSX event props are named
+        if: ${{ !cancelled() }}
+        run: pnpm run check:named-handlers:self-test && pnpm run check:named-handlers
+
+      - name: A hook gates on the permission its route declares
+        if: ${{ !cancelled() }}
+        run: pnpm run check:permission-binding:self-test && pnpm run check:permission-binding
+
+      - name: Response contracts ratchet
+        if: ${{ !cancelled() }}
+        run: pnpm run check:response-contracts:self-test && pnpm run check:response-contracts
+
+      # The request half of the same contract. check:response-contracts watches what a route
+      # returns; nothing watched what a caller sends, and a query key the backend schema does
+      # not declare is a hard 400 where that schema is .strict() and a silently dead filter
+      # where it is absent. It found 15 on the day it was written, including a pagination that
+      # returned page 1 forever and a GET /inventory/expiry that 400'd on every call.
+      - name: Request query parameters match the document
+        if: ${{ !cancelled() }}
+        run: pnpm run check:request-params:self-test && pnpm run check:request-params
+
+      # `check:properties:self-test` existed in package.json and was named by no
+      # workflow step — the gate itself has run here since it was written, but
+      # its own bite-proof never did, invisibly to `check-gate-wiring.mjs`
+      # (its `HELPER` regex excludes every `:self-test` name, on the ground
+      # that a self-test is not itself a `check:*` gate). It runs the four
+      # structural sub-detectors' own `--self-test` flags and deliberately
+      # excludes madge (covered by `check:cycles:self-test` above, and a second
+      # `npx madge@8` here would make timing non-deterministic on first run).
+      # MEASURED locally: 4/4 sub-self-tests passed.
+      - name: Component property conventions
+        if: ${{ !cancelled() }}
+        run: pnpm run check:properties:self-test && pnpm run check:properties
+
+      # 2026-09-03 (v2 ticket 30) — this gate now also fails on a gate that is wired but CANNOT
+      # FAIL: one whose every invocation sits under `continue-on-error` (step-level or
+      # job-level). It found 15 such gates across the two repositories on the day it was added.
+      # The self-test is new too: the gate that decides whether every other gate can run had
+      # none. 28 assertions, each naming a specific verdict; bite-proved by neutering the
+      # job-level rule and the conservative expression rule in a temp fixture, each exiting 1
+      # and naming the assertion.
+      - name: Every check:* script is wired into a workflow and can fail
+        if: ${{ !cancelled() }}
+        run: pnpm run check:gate-wiring:self-test && pnpm run check:gate-wiring
+
+      # 2026-09-03 — the permission catalogue is now VENDORED as
+      # contracts/permission-catalog.json, the same way contracts/openapi.json
+      # vendors the API contract. Eight jest suites used to read the backend's
+      # RBAC catalogue out of a sibling checkout that this workflow never clones;
+      # measured on run 33719474880 the `tests` job reported 9 failed suites, 8
+      # of them that cause, which meant the page-level RBAC gate had never once
+      # been enforced in CI.
+      #
+      # A vendored copy that goes stale is worse than no copy, so this gate is
+      # the load-bearing half and TWO of its three rules are hermetic:
+      # rule 1 floors and shape, rule 2 cross-checks every `x-permission` in the
+      # vendored OpenAPI contract against the catalogue. Both were bite-proved in
+      # a frontend-only tree: dropping one route-bound permission exits 1 naming
+      # it, and emptying the catalogue exits 1 — WITH the opt-in set, so the
+      # opt-in cannot mask them. It downgrades only rule 3, the byte-for-byte
+      # regeneration against the backend, which is reported PARTIAL here and
+      # NOT RUN rather than silently skipped. To make rule 3 blocking, add a
+      # checkout of Startupppp/streamlineos-backend and set STREAMLINE_BACKEND_ROOT.
+      - name: Vendored permission catalogue is well-formed and agrees with the API contract
+        if: ${{ !cancelled() }}
+        env:
+          STREAMLINE_ALLOW_FRONTEND_ONLY: "1"
+        run: pnpm run check:permission-catalog:self-test && pnpm run check:permission-catalog
+
+      # Compares frontend/contracts/openapi.json byte-for-byte against the
+      # BACKEND repository's generated artifact. In a frontend-only checkout the
+      # artifact does not resolve and the gate exits 1 by design — its own error
+      # text says to skip it here and rely on check:contract-drift, which is
+      # blocking above. To make this blocking, add a checkout of
+      # Startupppp/streamlineos-backend and set STREAMLINEOS_BACKEND_ROOT to it.
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED. The gate used to exit 1
+      # both when the backend artifact was absent and when the vendored copy was genuinely
+      # STALE, so the flag had to swallow both and a stale contract could ship. It now exits 2
+      # for the absent artifact (INCONCLUSIVE) and 1 only for a real hash mismatch, and run-gate
+      # splits them. The same change replaced this gate's private `STREAMLINEOS_BACKEND_ROOT`
+      # override — one letter off from the STREAMLINE_BACKEND_ROOT every other gate honours, so
+      # the documented override did nothing here — with the shared resolver.
+      # MEASURED 2026-09-03: two-repo layout exit 0, hashes equal; STREAMLINE_BACKEND_ROOT
+      # pointed at a nonexistent directory exit 2 (was exit 0 before the resolver fix, silently
+      # comparing against a checkout the operator had overridden away from).
+      - name: Vendored contract is byte-identical to the backend artifact
+        if: ${{ !cancelled() }}
+        run: >-
+          node scripts/run-gate.mjs check:contract-vendor:self-test check:contract-vendor
+          --prerequisite "a checkout of Startupppp/streamlineos-backend carrying a generated openapi.json (set STREAMLINE_BACKEND_ROOT)"
 
   # The six frontend inventory ratchets, BY NAME. `tests` above runs them too,
   # but only as part of one shared verdict for the whole suite; named here they
   # are readable in the log and cannot be silenced by an unrelated red suite.
   # `--ci` with no `--passWithNoTests`, so a pattern that matches nothing exits 1.
+  #
+  # The env block is the `tests` job's, for the `tests` job's reason: a suite
+  # that imports `components/ai/ai-error-state.ts` throws at MODULE LOAD
+  # without NEXT_PUBLIC_API_URL, which would fail a ratchet on an import rather
+  # than on its assertion.
   inventory-ratchets:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
+    env:
+      TZ: UTC
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

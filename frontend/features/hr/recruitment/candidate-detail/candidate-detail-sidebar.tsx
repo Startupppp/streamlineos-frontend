@@ -1,9 +1,9 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CandidateProfileCard } from "@/features/candidates/candidate-profile-card";
-import { AiScoreCard } from "@/features/candidates/ai-score-card";
-import { CompositeScoreCard } from "@/features/candidates/composite-score-card";
+import { CandidateProfileCard } from "@/features/hr/recruitment/candidates/candidate-profile-card";
+import { AiScoreCard } from "@/features/hr/recruitment/candidates/ai-score-card";
+import { CompositeScoreCard } from "@/features/hr/recruitment/candidates/composite-score-card";
 import type { AiScoreResult } from "@/hooks/api/hr";
 import type { CompositeScoreResult } from "@/hooks/api/hr/recruitment";
 import type { CandidateStatus } from "@/types/hr";

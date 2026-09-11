@@ -11,9 +11,11 @@ import {
   useSprints,
   useSubtasks,
 } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
 
 interface ProjectManager {
@@ -47,23 +49,28 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     data: ticket,
     isLoading,
     error: ticketError,
-  } = useTicket(projectId, ticketId ?? 0);
+    refetch: refetchTicket,
+  } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
   const members = useMemo<ProjectMember[]>(() => {
     if (!projectData?.members) return [];
-    const list = projectData.members
-      .filter((m) => !!m.user)
-      .map((m) => ({
-        id: m.user!.id,
-        name: m.user!.name || `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
-        firstName: m.user!.firstName || undefined,
-        lastName: m.user!.lastName || undefined,
-        image: m.user!.image || null,
-        email: m.user!.email || "",
-      }));
+    const list = projectData.members.flatMap((m) => {
+      const user = m.user;
+      if (!user) return [];
+      return [
+        {
+          id: user.id,
+          name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          image: user.image || null,
+          email: user.email || "",
+        },
+      ];
+    });
     const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
     if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({
@@ -88,12 +95,12 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: queryKeys.projects.detail(projectId),
+      queryKey: buildWorkQueryKeys.projects.detail(projectId),
       refetchType: "none",
     });
     if (ticketId !== null) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId) });
     }
   }, [queryClient, projectId, ticketId]);
 
@@ -108,7 +115,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
         toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
         if (ticketId !== null) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+          queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
         }
         return;
       }
@@ -188,6 +195,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     ticket,
     isLoading,
     ticketError,
+    refetchTicket,
     projectData,
     sprints: sprints ?? [],
     subtasks: subtasks ?? [],

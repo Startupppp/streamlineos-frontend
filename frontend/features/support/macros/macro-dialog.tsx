@@ -52,20 +52,28 @@ export function MacroDialog({
   const [title, setTitle] = useState(macro?.title ?? "");
   const [category, setCategory] = useState(macro?.category ?? "");
   const [body, setBody] = useState(macro?.body ?? "");
-  const [visibility, setVisibility] = useState<MacroVisibility>(
-    macro?.visibility ?? "org",
-  );
+  const [visibility, setVisibility] = useState<MacroVisibility>(() => {
+    const v = macro?.visibility ?? "org";
+    return isMacroVisibility(v) ? v : "org";
+  });
   const [setStatus, setSetStatus] = useState<
     SupportTicketStatus | typeof NONE_VALUE
-  >(macro?.actions.setStatus ?? NONE_VALUE);
+  >(() => {
+    const v = macro?.actions.setStatus;
+    return typeof v === "string" && isTicketStatus(v) ? v : NONE_VALUE;
+  });
   const [setPriority, setSetPriority] = useState<
     TicketPriority | typeof NONE_VALUE
-  >(macro?.actions.setPriority ?? NONE_VALUE);
-  const [addTagId, setAddTagId] = useState(
-    macro?.actions.addTagId ? String(macro.actions.addTagId) : NONE_VALUE,
-  );
+  >(() => {
+    const v = macro?.actions.setPriority;
+    return typeof v === "string" && isTicketPriority(v) ? v : NONE_VALUE;
+  });
+  const [addTagId, setAddTagId] = useState(() => {
+    const v = macro?.actions.addTagId;
+    return v != null ? String(v) : NONE_VALUE;
+  });
   const [actionIsInternal, setActionIsInternal] = useState(
-    macro?.actions.isInternal ?? false,
+    macro?.actions.isInternal === true,
   );
   const create = useCreateMacro();
   const update = useUpdateMacro();

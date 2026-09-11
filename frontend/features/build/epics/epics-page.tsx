@@ -14,6 +14,7 @@ import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Layers,
   AlertCircle,
@@ -32,7 +33,7 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -43,9 +44,28 @@ export function EpicsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
 
-  const { data: project, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const {
+    data: project,
+    isLoading: projectLoading,
+    isError: projectFailed,
+    error: projectError,
+    refetch: refetchProject,
+  } = useProject(projectId);
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsFailed,
+    error: ticketsError,
+    refetch: refetchTickets,
+  } = useProjectBoardTickets(projectId);
   const isLoading = projectLoading || ticketsLoading;
+  const isError = projectFailed || ticketsFailed;
+  const loadError = projectError ?? ticketsError;
+
+  const handleRetry = useCallback(() => {
+    void refetchProject();
+    void refetchTickets();
+  }, [refetchProject, refetchTickets]);
 
   const updateTicket = useUpdateTicket(projectId);
   const deleteTicket = useDeleteTicket(projectId);
@@ -106,6 +126,24 @@ export function EpicsPage({ params }: PageProps) {
               ))}
             </div>
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Epics"
+        subtitle="Organize related stories and tasks into larger themes"
+      >
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load epics"
+            description={getErrorMessage(loadError)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

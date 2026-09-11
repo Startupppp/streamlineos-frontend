@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { SimulationResult } from "./simulation-result";
 import { useComparePolicy } from "@/hooks/api/hr/enterprise-ops-simulator";
 
@@ -19,7 +21,11 @@ export function CompareSimulator() {
     policyType: string;
   } | null>(null);
 
-  const { data, isLoading } = useComparePolicy(params);
+  const { data, isLoading, isError, error, refetch } = useComparePolicy(params);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleCompare() {
     if (!employeeId || !oldPolicyId || !newPolicyId) return;
@@ -67,7 +73,15 @@ export function CompareSimulator() {
           </Button>
         </div>
       </div>
-      <SimulationResult result={data ?? null} label="Old vs new policy comparison" />
+      {isError ? (
+        <ErrorState
+          title="Couldn't compare these policies"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <SimulationResult result={data ?? null} label="Old vs new policy comparison" />
+      )}
     </div>
   );
 }

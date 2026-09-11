@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { addAttendeeResultContract } from "@/hooks/api/build/meetings-schema";
 export type MeetingType = "meeting" | "standup" | "retro" | "planning" | "review";
 export type MeetingStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 export type ActionItemStatus = "open" | "in_progress" | "done" | "converted" | "cancelled";
@@ -12,45 +14,46 @@ export interface RecurrenceRule {
 
 export interface Meeting {
   id: number;
-  orgId?: string;
+  orgId: string;
   projectId: number;
   meetingNumber: number;
   title: string;
-  type: MeetingType;
-  status: MeetingStatus;
+  type: string;
+  status: string;
   agenda: string | null;
   notes: string | null;
   scheduledAt: string | null;
   endAt: string | null;
   durationMinutes: number | null;
   timezone: string | null;
-  recurrenceRule: RecurrenceRule | null;
+  recurrenceRule: unknown;
   sprintId: number | null;
-  createdBy?: string | null;
+  createdBy: string | null;
   attendeeCount?: number;
   actionItemCount?: number;
   unresolvedActionItemCount?: number;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface MeetingAttendee {
-  id: number;
-  meetingId: number;
-  userId: string;
-  attended: boolean;
-}
+export type MeetingAttendee = z.infer<typeof addAttendeeResultContract>;
+
+
 
 export interface ActionItem {
   id: number;
+  orgId: string;
   meetingId: number;
   projectId: number;
   title: string;
   description: string | null;
   assigneeId: string | null;
   dueDate: string | null;
-  status: ActionItemStatus;
+  status: string;
   convertedTicketId: number | null;
+  createdBy: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

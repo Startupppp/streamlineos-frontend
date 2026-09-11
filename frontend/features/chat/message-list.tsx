@@ -9,6 +9,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
+import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
 
 interface GroupedMessages {
@@ -40,7 +41,7 @@ interface MessageItemProps {
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }
@@ -114,6 +115,14 @@ interface MessageListProps {
   groupedMessages: GroupedMessages[];
   messages: Message[];
   isLoading: boolean;
+  /**
+   * The history read failed. Without this the list fell through to its empty
+   * layout, so a 500 or a 403 on `GET /chat/channels/:id/messages` was
+   * indistinguishable from a channel nobody has written in yet.
+   */
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -141,7 +150,7 @@ interface MessageListProps {
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
   showScrollBtn: boolean;
@@ -167,6 +176,9 @@ export function MessageList({
   groupedMessages,
   messages,
   isLoading,
+  isError,
+  errorMessage,
+  onRetry,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -201,6 +213,30 @@ export function MessageList({
   onScroll,
 }: MessageListProps) {
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
+  const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
+
+  /*
+   * Before the empty layout, and before the entity-action provider mounts a
+   * query of its own: a channel whose history could not be read has nothing to
+   * resolve references against. The four sibling chat surfaces
+   * (channel-sidebar, channels-discovery-page, saved-messages-panel,
+   * shared-files-panel) already branch here; the timeline was the one that
+   * rendered a failure as an ordinary empty conversation.
+   */
+  if (isError) {
+    return (
+      <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">
+        <ErrorState
+          compact
+          title="Couldn't load this conversation"
+          description={
+            errorMessage ?? "The message history could not be read. Please try again."
+          }
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <EntityActionsProvider channelId={channelId} messages={messages}>
@@ -220,7 +256,8 @@ export function MessageList({
           }}
         >
         {isLoading ? (
-          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5">
+          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5" aria-busy="true">
+            <span role="status" className="sr-only">Loading messages…</span>
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
                 <div className="w-8 rounded-full bg-muted animate-pulse shrink-0" />

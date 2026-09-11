@@ -1,0 +1,16 @@
+{
+  "note": "Registry for check-test-integrity.mjs. Every frontend test that runs and cannot fail, and every unconditional suppression, must appear here with a reason and a named owner. All seven ratchets are 0: this package measured 0 in every class after the two COND_ASSERT tests in hooks/api/notifications-inbox.test.ts were repaired, so the first regression must be argued for rather than merged.",
+  "measured": "2026-09-03",
+  "minReasonLength": 24,
+  "ratchets": {
+    "NO_ASSERTION": 0,
+    "TAUTOLOGY": 0,
+    "COND_ASSERT": 0,
+    "EARLY_RETURN": 0,
+    "FLOATING_ASSERT": 0,
+    "FOCUSED": 0,
+    "SUPPRESSION": 0,
+    "BARE_THROW": 0
+  },
+  "allowed": []
+}

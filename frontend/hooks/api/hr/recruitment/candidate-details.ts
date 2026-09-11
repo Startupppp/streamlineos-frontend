@@ -1,168 +1,138 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-interface VaultDocument {
-  id: number;
-  candidateId: number;
-  orgId: string;
-  filename: string;
-  s3Key: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
-  documentType: string | null;
-  avResult: "PENDING" | "CLEAN" | "INFECTED" | null;
-  expiresAt: string | null;
-  uploadedBy: string;
-  createdAt: string | null;
-}
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const activityContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.candidateActivityEventListSchema,
+  ),
+);
+const vaultDocumentListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.vaultDocumentListSchema,
+  ),
+);
+const vaultDocumentContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.vaultDocumentSchema,
+  ),
+);
+const rolloutDocumentListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.rolloutDocumentListSchema,
+  ),
+);
+const generateRolloutContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.generateRolloutResponseSchema,
+  ),
+);
+const bgvSuccessContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.bgvUpdateSuccessSchema,
+  ),
+);
+const vaultAccessLogListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.vaultAccessLogListSchema,
+  ),
+);
+const bgvComplianceListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.bgvComplianceListSchema,
+  ),
+);
+const referralListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.candidateReferralListSchema,
+  ),
+);
+const referralContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.candidateReferralSchema,
+  ),
+);
+const calibrationListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.calibrationSessionListSchema,
+  ),
+);
+const calibrationContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.calibrationSessionSchema,
+  ),
+);
+const referenceCheckListContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.referenceCheckListSchema,
+  ),
+);
+const referenceCheckContract = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidate-details-schema").then(
+    (m) => m.referenceCheckSchema,
+  ),
+);
 
-export type BgvStatus = "NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED";
-export type VaultDocumentType = "AADHAR" | "PAN" | "PASSPORT" | "CERTIFICATE" | "OFFER_LETTER" | "OTHER";
+import type {
+  BgvComplianceRow,
+  CalibrationSession,
+  CandidateActivityEvent,
+  CandidateDocumentRecord,
+  CandidateReferral,
+  CreateReferenceCheckInput,
+  ReferenceCheck,
+  RolloutDocumentRecord,
+  RolloutDocumentsInput,
+  RolloutDocumentsResult,
+  UpdateBgvInput,
+  VaultAccessLog,
+  VaultDocument,
+  VaultDocumentType,
+} from "@/hooks/api/hr/recruitment/candidate-details-types";
 
-export interface RolloutDocumentRecord {
-  id: number;
-  templateId: number | null;
-  templateTitle: string | null;
-  title: string;
-  status: string;
-  sentAt: string | null;
-  viewedAt: string | null;
-  signedAt: string | null;
-  declinedAt: string | null;
-  createdAt: string | null;
-  createdBy: string;
-}
-
-export interface RolloutDocumentsInput {
-  templateIds: number[];
-  variables: Record<string, string>;
-  sendEmail: boolean;
-}
-
-interface RolloutDocumentsResult {
-  documents: RolloutDocumentRecord[];
-  count: number;
-}
-
-interface UpdateBgvInput {
-  bgvStatus: BgvStatus;
-  bgvAgency?: string;
-  bgvNotes?: string;
-}
-
-interface VaultAccessLog {
-  id: number;
-  action: string;
-  accessedAt: string | null;
-  fileName: string;
-  documentType: string | null;
-  accessorDisplayName: string;
-}
-
-export interface BgvComplianceRow {
-  jobPostingId: number;
-  jobTitle: string;
-  total: number;
-  cleared: number;
-  failed: number;
-  pending: number;
-  initiated: number;
-  notInitiated: number;
-  clearedPct: number;
-}
-
-interface CandidateReferral {
-  id: number;
-  orgId: string;
-  candidateId: number;
-  referredBy: string;
-  relationship: string | null;
-  notes: string | null;
-  bonusEligible: boolean;
-  bonusAmount: string | null;
-  bonusPaidAt: string | null;
-  createdAt: string;
-}
-
-interface CalibrationSession {
-  id: number;
-  orgId: string;
-  candidateId: number;
-  jobPostingId: number | null;
-  scheduledAt: string | null;
-  status: "pending" | "scheduled" | "completed" | "cancelled";
-  notes: string | null;
-  decision: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null;
-  participantIds: string[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ReferenceCheck {
-  id: number;
-  candidateId: number;
-  orgId: string;
-  referenceName: string;
-  referenceDesignation: string | null;
-  referenceCompany: string | null;
-  referenceEmail: string | null;
-  referencePhone: string | null;
-  relationship: string | null;
-  status: string;
-  outcome: string | null;
-  notes: string | null;
-  contactedAt: string | null;
-  createdBy: string | null;
-  createdAt: string | null;
-}
-
-interface CreateReferenceCheckInput {
-  referenceName: string;
-  referenceDesignation?: string;
-  referenceCompany?: string;
-  referenceEmail?: string;
-  referencePhone?: string;
-  relationship?: string;
-  notes?: string;
-}
-
-export interface CandidateActivityEvent {
-  type: "AUDIT" | "INTERVIEW" | "MESSAGE" | "DOCUMENT";
-  id: string;
-  label: string;
-  detail: Record<string, unknown> | null;
-  actor: string | null;
-  at: string;
-}
+export type {
+  BgvComplianceRow,
+  BgvStatus,
+  CandidateActivityEvent,
+  CandidateDocumentRecord,
+  RolloutDocumentRecord,
+  RolloutDocumentsInput,
+  VaultDocumentType,
+} from "@/hooks/api/hr/recruitment/candidate-details-types";
 
 export function useCandidateActivity(candidateId: number) {
+  const canView = useCan("hr:employees:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.candidate(candidateId), "activity"],
-    queryFn: () => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`),
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "activity"],
+    queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal, activityContract),
     staleTime: 60_000,
-    enabled: !!candidateId,
+    enabled: canView && !!candidateId,
   });
 }
 
 export function useCandidateVault(candidateId: number) {
+  const canViewVault = useCan("hr:employees:manage");
   return useQuery({
-    queryKey: queryKeys.hr.candidateVault(candidateId),
-    queryFn: () =>
-      apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`),
+    queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId),
+    queryFn: ({ signal }) =>
+      apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal, vaultDocumentListContract),
     staleTime: 2 * 60_000,
-    enabled: !!candidateId,
+    enabled: canViewVault && !!candidateId,
   });
 }
 
 export function useAddVaultDocument(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vault", "add", candidateId],
     mutationFn: (data: {
       filename: string;
@@ -172,31 +142,37 @@ export function useAddVaultDocument(candidateId: number) {
       fileSize: number;
       documentType?: VaultDocumentType;
     }) =>
-      apiClient.post<VaultDocument>(`/hr/recruitment/candidates/${candidateId}/vault`, data),
+      apiClient.post<VaultDocument>(`/hr/recruitment/candidates/${candidateId}/vault`, data, undefined, vaultDocumentContract),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId) }),
   });
 }
 
 export function useDeleteVaultDocument(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vault", "delete", candidateId],
     mutationFn: (documentId: number) =>
-      apiClient.delete<{ success: boolean }>(
-        `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`
+      apiClient.delete<void>(
+        `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId) }),
   });
 }
 
 export function useRolloutDocuments(candidateId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.rolloutDocuments(candidateId),
-    queryFn: () =>
+  return useGatedQuery("hr:employees:view", {
+    queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId),
+    queryFn: ({ signal }) =>
       apiClient.get<RolloutDocumentRecord[]>(
-        `/hr/recruitment/candidates/${candidateId}/rollout-documents`
+        `/hr/recruitment/candidates/${candidateId}/rollout-documents`,
+        undefined,
+        signal,
+        rolloutDocumentListContract,
       ),
     staleTime: 2 * 60_000,
     enabled: !!candidateId,
@@ -205,37 +181,47 @@ export function useRolloutDocuments(candidateId: number) {
 
 export function useGenerateAndRollout(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "rollout-documents", candidateId],
     mutationFn: (data: RolloutDocumentsInput) =>
       apiClient.post<RolloutDocumentsResult>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`,
-        data
+        data,
+        undefined,
+        generateRolloutContract,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.rolloutDocuments(candidateId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidateDocuments(candidateId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateDocuments(candidateId) });
     },
   });
 }
 
 export function useUpdateCandidateBgv(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bgv", candidateId],
     mutationFn: (data: UpdateBgvInput) =>
-      apiClient.patch<{ id: number; bgvStatus: BgvStatus }>(`/hr/recruitment/candidates/${candidateId}/bgv-status`, data),
+      apiClient.patch<{ success: true }>(
+        `/hr/recruitment/candidates/${candidateId}/bgv-status`,
+        data,
+        undefined,
+        bgvSuccessContract,
+      ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) }),
   });
 }
 
 export function useVaultAccessLogs(candidateId: number) {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
-    queryFn: () =>
+  return useGatedQuery("hr:employees:manage", {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
+    queryFn: ({ signal }) =>
       apiClient.get<VaultAccessLog[]>(
-        `/hr/recruitment/candidates/${candidateId}/vault/access-logs`
+        `/hr/recruitment/candidates/${candidateId}/vault/access-logs`,
+        undefined,
+        signal,
+        vaultAccessLogListContract,
       ),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
@@ -245,26 +231,27 @@ export function useVaultAccessLogs(candidateId: number) {
 export function useBgvComplianceDashboard() {
   const canSensitive = useCan("hr:sensitive:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "bgv-compliance"],
-    queryFn: () => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance"),
+    queryKey: [...humanResourcesQueryKeys.hr.all, "bgv-compliance"],
+    queryFn: ({ signal }) => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance", undefined, signal, bgvComplianceListContract),
     staleTime: 2 * 60_000,
     enabled: canSensitive,
   });
 }
 
 export function useCandidateReferrals(candidateId: number) {
+  const canView = useCan("hr:employees:view");
   return useQuery<CandidateReferral[]>({
-    queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"],
-    queryFn: () =>
-      apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`),
-    enabled: candidateId > 0,
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"],
+    queryFn: ({ signal }) =>
+      apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal, referralListContract),
+    enabled: canView && candidateId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCreateReferral(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "create", candidateId],
     mutationFn: (data: {
       referredBy: string;
@@ -272,16 +259,16 @@ export function useCreateReferral(candidateId: number) {
       notes?: string;
       bonusEligible?: boolean;
       bonusAmount?: number;
-    }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
+    }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, undefined, referralContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },
   });
 }
 
 export function useUpdateReferral(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "update", candidateId],
     mutationFn: (data: {
       id: number;
@@ -289,18 +276,18 @@ export function useUpdateReferral(candidateId: number) {
       bonusAmount?: number | null;
       bonusPaidAt?: string | null;
       notes?: string | null;
-    }) => apiClient.patch<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
+    }) => apiClient.patch<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, undefined, referralContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },
   });
 }
 
 export function useCalibrationSessions(candidateId: number) {
-  return useQuery<CalibrationSession[]>({
-    queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"],
-    queryFn: () =>
-      apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`),
+  return useGatedQuery<CalibrationSession[]>("hr:employees:view", {
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"],
+    queryFn: ({ signal }) =>
+      apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`, undefined, signal, calibrationListContract),
     enabled: candidateId > 0,
     staleTime: 2 * 60_000,
   });
@@ -308,23 +295,23 @@ export function useCalibrationSessions(candidateId: number) {
 
 export function useCreateCalibration(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "calibration", "create", candidateId],
     mutationFn: (data: {
       jobPostingId?: number;
       scheduledAt?: string;
       participantIds?: string[];
       notes?: string;
-    }) => apiClient.post<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
+    }) => apiClient.post<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data, undefined, calibrationContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"] });
     },
   });
 }
 
 export function useUpdateCalibration(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "calibration", "update", candidateId],
     mutationFn: (data: {
       id: number;
@@ -333,18 +320,18 @@ export function useUpdateCalibration(candidateId: number) {
       notes?: string | null;
       decision?: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null;
       participantIds?: string[];
-    }) => apiClient.patch<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
+    }) => apiClient.patch<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data, undefined, calibrationContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"] });
     },
   });
 }
 
 export function useReferenceChecks(candidateId: number) {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
-    queryFn: () =>
-      apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`),
+  return useGatedQuery("hr:employees:view", {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal, referenceCheckListContract),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
   });
@@ -352,21 +339,23 @@ export function useReferenceChecks(candidateId: number) {
 
 export function useCreateReferenceCheck(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "create", candidateId],
     mutationFn: (data: CreateReferenceCheckInput) =>
       apiClient.post<ReferenceCheck>(
         `/hr/recruitment/candidates/${candidateId}/reference-checks`,
-        data
+        data,
+        undefined,
+        referenceCheckContract,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }
 
 export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "update", candidateId, checkId],
     mutationFn: (data: {
       status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DECLINED";
@@ -374,24 +363,29 @@ export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
       notes?: string | null;
       contactedAt?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<ReferenceCheck>(
         `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`,
-        data
+        data,
+        undefined,
+        referenceCheckContract,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }
 
 export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "delete", candidateId, checkId],
     mutationFn: () =>
-      apiClient.delete<{ success: boolean }>(
-        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`
+      apiClient.delete<void>(
+        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`,
+        undefined,
+        undefined,
+        noContentContract,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }

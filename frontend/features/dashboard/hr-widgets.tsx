@@ -50,10 +50,14 @@ const LEAVE_STATUS_TONE: Record<string, string> = {
   CANCELLED: "text-muted-foreground",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 function toMyLeaveRequestSummary(raw: unknown): MyLeaveRequestSummary | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const row = raw as Record<string, unknown>;
-  const leaveType = row.leaveType as Record<string, unknown> | null | undefined;
+  if (!isRecord(raw)) return null;
+  const row = raw;
+  const leaveType = isRecord(row.leaveType) ? row.leaveType : null;
   const id = Number(row.id);
   if (!Number.isFinite(id)) return null;
   return {
@@ -76,7 +80,8 @@ function EmptyWidget({ message }: { message: string }) {
 
 export function LeavesTodayWidget() {
   const { data, isLoading, error, refetch } = useLeavesToday();
-  const leaves = data ?? [];
+  const leaves = data?.data ?? [];
+  const total = data?.total ?? leaves.length;
   const handleRetry = () => void refetch();
 
   return (
@@ -84,7 +89,7 @@ export function LeavesTodayWidget() {
       icon={CalendarOff}
       iconClassName="text-status-warning-ink"
       title="Who's On Leave Today"
-      badge={leaves.length || undefined}
+      badge={total || undefined}
       isLoading={isLoading}
       error={error}
       onRetry={handleRetry}
@@ -112,6 +117,11 @@ export function LeavesTodayWidget() {
           </li>
         ))}
       </ul>
+      {data?.hasMore ? (
+        <p className="pt-2 text-micro text-muted-foreground">
+          Showing {leaves.length} of {total}
+        </p>
+      ) : null}
     </WidgetCard>
   );
 }

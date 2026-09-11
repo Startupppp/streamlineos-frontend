@@ -1,0 +1,30 @@
+$ cd backend && npm run cell:backup:self-test
+  (node src/scripts/cell-backup.mjs --self-test)
+run_at: 2026-09-03T16:20:38Z
+
+RUN 1 — exactly as the npm script and RB-02 document it, using the repo's own .env:
+---
+◇ injected env (56) from .env // tip: ⌘ override existing { override: true }
+file:///Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/scripts/cell-topology.mjs:52
+    throw new Error("APP_DATABASE_URL (the non-BYPASSRLS app role) is required.");
+          ^
+
+Error: APP_DATABASE_URL (the non-BYPASSRLS app role) is required.
+    at parseCellArgs (file:///Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/scripts/cell-topology.mjs:52:11)
+    at file:///Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/scripts/cell-backup.mjs:27:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+--- exit code: 1 (EXPECTED 0 per RB-02; ACTUAL 1)
+
+RUN 2 — same self-test with DATABASE_URL/APP_DATABASE_URL exported to the LOCAL
+scratch databases. The self-test itself opens no connection; these two variables are
+only needed because parseCellArgs() runs at module load, above the --self-test branch.
+---
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+order: parent -> child
+cyclic: loop_a, loop_b
+SELF-TEST PASS: parents precede children and the cycle is reported, not silently ordered
+--- exit code: 0

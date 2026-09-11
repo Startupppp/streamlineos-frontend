@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SendIcon, UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { NOTIFICATION_CATEGORY_CONFIG } from "@/features/notifications/notification-types";
+import { NOTIFICATION_CATEGORY_CONFIG } from "@/lib/notification-types";
 import type { Broadcast } from "@/types/notifications";
 import { STATUS_CONFIG, formatDate } from "./broadcast-config";
 

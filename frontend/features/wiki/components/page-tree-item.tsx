@@ -34,8 +34,8 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
-import { KNOWLEDGE_BASE, pageHref } from "@/features/wiki/lib/knowledge-routes";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import {
   KbChevronRightIcon,
   KbChevronDownIcon,
@@ -81,7 +81,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const children = allNodes
     .filter((n) => n.parentPageId === node.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   const hasActiveDescendant = children.some(
     (c) =>

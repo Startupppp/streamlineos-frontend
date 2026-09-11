@@ -21,7 +21,8 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PackageDetailSheet } from "@/features/inventory/components/shipping/package-detail-sheet";
 import { PackageCreateDialog } from "@/features/inventory/components/shipping/package-create-dialog";
 import {

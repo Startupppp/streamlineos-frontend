@@ -1,9 +1,13 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type ProvisioningAction = "grant" | "revoke" | "review";
 export type ProvisioningStatus = "pending" | "completed" | "verified" | "failed";
@@ -28,7 +32,7 @@ export interface ProvisioningTemplate {
   id: string;
   orgId: string;
   name: string;
-  triggeredBy: "joiner" | "mover" | "leaver";
+  triggeredBy: "joiner" | "mover" | "leaver" | "manual";
   systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
   createdAt: string;
   updatedAt: string;
@@ -43,43 +47,62 @@ export interface ExitVerificationResult {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const BASE = "/hr/enterprise/ops/identity";
 
 const identityKeys = {
-  all: ["streamlineos", "hr-identity"] as const,
-  provisioning: (p: Record<string, unknown>) => ["streamlineos", "hr-identity", "provisioning", p] as const,
-  templates: ["streamlineos", "hr-identity", "templates"] as const,
-  exitVerification: (userId: string) => ["streamlineos", "hr-identity", "exit-verification", userId] as const,
+  all: [...queryKeyBase, "hr-identity"] as const,
+  provisioning: (p: Record<string, unknown>) => [...queryKeyBase, "hr-identity", "provisioning", p] as const,
+  templates: [...queryKeyBase, "hr-identity", "templates"] as const,
+  exitVerification: (userId: string) => [...queryKeyBase, "hr-identity", "exit-verification", userId] as const,
 };
 
+const _listProvisioningContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listProvisioningContract),
+);
+const _listTemplatesContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listTemplatesContract),
+);
+const _getExitVerificationContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.getExitVerificationContract),
+);
+const _createProvisioningContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createProvisioningContract),
+);
+const _createTemplateContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.createTemplateContract),
+);
+const _voidContract = lazyContract(() =>
+  import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.voidContract),
+);
+
 export function useAccessProvisioning(params: {
-  page?: number;
+  cursor?: string;
   userId?: string;
   triggeredBy?: ProvisioningTrigger;
   status?: ProvisioningStatus;
 } = {}) {
-  return useQuery({
-    queryKey: identityKeys.provisioning(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>),
+  return useGatedQuery("hr:identity:view", {
+    queryKey: identityKeys.provisioning(params),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/provisioning`, params, signal, _listProvisioningContract),
     staleTime: 30_000,
   });
 }
 
 export function useProvisioningTemplates() {
-  return useQuery({
+  return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.templates,
-    queryFn: () => apiClient.get<ProvisioningTemplate[]>(`${BASE}/templates`),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/templates`, undefined, signal, _listTemplatesContract),
     staleTime: 60_000,
   });
 }
 
 export function useExitVerification(userId: string) {
-  return useQuery({
+  return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.exitVerification(userId),
-    queryFn: () => apiClient.get<ExitVerificationResult>(`${BASE}/exit-verification`, { userId }),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/exit-verification`, { userId }, signal, _getExitVerificationContract),
     enabled: !!userId,
     staleTime: 15_000,
   });
@@ -87,14 +110,14 @@ export function useExitVerification(userId: string) {
 
 export function useCreateProvisioning() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "provisioning-create"],
     mutationFn: (body: {
       userId: string;
       systemName: string;
       action: ProvisioningAction;
       triggeredBy: ProvisioningTrigger;
-    }) => apiClient.post<AccessProvisioningRecord>(`${BASE}/provisioning`, body),
+    }) => apiClient.post(`${BASE}/provisioning`, body, undefined, _createProvisioningContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.all });
       toast.success("Provisioning record created");
@@ -105,13 +128,13 @@ export function useCreateProvisioning() {
 
 export function useCreateProvisioningTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-create"],
     mutationFn: (body: {
       name: string;
-      triggeredBy: "joiner" | "mover" | "leaver";
+      triggeredBy: "joiner" | "mover" | "leaver" | "manual";
       systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
-    }) => apiClient.post<ProvisioningTemplate>(`${BASE}/templates`, body),
+    }) => apiClient.post(`${BASE}/templates`, body, undefined, _createTemplateContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template created");
@@ -122,9 +145,9 @@ export function useCreateProvisioningTemplate() {
 
 export function useDeleteProvisioningTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-delete"],
-    mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`),
+    mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template deleted");

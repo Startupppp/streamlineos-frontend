@@ -35,60 +35,12 @@ export interface OrgSettings {
   companySize?: string | null;
   country?: string | null;
   enabledModules?: string[] | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface OrgMember {
-  membershipId?: number;
-  userId: string;
-  role: string;
-  joinedAt: Date;
-  name: string | null;
-  email: string;
-  image: string | null;
-  totpEnabled?: boolean;
-}
+export type { OrgMember } from "@/hooks/api/organization-schema";
 
-export interface Branch {
-  id: number;
-  orgId: string;
-  name: string;
-  code: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  pincode: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  branchManagerId: string | null;
-  branchHrId: string | null;
-  status: "ACTIVE" | "INACTIVE";
-  branchManager: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email?: string;
-  } | null;
-  branchHr: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email?: string;
-  } | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
-export interface Role {
-  id: number;
-  orgId: string;
-  name: string;
-  slug: string;
-  isSystem: boolean;
-  version: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type { Role } from "@/hooks/api/roles-schema";
 

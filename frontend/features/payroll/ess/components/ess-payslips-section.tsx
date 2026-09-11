@@ -104,10 +104,11 @@ const ExplainMenu = memo(function ExplainMenu({ payslip }: ExplainMenuProps) {
     {
       key: "explain-payslip",
       label: "Explain this payslip",
+      expectsCitations: true,
       description:
         "Plain-language breakdown of engine figures only — AI never changes pay",
-      run: async () => {
-        const result = await mutateAsync();
+      run: async (signal, onToken) => {
+        const result = await mutateAsync({ signal, onToken });
         const citations = (result.citations ?? []).slice(0, 12).map((c, i) => ({
           id: c.path || i,
           title: c.label,

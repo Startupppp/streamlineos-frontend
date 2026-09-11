@@ -51,7 +51,7 @@ const cursorResponse = {
   pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
-type QueryOpts = { queryFn: () => unknown };
+type QueryOpts = { queryFn: (context: { signal?: AbortSignal }) => unknown };
 
 function captureOpts<T extends QueryOpts>(call: () => void): T {
   mockQuery.mockImplementation((opts: unknown) => opts);
@@ -71,11 +71,13 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useWorkAuthorizations({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/work-authorizations",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -84,11 +86,13 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useWorkAuthorizations({ cursor: "eyJpZCI6MjB9", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/work-authorizations",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -97,11 +101,13 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useWorkAuthorizations({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/work-authorizations",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -110,11 +116,13 @@ describe("useWorkAuthorizations — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useWorkAuthorizations({ cursor: "eyJpZCI6NX0", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/work-authorizations",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      undefined,
+      expect.any(Function),
     );
   });
 });
@@ -125,11 +133,13 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceRequirements({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/requirements",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -138,11 +148,13 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceRequirements({ cursor: "eyJpZCI6MjB9", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/requirements",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -151,11 +163,13 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceRequirements({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/requirements",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -164,11 +178,13 @@ describe("useComplianceRequirements — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceRequirements({ cursor: "eyJpZCI6NX0", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/requirements",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      undefined,
+      expect.any(Function),
     );
   });
 });
@@ -179,11 +195,13 @@ describe("useComplianceEvents — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceEvents({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/events",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -192,11 +210,13 @@ describe("useComplianceEvents — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceEvents({ cursor: "eyJpZCI6MjB9", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/events",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -205,11 +225,13 @@ describe("useComplianceEvents — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceEvents({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/events",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -218,11 +240,13 @@ describe("useComplianceEvents — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useComplianceEvents({ cursor: "eyJpZCI6MTB9", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/compliance/events",
       expect.objectContaining({ cursor: "eyJpZCI6MTB9" }),
+      undefined,
+      expect.any(Function),
     );
   });
 });
@@ -233,11 +257,13 @@ describe("useContracts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useContracts({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/contracts",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -246,11 +272,13 @@ describe("useContracts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useContracts({ cursor: "eyJpZCI6MjB9", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/contracts",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -259,11 +287,13 @@ describe("useContracts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useContracts({ limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/contracts",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
+      expect.any(Function),
     );
   });
 
@@ -272,11 +302,13 @@ describe("useContracts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureOpts<QueryOpts>(() => useContracts({ cursor: "eyJpZCI6NX0", limit: 20 }));
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/global/contracts",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      undefined,
+      expect.any(Function),
     );
   });
 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NOTIFICATION_CATEGORY_VALUES } from "./notification-types";
+import { NOTIFICATION_CATEGORY_VALUES } from "@/lib/notification-types";
 
 export const templateSchema = z.object({
   templateKey: z.string().min(1).regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),

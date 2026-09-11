@@ -7,9 +7,10 @@ import { getServerAuth } from "@/lib/get-server-auth";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { getServerAccess } from "@/lib/rbac/get-server-access";
 import { resolveRequestPath } from "@/lib/rbac/request-path";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 
 interface RequirePermissionResult {
   session: Session;
@@ -26,7 +27,7 @@ async function getCurrentPath(): Promise<string | null> {
 }
 
 export async function requireSession(): Promise<Session> {
-  const session = (await getServerAuth()) as Session | null;
+  const session = await getServerAuth();
   if (!session?.user || session.user.isActive === false)
     redirect(signInPathForMissingSession());
   return session;
@@ -36,7 +37,7 @@ export async function requirePermission(
   permission: PermissionKey | PermissionKey[],
   options: { redirectTo?: string } = {},
 ): Promise<RequirePermissionResult> {
-  const session = (await getServerAuth()) as Session | null;
+  const session = await getServerAuth();
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
     redirect(signInPathForMissingSession());
@@ -45,8 +46,7 @@ export async function requirePermission(
 
   const access = await getServerAccess();
   const perms = Array.isArray(permission) ? permission : [permission];
-  const granted = access.scopes;
-  const allowed = access.isOrgOwner || perms.some((p) => p in granted);
+  const allowed = perms.some((p) => grantsPermission(access, p));
 
   if (!allowed) {
     if (options.redirectTo) redirect(options.redirectTo);
@@ -78,8 +78,7 @@ export async function requireModulePermission(
 
   if (permission) {
     const required = Array.isArray(permission) ? permission : [permission];
-    const granted = access.scopes;
-    if (!access.isOrgOwner && !required.some((key) => key in granted)) {
+    if (!required.some((key) => grantsPermission(access, key))) {
       const from = await getCurrentPath();
       const params = new URLSearchParams({ required: required.join(",") });
       if (from) params.set("from", from);

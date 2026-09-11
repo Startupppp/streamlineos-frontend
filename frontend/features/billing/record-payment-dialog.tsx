@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCan } from "@/hooks/api/access";
 import { useRecordPayment } from "@/hooks/api/invoice";
 import { useManualMethods } from "@/hooks/api/payments";
 import type { PaymentMethod } from "@/types/invoice";
@@ -76,8 +78,10 @@ export function RecordPaymentDialog({
   outstanding,
   onOpenChange,
 }: RecordPaymentDialogProps) {
+  // POST /invoices/:invoiceId/payments declares accounting:create.
+  const canRecordPayment = useCan("accounting:create");
   const recordPayment = useRecordPayment();
-  const { data: manualMethods } = useManualMethods();
+  const { data: manualMethods, isError: methodsFailed } = useManualMethods();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -140,6 +144,14 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle className="text-sm">Record Payment</DialogTitle>
         </DialogHeader>
+        {!canRecordPayment ? (
+          <NoPermissionState
+            compact
+            permission="accounting:create"
+            title="Cannot record payments"
+            description="You do not have permission to record a payment against this invoice."
+          />
+        ) : (
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 py-1">
           <div className="space-y-1">
             <Label htmlFor="pay-amount" className="text-xs">
@@ -202,7 +214,13 @@ export function RecordPaymentDialog({
                 </Select>
               )}
             />
-            {selectedMethodConfig && (
+            {methodsFailed && (
+              <p role="status" className="text-dense text-status-warning-ink bg-status-warning-surface rounded px-2 py-1.5 mt-1">
+                Your configured payment instructions could not be loaded, so none are shown here.
+                The methods listed above are the built-in defaults, not your organization&apos;s setup.
+              </p>
+            )}
+            {!methodsFailed && selectedMethodConfig && (
               <p className="text-dense text-muted-foreground bg-muted/40 rounded px-2 py-1.5 mt-1">
                 {selectedMethodConfig.instructions ||
                   (selectedMethodConfig.upiId && `UPI: ${selectedMethodConfig.upiId}`) ||
@@ -248,6 +266,7 @@ export function RecordPaymentDialog({
             </LoadingButton>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

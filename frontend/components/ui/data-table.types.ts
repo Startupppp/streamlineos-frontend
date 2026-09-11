@@ -17,6 +17,16 @@ export interface DataTableColumn<T> {
   key: string;
   header: string;
   cell: (row: T) => ReactNode;
+  /**
+   * Reorders the rows the table holds, and is honoured only while the table
+   * holds every row it will show: client pagination and no `sortState`. On a
+   * server- or cursor-paginated table it is inert, because sorting one page
+   * would present a slice as the sorted set. A server sort is
+   * `sortState.fields`, never this.
+   */
+  sortable?: boolean;
+  /** What `sortable` compares when the row's own `key` value is not it. */
+  sortValue?: (row: T) => string | number;
   className?: string;
   headerClassName?: string;
 }
@@ -43,26 +53,32 @@ type ServerPagination = {
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
 };
-
 /**
  * A keyset walk: next and previous, no page numbers.
  *
  * The server answers `hasMore` and `nextCursor` instead of a total, so there is
  * no last page to jump to and no count to render. The caller keeps the cursor
  * stack — `hooks/common/use-cursor-pagination.ts` is that stack. Anything that
- * can report a real total stays on `"server"`.
+ * can report a real total stays on `"server"`. The fields the other two modes
+ * carry are typed `never` so the three cannot be mixed.
  */
 type CursorPagination = {
   mode: "cursor";
   pageSize: number;
-  /** Position in the walk, 1-based. Not a page number a caller may jump to. */
-  pageNumber: number;
+  /**
+   * Position in the walk, 1-based, when the caller keeps one. Not a page number
+   * a caller may jump to.
+   */
+  pageNumber?: number;
   hasMore: boolean;
   hasPrevious: boolean;
   onNext: () => void;
   onPrevious: () => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
+  page?: never;
+  total?: never;
+  onPageChange?: never;
 };
 
 export interface DataTableProps<T> {
@@ -74,6 +90,14 @@ export interface DataTableProps<T> {
     selected: Set<string | number>;
     onChange: (sel: Set<string | number>) => void;
     isRowSelectable?: (row: T) => boolean;
+    /**
+     * Names the row a selection checkbox belongs to. Without it every checkbox
+     * in the table is announced identically, so a screen-reader user selecting
+     * the fourth row hears the same words as the first and has nothing to
+     * confirm the selection against. Return the row's own subject — a name, a
+     * title, a reference — not a position.
+     */
+    getRowLabel?: (row: T, index: number) => string;
   };
   pagination?: ClientPagination | ServerPagination | CursorPagination;
   isLoading?: boolean;

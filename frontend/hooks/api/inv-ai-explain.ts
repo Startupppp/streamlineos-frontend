@@ -1,10 +1,10 @@
 "use client";
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
-import { queryKeys } from "@/lib/query-keys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
+import { apiClient } from "@/lib/api-client";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { inventoryQueryKeys } from "@/lib/query-keys/inventory";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import type { VendorScorecard } from "@/types/inventory";
@@ -64,7 +64,7 @@ export interface InsightNarration {
 }
 
 export function useExplainInsight() {
-  return useMutation<InsightNarration, Error, number>({
+  return useAuthorizedMutation<InsightNarration, Error, number>("inventory:reports:read", {
     mutationKey: ["inventory", "ai", "insight", "explain"],
     mutationFn: (insightId: number) =>
       apiClient.post<InsightNarration>(`/inventory/ai/insights/${insightId}/explain`),
@@ -186,7 +186,7 @@ export interface InventoryDigest {
  */
 export function useInventoryDigest() {
   return useQuery<InventoryDigest, Error>({
-    queryKey: queryKeys.inventory.aiDigest(true),
+    queryKey: inventoryQueryKeys.inventory.aiDigest(true),
     queryFn: () => apiClient.get<InventoryDigest>("/inventory/ai/digest", { narrate: "true" }),
     staleTime: 10 * 60_000,
     // This is an explicit operator action because the endpoint may spend AI credits.
@@ -195,7 +195,7 @@ export function useInventoryDigest() {
 }
 
 export function useReorderProposal() {
-  return useMutation<ReorderProposalResponse, Error, { variantId: number; warehouseId?: number }>({
+  return useAuthorizedMutation<ReorderProposalResponse, Error, { variantId: number; warehouseId?: number }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal"],
     mutationFn: (body) =>
       apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body),
@@ -204,24 +204,24 @@ export function useReorderProposal() {
 
 export function useConfirmReorderProposal() {
   const qc = useQueryClient();
-  return useIdempotentMutation<unknown, Error, { proposalId: number; token: string }>({
+  return useAuthorizedIdempotentMutation<unknown, Error, { proposalId: number; token: string }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
     mutationFn: (body, idempotencyKey) =>
       apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
+      void qc.invalidateQueries({ queryKey: inventoryQueryKeys.inventory.aiInsights() });
     },
   });
 }
 
 export function useSupplierDelayBriefing(vendorId?: string) {
-  const canRead = useCan("inventory:ai:read");
+  const canRead = useCan("inventory:reports:read");
   return useQuery<SupplierDelayBriefing, Error>({
-    queryKey: queryKeys.inventory.supplierDelayBriefing(vendorId),
-    queryFn: () =>
+    queryKey: inventoryQueryKeys.inventory.supplierDelayBriefing(vendorId),
+    queryFn: ({ signal }) =>
       apiClient.get<SupplierDelayBriefing>(
         "/inventory/ai/supplier-delay",
-        vendorId ? { vendorId } : {},
+        vendorId ? { vendorId } : {}, signal,
       ),
     staleTime: 5 * 60_000,
     enabled: canRead,

@@ -38,7 +38,8 @@ interface CandidateSheetProps {
   currentStage?: CandidateStatus;
 }
 
-type ActiveTab = "overview" | "resume";
+const ACTIVE_TABS = ["overview", "resume"] as const;
+type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 export const CandidateSheet = memo(function CandidateSheet({
   candidate,
@@ -53,7 +54,8 @@ export const CandidateSheet = memo(function CandidateSheet({
   const stageConfig = currentStage ? COLUMNS.find((col) => col.id === currentStage) : undefined;
 
   function handleTabChange(value: string) {
-    setActiveTab(value as ActiveTab);
+    const tab = ACTIVE_TABS.find((candidate) => candidate === value);
+    if (tab) setActiveTab(tab);
   }
 
   return (

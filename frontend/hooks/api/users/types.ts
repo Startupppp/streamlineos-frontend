@@ -1,7 +1,7 @@
 export type OrgRole = "OWNER" | "ORG_ADMIN" | "MEMBER";
 
 export interface UserListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: "active" | "suspended" | "archived";
@@ -40,8 +40,23 @@ export interface UserPreferences {
   weekStartDay: string | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
-  updatedAt: string;
+  updatedAt?: string;
 }
+
+export type UpdateUserPreferencesInput = Partial<
+  Pick<
+    UserPreferences,
+    | "theme"
+    | "language"
+    | "timezone"
+    | "dateFormat"
+    | "timeFormat"
+    | "numberFormat"
+    | "weekStartDay"
+    | "notificationPreferences"
+    | "dashboardPreferences"
+  >
+>;
 
 export interface EmergencyContact {
   name: string;
@@ -63,16 +78,16 @@ export interface User {
   isActive: boolean;
   userStatus?: string | null;
   archivedAt?: string | null;
-  team: string | null;
-  bio: string | null;
-  linkedinUrl: string | null;
-  twitterUrl: string | null;
-  githubUrl: string | null;
-  websiteUrl: string | null;
-  emergencyContact: EmergencyContact | null;
-  joinedAt: string | null;
+  team?: string | null;
+  bio?: string | null;
+  linkedinUrl?: string | null;
+  twitterUrl?: string | null;
+  githubUrl?: string | null;
+  websiteUrl?: string | null;
+  emergencyContact?: EmergencyContact | null;
+  joinedAt?: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   lastSeenAt?: string | null;
   teams?: string[];
 }
@@ -97,10 +112,9 @@ export interface UpdateUserInput {
 export interface UsersResponse {
   data: User[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
@@ -162,10 +176,9 @@ export interface LoginHistoryItem {
 export interface LoginHistoryResponse {
   data: LoginHistoryItem[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

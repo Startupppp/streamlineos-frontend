@@ -1,35 +1,22 @@
 import "server-only";
 
+import type { z } from "zod";
+
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { serverGet } from "@/lib/server-fetch";
-import type { Document, Asset } from "@/types/hr";
+import { hrDocumentListContract, hrAssetListContract } from "@/lib/prefetch/prefetch-schema";
 
-interface HrDocumentListResponse {
-  data: Document[];
-  pageInfo: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+type HrDocumentListResponse = z.infer<typeof hrDocumentListContract>;
 
-interface HrAssetCounts {
-  total: number;
-  available: number;
-  assigned: number;
-  maintenance: number;
-  retired: number;
-}
-
-interface HrAssetListResponse {
-  data: Asset[];
-  counts: HrAssetCounts;
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}
+type HrAssetListResponse = z.infer<typeof hrAssetListContract>;
 
 export async function prefetchHrDocuments() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: queryKeys.hr.documents({ limit: 20 }),
-    queryFn: () => serverGet<HrDocumentListResponse>("/hr/documents?limit=20"),
+    queryKey: humanResourcesQueryKeys.hr.documents({ limit: 20 }),
+    queryFn: () => serverGet<HrDocumentListResponse>("/hr/documents?limit=20", hrDocumentListContract),
     staleTime: 60_000,
   });
   return dehydrate(queryClient);
@@ -38,8 +25,8 @@ export async function prefetchHrDocuments() {
 export async function prefetchHrAssets() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: queryKeys.hr.assets({ page: 1, limit: 20 }),
-    queryFn: () => serverGet<HrAssetListResponse>("/hr/assets?page=1&limit=20"),
+    queryKey: humanResourcesQueryKeys.hr.assets({ page: 1, limit: 20 }),
+    queryFn: () => serverGet<HrAssetListResponse>("/hr/assets?page=1&limit=20", hrAssetListContract),
     staleTime: 60_000,
   });
   return dehydrate(queryClient);

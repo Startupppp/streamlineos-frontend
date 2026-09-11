@@ -2,6 +2,16 @@ import { reportError } from "./error-reporter";
 
 let installed = false;
 
+const BENIGN_BROWSER_NOTICES: readonly string[] = [
+  "ResizeObserver loop completed with undelivered notifications",
+  "ResizeObserver loop limit exceeded",
+];
+
+function isBenignBrowserNotice(event: ErrorEvent): boolean {
+  const msg = typeof event.message === "string" ? event.message : "";
+  return BENIGN_BROWSER_NOTICES.some((notice) => msg.includes(notice));
+}
+
 /**
  * Catches the failures React never sees: an error thrown outside a render, and a
  * promise nobody awaited. Without these, the only record is the user's console,
@@ -16,6 +26,7 @@ export function installGlobalErrorHandlers(): () => void {
   if (installed) return () => undefined;
 
   const onError = (event: ErrorEvent): void => {
+    if (isBenignBrowserNotice(event)) return;
     reportError(event.error ?? event.message, {
       source: "window.onerror",
       filename: event.filename,
@@ -24,8 +35,8 @@ export function installGlobalErrorHandlers(): () => void {
     });
   };
 
-  const onRejection = (event: Event): void => {
-    const reason = (event as Event & { reason?: unknown }).reason;
+  const onRejection = (event: PromiseRejectionEvent): void => {
+    const reason: unknown = event.reason;
     reportError(reason, { source: "unhandledrejection" });
   };
 

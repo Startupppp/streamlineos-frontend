@@ -7,6 +7,15 @@ import { useAccess } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FolderKanban, RefreshCw } from "lucide-react";
 
+/**
+ * The CRM check gates the MOUNT, not an `enabled` flag, and that is the whole
+ * point of the split. `ExecutiveKpiWidget` observes the same
+ * `queryKeys.dashboard.executive()` key without a CRM condition, and TanStack
+ * enables a query when ANY observer enables it — so an `enabled: hasCrmAccess`
+ * on this hook was satisfied by the sibling and never suppressed a single
+ * request. A permission that decides whether a widget exists has to decide
+ * whether its hook runs at all.
+ */
 export function BusinessPulseWidget() {
   const { data: accessData, isLoading: accessLoading } = useAccess();
 
@@ -14,11 +23,15 @@ export function BusinessPulseWidget() {
     accessData?.isOrgOwner === true ||
     (accessData ? "crm:leads:view" in accessData.scopes : false);
 
-  const { data, isLoading, error, refetch } = useExecutiveDashboard({
-    enabled: hasCrmAccess,
-  });
+  if (accessLoading)
+    return <WidgetCard icon={FolderKanban} title="Business Pulse" isLoading loadingRows={2} />;
+  if (!hasCrmAccess) return null;
 
-  if (!accessLoading && !hasCrmAccess) return null;
+  return <BusinessPulseCard />;
+}
+
+function BusinessPulseCard() {
+  const { data, isLoading, error, refetch } = useExecutiveDashboard();
 
   const handleRetry = () => void refetch();
 
@@ -31,12 +44,14 @@ export function BusinessPulseWidget() {
           ? undefined
           : { href: "/crm/leads", label: "View pipeline", ariaLabel: "View CRM pipeline" }
       }
-      isLoading={isLoading || accessLoading}
+      isLoading={isLoading}
       loadingRows={2}
     >
       {error ? (
         <div className="flex flex-col items-center gap-2 py-4">
-          <p className="text-sm text-destructive text-center">{getErrorMessage(error)}</p>
+          <p role="alert" className="text-sm text-destructive text-center">
+            {getErrorMessage(error)}
+          </p>
           <Button variant="ghost" size="sm" onClick={handleRetry}>
             <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
             Retry

@@ -9,6 +9,11 @@ interface SlaAlertCardProps {
   slaData: SlaAlertResponse;
 }
 
+function hoursOverdue(slaDeadline: string | null, updatedAt: string): number {
+  const ref = slaDeadline ? new Date(slaDeadline) : new Date(updatedAt);
+  return Math.max(0, Math.floor((Date.now() - ref.getTime()) / (1000 * 60 * 60)));
+}
+
 export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
   return (
     <Card className="border-status-danger-rule bg-status-danger-surface">
@@ -22,11 +27,11 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
         <div className="space-y-2 max-h-[160px] overflow-y-auto">
           {slaData.leads.slice(0, 8).map((lead) => (
             <div
-              key={lead.leadId}
+              key={lead.id}
               className="flex items-center justify-between p-2 rounded-lg bg-background/60 border border-status-danger-rule"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <TruncatedText text={lead.leadName} className="text-sm font-medium" />
+                <TruncatedText text={lead.name} className="text-sm font-medium" />
                 <Badge variant="outline" className="text-micro shrink-0">
                   {lead.status}
                 </Badge>
@@ -49,10 +54,7 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0 ml-3">
                 <Clock className="h-3 w-3" />
-                {lead.hoursSinceUpdate}h overdue
-                {lead.assignedTo && (
-                  <span className="hidden sm:inline">· {lead.assignedTo}</span>
-                )}
+                {hoursOverdue(lead.slaDeadline, lead.updatedAt)}h overdue
               </div>
             </div>
           ))}

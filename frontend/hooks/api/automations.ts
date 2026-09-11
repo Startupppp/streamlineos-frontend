@@ -2,104 +2,56 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { z } from "zod";
+import type { AutomationTrigger } from "@/lib/automations/automation-triggers";
+import type {
+  automationActionResultSchema,
+  automationActionSchema,
+  automationConditionSchema,
+  automationRuleListItemSchema,
+  automationRunItemSchema,
+  automationRunStatusEnum,
+} from "@/hooks/api/automations-schema";
+
+const automationListContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationListContract),
+);
+const automationContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationContract),
+);
+const automationDeleteContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationDeleteContract),
+);
+const automationRunsContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationRunsContract),
+);
+const automationTestContract = lazyContract(() =>
+  import("@/hooks/api/automations-schema").then((m) => m.automationTestContract),
+);
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage automations.");
 }
 
-export type AutomationTrigger =
-  | "lead.created"
-  | "deal.stage_changed"
-  | "ticket.created"
-  | "ticket.priority_changed"
-  | "ticket.message_received"
-  | "invoice.overdue"
-  | "candidate.application_created"
-  | "candidate.stage_changed"
-  | "interview.scheduled"
-  | "interview.completed"
-  | "scorecard.submitted"
-  | "offer.sent"
-  | "offer.accepted"
-  | "offer.rejected"
-  | "candidate.bgv_status_changed"
-  | "sla.breached"
-  | "onboarding.started"
-  | "onboarding.task_overdue"
-  | "onboarding.document_submitted"
-  | "onboarding.completed"
-  | "leave.requested"
-  | "leave.approved"
-  | "leave.rejected"
-  | "attendance.anomaly"
-  | "resignation.submitted"
-  | "resignation.approved"
-  | "employee.terminated"
-  | "certification.expiring"
-  | "document.review_requested"
-  | "performance.review_cycle_started"
-  | "expense.submitted"
-  | "reimbursement.approved"
-  | "reimbursement.rejected";
+export type { AutomationTrigger };
 
-export type AutomationConditionOp = "eq" | "neq" | "contains" | "gt" | "lt" | "exists";
+export type AutomationCondition = z.infer<typeof automationConditionSchema>;
+export type AutomationConditionOp = AutomationCondition["op"];
 
-export interface AutomationCondition {
-  field: string;
-  op: AutomationConditionOp;
-  value?: string | number | boolean;
-}
-
-export type AutomationAction =
-  | { type: "notify_roles"; config: { roles: string[]; title: string; message: string; link?: string } }
-  | { type: "notify_all"; config: { title: string; message: string; link?: string } }
-  | { type: "email"; config: { to: string; subject: string; body: string } }
-  | { type: "create_task"; config: { title: string; assigneeId?: string; dueInDays?: number } }
-  | { type: "webhook"; config: { event: string } }
-  | { type: "support_assign_ticket"; config: { assigneeId: string } }
-  | { type: "support_set_priority"; config: { priority: string } }
-  | { type: "support_add_tag"; config: { tagId: number } }
-  | { type: "support_internal_note"; config: { body: string } }
-  | { type: "ai_classify"; config: Record<string, unknown> }
-  | { type: "ai_summarize"; config: Record<string, unknown> }
-  | { type: "ai_extract"; config: Record<string, unknown> }
-  | { type: "ai_routing_suggestion"; config: Record<string, unknown> };
-
+export type AutomationAction = z.infer<typeof automationActionSchema>;
 export type AutomationActionType = AutomationAction["type"];
 
-export interface AutomationRule {
-  id: number;
-  name: string;
-  description: string | null;
-  triggerEvent: AutomationTrigger;
-  conditions: AutomationCondition[];
-  actions: AutomationAction[];
-  isEnabled: boolean;
-  runCount: number;
-  lastRunAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AutomationRule = z.infer<typeof automationRuleListItemSchema>;
 
-export type AutomationRunStatus = "success" | "failed" | "skipped";
+export type AutomationRunStatus = z.infer<typeof automationRunStatusEnum>;
 
-interface AutomationRun {
-  id: number;
-  triggerEvent: string;
-  status: AutomationRunStatus;
-  payload: Record<string, unknown> | null;
-  result: Record<string, unknown> | null;
-  error: string | null;
-  createdAt: string;
-}
+type AutomationRun = z.infer<typeof automationRunItemSchema>;
 
-interface AutomationActionResult {
-  type: AutomationActionType;
-  ok: boolean;
-  error?: string;
-}
+type AutomationActionResult = z.infer<typeof automationActionResultSchema>;
 
 export interface AutomationTestResult {
   runId: number;
@@ -128,24 +80,24 @@ interface UpdateAutomationInput {
 
 export interface PaginatedAutomations {
   data: AutomationRule[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface AutomationListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
 export function useAutomations(params?: AutomationListParams) {
   const canView = useCan("settings:automations:view");
   return useQuery({
-    queryKey: [...queryKeys.automations.all, "list", params] as const,
-    queryFn: () => {
+    queryKey: [...knowledgeAndSurveysQueryKeys.automations.all, "list", params] as const,
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`);
+      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`, undefined, signal, automationListContract);
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -156,8 +108,8 @@ export function useAutomations(params?: AutomationListParams) {
 export function useAutomationRuns(ruleId: number) {
   const canView = useCan("settings:automations:view");
   return useQuery({
-    queryKey: queryKeys.automations.runs(ruleId),
-    queryFn: () => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`),
+    queryKey: knowledgeAndSurveysQueryKeys.automations.runs(ruleId),
+    queryFn: ({ signal }) => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`, undefined, signal, automationRunsContract),
     enabled: canView && Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 35_000,
     refetchInterval: 30_000,
@@ -168,67 +120,67 @@ export function useAutomationRuns(ruleId: number) {
 export function useCreateAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "create"],
     mutationFn: (input: CreateAutomationInput) => {
       assertPermission(canManage);
-      return apiClient.post<AutomationRule>("/settings/automations", input);
+      return apiClient.post<AutomationRule>("/settings/automations", input, undefined, automationContract);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
 export function useUpdateAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "update"],
     mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) => {
       assertPermission(canManage);
-      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input);
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input, undefined, automationContract);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
 export function useToggleAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) => {
       assertPermission(canManage);
-      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled });
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled }, undefined, automationContract);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
 export function useDeleteAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "delete"],
     mutationFn: (id: number) => {
       assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`);
+      return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`, undefined, undefined, automationDeleteContract);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
 export function useTestAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => {
       assertPermission(canManage);
-      return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload });
+      return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }, undefined, automationTestContract);
     },
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.automations.all });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.runs(variables.id) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all });
     },
   });
 }

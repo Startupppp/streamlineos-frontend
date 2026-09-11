@@ -15,7 +15,7 @@ import {
   useAllWork,
   useInfiniteAllWork,
 } from "@/hooks/api/build/all-work";
-import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette";
+import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
 import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {
@@ -23,7 +23,7 @@ import {
   PmSection,
   PmPanel,
   PM_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { pmSnappy } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";

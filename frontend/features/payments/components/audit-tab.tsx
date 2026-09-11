@@ -1,11 +1,32 @@
 "use client";
 
+import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import { usePaymentAudit } from "@/hooks/api/payments";
 
 export function AuditTab({ providerKey }: { providerKey: string }) {
-  const { data: events, isLoading } = usePaymentAudit(providerKey);
+  const canView = useCan("payments:audit:view");
+  const { data: events, isLoading, isError, error, refetch } = usePaymentAudit(providerKey);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (!canView) {
+    return (
+      <NoPermissionState
+        compact
+        permission="payments:audit:view"
+        title="Audit trail hidden"
+        description="You do not have permission to view this provider's audit events."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -14,6 +35,17 @@ export function AuditTab({ providerKey }: { providerKey: string }) {
           <Skeleton key={i} className="h-10 rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load audit events"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

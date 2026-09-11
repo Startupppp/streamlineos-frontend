@@ -171,3 +171,12 @@ export interface PaginatedResult<T> {
   page: number;
   limit: number;
 }
+
+export interface CursorPaginatedResult<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+}

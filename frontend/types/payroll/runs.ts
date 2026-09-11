@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { runVarianceResponseContract } from "@/hooks/api/payroll/run-employees-schema";
+import type { profileDetailResponseContract } from "@/hooks/api/payroll/employees-schema";
 export type PayrollRunStatus =
   | "PREPARING"
   | "DRAFT"
@@ -46,11 +49,10 @@ export interface PayrollChecklistItem {
 }
 
 export interface CalcExplainStep {
-  method: string;
-  formula?: string;
-  inputs: Record<string, number>;
   steps: string[];
   note?: string;
+  formula?: string;
+  inputs?: Record<string, number>;
 }
 
 export interface CalculationSnapshotLine {
@@ -126,14 +128,21 @@ export interface PayrollRunListItem {
   createdAt: string;
 }
 
+/**
+ * `userName` is `users.name`, a nullable column, and
+ * `hooks/api/payroll/runs-schema.ts::runEmployeeContract` says so. That
+ * contract is not wired to `useRunEmployees` yet because the corrected type
+ * fails `features/payroll/runs/employees-tab.tsx:31`, which hands `userName`
+ * straight to `TruncatedText`'s `text: string`. One line, another territory.
+ */
 export interface RunEmployee {
   id: number;
   userId: string;
   workerType: PayrollWorkerType;
   currency: string;
-  gross: string | null;
-  totalDeductions: string | null;
-  net: string | null;
+  gross: string;
+  totalDeductions: string;
+  net: string;
   status: string;
   holdReason: string | null;
   userName: string;
@@ -190,24 +199,6 @@ export interface EmployeeSalaryProfile {
   userEmail: string | null;
 }
 
-export interface EmployeeProfileDetail {
-  active: EmployeeSalaryProfile | null;
-  history: EmployeeSalaryProfile[];
-  components: ProfileComponent[];
-}
-
-export interface ProfileComponent {
-  id: number;
-  componentId: number;
-  code: string;
-  name: string;
-  type: SalaryComponentType;
-  calcMethod: string;
-  amount: string | null;
-  percent: string | null;
-  isOverride: boolean;
-}
-
 export interface VarianceSummary {
   previousMonth: string | null;
   currentNet: string;
@@ -219,37 +210,5 @@ export interface VarianceSummary {
   changedEmployees: number;
 }
 
-export interface CommandCenterHeader {
-  runId: number | null;
-  month: string;
-  status: PayrollRunStatus | null;
-  grossTotal: string;
-  deductionTotal: string;
-  netTotal: string;
-  employerCostTotal: string;
-  employeeCount: number;
-  exceptionCounts: { BLOCKER: number; WARNING: number; INFO: number };
-}
+export type VarianceData = z.infer<typeof runVarianceResponseContract>;
 
-export interface CommandCenterData {
-  header: CommandCenterHeader;
-  checklist: PayrollChecklistItem[];
-  panels: {
-    runStatus: PayrollRunStatus | null;
-    topExceptions: Pick<PayrollException, "id" | "code" | "severity" | "message" | "status" | "runEmployeeId">[];
-    varianceSummary: VarianceSummary | null;
-    pendingApprovals: { id: number; stage: number; status: string }[];
-    payoutReadiness: boolean;
-    statutoryReadiness: {
-      taxDeclarationsLocked: boolean;
-      packComplianceChecklist: { key: string; label: string; detail: string }[];
-    };
-  };
-  upcomingCalendarEvents: { id: number; date: string; eventType: string; label: string }[];
-}
-
-export interface VarianceData {
-  currentRun: { id: number; month: string; grossTotal: string | null; netTotal: string | null };
-  previousRun: { id: number; month: string; grossTotal: string | null; netTotal: string | null } | null;
-  topMovers: { userId: string; net: string | null; userName: string }[];
-}

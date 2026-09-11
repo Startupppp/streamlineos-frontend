@@ -52,8 +52,8 @@ function SourceFailureBanner({ failures }: SourceFailureBannerProps) {
 
   return (
     <div className="mb-2 flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2">
-      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink" />
-      <p className="text-dense text-status-warning-ink">
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink-strong" />
+      <p className="text-dense text-status-warning-ink-strong">
         Some events could not be loaded:{" "}
         {failures.map((f) => f.label).join(", ")}
       </p>

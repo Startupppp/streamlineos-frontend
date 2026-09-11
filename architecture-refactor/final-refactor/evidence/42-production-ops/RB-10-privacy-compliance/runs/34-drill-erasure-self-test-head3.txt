@@ -1,0 +1,10 @@
+$ node src/scripts/drill-erasure.mjs --self-test
+self-test: verifying FK enumeration helpers
+
+  PASS  no cyclic tables in test graph
+  PASS  notifications (1) ordered before organization_members (3)
+  PASS  organization_members (3) ordered before users (4)
+  PASS  hr_employments (0) ordered before hr_people (2)
+
+self-test PASS — FK enumeration and deletion ordering correct
+EXIT_CODE=0

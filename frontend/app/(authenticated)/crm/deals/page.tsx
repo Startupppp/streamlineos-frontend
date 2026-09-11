@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealList } from "@/features/crm/deals/deal-list";
 import { DealsFilterBar } from "@/features/crm/deals/deals-filter-bar";
-import { useDensity } from "@/features/renderer/density-toggle";
+import { useDensity } from "@/components/renderer/density-toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
@@ -403,7 +403,7 @@ export default function DealsPage() {
                     {kanbanStages.map((s) => (
                       <KanbanColumn
                         key={s.key}
-                        stage={{ key: s.key, label: s.label, color: s.color }}
+                        stage={{ key: s.key, label: s.label, color: s.color ?? undefined }}
                         deals={dealsByStage[s.key] ?? []}
                         onStageChange={handleStageChange}
                         onDelete={setDealToDelete}

@@ -1,10 +1,26 @@
-﻿"use client";
-
+"use client";
+import type { z } from "zod";
+import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
+﻿
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const templateListContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
+);
+const templateRowContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.templateRowContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const applyTemplateResultContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.applyTemplateResultContract),
+);
 
 interface ProjectTemplateTicket {
   id: number;
@@ -18,16 +34,7 @@ interface ProjectTemplateTicket {
   phase: string | null;
 }
 
-export interface ProjectTemplate {
-  id: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  category: string;
-  createdBy: string | null;
-  createdAt: string | null;
-  tickets: ProjectTemplateTicket[];
-}
+export type ProjectTemplate = z.infer<typeof templateRowContractDef>;
 
 interface CreateProjectTemplateInput {
   name: string;
@@ -52,14 +59,13 @@ interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-const TEMPLATES_KEY = queryKeys.projects.templates();
-
+const TEMPLATES_KEY = buildWorkQueryKeys.projects.templates();
 
 export function useProjectTemplates() {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: TEMPLATES_KEY,
-    queryFn: () => apiClient.get<ProjectTemplate[]>("/build/templates"),
+    queryFn: ({ signal }) => apiClient.get<ProjectTemplate[]>("/build/templates", undefined, signal, templateListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -67,35 +73,37 @@ export function useProjectTemplates() {
 
 export function useCreateProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "create"],
     mutationFn: (input: CreateProjectTemplateInput) =>
-      apiClient.post<ProjectTemplate>("/build/templates", input),
+      apiClient.post<ProjectTemplate>("/build/templates", input, undefined, templateRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
   });
 }
 
 export function useDeleteProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/build/templates/${id}`),
+      apiClient.delete<void>(`/build/templates/${id}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
   });
 }
 
 export function useApplyProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "apply"],
     mutationFn: ({ templateId, input }: { templateId: number; input: ApplyProjectTemplateInput }) =>
       apiClient.post<{ projectId: number; key: string; ticketsCreated: number }>(
         `/build/templates/${templateId}/apply`,
         input,
+        undefined,
+        applyTemplateResultContract,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
 }

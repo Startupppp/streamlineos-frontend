@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { useCreateDeal } from "@/hooks/api/crm";
+import { useCreateDeal } from "@/hooks/api/crm/deals";
 import {
   useAssignLead,
   useBulkDeleteLeads,

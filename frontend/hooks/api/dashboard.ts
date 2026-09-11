@@ -1,49 +1,96 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+
+const dashboardStatsContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.dashboardStatsContract),
+);
+const todayActivitiesContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.todayActivitiesContract),
+);
+const leavesTodayContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.leavesTodayContract),
+);
+const upcomingHolidaysContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.upcomingHolidaysContract),
+);
+const birthdaysContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.birthdaysContract),
+);
+const pendingApprovalsContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.pendingApprovalsContract),
+);
+const announcementsListContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.announcementsListContract),
+);
+const dashboardSuccessContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.dashboardSuccessContract),
+);
+const executiveDashboardContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.executiveDashboardContract),
+);
+const myIssuesContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.myIssuesContract),
+);
+const recentProjectsContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.recentProjectsContract),
+);
+const activeSprintContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.activeSprintContract),
+);
+const recentActivityContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.recentActivityContract),
+);
+const leaveBalanceContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.leaveBalanceContract),
+);
+const teamAttendanceContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.teamAttendanceContract),
+);
+const announcementContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.announcementContract),
+);
+const personalDashboardContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.personalDashboardContract),
+);
+const hrDocumentsListContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.hrDocumentsListContract),
+);
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { homeSectionModule } from "@/lib/home/home-sections";
+import type { DashboardStats } from "@/types/dashboard";
+import type { z } from "zod";
 import type {
-  DashboardStats,
-  RecentProject,
-  SprintSummary,
-  RecentActivity,
-  MyIssue,
-} from "@/types/dashboard";
+  myIssuesContract as myIssuesContractDef,
+  recentProjectsContract as recentProjectsContractDef,
+  activeSprintContract as activeSprintContractDef,
+  recentActivityContract as recentActivityContractDef,
+  leaveBalanceContract as leaveBalanceContractDef,
+  teamAttendanceContract as teamAttendanceContractDef,
+  announcementContract as announcementContractDef,
+  personalDashboardContract as personalDashboardContractDef,
+  hrDocumentsListContract as hrDocumentsListContractDef,
+} from "@/hooks/api/dashboard-schema";
 import {
   DAILY_DATA_STALE_TIME_MS,
   NOTIFICATION_FALLBACK_INTERVAL_MS,
 } from "@/lib/query-request-policies";
 
-export interface PublicDoc {
-  id: number;
-  orgId: string;
-  userId: string | null;
-  departmentId: string | null;
-  name: string;
-  description: string | null;
-  type: string;
-  category: string | null;
-  hasFile: boolean;
-  fileName: string | null;
-  fileSize: number | null;
-  mimeType: string | null;
-  version: number;
-  parentDocumentId: number | null;
-  isPublic: boolean;
-  isActive: boolean;
-  expiryDate: string | null;
-  expiryReminderSent: boolean;
-  tags: string[];
-  metadata: Record<string, unknown> | null;
-  uploadedBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
+export type PublicDoc = z.infer<typeof hrDocumentsListContractDef>["data"][number];
+type MyIssue = z.infer<typeof myIssuesContractDef>[number];
+type RecentProject = z.infer<typeof recentProjectsContractDef>[number];
+type SprintSummary = NonNullable<z.infer<typeof activeSprintContractDef>>;
+type RecentActivity = z.infer<typeof recentActivityContractDef>[number];
+export type LeaveBalance = z.infer<typeof leaveBalanceContractDef>[number];
+export type TeamAttendance = z.infer<typeof teamAttendanceContractDef>;
+type CreatedAnnouncement = z.infer<typeof announcementContractDef>;
+type PersonalDashboard = z.infer<typeof personalDashboardContractDef>;
 
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
@@ -51,8 +98,8 @@ export const useDashboardStats = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
-    queryKey: queryKeys.dashboard.stats(),
-    queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
+    queryKey: collaborationQueryKeys.dashboard.stats(),
+    queryFn: ({ signal }) => apiClient.get<DashboardStats>("/dashboard/stats", undefined, signal, dashboardStatsContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -64,8 +111,8 @@ export const useMyIssues = (
 ) => {
   const buildEnabled = useModuleEnabled("build");
   return useQuery<MyIssue[], Error>({
-    queryKey: queryKeys.dashboard.myIssues(),
-    queryFn: () => apiClient.get<MyIssue[]>("/dashboard/my-issues"),
+    queryKey: collaborationQueryKeys.dashboard.myIssues(),
+    queryFn: ({ signal }) => apiClient.get<MyIssue[]>("/dashboard/my-issues", undefined, signal, myIssuesContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: buildEnabled && (options?.enabled ?? true),
@@ -84,8 +131,8 @@ export const useTodayActivities = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("crm:leads:view");
   return useQuery<ScheduledActivity[], Error>({
-    queryKey: queryKeys.dashboard.todayActivities(),
-    queryFn: () => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities"),
+    queryKey: collaborationQueryKeys.dashboard.todayActivities(),
+    queryFn: ({ signal }) => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities", undefined, signal, todayActivitiesContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -102,8 +149,8 @@ export const useRecentProjects = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("build:tickets:view");
   return useQuery<RecentProject[], Error>({
-    queryKey: queryKeys.dashboard.recentProjects(),
-    queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
+    queryKey: collaborationQueryKeys.dashboard.recentProjects(),
+    queryFn: ({ signal }) => apiClient.get<RecentProject[]>("/dashboard/recent-projects", undefined, signal, recentProjectsContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -120,9 +167,9 @@ export const useActiveSprintSummary = (
   const orgId = session?.orgId ?? "";
   const buildEnabled = useModuleEnabled("build");
   return useQuery<SprintSummary | null, Error>({
-    queryKey: queryKeys.dashboard.activeSprintSummary(),
-    queryFn: () =>
-      apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
+    queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
+    queryFn: ({ signal }) =>
+      apiClient.get<SprintSummary | null>("/dashboard/active-sprint", undefined, signal, activeSprintContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && buildEnabled && (options?.enabled ?? true),
@@ -139,9 +186,9 @@ export const useRecentActivity = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("build:tickets:view");
   return useQuery<RecentActivity[], Error>({
-    queryKey: queryKeys.dashboard.recentActivity(),
-    queryFn: () =>
-      apiClient.get<RecentActivity[]>("/dashboard/recent-activity"),
+    queryKey: collaborationQueryKeys.dashboard.recentActivity(),
+    queryFn: ({ signal }) =>
+      apiClient.get<RecentActivity[]>("/dashboard/recent-activity", undefined, signal, recentActivityContract),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -165,14 +212,6 @@ export interface UpcomingHoliday {
   message: string | null;
 }
 
-export interface LeaveBalance {
-  id: number;
-  balance: string;
-  year: number;
-  leaveTypeName: string | null;
-  daysPerYear: number | null;
-}
-
 export interface BirthdayEntry {
   id: string;
   name: string | null;
@@ -189,31 +228,21 @@ interface PendingApprovalsCount {
   total: number;
 }
 
-export interface TeamAttendance {
+export interface LeavesTodayPage {
+  data: LeaveToday[];
   total: number;
-  present: number;
-  clockedIn: number;
-  absent: number;
-  records: {
-    userId: string;
-    userName: string | null;
-    userImage: string | null;
-    userDesignation: string | null;
-    checkIn: string | null;
-    checkOut: string | null;
-    status: string | null;
-  }[];
+  hasMore: boolean;
 }
 
 export const useLeavesToday = (
-  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<LeavesTodayPage, Error>, "queryKey" | "queryFn">
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:leaves:view");
-  return useQuery<LeaveToday[], Error>({
-    queryKey: queryKeys.dashboard.leavesToday(),
-    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
+  return useQuery<LeavesTodayPage, Error>({
+    queryKey: collaborationQueryKeys.dashboard.leavesToday(),
+    queryFn: ({ signal }) => apiClient.get<LeavesTodayPage>("/dashboard/leaves-today", undefined, signal, leavesTodayContract),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -225,8 +254,8 @@ export const useUpcomingHolidays = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<UpcomingHoliday[]>({
-    queryKey: queryKeys.dashboard.upcomingHolidays(),
-    queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
+    queryKey: collaborationQueryKeys.dashboard.upcomingHolidays(),
+    queryFn: ({ signal }) => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays", undefined, signal, upcomingHolidaysContract),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     enabled: !!orgId && hrEnabled,
   });
@@ -237,8 +266,8 @@ export const useMyLeaveBalance = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaveBalance[]>({
-    queryKey: queryKeys.dashboard.myLeaveBalance(),
-    queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
+    queryKey: collaborationQueryKeys.dashboard.myLeaveBalance(),
+    queryFn: ({ signal }) => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance", undefined, signal, leaveBalanceContract),
     staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled,
   });
@@ -251,8 +280,8 @@ export const useBirthdays = (
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<BirthdayEntry[], Error>({
-    queryKey: queryKeys.dashboard.birthdays(),
-    queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
+    queryKey: collaborationQueryKeys.dashboard.birthdays(),
+    queryFn: ({ signal }) => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays", undefined, signal, birthdaysContract),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     ...options,
     enabled: !!orgId && hrEnabled && (options?.enabled ?? true),
@@ -267,11 +296,9 @@ export const usePendingApprovals = (
   const canApprove = useCan("hr:leaves:approve");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
-    queryKey: queryKeys.dashboard.pendingApprovals(),
-    queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
+    queryKey: collaborationQueryKeys.dashboard.pendingApprovals(),
+    queryFn: ({ signal }) => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals", undefined, signal, pendingApprovalsContract),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchIntervalInBackground: false,
     ...restOptions,
     enabled: !!orgId && canApprove && (enabledOption ?? true),
   });
@@ -284,8 +311,8 @@ export const useTeamAttendance = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:attendance:view");
   return useQuery<TeamAttendance>({
-    queryKey: queryKeys.dashboard.teamAttendance(),
-    queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
+    queryKey: collaborationQueryKeys.dashboard.teamAttendance(),
+    queryFn: ({ signal }) => apiClient.get<TeamAttendance>("/dashboard/team-attendance", undefined, signal, teamAttendanceContract),
     staleTime: 65_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -304,23 +331,25 @@ export interface Announcement {
   authorLastName: string | null;
 }
 
-interface PersonalDashboard {
-  myTasks: { id: number; title: string; status: string; priority: string | null; dueDate: string | null; projectName: string | null }[];
-  timesheetStatus: { submitted: boolean; weekLabel: string; hoursLogged: number };
-  leaveBalance: { type: string; remaining: number; total: number }[];
-  upcomingEvents: { id: number; title: string; startTime: Date; endTime: Date; type: string }[];
-  unreadNotifications: number;
-  degraded?: string[];
-}
-
+/**
+ * `leaveBalance` and `unreadNotifications` used to be here and are gone.
+ *
+ * Neither was ever read: they appeared exactly once each in this repository —
+ * on this interface — while `usePersonalDashboard`'s three consumers
+ * (my-tasks-widget, timesheet-widget, upcoming-events-widget) read `myTasks`,
+ * `timesheetStatus` and `upcomingEvents`. The leave balance Home renders comes
+ * from `useMyLeaveBalance` -> GET /dashboard/my-leave-balance, a different
+ * route. The backend no longer computes either; the unread count was the most
+ * expensive query on the Home surface.
+ */
 interface ExecutiveDashboard {
-  mrr: number;
-  pipelineValue: number;
   headcount: number;
   openRoles: number;
-  newLeadsThisWeek: number;
   activeProjects: number;
-  conversionRate: number;
+  mrr?: number;
+  pipelineValue?: number;
+  newLeadsThisWeek?: number;
+  conversionRate?: number;
 }
 
 export const useAnnouncements = (
@@ -329,8 +358,8 @@ export const useAnnouncements = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<Announcement[], Error>({
-    queryKey: queryKeys.dashboard.announcements(),
-    queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
+    queryKey: collaborationQueryKeys.dashboard.announcements(),
+    queryFn: ({ signal }) => apiClient.get<Announcement[]>("/dashboard/announcements", undefined, signal, announcementsListContract),
     staleTime: 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -339,24 +368,24 @@ export const useAnnouncements = (
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
-      apiClient.post<Announcement>("/dashboard/announcements", body),
+      apiClient.post<CreatedAnnouncement>("/dashboard/announcements", body, undefined, announcementContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+      void qc.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.announcements() });
     },
   });
 };
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),
+      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`, undefined, undefined, dashboardSuccessContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+      void qc.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.announcements() });
     },
   });
 };
@@ -367,8 +396,8 @@ export const usePersonalDashboard = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<PersonalDashboard, Error>({
-    queryKey: queryKeys.dashboard.personal(),
-    queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
+    queryKey: collaborationQueryKeys.dashboard.personal(),
+    queryFn: ({ signal }) => apiClient.get<PersonalDashboard>("/dashboard/personal", undefined, signal, personalDashboardContract),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -382,8 +411,8 @@ export const useExecutiveDashboard = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:analytics:read");
   return useQuery<ExecutiveDashboard, Error>({
-    queryKey: queryKeys.dashboard.executive(),
-    queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
+    queryKey: collaborationQueryKeys.dashboard.executive(),
+    queryFn: ({ signal }) => apiClient.get<ExecutiveDashboard>("/dashboard/executive", undefined, signal, executiveDashboardContract),
     staleTime: 5 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -396,9 +425,9 @@ export const usePublicDocuments = (limit = 6, enabled = true) => {
   const hrEnabled = useModuleEnabled(homeSectionModule("public-documents") ?? "hr");
   const canView = useCan("hr:documents:view");
   return useQuery<PublicDoc[]>({
-    queryKey: queryKeys.dashboard.publicDocuments(limit),
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit });
+    queryKey: collaborationQueryKeys.dashboard.publicDocuments(limit),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit }, signal, hrDocumentsListContract);
       return res.data;
     },
     staleTime: 5 * 60_000,

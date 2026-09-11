@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import type { CreateDealInput, Deal, UpdateDealInput } from "@/types/crm";
 import { DealLinkFields, type DealLinks } from "./deal-link-fields";

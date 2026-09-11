@@ -88,7 +88,7 @@ export function GeneralSettingsFormFields({
         </CardHeader>
         <CardContent className="px-5 pb-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Week starts on</Label>
+            <Label htmlFor="timesheet-settings-work-week-start" className="text-xs font-medium">Week starts on</Label>
             <Controller
               control={control}
               name="workWeekStart"
@@ -98,7 +98,7 @@ export function GeneralSettingsFormFields({
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-9 w-44">
+                  <SelectTrigger id="timesheet-settings-work-week-start" className="h-9 w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -150,12 +150,12 @@ export function GeneralSettingsFormFields({
             />
           </div>
           <div className="flex items-center justify-between py-0.5">
-            <Label className="text-xs font-medium">Allow future-dated entries</Label>
+            <Label htmlFor="timesheet-settings-allow-future-entries" className="text-xs font-medium">Allow future-dated entries</Label>
             <Controller
               control={control}
               name="allowFutureEntries"
               render={({ field }) => (
-                <Switch
+                <Switch id="timesheet-settings-allow-future-entries"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={!canManage}
@@ -164,12 +164,12 @@ export function GeneralSettingsFormFields({
             />
           </div>
           <div className="flex items-center justify-between py-0.5">
-            <Label className="text-xs font-medium">Allow backdated entries</Label>
+            <Label htmlFor="timesheet-settings-allow-backdated-entries" className="text-xs font-medium">Allow backdated entries</Label>
             <Controller
               control={control}
               name="allowBackdatedEntries"
               render={({ field }) => (
-                <Switch
+                <Switch id="timesheet-settings-allow-backdated-entries"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={!canManage}
@@ -314,7 +314,7 @@ export function GeneralSettingsFormFields({
         </CardHeader>
         <CardContent className="px-5 pb-4 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Approval mode</Label>
+            <Label htmlFor="timesheet-settings-approval-mode" className="text-xs font-medium">Approval mode</Label>
             <Controller
               control={control}
               name="approvalMode"
@@ -324,7 +324,7 @@ export function GeneralSettingsFormFields({
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-9 w-52">
+                  <SelectTrigger id="timesheet-settings-approval-mode" className="h-9 w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,12 +339,12 @@ export function GeneralSettingsFormFields({
             />
           </div>
           <div className="flex items-center justify-between py-0.5">
-            <Label className="text-xs font-medium">Enable client approval</Label>
+            <Label htmlFor="timesheet-settings-client-approval-enabled" className="text-xs font-medium">Enable client approval</Label>
             <Controller
               control={control}
               name="clientApprovalEnabled"
               render={({ field }) => (
-                <Switch
+                <Switch id="timesheet-settings-client-approval-enabled"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={!canManage}
@@ -353,12 +353,12 @@ export function GeneralSettingsFormFields({
             />
           </div>
           <div className="flex items-center justify-between py-0.5">
-            <Label className="text-xs font-medium">Lock timesheets after approval</Label>
+            <Label htmlFor="timesheet-settings-lock-after-approval" className="text-xs font-medium">Lock timesheets after approval</Label>
             <Controller
               control={control}
               name="lockAfterApproval"
               render={({ field }) => (
-                <Switch
+                <Switch id="timesheet-settings-lock-after-approval"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={!canManage}

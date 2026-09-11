@@ -46,6 +46,7 @@ export function UpdateProgressDialog({
               </Label>
               <input
                 type="range"
+                aria-label="Progress percent"
                 min={0}
                 max={100}
                 value={progressValue}

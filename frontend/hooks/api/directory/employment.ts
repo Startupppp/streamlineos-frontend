@@ -1,8 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { lazyContract } from "@/lib/api-envelope";
+
+const employmentFactsContract = lazyContract(() =>
+  import("@/hooks/api/directory/employment-schema").then((m) => m.employmentFactsContract),
+);
 
 export interface EmploymentFacts {
   userId: string;
@@ -22,12 +27,12 @@ interface EmploymentFactsResponse {
 export const useEmploymentFacts = (userIds: readonly string[]) => {
   const wanted = [...new Set(userIds.filter(Boolean))].slice(0, 100);
 
-  const query = useQuery<EmploymentFactsResponse, Error>({
-    queryKey: queryKeys.directory.employment(wanted),
-    queryFn: () =>
+  const query = useGatedQuery<EmploymentFactsResponse, Error>("settings:view", {
+    queryKey: directoryAndOwnershipQueryKeys.directory.employment(wanted),
+    queryFn: ({ signal }) =>
       apiClient.get<EmploymentFactsResponse>("/directory/employment", {
         userIds: wanted.join(","),
-      }),
+      }, signal, employmentFactsContract),
     staleTime: 30_000,
     enabled: wanted.length > 0,
   });

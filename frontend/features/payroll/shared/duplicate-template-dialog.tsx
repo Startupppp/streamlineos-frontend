@@ -18,7 +18,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDuplicateTemplate } from "@/hooks/api/payroll";
-import type { TemplateRow } from "@/types/payroll/setup";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -27,10 +27,10 @@ const schema = z.object({
 type DuplicateForm = z.infer<typeof schema>;
 
 type DuplicateTemplateDialogProps = {
-  template: TemplateRow | null;
+  template: PayrollTemplate | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (result: TemplateRow) => void;
+  onSuccess?: (result: PayrollTemplate) => void;
 };
 
 export function DuplicateTemplateDialog({

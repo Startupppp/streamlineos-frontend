@@ -7,7 +7,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,7 +16,7 @@ import {
   useCreateAccessRequest,
   useUpdateAccessRequest,
 } from "@/hooks/api/hr/access-requests";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -38,11 +38,11 @@ const STATUS_META: Record<string, { label: string; badge: string }> = {
 };
 
 interface AccessRequestsTabProps {
-  employees: Employee[];
+  employees: EmployeeListItem[];
   canManage: boolean;
 }
 
-function getEmployeeName(employees: Employee[], id: string) {
+function getEmployeeName(employees: EmployeeListItem[], id: string) {
   const emp = employees.find((e) => e.id === id);
   if (!emp) return id;
   return `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email;

@@ -16,7 +16,8 @@ export const STAGE_TYPES: { value: CrmStageType; label: string; className: strin
   { value: "archived", label: "Archived", className: "text-muted-foreground" },
 ];
 
-export function getPipelineTypeMeta(type: CrmPipelineType) {
+export function getPipelineTypeMeta(type: CrmPipelineType | null) {
+  if (type === null) return PIPELINE_TYPES[5];
   return PIPELINE_TYPES.find((t) => t.value === type) ?? PIPELINE_TYPES[5];
 }
 

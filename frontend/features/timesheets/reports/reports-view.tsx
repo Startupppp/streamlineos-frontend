@@ -134,12 +134,12 @@ export function ReportsView() {
             : !data
               ? "No data to summarize yet"
               : undefined,
-        run: async () => {
+        run: async (signal, onToken) => {
           const res = await generateReportsNarrative({
             startDate,
             endDate,
             userId,
-          });
+          }, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
       },

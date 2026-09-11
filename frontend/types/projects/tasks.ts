@@ -65,12 +65,16 @@ export interface TicketAssignee {
   user?: TicketUser;
 }
 
+/**
+ * `userId` is nullable because a watcher whose organization row is gone flattens to nulls
+ * rather than to missing keys — the backend lifts both off the `organization_members` join.
+ */
 export interface TicketWatcher {
   id: number;
   ticketId: number;
-  userId: string;
+  userId: string | null;
   createdAt: string | Date | null;
-  user?: TicketUser;
+  user?: TicketUser | null;
 }
 
 export interface Ticket {
@@ -85,12 +89,12 @@ export interface Ticket {
   description?: string | null;
   type: string;
   status: string;
-  priority: TicketPriority | null;
+  priority: string | null;
   projectId: number | null;
   ticketNumber: number;
   sprintId: number | null;
   epicId: number | null;
-  assigneeId: string | null;
+  assigneeId?: string | null;
   reporterId: string | null;
   points: number | null;
   storyPoints: number | null;
@@ -101,7 +105,7 @@ export interface Ticket {
   timeSpent: string | null;
   startDate: string | null;
   dueDate: string | null;
-  stateId: number | null;
+  stateId?: number | null;
   moduleId: number | null;
   cycleId: number | null;
   sequenceId: string | null;
@@ -209,7 +213,7 @@ export interface CreateLabelInput {
 }
 
 export interface TicketFilters {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: string;
@@ -226,8 +230,7 @@ export interface TicketFilters {
   orderDir?: "asc" | "desc";
 }
 
-export interface AllWorkFilters extends Omit<TicketFilters, "page"> {
-  cursor?: string;
+export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";
@@ -242,27 +245,23 @@ export interface AllWorkTicketLabel {
 
 export interface AllWorkTicket {
   id: number;
-  orgId: string;
   title: string;
-  description: string | null;
   type: string;
   status: string;
   priority: string | null;
-  projectId: number;
-  projectKey: string;
-  projectName: string;
+  projectId: number | null;
+  projectKey: string | null;
+  projectName: string | null;
   ticketNumber: number;
   sprintId: number | null;
   epicId: number | null;
   assigneeId: string | null;
-  reporterId: string | null;
   points: number | null;
-  storyPoints: number | null;
+  estimate: number | null;
   rank: string | null;
   startDate: string | null;
   dueDate: string | null;
   cycleId: number | null;
-  sequenceId: string | null;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   assignee: TicketUser | null;
@@ -285,7 +284,7 @@ export interface Checklist {
   ticketId: number;
   orgId: string;
   title: string;
-  items: ChecklistItem[];
+  items?: ChecklistItem[];
   createdAt: string;
   updatedAt: string;
 }

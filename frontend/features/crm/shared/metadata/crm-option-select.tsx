@@ -48,7 +48,7 @@ export function CrmOptionSelect({
           </SelectItem>
         )}
         {options.map((option) => {
-          const { dotClass } = getCrmTokenClasses(option.color);
+          const { dotClass } = getCrmTokenClasses(option.color ?? "");
           return (
             <SelectItem key={option.id} value={option.key} className="text-xs">
               <span className="flex items-center gap-1.5">

@@ -14,7 +14,6 @@ interface KanbanTicketCardProps {
   projectId?: number;
   projectKey?: string;
   isDragging: boolean;
-  dragStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
   onSelect: (id: number) => void;
   displayOptions?: DisplayOptions;
 }
@@ -24,31 +23,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   projectId,
   projectKey,
   isDragging,
-  dragStartRef,
   onSelect,
   displayOptions,
 }: KanbanTicketCardProps) {
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      dragStartRef.current = { x: e.clientX, y: e.clientY };
-    },
-    [dragStartRef],
-  );
-
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (dragStartRef.current) {
-        const moved =
-          Math.abs(e.clientX - dragStartRef.current.x) > 5 ||
-          Math.abs(e.clientY - dragStartRef.current.y) > 5;
-        dragStartRef.current = null;
-        if (!moved) onSelect(ticket.id);
-      } else {
-        onSelect(ticket.id);
-      }
-    },
-    [ticket.id, onSelect, dragStartRef],
-  );
+  const handleActivate = useCallback(() => {
+    onSelect(ticket.id);
+  }, [ticket.id, onSelect]);
 
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
@@ -77,8 +57,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           ? "z-20 border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25 before:bg-primary rotate-1 scale-[1.02]"
           : "hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-md hover:before:bg-primary/60",
       )}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
     >
       <div className="flex items-start gap-1.5">
         {projectId ? (
@@ -90,9 +68,16 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             />
           </div>
         ) : null}
-        <p className={cn(TEXT_TWO_LINES, "flex-1 text-xs font-medium leading-snug text-foreground/95")}>
+        <button
+          type="button"
+          onClick={handleActivate}
+          className={cn(
+            TEXT_TWO_LINES,
+            "flex-1 text-left text-xs font-medium leading-snug text-foreground/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+          )}
+        >
           {ticket.title}
-        </p>
+        </button>
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}

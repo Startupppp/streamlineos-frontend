@@ -10,9 +10,6 @@
     "eslint.config.mjs",
     "jest.config.cjs",
     "jest.setup.js",
-    "**/*.test.{ts,tsx}",
-    "**/*.spec.{ts,tsx}",
-    "**/__tests__/**/*.{ts,tsx}",
     "feedbucket-widget/build.mjs",
     "feedbucket-widget/src/index.ts"
   ],
@@ -30,6 +27,5 @@
     "components/ui/table.tsx",
     "lib/rbac/permissions/**"
   ],
-  "ignoreDependencies": ["sharp", "tailwindcss", "@tailwindcss/typography"],
   "ignoreExportsUsedInFile": true
 }

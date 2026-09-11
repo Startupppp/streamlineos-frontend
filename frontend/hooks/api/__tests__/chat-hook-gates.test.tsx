@@ -19,9 +19,12 @@ jest.mock("@/lib/api-client", () => ({
     patch: jest.fn(),
     delete: jest.fn(),
   },
+  isApiError: (error: unknown) => error instanceof Error && error.name === "ApiError",
+  getApiErrorCode: () => undefined,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
   useCan: jest.fn().mockReturnValue(false),
   useModuleEnabled: jest.fn().mockReturnValue(true),
 }));

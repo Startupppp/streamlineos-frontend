@@ -1,7 +1,10 @@
 "use client";
 
+import { useCallback } from "react";
 import { useWellnessTrend } from "@/hooks/api/hr/safety";
 import { Card } from "@/components/ui/card";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   LineChart,
   Line,
@@ -20,7 +23,11 @@ interface Props {
 }
 
 export function WellnessTrendChart({ fromDate, toDate }: Props) {
-  const { data, isLoading } = useWellnessTrend(fromDate, toDate);
+  const { data, isLoading, isError, error, refetch } = useWellnessTrend(fromDate, toDate);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <Card className="p-4 bg-card border border-border rounded-xl">
@@ -30,6 +37,13 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
       </p>
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-lg" />
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load the wellness trend"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : !data?.length ? (
         <p className="text-xs text-muted-foreground text-center py-10">
           Not enough data yet (need 5+ respondents per day)

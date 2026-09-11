@@ -1,11 +1,12 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RefreshCw } from "lucide-react";
@@ -25,6 +26,7 @@ import { TemplateSheet } from "./template-sheet";
 import { ExitVerificationView } from "./exit-verification-view";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -48,14 +50,21 @@ const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
 
 export function IdentityPageContent() {
   const canManage = useCan("hr:identity:manage");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [activeTab, setActiveTab] = useState("provisioning");
 
   const qc = useQueryClient();
 
-  const { data, isLoading, isError: provisioningError } = useAccessProvisioning({ page });
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError: provisioningError,
+  } = useAccessProvisioning({ cursor });
   const { data: templates, isLoading: templatesLoading, isError: templatesError } = useProvisioningTemplates();
   const deleteTemplate = useDeleteProvisioningTemplate();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -63,7 +72,7 @@ export function IdentityPageContent() {
   const pageError = provisioningError || templatesError;
 
   function handleRetry() {
-    void qc.invalidateQueries({ queryKey: ["hr-identity"] });
+    void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrIdentityAll });
   }
 
   const memberById = useMemo(() => {
@@ -131,6 +140,14 @@ export function IdentityPageContent() {
     },
   ], [resolveMemberName]);
 
+  const handleTemplateDelete = useCallback(
+    (templateId: string) => (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      deleteTemplate.mutate(templateId);
+    },
+    [deleteTemplate],
+  );
+
   const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
     {
       key: "name",
@@ -161,13 +178,22 @@ export function IdentityPageContent() {
           variant="ghost"
           size="sm"
           className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={(e) => { e.stopPropagation(); deleteTemplate.mutate(r.id); }}
+          onClick={handleTemplateDelete(r.id)}
         >
           Delete
         </Button>
       ) : null,
     },
   ];
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   if (pageError) {
     return (
@@ -227,37 +253,37 @@ export function IdentityPageContent() {
                 ))}
               </div>
             ) : (
-              <DataTable
-                className="flex-1 min-h-0"
-                data={data?.data ?? []}
-                columns={provisioningColumns}
-                getRowKey={(r) => r.id}
-                isLoading={false}
-                emptyState={
-                  <EmptyState
-                    illustrationPreset="permissions"
-                    title="No provisioning records"
-                    description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
-                    action={
-                      canManage
-                        ? { label: "Provision", onClick: () => setShowCreate(true) }
-                        : undefined
-                    }
-                    compact
-                  />
-                }
-                pagination={
-                  data
-                    ? {
-                        mode: "server",
-                        page,
-                        pageSize: data.pagination.limit,
-                        total: data.pagination.total,
-                        onPageChange: setPage,
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <DataTable
+                  className="flex-1 min-h-0"
+                  data={data?.data ?? []}
+                  columns={provisioningColumns}
+                  getRowKey={(r) => r.id}
+                  isLoading={false}
+                  emptyState={
+                    <EmptyState
+                      illustrationPreset="permissions"
+                      title="No provisioning records"
+                      description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
+                      action={
+                        canManage
+                          ? { label: "Provision", onClick: () => setShowCreate(true) }
+                          : undefined
                       }
-                    : undefined
-                }
-              />
+                      compact
+                    />
+                  }
+                />
+                {data && (page > 1 || data.pagination.hasMore) ? (
+                  <CursorPageControls
+                    page={page}
+                    hasNext={data.pagination.hasMore}
+                    disabled={isFetching}
+                    onPrevious={handlePreviousPage}
+                    onNext={handleNextPage}
+                  />
+                ) : null}
+              </div>
             )}
           </TabsContent>
 

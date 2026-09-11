@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordList, asRecordValues } from "@/features/renderer";
-import { useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordList, asRecordValues } from "@/components/renderer";
+import { useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   QUOTE_LINE_ITEM_LAYOUT,
   quoteLineItemRecordFields,

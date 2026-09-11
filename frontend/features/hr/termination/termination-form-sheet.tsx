@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 
 import { TERMINATION_REASONS, TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 function buildLetterPreview(params: {
   employeeName: string;
@@ -79,7 +79,7 @@ interface TerminationFormSheetProps {
   isPending: boolean;
   submitDisabled?: boolean;
   onSubmit: () => void;
-  employees: Employee[];
+  employees: EmployeeListItem[];
   selectedEmployeeUserId: string;
   onSelectedEmployeeUserIdChange: (employeeUserId: string) => void;
   selectedReason: string;

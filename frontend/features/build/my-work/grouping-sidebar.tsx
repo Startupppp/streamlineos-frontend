@@ -194,8 +194,8 @@ function GroupingSidebarBody({
         existing.count += 1;
       } else {
         counts.set(String(t.projectId), {
-          name: t.projectName,
-          key: t.projectKey,
+          name: t.projectName ?? "",
+          key: t.projectKey ?? "",
           count: 1,
         });
       }

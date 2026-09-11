@@ -1,12 +1,15 @@
 "use client";
 
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Wifi, WifiOff, Edit2 } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useBiometricDevices, type BiometricDevice } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -17,7 +20,11 @@ interface Props {
 }
 
 export function BiometricDevicesList({ canManage, onEdit }: Props) {
-  const { data: devices, isLoading } = useBiometricDevices();
+  const { data: devices, isLoading, isError, error, refetch } = useBiometricDevices();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -26,6 +33,17 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
           <Skeleton key={i} className="h-44 rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load biometric devices"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

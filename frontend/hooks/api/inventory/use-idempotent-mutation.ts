@@ -6,7 +6,8 @@ import {
   type UseMutationOptions,
   type UseMutationResult,
 } from "@tanstack/react-query";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { randomId } from "@/lib/random-id";
 
@@ -89,17 +90,24 @@ export function useIdempotentMutation<TData, TError = Error, TVariables = void>(
  * `MutationFunctionContext` as a second argument. A hook that took the key
  * there would receive that context object instead and send `undefined` as the
  * header — well-formed enough to pass a smoke test, and no protection at all.
+ *
+ * It follows `useAuthorizedMutation` on an unresolved access snapshot: that is
+ * `pending`, not `denied`, so the guard resolves the snapshot before deciding
+ * rather than telling a permitted operator who acted early that they lack access.
  */
 export function useAuthorizedIdempotentMutation<TData, TError = Error, TVariables = void>(
   permission: PermissionKey,
   options: IdempotentMutationOptions<TData, TError, TVariables>,
 ): UseMutationResult<TData, TError, TVariables> {
   const allowed = useCan(permission);
+  const { data: access, refetch } = useAccess();
   const { mutationFn, ...rest } = options;
   return useIdempotentMutation<TData, TError, TVariables>({
     ...rest,
+    meta: { ...rest.meta, permission },
     mutationFn: async (variables, idempotencyKey) => {
-      if (!allowed) throw new Error(`Missing permission: ${permission}`);
+      const granted = access ? allowed : grantsPermission((await refetch()).data, permission);
+      if (!granted) throw new Error(`Missing permission: ${permission}`);
       return mutationFn(variables, idempotencyKey);
     },
   });

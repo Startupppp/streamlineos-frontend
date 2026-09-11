@@ -30,7 +30,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -91,7 +91,7 @@ export function TeamsListPage() {
   const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectTeams({
+  const { data, isLoading, isError, error, refetch } = useProjectTeams({
     cursor,
     pageSize: 50,
     search: search.trim() || undefined,
@@ -294,23 +294,28 @@ export function TeamsListPage() {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={4} className="flex-1" />
           ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
+            <ErrorState
+              className={PM_FILL_PANEL}
+              title="Couldn't load teams"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : teams.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"
-              title={isFiltered ? "No matching teams" : "No teams yet"}
+              title="No teams yet"
               description={
                 isFiltered
-                  ? "Try adjusting your search."
+                  ? undefined
                   : "Create a team to group members and track work together."
               }
+              filtersActive={isFiltered}
+              onClearFilters={handleClearSearch}
               action={
-                isFiltered
-                  ? { label: "Clear search", onClick: handleClearSearch }
-                  : canCreate
-                    ? { label: "New Team", onClick: handleOpenCreate }
-                    : undefined
+                !isFiltered && canCreate
+                  ? { label: "New Team", onClick: handleOpenCreate }
+                  : undefined
               }
             />
           ) : (

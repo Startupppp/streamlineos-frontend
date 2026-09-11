@@ -7,7 +7,7 @@ export interface RoadmapItem {
   orgId: string;
   title: string;
   description: string | null;
-  status: RoadmapStatus;
+  status: string;
   category: string | null;
   isPublic: boolean;
   projectId: number | null;
@@ -25,7 +25,7 @@ export interface FeedbackPost {
   orgId: string;
   title: string;
   description: string | null;
-  status: FeedbackStatus;
+  status: string;
   category: string | null;
   votes: number;
   submittedByName: string | null;
@@ -44,7 +44,7 @@ export interface ChangelogEntry {
   title: string;
   content: string;
   version: string | null;
-  type: ChangelogType;
+  type: string;
   isPublished: boolean;
   linkedRoadmapItemId: number | null;
   publishedAt: string | null;

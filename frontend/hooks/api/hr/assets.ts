@@ -2,12 +2,17 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const assetListPageC = lazyContract(() =>
+  import("@/hooks/api/hr/assets-schema").then((m) => m.assetListPageContract),
+);
 import { useCan } from "@/hooks/api/access";
 import type { Asset } from "@/types/hr";
 
 export interface HrAssetListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
@@ -23,21 +28,21 @@ export interface HrAssetCounts {
 export interface HrAssetListResponse {
   data: Asset[];
   counts: HrAssetCounts;
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export const hrAssetListPrefix = [...queryKeys.hr.all, "assets"] as const;
+export const hrAssetListPrefix = [...humanResourcesQueryKeys.hr.all, "assets"] as const;
 
 export function useHrAssetList(params?: HrAssetListParams) {
   const canAssets = useCan("hr:assets:view");
   const queryParams: Record<string, unknown> = {
-    page: params?.page ?? 1,
     limit: params?.limit ?? 20,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
     ...(params?.status ? { status: params.status } : {}),
   };
   return useQuery({
-    queryKey: queryKeys.hr.assets(queryParams),
-    queryFn: () => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams),
+    queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
+    queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal, assetListPageC),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canAssets,
@@ -48,22 +53,20 @@ const EXPORT_PAGE_LIMIT = 100;
 const EXPORT_MAX_ROWS = 5_000;
 
 export async function fetchAllAssetsForExport(
-  params: Omit<HrAssetListParams, "page" | "limit">,
+  params: Omit<HrAssetListParams, "cursor" | "limit">,
 ): Promise<Asset[]> {
   const all: Asset[] = [];
-  let page = 1;
-  let totalPages = 1;
+  let cursor: string | undefined;
 
-  while (page <= totalPages && all.length < EXPORT_MAX_ROWS) {
+  while (all.length < EXPORT_MAX_ROWS) {
     const res = await apiClient.get<HrAssetListResponse>("/hr/assets", {
       ...(params.status ? { status: params.status } : {}),
-      page,
+      ...(cursor ? { cursor } : {}),
       limit: EXPORT_PAGE_LIMIT,
-    });
+    }, undefined, assetListPageC);
     all.push(...res.data);
-    totalPages = Math.max(1, res.pagination.totalPages);
-    if (res.data.length === 0) break;
-    page += 1;
+    if (!res.pagination.hasMore || !res.pagination.nextCursor) break;
+    cursor = res.pagination.nextCursor;
   }
 
   return all.slice(0, EXPORT_MAX_ROWS);

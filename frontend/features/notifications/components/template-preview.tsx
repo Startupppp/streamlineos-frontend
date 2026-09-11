@@ -13,7 +13,7 @@ import {
   usePreviewTemplate,
 } from "@/hooks/api/notifications";
 import type {
-  NotificationTemplate
+  NotificationTemplate,
 } from "@/types/notifications";
 
 export function PreviewDialog({

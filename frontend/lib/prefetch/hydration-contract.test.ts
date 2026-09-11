@@ -19,6 +19,8 @@ jest.mock("@/lib/server-fetch", () => ({
   serverGet: jest.fn(),
 }));
 
+import * as fs from "fs";
+import * as path from "path";
 import { QueryClient, dehydrate, hydrate } from "@tanstack/react-query";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
@@ -30,8 +32,10 @@ import { prefetchRoles } from "./roles";
 import { prefetchWorkers } from "./directory";
 import { prefetchHrDocuments, prefetchHrAssets } from "./hr";
 import { prefetchPayrollRuns } from "./payroll";
+import { prefetchBuildProject } from "./build";
 import { workersListKey } from "@/lib/query-keys/directory-workers-list";
 
+const FE_ROOT = path.join(__dirname, "..", "..");
 const ORG = "org-a";
 const USER = "user-1";
 const PAYLOAD = { isOrgOwner: false, modules: {}, scopes: { "hr:employees:view": "all" } };
@@ -129,7 +133,7 @@ describe("the shipped prefetch factories honour that contract", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    expect(app.getQueryData(queryKeys.roles.list({ page: 1, limit: 20 }))).toEqual(page);
+    expect(app.getQueryData(queryKeys.roles.list({ limit: 20 }))).toEqual(page);
   });
 
   it("returns an empty scoped snapshot when the server access read fails", async () => {
@@ -200,6 +204,71 @@ describe("the shipped prefetch factories honour that contract", () => {
     hydrate(app, state);
 
     expect(app.getQueryData(queryKeys.payroll.runs({ cursor: undefined, limit: 20 }))).toEqual(response);
+  });
+});
+
+/**
+ * PRD-C094 — the build project route reads `GET /build/:id` on the SERVER for its 404 /
+ * access-denied / workspace-redirect decision, and 29 files then call `useProject(id)`,
+ * which issued the identical request again from the browser on mount. The server read
+ * now seeds the cache those callers read from.
+ *
+ * Three things have to hold together or the double fetch comes back silently:
+ * the snapshot must be readable by the app's own scoped client, it must sit under the
+ * key `useProject` asks with, and the layouts must actually wrap children in a
+ * HydrationBoundary over it. The first two are behaviour; the third is the wiring, and
+ * a factory nobody mounts is the same as no factory.
+ */
+describe("build project prefetch feeds useProject's cache", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (getServerAuth as jest.Mock).mockResolvedValue({ orgId: ORG, user: { id: USER } });
+  });
+
+  const PROJECT = { id: 314, name: "Apollo", key: "APL", pmWorkspaceId: null };
+
+  it("dehydrates the project under the exact key useProject reads", async () => {
+    (serverGet as jest.Mock).mockResolvedValue(PROJECT);
+
+    const { project, state } = await prefetchBuildProject(314);
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    // The layout is a consumer too: it needs the value for its 404/403/redirect branch.
+    expect(project).toEqual(PROJECT);
+    expect(app.getQueryData(queryKeys.projects.detail(314))).toEqual(PROJECT);
+  });
+
+  it("issues exactly one server read, which is the whole point", async () => {
+    (serverGet as jest.Mock).mockResolvedValue(PROJECT);
+
+    await prefetchBuildProject(314);
+
+    expect(serverGet).toHaveBeenCalledTimes(1);
+    expect((serverGet as jest.Mock).mock.calls[0]?.[0]).toBe("/build/314");
+  });
+
+  it("rethrows, so the layout still sees the 403/404 it branches on", async () => {
+    const failure = Object.assign(new Error("forbidden"), { status: 403 });
+    (serverGet as jest.Mock).mockRejectedValue(failure);
+
+    // `prefetchQuery` would swallow this and hand back an empty snapshot, and the
+    // access-denied branch would never run.
+    await expect(prefetchBuildProject(314)).rejects.toBe(failure);
+  });
+
+  it("both build layouts mount a HydrationBoundary over that snapshot", () => {
+    const layouts = [
+      "app/(authenticated)/build/[projectId]/layout.tsx",
+      "app/(authenticated)/build/workspaces/[pmWorkspaceId]/[projectId]/layout.tsx",
+    ];
+    for (const relative of layouts) {
+      const source = fs.readFileSync(path.join(FE_ROOT, relative), "utf8");
+      expect([relative, source.includes("prefetchBuildProject")]).toEqual([relative, true]);
+      expect([relative, /<HydrationBoundary state=\{hydrated\}>/.test(source)]).toEqual([relative, true]);
+      // The duplicate-fetch shape this replaced: a bare serverGet with nowhere to put it.
+      expect([relative, source.includes("serverGet")]).toEqual([relative, false]);
+    }
   });
 });
 

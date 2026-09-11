@@ -11,16 +11,15 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   HrHero,
   HrPageContent,
   HrQuickAction,
 } from "@/features/hr/shared/hr-ui";
 import { cn } from "@/lib/utils";
-import {
-  EMPTY_HR_HUB_ACCESS,
-  useHrHubSnapshot,
-} from "@/hooks/api/hr/hub";
+import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
+import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubRecruitment } from "./hr-hub-recruitment";
@@ -87,6 +86,8 @@ export function HrHubPage() {
     [access],
   );
 
+  const hasAnyPanel = Object.values(access).some(Boolean);
+
   return (
     <PageWrapper
       title="HR"
@@ -136,6 +137,15 @@ export function HrHubPage() {
                 Retry
               </button>
             </div>
+          ) : null}
+
+          {!hub.isLoading && !hub.isError && !hasAnyPanel ? (
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="team"
+              title="No HR panels available to you"
+              description="Your access doesn't include any of this hub's sections yet. Ask an administrator to grant the HR permissions you need."
+            />
           ) : null}
 
           <HrHubQueues

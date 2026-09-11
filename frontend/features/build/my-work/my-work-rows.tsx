@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
-import { memo, type ComponentType } from "react";
+import { memo, useEffect, useTransition, useState, type ComponentType } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -17,18 +16,13 @@ import type { MyWorkItem } from "@/types/projects/my-work";
 
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/features/build/shared/status-badge";
-import { PmPanel, PM_ROW } from "@/features/build/shared/pm-chrome";
-import {
-  listItem,
-  listItemReduced,
-  pmSnappy,
-} from "@/lib/motion-presets";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
+import { PmPanel, PM_ROW } from "@/components/pm-chrome";
 import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
 } from "@/lib/text-overflow";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
@@ -57,20 +51,16 @@ export const BUCKET_CONFIG: Record<
   none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
 };
 
+export const BUCKET_SYNC_LIMIT = 20;
+
 export const WorkItemRow = memo(function WorkItemRow({
   item,
 }: {
   item: WorkRowShape;
   index?: number;
 }) {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <motion.div
-      variants={shouldReduceMotion ? listItemReduced : listItem}
-      transition={pmSnappy}
-      whileHover={shouldReduceMotion ? undefined : { x: 2 }}
-    >
+    <div className="transition-transform duration-150 hover:translate-x-0.5">
       <Link
         href={
           item.ticketNumber != null
@@ -110,11 +100,11 @@ export const WorkItemRow = memo(function WorkItemRow({
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 });
 
-export function BucketSection({
+export const BucketSection = memo(function BucketSection({
   bucket,
   items,
 }: {
@@ -122,7 +112,18 @@ export function BucketSection({
   items: MyWorkItem[];
 }) {
   const cfg = BUCKET_CONFIG[bucket];
-  const shouldReduceMotion = useReducedMotion();
+  const [, startTransition] = useTransition();
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(items.length, BUCKET_SYNC_LIMIT),
+  );
+
+  useEffect(() => {
+    if (items.length > BUCKET_SYNC_LIMIT) {
+      startTransition(() => setVisibleCount(items.length));
+    } else {
+      setVisibleCount(items.length);
+    }
+  }, [items.length]);
 
   return (
     <PmPanel>
@@ -135,25 +136,14 @@ export function BucketSection({
           {items.length}
         </span>
       </div>
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: {
-            transition: shouldReduceMotion
-              ? { duration: 0 }
-              : { staggerChildren: 0.03, delayChildren: 0.04 },
-          },
-        }}
-      >
-        {items.map((item) => (
+      <div>
+        {items.slice(0, visibleCount).map((item) => (
           <WorkItemRow key={item.id} item={item} />
         ))}
-      </motion.div>
+      </div>
     </PmPanel>
   );
-}
+});
 
 export function AllWorkListSkeleton() {
   return (
@@ -166,4 +156,3 @@ export function AllWorkListSkeleton() {
     </PmPanel>
   );
 }
-

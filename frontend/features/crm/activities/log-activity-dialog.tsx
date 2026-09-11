@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 import { AppDialog } from "@/components/shared/app-dialog";
-import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   activityLayoutWithTypes,
   activityTypeOptions,

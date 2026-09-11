@@ -1,23 +1,24 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
+import type { EmployeeListItem } from "@/types/hr";
 
 interface EmployeeCardProps {
-  employee: Employee;
+  employee: EmployeeListItem;
   department: string | null;
 }
 
-function employeeDisplayName(emp: Employee): string {
+function employeeDisplayName(emp: EmployeeListItem): string {
   if (emp.firstName && emp.lastName) return `${emp.firstName} ${emp.lastName}`;
   return emp.name?.trim() || "—";
 }
 
-function employeeInitials(emp: Employee): string {
+function employeeInitials(emp: EmployeeListItem): string {
   const first = emp.firstName?.trim()?.[0];
   const last = emp.lastName?.trim()?.[0];
   if (first && last) return `${first}${last}`.toUpperCase();
@@ -25,7 +26,17 @@ function employeeInitials(emp: Employee): string {
   return (fromName ?? "?").toUpperCase();
 }
 
-export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
+/**
+ * One per loaded employee in the directory grid, and `useInfiniteHrEmployees`
+ * accumulates its pages — so the mounted count grows with every "Load more"
+ * while the page re-renders on each search keystroke. Both props are already
+ * stable (`employees` is a `useMemo` over the query pages, `department` a
+ * string), so memo turns 60 avoidable renders per keystroke into zero.
+ */
+export const EmployeeCard = memo(function EmployeeCard({
+  employee: emp,
+  department,
+}: EmployeeCardProps) {
   const displayName = employeeDisplayName(emp);
   const initials = employeeInitials(emp);
   const designation = emp.designation?.trim() || null;
@@ -123,4 +134,4 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
       </article>
     </Link>
   );
-}
+});

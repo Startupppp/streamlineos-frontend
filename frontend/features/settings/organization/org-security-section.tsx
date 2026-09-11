@@ -1,17 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateOrgSecurity } from "@/hooks/api/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
 import {
   OrgSettingsCard,
@@ -25,13 +22,14 @@ import {
   parseSecurityList,
   type OrgSecurityFormValues,
 } from "./org-security-schema";
+import { useOrganizationSettingsForm } from "./use-organization-settings-form";
 
 interface OrgSecuritySectionProps {
   org: OrgSettings;
   canEdit: boolean;
 }
 
-function toDefaults(org: OrgSettings): OrgSecurityFormValues {
+function toSecurityValues(org: OrgSettings): OrgSecurityFormValues {
   return {
     mfaEnforced: org.mfaEnforced ?? false,
     allowedEmailDomains: (org.allowedEmailDomains ?? []).join("\n"),
@@ -44,29 +42,23 @@ function toDefaults(org: OrgSettings): OrgSecurityFormValues {
 }
 
 export function OrgSecuritySection({ org, canEdit }: OrgSecuritySectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const updateSecurity = useUpdateOrgSecurity();
+  const mutation = useUpdateOrgSecurity();
+  const { form, isEditing, isSaving, handleEdit, handleCancel, save } =
+    useOrganizationSettingsForm({
+      resolver: zodResolver(orgSecurityFormSchema),
+      serverValues: toSecurityValues(org),
+      mutation,
+      successMessage: "Session policy updated",
+    });
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     watch,
     formState: { errors },
-  } = useForm<OrgSecurityFormValues>({
-    resolver: zodResolver(orgSecurityFormSchema),
-    defaultValues: toDefaults(org),
-  });
+  } = form;
   const mfaEnforced = watch("mfaEnforced");
 
-  const handleEdit = useCallback(() => {
-    reset(toDefaults(org));
-    setIsEditing(true);
-  }, [org, reset]);
-  const handleCancel = useCallback(() => {
-    reset(toDefaults(org));
-    setIsEditing(false);
-  }, [org, reset]);
   const handleMfaChange = useCallback(
     (checked: boolean) => setValue("mfaEnforced", checked, { shouldDirty: true }),
     [setValue],
@@ -74,23 +66,14 @@ export function OrgSecuritySection({ org, canEdit }: OrgSecuritySectionProps) {
   const handleSave = useCallback(
     (values: OrgSecurityFormValues) => {
       const maxSessions = values.maxConcurrentSessions.trim();
-      updateSecurity.mutate(
-        {
-          mfaEnforced: values.mfaEnforced,
-          allowedEmailDomains: parseSecurityList(values.allowedEmailDomains),
-          ipAllowlist: parseSecurityList(values.ipAllowlist),
-          maxConcurrentSessions: maxSessions ? Number(maxSessions) : null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Session policy updated");
-            setIsEditing(false);
-          },
-          onError: (error) => toast.error(getErrorMessage(error)),
-        },
-      );
+      save({
+        mfaEnforced: values.mfaEnforced,
+        allowedEmailDomains: parseSecurityList(values.allowedEmailDomains),
+        ipAllowlist: parseSecurityList(values.ipAllowlist),
+        maxConcurrentSessions: maxSessions ? Number(maxSessions) : null,
+      });
     },
-    [updateSecurity],
+    [save],
   );
 
   return (
@@ -160,11 +143,8 @@ export function OrgSecuritySection({ org, canEdit }: OrgSecuritySectionProps) {
               </p>
             )}
           </div>
-          <OrgSettingsFormActions
-            onCancel={handleCancel}
-            isPending={updateSecurity.isPending}
-          >
-            <LoadingButton type="submit" size="sm" isPending={updateSecurity.isPending}>
+          <OrgSettingsFormActions onCancel={handleCancel} isPending={isSaving}>
+            <LoadingButton type="submit" size="sm" isPending={isSaving}>
               Save policy
             </LoadingButton>
           </OrgSettingsFormActions>

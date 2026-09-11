@@ -1,15 +1,28 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const sprintListContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.sprintListContract),
+);
+const sprintRowContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.sprintRowContract),
+);
+const sprintUpdateResultContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.sprintUpdateResultContract),
+);
 import type {
   Sprint,
   CreateSprintInput,
   UpdateSprintInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateBuildViews } from "./ticket-cache";
 
 export function useSprints(
   projectId?: number,
@@ -17,47 +30,47 @@ export function useSprints(
 ) {
   const canView = useCan("build:sprints:view");
   return useQuery<Sprint[]>({
-    queryKey: queryKeys.projects.sprints(projectId),
-    queryFn: () =>
-      apiClient.get<Sprint[]>(`/build/${projectId}/sprints`),
+    queryKey: buildWorkQueryKeys.projects.sprints(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<Sprint[]>(`/build/${projectId}/sprints`, undefined, signal, sprintListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
   });
 }
 
-export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
+export function useCreateSprint(options?: Omit<UseMutationOptions<Sprint, Error, CreateSprintInput>, "mutationFn">) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:sprints:manage", {
+    ...options,
     mutationKey: ["projects", "sprints", "create"],
     mutationFn: ({ projectId, ...data }: CreateSprintInput) =>
-      apiClient.post<Sprint>(`/build/${projectId}/sprints`, data),
-    onSuccess: (_: unknown, variables: CreateSprintInput) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(variables.projectId),
-      });
+      apiClient.post<Sprint>(`/build/${projectId}/sprints`, data, undefined, sprintRowContract),
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, variables.projectId);
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
-    ...options,
   });
 }
 
 export function useUpdateSprint(
   projectId: number,
-  options?: Parameters<typeof useMutation>[0]
+  options?: Omit<UseMutationOptions<{ success: true }, Error, UpdateSprintInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:sprints:manage", {
+    ...options,
     mutationKey: ["projects", "sprints", "update"],
     mutationFn: ({ sprintId, ...data }: UpdateSprintInput) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<{ success: true }>(
         `/build/${projectId}/sprints/${sprintId}`,
-        data
+        data,
+        undefined,
+        sprintUpdateResultContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
-      });
+    onSuccess: (data, variables, context, mutationContext) => {
+      invalidateBuildViews(queryClient, projectId);
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
-    ...options,
   });
 }

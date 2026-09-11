@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import type { AssignDialogState } from "./asset-constants";
 

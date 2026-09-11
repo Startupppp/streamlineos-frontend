@@ -1,9 +1,19 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+
+const loanListC = lazyContract(() =>
+  import("@/hooks/api/payroll/loans-admin-schema").then((m) => m.loanListResponseContract),
+);
+const loanSuccessC = lazyContract(() =>
+  import("@/hooks/api/payroll/loans-admin-schema").then((m) => m.successContract),
+);
 
 export type LoanStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REPAID" | "REJECTED";
 
@@ -23,18 +33,19 @@ export interface LoanAdminItem {
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  user: {
+  user?: {
     id: string;
     name: string | null;
     email: string;
-  };
+  } | null;
 }
 
 export function useAdminLoans() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.payroll.loansAdmin(),
-    queryFn: () => apiClient.get<LoanAdminItem[]>("/hr/loans"),
+    queryKey: payrollQueryKeys.payroll.loansAdmin(),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get("/hr/loans", undefined, signal, loanListC)).items,
     staleTime: 30_000,
     enabled: canView,
   });
@@ -47,12 +58,12 @@ interface UpdateLoanStatusInput {
 
 export function useUpdateLoanStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "loans", "update-status"],
     mutationFn: ({ loanId, status }: UpdateLoanStatusInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/loans/${loanId}`, { status }),
+      apiClient.patch<{ success: boolean }>(`/hr/loans/${loanId}`, { status }, undefined, loanSuccessC),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.loansAdmin() });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.loansAdmin() });
     },
   });
 }

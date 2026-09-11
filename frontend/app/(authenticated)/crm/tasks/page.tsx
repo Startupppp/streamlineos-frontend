@@ -17,14 +17,15 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { type RecordValue } from "@/features/renderer";
-import { useDensity } from "@/features/renderer/density-toggle";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { type RecordValue } from "@/components/renderer";
+import { useDensity } from "@/components/renderer/density-toggle";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { TASK_LAYOUT, taskRecordFields } from "@/lib/renderer/crm/task-layout";
 import {
   useTasks,
@@ -37,10 +38,11 @@ import {
   type TaskEntityType,
   type TasksFilters,
 } from "@/hooks/api/tasks";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarMemberLookup } from "@/hooks/api/calendar";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { TasksToolbar } from "@/features/crm/tasks/tasks-toolbar";
+import { MyTasksPanel } from "@/components/timeline/my-tasks-panel";
 
 function getTaskBucket(dueDate: string | null): TaskBucket {
   if (!dueDate) return "NO_DATE";
@@ -153,7 +155,7 @@ function CrmTasksContent() {
   };
 
   const { data, isLoading, isError, refetch } = useTasks(tasksFilters);
-  const { data: members = [] } = useCalendarOrgMembers();
+  const { data: members = [] } = useCalendarMemberLookup();
 
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
@@ -292,6 +294,9 @@ function CrmTasksContent() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        {/* Tasks logged on a customer, deal or subject timeline — same rows, read by assignee. */}
+        <MyTasksPanel />
+
         <StatCardGrid cols={5}>
           <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" isLoading={isLoading} />
           <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" isLoading={isLoading} />

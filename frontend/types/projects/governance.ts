@@ -5,33 +5,37 @@ export type DecisionStatus = "proposed" | "accepted" | "superseded" | "revisit";
 
 export interface Risk {
   id: number;
+  orgId: string;
   projectId: number;
   riskNumber: number;
   title: string;
   description: string | null;
-  probability: RiskProbability;
-  impact: RiskImpact;
-  status: RiskStatus;
+  probability: string;
+  impact: string;
+  status: string;
   ownerId: string | null;
   mitigation: string | null;
   linkedTicketId: number | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Decision {
   id: number;
+  orgId: string;
   projectId: number;
   decisionNumber: number;
   title: string;
   context: string | null;
   decision: string | null;
   optionsConsidered: string | null;
-  status: DecisionStatus;
+  status: string;
   ownerId: string | null;
   decidedAt: string | null;
   revisitAt: string | null;
   linkedTicketId: number | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

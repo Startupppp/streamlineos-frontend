@@ -122,9 +122,9 @@ export function ReportsPage() {
                 </p>
               ) : (
                 <ul className="space-y-2">
-                  {data.senderPerformance.map((s) => (
+                  {data.senderPerformance.map((s, i) => (
                     <li
-                      key={s.senderUserId}
+                      key={i}
                       className="flex items-center justify-between text-sm"
                     >
                       <span>{s.senderName ?? "Unknown"}</span>
@@ -173,14 +173,14 @@ export function ReportsPage() {
               <div className="flex items-center justify-between">
                 <span>Bulk send jobs</span>
                 <span className="font-medium">
-                  {data.bulkSendStats.totalJobs}
+                  {data.bulkSendStats?.totalJobs ?? 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Bulk send rows sent / failed</span>
                 <span className="font-medium">
-                  {data.bulkSendStats.successRows} /{" "}
-                  {data.bulkSendStats.failedRows}
+                  {data.bulkSendStats?.successRows ?? 0} /{" "}
+                  {data.bulkSendStats?.failedRows ?? 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">

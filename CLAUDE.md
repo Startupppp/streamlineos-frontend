@@ -25,6 +25,7 @@
 9. **Leave less code than you found.** Delete dead code and its files. No speculative abstractions.
 10. **Living rules.** Any rule I state mid-task goes into the right file immediately — shared here, side-specific in that side's file.
 11. **Git is orchestrator-only.** MAY `commit` verified work on the current branch between tasks. NEVER push/checkout/branch/merge/pull/fetch/reset/stash/rebase. Subagents run no git.
+12. **No cyclic dependencies.** Keep both frontend and backend import graphs acyclic. Do not use `forwardRef`, dynamic imports, barrels, duplicated types or pass-through wrappers to hide a cycle; move the shared contract to its proper neutral owner and verify zero cycles with the repository's dependency-cycle gate.
 
 ## 2. Stack
 
@@ -46,6 +47,16 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 
 Identify from the real codebase: module · entities · existing schema, APIs, cache keys, RBAC keys/guards, components, services, hooks · a simpler alternative. Audit across architecture · DB · API · cache · backend · frontend · UI/UX · security · performance · product completeness → implement → validate.
 
+### Reuse existing symbols before creating anything
+
+- Before adding a type, interface, function, class, component, hook, schema, DTO, constant, enum, utility, service, query key or configuration object, search both repositories for the same name, purpose, shape and behavior. Use `rg` for declarations, exports and call sites; do not decide from the current folder alone.
+- If an existing symbol already provides the required contract, import and use it. Do not copy it, rename a copy, wrap it with a pass-through helper, create a second local version, or duplicate its shape inline.
+- If the reusable symbol is in the wrong file, move the original symbol to the proper owning module or a neutral shared file, update every import and call site, and delete the old definition. Preserve one implementation and one source of truth.
+- If two existing symbols perform the same job, consolidate them into the best-owned implementation and remove the duplicate after all consumers are migrated. Keep separate symbols only when their domain meaning or behavior is materially different; document that difference in their names and tests.
+- Derive types from the source contract whenever possible: `z.infer` from Zod schemas, Drizzle inferred row/insert types from tables, and indexed/access types from existing models. Never create a parallel interface that can drift.
+- Create a new file only when no existing file owns the responsibility and adding the symbol to the correct cohesive module would make that module less clear. File-size limits do not justify duplicate helpers, one-symbol wrapper files, re-export shells or artificial fragmentation.
+- In the final review, search again for the new symbol's purpose and confirm there is one canonical definition, all consumers use it, obsolete definitions/files are removed, and the import graph remains acyclic.
+
 **Architecture re-review is a delta audit.** Read `architecture-refactor/PRD-IN-SCOPE.md` §27, verify prior findings against current source, and classify them as VERIFIED DONE, REGRESSED, STILL PENDING or NEW. A verified fix appears once under DONE and is not reintroduced as pending without current regression evidence.
 
 ## 5. Frontend ↔ Backend Boundary
@@ -61,12 +72,30 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 
 ## 6. TypeScript & Code Quality
 
-- `strict: true` + `noUncheckedIndexedAccess`. No `any` (`unknown` + narrowing), no `@ts-ignore`, no `!` abuse.
+- `strict: true`. No `any` (`unknown` + narrowing), no `@ts-ignore`, no `!` abuse.
+- `noUncheckedIndexedAccess` is **NOT enabled** in either repo and this rule has been aspirational, not
+  enforced. Measured 2026-09-02: backend **574 errors / 190 files**, frontend **184 / 84** — and both
+  are **floors**, because each build config excludes tests and scripts, so the flag would report "on"
+  while much of the code went unchecked. Deliberately left off for the 10/10 code release rather than
+  half-migrated; a half-enabled strictness flag is worse than an honest absent one. Tracked as a NEW
+  REQUIREMENT needing an owner, not as a passing rule. Do not turn it on without owning the migration
+  and stating what it does not cover.
+- **Unused-symbol enforcement is NOT on, and the underscore escape is why.** `noUnusedLocals`/`noUnusedParameters` are
+  absent from both tsconfigs and `@typescript-eslint/no-unused-vars` is `warn` with `argsIgnorePattern`,
+  `varsIgnorePattern` and `caughtErrorsIgnorePattern` all `^_`. Measured 2026-09-03: at
+  `no-unused-vars: ["error", {args:"all", caughtErrors:"all"}]` the two repos hold **4,186 violations across 1,896
+  files** (backend 2,087/900, frontend 2,099/996), and **2,912 of them — 69.6% — name an identifier beginning with
+  `_`**, i.e. they exist only because the escape does. tsc cannot replace ESLint here: **`--noUnusedParameters` exempts
+  `_`-prefixed parameters by construction and has no off switch**, and neither flag sees a catch binding (bite-proved).
+  The tsc floors are 289 errors/194 files on `tsconfig.build.json` and 475/318 on `tsconfig.json`. Deliberately left
+  off for the 10/10 code release: the flags cannot enforce the rule, and turning them on would report "on" over a set
+  they cannot see. Tracked as a NEW REQUIREMENT needing an owner. Do not turn it on without owning the migration and
+  deleting the three `^_` patterns in the same change.
 - **Never force types.** No `as X` / `as unknown as X`. Raw `db.execute(sql\`…\`)` rows are `Record<string, unknown>` — convert at the use site (`Number(row.count)`, `row?.field ?? fallback`). If a cast feels necessary, fix the source type or the projection.
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
-- **Named event handlers only.** **Single-statement `if`/`for` bodies omit braces.**
-- **No comments in code.** Delete stray comments, commented-out code, `console.log`s. If something genuinely needs explaining, **at most one** comment — otherwise remove it.
+- **Named handler functions inside components and pages.** Every JSX event or action callback must reference a named handler declared inside that component or page (`onClick={handleSave}`, `onSubmit={handleSubmit}`), never an inline arrow or anonymous function. Handlers coordinate the local UI event; reusable state, validation, data access and business behavior remain in the proper hook, service or module and are called by the handler. **Single-statement `if`/`for` bodies omit braces.**
+- **No comments in code — none.** Delete stray comments, commented-out code, `console.log`s. Never add a comment; if something needs explaining, put it in a name, a test, or the PRD. Migration `.sql` headers follow their neighbours and are the only exception.
 - Mentally test: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 
 ## 7. Structure & Naming (both repos)

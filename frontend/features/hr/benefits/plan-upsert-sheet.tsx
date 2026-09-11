@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,16 +19,27 @@ import {
 import { useCreateBenefitPlan, useUpdateBenefitPlan, type BenefitPlan } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const PLAN_CATEGORIES = [
+  "health",
+  "life",
+  "accident",
+  "retirement",
+  "wellness",
+  "perk",
+  "other",
+] as const;
+const PLAN_STATUSES = ["draft", "active", "archived"] as const;
+
 const planSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  category: z.enum(["health", "life", "accident", "retirement", "wellness", "perk", "other"]),
+  category: z.enum(PLAN_CATEGORIES),
   provider: z.string().optional(),
   description: z.string().optional(),
   premiumCents: z.string().optional(),
   employerContributionPct: z.string().optional(),
   effectiveFrom: z.string().min(1, "Effective from is required"),
   effectiveTo: z.string().optional(),
-  status: z.enum(["draft", "active", "archived"]).optional(),
+  status: z.enum(PLAN_STATUSES).optional(),
 });
 
 type PlanFormValues = z.infer<typeof planSchema>;
@@ -128,6 +139,16 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
 
   const isPending = createPlan.isPending || updatePlan.isPending;
 
+  function handleCategoryChange(v: string) {
+    const next = PLAN_CATEGORIES.find((candidate) => candidate === v);
+    if (next) form.setValue("category", next);
+  }
+
+  function handlePlanStatusChange(v: string) {
+    const next = PLAN_STATUSES.find((candidate) => candidate === v);
+    if (next) form.setValue("status", next);
+  }
+
   return (
     <HrSheet
       open={open}
@@ -151,7 +172,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
           <Label>Category <span className="text-destructive">*</span></Label>
           <Select
             defaultValue={form.getValues("category")}
-            onValueChange={(v) => form.setValue("category", v as PlanFormValues["category"])}
+            onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select category" />
@@ -168,7 +189,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
           <Label>Status</Label>
           <Select
             defaultValue={form.getValues("status") ?? "draft"}
-            onValueChange={(v) => form.setValue("status", v as PlanFormValues["status"])}
+            onValueChange={handlePlanStatusChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select status" />

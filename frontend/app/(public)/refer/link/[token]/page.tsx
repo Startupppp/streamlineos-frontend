@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { publicReferrerPortalContract } from "@/lib/public-schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { publicGetNoStore, type PublicReferrerPortal } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
+
 import { ReferrerPortalIsland } from "@/features/careers/components/referrer-portal-island";
 
 type Props = { params: Promise<{ token: string }> };
@@ -27,7 +29,7 @@ export default async function ExternalReferrerPortalPage({ params }: Props) {
 
   let data: PublicReferrerPortal | null;
   try {
-    data = await publicGetNoStore<PublicReferrerPortal>(`/public/referrals/${token}`);
+    data = await publicGetNoStore<PublicReferrerPortal>(`/public/referrals/${token}`, undefined, publicReferrerPortalContract);
   } catch (e) {
     if (e instanceof ApiError && e.status === 403) return <BlockedState />;
     throw e;

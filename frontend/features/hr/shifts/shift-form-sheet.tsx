@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const SHIFT_TYPES = ["FIXED", "ROTATIONAL", "NIGHT", "FLEXIBLE"] as const;
 
@@ -257,9 +258,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                         max={480}
                         className="text-sm"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value, 10))
-                        }
+                        onChange={numericFieldChange(field.onChange)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -281,9 +280,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                         max={120}
                         className="text-sm"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value, 10))
-                        }
+                        onChange={numericFieldChange(field.onChange)}
                       />
                     </FormControl>
                     <FormMessage />

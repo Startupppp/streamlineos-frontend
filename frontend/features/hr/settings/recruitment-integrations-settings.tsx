@@ -13,12 +13,12 @@ import {
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { RequireModule } from "@/components/auth/require-module";
 
 import {
@@ -171,7 +171,7 @@ interface HrRecruitmentIntegrationsSettingsProps {
 }
 
 export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecruitmentIntegrationsSettingsProps) {
-  const { data: portals, isLoading, isError, refetch } = useSourcePortals();
+  const { data: portals, isLoading, isError, error, refetch } = useSourcePortals();
 
   const portalByPlatform = useCallback(
     (platform: string) => portals?.find((p) => p.platform === platform),
@@ -185,10 +185,12 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
   const content = (
     <RequireModule module="hr">
       {isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-        </div>
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load recruitment integrations"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : (
         <div className="space-y-6">
           <div className="rounded-lg border border-status-info-rule bg-status-info-surface p-4 text-sm text-status-info-ink">

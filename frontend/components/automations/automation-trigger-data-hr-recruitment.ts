@@ -161,22 +161,4 @@ export const HR_RECRUITMENT_TRIGGER_META: TriggerMeta[] = [
       bgvAgency: "VerifyPro",
     },
   },
-  {
-    value: "sla.breached",
-    label: "Recruitment SLA breached",
-    description: "Runs when a candidate has been in a stage beyond the allowed time",
-    module: "hr",
-    fields: [
-      { value: "stage", label: "Stage" },
-      { value: "hoursInStage", label: "Hours in stage" },
-    ],
-    samplePayload: {
-      candidateId: 1,
-      candidateName: "Jane Smith",
-      stage: "INTERVIEW",
-      enteredAt: "2026-06-18T10:00:00Z",
-      breachedAt: "2026-06-21T10:00:00Z",
-      hoursInStage: 72,
-    },
-  },
 ];

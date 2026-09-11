@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -17,6 +17,8 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
+import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 
 function ModuleNavLink({
   route,
@@ -31,7 +33,7 @@ function ModuleNavLink({
     <Link
       href={route.href}
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
+        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
         isActive
           ? "text-primary"
           : "text-muted-foreground hover:text-foreground",
@@ -44,6 +46,7 @@ function ModuleNavLink({
         text={route.label}
         className="max-w-full truncate text-center text-micro leading-none"
       />
+      <NavPendingIndicator />
     </Link>
   );
 }
@@ -79,6 +82,48 @@ function MoreTab({
         className="max-w-full truncate text-center text-micro leading-none"
       />
     </button>
+  );
+}
+
+function OverflowNavLink({
+  href,
+  label,
+  icon: Icon,
+  isActive,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  icon: NavRoute["icon"];
+  isActive: boolean;
+  onNavigate: () => void;
+}) {
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(href),
+    [prefetchOnIntent, href],
+  );
+
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      onTouchStart={handleIntent}
+      onMouseEnter={handleIntent}
+      onFocus={handleIntent}
+      onClick={onNavigate}
+      className={cn(
+        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-foreground hover:bg-muted",
+      )}
+      aria-current={isActive ? "page" : undefined}
+    >
+      <Icon className="size-4 shrink-0" />
+      {label}
+      <NavPendingIndicator />
+    </Link>
   );
 }
 
@@ -121,21 +166,14 @@ function MoreDrawer({
                   allOverflowRoutes,
                 );
                 return (
-                  <Link
+                  <OverflowNavLink
                     key={route.href}
                     href={route.href}
-                    onClick={handleClose}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <Icon className="size-4 shrink-0" />
-                    {route.label}
-                  </Link>
+                    label={route.label}
+                    icon={Icon}
+                    isActive={isActive}
+                    onNavigate={handleClose}
+                  />
                 );
               })}
             </div>

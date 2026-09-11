@@ -5,15 +5,29 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+
+const ticketListPageLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketListPageContract),
+);
+const ticketDetailLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+);
+const columnCountsLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
+);
+const ticketRowListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowListContract),
+);
 import type {
   Ticket,
   TicketLabel,
-  PaginatedResponse,
-  CursorPaginatedResponse,
+  CursorPageResponse,
   TicketFilters,
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const BOARD_PAGE_SIZE = 100;
 const BOARD_AUTOLOAD_LIMIT = 500;
@@ -21,13 +35,13 @@ const BOARD_AUTOLOAD_LIMIT = 500;
 export function useTickets(
   projectId: number,
   filters?: TicketFilters,
-  options?: Omit<UseQueryOptions<PaginatedResponse<Ticket>>, "queryKey" | "queryFn" | "enabled">
+  options?: Omit<UseQueryOptions<CursorPageResponse<Ticket>>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:tickets:view");
-  return useQuery<PaginatedResponse<Ticket>>({
-    queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
-    queryFn: () =>
-      apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
+  return useQuery<CursorPageResponse<Ticket>>({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, ...filters }),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal, ticketListPageLazy),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -61,15 +75,14 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     filters?.module
   );
 
-  const query = useInfiniteQuery<CursorPaginatedResponse<Ticket>>({
-    queryKey: queryKeys.projects.tickets({ projectId, view: "board", ...filters }),
-    queryFn: ({ pageParam }) => {
+  const query = useInfiniteQuery({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
-        paging: "cursor",
         orderBy: "rank",
         orderDir: "asc",
-        ...(pageParam ? { cursor: pageParam as string } : {}),
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       };
       if (filters?.q) params.search = filters.q;
       if (filters?.status) params.status = filters.status;
@@ -80,10 +93,10 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
-      return apiClient.get<CursorPaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, params);
+      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -93,7 +106,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
     [query.data],
   );
-  const total = query.data?.pages[0]?.total ?? 0;
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
 
   useEffect(() => {
@@ -106,9 +118,9 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
   return {
     ...query,
     data,
-    total,
+    total: data.length,
     loadedCount: data.length,
-    isTruncated: total > data.length,
+    isTruncated: hasNextPage,
   };
 }
 
@@ -119,9 +131,9 @@ export function useTicket(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
-    queryKey: queryKeys.projects.ticket(ticketId),
-    queryFn: () =>
-      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`),
+    queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+    queryFn: ({ signal }) =>
+      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal, ticketDetailLazy),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -136,13 +148,13 @@ export function useTicketByKey(
   const canView = useCan("build:tickets:view");
   const queryClient = useQueryClient();
   return useQuery<Ticket | null>({
-    queryKey: queryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
-    queryFn: async () => {
+    queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
+    queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
-        `/build/${projectId}/tickets/key/${ticketNumber}`,
+        `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal, ticketDetailLazy,
       );
       if (ticket) {
-        queryClient.setQueryData(queryKeys.projects.ticket(ticket.id), ticket);
+        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(ticket.id), ticket);
       }
       return ticket;
     },
@@ -163,8 +175,14 @@ export function useSubtasks(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
-    queryKey: queryKeys.projects.subtasks(ticketId),
-    queryFn: () => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`),
+    queryKey: buildWorkQueryKeys.projects.subtasks(ticketId),
+    queryFn: ({ signal }) =>
+      apiClient.get<Ticket[]>(
+        `/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`,
+        undefined,
+        signal,
+        ticketRowListLazy,
+      ),
     enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,
     ...options,
@@ -174,9 +192,9 @@ export function useSubtasks(
 export function useTicketColumnCounts(projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<Record<string, number>>({
-    queryKey: queryKeys.projects.columnCounts(projectId),
-    queryFn: () =>
-      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`),
+    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal, columnCountsLazy),
     enabled: canView && projectId > 0,
     staleTime: 30_000,
   });

@@ -1,0 +1,36 @@
+### BEFORE — both DLQ alerts quiet
+-- alert-dead-outbox
+◇ injected env (55) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+-- alert-dead-delivery
+◇ injected env (55) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+
+### Committing retry-EXHAUSTED rows: outbox retry_count=8 (OUTBOX_MAX_RETRIES) -> DEAD,
+### and notification_deliveries attempt_count=5/max_attempts=5 -> DEAD on PUSH and EMAIL.
+### One outbox row at retry_count=7 and one delivery at 3/5 are still retrying and must NOT fire.
+
+### AFTER — both DLQ alerts must FIRE with exit 1
+-- alert-dead-outbox
+◇ injected env (55) from .env // tip: ⌘ enable debugging { debug: true }
+{"fired":true,"count":1,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[{"org_id":"drill-c162-dlq-e2e","event_type":"invitation.created","dead_lettered_at":"2026-09-03T16:28:56.109Z","last_error":"email provider outage: 503 x8","retry_count":8}]}
+EXIT=1
+-- alert-dead-delivery
+◇ injected env (55) from .env // tip: ⌘ suppress logs { quiet: true }
+{"fired":true,"count":2,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[{"org_id":"drill-c162-dlq-e2e","event_key":"chat.message","channel":"PUSH","failed_at":"2026-09-03T16:28:56.109Z","failure_message":"web-push unreachable after 5 attempts","attempt_count":5},{"org_id":"drill-c162-dlq-e2e","event_key":"invitation.created","channel":"EMAIL","failed_at":"2026-09-03T16:28:56.109Z","failure_message":"resend 503 after 5 attempts","attempt_count":5}]}
+EXIT=1
+
+### RECOVERY — provider returns, operator redrives; both alerts must clear
+-- alert-dead-outbox
+◇ injected env (55) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+-- alert-dead-delivery
+◇ injected env (55) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+
+### CLEANED UP — residual rows:
+0 outbox, 0 deliveries, 0 orgs

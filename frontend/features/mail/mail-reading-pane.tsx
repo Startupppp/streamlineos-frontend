@@ -4,8 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import type { AiAction } from "@/components/ai";
-import { AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -46,6 +46,7 @@ export function MailReadingPane({
   const {
     data: threadMessages,
     isLoading: threadLoading,
+    isFetching: threadFetching,
     isError: threadError,
     error: threadErr,
     refetch: retryThread,
@@ -54,6 +55,7 @@ export function MailReadingPane({
   const {
     data: singleMessage,
     isLoading: singleLoading,
+    isFetching: singleFetching,
     isError: singleError,
     error: singleErr,
     refetch: retrySingle,
@@ -65,6 +67,7 @@ export function MailReadingPane({
   const canAi = useCan("mail:ai:use");
 
   const isLoading = threadId ? threadLoading : singleLoading;
+  const isFetching = threadId ? threadFetching : singleFetching;
   const isError = threadId ? threadError : singleError;
   const errorVal = threadId ? threadErr : singleErr;
   const retry = threadId ? retryThread : retrySingle;
@@ -76,6 +79,11 @@ export function MailReadingPane({
   }, [threadId, threadMessages, singleMessage]);
 
   const latestMessage = messages[messages.length - 1];
+
+  const isHydrating =
+    isFetching &&
+    messages.length > 0 &&
+    messages.every((m) => m.bodyHtml === null && m.bodyText === null);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     if (latestMessage) return new Set([latestMessage.id]);
@@ -186,6 +194,8 @@ export function MailReadingPane({
     aiDraftMutation,
   ]);
 
+  const handleRetry = useCallback(() => { void retry(); }, [retry]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 p-4 gap-3">
@@ -210,20 +220,13 @@ export function MailReadingPane({
 
   if (isError) {
     return (
-      <div className="flex flex-col h-full min-h-0 items-center justify-center gap-3 p-6">
-        <AlertCircle className="h-8 w-8 text-muted-foreground" aria-hidden />
-        <p className="text-sm text-muted-foreground text-center">
-          {getErrorMessage(errorVal)}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void retry()}
-          className="h-8 text-xs"
-        >
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        className="flex-1 m-4"
+        compact
+        title="Couldn't load message"
+        description={getErrorMessage(errorVal)}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -284,6 +287,7 @@ export function MailReadingPane({
               expandedIds.has(msg.id) || index === messages.length - 1
             }
             isLatest={index === messages.length - 1}
+            isHydrating={isHydrating}
             onToggle={handleToggleExpand}
           />
         ))}

@@ -58,7 +58,7 @@ export const PLANNED_ENTITIES: readonly PlannedEntityDescriptor[] = [
 export function plannedEntity(id: PlannedEntity): PlannedEntityDescriptor {
   // Every id in the union is declared above; typed as non-optional so callers
   // do not each handle a case that cannot happen.
-  return PLANNED_ENTITIES.find((entity) => entity.id === id) ?? PLANNED_ENTITIES[0]!;
+  return PLANNED_ENTITIES.find((entity) => entity.id === id) ?? PLANNED_ENTITIES[0];
 }
 
 /** A subject import cannot be planned without knowing which declaration it is. */

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
 import { reportError } from "./error-reporter";
 import { isChunkLoadError } from "./chunk-load";
@@ -18,6 +19,8 @@ export function ReportingRouteErrorBoundary({
   reset,
   ...rest
 }: ReportingRouteErrorBoundaryProps) {
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const route =
       typeof window !== "undefined" ? window.location.pathname : undefined;
@@ -26,5 +29,16 @@ export function ReportingRouteErrorBoundary({
     reportError(error, extra);
   }, [error]);
 
-  return <RouteErrorBoundary error={error} reset={reset} {...rest} />;
+  const handleBeforeReset = useCallback(() => {
+    void queryClient.resetQueries();
+  }, [queryClient]);
+
+  return (
+    <RouteErrorBoundary
+      error={error}
+      reset={reset}
+      onBeforeReset={handleBeforeReset}
+      {...rest}
+    />
+  );
 }

@@ -12,7 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import {
   useSetModuleGroupPermissions,
   type ModulePermission,
@@ -102,7 +102,7 @@ export function GroupDetailPanel({
                   label: "Reload",
                   onClick: () => {
                     void queryClient.invalidateQueries({
-                      queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+                      queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
                     });
                   },
                 },

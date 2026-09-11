@@ -11,7 +11,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useRouter } from "next/navigation";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { Save } from "lucide-react";
-import { useRoles } from "@/hooks/api/roles";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
@@ -41,17 +40,11 @@ export function EditEmployeeForm({
 }: EditEmployeeFormProps) {
   const router = useRouter();
   const updateProfileMutation = useUpdateProfile();
-  const { data: orgRoles } = useRoles();
-  const assignableRoles = useMemo(
-    () => (orgRoles || []).filter((r) => r.slug !== "FINAL"),
-    [orgRoles],
-  );
 
   const defaultValues = useMemo<EmployeeFormValues>(
     () => ({
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
-      role: employee.role || "ENGINEERING",
       designation: employee.designation || "",
       departmentId: employee.orgDepartmentId || undefined,
       phone: employee.phone || "",
@@ -80,7 +73,6 @@ export function EditEmployeeForm({
         userId: employee.id,
         firstName: values.firstName,
         lastName: values.lastName,
-        role: values.role as string,
         designation: values.designation,
         departmentId: values.departmentId,
         phone: values.phone,
@@ -137,7 +129,7 @@ export function EditEmployeeForm({
           </div>
           <Separator />
           <div className="p-5">
-            <ProfessionalInfoSection assignableRoles={assignableRoles} />
+            <ProfessionalInfoSection />
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5">
             <Button

@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign } from "lucide-react";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import {
   useEmployeeProfile,
@@ -17,11 +19,11 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type {
-  EmployeeSalaryProfile,
+  ProfileDetail,
   SalaryProfileStatus,
   ProfileComponent,
   SalaryComponentType,
-} from "@/types/payroll/runs";
+} from "@/hooks/api/payroll/employees-schema";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
@@ -56,7 +58,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
       <div>
         <div className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{comp.name}</span>
-          {comp.isOverride && (
+          {(comp.calcMethodOverride !== null || comp.formulaOverride !== null) && (
             <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
               override
             </span>
@@ -135,7 +137,7 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
   );
 }
 
-function ProfileHistoryRow({ profile }: { profile: EmployeeSalaryProfile }) {
+function ProfileHistoryRow({ profile }: { profile: ProfileDetail }) {
   const cfg = STATUS_CONFIG[profile.status];
   return (
     <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-dense">
@@ -164,7 +166,13 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
 
   const canView = useCan("payroll:salaries:view");
   const canUpdate = useCan("payroll:salaries:update");
-  const { data: profileData, isLoading } = useEmployeeProfile(employeeUserId);
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEmployeeProfile(employeeUserId);
   const { data: historyData } = useEmployeeProfileHistory(employeeUserId);
 
   const activeProfile = profileData?.active ?? null;
@@ -172,6 +180,10 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
   const history = historyData ?? [];
   const upcomingProfiles = history.filter((p) => p.status === "UPCOMING");
   const supersededProfiles = history.filter((p) => p.status === "SUPERSEDED");
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleEditOpen() {
     setSheetOpen(true);
@@ -205,7 +217,20 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
     );
   }
 
-  const userName = activeProfile?.userName ?? employeeUserId;
+  if (isError) {
+    return (
+      <PageWrapper title="Salary Profile" backHref="/payroll/employees">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this salary profile"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  const userName = activeProfile?.userId ?? employeeUserId;
 
   return (
     <PageWrapper

@@ -94,7 +94,23 @@ export function buildEventPayload({
       location: form.location || undefined,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      /*
+       * A CREATE declares the author's browser zone; an EDIT declares nothing.
+       *
+       * `timezone` is the anchor the server re-projects every future occurrence
+       * from — `expandRecurring` builds `dtstart` as
+       * `toWallClockUtc(event.startDate, event.timezone)`. The editor has no
+       * timezone field and `toEditForm` never reads `event.timezone`, so a zone
+       * stated on an edit could only ever be the EDITOR's zone: a US colleague
+       * fixing a typo in a weekly 10:00 Asia/Kolkata stand-up re-anchored every
+       * future occurrence to the New York wall clock, and thereafter it followed
+       * US DST instead of IST. `calendar.service.ts` additionally counts any
+       * `timezone` in the body as `timeChanged` and clears `reminder15MinSent`,
+       * so an unchanged time re-fired its reminders. Omitted, not restated:
+       * JSON.stringify drops an undefined value, so the key never reaches the
+       * `input.timezone !== undefined` check at all.
+       */
+      timezone: isEdit ? undefined : Intl.DateTimeFormat().resolvedOptions().timeZone,
       allDay: form.allDay,
       color: form.color,
       category: form.category,

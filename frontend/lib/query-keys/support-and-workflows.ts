@@ -1,10 +1,12 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const supportAndWorkflowsQueryKeys = {
   supportMacros: {
     all: [...base, "supportMacros"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "supportMacros", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportMacros", "list"] as const)
+        : ([...base, "supportMacros", "list", params] as const),
     usage: () => [...base, "supportMacros", "usage"] as const,
   },
 
@@ -16,9 +18,9 @@ export const supportAndWorkflowsQueryKeys = {
   supportCustomFields: {
     all: [...base, "supportCustomFields"] as const,
     list: (activeOnly?: boolean) =>
-      [...base, "supportCustomFields", "list", activeOnly ?? null] as const,
-    ticketValues: (ticketId: number) =>
-      [...base, "supportCustomFields", "ticketValues", ticketId] as const,
+      activeOnly === undefined
+        ? ([...base, "supportCustomFields", "list"] as const)
+        : ([...base, "supportCustomFields", "list", activeOnly] as const),
     portalActive: () =>
       [...base, "supportCustomFields", "portalActive"] as const,
   },
@@ -26,7 +28,9 @@ export const supportAndWorkflowsQueryKeys = {
   supportSettingsAuditLog: {
     all: [...base, "supportSettingsAuditLog"] as const,
     list: (entityType?: string) =>
-      [...base, "supportSettingsAuditLog", "list", entityType ?? null] as const,
+      entityType === undefined
+        ? ([...base, "supportSettingsAuditLog", "list"] as const)
+        : ([...base, "supportSettingsAuditLog", "list", entityType] as const),
   },
 
   supportBusinessHours: {
@@ -53,8 +57,10 @@ export const supportAndWorkflowsQueryKeys = {
 
   supportPortalTickets: {
     all: [...base, "supportPortalTickets"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "supportPortalTickets", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportPortalTickets", "list"] as const)
+        : ([...base, "supportPortalTickets", "list", params] as const),
     detail: (supportPortalTicketId: number) =>
       [...base, "supportPortalTickets", "detail", supportPortalTicketId] as const,
   },
@@ -74,8 +80,10 @@ export const supportAndWorkflowsQueryKeys = {
 
   supportAiReport: {
     all: [...base, "supportAiReport"] as const,
-    get: (params?: Record<string, unknown>) =>
-      [...base, "supportAiReport", "get", params] as const,
+    get: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportAiReport", "get"] as const)
+        : ([...base, "supportAiReport", "get", params] as const),
   },
 
   supportAiSettings: {
@@ -85,16 +93,26 @@ export const supportAndWorkflowsQueryKeys = {
 
   supportReports: {
     all: [...base, "supportReports"] as const,
-    overview: (params?: Record<string, unknown>) =>
-      [...base, "supportReports", "overview", params] as const,
-    agentPerformance: (params?: Record<string, unknown>) =>
-      [...base, "supportReports", "agentPerformance", params] as const,
-    queuePerformance: (params?: Record<string, unknown>) =>
-      [...base, "supportReports", "queuePerformance", params] as const,
-    channelPerformance: (params?: Record<string, unknown>) =>
-      [...base, "supportReports", "channelPerformance", params] as const,
-    automationPerformance: (params?: Record<string, unknown>) =>
-      [...base, "supportReports", "automationPerformance", params] as const,
+    overview: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportReports", "overview"] as const)
+        : ([...base, "supportReports", "overview", params] as const),
+    agentPerformance: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportReports", "agentPerformance"] as const)
+        : ([...base, "supportReports", "agentPerformance", params] as const),
+    queuePerformance: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportReports", "queuePerformance"] as const)
+        : ([...base, "supportReports", "queuePerformance", params] as const),
+    channelPerformance: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportReports", "channelPerformance"] as const)
+        : ([...base, "supportReports", "channelPerformance", params] as const),
+    automationPerformance: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "supportReports", "automationPerformance"] as const)
+        : ([...base, "supportReports", "automationPerformance", params] as const),
   },
 
   supportRouting: {
@@ -140,9 +158,11 @@ export const supportAndWorkflowsQueryKeys = {
 
   webhooks: {
     all: [...base, "webhooks"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "webhooks", "list", params] as const,
-    logs: (endpointId: number, params?: Record<string, unknown>) =>
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "webhooks", "list"] as const)
+        : ([...base, "webhooks", "list", params] as const),
+    logs: (endpointId: number, params?: QueryKeyParams) =>
       params
         ? ([...base, "webhooks", "logs", endpointId, params] as const)
         : ([...base, "webhooks", "logs", endpointId] as const),
@@ -150,11 +170,15 @@ export const supportAndWorkflowsQueryKeys = {
 
   workflows: {
     all: [...base, "workflows"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "workflows", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "workflows", "list"] as const)
+        : ([...base, "workflows", "list", params] as const),
     detail: (workflowId: string) => [...base, "workflows", workflowId] as const,
-    executions: (workflowId: string, params?: Record<string, unknown>) =>
-      [...base, "workflows", workflowId, "executions", params] as const,
+    executions: (workflowId: string, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "workflows", workflowId, "executions"] as const)
+        : ([...base, "workflows", workflowId, "executions", params] as const),
     execution: (workflowId: string, executionId: string) =>
       [...base, "workflows", workflowId, "executions", executionId] as const,
     approvals: () => [...base, "workflows", "approvals"] as const,
@@ -162,8 +186,6 @@ export const supportAndWorkflowsQueryKeys = {
     analytics: () => [...base, "workflows", "analytics"] as const,
     schedules: (workflowId: string) =>
       [...base, "workflows", workflowId, "schedules"] as const,
-    secrets: (workflowId: string) =>
-      [...base, "workflows", workflowId, "secrets"] as const,
   },
 
   mfa: {
@@ -173,17 +195,19 @@ export const supportAndWorkflowsQueryKeys = {
 
   delegations: {
     all: [...base, "delegations"] as const,
-    received: (params: { page: number; limit: number; search: string }) =>
+    received: (params: { cursor?: string; limit: number; search: string }) =>
       [...base, "delegations", "received", params] as const,
-    given: (params: { page: number; limit: number; search: string }) =>
+    given: (params: { cursor?: string; limit: number; search: string }) =>
       [...base, "delegations", "given", params] as const,
   },
 
   auth: {
     all: [...base, "auth"] as const,
     sessions: () => [...base, "auth", "sessions"] as const,
-    loginHistory: (params?: Record<string, unknown>) =>
-      [...base, "auth", "loginHistory", params] as const,
+    loginHistory: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "auth", "loginHistory"] as const)
+        : ([...base, "auth", "loginHistory", params] as const),
   },
 
   featureFlags: {

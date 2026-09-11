@@ -1,4 +1,4 @@
-﻿import type { Permission } from "./types";
+import type { Permission } from "./types";
 
 export const SHARED_PERMISSIONS: Permission[] = [
   {

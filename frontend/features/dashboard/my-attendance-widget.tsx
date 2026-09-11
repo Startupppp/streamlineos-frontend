@@ -5,7 +5,15 @@ import { format } from "date-fns";
 import { AlertTriangle, Clock } from "lucide-react";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { useHrAttendanceStatus } from "@/hooks/api/hr";
-import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
+import dynamic from "next/dynamic";
+
+const AttendanceRegularizationDialog = dynamic(
+  () =>
+    import(
+      "@/features/hr/attendance/attendance-regularization-dialog"
+    ).then((m) => ({ default: m.AttendanceRegularizationDialog })),
+  { ssr: false },
+);
 
 const STATUS_LABEL: Record<string, string> = {
   OFFLINE: "Not clocked in",

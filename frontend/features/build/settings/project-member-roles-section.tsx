@@ -21,6 +21,7 @@ import {
   getUserInitials,
 } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
+import { resolveImageUrl } from "@/lib/utils";
 
 type ProjectMemberRole = "ADMIN" | "MEMBER" | "VIEWER";
 
@@ -68,7 +69,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
       <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-dense font-medium shrink-0 select-none">
         {member.image ? (
           <img
-            src={member.image}
+            src={resolveImageUrl(member.image)}
             alt={displayName}
             className="h-7 w-7 rounded-full object-cover"
           />

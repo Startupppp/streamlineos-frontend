@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -100,13 +100,16 @@ interface Props {
 }
 
 export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
-  const [page, setPage] = useState(1);
-  const { data: runsData, isLoading } = useHrAutomationRuns(ruleId, { page, limit: 20 });
+  const pager = useCursorPager();
+  const { data: runsData, isLoading } = useHrAutomationRuns(ruleId, {
+    cursor: pager.cursor,
+    limit: 20,
+  });
   const runs = runsData?.data;
   const pagination = runsData?.pagination;
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+  function handleNext() {
+    pager.goNext(pagination?.nextCursor);
   }
 
   return (
@@ -127,12 +130,14 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
           {runs?.map((run) => <RunRow key={run.id} run={run} />)}
         </SheetBody>
 
-        {pagination && pagination.totalPages > 1 && (
+        {pagination && (pagination.hasMore || pager.hasPrevious) && (
           <TablePagination
-            page={page}
-            pageSize={pagination.limit}
-            total={pagination.total}
-            onPageChange={handlePageChange}
+            mode="cursor"
+            rowCount={runs?.length ?? 0}
+            hasMore={pagination.hasMore}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={pager.goPrevious}
           />
         )}
       </SheetContent>

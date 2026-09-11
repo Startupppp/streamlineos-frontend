@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
-import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
@@ -100,7 +101,7 @@ interface CancelSalesOrderInput {
 
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>("inventory:sales-orders:create", {
     mutationKey: ["inventory", "salesOrders", "create"],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
@@ -127,7 +128,7 @@ export function useCreateSalesOrder() {
 
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, ConfirmSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<void, Error, ConfirmSalesOrderInput>("inventory:sales-orders:confirm", {
     mutationKey: ["inventory", "salesOrders", "confirm"],
     mutationFn: ({ soId }, idempotencyKey) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -140,7 +141,7 @@ export function useConfirmSalesOrder() {
 
 export function useShipSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, ShipSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<void, Error, ShipSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "ship"],
     mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }, idempotencyKey) =>
       apiClient.post<void>(
@@ -162,7 +163,7 @@ export function useShipSalesOrder() {
 
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>("inventory:sales-orders:invoice", {
     mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }, idempotencyKey) =>
       apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -175,7 +176,7 @@ export function useInvoiceSalesOrder() {
 
 export function useReserveSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>("inventory:stock:reserve", {
     mutationKey: ["inventory", "salesOrders", "reserve"],
     mutationFn: ({ soId, warehouseId, allocations }, idempotencyKey) =>
       apiClient.post<ReserveSalesOrderResult>(
@@ -195,7 +196,7 @@ export function useReserveSalesOrder() {
 
 export function usePickSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, PickSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<void, Error, PickSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pick"],
     mutationFn: ({ soId, lines }, idempotencyKey) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
@@ -208,7 +209,7 @@ export function usePickSalesOrder() {
 
 export function usePackSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, PackSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<void, Error, PackSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pack"],
     mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }, idempotencyKey) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pack`, {
@@ -226,7 +227,7 @@ export function usePackSalesOrder() {
 
 export function useCancelSalesOrder() {
   const qc = useQueryClient();
-  return useIdempotentMutation<void, Error, CancelSalesOrderInput>({
+  return useAuthorizedIdempotentMutation<void, Error, CancelSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "cancel"],
     mutationFn: ({ soId, reason }, idempotencyKey) =>
       apiClient.post<void>(
@@ -243,7 +244,7 @@ export function useCancelSalesOrder() {
 
 export function useUpdateSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, UpdateSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, UpdateSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "update"],
     mutationFn: ({ soId, lines, ...rest }) =>
       apiClient.patch<void>(`/inventory/sales-orders/${soId}`, {

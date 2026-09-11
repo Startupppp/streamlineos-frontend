@@ -1,0 +1,7 @@
+
+> streamlineos-api@0.1.0 check:vulnerabilities
+> node src/scripts/check-vulnerabilities.mjs
+
+[check:vulnerabilities] Running pnpm audit --prod --audit-level=high ...
+[check:vulnerabilities] OK — no high/critical vulnerabilities in production dependencies.
+EXIT=0

@@ -21,7 +21,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCampaignsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
   useEngagementCampaigns,
@@ -33,6 +33,13 @@ import {
 } from "@/hooks/api/hr/engagement";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+
+const CAMPAIGN_STATUSES = [
+  "draft",
+  "active",
+  "completed",
+  "cancelled",
+] as const satisfies readonly HrCampaign["status"][];
 
 const STATUS_COLORS: Record<HrCampaign["status"], string> = {
   draft: "bg-muted text-muted-foreground border-border",
@@ -122,6 +129,11 @@ export function CampaignsTab() {
   const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
   const handleStartsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartsAt(e.target.value), []);
   const handleEndsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndsAt(e.target.value), []);
+
+  function handleCampaignStatusChange(v: string) {
+    const next = CAMPAIGN_STATUSES.find((candidate) => candidate === v);
+    if (next) setStatus(next);
+  }
 
   if (isLoading) {
     return (
@@ -250,7 +262,10 @@ export function CampaignsTab() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as HrCampaign["status"])}>
+            <Select
+              value={status}
+              onValueChange={handleCampaignStatusChange}
+            >
               <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>

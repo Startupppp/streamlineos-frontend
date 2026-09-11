@@ -8,7 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
-import { UomSelect } from "@/features/inventory/components/product-field-selects";
+import { UomSelect } from "@/features/inventory/components/uom-select";
 import type { ProductFormValues } from "@/features/inventory/lib/new-product-schema";
 
 interface ProductUomCardFieldsProps {

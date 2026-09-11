@@ -143,14 +143,14 @@ export function LogTimeSheet({
           (descriptionValue ?? "").trim().length === 0
             ? "Write a note first"
             : undefined,
-        run: async () => {
+        run: async (signal, onToken) => {
           const values = form.getValues();
           const hoursNum = Number(values.hours);
           const res = await describeTimesheetEntry({
             description: (values.description ?? "").trim(),
             hours: Number.isFinite(hoursNum) && hoursNum > 0 ? hoursNum : undefined,
             billable: values.isBillable,
-          });
+          }, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
         onApply: (text) => form.setValue("description", text, { shouldDirty: true }),

@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { TokenRow, TokenListSkeleton, TokensEmptyHint } from "./agent-token-list";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
@@ -22,18 +22,18 @@ export function AgentTokensSection() {
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<number | null>(null);
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
 
-  const handleRevoke = useCallback((id: string | number) => setRevokeId(String(id)), []);
+  const handleRevoke = useCallback((id: number) => setRevokeId(id), []);
 
   const handleRevokeDialogChange = useCallback((open: boolean) => {
     if (!open) setRevokeId(null);
   }, []);
 
   const handleConfirmRevoke = useCallback(() => {
-    if (!revokeId) return;
+    if (revokeId === null) return;
     revokeToken.mutate(revokeId, {
       onSuccess: () => {
         toast.success("Token revoked");

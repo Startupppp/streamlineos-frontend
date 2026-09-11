@@ -9,7 +9,7 @@ import {
   type ExceptionRule,
   type ExceptionSeverity,
   type ExceptionStatus,
-} from "@/features/timesheets/types";
+} from "@/features/timesheets/exception-types";
 
 /** The sentinel that means "do not send this filter at all". */
 export const ALL = "all";

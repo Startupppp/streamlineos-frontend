@@ -23,7 +23,7 @@ import {
   useRevokeCrmAgentToken,
 } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { AgentToken } from "@/types/projects";
+import type { AgentToken } from "@/types/projects/agent-tokens";
 import { CrmMcpTokenDialog } from "./mcp-token-dialog";
 import { scopeLabel } from "./mcp-scopes";
 import { CrmMcpAccessCard } from "./mcp-access-card";

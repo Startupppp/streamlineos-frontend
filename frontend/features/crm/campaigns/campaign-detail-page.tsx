@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { RecordList } from "@/features/renderer";
+import { RecordList } from "@/components/renderer";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
@@ -144,9 +144,10 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     not from a comparison written here. The hand-written version of this line
     was one of two colour rules on this screen that disagreed about zero.
   */
+  const roiField = fieldByName(CAMPAIGN_LAYOUT, "roi");
   const roiTone: StatTone =
     STAT_TONE_BY_FIELD_TONE[
-      toneForSignedValue(fieldByName(CAMPAIGN_LAYOUT, "roi")!, roiValue) ?? "neutral"
+      (roiField ? toneForSignedValue(roiField, roiValue) : undefined) ?? "neutral"
     ];
 
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);

@@ -4,8 +4,6 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  DollarSign,
-  Clock,
   BarChart3,
 } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -54,31 +52,3 @@ export function AdminExpenseStats({ stats, pendingCount }: AdminExpenseStatsProp
   );
 }
 
-interface MemberExpenseStatsProps {
-  stats: ExpensePageData["stats"] | null | undefined;
-}
-
-export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
-  return (
-    <StatCardGrid cols={3}>
-      <StatCard
-        label="Total Reimbursed (YTD)"
-        value={formatINRCompact((stats?.approvedAmount || 0) + (stats?.paidAmount || 0))}
-        icon={DollarSign}
-        tone="emerald"
-      />
-      <StatCard
-        label="Pending Approval"
-        value={formatINRCompact(stats?.pendingAmount || 0)}
-        icon={Clock}
-        tone="amber"
-      />
-      <StatCard
-        label="Rejected (30d)"
-        value={formatINRCompact(stats?.rejectedAmount || 0)}
-        icon={XCircle}
-        tone="red"
-      />
-    </StatCardGrid>
-  );
-}

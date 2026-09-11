@@ -2,7 +2,8 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -10,6 +11,17 @@ import type {
   TemplatePreviewResult,
   PaginatedResult,
 } from "@/types/payroll/setup";
+import { templatePreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
+
+const templateListC = lazyContract(() =>
+  import("@/hooks/api/payroll/templates-schema").then((m) => m.templateListResponseContract),
+);
+const noContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const payrollTemplateC = lazyContract(() =>
+  import("@/hooks/api/payroll/templates-schema").then((m) => m.payrollTemplateContract),
+);
 
 type TemplateListParams = {
   country?: string;
@@ -35,11 +47,11 @@ type PreviewInput = {
 export function usePayrollTemplates(params?: TemplateListParams) {
   const canView = useCan("payroll:templates:view");
   return useQuery({
-    queryKey: queryKeys.payroll.templates(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<PaginatedResult<TemplateRow>>(
+    queryKey: payrollQueryKeys.payroll.templates(params),
+    queryFn: ({ signal }) =>
+      apiClient.get(
         "/payroll/templates",
-        params as Record<string, unknown> | undefined,
+        params, signal, templateListC,
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
@@ -54,6 +66,8 @@ export function usePreviewTemplate() {
       apiClient.post<TemplatePreviewResult>(
         `/payroll/templates/${templateId}/preview`,
         { annualCtc, toggleOverrides },
+        undefined,
+        templatePreviewContract,
       ),
   });
 }
@@ -63,10 +77,10 @@ export function useDeleteTemplate() {
   return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<void>(`/payroll/templates/${templateId}`),
+      apiClient.delete<void>(`/payroll/templates/${templateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "template"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "template"] });
     },
   });
 }
@@ -76,12 +90,14 @@ export function useDuplicateTemplate() {
   return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "duplicate"],
     mutationFn: ({ templateId, name, description }: DuplicateInput) =>
-      apiClient.post<TemplateRow>(
+      apiClient.post(
         `/payroll/templates/${templateId}/duplicate`,
         { name, description },
+        undefined,
+        payrollTemplateC,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
     },
   });
 }

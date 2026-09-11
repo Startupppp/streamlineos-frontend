@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -34,7 +34,7 @@ import { useProjects } from "@/hooks/api/build";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateBudget, useUpdateBudget } from "@/hooks/api/timesheets-core/budgets";
-import type { TimesheetBudget } from "@/features/timesheets/types";
+import type { TimesheetBudget } from "@/features/timesheets/budget-types";
 
 interface BudgetFormDialogProps {
   open: boolean;

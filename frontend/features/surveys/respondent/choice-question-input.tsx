@@ -44,12 +44,20 @@ function ChoiceCard({
   );
 }
 
+function selectChoice(
+  onChange: QuestionInputProps["onChange"],
+): (choiceId: string) => void {
+  return function handleChoiceSelected(choiceId) {
+    onChange({ choiceIds: [Number(choiceId)] });
+  };
+}
+
 export function SingleSelectInput({ question, value, onChange }: QuestionInputProps) {
   const selected = value?.choiceIds?.[0];
   return (
     <RadioGroup
       value={selected ? String(selected) : undefined}
-      onValueChange={(v) => onChange({ choiceIds: [Number(v)] })}
+      onValueChange={selectChoice(onChange)}
       className="gap-2.5"
     >
       {question.choices.map((choice) => {
@@ -103,7 +111,7 @@ export function MultiSelectInput({ question, value, onChange }: QuestionInputPro
 export function DropdownInput({ question, value, onChange }: QuestionInputProps) {
   const selected = value?.choiceIds?.[0];
   return (
-    <Select value={selected ? String(selected) : undefined} onValueChange={(v) => onChange({ choiceIds: [Number(v)] })}>
+    <Select value={selected ? String(selected) : undefined} onValueChange={selectChoice(onChange)}>
       <SelectTrigger className="h-11 w-full rounded-xl">
         <SelectValue placeholder="Select an option" />
       </SelectTrigger>

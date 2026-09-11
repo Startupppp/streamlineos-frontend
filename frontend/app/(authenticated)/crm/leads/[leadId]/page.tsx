@@ -4,7 +4,7 @@ import { use, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus } from "@/hooks/api/leads";
 import { toast } from "sonner";
@@ -174,10 +174,7 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
-            <LeadQualificationPanel
-              leadId={leadId}
-              qualificationJson={lead.qualificationNotes ?? null}
-            />
+            <LeadQualificationPanel leadId={leadId} customData={lead.customData} />
           </div>
         </motion.div>
       </motion.div>

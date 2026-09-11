@@ -1,30 +1,35 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const platformCoreQueryKeys = {
   reports: {
     all: [...base, "reports"] as const,
-    attendance: (params?: Record<string, unknown>) =>
-      [...base, "reports", "attendance", params] as const,
-    project: (params?: Record<string, unknown>) =>
-      [...base, "reports", "project", params] as const,
-    teamPerformance: (params?: Record<string, unknown>) =>
-      [...base, "reports", "teamPerformance", params] as const,
-    dashboardStats: () => [...base, "reports", "dashboardStats"] as const,
+    attendance: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "reports", "attendance"] as const)
+        : ([...base, "reports", "attendance", params] as const),
+    project: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "reports", "project"] as const)
+        : ([...base, "reports", "project", params] as const),
   },
 
   notifications: {
     all: [...base, "notifications"] as const,
     lists: () => [...base, "notifications", "list"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "notifications", "list"] as const)
+        : ([...base, "notifications", "list", params] as const),
     unreadList: () => [...base, "notifications", "list", "unread"] as const,
     unreadCount: () => [...base, "notifications", "unreadCount"] as const,
     preferences: () => [...base, "notifications", "preferences"] as const,
-    templates: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "templates", params] as const,
+    templates: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "notifications", "templates"] as const)
+        : ([...base, "notifications", "templates", params] as const),
     template: (templateId: number) =>
       [...base, "notifications", "template", templateId] as const,
-    broadcasts: (params?: Record<string, unknown>) =>
+    broadcasts: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "notifications", "broadcasts"] as const)
         : ([...base, "notifications", "broadcasts", params] as const),
@@ -38,8 +43,10 @@ export const platformCoreQueryKeys = {
 
   invoice: {
     all: [...base, "invoice"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "invoice", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "invoice", "list"] as const)
+        : ([...base, "invoice", "list", params] as const),
     detail: (invoiceId: number) =>
       [...base, "invoice", "detail", invoiceId] as const,
     stats: () => [...base, "invoice", "stats"] as const,
@@ -47,8 +54,10 @@ export const platformCoreQueryKeys = {
 
   support: {
     all: [...base, "support"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "support", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "support", "list"] as const)
+        : ([...base, "support", "list", params] as const),
     detail: (supportTicketId: number) =>
       [...base, "support", "detail", supportTicketId] as const,
   },
@@ -59,11 +68,13 @@ export const platformCoreQueryKeys = {
     members: () => [...base, "organization", "members"] as const,
     settings: () => [...base, "organization", "settings"] as const,
     display: () => [...base, "organization", "display"] as const,
+    holidays: [...base, "organization", "holidays"] as const,
   },
 
   orgSetup: {
     all: [...base, "org-setup"] as const,
     session: () => [...base, "org-setup", "session"] as const,
+    status: () => [...base, "org-setup", "status"] as const,
   },
 
   onboardingFlow: {
@@ -107,7 +118,9 @@ export const platformCoreQueryKeys = {
     readiness: (providerKey: string) =>
       [...base, "payments", "providers", providerKey, "readiness"] as const,
     audit: (providerKey?: string) =>
-      [...base, "payments", "audit", providerKey ?? "all"] as const,
+      providerKey === undefined
+        ? ([...base, "payments", "audit"] as const)
+        : ([...base, "payments", "audit", providerKey] as const),
   },
 
   recordLayouts: {
@@ -120,11 +133,15 @@ export const platformCoreQueryKeys = {
 
   inbox: {
     all: [...base, "inbox"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "inbox", "list", params] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "inbox", "list"] as const)
+        : ([...base, "inbox", "list", params] as const),
     count: () => [...base, "inbox", "count"] as const,
-    unified: (params?: Record<string, unknown>) =>
-      [...base, "inbox", "unified", params] as const,
+    unified: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "inbox", "unified"] as const)
+        : ([...base, "inbox", "unified", params] as const),
   },
 
   access: {
@@ -133,13 +150,25 @@ export const platformCoreQueryKeys = {
     simulate: (targetUserId: string) =>
       [...base, "access", "simulate", targetUserId] as const,
     simulationCandidates: (params: {
-      page: number;
+      cursor?: string;
       limit: number;
       search?: string;
     }) => [...base, "access", "simulate", "candidates", params] as const,
-    resourceGrants: (resourceType: string, resourceId: string) =>
-      [...base, "access", "resource-grants", resourceType, resourceId] as const,
     orgModules: () => [...base, "access", "org-modules"] as const,
   },
+
+  invitation: {
+    token: (token: string) => [...base, "invitation", token] as const,
+  },
+
+  globalSearch: {
+    all: [...base, "globalSearch"] as const,
+    query: (q: string) => [...base, "globalSearch", q] as const,
+  },
+
+  attachmentSignedUrl: (fileUrl: string) =>
+    [...base, "attachments", "signed-url", fileUrl] as const,
+
+  executiveBrief: [...base, "ai", "executive-brief"] as const,
 
 } as const;

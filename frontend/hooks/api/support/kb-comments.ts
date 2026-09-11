@@ -1,8 +1,21 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const kbCommentListC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbCommentListContract),
+);
+const kbCommentRowC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbCommentRowContract),
+);
+const kbSuccessC = lazyContract(() =>
+  import("./support-kb-schema").then((m) => m.kbSuccessContract),
+);
 
 interface KbArticleComment {
   id: number;
@@ -16,11 +29,14 @@ interface KbArticleComment {
 }
 
 export function useSupportKbComments(articleId: number) {
-  return useQuery({
-    queryKey: queryKeys.kbComments.list(articleId),
-    queryFn: () =>
+  return useGatedQuery("support:kb:view", {
+    queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId),
+    queryFn: ({ signal }) =>
       apiClient.get<KbArticleComment[]>(
-        `/support/kb/articles/${articleId}/comments`
+        `/support/kb/articles/${articleId}/comments`,
+        undefined,
+        signal,
+        kbCommentListC,
       ),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
@@ -29,27 +45,32 @@ export function useSupportKbComments(articleId: number) {
 
 export function useAddSupportKbComment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbComments", "add"],
     mutationFn: (body: string) =>
       apiClient.post<KbArticleComment>(
         `/support/kb/articles/${articleId}/comments`,
-        { body }
+        { body },
+        undefined,
+        kbCommentRowC,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbComments.list(articleId) }),
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),
   });
 }
 
 export function useDeleteSupportKbComment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbComments", "delete"],
     mutationFn: (commentId: number) =>
       apiClient.delete<{ success: boolean }>(
-        `/support/kb/articles/${articleId}/comments/${commentId}`
+        `/support/kb/articles/${articleId}/comments/${commentId}`,
+        undefined,
+        undefined,
+        kbSuccessC,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbComments.list(articleId) }),
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),
   });
 }

@@ -141,10 +141,7 @@ export type InterviewsParams = {
   candidateId?: number;
   upcoming?: boolean;
   relevant?: boolean;
-  page?: number;
-  pageSize?: number;
   limit?: number;
-  offset?: number;
 };
 
 export interface HrBookingLink {

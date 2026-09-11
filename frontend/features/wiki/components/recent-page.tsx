@@ -11,8 +11,8 @@ import { useKbPagesRecent } from "@/hooks/api/kb";
 import {
   pageHref,
   KB_FAVORITES,
-} from "@/features/wiki/lib/knowledge-routes";
-import type { KbPageListItem } from "@/hooks/api/kb/pages";
+} from "@/lib/knowledge-routes";
+import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import {
   KbClockIcon,
   KbFileTextIcon,

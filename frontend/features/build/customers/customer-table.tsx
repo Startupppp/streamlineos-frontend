@@ -7,13 +7,23 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { PmPanel } from "@/components/pm-chrome";
 import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
-import type { CrmOrganization } from "@/types/crm";
 import type { CustomerDisplayPrefs } from "./use-customer-display-prefs";
 
+interface CustomerOrg {
+  id: number;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  size: string | null;
+  website: string | null;
+  healthScore?: number | null;
+  openRequestCount?: number;
+}
+
 interface CustomerTableProps {
-  customers: CrmOrganization[];
+  customers: CustomerOrg[];
   prefs: CustomerDisplayPrefs;
   hasPrev: boolean;
   hasNext: boolean;
@@ -56,8 +66,8 @@ export const CustomerTable = React.memo(function CustomerTable({
   isLoading,
   emptyState,
 }: CustomerTableProps) {
-  const columns = useMemo<DataTableColumn<CrmOrganization>[]>(() => {
-    const cols: DataTableColumn<CrmOrganization>[] = [
+  const columns = useMemo<DataTableColumn<CustomerOrg>[]>(() => {
+    const cols: DataTableColumn<CustomerOrg>[] = [
       {
         key: "name",
         header: "Name",
@@ -154,7 +164,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         header: "Status",
         className: "w-[90px]",
         cell: (c) => {
-          const { label, className } = healthScoreToStatus(c.healthScore);
+          const { label, className } = healthScoreToStatus(c.healthScore ?? null);
           return (
             <Badge
               variant="outline"

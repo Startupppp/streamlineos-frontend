@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import {
   Select,
   SelectContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { getUserDisplayName } from "@/lib/person-display";
 import { CONDITIONS } from "./asset-return-constants";
-import type { Asset, Employee } from "@/types/hr";
+import type { Asset, EmployeeListItem } from "@/types/hr";
 
 interface AssetReturnLogSheetProps {
   open: boolean;
@@ -24,7 +24,7 @@ interface AssetReturnLogSheetProps {
   allAssignedAssets: Asset[];
   selectedAssetId: string;
   resolvedUserId: string;
-  resolvedEmployee: Employee | null;
+  resolvedEmployee: EmployeeListItem | null;
   overrideUserId: string | null;
   condition: string;
   notes: string;

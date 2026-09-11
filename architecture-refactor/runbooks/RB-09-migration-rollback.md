@@ -6,8 +6,10 @@ disposable branch remains OPEN (needs a scratch database, see §5).**
 Applies to the expand/contract sequence this repo uses for every schema change:
 **additive → backfill → validate → cutover → drop.**
 
-Current state at time of writing: `check:migration-ledger` reports **492 applied rows against 492
-journal entries, 0 pending, 0 orphan, 0 duplicate, 0 unreachable**; watermark `1798000118000`.
+Current state at the latest 2026-09-01 verification: `check:migration-ledger` reports **585 applied rows
+against 585 journal entries, 0 pending, 0 orphan, 0 duplicate, 0 unreachable**; the latest
+applied watermark is `1803000010025`. The configured-database upgrade is complete; disposable
+staging replay and the live rollback drill remain open before the production migration gate can close.
 
 ---
 
@@ -77,9 +79,11 @@ A rollback **drill** — actually branching a database, applying a drop, restori
 has not been run. It needs a disposable Neon branch and is the same infrastructure gap as
 [RB-04](RB-04-recovery-drill.md). Do not record this runbook as a drill result.
 
-Also open: the **cold-bootstrap** proof. `db:bootstrap` replaying all 492 migrations onto an empty
-database exceeded a 10-minute command ceiling on the machine available. Run it from a host without
-that ceiling and diff `pg_catalog` against the upgraded database.
+Also open: the **cold-bootstrap** proof. `db:bootstrap` replaying all 585 migrations requires a
+disposable staging database and a host without the local command ceiling. The corrected proof runner
+preserves transaction scope, fails closed on missing objects, and now rejects incomplete/corrupt
+probe ledgers; the catalog comparison and supported-upgrade proof remain open until it passes at
+current head.
 
 ## 6. The failure this procedure exists to prevent
 

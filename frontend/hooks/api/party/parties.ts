@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type {
   BusinessParty,
@@ -10,6 +10,21 @@ import type {
   CreatePartyInput,
   UpdatePartyInput,
 } from "@/types/party/parties";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+
+const partyListContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyListContract),
+);
+const partyDetailContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyDetailContract),
+);
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const partyMutationContract = lazyContract(() =>
+  import("@/hooks/api/party/party-schema").then((m) => m.partyMutationContract),
+);
 
 export interface UsePartiesParams {
   page?: number;
@@ -29,8 +44,8 @@ export function useParties(params: UsePartiesParams = {}) {
   if (search) queryParams.search = search;
 
   return useQuery({
-    queryKey: queryKeys.party.parties(queryParams),
-    queryFn: () => {
+    queryKey: directoryAndOwnershipQueryKeys.party.parties(queryParams),
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         page: String(page),
         limit: String(limit),
@@ -38,7 +53,7 @@ export function useParties(params: UsePartiesParams = {}) {
       if (partyType) searchParams.set("partyType", partyType);
       if (role) searchParams.set("role", role);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`);
+      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`, undefined, signal, partyListContract);
     },
     staleTime: 60_000,
     enabled: canView,
@@ -49,8 +64,8 @@ export function useParty(partyId: string | null) {
   const canView = useCan("party:parties:view");
 
   return useQuery({
-    queryKey: queryKeys.party.party(partyId ?? ""),
-    queryFn: () => apiClient.get<BusinessParty>(`/party/parties/${partyId}`),
+    queryKey: directoryAndOwnershipQueryKeys.party.party(partyId ?? ""),
+    queryFn: ({ signal }) => apiClient.get<BusinessParty>(`/party/parties/${partyId}`, undefined, signal, partyDetailContract),
     staleTime: 60_000,
     enabled: canView && !!partyId,
   });
@@ -58,39 +73,39 @@ export function useParty(partyId: string | null) {
 
 export function useCreateParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:create", {
     mutationKey: ["party", "parties", "create"],
     mutationFn: (input: CreatePartyInput) =>
-      apiClient.post<BusinessParty>("/party/parties", input),
+      apiClient.post<BusinessParty>("/party/parties", input, undefined, partyMutationContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
     },
   });
 }
 
 export function useUpdateParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:update", {
     mutationKey: ["party", "parties", "update"],
     mutationFn: ({ partyId, ...input }: UpdatePartyInput & { partyId: string }) =>
-      apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input),
+      apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input, undefined, partyMutationContract),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.party(variables.partyId),
+        queryKey: directoryAndOwnershipQueryKeys.party.party(variables.partyId),
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.party.parties() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties() });
     },
   });
 }
 
 export function useDeleteParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:delete", {
     mutationKey: ["party", "parties", "delete"],
     mutationFn: (partyId: string) =>
-      apiClient.delete(`/party/parties/${partyId}`),
+      apiClient.delete<void>(`/party/parties/${partyId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.parties() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties() });
     },
   });
 }

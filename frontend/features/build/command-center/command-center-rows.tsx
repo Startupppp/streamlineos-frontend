@@ -16,7 +16,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/features/build/shared/status-badge";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { isPast, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -25,10 +25,10 @@ import {
   pmSnappy,
   pmSpring,
 } from "@/lib/motion-presets";
-import { PM_ROW } from "@/features/build/shared/pm-chrome";
+import { PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 export const STATUS_COLOR: Record<string, string> = {
   ACTIVE:

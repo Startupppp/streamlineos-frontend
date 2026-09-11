@@ -37,6 +37,57 @@ function SelectValue({
   );
 }
 
+/**
+ * A `SelectTrigger` renders `role="combobox"`, and `combobox` is NOT a
+ * name-from-content role — the `SelectValue` inside the trigger does not name
+ * it. Measured in Chrome via `Accessibility.getPartialAXTree`: a bare
+ * `<button role="combobox"><span>Asia/Kolkata</span></button>` computes an
+ * accessible name of `""`, while the same button carrying an associated
+ * `<label for>` computes `"Timezone"`. That is why axe reported `button-name`
+ * on eight routes over this one primitive.
+ *
+ * Three mechanisms already name a trigger, and all three are honoured by
+ * leaving them alone: an author's `aria-label` or `aria-labelledby`, and an
+ * `id` — which `FormControl` supplies as `formItemId` while `FormLabel`
+ * supplies the matching `htmlFor`, a real `<label for>` association confirmed
+ * above to name a `role="combobox"` button. The fallback below covers the
+ * fourth shape: a trigger whose `SelectValue` carries a `placeholder`, which
+ * is the call site's own words for what the control selects and is therefore
+ * a SPECIFIC name rather than a generic one.
+ *
+ * What this deliberately does not do is default to a constant such as
+ * "Select". That would silence the automated check and leave a screen-reader
+ * user with hundreds of identically-named comboboxes, which is worse than the
+ * failure it hides. A trigger with no label, no `aria-label` and no
+ * placeholder stays nameless on purpose and keeps failing;
+ * `design-system-control-names.contract` enumerates every one of them by file
+ * and line and ratchets the count.
+ */
+export function selectValuePlaceholderName(
+  children: React.ReactNode,
+): string | undefined {
+  let found: string | undefined;
+  const walk = (nodes: unknown, depth: number) => {
+    if (found !== undefined || depth > 4) return;
+    React.Children.forEach(nodes, (child: unknown) => {
+      if (found !== undefined || child === null || child === undefined) return;
+      if (!React.isValidElement(child)) return;
+      const childProps = child.props;
+      if (typeof childProps !== "object" || childProps === null) return;
+      if (child.type === SelectValue || child.type === SelectPrimitive.Value) {
+        const placeholder =
+          "placeholder" in childProps ? childProps.placeholder : undefined;
+        if (typeof placeholder === "string" && placeholder.trim())
+          found = placeholder.trim();
+        return;
+      }
+      if ("children" in childProps) walk(childProps.children, depth + 1);
+    });
+  };
+  walk(children, 0);
+  return found;
+}
+
 function SelectTrigger({
   className,
   size = "default",
@@ -45,6 +96,12 @@ function SelectTrigger({
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
 }) {
+  const authoredName =
+    props["aria-label"] ?? props["aria-labelledby"] ?? props.id;
+  const placeholderName = authoredName
+    ? undefined
+    : selectValuePlaceholderName(children);
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -63,6 +120,7 @@ function SelectTrigger({
         className,
       )}
       {...props}
+      aria-label={props["aria-label"] ?? placeholderName}
     >
       {children}
       <SelectPrimitive.Icon asChild>

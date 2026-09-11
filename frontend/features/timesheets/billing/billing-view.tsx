@@ -33,7 +33,7 @@ import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
-import type { BillingGroup } from "@/features/timesheets/types";
+import type { BillingGroup } from "@/features/timesheets/billing-types";
 
 const now = new Date();
 const DEFAULT_START = format(startOfMonth(now), "yyyy-MM-dd");
@@ -168,6 +168,16 @@ export function BillingView() {
   const handleInvoiceOpen = useCallback(() => setInvoiceOpen(true), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const filtersActive =
+    parsedProjectId !== null ||
+    startDate !== DEFAULT_START ||
+    endDate !== DEFAULT_END;
+
+  const handleClearFilters = useCallback(
+    () => updateParams({ startDate: null, endDate: null, projectId: null }),
+    [updateParams],
+  );
+
   const totalsAmountLabel = totals
     ? totals.mixed
       ? totals.byCurrency.map((c) => formatCurrencyForBilling(c.amount, c.currency)).join(" + ")
@@ -191,7 +201,13 @@ export function BillingView() {
     <EmptyState
       illustration={<EmptyReportIllustration className="h-32 w-32" />}
       title="No uninvoiced billable hours"
-      description="All billable hours for this period have been invoiced."
+      description={
+        filtersActive
+          ? undefined
+          : "All billable hours for this period have been invoiced."
+      }
+      filtersActive={filtersActive}
+      onClearFilters={handleClearFilters}
     />
   );
 

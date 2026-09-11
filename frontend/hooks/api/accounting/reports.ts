@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingReportsQueryKeys } from "@/lib/query-keys/accounting-reports";
 import { useCan } from "@/hooks/api/access";
 import type {
   AgingParams,
@@ -43,7 +43,7 @@ export function useTrialBalanceReport(
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<TrialBalanceStatement, Error>({
-    queryKey: queryKeys.accountingReports.trialBalance(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.trialBalance(search),
     queryFn: () =>
       apiClient.get<TrialBalanceStatement>("/accounting/reports/trial-balance", search),
     staleTime: REPORT_STALE,
@@ -59,7 +59,7 @@ export function useProfitLossReport(
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<ProfitLossReport, Error>({
-    queryKey: queryKeys.accountingReports.profitLoss(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.profitLoss(search),
     queryFn: () => apiClient.get<ProfitLossReport>("/accounting/reports/pnl", search),
     staleTime: REPORT_STALE,
     ...options,
@@ -74,7 +74,7 @@ export function useBalanceSheetReport(
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<BalanceSheetReport, Error>({
-    queryKey: queryKeys.accountingReports.balanceSheet(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.balanceSheet(search),
     queryFn: () =>
       apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", search),
     staleTime: REPORT_STALE,
@@ -90,7 +90,7 @@ export function useCashFlowReport(
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<CashFlowReport, Error>({
-    queryKey: queryKeys.accountingReports.cashFlow(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.cashFlow(search),
     queryFn: () => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", search),
     staleTime: REPORT_STALE,
     ...options,
@@ -102,7 +102,7 @@ export function useAgingReport(params: AgingParams, options?: QueryOpts<AgingRep
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<AgingReport, Error>({
-    queryKey: queryKeys.accountingReports.aging(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.aging(search),
     queryFn: () => apiClient.get<AgingReport>("/accounting/reports/aging", search),
     staleTime: REPORT_STALE,
     ...options,
@@ -117,7 +117,7 @@ export function useTaxSummaryReport(
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<TaxSummaryReport, Error>({
-    queryKey: queryKeys.accountingReports.taxSummary(search),
+    queryKey: accountingReportsQueryKeys.accountingReports.taxSummary(search),
     queryFn: () =>
       apiClient.get<TaxSummaryReport>("/accounting/reports/tax-summary", search),
     staleTime: REPORT_STALE,

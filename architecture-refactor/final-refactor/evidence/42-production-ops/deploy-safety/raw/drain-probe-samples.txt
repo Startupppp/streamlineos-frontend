@@ -1,0 +1,128 @@
+[
+  {
+    "tMs": 0,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 246,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 452,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 657,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 862,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 1066,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 1271,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 1475,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 1679,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 1884,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 2087,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 2292,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 2497,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 2702,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 2908,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 404,
+    "retryAfter": null
+  },
+  {
+    "tMs": 3113,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 503,
+    "retryAfter": "5"
+  },
+  {
+    "tMs": 3318,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 503,
+    "retryAfter": "5"
+  },
+  {
+    "tMs": 3521,
+    "liveness": 200,
+    "readiness": 503,
+    "traffic": 503,
+    "retryAfter": "5"
+  }
+]

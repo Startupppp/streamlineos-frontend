@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { formatDateOnly } from "@/lib/date-utils";
 import type { Quote, QuoteLineItem } from "@/types/crm/quotes";
 import { QuoteLineItemsEditor } from "./quote-line-items-editor";
 import {
@@ -77,7 +78,7 @@ interface QuoteCreateSheetProps {
 function defaultExpiryDate(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0] ?? "";
+  return formatDateOnly(d);
 }
 
 function mapLineItem(item: QuoteLineItem) {

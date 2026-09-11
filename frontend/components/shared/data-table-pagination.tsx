@@ -7,52 +7,61 @@ import {
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 
-interface PaginationProps {
-  mode?: "page";
-  page: number;
-  totalPages: number;
-  total: number;
+interface PaginationChrome {
   limit: number;
-  onPageChange: (page: number) => void;
   onLimitChange?: (limit: number) => void;
   pageSizeOptions?: readonly number[];
 }
 
-/**
- * A keyset-paginated list, which cannot offer the controls above it.
- *
- * There is no total, so there is no last page to jump to, no "of 92", and no
- * numbered buttons — the server was never asked how many rows match, because
- * counting them is most of what offset pagination costs on a large tenant. What
- * a cursor list knows is where it is standing and whether there is more, so that
- * is what the footer says.
- */
-interface CursorPaginationProps {
-  mode: "cursor";
-  /** Position in the walk, 1-based. Not a page number a caller may jump to. */
+interface OffsetPaginationProps extends PaginationChrome {
+  mode?: "offset";
   page: number;
+  totalPages: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  rowCount?: never;
+  pageNumber?: never;
+  hasMore?: never;
+  hasPrevious?: never;
+  onNext?: never;
+  onPrevious?: never;
+}
+
+/**
+ * A keyset page knows only what it holds and whether anything follows, so
+ * first/last and page numbers are not merely hidden here — they are absent
+ * from the type. The inactive half of each variant is `never` so the two
+ * cannot be mixed even by spreading a wider object.
+ */
+interface CursorPaginationProps extends PaginationChrome {
+  mode: "cursor";
   /** Rows on this page — the only count that exists here. */
-  shown: number;
-  limit: number;
+  rowCount: number;
+  /**
+   * Position in the walk, 1-based, when the caller keeps one. Not a page number
+   * a caller may jump to, so it is shown and never offered as a control.
+   */
+  pageNumber?: number;
   hasMore: boolean;
   hasPrevious: boolean;
   onNext: () => void;
   onPrevious: () => void;
-  onLimitChange?: (limit: number) => void;
-  pageSizeOptions?: readonly number[];
+  page?: never;
+  totalPages?: never;
+  total?: never;
+  onPageChange?: never;
 }
 
-function PageSizeControl({
-  limit,
-  onLimitChange,
-  pageSizeOptions,
-}: {
-  limit: number;
-  onLimitChange: (limit: number) => void;
-  pageSizeOptions: readonly number[];
-}) {
+export type DataTablePaginationProps = OffsetPaginationProps | CursorPaginationProps;
+
+const NAV_CLASS =
+  "flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2";
+
+function PageSizeSelect({ limit, onLimitChange, pageSizeOptions }: PaginationChrome) {
+  if (!onLimitChange) return null;
+
   function handleLimitChange(value: string) {
-    onLimitChange(Number(value));
+    onLimitChange?.(Number(value));
   }
 
   return (
@@ -63,7 +72,7 @@ function PageSizeControl({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {pageSizeOptions.map((n) => (
+          {(pageSizeOptions ?? STANDARD_PAGE_SIZE_OPTIONS).map((n) => (
             <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
           ))}
         </SelectContent>
@@ -73,18 +82,20 @@ function PageSizeControl({
 }
 
 function CursorPagination({
-  page, shown, limit, hasMore, hasPrevious, onNext, onPrevious, onLimitChange,
-  pageSizeOptions = STANDARD_PAGE_SIZE_OPTIONS,
+  limit, onLimitChange, pageSizeOptions,
+  rowCount, pageNumber, hasMore, hasPrevious, onNext, onPrevious,
 }: CursorPaginationProps) {
-  if (shown === 0 && !hasPrevious) return null;
+  // An empty page reached by Next still owes the reader a way back.
+  if (rowCount === 0 && !hasPrevious) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2">
+    <nav aria-label="Pagination" className={NAV_CLASS}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span className="tabular-nums">Showing {shown} · page {page}</span>
-        {onLimitChange ? (
-          <PageSizeControl limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
-        ) : null}
+        <span className="tabular-nums">
+          {rowCount === 1 ? "1 result on this page" : `${rowCount} results on this page`}
+          {pageNumber ? ` · page ${pageNumber}` : null}
+        </span>
+        <PageSizeSelect limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
       </div>
 
       <div className="flex items-center gap-0.5">
@@ -95,19 +106,13 @@ function CursorPagination({
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }
 
-export function DataTablePagination(props: PaginationProps | CursorPaginationProps) {
-  if (props.mode === "cursor") return <CursorPagination {...props} />;
-  return <PagePagination {...props} />;
-}
-
-function PagePagination({
-  page, totalPages, total, limit, onPageChange, onLimitChange,
-  pageSizeOptions = STANDARD_PAGE_SIZE_OPTIONS,
-}: PaginationProps) {
+function OffsetPagination({
+  page, totalPages, total, limit, onPageChange, onLimitChange, pageSizeOptions,
+}: OffsetPaginationProps) {
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
 
@@ -152,12 +157,10 @@ function PagePagination({
   if (total === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2">
+    <nav aria-label="Pagination" className={NAV_CLASS}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="tabular-nums">Showing {start}-{end} of {total}</span>
-        {onLimitChange ? (
-          <PageSizeControl limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
-        ) : null}
+        <PageSizeSelect limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
       </div>
 
       <div className="flex items-center gap-0.5">
@@ -196,6 +199,11 @@ function PagePagination({
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
+}
+
+export function DataTablePagination(props: DataTablePaginationProps) {
+  if (props.mode === "cursor") return <CursorPagination {...props} />;
+  return <OffsetPagination {...props} />;
 }

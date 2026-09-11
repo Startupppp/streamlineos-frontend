@@ -2,10 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { Users, Scale, Sparkles } from "lucide-react";
-import type { ToggleImpactResult } from "@/types/payroll/setup";
+import type { PolicyToggleImpact } from "@/hooks/api/payroll/policies-schema";
 
 interface PolicyImpactPreviewProps {
-  impact?: ToggleImpactResult | null;
+  impact?: PolicyToggleImpact | null;
   loading?: boolean;
   toggleLabel?: string;
   className?: string;

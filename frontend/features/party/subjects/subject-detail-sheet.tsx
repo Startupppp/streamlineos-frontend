@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordDetail, type RecordValue } from "@/features/renderer";
+import { RecordDetail, type RecordValue } from "@/components/renderer";
 import { subjectLayout, subjectRecord, type RenderableSubject } from "@/lib/renderer/subject-layout";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { useSubject, useUnlinkParty } from "@/hooks/api/party/subjects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LinkPartyControl } from "./link-party-control";
-import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
+import { ActivityTimeline } from "@/components/timeline/activity-timeline";
 import type { SubjectType } from "@/types/party/subjects";
 
 export interface SubjectDetailSheetProps {

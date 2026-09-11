@@ -1,31 +1,47 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import type {
   KbResearchBrief,
-  KbResearchBriefListItem,
+  KbResearchBriefListPage,
   CreateResearchBriefInput,
 } from "@/types/kb";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-interface BriefListResponse {
-  items: KbResearchBriefListItem[];
-  nextCursor: number | null;
-}
+const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
-export function useKbResearchBriefs(limit = 20) {
+const kbResearchBriefListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefListContract),
+);
+
+const kbResearchBriefDetailContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefDetailContract),
+);
+
+const kbResearchBriefEnqueueContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefEnqueueContract),
+);
+
+const kbResearchBriefRateContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefRateContract),
+);
+
+export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.researchBriefs(),
-    queryFn: ({ pageParam }) => {
-      const params: Record<string, unknown> = { limit };
-      if (pageParam) params.cursor = pageParam;
-      return apiClient.get<BriefListResponse>("/kb/research-briefs", params);
+    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs(),
+    queryFn: ({ pageParam, signal }) => {
+      const params: Record<string, unknown> = { limit: RESEARCH_BRIEFS_PAGE_SIZE };
+      if (pageParam !== undefined) params.cursor = pageParam;
+      return apiClient.get<KbResearchBriefListPage>("/kb/research-briefs", params, signal, kbResearchBriefListContract);
     },
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: NO_ID_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
     staleTime: 30_000,
   });
@@ -34,9 +50,9 @@ export function useKbResearchBriefs(limit = 20) {
 export function useKbResearchBrief(briefId: number | undefined) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
-    queryKey: queryKeys.kb.researchBrief(briefId ?? 0),
-    queryFn: () => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`),
-    enabled: canViewPages && briefId !== undefined && briefId > 0,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId ?? 0),
+    queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal, kbResearchBriefDetailContract),
+    enabled: canViewPages && briefId !== undefined,
     staleTime: 10_000,
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -48,23 +64,23 @@ export function useKbResearchBrief(briefId: number | undefined) {
 
 export function useCreateResearchBrief() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "create"],
     mutationFn: (input: CreateResearchBriefInput) =>
-      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.researchBriefs() }),
+      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input, undefined, kbResearchBriefEnqueueContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() }),
   });
 }
 
 export function useRateResearchBrief() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "rate"],
     mutationFn: ({ briefId, rating }: { briefId: number; rating: "helpful" | "not_helpful" }) =>
-      apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }),
+      apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }, undefined, kbResearchBriefRateContract),
     onSuccess: (_, { briefId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.researchBrief(briefId) });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.researchBriefs() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
     },
   });
 }

@@ -4,11 +4,16 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import type { Path, TElement } from "platejs";
 import type { PlateEditor } from "platejs/react";
-import type { UploadedKbMedia } from "@/features/wiki/lib/upload-kb-media";
+export interface UploadedEditorMedia {
+  key: string;
+  size: number;
+  mimeType: string;
+  name: string;
+}
 
 export type EditorMediaType = "img" | "video" | "audio" | "file";
 
-export type EditorMediaUploader = (file: File) => Promise<UploadedKbMedia>;
+export type EditorMediaUploader = (file: File) => Promise<UploadedEditorMedia>;
 
 export function mediaTypeForFile(file: File): EditorMediaType {
   if (file.type.startsWith("image/")) return "img";
@@ -50,7 +55,7 @@ export async function uploadEditorMedia(
     const path = findPlaceholderPath(editor, placeholderId);
     if (!path) return;
     editor.tf.setNodes<TElement>(
-      { type: mediaType, url: result.url, name: result.name, size: result.size },
+      { type: mediaType, url: result.key, name: result.name, size: result.size },
       { at: path },
     );
     editor.tf.unsetNodes(["placeholderId", "mediaType"], { at: path });

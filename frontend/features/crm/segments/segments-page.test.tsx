@@ -31,7 +31,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 /** Renderer-backed list: `useTenantLayout` reads the signed-in tenant's arrangement. */
-jest.mock("@/features/renderer/use-tenant-layout", () => ({
+jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 

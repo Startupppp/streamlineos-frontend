@@ -16,6 +16,7 @@ interface PayrollQueueTableProps {
   selection: Set<string>;
   onSelectionChange: (sel: Set<string | number>) => void;
   onRowClick: (row: PayrollSummaryRow) => void;
+  onClearFilters: () => void;
 }
 
 function RowStatus({ row }: { row: PayrollSummaryRow }) {
@@ -54,6 +55,7 @@ export function PayrollQueueTable({
   selection,
   onSelectionChange,
   onRowClick,
+  onClearFilters,
 }: PayrollQueueTableProps) {
   const columns = useMemo<DataTableColumn<PayrollSummaryRow>[]>(
     () => [
@@ -164,13 +166,12 @@ export function PayrollQueueTable({
     rows.length === 0 && !isLoading ? (
       <EmptyState
         illustration={<EmptyReportIllustration className="h-32 w-32" />}
-        title={hasFilters ? "No results match" : "No payroll data"}
+        title="No payroll data"
         description={
-          hasFilters
-            ? "Try adjusting the date range or filters."
-            : "Select a pay period to see the payroll queue."
+          hasFilters ? undefined : "Select a pay period to see the payroll queue."
         }
-        action={hasFilters ? { label: "Clear filters", href: "?" } : undefined}
+        filtersActive={hasFilters}
+        onClearFilters={onClearFilters}
       />
     ) : undefined;
 
@@ -183,7 +184,11 @@ export function PayrollQueueTable({
       onRowClick={onRowClick}
       isLoading={isLoading}
       emptyState={emptyState}
-      selection={{ selected: selection, onChange: onSelectionChange }}
+      selection={{
+        selected: selection,
+        onChange: onSelectionChange,
+        getRowLabel: (row) => row.userName ?? "",
+      }}
       minWidth="900px"
     />
   );

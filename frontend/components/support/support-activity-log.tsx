@@ -13,6 +13,9 @@ import {
   PlusCircle,
   GitMerge,
   Link2,
+  GitFork,
+  BellOff,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -41,6 +44,9 @@ const ACTION_ICONS: Record<SupportActivityAction, LucideIcon> = {
   reopened: RotateCcw,
   merged: GitMerge,
   linked: Link2,
+  split: GitFork,
+  snoozed: BellOff,
+  unsnoozed: Bell,
 };
 
 function describeChange(entry: SupportActivityEntry) {

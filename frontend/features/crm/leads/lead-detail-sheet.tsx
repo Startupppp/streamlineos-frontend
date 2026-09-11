@@ -37,7 +37,7 @@ import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
 import { AINextActionButton } from "./ai-next-action-button";
 import { AIEnrichLeadButton } from "./ai-enrich-lead-button";
-import { RecordDetail } from "@/features/renderer";
+import { RecordDetail } from "@/components/renderer";
 import { useLeadLayout } from "./use-lead-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { LeadActivityTab } from "./lead-activity-tab";
@@ -104,7 +104,7 @@ export function LeadDetailSheet({
   const statusList = statusOptions.map((o) => ({
     key: o.key,
     label: o.label,
-    border: getCrmTokenClasses(o.color).badgeClass,
+    border: getCrmTokenClasses(o.color ?? "").badgeClass,
   }));
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");

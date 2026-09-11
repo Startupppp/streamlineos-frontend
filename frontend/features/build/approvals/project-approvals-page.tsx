@@ -35,7 +35,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 
 interface ProjectApprovalsPageProps {
   projectId: number;
@@ -266,7 +266,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onConfirm={handleDelegate}
         isPending={updateApproval.isPending}
         members={members}
-        currentApproverId={delegateTarget?.approverId}
+        currentApproverId={delegateTarget?.requestedById ?? undefined}
       />
       <ConfirmDialog
         open={!!cancelTarget}

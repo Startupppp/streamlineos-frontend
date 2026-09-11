@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Sprint } from "@/types/projects";
 import { getUserDisplayName } from "@/lib/person-display";
-import { PM_TOOLBAR } from "@/features/build/shared/pm-chrome";
+import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { cn } from "@/lib/utils";
@@ -106,6 +106,7 @@ function ParentPickerPopover({
         <Input
           ref={inputRef}
           placeholder="Search tickets…"
+          aria-label="Search parent tickets"
           value={q}
           onChange={handleInputChange}
           className="mb-2 h-8 text-xs"

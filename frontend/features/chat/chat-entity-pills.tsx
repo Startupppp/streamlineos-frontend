@@ -1,16 +1,10 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
-import Image from "next/image";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
-import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useQuery } from "@tanstack/react-query";
+import { Loader2, Lock, MessageSquare, Ticket } from "lucide-react";
 import { toast } from "sonner";
-import { cn, resolveImageUrl } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,29 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  getInitials,
-  formatMessageTime,
-  formatMessageTimeFull,
-  formatFileSize,
-  getFileExt,
-  getFileColor,
-  isImageMime,
-  resolveFileUrl,
-  getForwardedDisplay,
-} from "./chat-helpers";
-import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
+import type { TicketEntityRef, CommentEntityRef } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
-import { apiClient, isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
-import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { EntityActionDialog } from "./entity-action-dialog";
-import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
-import { InternalLinkPreview } from "./internal-link-preview";
-import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
-import { renderFormattedContent } from "./formatted-message-content";
+import { useTicketPermalink } from "@/hooks/api/chat-previews";
+import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",
@@ -62,7 +41,13 @@ function UnresolvedPill({ label }: { label: string }) {
   );
 }
 
-export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
+export function TicketPill({
+  entity,
+  channelId,
+}: {
+  entity: TicketEntityRef;
+  channelId: number;
+}) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(
     entity.card?.status ?? entity.status ?? "TODO",
@@ -79,7 +64,9 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
     (entity.projectKey && entity.ticketNumber
       ? `${entity.projectKey}-${entity.ticketNumber}`
       : `Ticket #${entity.id}`);
-  const hasFullInfo = Boolean(card?.subtitle) || Boolean(entity.projectKey && entity.ticketNumber);
+  const hasFullInfo =
+    Boolean(card?.subtitle) ||
+    Boolean(entity.projectKey && entity.ticketNumber);
   const ticketTitle = card?.title ?? entity.title;
 
   const handlePillClick = useCallback(() => {
@@ -87,7 +74,8 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
       router.push(card.href);
       return;
     }
-    if (entity.projectId) router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+    if (entity.projectId)
+      router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
   }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
@@ -105,15 +93,15 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
       } catch (err) {
         setCurrentStatus(prev);
         const code = isApiError(err) ? err.code : undefined;
-        if (code === "CHAT_ACTION_FORBIDDEN") {
-          toast.error("You don't have permission to change this ticket's status.");
-        } else if (code === "PROJECTS_TICKET_NOT_FOUND") {
+        if (code === "CHAT_ACTION_FORBIDDEN")
+          toast.error(
+            "You don't have permission to change this ticket's status.",
+          );
+        else if (code === "PROJECTS_TICKET_NOT_FOUND")
           toast.error("This ticket no longer exists.");
-        } else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED") {
+        else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED")
           toast.error("This status change isn't allowed.");
-        } else {
-          toast.error("Failed to update ticket status");
-        }
+        else toast.error("Failed to update ticket status");
       } finally {
         setIsChangingStatus(false);
       }
@@ -121,7 +109,8 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
     [currentStatus, channelId, entity],
   );
 
-  if (entity.card === null) return <UnresolvedPill label="A ticket you can't see" />;
+  if (entity.card === null)
+    return <UnresolvedPill label="A ticket you can't see" />;
 
   if (!hasFullInfo) {
     return (
@@ -174,20 +163,22 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
               {isChangingStatus ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus
+                (TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus)
               )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-36">
-            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map((s) => (
-              <DropdownMenuItem
-                key={s}
-                onClick={() => handleStatusChange(s)}
-                className={cn(s === currentStatus && "font-semibold")}
-              >
-                {TICKET_STATUS_DISPLAY[s]}
-              </DropdownMenuItem>
-            ))}
+            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
+              (s) => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={() => handleStatusChange(s)}
+                  className={cn(s === currentStatus && "font-semibold")}
+                >
+                  {TICKET_STATUS_DISPLAY[s]}
+                </DropdownMenuItem>
+              ),
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
@@ -207,10 +198,13 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
 export function CommentPill({ entity }: { entity: CommentEntityRef }) {
   const router = useRouter();
   const canViewTickets = useCan("build:tickets:view");
-  const { data: ticket } = useQuery({
-    ...ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
-    enabled: canViewTickets,
-  });
+  const { data: ticket } = useTicketPermalink(
+    entity.projectId,
+    entity.ticketId,
+    {
+      enabled: canViewTickets,
+    },
+  );
 
   const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
@@ -233,4 +227,3 @@ export function CommentPill({ entity }: { entity: CommentEntityRef }) {
     </button>
   );
 }
-

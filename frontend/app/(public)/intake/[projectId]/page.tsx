@@ -3,9 +3,7 @@
 import { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +13,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { buildUrl } from "@/lib/api-client";
+import {
+  intakeFormSchema,
+  type IntakeFormValues,
+} from "@/features/build/intake/public-intake-schema";
+import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -32,50 +34,6 @@ const REQUEST_TYPE_OPTIONS = [
   { value: "other", label: "Other" },
 ] as const;
 
-const intakeFormSchema = z.object({
-  title: z.string().min(1, "Request title is required").max(200, "Title must be 200 characters or fewer"),
-  description: z.string().max(5000, "Description must be 5000 characters or fewer").optional(),
-  submitterName: z.string().max(200, "Name must be 200 characters or fewer").optional(),
-  submitterEmail: z
-    .union([z.string().email("Please enter a valid email address"), z.literal("")])
-    .optional()
-    .transform((v) => (v === "" ? undefined : v)),
-  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-  requestType: z.enum(["bug", "feature", "task", "question", "other"]).optional(),
-});
-
-type IntakeFormValues = z.input<typeof intakeFormSchema>;
-type IntakeFormOutput = z.output<typeof intakeFormSchema>;
-
-interface IntakeResponse {
-  id: number;
-  message: string;
-}
-
-async function submitIntake(projectId: string, body: IntakeFormOutput): Promise<IntakeResponse> {
-  const url = buildUrl(`/public/intake/${projectId}`);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    let message = "Failed to submit. Please try again.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      } else if (Array.isArray(data?.message) && data.message.length > 0) {
-        const msgs = data.message.filter((m): m is string => typeof m === "string");
-        if (msgs.length > 0) message = msgs.join(", ");
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<IntakeResponse>;
-}
-
 export default function PublicIntakePage() {
   const params = useParams<{ projectId: string }>();
   const projectId = params.projectId;
@@ -89,16 +47,12 @@ export default function PublicIntakePage() {
     resolver: zodResolver(intakeFormSchema),
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: IntakeFormValues) => {
-      const output = intakeFormSchema.parse(values);
-      return submitIntake(projectId, output);
-    },
-  });
+  const mutation = useSubmitIntake(projectId);
 
   const onSubmit = useCallback(
     (values: IntakeFormValues) => {
-      mutation.mutate(values);
+      const output = intakeFormSchema.parse(values);
+      mutation.mutate(output);
     },
     [mutation],
   );

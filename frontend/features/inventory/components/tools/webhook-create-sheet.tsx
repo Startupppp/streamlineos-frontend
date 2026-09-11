@@ -112,7 +112,7 @@ export function WebhookCreateSheet({ open, editingWebhook, onOpenChange }: Webho
   function handleEventToggle(evt: string, checked: boolean): void {
     const current = form.getValues("events");
     const isValidEvent = (v: string): v is WebhookFormValues["events"][number] =>
-      (WEBHOOK_EVENT_VALUES as readonly string[]).includes(v);
+      WEBHOOK_EVENT_VALUES.some((candidate) => candidate === v);
     const next = checked
       ? isValidEvent(evt) ? [...current, evt] : current
       : current.filter((e) => e !== evt);
@@ -188,7 +188,7 @@ export function WebhookCreateSheet({ open, editingWebhook, onOpenChange }: Webho
                         <EventCheckbox
                           key={evt}
                           evt={evt}
-                          label={WEBHOOK_EVENT_LABELS[evt]}
+                          label={WEBHOOK_EVENT_LABELS[evt] ?? evt}
                           mono={evt}
                           checked={field.value.includes(evt)}
                           onToggle={handleEventToggle}

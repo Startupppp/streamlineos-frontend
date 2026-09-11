@@ -9,7 +9,7 @@ import {
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
-import { useBranches } from "@/hooks/api";
+import { useBranchOptions } from "@/hooks/api";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Briefcase, MapPin } from "lucide-react";
@@ -193,21 +193,19 @@ export function Section1({ form, departments }: SectionProps) {
 
 export function Section2({ form }: SectionProps) {
   const { register, control, setValue, formState: { errors } } = form;
-  const { data: branches } = useBranches();
+  const { data: branches } = useBranchOptions();
   const branchOptions = useMemo<ComboboxOption[]>(
     () =>
-      (branches ?? [])
-        .filter((b) => b.status === "ACTIVE")
-        .map((b) => ({
-          value: String(b.id),
-          label: b.name,
-          sublabel: [b.city, b.state, b.country].filter(Boolean).join(", "),
-        })),
+      (branches?.data ?? []).map((b) => ({
+        value: b.id,
+        label: b.name,
+        sublabel: [b.city, b.state, b.country].filter(Boolean).join(", "),
+      })),
     [branches],
   );
 
   function handleBranchSelect(branchId: string) {
-    const branch = (branches ?? []).find((b) => String(b.id) === branchId);
+    const branch = (branches?.data ?? []).find((b) => b.id === branchId);
     if (!branch) return;
     if (branch.country) setValue("country", branch.country, { shouldValidate: true });
     const cityState = [branch.city, branch.state].filter(Boolean).join(", ");

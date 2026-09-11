@@ -1,24 +1,28 @@
 export type KnowledgeGapStatus = "OPEN" | "DRAFTED" | "ROUTED" | "PUBLISHED" | "DISMISSED";
 
-export interface KnowledgeGap {
+export interface KnowledgeGapEvidence {
+  searchQueries?: Array<{ query: string; count: number }>;
+  relatedTicketIds?: number[];
+}
+
+export interface DraftedKnowledgeGap {
   id: number;
   orgId: string;
-  clusterKey: string;
   representativeQuestion: string;
   ticketCount: number;
   sampleTicketIds: number[];
   status: KnowledgeGapStatus;
   proposedArticleId: number | null;
-  proposedArticleTitle?: string | null;
   draftedBy: string | null;
   reviewedBy: string | null;
-  evidence: {
-    searchQueries?: Array<{ query: string; count: number }>;
-    relatedTicketIds?: number[];
-  };
-  deflectionCount: number;
+  evidence: KnowledgeGapEvidence | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface KnowledgeGap extends DraftedKnowledgeGap {
+  proposedArticleTitle?: string | null;
+  deflectionCount: number;
 }
 
 export interface ListKnowledgeGapsResponse {
@@ -31,5 +35,5 @@ export interface DetectGapsResponse {
 }
 
 export interface DraftGapResponse {
-  gap: KnowledgeGap;
+  gap: DraftedKnowledgeGap;
 }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCreateTicket } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,7 +57,7 @@ export function QuickAddInput({ columnId, projectId, headerMode = false }: Quick
       setValue("");
       setIsAdding(false);
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
       });
     },
     onError: (error) => {

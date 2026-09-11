@@ -2,7 +2,24 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+const documentListLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentListContract),
+);
+const documentStatsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentStatsContract),
+);
+const documentExpiryLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.documentExpiryContract),
+);
+const myOnboardingDocsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.myOnboardingDocsContract),
+);
+const onboardingDocsSummaryLazy = lazyContract(() =>
+  import("@/hooks/api/hr/documents-schema").then((m) => m.onboardingDocsSummaryContract),
+);
 import type { Document, DocumentType } from "@/types/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
@@ -20,7 +37,7 @@ export interface HrDocumentListResponse {
   pageInfo: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export const hrDocumentListPrefix = queryKeys.hr.documentsAll;
+export const hrDocumentListPrefix = humanResourcesQueryKeys.hr.documentsAll;
 
 export function useHrDocumentList(params?: HrDocumentListParams) {
   const canDocs = useCan("hr:documents:view");
@@ -36,8 +53,8 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
       : {}),
   };
   return useQuery({
-    queryKey: queryKeys.hr.documents(queryParams),
-    queryFn: () => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams),
+    queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal, documentListLazy),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canDocs,
@@ -56,8 +73,8 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   const canDocs = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentsStats(),
-    queryFn: () => apiClient.get<HrDocumentStats>("/hr/documents/stats"),
+    queryKey: humanResourcesQueryKeys.hr.documentsStats(),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal, documentStatsLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
@@ -83,9 +100,9 @@ export function useHrDocumentExpiry(
   const canDocs = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentsExpiry(days),
-    queryFn: () =>
-      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }),
+    queryKey: humanResourcesQueryKeys.hr.documentsExpiry(days),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal, documentExpiryLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
@@ -111,18 +128,18 @@ export interface MyOnboardingDoc {
 
 interface MyOnboardingDocsResponse {
   data: MyOnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const MY_DOCS_LIMIT = 100;
 
 export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
   const canView = useCan("self:onboarding-docs");
-  const params = { page: 1, limit: MY_DOCS_LIMIT };
+  const params = { limit: MY_DOCS_LIMIT };
   return useQuery({
-    queryKey: queryKeys.hr.onboardingDocs(params),
-    queryFn: () =>
-      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal, myOnboardingDocsLazy),
     staleTime: 60_000,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -130,40 +147,25 @@ export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
 
 interface OnboardingDocsSummaryTotals {
   pagination: { total: number };
+  statusCounts: { PENDING: number; IN_PROGRESS: number; APPROVED: number };
 }
 
 export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
   const canOnboarding = useCan("hr:onboarding:manage");
-  const enabled = canOnboarding && (options?.enabled ?? true);
-
-  const totalQuery = useQuery({
-    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1 }),
-    queryFn: () =>
+  const summaryQuery = useQuery({
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary({ limit: 1 }),
+    queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
-      }),
+      }, signal, onboardingDocsSummaryLazy),
     staleTime: 2 * 60_000,
-    enabled,
-  });
-  const approvedQuery = useQuery({
-    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
-    queryFn: () =>
-      apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
-        limit: 1,
-        status: "APPROVED",
-      }),
-    staleTime: 2 * 60_000,
-    enabled,
+    enabled: canOnboarding && (options?.enabled ?? true),
   });
 
-  const total = totalQuery.data?.pagination.total;
-  const approved = approvedQuery.data?.pagination.total;
+  const counts = summaryQuery.data?.statusCounts;
 
   return {
-    missingCount:
-      total !== undefined && approved !== undefined
-        ? Math.max(total - approved, 0)
-        : undefined,
-    isLoading: totalQuery.isLoading || approvedQuery.isLoading,
+    missingCount: counts ? counts.PENDING + counts.IN_PROGRESS : undefined,
+    isLoading: summaryQuery.isLoading,
   };
 }

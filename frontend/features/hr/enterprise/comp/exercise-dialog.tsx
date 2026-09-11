@@ -10,6 +10,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRecordExercise } from "@/hooks/api/hr/enterprise-comp";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const schema = z.object({
   exerciseDate: z.string().min(1, "Required"),
@@ -64,14 +65,14 @@ export function ExerciseDialog({ open, onOpenChange, grantId }: Props) {
               <FormField control={form.control} name="units" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Units</FormLabel>
-                  <FormControl><Input type="number" min={1} {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} /></FormControl>
+                  <FormControl><Input type="number" min={1} {...field} onChange={numericFieldChange(field.onChange)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="amountCents" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount (cents)</FormLabel>
-                  <FormControl><Input type="number" min={0} {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} /></FormControl>
+                  <FormControl><Input type="number" min={0} {...field} onChange={numericFieldChange(field.onChange)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useCallback } from "react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useTickets } from "@/hooks/api/build/tickets";

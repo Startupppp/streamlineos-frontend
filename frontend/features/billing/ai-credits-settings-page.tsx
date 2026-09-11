@@ -9,6 +9,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -33,15 +35,28 @@ import {
   type PurchaseAiPackResult,
   type AiCreditsUsageDays,
 } from "@/hooks/api/ai-credits";
-import { AiCreditsDailyChart } from "@/features/billing/ai-credits-daily-chart";
 import { AiCreditsBreakdownTables } from "@/features/billing/ai-credits-breakdown-tables";
+import dynamic from "next/dynamic";
 import { AiCreditPackCard } from "@/features/billing/components/ai-credit-pack-card";
 import { TXN_COLUMNS, getTxnRowKey } from "@/features/billing/components/ai-credit-txn-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  AI_CREDITS_USAGE_DAYS,
+  AI_CREDIT_TRANSACTION_LIMIT,
+} from "@/lib/settings-initial-reads";
 
-type TxnPageSize = 10 | 20 | 50;
+const AiCreditsDailyChart = dynamic(
+  () =>
+    import("@/features/billing/ai-credits-daily-chart").then((m) => ({
+      default: m.AiCreditsDailyChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full rounded-lg" /> },
+);
+
+type TxnPageSize = (typeof STANDARD_PAGE_SIZE_OPTIONS)[number];
 
 export function AiCreditsSettingsPage() {
   const { data, isLoading, isError, error: walletError, refetch } = useAiCreditsWallet();
@@ -50,9 +65,10 @@ export function AiCreditsSettingsPage() {
   const verifyMutation = useVerifyAiCreditPurchase();
   const canPurchase = useCan("billing:ai-credits:purchase");
 
-  const [txnPage, setTxnPage] = useState(1);
-  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(20);
-  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(30);
+  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(AI_CREDIT_TRANSACTION_LIMIT);
+  const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([undefined]);
+  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(AI_CREDITS_USAGE_DAYS);
+  const txnCursor = txnCursors.at(-1);
 
   const {
     data: txnData,
@@ -60,7 +76,7 @@ export function AiCreditsSettingsPage() {
     isError: txnError,
     error: txnErrorObj,
     refetch: refetchTxns,
-  } = useAiCreditTransactions(txnPage, txnLimit);
+  } = useAiCreditTransactions({ cursor: txnCursor, limit: txnLimit });
 
   const {
     data: usageData,
@@ -76,8 +92,8 @@ export function AiCreditsSettingsPage() {
   const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
   const wallet = data?.wallet;
   const packs = data?.packs ?? [];
-  const txns = txnData?.items ?? [];
-  const txnTotal = txnData?.total ?? 0;
+  const txns = txnData?.data ?? [];
+  const txnPagination = txnData?.pagination;
   const isBusy = purchaseMutation.isPending || verifyMutation.isPending;
 
   const usageTotals = usageData?.totals;
@@ -115,14 +131,22 @@ export function AiCreditsSettingsPage() {
     void refetchUsage();
   }
 
-  const handleTxnPageChange = useCallback((p: number) => {
-    setTxnPage(p);
-  }, []);
-
   const handleTxnPageSizeChange = useCallback((size: number) => {
     setTxnLimit(size as TxnPageSize);
-    setTxnPage(1);
+    setTxnCursors([undefined]);
   }, []);
+
+  const handlePreviousTxnPage = useCallback(() => {
+    setTxnCursors((cursors) => cursors.slice(0, -1));
+  }, []);
+
+  const handleNextTxnPage = useCallback(() => {
+    const nextCursor = txnPagination?.nextCursor;
+    if (!nextCursor) return;
+    setTxnCursors((cursors) =>
+      cursors.at(-1) === nextCursor ? cursors : [...cursors, nextCursor],
+    );
+  }, [txnPagination?.nextCursor]);
 
   function handleTxnRetry() {
     void refetchTxns();
@@ -332,7 +356,7 @@ export function AiCreditsSettingsPage() {
                     id="auto-topup"
                     checked={autoTopUp}
                     onCheckedChange={handleAutoTopUpToggle}
-                    disabled={configureTopUp.isPending || packs.length === 0}
+                    disabled={!canPurchase || configureTopUp.isPending || packs.length === 0}
                   />
                 </div>
               </div>
@@ -364,7 +388,7 @@ export function AiCreditsSettingsPage() {
                   compact
                   className="border-0 bg-transparent py-8"
                 />
-              ) : txns.length === 0 && txnPage === 1 ? (
+              ) : txns.length === 0 && txnCursors.length === 1 ? (
                 <EmptyState
                   illustrationPreset="report"
                   title="No transactions yet"
@@ -378,14 +402,20 @@ export function AiCreditsSettingsPage() {
                   columns={TXN_COLUMNS}
                   getRowKey={getTxnRowKey}
                   className="rounded-none border-0"
-                  pagination={{
-                    mode: "server",
-                    page: txnPage,
-                    pageSize: txnLimit,
-                    total: txnTotal,
-                    onPageChange: handleTxnPageChange,
-                    onPageSizeChange: handleTxnPageSizeChange,
-                  }}
+                  pagination={{ pageSize: txnLimit }}
+                />
+              )}
+              {(txnCursors.length > 1 || txnPagination?.hasMore) && (
+                <CursorPageControls
+                  page={txnCursors.length}
+                  hasNext={txnPagination?.hasMore ?? false}
+                  disabled={txnLoading}
+                  onPrevious={handlePreviousTxnPage}
+                  onNext={handleNextTxnPage}
+                  pageSize={txnLimit}
+                  onPageSizeChange={handleTxnPageSizeChange}
+                  pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+                  className="m-3"
                 />
               )}
             </div>

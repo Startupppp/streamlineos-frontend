@@ -1,4 +1,4 @@
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 
 export function filterTreeWithAncestors(
   nodes: KbPageTreeNode[],

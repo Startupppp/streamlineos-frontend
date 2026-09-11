@@ -12,7 +12,7 @@ import { useTicketByKey } from "@/hooks/api/build";
 import {
   formatTicketKey,
   parseTicketKey,
-} from "@/features/build/shared/format-ticket-key";
+} from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "@/features/build/ticket-details/ticket-detail-main-section";
 import { TicketDetailRightPanel } from "@/features/build/ticket-details/ticket-detail-right-panel";
 import { TicketParentLink } from "@/features/build/ticket-details/ticket-parent-link";

@@ -62,8 +62,24 @@ const {
 };
 
 const CATEGORIES: AdminBlogCategory[] = [
-  { id: "cat-1", name: "Engineering", slug: "engineering", description: "Tech articles", color: "#3b82f6", postCount: 5, createdAt: "2026-03-01T09:00:00.000Z" },
-  { id: "cat-2", name: "Product", slug: "product", description: null, color: null, postCount: 2, createdAt: "2026-03-01T09:00:00.000Z" },
+  {
+    id: "cat-1",
+    name: "Engineering",
+    slug: "engineering",
+    description: "Tech articles",
+    color: "#3b82f6",
+    postCount: 5,
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  },
+  {
+    id: "cat-2",
+    name: "Product",
+    slug: "product",
+    description: null,
+    color: null,
+    postCount: 2,
+    createdAt: new Date("2026-01-02T00:00:00.000Z"),
+  },
 ];
 
 const DEFAULT_RETURN: UseAdminBlogCategoriesReturn = {

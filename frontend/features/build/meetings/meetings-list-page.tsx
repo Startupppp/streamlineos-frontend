@@ -28,7 +28,7 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
-} from "@/features/build/shared/pm-chrome";
+} from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { getUserDisplayName } from "@/lib/person-display";
 
@@ -175,11 +175,13 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   }
 
   function handleScheduleStandup() {
-    handleOpenTemplate(MEETING_TEMPLATES[0]!);
+    const template = MEETING_TEMPLATES[0];
+    if (template) handleOpenTemplate(template);
   }
 
   function handleSchedulePlanning() {
-    handleOpenTemplate(MEETING_TEMPLATES[1]!);
+    const template = MEETING_TEMPLATES[1];
+    if (template) handleOpenTemplate(template);
   }
 
   const handleGenerateAgenda = useCallback(

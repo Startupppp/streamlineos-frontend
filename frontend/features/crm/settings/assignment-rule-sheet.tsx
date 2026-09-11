@@ -16,8 +16,8 @@ import {
   type RecordFieldControl,
   type RecordFormLines,
   type RecordFormValues,
-} from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import type {
   AssignmentRule,
   AssignmentRuleCondition,

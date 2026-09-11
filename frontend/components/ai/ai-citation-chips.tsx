@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface Citation {
   id: string | number;
@@ -84,6 +85,29 @@ export function AiCitationChips({ citations, className }: AiCitationChipsProps) 
           <CitationChipInner key={citation.id} index={index} citation={citation} />
         ),
       )}
+    </div>
+  );
+}
+
+interface AiCitationChipsSkeletonProps {
+  count?: number;
+  className?: string;
+}
+
+export function AiCitationChipsSkeleton({
+  count = 3,
+  className,
+}: AiCitationChipsSkeletonProps) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading sources"
+      className={cn("flex flex-wrap gap-1", className)}
+    >
+      {Array.from({ length: count }, (_, index) => (
+        <Skeleton key={index} className="h-4 w-20 rounded-full" />
+      ))}
     </div>
   );
 }

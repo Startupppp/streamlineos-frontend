@@ -14,8 +14,10 @@ import { cn } from "@/lib/utils";
 import {
   TurnstileWidget,
   isTurnstileEnabled,
-} from "@/features/security/turnstile-widget";
+} from "@/components/security/turnstile-widget";
 import { PublicFormField } from "./components/public-form-field";
+import { withCorrelation } from "@/lib/observability/with-correlation";
+import { contactErrorBodySchema } from "./contact-api-schema";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -52,14 +54,12 @@ async function submitContactForm(
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/contact`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
       body: JSON.stringify(data),
     });
     if (res.ok) return { ok: true };
-    let body: { error?: string; fieldErrors?: Partial<Record<keyof FormValues, string>> } = {};
-    try {
-      body = (await res.json()) as typeof body;
-    } catch {}
+    const raw = await res.json().catch(() => null);
+    const body = contactErrorBodySchema.safeParse(raw).data ?? {};
     return {
       ok: false,
       error: body.error ?? "Failed to send message. Please try again.",

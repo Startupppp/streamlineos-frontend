@@ -1,0 +1,18 @@
+# Two adjacent checks on the alert wiring — 2026-09-03T16:29:38Z  backend SHA=45f8a2e99494483526e357e27f18c76961ebf266
+
+== ALERT_WEBHOOK_ROUTING_KEY is documented by RB-06 Step 1 but read by nothing ==
+$ grep -rn 'ALERT_WEBHOOK_ROUTING_KEY|routing_key|routingKey' src .github
+  (no matches — the variable is inert)
+
+RB-06 Step 1 instructs the operator to: export ALERT_WEBHOOK_ROUTING_KEY="<your-pd-routing-key>"
+No script consumes it. alert-dispatch.mjs POSTs a bare JSON object with no PagerDuty
+Events v2 envelope (no routing_key / event_action / payload.summary). Confirm the payload
+shape against the chosen platform BEFORE the operator drill, or the drill fails on transport.
+
+== $ npm run -s check:gate-wiring:self-test ==
+check-gate-wiring self-tests: 28 passed
+EXIT=0
+
+== $ npm run -s check:gate-wiring ==
+check-gate-wiring: 100 gates, 91 of them able to FAIL the job (0 registered non-blocking), all invoked by a run: step of a reachable job (161 run steps across 15 jobs in 7 workflow files, all 7 reachable, 9 deliberate exceptions).
+EXIT=0

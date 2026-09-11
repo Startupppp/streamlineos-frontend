@@ -60,6 +60,7 @@ interface ComboboxProps {
    * two triggers reading "Location" are two a screen reader cannot tell apart.
    */
   ariaLabel?: string;
+  footer?: React.ReactNode;
 }
 
 export function Combobox({
@@ -73,6 +74,7 @@ export function Combobox({
   className,
   onSearchChange,
   ariaLabel,
+  footer,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -177,6 +179,7 @@ export function Combobox({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {footer}
           </CommandList>
         </Command>
       </PopoverContent>

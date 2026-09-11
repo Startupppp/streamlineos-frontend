@@ -12,11 +12,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { HrIconWell } from "@/features/hr/shared/hr-ui";
-import {
-  hubSectionData,
-  type HrHubAccess,
-  type HrHubSections,
-} from "@/hooks/api/hr/hub";
+import { hubSectionData } from "@/hooks/api/hr/hub";
+import type { HrHubAccess, HrHubSections } from "@/hooks/api/hr/hub-types";
 
 export type QueueTone = "red" | "amber" | "neutral";
 

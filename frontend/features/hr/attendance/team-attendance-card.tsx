@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -128,11 +128,15 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([
+    undefined,
+  ]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
   const { data, error, isLoading, refetch } = useHrTeamAttendanceStatus({
-    page,
+    cursor,
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
     status: statusFilter === "ALL" ? undefined : statusFilter,
@@ -142,16 +146,39 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }, []);
   const handleDepartmentChange = useCallback((value: string) => {
     setDepartmentFilter(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }, []);
   const handleStatusChange = useCallback((status: TeamAttendanceEntry["status"]) => {
     setStatusFilter((prev) => (prev === status ? "ALL" : status));
-    setPage(1);
+    setCursorHistory([undefined]);
   }, []);
+
+  const filtersActive =
+    search.trim() !== "" || statusFilter !== "ALL" || departmentFilter !== "ALL";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("ALL");
+    setDepartmentFilter("ALL");
+    setCursorHistory([undefined]);
+  }, []);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) {
+      setCursorHistory((history) => [...history, nextCursor]);
+    }
+  }, [data?.pagination.nextCursor]);
 
   const departments = useMemo(
     () => [...(departmentsData ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
@@ -161,18 +188,6 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   const entries = data?.data ?? [];
   const counts = data?.counts;
   const pagination = data?.pagination;
-  const totalPages = pagination?.totalPages ?? 1;
-
-  useEffect(() => {
-    if (isLoading || page <= totalPages) return;
-    let correctionActive = true;
-    queueMicrotask(() => {
-      if (correctionActive) setPage(totalPages);
-    });
-    return () => {
-      correctionActive = false;
-    };
-  }, [isLoading, page, totalPages]);
 
   const listMaxClass = expanded ? "max-h-[min(70dvh,36rem)]" : "max-h-72";
 
@@ -285,12 +300,10 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
         ) : entries.length === 0 ? (
           <EmptyState
             illustrationPreset="team"
-            title="No teammates match"
-            description={
-              search || statusFilter !== "ALL" || departmentFilter !== "ALL"
-                ? "Try clearing search or filters."
-                : "No team attendance data for today yet."
-            }
+            title="No team attendance yet"
+            description={filtersActive ? undefined : "No team attendance data for today yet."}
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
             compact
           />
         ) : (
@@ -302,13 +315,13 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                 ))}
               </div>
             </ScrollArea>
-            {pagination ? (
-              <DataTablePagination
-                page={pagination.page}
-                totalPages={totalPages}
-                total={pagination.total}
-                limit={pagination.limit}
-                onPageChange={setPage}
+            {pagination && (page > 1 || pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={pagination.hasMore}
+                disabled={isLoading}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
               />
             ) : null}
           </>

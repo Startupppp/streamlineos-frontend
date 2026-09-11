@@ -4,7 +4,9 @@ import { act, renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { WorkerEngagement } from "@/types/directory/workers";
+import { useCan } from "@/hooks/api/access";
 import { useCancelEngagement, useUpdateEngagement } from "./workers";
+import { workerEngagementContract } from "./workers-schema";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -13,8 +15,14 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useCan: jest.fn(() => true),
+}));
+
 const mockedPatch = apiClient.patch as jest.Mock;
 const mockedPost = apiClient.post as jest.Mock;
+const mockedUseCan = useCan as jest.Mock;
 
 function engagement(
   overrides: Partial<WorkerEngagement> = {},
@@ -42,7 +50,12 @@ function engagement(
     noticePeriodDays: null,
     terminationReason: null,
     terminationNotes: null,
-    createdBy: null,
+    stateReason: null,
+    lastStateEventId: null,
+    createdByMembershipId: null,
+    updatedByMembershipId: null,
+    archivedAt: null,
+    archivedByMembershipId: null,
     rowVersion: 1,
     createdAt: "2026-08-08T00:00:00.000Z",
     updatedAt: "2026-08-08T00:00:00.000Z",
@@ -53,6 +66,7 @@ function engagement(
 describe("directory engagement mutations", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedUseCan.mockReturnValue(true);
   });
 
   it("cancels a plan without deleting it and updates the engagement cache", async () => {
@@ -82,6 +96,9 @@ describe("directory engagement mutations", () => {
 
     expect(mockedPost).toHaveBeenCalledWith(
       "/directory/engagements/engagement-1/cancel",
+      undefined,
+      undefined,
+      workerEngagementContract,
     );
     expect(
       client.getQueryData<WorkerEngagement[]>(
@@ -132,6 +149,8 @@ describe("directory engagement mutations", () => {
         endsOn: "2026-09-30",
         designation: "Senior Engineer",
       },
+      undefined,
+      workerEngagementContract,
     );
     expect(
       client.getQueryData<WorkerEngagement[]>(
@@ -147,5 +166,32 @@ describe("directory engagement mutations", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.directory.worker("worker-1"),
     });
+  });
+
+  it("refuses to issue an engagement command without the manage permission", async () => {
+    mockedUseCan.mockReturnValue(false);
+    const client = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    });
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => useCancelEngagement(), {
+      wrapper: Wrapper,
+    });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({
+          workerId: "worker-1",
+          workerEngagementId: "engagement-1",
+        }),
+      ).rejects.toThrow("Missing permission: directory:workers:manage");
+    });
+
+    expect(mockedPost).not.toHaveBeenCalled();
   });
 });

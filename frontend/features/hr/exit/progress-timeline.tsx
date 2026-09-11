@@ -2,6 +2,8 @@
 
 import { useResignationProgress } from "@/hooks/api/hr";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +16,7 @@ const PROGRESS_STEPS = [
 ];
 
 export function ProgressTimeline({ id }: { id: number }) {
-  const { data, isLoading } = useResignationProgress(id, true);
+  const { data, isLoading, isError, error, refetch } = useResignationProgress(id, true);
 
   if (isLoading) {
     return (
@@ -26,6 +28,18 @@ export function ProgressTimeline({ id }: { id: number }) {
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        className="m-3"
+        title="Couldn't load the exit progress"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

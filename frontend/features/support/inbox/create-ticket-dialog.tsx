@@ -34,6 +34,11 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+
+const storageUploadC = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
+);
 import type { SupportTicketPriority } from "@/types/support";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
@@ -108,10 +113,10 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
           const fd = new FormData();
           fd.append("file", file);
           fd.append("folder", "support-attachments");
-          const json = await apiClient.upload<{ url: string }>("/storage/upload", fd);
+          const json = await apiClient.upload("/storage/upload", fd, storageUploadC);
           uploaded.push({
             fileName: file.name,
-            fileUrl: json.url,
+            fileUrl: json.key,
             fileSize: file.size,
             mimeType: file.type,
           });

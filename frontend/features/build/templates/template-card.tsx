@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getColorSafe } from "@/lib/theme-constants";
 import { cn } from "@/lib/utils";
 import type { ProjectTemplate } from "@/hooks/api/build";
-import { PM_PANEL } from "@/features/build/shared/pm-chrome";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -118,9 +118,9 @@ export const TemplateCard = memo(function TemplateCard({
   const dotColor = getColorSafe(categoryDotColors, category);
   const avatarTint = getColorSafe(categoryAvatarTints, category);
   const initials = getTemplateInitials(template.name);
-  const taskCount = template.tickets.length;
+  const taskCount = (template.tickets ?? []).length;
   const hasTasks = taskCount > 0;
-  const { preview, overflow } = getPreviewTickets(template.tickets);
+  const { preview, overflow } = getPreviewTickets(template.tickets ?? []);
 
   return (
     <motion.div

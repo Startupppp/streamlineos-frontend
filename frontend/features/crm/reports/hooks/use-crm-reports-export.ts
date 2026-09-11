@@ -88,20 +88,14 @@ export function useCrmReportsExport({
         ws3.columns = [
           { header: "Rank", key: "rank", width: 8 },
           { header: "Name", key: "name", width: 26 },
-          { header: "Leads Assigned", key: "assigned", width: 18 },
-          { header: "Leads Converted", key: "converted", width: 18 },
-          { header: "Revenue", key: "revenue", width: 20 },
-          { header: "Score", key: "score", width: 10 },
+          { header: "Leads", key: "count", width: 14 },
         ];
         ws3.getRow(1).font = { bold: true };
         ws3.addRows(
           leaderboard.map((rep, i) => ({
             rank: i + 1,
-            name: rep.name,
-            assigned: rep.leadsAssigned,
-            converted: rep.leadsConverted,
-            revenue: `₹${rep.totalRevenue.toLocaleString("en-IN")}`,
-            score: rep.score,
+            name: rep.name ?? "Unknown",
+            count: rep.count,
           })),
         );
       }

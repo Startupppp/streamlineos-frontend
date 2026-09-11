@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AiReportStats } from "./ai-report-stats";
 import { useSupportAiReport } from "@/hooks/api/support/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -29,6 +30,8 @@ export function AiReportClient() {
 
   const handleClear = useCallback(() => setFilters({}), []);
 
+  const filtersActive = filters.dateFrom !== undefined || filters.dateTo !== undefined;
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -40,15 +43,17 @@ export function AiReportClient() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
-          <label className="text-xs text-muted-foreground shrink-0">From</label>
+          <label htmlFor="ai-report-date-from" className="text-xs text-muted-foreground shrink-0">From</label>
           <input
+            id="ai-report-date-from"
             type="date"
             value={filters.dateFrom ?? ""}
             onChange={handleDateFrom}
             className="h-9 rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
-          <label className="text-xs text-muted-foreground shrink-0">To</label>
+          <label htmlFor="ai-report-date-to" className="text-xs text-muted-foreground shrink-0">To</label>
           <input
+            id="ai-report-date-to"
             type="date"
             value={filters.dateTo ?? ""}
             onChange={handleDateTo}
@@ -70,12 +75,13 @@ export function AiReportClient() {
             compact
           />
         ) : !data ? (
-          <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm font-medium text-foreground/70">No AI data yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              AI metrics appear once agents start using AI suggestions on tickets.
-            </p>
-          </div>
+          <EmptyState
+            className="flex-1"
+            title="No AI data yet"
+            description="AI metrics appear once agents start using AI suggestions on tickets."
+            filtersActive={filtersActive}
+            onClearFilters={handleClear}
+          />
         ) : (
           <AiReportStats data={data} />
         )}

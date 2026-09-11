@@ -14,11 +14,12 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { usePreviewTemplate, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { formatMoney } from "./payroll-format";
-import type { TemplateRow, PreviewLine } from "@/types/payroll/setup";
+import type { PreviewLine } from "@/types/payroll/setup";
+import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 import { cn } from "@/lib/utils";
 
 type TemplatePreviewSheetProps = {
-  template: TemplateRow | null;
+  template: PayrollTemplate | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   toggleOverrides?: Record<string, boolean>;

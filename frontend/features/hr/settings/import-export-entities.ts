@@ -1,5 +1,5 @@
 import { Package, FileSpreadsheet } from "lucide-react";
-import type { ImportEntity } from "@/features/shared/import-export/entity-card";
+import type { ImportEntity } from "@/components/import-export/entity-card";
 
 export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
   {

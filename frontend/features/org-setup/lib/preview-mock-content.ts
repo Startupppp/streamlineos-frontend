@@ -58,7 +58,7 @@ export type MockWidget = {
 export type MockGoalChip = { id: string; label: string };
 
 function isOrgModuleKey(value: string): value is OrgModuleKey {
-  return (ORG_MODULE_KEYS as readonly string[]).includes(value);
+  return ORG_MODULE_KEYS.some((candidate) => candidate === value);
 }
 
 export function resolvePreviewModules(

@@ -1,4 +1,20 @@
+import type { LeadQualification } from "@/hooks/api/leads-schema";
 
+import type { z } from "zod";
+import type {
+  leadPartyContract,
+  leadDetailContract,
+  leadListContract,
+  leadBoardContract,
+  leadStatsContract,
+  leadActivityContract,
+  leadTimelineContract,
+  leadsSlaAlertsContract,
+  leadsAnalyticsContract,
+  leadsSalesLeaderboardContract,
+  leadsSalesTeamCapacityContract,
+  leadsDistributeContract,
+} from "@/hooks/api/leads-schema";
 
 export type PipelineStatus =
   | "NEW"
@@ -19,15 +35,6 @@ export type LeadSource =
 
 export type LeadPriority = "HOT" | "WARM" | "COLD";
 
-export type ActivityType =
-  | "call"
-  | "email"
-  | "whatsapp"
-  | "meeting"
-  | "site_visit"
-  | "note"
-  | "task";
-
 export interface LeadUser {
   id: string;
   name: string | null;
@@ -40,171 +47,55 @@ export interface LeadCampaign {
   name: string;
 }
 
-export interface Lead {
-  id: number;
-  orgId: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  whatsappNumber: string | null;
-  source: LeadSource | null;
-  campaignId: number | null;
-  status: PipelineStatus;
-  priority: LeadPriority | null;
-  investmentInterest: string | null;
-  potentialValue: string | null;
-  notes: string | null;
-  assignedToId: string | null;
-  assignedById: string | null;
-  verifiedById: string | null;
-  assignedAt: string | null;
-  convertedAt: string | null;
-  lostReason: string | null;
-  company: string | null;
-  designation: string | null;
-  city: string | null;
-  referredBy: string | null;
-  tags: string[] | null;
-  score: number | null;
-  slaDeadline: string | null;
-  website: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+/**
+ * The wire shape for a lead, as every `/leads*` mutation (create, update,
+ * status change, assign, self-assign) actually returns it — bare party
+ * fields, no relations. `assignedTo`/`assignedBy`/`campaign` are declared
+ * optional here because the LIST and BOARD endpoints embed them on top of
+ * this same shape; a mutation response simply omits them.
+ */
+export type Lead = z.infer<typeof leadPartyContract> & {
   assignedTo?: LeadUser | null;
   assignedBy?: { id: string; name: string | null } | null;
   campaign?: LeadCampaign | null;
-  qualificationNotes?: string | null;
-  customFields?: Record<string, unknown>;
-}
+};
 
-export interface LeadWithActivities extends Lead {
-  activities: LeadActivity[];
-}
+export type LeadWithActivities = z.infer<typeof leadDetailContract>;
 
-export interface LeadActivity {
-  id: number;
-  orgId: string;
-  leadId: number;
-  type: ActivityType;
-  date: string;
-  duration: number | null;
-  subject: string | null;
-  location: string | null;
-  locationLink: string | null;
-  messageSummary: string | null;
-  notes: string | null;
-  outcome: string | null;
-  userId: string;
-  createdAt: string | null;
-  user?: LeadUser | null;
-}
+export type LeadActivity = z.infer<typeof leadActivityContract>;
 
-export interface TimelineItem {
-  id: number;
-  type: "note" | "task" | "email" | "activity";
-  timestamp: string | null;
-  data: Record<string, unknown>;
-}
+export type TimelineItem = z.infer<typeof leadTimelineContract>[number];
 
-export interface LeadStats {
-  total: number;
-  byStatus: {
-    NEW: number;
-    CONTACTED: number;
-    INTERESTED: number;
-    QUALIFIED: number;
-    CONVERTED: number;
-    LOST: number;
-  };
-  conversionRate: number;
-  totalPotentialValue: number;
-  unassigned: number;
-  thisMonth: number;
-}
+export type LeadStats = z.infer<typeof leadStatsContract>;
 
-export interface LeadBoardColumn {
-  leads: Lead[];
-  total: number;
-}
+export type LeadBoardColumn = z.infer<typeof leadBoardContract>[string];
 
-export interface LeadBoard {
-  NEW: LeadBoardColumn;
-  CONTACTED: LeadBoardColumn;
-  INTERESTED: LeadBoardColumn;
-  QUALIFIED: LeadBoardColumn;
-  CONVERTED: LeadBoardColumn;
-  LOST: LeadBoardColumn;
-}
+/**
+ * The board is keyed by the ORG's pipeline stages, not by a fixed six.
+ * `LeadsBoardService.getBoard` derives the keys from `crm_pipeline_stages`, else
+ * `crm_options`, else the statuses present in the data — so a tenant can send
+ * five keys, seven, or none. Declaring the six as required properties is what
+ * let `board[status].leads` compile and then throw at runtime.
+ */
+export type LeadBoard = z.infer<typeof leadBoardContract>;
 
-export interface SlaAlert {
-  leadId: number;
-  leadName: string;
-  status: string;
-  assignedTo: string | null;
-  hoursSinceUpdate: number;
-  priority: string | null;
-}
+export type SlaAlert = z.infer<typeof leadsSlaAlertsContract>["leads"][number];
 
-export interface SlaAlertResponse {
-  total: number;
-  leads: SlaAlert[];
-}
+export type SlaAlertResponse = z.infer<typeof leadsSlaAlertsContract>;
 
-export interface ConversionBySource {
-  source: string;
-  total: number;
-  converted: number;
-  rate: number;
-}
+export type ConversionBySource = z.infer<typeof leadsAnalyticsContract>["conversionBySource"][number];
 
-export interface MonthlyRevenue {
-  month: string;
-  revenue: number;
-}
+export type MonthlyRevenue = z.infer<typeof leadsAnalyticsContract>["monthlyRevenue"][number];
 
-export interface AssignmentDistribution {
-  userId: string;
-  name: string;
-  count: number;
-}
+export type AssignmentDistribution = z.infer<typeof leadsAnalyticsContract>["assignmentDistribution"][number];
 
-export interface LeadAnalyticsSummary {
-  totalLeads: number;
-  totalLeadsPrevPeriod: number;
-  conversionRate: number;
-  conversionRatePrevPeriod: number;
-  totalRevenue: number;
-  conversionBySource: ConversionBySource[];
-  monthlyRevenue: MonthlyRevenue[];
-  assignmentDistribution: AssignmentDistribution[];
-}
+export type LeadAnalyticsSummary = z.infer<typeof leadsAnalyticsContract>;
 
-export interface SalesLeaderboardEntry {
-  userId: string;
-  name: string;
-  image: string | null;
-  totalCalls: number;
-  totalMeetings: number;
-  totalEmails: number;
-  leadsAssigned: number;
-  leadsConverted: number;
-  totalRevenue: number;
-  score: number;
-}
+export type SalesLeaderboardEntry = z.infer<typeof leadsSalesLeaderboardContract>[number];
 
-export interface SalesTeamCapacityEntry {
-  id: string;
-  name: string | null;
-  image: string | null;
-  activeLeads: number;
-}
+export type SalesTeamCapacityEntry = z.infer<typeof leadsSalesTeamCapacityContract>[number];
 
-export interface PaginatedLeads {
-  leads: Lead[];
-  totalCount: number;
-  page: number;
-  totalPages: number;
-}
+export type PaginatedLeads = z.infer<typeof leadListContract>;
 
 export interface LeadFilters {
   status?: PipelineStatus;
@@ -214,7 +105,7 @@ export interface LeadFilters {
   search?: string;
   sortBy?: "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt";
   sortOrder?: "asc" | "desc";
-  page?: number;
+  cursor?: string;
   limit?: number;
   dateFrom?: string;
   dateTo?: string;
@@ -256,13 +147,13 @@ export interface UpdateLeadInput {
   tags?: string[];
   lostReason?: string;
   priority?: LeadPriority;
-  qualificationNotes?: string;
+  qualification?: LeadQualification;
 }
 
 export interface UpdateLeadStatusInput {
   leadId: number;
   status: PipelineStatus;
-  expectedStatus?: PipelineStatus;
+  expectedStatus?: string;
   lostReason?: string;
   estimatedInvestment?: string;
   conversionNotes?: string;
@@ -304,13 +195,4 @@ export interface DistributeLeadsInput {
   skipAbsent?: boolean;
 }
 
-export interface DistributeResult {
-  distributed: number;
-  salesPeople: number;
-  totalSalesPeople: number;
-  absentCount: number;
-  absentNames: string[];
-  summary: { userId: string; name: string; count: number }[];
-}
-
-
+export type DistributeResult = z.infer<typeof leadsDistributeContract>;

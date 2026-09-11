@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -102,13 +102,15 @@ export interface RolesListPanelProps {
   rolesQueryError: unknown;
   roles: RoleListRow[];
   search: string;
+  page: number;
   pagination: PaginatedRolesResponse["pagination"];
   selectedRoleId: number | null;
   onRetry: () => void;
   onSelect: (roleId: number) => void;
   onDelete: (role: RoleListRow) => void;
   onRename: (role: Role) => void;
-  onPageChange: (page: number) => void;
+  onPrevious: () => void;
+  onNext: () => void;
   onPageSizeChange: (limit: number) => void;
   onClearSearch?: () => void;
 }
@@ -119,13 +121,15 @@ export function RolesListPanel({
   rolesQueryError,
   roles,
   search,
+  page,
   pagination,
   selectedRoleId,
   onRetry,
   onSelect,
   onDelete,
   onRename,
-  onPageChange,
+  onPrevious,
+  onNext,
   onPageSizeChange,
   onClearSearch,
 }: RolesListPanelProps) {
@@ -216,13 +220,13 @@ export function RolesListPanel({
               "[&_[data-slot=select-trigger]]:!h-7 [&_[data-slot=select-trigger]]:!w-[4.75rem] [&_[data-slot=select-trigger]]:!px-2",
             )}
           >
-            <DataTablePagination
-              page={pagination.page}
-              totalPages={pagination.totalPages}
-              total={pagination.total}
-              limit={pagination.limit}
-              onPageChange={onPageChange}
-              onLimitChange={onPageSizeChange}
+            <CursorPageControls
+              page={page}
+              hasNext={pagination.hasMore}
+              onPrevious={onPrevious}
+              onNext={onNext}
+              pageSize={pagination.limit}
+              onPageSizeChange={onPageSizeChange}
               pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
             />
           </div>

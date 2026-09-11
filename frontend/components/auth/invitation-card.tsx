@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 
 export function InvitationCard({
   children,
@@ -24,7 +24,7 @@ export function InvitationCard({
 }) {
   return (
     <Card
-      className={`overflow-hidden rounded-2xl border border-border bg-white shadow-[0_24px_64px_-32px_rgba(15,23,42,0.28)] ring-1 ring-ring/[0.02] ${className ?? ""}`}
+      className={`overflow-hidden rounded-2xl border border-border bg-white shadow-card ring-1 ring-ring/[0.02] ${className ?? ""}`}
     >
       {children}
     </Card>
@@ -45,7 +45,7 @@ export function InvitationHero({
     <div className="relative border-b border-border bg-muted px-5 py-5 sm:px-6">
       <span className="absolute inset-x-0 top-0 h-1 bg-status-info-fill" />
       <div className="flex items-start gap-3.5 pt-1">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-status-info-fill text-white shadow-[0_8px_20px_-10px_rgba(37,99,235,0.8)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-status-info-fill text-white shadow-accent-strong">
           <HeroIcon className="h-5 w-5" strokeWidth={2} />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
@@ -60,7 +60,7 @@ export function InvitationHero({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-[28px]">
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-3xl">
             {title}
           </h1>
           <p className="mt-1 max-w-md text-sm leading-5 text-muted-foreground">

@@ -10,6 +10,9 @@ import {
   useStartSurveySession,
   useSaveSurveyAnswers,
   useSubmitSurveySession,
+  type PublicSurveySection,
+  type PublicSurveyLogicRule,
+  type StartSessionResponse,
 } from "@/hooks/api/surveys/public-runtime";
 import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
 import { PublicSurveyShell } from "@/features/surveys/respondent/public-survey-shell";
@@ -24,6 +27,18 @@ interface SurveyMessages {
 }
 
 type Phase = "welcome" | "running" | "done";
+
+type SchemaShape = { sections: PublicSurveySection[]; logicRules: PublicSurveyLogicRule[] };
+type SessionWithScore = StartSessionResponse & { score: number | null; passed: boolean | null };
+
+function isSchemaWithSections(schema: Record<string, unknown> | null | undefined): schema is SchemaShape {
+  if (!schema) return false;
+  return Array.isArray(schema["sections"]) && Array.isArray(schema["logicRules"]);
+}
+
+function hasScore(session: StartSessionResponse): session is SessionWithScore {
+  return "score" in session;
+}
 
 function SurveyLoadingState() {
   return (
@@ -56,8 +71,8 @@ export default function PublicSurveyPage() {
 
   const data = surveyQuery.data;
   const messages = (data?.survey.settings.messages as SurveyMessages | undefined) ?? {};
-  const questionCount =
-    data?.schema?.sections.reduce((sum, s) => sum + s.questions.length, 0) ?? 0;
+  const parsedSchema = isSchemaWithSections(data?.schema) ? data.schema : null;
+  const questionCount = parsedSchema?.sections.reduce((sum, s) => sum + s.questions.length, 0) ?? 0;
 
   async function handleStart() {
     try {
@@ -76,7 +91,7 @@ export default function PublicSurveyPage() {
   async function handleFinish(finishOutcome: "completed" | "disqualified") {
     try {
       const submitted = await submitSession.mutateAsync(undefined);
-      setResult({ score: submitted.score, passed: submitted.passed });
+      setResult(hasScore(submitted) ? { score: submitted.score, passed: submitted.passed } : null);
       setOutcome(finishOutcome);
       setPhase("done");
     } catch (error) {
@@ -116,13 +131,13 @@ export default function PublicSurveyPage() {
     );
   }
 
-  if (phase === "running" && data.schema) {
+  if (phase === "running" && parsedSchema) {
     return (
       <PublicSurveyShell mode="form">
         <RuntimeFlow
           surveyTitle={data.survey.title}
-          sections={data.schema.sections}
-          logicRules={data.schema.logicRules}
+          sections={parsedSchema.sections}
+          logicRules={parsedSchema.logicRules}
           onSaveAnswer={handleSaveAnswer}
           onFinish={handleFinish}
         />

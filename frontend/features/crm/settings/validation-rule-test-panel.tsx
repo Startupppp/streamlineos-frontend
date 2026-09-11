@@ -58,7 +58,7 @@ export function ValidationRuleTestPanel({ entityType }: { entityType: CrmValidat
     );
   }, [testRules, entityType, record]);
 
-  const failures = Object.entries(testRules.data?.errors ?? {});
+  const failures = testRules.data?.errors ?? [];
   const passTone = statusToneClasses("success");
   const failTone = statusToneClasses("danger");
 
@@ -134,7 +134,7 @@ export function ValidationRuleTestPanel({ entityType }: { entityType: CrmValidat
                 Every rule passes
               </span>
             ) : (
-              failures.map(([field, message]) => (
+              failures.map(({ field, message }) => (
                 <div key={field} className="flex items-start gap-gap-inline">
                   <span
                     className={`shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-micro ${failTone.surface} ${failTone.inkStrong} ${failTone.rule}`}

@@ -5,6 +5,9 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useEffectiveRules } from "@/hooks/api/hr/settings-hub";
 import type { EffectiveRuleItem } from "@/hooks/api/hr/settings-hub";
 import { POLICY_TYPE_LABELS } from "@/types/hr/policies";
@@ -77,7 +80,11 @@ export function EffectiveRulesPreview() {
   const params =
     employeeId.trim() && date ? { employeeId: employeeId.trim(), date } : null;
 
-  const { data, isLoading } = useEffectiveRules(params);
+  const { data, isLoading, isError, error, refetch } = useEffectiveRules(params);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -107,6 +114,12 @@ export function EffectiveRulesPreview() {
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load effective rules"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : data && data.length > 0 ? (
         <div className="flex flex-col gap-3">
           {data.map((item) => (
@@ -114,13 +127,18 @@ export function EffectiveRulesPreview() {
           ))}
         </div>
       ) : params ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm font-medium text-foreground mb-1">No rules matched</p>
-          <p className="text-xs text-muted-foreground">
-            No rules match this employee on the selected date.
-          </p>
-        </div>
-      ) : null}
+        <EmptyState
+          illustrationPreset="settings"
+          title="No rules matched"
+          description="No policy rules match this employee on the selected date."
+        />
+      ) : (
+        <EmptyState
+          illustrationPreset="person"
+          title="No employee selected"
+          description="Pick an employee and a date to preview the policy rules that apply to them."
+        />
+      )}
     </div>
   );
 }

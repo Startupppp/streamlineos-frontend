@@ -120,8 +120,8 @@ export function buildLoanColumns({
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.user.name ?? "—"} className="text-dense font-medium" />
-          <TruncatedText text={row.user.email} className="text-micro text-muted-foreground" />
+          <TruncatedText text={row.user?.name ?? "—"} className="text-dense font-medium" />
+          <TruncatedText text={row.user?.email ?? ""} className="text-micro text-muted-foreground" />
         </div>
       ),
     },

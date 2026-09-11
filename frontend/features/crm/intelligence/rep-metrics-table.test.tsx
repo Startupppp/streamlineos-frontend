@@ -14,7 +14,7 @@ import { RepMetricsTable } from "./rep-metrics-table";
  * control at all. That the arrangement path leaves a description valid is
  * `lib/renderer/registry.test.ts`'s job, for every layout at once.
  */
-jest.mock("@/features/renderer/use-tenant-layout", () => ({
+jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 
