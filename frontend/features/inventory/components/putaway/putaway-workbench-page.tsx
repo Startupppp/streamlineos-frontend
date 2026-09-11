@@ -6,8 +6,7 @@ import { useSession } from "next-auth/react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -25,9 +24,7 @@ import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import {
   usePutawayTasks,
@@ -37,12 +34,10 @@ import {
   type PutawayTaskStatus,
   type PutawayTaskSummary,
 } from "@/hooks/api/inventory/putaway";
-import {
-  PUTAWAY_TASK_STATUS_BADGE,
-  PUTAWAY_TASK_STATUS_LABEL,
-} from "@/features/inventory/lib/inventory-status";
+import { PUTAWAY_TASK_STATUS_LABEL } from "@/features/inventory/lib/inventory-status";
 import { RaisePutawayDialog } from "./raise-putaway-dialog";
 import { PutawayTaskSheet } from "./putaway-task-sheet";
+import { buildPutawayTaskColumns, renderPutawayTaskMobileCard } from "./putaway-task-columns";
 
 const ASSIGNMENTS: ReadonlyArray<{ value: PutawayAssignment; label: string }> = [
   { value: "UNCLAIMED", label: "Available" },
@@ -63,10 +58,6 @@ function isAssignment(value: string | null): value is PutawayAssignment {
 
 function isStatus(value: string | null): value is PutawayTaskStatus {
   return STATUSES.includes(value as PutawayTaskStatus);
-}
-
-function progressLabel(task: PutawayTaskSummary): string {
-  return `${task.linesClosed}/${task.lineCount}`;
 }
 
 /**
@@ -146,82 +137,7 @@ export function PutawayWorkbenchPage() {
     if (!open) setOpenTaskId(null);
   }
 
-  const columns: DataTableColumn<PutawayTaskSummary>[] = [
-    {
-      key: "taskNumber",
-      header: "Task",
-      cell: (task) => (
-        <span className="font-mono text-dense tabular-nums">{task.taskNumber}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (task) => (
-        <Badge
-          variant="outline"
-          className={cn("h-4 px-1.5 py-0 text-micro", PUTAWAY_TASK_STATUS_BADGE[task.status])}
-        >
-          {PUTAWAY_TASK_STATUS_LABEL[task.status]}
-        </Badge>
-      ),
-    },
-    {
-      key: "grnNumber",
-      header: "Receipt",
-      cell: (task) => (
-        <span className="font-mono text-dense tabular-nums">{task.grnNumber ?? "—"}</span>
-      ),
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "fromLocationCode",
-      header: "From",
-      cell: (task) => (
-        <span className="font-mono text-dense">{task.fromLocationCode ?? "—"}</span>
-      ),
-    },
-    {
-      key: "progress",
-      header: "Put away",
-      cell: (task) => (
-        <span className="font-mono tabular-nums">{progressLabel(task)}</span>
-      ),
-      className: "text-right",
-      headerClassName: "text-right",
-    },
-    {
-      key: "quarantineLineCount",
-      header: "Quarantine",
-      cell: (task) =>
-        task.quarantineLineCount > 0 ? (
-          <span className="font-mono tabular-nums">{task.quarantineLineCount}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
-      className: "text-right hidden lg:table-cell",
-      headerClassName: "text-right hidden lg:table-cell",
-    },
-    {
-      key: "assignedToName",
-      header: "Operator",
-      cell: (task) => (
-        <span className="text-sm text-muted-foreground">
-          {task.assignedToName ?? (task.assignedTo ? "Assigned" : "Unclaimed")}
-        </span>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Raised",
-      cell: (task) => (
-        <span className="font-mono tabular-nums">{formatShortDate(task.createdAt)}</span>
-      ),
-      className: "hidden lg:table-cell",
-      headerClassName: "hidden lg:table-cell",
-    },
-  ];
+  const columns = buildPutawayTaskColumns();
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -302,30 +218,7 @@ export function PutawayWorkbenchPage() {
           onRowClick={handleRowClick}
           className="flex-1 min-h-0"
           minWidth="900px"
-          mobileCard={(task) => (
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate font-mono text-sm tabular-nums">
-                  {task.taskNumber}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={cn("h-5 px-2 py-0.5 text-micro", PUTAWAY_TASK_STATUS_BADGE[task.status])}
-                >
-                  {PUTAWAY_TASK_STATUS_LABEL[task.status]}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span className="truncate">
-                  {task.fromLocationCode ?? "No location"} ·{" "}
-                  {task.assignedToName ?? (task.assignedTo ? "Assigned" : "Unclaimed")}
-                </span>
-                <span className="shrink-0 font-mono tabular-nums">
-                  {progressLabel(task)} lines
-                </span>
-              </div>
-            </div>
-          )}
+          mobileCard={renderPutawayTaskMobileCard}
           emptyState={
             <InventoryEmptyState
               illustration={<EmptyWarehouseIllustration />}
