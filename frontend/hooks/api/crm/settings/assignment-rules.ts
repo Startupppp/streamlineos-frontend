@@ -76,7 +76,6 @@ export interface AssignmentRule {
   priority: number;
   isActive: boolean;
   createdAt: string | null;
-  updatedAt: string | null;
 }
 
 export interface CreateAssignmentRuleInput {

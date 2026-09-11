@@ -1,23 +1,31 @@
 import { z } from "zod";
 
+/**
+ * One `lead_assignment_rules` row as the server returns it. It has no
+ * `updatedAt` column, and the weighted/territory arms live in `config` and
+ * `assignmentTypeText`, not in columns of their own; the response is validated
+ * here, so a field the table does not have would fail every read.
+ */
 const assignmentRuleSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
-  assignmentType: z.enum(["assign_user", "round_robin", "weighted_round_robin", "least_loaded", "territory"] as const),
+  assignmentType: z.enum(["assign_user", "round_robin"] as const),
+  assignmentTypeText: z
+    .enum(["assign_user", "round_robin", "weighted_round_robin", "least_loaded", "territory"] as const)
+    .nullable(),
   assignToUserId: z.string().nullable(),
-  assignToMembershipId: z.number().int().nullable(),
   roundRobinUserIds: z.array(z.string()).nullable(),
-  weightedMembers: z.array(z.object({ userId: z.string(), weight: z.number() })).nullable(),
-  windowHours: z.number().int().nullable(),
-  territoryId: z.number().int().nullable(),
+  config: z
+    .object({
+      weights: z.record(z.string(), z.number()).optional(),
+      fallbackUserId: z.string().optional(),
+    })
+    .nullable(),
   conditions: z.array(z.object({ field: z.string(), operator: z.string(), value: z.string() })),
   priority: z.number().int(),
   isActive: z.boolean(),
-  config: z.record(z.string(), z.unknown()).nullable(),
-  assignmentTypeText: z.string().nullable(),
   createdAt: z.string().nullable(),
-  updatedAt: z.string().nullable(),
 });
 
 export const assignmentRulesListContract = z.array(assignmentRuleSchema);
