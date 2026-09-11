@@ -174,7 +174,7 @@ const OFF_CONTRACT_READS = new Map([
 const SCAN_DIRS = ["hooks/api", "features"];
 const TEST_FILE_RE = /\.test\.|\.spec\.|__tests__/;
 
-const MUTATION_CALL_RE = /\buse(?:Authorized)?Mutation\s*[<(]/;
+const MUTATION_CALL_RE = /\buse(?:Authorized(?:Idempotent)?)?Mutation\s*[<(]/;
 const QUERY_CALL_RE = /\buseGatedQuery\s*[<(]/;
 
 const METHOD_OF = {
@@ -323,9 +323,9 @@ function normalizePath(arg, consts) {
   return s.replace(/\/+$/, "") || "/";
 }
 
-/** The permission key declared by useAuthorizedMutation, past any type arguments. */
+/** The permission key declared by either authorized wrapper, past any type arguments. */
 function readAuthorizedKey(body) {
-  const m = /\buseAuthorizedMutation/.exec(body);
+  const m = /\buseAuthorized(?:Idempotent)?Mutation/.exec(body);
   if (!m) return null;
   let i = m.index + m[0].length;
   while (/\s/.test(body[i] ?? "")) i++;
@@ -600,15 +600,31 @@ function runSelfTest() {
     {
       label: "(a) permissioned endpoint carrying the contract key",
       src: `export function useCreateTaxCode() {
-        return useAuthorizedMutation("accounting:taxes:manage", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useAuthorizedMutation("crm:issues:manage", { mutationFn: (d) => apiClient.post("/crm/issues", d) });
       }`,
       name: "useCreateTaxCode",
       expect: "PERMISSIONED",
     },
     {
+      label: "(a2) the idempotent authorized wrapper declares its key the same way",
+      src: `export function useCreateTaxCode() {
+        return useAuthorizedIdempotentMutation<TaxCode, Error, Input>("crm:issues:manage", { mutationFn: (d, key) => apiClient.post("/crm/issues", d, { headers: { "Idempotency-Key": key } }) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(a3) the idempotent wrapper on the wrong key is still WRONG-KEY",
+      src: `export function useCreateTaxCode() {
+        return useAuthorizedIdempotentMutation("crm:issues:view", { mutationFn: (d, key) => apiClient.post("/crm/issues", d, { headers: { "Idempotency-Key": key } }) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "WRONG-KEY",
+    },
+    {
       label: "(b) permissioned endpoint left on a raw useMutation",
       src: `export function useCreateTaxCode() {
-        return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useMutation({ mutationFn: (d) => apiClient.post("/crm/issues", d) });
       }`,
       name: "useCreateTaxCode",
       expect: "UNCLASSIFIED",
@@ -616,7 +632,7 @@ function runSelfTest() {
     {
       label: "(c) a declared key that no longer matches the contract",
       src: `export function useCreateTaxCode() {
-        return useAuthorizedMutation("accounting:taxes:view", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useAuthorizedMutation("crm:issues:view", { mutationFn: (d) => apiClient.post("/crm/issues", d) });
       }`,
       name: "useCreateTaxCode",
       expect: "WRONG-KEY",
@@ -665,7 +681,7 @@ function runSelfTest() {
     {
       label: "(i2) the generic form useMutation<T, E, V>({...}) is seen — 382 call sites the old gate could not",
       src: `export function useCreateTaxCode() {
-        return useMutation<TaxCode, Error, CreateTaxCodeInput>({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useMutation<TaxCode, Error, CreateTaxCodeInput>({ mutationFn: (d) => apiClient.post("/crm/issues", d) });
       }`,
       name: "useCreateTaxCode",
       expect: "UNCLASSIFIED",
@@ -673,7 +689,7 @@ function runSelfTest() {
     {
       label: "(i3) the generic form on useAuthorizedMutation keeps its key",
       src: `export function useCreateTaxCode() {
-        return useAuthorizedMutation<TaxCode, Error, CreateTaxCodeInput>("accounting:taxes:manage", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useAuthorizedMutation<TaxCode, Error, CreateTaxCodeInput>("crm:issues:manage", { mutationFn: (d) => apiClient.post("/crm/issues", d) });
       }`,
       name: "useCreateTaxCode",
       expect: "PERMISSIONED",
@@ -705,7 +721,7 @@ export const useOther = () => {
     {
       label: "(i) an `export const` hook is seen, not only `export function`",
       src: `export const useCreateTaxCode = () => {
-        return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+        return useMutation({ mutationFn: (d) => apiClient.post("/crm/issues", d) });
       };`,
       name: "useCreateTaxCode",
       expect: "UNCLASSIFIED",
@@ -728,7 +744,7 @@ export const useOther = () => {
   }
 
   const missing = classify(
-    `export function useCreateTaxCode() { return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) }); }`,
+    `export function useCreateTaxCode() { return useMutation({ mutationFn: (d) => apiClient.post("/crm/issues", d) }); }`,
     "useNonExistent",
   );
   assert(missing === null, "(j) an unknown hook name must return null so the scan is not vacuous");
