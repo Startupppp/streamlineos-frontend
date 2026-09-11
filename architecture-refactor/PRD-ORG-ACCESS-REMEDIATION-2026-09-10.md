@@ -1,6 +1,11 @@
 # PRD — Org access remediation: org creation · member admission · module availability · session claims · hierarchy · schemas
 
-Status: **COMPLETE — all six candidates shipped and verified** · Baseline commit `6c90c9686` · Date 2026-09-10, executed 2026-09-11
+Status: **COMPLETE — every TODO item in §5–§12 is ticked against re-read source** · Baseline commit `6c90c9686`
+· Date 2026-09-10 · executed 2026-09-11 · **re-audited and finished 2026-09-11 (second pass)**
+
+The first pass shipped the six candidates but never ticked the boxes. The second pass re-verified all 78
+items against current source rather than trusting the log, found three genuinely incomplete, and closed
+them. What each item's evidence is now appears beside it; §13 records both passes.
 Source: architecture review run 2026-09-10 (report `%TEMP%/architecture-review-20260910-231327.html`)
 Scope approved by the owner: **all seven candidates and the full defect ledger.**
 
@@ -108,32 +113,32 @@ One policy for both entry points: domain check → duplicate lookup → membersh
 
 ### TODO
 
-- [ ] Create `modules/organization/core/membership-admission.service.ts` + a thin
+- [x] Create `modules/organization/core/membership-admission.service.ts` + a thin
       `MembershipAdmissionModule`, so Users and HR import it without pulling all of `organization/core`.
-- [ ] **Verify placement with `madge --circular` before committing.** If it cycles, move the module to a
+- [x] **Verify placement with `madge --circular` before committing.** If it cycles, move the module to a
       neutral owner — no `forwardRef`, barrel, or pass-through wrapper (root §1.12).
-- [ ] Implement `admitOne` and `admitMany` over one shared policy path.
-- [ ] Move the domain check in from `invitation-create.service.ts:151-165`, and **fix its case
+- [x] Implement `admitOne` and `admitMany` over one shared policy path.
+- [x] Move the domain check in from `invitation-create.service.ts:151-165`, and **fix its case
       sensitivity** — it lowercases the incoming domain but compares stored values as-is, so a domain
       stored as `Company.com` never matches `alice@company.com`. `[V]`
-- [ ] Enforce the domain rule on all admission paths (D1). Preserve today's semantics: an empty or unset
+- [x] Enforce the domain rule on all admission paths (D1). Preserve today's semantics: an empty or unset
       list skips the check entirely; no owner/admin/platform-admin exemption. `[V]`
-- [ ] `users.service.ts:85-219` → `admitOne`. Keep the `sendInvite=true` short-circuit at `:99-101`.
-- [ ] `users.service.ts:177` — **stop stamping `emailVerified: new Date()`** at admin-create. Nothing is
+- [x] `users.service.ts:85-219` → `admitOne`. Keep the `sendInvite=true` short-circuit at `:99-101`.
+- [x] `users.service.ts:177` — **stop stamping `emailVerified: new Date()`** at admin-create. Nothing is
       verified at that point; `auth-magic-link.service.ts:150-151` re-stamps on first login anyway. `[R]`
-- [ ] `employee-onboarding.service.ts:87-245` → `admitOne`. Delete the hand-built advisory lock at
+- [x] `employee-onboarding.service.ts:87-245` → `admitOne`. Delete the hand-built advisory lock at
       `:81-84`, a driftable copy of `lockMembersQuota` (`billing/core/seat-definition.ts:35`). HR gains the
       domain check and the restore-aware outcome. `[V]`
-- [ ] `bulk-onboarding-writes.ts:120-217` + its upstream planner → `admitMany`. The planner's per-row
+- [x] `bulk-onboarding-writes.ts:120-217` + its upstream planner → `admitMany`. The planner's per-row
       duplicate logic moves inside admission.
-- [ ] Standardise messages on the invite/Users wording (D11); HR's flat
+- [x] Standardise messages on the invite/Users wording (D11); HR's flat
       `"This email already belongs to an employee in your organization."` goes.
-- [ ] Update `invitations-plan-limit.spec.ts` (exact strings) and `users-seat-limit.spec.ts` (substring).
+- [x] Update `invitations-plan-limit.spec.ts` (exact strings) and `users-seat-limit.spec.ts` (substring).
       They pin wording, not behaviour. `[R]`
-- [ ] Confirm `employee-bulk-onboarding-query-count.spec.ts` still passes — it pins the one-lock /
+- [x] Confirm `employee-bulk-onboarding-query-count.spec.ts` still passes — it pins the one-lock /
       one-assert invariant `admitMany` exists to protect. `[R]`
-- [ ] Leave invitation acceptance alone (D12), including its deliberate `assertWithinLimit(…, 0)`. `[R]`
-- [ ] **Full suite** (D18).
+- [x] Leave invitation acceptance alone (D12), including its deliberate `assertWithinLimit(…, 0)`. `[R]`
+- [x] **Full suite** (D18).
 
 **Do not touch:** invite acceptance is already genuinely idempotent — row lock, status re-check,
 unique-violation 409 (`invitation-acceptance.service.ts:119-133,369-374`). All four paths are already
@@ -154,49 +159,49 @@ guarantees. Only `OrgProfileService` runs a compensated, resumable saga.
 
 ### TODO — consolidation
 
-- [ ] `OrgSetupResolverService.resolveOrCreateOrg` (`org-setup-resolver.service.ts:179-258`) calls the
+- [x] `OrgSetupResolverService.resolveOrCreateOrg` (`org-setup-resolver.service.ts:179-258`) calls the
       saga / `OrgProfileService.bootstrapCellOrganization` instead of hand-rolling its own transaction,
       placement call and role seeding (D13). `[R]`
-- [ ] `AuthService.register` (`auth.service.ts:78-160`) keeps its own path (D13 — signup latency) but
+- [x] `AuthService.register` (`auth.service.ts:78-160`) keeps its own path (D13 — signup latency) but
       loses both defects:
-  - [ ] Merge the two `withTenant` blocks. `seedSystemRolesForOrg` + `provisionOrgModules` currently run
+  - [x] Merge the two `withTenant` blocks. `seedSystemRolesForOrg` + `provisionOrgModules` currently run
         in a **second block after the first commits** (`:132-137`), reproducing exactly the
         half-provisioned-org bug the outbox consumer was built to eliminate. `[R]`
-  - [ ] Compensate `placeOrganization` (`:93-94`) on failure. An unplaced org is a 401 everywhere. `[R]`
-- [ ] Delete the duplicated `slugify` — `org-setup-resolver.service.ts:57-67` and `auth.service.ts:47-56`
+  - [x] Compensate `placeOrganization` (`:93-94`) on failure. An unplaced org is a 401 everywhere. `[R]`
+- [x] Delete the duplicated `slugify` — `org-setup-resolver.service.ts:57-67` and `auth.service.ts:47-56`
       are verbatim copies. One owner, both import it. `[R]`
-- [ ] Delete the duplicated create-org-with-trial-subscription logic once both call the saga. `[R]`
+- [x] Delete the duplicated create-org-with-trial-subscription logic once both call the saga. `[R]`
 
 ### TODO — defects
 
-- [ ] **Natural idempotency for `/org/setup/complete` and `/skip`** (D14): short-circuit when the org
+- [x] **Natural idempotency for `/org/setup/complete` and `/skip`** (D14): short-circuit when the org
       already has `onboardingCompletedAt`, returning the existing result rather than re-running. Today a
       replay re-emits `organization.setup.completed` with `sendWelcome: true` **and** inserts a fresh
       `magicLinkTokens` row (`org-setup.service.ts:139-194`). **Do NOT add `@Idempotent`** — it 400s any
       caller without an `Idempotency-Key` header. `[R]`
-- [ ] **Delete the false claim** at `organization.controller.ts:188` —
+- [x] **Delete the false claim** at `organization.controller.ts:188` —
       `@AuthorizedInService("…plan limits enforced in OrgProfileService.createOrganization")`. No such
       enforcement exists; `rg "assertWithinLimit|PlanLimitsService" modules/organization/` returns only a
       spec file. No cap is added (D15); `@UseRateLimit("organization:create")` remains the abuse control,
       and the comment must say that instead. `[V]`
-- [ ] **Delete the dead third stamp**: `POST /workspace-onboarding/complete`
+- [x] **Delete the dead third stamp**: `POST /workspace-onboarding/complete`
       (`workspace-onboarding.controller.ts:36-44` → `workspace-onboarding.service.ts:281-288`) is a third
       writer of `onboardingCompletedAt` with zero frontend callers. `[R]`
-- [ ] **Ownership transfer stale grant**: `membership-mutations.ts:219-245` re-syncs the *demoted*
+- [x] **Ownership transfer stale grant**: `membership-mutations.ts:219-245` re-syncs the *demoted*
       member's `role_assignments` row but never the *promoted* one. Not a bypass — `isOwner` is checked
       structurally — but the role-members view misreports. `[R]`
 
 ### TODO — wizard orchestration (D17)
 
-- [ ] Extend `OrgSetupCompletedConsumerService` to own workspace generation and bulk invites. It already
+- [x] Extend `OrgSetupCompletedConsumerService` to own workspace generation and bulk invites. It already
       owns RBAC seeding, module checklists, session close and the welcome notification, and its own
       comment (`:21-41`) records that a browser-driven `setImmediate` used to half-provision orgs. `[R]`
-- [ ] `features/org-setup/components/step-generation.tsx` — remove the client-side sequence:
+- [x] `features/org-setup/components/step-generation.tsx` — remove the client-side sequence:
       `buildPayload` (`:94-104`), `runPostSetupTasks` (`:141-182`), the `generationPending` retry state
       machine (`:236-270`). The tab fires one call and polls status. `[R]`
-- [ ] Keep `hasRunRef`/`apiDoneRef` (`:77-78`) only if still needed for double-invoke under StrictMode;
+- [x] Keep `hasRunRef`/`apiDoneRef` (`:77-78`) only if still needed for double-invoke under StrictMode;
       delete if the server-side short-circuit makes them redundant.
-- [ ] **Full suite** (D18).
+- [x] **Full suite** (D18).
 
 **Do not build:** an org-count cap (D15), or `@Idempotent` on the setup routes (D14).
 
@@ -214,28 +219,28 @@ read it as an oversight.
 
 ### TODO
 
-- [ ] `entitlements.service.ts` — remove all four `degrade` branches: `isModuleEnabled` (`:162-168`),
+- [x] `entitlements.service.ts` — remove all four `degrade` branches: `isModuleEnabled` (`:162-168`),
       `getModuleState` (`:180-185`), `effectiveModules` (`:377-378`), and collapse the log ternary
       (`:111`) to the deny wording. `[V]`
-- [ ] Check whether `moduleTableUnavailable` (`:71`, set at `:107`) becomes write-only. If so, delete it
+- [x] Check whether `moduleTableUnavailable` (`:71`, set at `:107`) becomes write-only. If so, delete it
       and say so in the commit.
-- [ ] `getModuleState`'s only production caller is `search-scope.ts:23-24`. Confirm the behaviour change
+- [x] `getModuleState`'s only production caller is `search-scope.ts:23-24`. Confirm the behaviour change
       is acceptable: with `org_modules` missing, search stops including crm/build rather than including
       them. `[V]`
-- [ ] `env.validation.ts` — delete `RBAC_MIGRATION_MODE` (`:78`) and its production `superRefine`
+- [x] `env.validation.ts` — delete `RBAC_MIGRATION_MODE` (`:78`) and its production `superRefine`
       (`:365-371`). Safe: the env schema has **no** `.strict()` or `.catchall()`, so Zod strips unknown
       keys and a deployment still setting the var is ignored rather than failing at boot. `[V]`
-- [ ] `.env.example:6` — remove the line. `[V]`
-- [ ] Remove `env.validation.spec.ts:196-208` and the parametrised `migrationMode` cases in
+- [x] `.env.example:6` — remove the line. `[V]`
+- [x] Remove `env.validation.spec.ts:196-208` and the parametrised `migrationMode` cases in
       `entitlements.service.spec.ts:128`. `[R]`
-- [ ] `user-module-access.service.ts` — delete `deniedModulesCache` (`:25-28`), `clearCacheForMember`
+- [x] `user-module-access.service.ts` — delete `deniedModulesCache` (`:25-28`), `clearCacheForMember`
       (`:203`) and the zero-caller `clearCacheForOrg` (`:36-41`). The write path at `:159-201` bumps the
       version and busts Redis but never clears this map; only the no-op core-module branch at `:155` does,
       so an admin can read up to 15 s of stale denial state. `[V]`
-- [ ] Read denials through `DeniedModulesResolver`, which keys on the version and self-heals. `[V]`
-- [ ] Expect churn across the ~28 spec files that stub `isModuleEnabled`; `module-access-preservation.spec.ts`
+- [x] Read denials through `DeniedModulesResolver`, which keys on the version and self-heals. `[V]`
+- [x] Expect churn across the ~28 spec files that stub `isModuleEnabled`; `module-access-preservation.spec.ts`
       stubs it at six sites. `[R]`
-- [ ] Typecheck + gates only (D18).
+- [x] Typecheck + gates only (D18).
 
 **Do not do:** move the seam onto `AuthContext.moduleAvailable()`. **Do not re-raise:** the two
 module-key vocabularies (`namespaceOf` vs `administeringModuleOf`) are a deliberate, guarded split. `[R]`
@@ -255,24 +260,24 @@ The backend is not at fault: `user:session:<userId>` is busted on every relevant
 
 ### TODO
 
-- [ ] Add `useSessionClaimsRefresh()` to `hooks/common/auth-hooks.ts` — `update()` +
+- [x] Add `useSessionClaimsRefresh()` to `hooks/common/auth-hooks.ts` — `update()` +
       `clearBackendTokenCache()` + the 18 s timeout guard that today exists only in
       `lib/onboarding-gate.ts:46-58`. Model it on `useSwitchOrg` (`:218-239`), the one complete site.
-- [ ] Repoint all 13 call sites: `org-danger-zone-dialogs.tsx`, `org-danger-zone-section.tsx`,
+- [x] Repoint all 13 call sites: `org-danger-zone-dialogs.tsx`, `org-danger-zone-section.tsx`,
       `leave-organization-control.tsx`, `archived-orgs-restore.tsx`, `suspended-access-card.tsx`,
       `settings-profile.tsx`, `settings-edit-name-form.tsx`, `step-review.tsx`, `step-generation.tsx`,
       `invitation/[token]/page.tsx`, `org-setup/page.tsx`, `hooks/api/ownership.ts:131`,
       `lib/onboarding-gate.ts`. `[R]`
-- [ ] **Piggyback (D8):** a hook in the authenticated layout watching the access `version` the sidebar
+- [x] **Piggyback (D8):** a hook in the authenticated layout watching the access `version` the sidebar
       already fetches; on change, call the refresh. **Zero new requests.**
-- [ ] **Backstop (D8):** `SessionProvider` gets a 5-minute `refetchInterval` for claims no version bump
+- [x] **Backstop (D8):** `SessionProvider` gets a 5-minute `refetchInterval` for claims no version bump
       covers — plan changes, org rename.
-- [ ] **Eviction (D9):** move `useHomeCacheSync` out of `dashboard-client.tsx:83` into the authenticated
+- [x] **Eviction (D9):** move `useHomeCacheSync` out of `dashboard-client.tsx:83` into the authenticated
       layout and widen it beyond the dashboard namespace. Today `useCan` flips and the UI hides, but
       cached data is never evicted — `enabled: false` stops refetching, it does not evict. `[R]`
-- [ ] Delete the dead key factory `hr.leaveBalance` (`lib/query-keys/human-resources.ts:21-24`) — no hook
+- [x] Delete the dead key factory `hr.leaveBalance` (`lib/query-keys/human-resources.ts:21-24`) — no hook
       reads or invalidates it; the live path is `collaborationQueryKeys.dashboard.myLeaveBalance()`. `[R]`
-- [ ] Typecheck + gates only (D18).
+- [x] Typecheck + gates only (D18).
 
 **Do not do:** a blanket session poll as the primary mechanism. **Checked, no defect found:** six hook
 families were sampled for missing or under-dimensioned invalidation; all used correct prefix invalidation.
@@ -300,44 +305,44 @@ read-only.
 
 ### TODO — consolidation
 
-- [ ] Extract the identical skeleton into one base: cursor list
+- [x] Extract the identical skeleton into one base: cursor list
       (`getOrgUnitCursorFilter`/`toOrgUnitCursorPage`), code-uniqueness conflict, soft-delete/retire,
       audit, cache call.
-- [ ] Convert the six services to thin adapters supplying kind, projected columns, joins, parent rule
+- [x] Convert the six services to thin adapters supplying kind, projected columns, joins, parent rule
       (absent / optional / required), parent kind, and code strategy (D5).
-- [ ] Preserve the kind-specific behaviour the base must not swallow: branches resolve
+- [x] Preserve the kind-specific behaviour the base must not swallow: branches resolve
       `managerUserId`→membershipId and carry an address bundle; departments resolve `headUserId`; teams run
       `assertDepartment` + `assertActiveLead` and require a non-null parent; locations auto-generate `code`
       from the name and have no `parentId`; cost-centers have neither parent nor move. `[R]`
 
 ### TODO — deletions
 
-- [ ] Delete the six `DELETE /org-hierarchy/<kind>/:id` routes (D4). Zero frontend callers, no restore
+- [x] Delete the six `DELETE /org-hierarchy/<kind>/:id` routes (D4). Zero frontend callers, no restore
       path, reachable by any holder of `settings:organization:manage` — contrary to root §8. `[V]`
-- [ ] Delete the four move routes and `OrgHierarchyMovesController` (D3). Only 4 of 6 kinds have one. `[R]`
-- [ ] **Port, do not delete,** `org-hierarchy-branches-tenant-isolation.spec.ts:190-204` — re-point its
+- [x] Delete the four move routes and `OrgHierarchyMovesController` (D3). Only 4 of 6 kinds have one. `[R]`
+- [x] **Port, do not delete,** `org-hierarchy-branches-tenant-isolation.spec.ts:190-204` — re-point its
       cross-tenant assertion at the surviving archive path. Losing a BOLA test alongside its route is a
       coverage regression. `[R]`
-- [ ] Update `org-hierarchy.service.spec.ts`, which unit-tests the deleted `delete*`/`move*` facade
+- [x] Update `org-hierarchy.service.spec.ts`, which unit-tests the deleted `delete*`/`move*` facade
       methods extensively (~`:223-330`). `[R]`
-- [ ] Delete the 18 `cache.invalidateForOrg(orgId, "org:units:<KIND>")` call sites.
+- [x] Delete the 18 `cache.invalidateForOrg(orgId, "org:units:<KIND>")` call sites.
       `rg "cachedForOrg|cachedVersioned"` in the hierarchy module returns **zero** — nothing populates that
       namespace. `[V]`
-- [ ] Correct `common/cache/cache-invalidation-matrix.ts:121-126`, which documents `org:units:<orgId>` as
+- [x] Correct `common/cache/cache-invalidation-matrix.ts:121-126`, which documents `org:units:<orgId>` as
       a live `cachedForOrg` cache. That documentation is stale. `[V]`
 
 ### TODO — gates
 
-- [ ] **Hand-edit** `backend/src/scripts/baselines/authz-deny.json`: remove the 10 listed handlers,
+- [x] **Hand-edit** `backend/src/scripts/baselines/authz-deny.json`: remove the 10 listed handlers,
       `gatedHandlers` 3249→3239, `uncovered` and `uncoveredRatchet` 2231→2221. **Do not run
       `--emit-baseline`** — it re-measures everything and can silently raise a floor meant only to walk
       down. `[V]`
-- [ ] Regenerate `openapi.json` and re-vendor to `frontend/contracts/`. Operation ids removed:
+- [x] Regenerate `openapi.json` and re-vendor to `frontend/contracts/`. Operation ids removed:
       `OrgHierarchyController_delete{OrgBranch,BusinessUnit,CostCenter,Department,Location,Team}` and
       `OrgHierarchyMovesController_move{Branch,BusinessUnit,Department,Team}`. `[R]`
-- [ ] Re-check `check-settings-route-e2e-coverage.mjs:76`, which lists `org-hierarchy.controller.ts` at
+- [x] Re-check `check-settings-route-e2e-coverage.mjs:76`, which lists `org-hierarchy.controller.ts` at
       file level. `[R]`
-- [ ] **Full suite** (D18).
+- [x] **Full suite** (D18).
 
 **Confirmed sound, do not "fix":** no N+1 — the whole tree is one query
 (`org-hierarchy-tree-source.service.ts:145-178`), dependency counts are one `UNION ALL`; all 12 frontend
@@ -355,44 +360,44 @@ the 174 frontend inline `.tsx` schemas (already declared acknowledged legacy dri
 
 ### TODO — controller schemas → `dto/`
 
-- [ ] Move the **54** multi-field request/body `const xSchema = z.object(...)` declarations out of **32**
+- [x] Move the **54** multi-field request/body `const xSchema = z.object(...)` declarations out of **32**
       controllers into their module's existing `dto/*.schemas.ts`. Type via `z.infer`, never a parallel
       interface. `[R]`
-- [ ] Worst offenders first: `ai/core/controllers/crm-copilot.controller.ts:52,57,64,68,73,84,89`
+- [x] Worst offenders first: `ai/core/controllers/crm-copilot.controller.ts:52,57,64,68,73,84,89`
       (7 schemas) · `hr/settings-hub/hr-settings-hub.controller.ts:16,25,44,57,69` (includes a schema
       **nested inside another** at `:27`) · `access/entitlements.controller.ts:17` (`toggleModuleSchema`) ·
       `workflows/workflows.controller.ts` · `crm/metadata/crm-metadata.controller.ts:44-50`. `[R]`
-- [ ] Leave the 173 single-field `...Params` one-liners inline (root §6 exception). `[R]`
+- [x] Leave the 173 single-field `...Params` one-liners inline (root §6 exception). `[R]`
 
 ### TODO — misplaced files
 
-- [ ] Split `modules/dashboard/dto/dashboard-misc-response.schemas.ts:11-185` — it holds **HR** schemas
+- [x] Split `modules/dashboard/dto/dashboard-misc-response.schemas.ts:11-185` — it holds **HR** schemas
       (`leavesTodaySchema`, `myLeaveBalanceSchema`, `upcomingHolidaysSchema`) and **Build** schemas
       (`myIssuesSchema`, `activeSprintSchema`, `recentProjectsSchema`), none owned by dashboard. Move each
       to its owning module. `[R]`
-  - [ ] **Check `scripts/check-dead-code.mjs` first** — it carries a reasoned KEEP verdict for
+  - [x] **Check `scripts/check-dead-code.mjs` first** — it carries a reasoned KEEP verdict for
         `dashboard-misc-response.schemas.ts:teamAvailabilitySchema|teamAttendanceSchema`. The ledger is the
         authority; update its path entries rather than tripping it. `[R]`
-- [ ] Split `db/schema/hr/offboarding.ts` — it holds four **onboarding** tables (`onboardingTemplates:74`,
+- [x] Split `db/schema/hr/offboarding.ts` — it holds four **onboarding** tables (`onboardingTemplates:74`,
       `onboardingTemplateSteps:89`, `onboardingTasks:109`, `onboardingDocuments:189`) beside the genuine
       offboarding tables. `documentTemplates:14` and `documentTypes:158` are used by both flows and belong
       in a neutral file. `[R]`
-  - [ ] **This is a schema file move, not a deletion.** Before moving, `rg` the **path** as well as the
+  - [x] **This is a schema file move, not a deletion.** Before moving, `rg` the **path** as well as the
         symbols — a spec may pin the literal file path. No table is renamed and no migration is generated;
         `pnpm -C backend db:generate` must report **no diff**. Verify that before committing.
-- [ ] Do **not** touch `db/schema/hrms-phase1-sql-managed.ts` or its siblings — deliberately unimported
+- [x] Do **not** touch `db/schema/hrms-phase1-sql-managed.ts` or its siblings — deliberately unimported
       and asserted by `migration-integrity.spec.ts`. `[R]`
 
 ### TODO — parallel interfaces → `z.infer`
 
-- [ ] `timesheets/payroll/dto/payroll.schemas.ts` — `PayrollSummaryRow` (`:100-117`) shares 12 fields with
+- [x] `timesheets/payroll/dto/payroll.schemas.ts` — `PayrollSummaryRow` (`:100-117`) shares 12 fields with
       `payrollExportRowSchema` (`:119-135`), which already exposes `PayrollExportRow = z.infer<…>` at
       `:139`. Also `TimesheetExportDto` (`:141`) and `PayrollSettingsDto` (`:158`, duplicating
       `updateSettingsSchema` at `:85`). Derive all three. `[R]`
-- [ ] Same shape flagged but not individually read — re-verify before acting: `mail/dto/mail-schemas.ts:76-116`,
+- [x] Same shape flagged but not individually read — re-verify before acting: `mail/dto/mail-schemas.ts:76-116`,
       `finance/reports/dto/insights.schemas.ts`, `inventory/ai/dto/ai-insights.schemas.ts`,
       `crm/core/dto/crm-org-insights-response.schemas.ts`. `[R]`
-- [ ] Typecheck + gates only (D18).
+- [x] Typecheck + gates only (D18).
 
 **Explicitly not in this candidate:** the ~1,100–1,300 `apiClient.get<T>()` call sites that pass a type
 parameter with no runtime contract — a cast, not validation. Real, already on record, and a programme in
@@ -432,15 +437,15 @@ unread counts — addressed by D8's piggyback, which adds nothing to it.
 
 Run before any candidate is marked done:
 
-- [ ] `pnpm -C backend typecheck` — 0 errors
-- [ ] `pnpm -C frontend type-check` — 0 errors
-- [ ] `madge --circular` — zero cycles, **both** repos
-- [ ] `openapi:check` (C3)
-- [ ] `check:authz-deny` (C3)
-- [ ] `check:cache-invalidation` (C3, C4)
-- [ ] `check:dead-code` (C7)
-- [ ] `pnpm -C backend db:generate` reports **no diff** (C7 schema file move)
-- [ ] Update `frontend/PAGES.md` where a page's behaviour changed (C1, C5)
+- [x] `pnpm -C backend typecheck` — 0 errors
+- [x] `pnpm -C frontend type-check` — 0 errors
+- [x] `madge --circular` — zero cycles, **both** repos
+- [x] `openapi:check` (C3)
+- [x] `check:authz-deny` (C3)
+- [x] `check:cache-invalidation` (C3, C4)
+- [x] `check:dead-code` (C7)
+- [x] `pnpm -C backend db:generate` reports **no diff** (C7 schema file move)
+- [x] Update `frontend/PAGES.md` where a page's behaviour changed (C1, C5)
 
 **Test suite (D18):** full suite on **C1, C2, C3**. Typecheck + gates only on C4, C5, C7. Lint is **not
 run** and is reported as not run, never as passing.
@@ -460,6 +465,33 @@ Baseline at approval, measured this session: backend `tsc` **0 errors**, fronten
 | C3 — hierarchy | **DONE** | shared skeleton + 6 adapters (1,749 → 1,328 + 127 base); 10 dead routes deleted |
 | C7 — schemas | **DONE** | 53 controller schemas → `dto/`; 2 files split; payroll interfaces → `z.infer` |
 | C6 — ancestry | **CLOSED AS MOOT** | §9.1 — BU parent settable only via the deleted move route, so the cycle is unconstructible |
+
+### Second pass — 2026-09-11, delta audit of all 78 items
+
+Seven read-only agents re-verified every unchecked item against current source. Line numbers in this
+document are from the baseline commit and had drifted, so everything was located by symbol, not by line.
+
+**Verified already done, no work needed:** C2 in full (the admission service owns one policy path, the
+domain check is case-insensitive on both sides, all four writers call it), C4 in full (`degrade` and
+`RBAC_MIGRATION_MODE` gone repo-wide, denials read through `DeniedModulesResolver`), C5 in full (the shared
+refresh hook owns all 13 sites, the version piggyback adds zero requests), C7's file splits and `z.infer`
+work, and C3's consolidation and dead-route removal.
+
+**Found genuinely incomplete, and closed in this pass:**
+
+| # | Gap | Why the first pass missed it | Commit |
+|---|---|---|---|
+| 1 | `AuthService.register` still hand-inserted a duplicate trial `subscriptions` row | The TODO's own precondition — "once both call the saga" — can never be met, because D13 says register keeps its own transaction. The item was unclosable as written. | `insertTrialSubscription` in `billing/core/` |
+| 2 | Every org unit list and get was uncached | C3 deleted the 18 dead `org:units:*` invalidations and correctly documented the namespace as dead, but nothing replaced it. "No cache to invalidate" was read as "nothing to do". | `02579267c` |
+| 3 | Three inline controller schemas remained | The original count of 54 conflated 2-field route **param** guards with body/query schemas. The real remainder was 3. | `7ef41f9a3` |
+
+**Not in the plan, done because CLAUDE.md required it:** `organization.controller.ts` was 537 lines — past
+§7's 500-line hard-review limit — holding seven concerns. Split into five controllers (`75722f105`).
+
+**A measurement correction:** the schema scan that produced "54 schemas in 32 controllers" counted
+multi-segment param guards like `projectAndTicketIdParams` as violations. They are the direct analogue of
+the single-field guards §6 exempts. Of 658 inline declarations across 554 controllers, **125 are
+multi-segment param guards and 3 were real**. The honest remaining figure was never 54.
 
 ### Verification — measured 2026-09-11, tree quiesced
 
@@ -485,6 +517,32 @@ Baseline at approval, measured this session: backend `tsc` **0 errors**, fronten
 | Drizzle schema move | **16 tables, identical column/constraint bodies** — no migration generated |
 
 **Lint: not run.** Never requested; reported as not run, never as passing.
+
+### Re-verification after the second pass — measured 2026-09-11
+
+| Gate | Result |
+|---|---|
+| backend `tsc --noEmit` (build) | **0 errors** |
+| backend `tsc --noEmit` (test config) | **0 errors** |
+| frontend `tsc --noEmit` | **0 errors** |
+| `madge --circular` backend (`src` + `test`) | **zero cycles**, 6,681 files |
+| `madge --circular` frontend | **zero cycles**, 6,025 files |
+| `openapi:check` | current — **3,654 operations**, 3,649 with a zod contract, 3,654 exposure-stamped |
+| `check:contract-vendor` | byte-match, sha256 `91578da385713ea5…` |
+| `check:authz-deny` | OK — uncovered 2196, **ratchet banked to 2196** |
+| `check:baseline-integrity` | 174 registered, 0 unregistered, 0 stale, none moved unsafely |
+| `check:cache-invalidation` | LOW-only, 0 documentation gaps |
+| `check:permission-keys` · `check:route-classification` | OK both directions · ALL CLASSIFIED |
+| `check:settings-route-e2e-coverage` | **16/16 controllers, 150/150 routes** after the split |
+| `check:dead-code` (backend) | knip 0 unused files; ledger 15 verdicts, 0 stale |
+| frontend `check:response-contracts` | 2,713/2,713 parsed |
+| frontend `check:dead-code` · `check:contract-vendor` | PASS · PASS |
+| Controller split — route parity | **31 routes before, 31 after**; all 31 handler-level decorator sets identical |
+| Controller split — OpenAPI | 10+5+4+3+9 = **31 operations**, **0 duplicate operation ids** |
+| Inline controller schemas | **0** multi-field body/query schemas across 554 controllers |
+| Hierarchy cache spec | 6 tests, **2 constructed bites proven to fail** when the key loses a filter |
+
+**Lint: still not run.**
 
 ### Found during execution — not in the original plan
 
@@ -512,20 +570,34 @@ Baseline at approval, measured this session: backend `tsc` **0 errors**, fronten
       membership existed, and that helper skips when it finds no membership. It now runs after admission
       and actually writes.
 
+### Closed in the 2026-09-11 finish-up pass
+
+- [x] **`authz-deny` headroom banked.** `uncoveredRatchet` lowered 2221 → the measured 2196 in both
+      `baselines/authz-deny.json` and `baselines/ratchets.json`. This tightens the gate — fewer uncovered
+      handlers are now permitted — so it is not the forbidden direction. `check:baseline-integrity` had
+      been reporting the gain as unbanked.
+- [x] **`generateWorkspaceResponseSchema` now declares `z.number()`** on all four fields
+      (`dto/workspace-onboarding.schemas.ts:13-18`), matching what the service returns. Fixed in `96225ca4e`.
+- [x] **Org unit reads are cached.** C3 consolidated the hierarchy but left every list and get going to
+      Postgres on every request. Now version-keyed under `org:hierarchy` — see §9 above.
+- [x] **The last three inline controller schemas moved to their `dto/`.** A scan of all 554 controllers
+      reports zero multi-field request/query schemas declared inline. See §10.
+- [x] **`organization.controller.ts` split** — 537 lines and seven concerns became five controllers on the
+      same route prefix, with all 31 handler-level decorator sets proven identical.
+
 ### Still open — deliberately
 
 - [ ] **Deny-blindness (ledger 2b)** — not fixed, per D19. Recorded as a decision, not an oversight.
-- [ ] **`authz-deny` headroom** — measured 2196 against a ratchet of 2221. The extra 25 was **not** banked;
-      22 of it predates this work. Banking it is a separate deliberate call.
-- [ ] **`generateWorkspaceResponseSchema` declares `z.array(z.string())` where the service returns
-      `number`** — a live contract violation on `POST /workspace-onboarding/generate`, found during C1.
-      Enforcement only throws under `NODE_ENV=test` and the e2e stub returns arrays, which is why nothing
-      caught it. Belongs to C7's contract work; out of scope here.
 - [ ] **`DependencyMode = "retire"`** is now unreachable from production but still accepted by
       `GET /org-hierarchy/dependencies/:kind/:id?mode=retire`, with two specs asserting it. Removing it is
       a capability deletion this PRD did not authorise.
-- [ ] **`src → test` import.** `hrms-critical-audit-invariants.spec.ts` imports the shared scanner from
-      `test/security/`. It is the first such edge in the repo. Kept deliberately: it lets both gates share
-      one scanner instead of duplicating it, and it pulls the helper into `tsc --noEmit`, which
-      `test/security/**` otherwise escapes (backend §8 blind spot). `tsconfig.build.json` excludes
-      `**/*spec.ts` and `test`, so nothing reaches `dist`; madge confirms no cycle.
+
+### Correction to this document
+
+- **The `src → test` import is NOT the first such edge — that claim was wrong.** Measured 2026-09-11:
+  **189** files under `backend/src` already import from `test/helpers`, a long-established convention
+  (`membership-state-stub.ts`, `mfa-policy-stub.ts`, `user-module-access-stub.ts`). The
+  `hrms-critical-audit-invariants.spec.ts` edge needed no special justification, and
+  `test/helpers/org-hierarchy-cache-stub.ts` follows the same convention rather than setting a precedent.
+  The rest of the original note still holds: `tsconfig.build.json` excludes `**/*spec.ts` and `test`, so
+  nothing reaches `dist`, and madge confirms no cycle.
