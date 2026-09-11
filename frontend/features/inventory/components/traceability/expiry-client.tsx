@@ -18,7 +18,9 @@ import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatCalendarDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -94,7 +96,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     className: "tabular-nums",
     cell: (row) => (
       <span className={getExpiryColorClass(row.daysUntilExpiry)}>
-        {new Date(row.expiryDate).toLocaleDateString()}
+        {row.expiryDate ? formatCalendarDate(row.expiryDate) : "—"}
       </span>
     ),
   },
@@ -110,23 +112,16 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     ),
   },
   {
-    key: "currentStock",
-    header: "Stock Qty",
+    key: "totalOnHand",
+    header: "On Hand",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
-    cell: (row) => <>{row.currentStock.toLocaleString()}</>,
-  },
-  {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
+    cell: (row) => <>{formatQuantity(row.totalOnHand)}</>,
   },
   {
     key: "actions",
     header: "",
-    cell: (row) => <ExpiryLotViewButton lotId={row.lotId} lotNumber={row.lotNumber} />,
+    cell: (row) => <ExpiryLotViewButton lotId={row.id} lotNumber={row.lotNumber} />,
   },
 ];
 
@@ -205,7 +200,7 @@ export function ExpiryClient() {
             data={items}
             columns={EXPIRY_COLUMNS}
             className="flex-1 min-h-0"
-            getRowKey={(row) => row.lotId}
+            getRowKey={(row) => row.id}
             isLoading={isLoading}
             emptyState={emptyState}
             rowClassName={getExpiryRowClassName}

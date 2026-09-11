@@ -3,28 +3,27 @@
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import type { LotMovement } from "@/hooks/api/inventory/traceability";
+import { formatSignedQuantity } from "@/features/inventory/components/planning/forecast-format";
+import { formatDateTime } from "@/lib/date-utils";
+import type { StockMovement } from "@/hooks/api/inventory/traceability-schema";
+import { movementTypeLabel } from "./traceability-format";
 
 interface MovementHistoryTableProps {
-  movements: LotMovement[];
+  movements: StockMovement[];
 }
 
-function formatQty(qty: number): string {
-  return `${qty >= 0 ? "+" : ""}${qty}`;
-}
-
-const columns: DataTableColumn<LotMovement>[] = [
+const columns: DataTableColumn<StockMovement>[] = [
   {
     key: "date",
     header: "Date",
     className: "text-muted-foreground tabular-nums",
-    cell: (row) => new Date(row.createdAt).toLocaleString(),
+    cell: (row) => formatDateTime(row.createdAt),
   },
   {
     key: "type",
     header: "Type",
     className: "font-medium text-foreground",
-    cell: (row) => row.type,
+    cell: (row) => movementTypeLabel(row.transactionType),
   },
   {
     key: "qty",
@@ -32,20 +31,25 @@ const columns: DataTableColumn<LotMovement>[] = [
     className: "text-right font-mono tabular-nums font-semibold",
     headerClassName: "text-right",
     cell: (row) => (
-      <span className={row.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}>
-        {formatQty(row.qty)}
+      <span
+        className={
+          Number(row.quantityChange) >= 0
+            ? "text-status-success-ink"
+            : "text-status-danger-ink"
+        }
+      >
+        {formatSignedQuantity(Number(row.quantityChange))}
       </span>
     ),
   },
   {
-    key: "reference",
-    header: "Reference",
+    key: "location",
+    header: "Location",
     className: "hidden md:table-cell text-muted-foreground",
     headerClassName: "hidden md:table-cell",
-    cell: (row) =>
-      row.referenceType && row.referenceId
-        ? `${row.referenceType} #${row.referenceId}`
-        : "—",
+    cell: (row) => (
+      <TruncatedText text={row.location?.name ?? "—"} className="text-muted-foreground" />
+    ),
   },
   {
     key: "notes",
@@ -53,13 +57,6 @@ const columns: DataTableColumn<LotMovement>[] = [
     className: "hidden lg:table-cell text-muted-foreground",
     headerClassName: "hidden lg:table-cell",
     cell: (row) => <TruncatedText text={row.notes ?? "—"} className="max-w-[200px]" />,
-  },
-  {
-    key: "by",
-    header: "By",
-    className: "hidden md:table-cell text-muted-foreground",
-    headerClassName: "hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.performedBy ?? "—"} className="text-muted-foreground" />,
   },
 ];
 

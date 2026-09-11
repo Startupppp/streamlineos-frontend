@@ -19,12 +19,11 @@ import {
 } from "@/components/ui/select";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
-import {
-  EmptyTransferIllustration,
-  EmptySearchIllustration,
-} from "@/components/illustrations";
+import { EmptyTransferIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatCalendarDate, formatShortDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import {
   LOT_STATUS_BADGE,
@@ -94,11 +93,11 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     ),
   },
   {
-    key: "currentStock",
-    header: "Stock",
+    key: "totalOnHand",
+    header: "On Hand",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
-    cell: (row) => <>{row.currentStock.toLocaleString()}</>,
+    cell: (row) => <>{formatQuantity(row.totalOnHand)}</>,
   },
   {
     key: "expiryDate",
@@ -106,23 +105,16 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     className: "tabular-nums",
     cell: (row) => (
       <span className={getExpiryClass(row.expiryDate)}>
-        {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+        {row.expiryDate ? formatCalendarDate(row.expiryDate) : "—"}
       </span>
     ),
-  },
-  {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "createdAt",
     header: "Created",
     headerClassName: "hidden lg:table-cell",
     className: "text-muted-foreground tabular-nums hidden lg:table-cell",
-    cell: (row) => <>{new Date(row.createdAt).toLocaleDateString()}</>,
+    cell: (row) => <>{formatShortDate(row.createdAt)}</>,
   },
   {
     key: "actions",

@@ -3,14 +3,25 @@
 import { memo, type ReactNode } from "react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
-import type {
-  TraceabilityResult,
-  TraceabilityEvent,
-  LotStockByLocation,
-} from "@/hooks/api/inventory/traceability";
+import {
+  formatQuantity,
+  formatSignedQuantity,
+} from "@/features/inventory/components/planning/forecast-format";
+import { formatCalendarDate, formatDateTime, formatShortDate } from "@/lib/date-utils";
+import type { TraceabilityChain } from "@/hooks/api/inventory/traceability-schema";
+import {
+  movementTypeLabel,
+  statusLabel,
+  totalReturns,
+  totalShipments,
+  totalStockByLocation,
+  type LocationStockTotal,
+  type ReturnTotal,
+  type ShipmentTotal,
+} from "./traceability-format";
 
 interface TraceabilityTimelineProps {
-  result: TraceabilityResult | undefined;
+  result: TraceabilityChain | undefined;
   isLoading: boolean;
 }
 
@@ -37,49 +48,107 @@ function TimelineSection({ dotClass, label, children }: TimelineSectionProps) {
   );
 }
 
-const EventRow = memo(function EventRow({
-  event,
+const ReceiptRow = memo(function ReceiptRow({
+  receipt,
 }: {
-  event: TraceabilityEvent;
+  receipt: TraceabilityChain["receipts"][number];
 }) {
   return (
     <div className="flex items-start justify-between gap-2 text-dense py-0.5">
       <div className="min-w-0 flex-1">
-        <span className="font-medium text-foreground">{event.eventType}</span>
-        {event.referenceType && event.referenceId && (
-          <span className="text-muted-foreground ml-1.5">
-            {event.referenceType} #{event.referenceId}
-          </span>
-        )}
-        {event.notes && (
-          <TruncatedText text={event.notes} className="text-muted-foreground mt-0.5" />
+        <span className="font-medium text-foreground">{receipt.grnNumber}</span>
+        <span className="text-muted-foreground ml-1.5">{receipt.vendorName}</span>
+        <span className="text-muted-foreground ml-1.5">PO {receipt.poNumber}</span>
+        {receipt.reversed && (
+          <span className="text-status-warning-ink ml-1.5">Reversed</span>
         )}
       </div>
       <div className="text-right shrink-0 text-muted-foreground tabular-nums">
-        <p>{new Date(event.date).toLocaleDateString()}</p>
-        <p
-          className={`font-semibold ${event.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}`}
-        >
-          {event.qty >= 0 ? "+" : ""}
-          {event.qty}
+        <p>{formatCalendarDate(receipt.receivedDate)}</p>
+        <p className="font-semibold text-status-success-ink">
+          {formatSignedQuantity(Number(receipt.qtyReceived))}
         </p>
       </div>
     </div>
   );
 });
 
-const StockRow = memo(function StockRow({ loc }: { loc: LotStockByLocation }) {
+const StockRow = memo(function StockRow({ location }: { location: LocationStockTotal }) {
   return (
     <div className="flex items-center justify-between text-dense py-0.5">
-      <div>
-        <span className="font-medium text-foreground">{loc.locationName}</span>
-        <span className="text-muted-foreground ml-1.5">
-          {loc.warehouseName}
-        </span>
+      <div className="min-w-0">
+        <span className="font-medium text-foreground">{location.locationName}</span>
+        <span className="text-muted-foreground ml-1.5">{location.warehouseName}</span>
       </div>
       <span className="font-mono tabular-nums font-semibold text-foreground">
-        {loc.qty.toLocaleString()}
+        {formatQuantity(location.onHand)}
       </span>
+    </div>
+  );
+});
+
+const ShipmentRow = memo(function ShipmentRow({ shipment }: { shipment: ShipmentTotal }) {
+  return (
+    <div className="flex items-start justify-between gap-2 text-dense py-0.5">
+      <div className="min-w-0 flex-1">
+        <span className="font-medium text-foreground">{shipment.shipmentNumber}</span>
+        <span className="text-muted-foreground ml-1.5">{statusLabel(shipment.status)}</span>
+      </div>
+      <div className="text-right shrink-0 text-muted-foreground tabular-nums">
+        <p>{shipment.shippedAt ? formatShortDate(shipment.shippedAt) : "Not shipped"}</p>
+        <p className="font-semibold text-status-danger-ink">
+          {formatQuantity(shipment.quantity)}
+        </p>
+      </div>
+    </div>
+  );
+});
+
+const ReturnRow = memo(function ReturnRow({ entry }: { entry: ReturnTotal }) {
+  return (
+    <div className="flex items-start justify-between gap-2 text-dense py-0.5">
+      <div className="min-w-0 flex-1">
+        <span className="font-medium text-foreground">{entry.returnNumber}</span>
+        <span className="text-muted-foreground ml-1.5">{entry.kind}</span>
+        <span className="text-muted-foreground ml-1.5">{statusLabel(entry.status)}</span>
+      </div>
+      <span className="shrink-0 font-semibold text-muted-foreground tabular-nums">
+        {formatQuantity(entry.quantity)}
+      </span>
+    </div>
+  );
+});
+
+const EventRow = memo(function EventRow({
+  event,
+}: {
+  event: TraceabilityChain["events"][number];
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2 text-dense py-0.5">
+      <div className="min-w-0 flex-1">
+        <span className="font-medium text-foreground">
+          {movementTypeLabel(event.transactionType)}
+        </span>
+        {event.location && (
+          <span className="text-muted-foreground ml-1.5">{event.location.name}</span>
+        )}
+        {event.creator?.name && (
+          <span className="text-muted-foreground ml-1.5">{event.creator.name}</span>
+        )}
+        {event.reversed && <span className="text-status-warning-ink ml-1.5">Reversed</span>}
+        {event.notes && (
+          <TruncatedText text={event.notes} className="text-muted-foreground mt-0.5" />
+        )}
+      </div>
+      <div className="text-right shrink-0 text-muted-foreground tabular-nums">
+        <p>{formatDateTime(event.createdAt)}</p>
+        <p
+          className={`font-semibold ${Number(event.quantityChange) >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}`}
+        >
+          {formatSignedQuantity(Number(event.quantityChange))}
+        </p>
+      </div>
     </div>
   );
 });
@@ -112,24 +181,21 @@ export function TraceabilityTimeline({
     );
   }
 
+  const stock = totalStockByLocation(result.currentStock);
+  const shipments = totalShipments(result.shipments);
+  const returns = totalReturns(result.returns);
+
   return (
     <div className="space-y-0 pl-1">
       <TimelineSection dotClass="bg-primary" label="Origin">
         {result.origin ? (
           <div className="text-dense">
             <span className="font-medium text-foreground">
-              {result.origin.vendorName ?? "Unknown vendor"}
+              {result.origin.productVariant.product.name}
             </span>
-            {result.origin.receiptDate && (
-              <span className="text-muted-foreground ml-1.5">
-                {new Date(result.origin.receiptDate).toLocaleDateString()}
-              </span>
-            )}
-            {result.origin.receiptId && (
-              <span className="text-muted-foreground ml-1.5">
-                Receipt #{result.origin.receiptId}
-              </span>
-            )}
+            <span className="text-muted-foreground ml-1.5 font-mono">
+              {result.origin.productVariant.sku}
+            </span>
           </div>
         ) : (
           <p className="text-dense text-muted-foreground">No origin data</p>
@@ -139,18 +205,18 @@ export function TraceabilityTimeline({
       {result.receipts.length > 0 && (
         <TimelineSection dotClass="bg-status-success-fill" label="Receipts">
           <div className="space-y-0.5">
-            {result.receipts.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {result.receipts.map((receipt) => (
+              <ReceiptRow key={receipt.transactionId} receipt={receipt} />
             ))}
           </div>
         </TimelineSection>
       )}
 
       <TimelineSection dotClass="bg-muted-foreground/40" label="Current Stock">
-        {result.currentStock.length > 0 ? (
+        {stock.length > 0 ? (
           <div className="space-y-0.5">
-            {result.currentStock.map((loc) => (
-              <StockRow key={loc.locationId} loc={loc} />
+            {stock.map((location) => (
+              <StockRow key={location.locationId} location={location} />
             ))}
           </div>
         ) : (
@@ -158,32 +224,31 @@ export function TraceabilityTimeline({
         )}
       </TimelineSection>
 
-      {result.shipments.length > 0 && (
+      {shipments.length > 0 && (
         <TimelineSection dotClass="bg-status-warning-fill" label="Shipments">
           <div className="space-y-0.5">
-            {result.shipments.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {shipments.map((shipment) => (
+              <ShipmentRow key={shipment.shipmentId} shipment={shipment} />
             ))}
           </div>
         </TimelineSection>
       )}
 
-      {(result.vendorReturns.length > 0 ||
-        result.customerReturns.length > 0) && (
+      {returns.length > 0 && (
         <TimelineSection dotClass="bg-status-warning-fill" label="Returns">
           <div className="space-y-0.5">
-            {[...result.vendorReturns, ...result.customerReturns].map((e) => (
-              <EventRow key={e.id} event={e} />
+            {returns.map((entry) => (
+              <ReturnRow key={entry.key} entry={entry} />
             ))}
           </div>
         </TimelineSection>
       )}
 
       {result.events.length > 0 && (
-        <TimelineSection dotClass="bg-primary/60" label="Other Events">
+        <TimelineSection dotClass="bg-primary/60" label="Movements">
           <div className="space-y-0.5">
-            {result.events.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {result.events.map((event) => (
+              <EventRow key={event.id} event={event} />
             ))}
           </div>
         </TimelineSection>

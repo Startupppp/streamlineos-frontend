@@ -168,7 +168,7 @@ export function LotGenealogyPanel({ lotId }: LotGenealogyPanelProps) {
   const rows = useMemo(() => toRows(data), [data]);
 
   function handleDirectionChange(value: string): void {
-    setDirection(value as GenealogyDirection);
+    if (value === "forward" || value === "backward" || value === "both") setDirection(value);
   }
 
   function handleDepthChange(value: string): void {

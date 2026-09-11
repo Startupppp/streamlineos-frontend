@@ -19,11 +19,9 @@ import {
 } from "@/components/ui/select";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
-import {
-  EmptyProductsIllustration,
-  EmptySearchIllustration,
-} from "@/components/illustrations";
+import { EmptyProductsIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatShortDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerials } from "@/hooks/api/inventory/traceability";
 import {
@@ -93,32 +91,30 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     ),
   },
   {
-    key: "locationName",
+    key: "currentLocationName",
     header: "Location",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-muted-foreground" />,
+    cell: (row) => (
+      <TruncatedText
+        text={row.currentLocationName ?? "—"}
+        className="text-muted-foreground"
+      />
+    ),
   },
   {
-    key: "warehouseName",
-    header: "Warehouse",
-    headerClassName: "hidden md:table-cell",
-    className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
-  },
-  {
-    key: "lotNumber",
-    header: "Lot #",
+    key: "currentLocationCode",
+    header: "Bin",
     headerClassName: "hidden lg:table-cell",
     className: "font-mono text-muted-foreground hidden lg:table-cell",
-    cell: (row) => <>{row.lotNumber ?? "—"}</>,
+    cell: (row) => <>{row.currentLocationCode ?? "—"}</>,
   },
   {
     key: "createdAt",
     header: "Created",
     headerClassName: "hidden lg:table-cell",
     className: "text-muted-foreground tabular-nums hidden lg:table-cell",
-    cell: (row) => <>{new Date(row.createdAt).toLocaleDateString()}</>,
+    cell: (row) => <>{formatShortDate(row.createdAt)}</>,
   },
   {
     key: "actions",

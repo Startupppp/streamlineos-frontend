@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useLots } from "@/hooks/api/inventory/traceability";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
+import { formatCalendarDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -155,10 +157,10 @@ export function RecallLotPicker({ value, onChange }: Props) {
                     </span>
                     <span className="shrink-0 text-right">
                       <span className="block font-mono text-xs tabular-nums">
-                        {lot.currentStock}
+                        {formatQuantity(lot.totalOnHand)}
                       </span>
                       <span className="block text-micro text-muted-foreground">
-                        {lot.expiryDate ?? "no expiry"}
+                        {lot.expiryDate ? formatCalendarDate(lot.expiryDate) : "no expiry"}
                       </span>
                     </span>
                   </label>
