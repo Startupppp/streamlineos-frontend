@@ -51,7 +51,6 @@ export const inventoryQueryKeys = {
     physicalAuditsList: list("physicalAudits"),
     goodsReceiptsList: list("goodsReceipts"),
     replenishmentRulesList: list("replenishmentRules"),
-    replenishmentSuggestionsList: list("replenishmentSuggestions"),
     forecastingList: list("forecasting"),
     valuationReportList: list("valuationReport"),
     valuationLayersList: list("valuationLayers"),
@@ -142,8 +141,6 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "goodsReceipt", goodsReceiptId),
     replenishmentRules: (params?: Record<string, unknown>) =>
       k(...base, "inventory", "replenishmentRules", params),
-    replenishmentSuggestions: (params?: object) =>
-      k(...base, "inventory", "replenishmentSuggestions", params),
     forecasting: (params?: Record<string, unknown>) =>
       k(...base, "inventory", "forecasting", params),
     valuationReport: (params?: Record<string, unknown>) =>
@@ -194,8 +191,6 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "platformPurchaseOrders", filters),
     platformPurchaseOrder: (platformPoId: number) =>
       k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
-    asnsList: [...base, "inventory", "asns"] as const,
-    asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
     /** NEO-9, NEO-11, NEO-12. Params-less prefixes, then the shapes screens read. */
     kitsAll: [...base, "inventory", "kits"] as const,
     kitBom: (kitVariantId: number) => k(...base, "inventory", "kits", "bom", kitVariantId),
@@ -268,13 +263,6 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "demandBaseline", productVariantId),
     supplierDelayBriefing: (vendorId?: string) =>
       k(...base, "inventory", "supplierDelayBriefing", vendorId),
-    barcodeLookup: (code: string) => k(...base, "inventory", "barcodeLookup", code),
-    variantLabel: (productVariantId: number, lotId?: number) =>
-      k(...base, "inventory", "variantLabel", productVariantId, lotId),
-    landedCostVouchers: (params?: Record<string, unknown>) =>
-      k(...base, "inventory", "landedCostVouchers", params),
-    landedCostVoucher: (voucherId: number) =>
-      k(...base, "inventory", "landedCostVoucher", voucherId),
     qualityHold: (qualityHoldId: number) => k(...base, "inventory", "qualityHold", qualityHoldId),
     webhooks: () => k(...base, "inventory", "webhooks"),
     webhookEvents: (webhookId: number, params?: Record<string, unknown>) =>

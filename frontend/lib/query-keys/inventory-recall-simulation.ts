@@ -22,7 +22,5 @@ export const inventoryRecallSimulationQueryKeys = {
     impactList: [...base, "recallSimulation", "impact"] as const,
     impact: (selection?: Record<string, unknown>) =>
       k(...base, "recallSimulation", "impact", selection),
-    lotOptions: (params?: Record<string, unknown>) =>
-      k(...base, "recallSimulation", "lotOptions", params),
   },
 } as const;
