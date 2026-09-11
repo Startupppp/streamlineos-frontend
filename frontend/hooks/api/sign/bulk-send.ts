@@ -1,9 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { SignBulkSendJob } from "@/types/sign";
+import type { SignBulkSendErrorReport, SignBulkSendJob, SignBulkSendJobDetail } from "@/types/sign";
 
 export interface CreateBulkSendJobInput {
   templateId: number;
@@ -92,32 +92,34 @@ export function useBulkSendJobs() {
   });
 }
 
-export interface BulkSendJobRow {
-  id: number;
-  rowNumber: number;
-  /** Mirrors the backend `sign_bulk_row_status` enum exactly. */
-  status: "pending" | "success" | "failed";
-  rawDataJson: Record<string, unknown>;
-  errorMessage: string | null;
-  envelopeId: number | null;
-  attempts: number;
-}
-
-export interface BulkSendJobDetail {
-  job: SignBulkSendJob;
-  rows: BulkSendJobRow[];
-}
-
-/** One job with its per-row outcomes, polled on the same terms as the list. */
-export function useBulkSendJob(jobId: number | null) {
+/** One job with its first page of rows, polled on the same terms as the list. */
+export function useBulkSendJob(
+  jobId: number | undefined,
+  options?: Omit<UseQueryOptions<SignBulkSendJobDetail, Error>, "queryKey" | "queryFn">,
+) {
   return useQuery({
     queryKey: queryKeys.signBulkSend.job(jobId ?? 0),
-    queryFn: () => apiClient.get<BulkSendJobDetail>(`/sign/bulk-send/jobs/${jobId}`),
-    enabled: jobId !== null,
+    queryFn: () => apiClient.get<SignBulkSendJobDetail>(`/sign/bulk-send/jobs/${jobId}`),
+    staleTime: 0,
     refetchInterval: (query) => {
       const job = query.state.data?.job;
       return bulkSendPollInterval(job ? [job] : undefined);
     },
+    ...options,
+    enabled: jobId !== undefined && (options?.enabled ?? true),
+  });
+}
+
+export function useBulkSendJobErrorReport(
+  jobId: number | undefined,
+  options?: Omit<UseQueryOptions<SignBulkSendErrorReport, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: queryKeys.signBulkSend.errorReport(jobId ?? 0),
+    queryFn: () => apiClient.get<SignBulkSendErrorReport>(`/sign/bulk-send/jobs/${jobId}/error-report`),
+    staleTime: 15_000,
+    ...options,
+    enabled: jobId !== undefined && (options?.enabled ?? true),
   });
 }
 

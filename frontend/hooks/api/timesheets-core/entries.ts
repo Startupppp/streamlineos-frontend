@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
+  AttendanceDraftResult,
   CreateEntryInput,
   EntriesQuery,
   TimesheetEntry,
@@ -49,6 +50,36 @@ export function useCreateTimesheetEntry() {
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
       toast.success("Time logged");
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+/**
+ * TS-09, which had no caller at all.
+ *
+ * `POST /timesheets/entries/from-attendance` turns completed clock days into
+ * draft entries. It shipped with a permission key, idempotency, an own-time-only
+ * guarantee and a careful docblock — and no hook, no button, no route. The
+ * feature worked and reached nobody, which is the same defect the overdue queue
+ * had and the reason both were found by asking which routes the frontend never
+ * names.
+ *
+ * No toast on success. The result has five outcomes that a single line cannot
+ * distinguish, so the caller renders them; a toast here would flatten "your
+ * organisation has not enabled this" into "nothing happened".
+ */
+export function useDraftEntriesFromAttendance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["timesheets", "entries", "from-attendance"],
+    mutationFn: (range: { start: string; end: string }) =>
+      apiClient.post<AttendanceDraftResult>("/timesheets/entries/from-attendance", range),
+    onSuccess: (result) => {
+      if (result.entriesCreated > 0) {
+        void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
+        void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      }
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });

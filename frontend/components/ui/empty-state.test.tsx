@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { permissionGate } from "@/lib/rbac/permission-gate";
 import { EmptyState } from "./empty-state";
 
@@ -24,6 +24,18 @@ describe("EmptyState — semantic structure", () => {
   it("renders a heading so screen readers can identify the state", () => {
     render(<EmptyState title="No results" />);
     expect(screen.getByRole("heading", { name: "No results" })).toBeInTheDocument();
+  });
+
+  it("announces the state, so a list filtered down to nothing is not silent", () => {
+    render(<EmptyState title="No results" description="Try adjusting your filters." />);
+    const announced = screen.getByRole("status");
+    expect(within(announced).getByRole("heading", { name: "No results" })).toBeInTheDocument();
+    expect(within(announced).getByText("Try adjusting your filters.")).toBeInTheDocument();
+  });
+
+  it("announces the compact variant too", () => {
+    render(<EmptyState title="Nothing yet" compact />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("renders the description beneath the heading", () => {

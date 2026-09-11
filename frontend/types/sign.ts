@@ -166,12 +166,73 @@ export interface SignBulkSendJob {
   id: number;
   orgId: string;
   templateId: number;
+  columnMappingJson: Record<string, string>;
   status: "pending" | "validating" | "running" | "completed" | "failed" | "cancelled";
   totalCount: number;
   successCount: number;
   failedCount: number;
   createdAt: string;
   completedAt: string | null;
+}
+
+export type SignBulkSendRowStatus = "pending" | "success" | "failed";
+
+export interface SignBulkSendRow {
+  id: number;
+  jobId: number;
+  rowNumber: number;
+  rawDataJson: Record<string, unknown>;
+  status: SignBulkSendRowStatus;
+  envelopeId: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SignBulkSendJobDetail {
+  job: SignBulkSendJob;
+  /** The first page of the job's rows, by row number — not all of them. */
+  rows: SignBulkSendRow[];
+  /** How many rows the job has, counted server-side. */
+  rowTotal: number;
+  rowsTruncated: boolean;
+}
+
+/**
+ * `GET /sign/bulk-send/jobs/:id/error-report`: the failed rows, filtered in SQL
+ * and capped at `limit`, beside the job's own failure tally so a capped list
+ * cannot understate how many rows failed.
+ */
+export interface SignBulkSendErrorReport {
+  rows: SignBulkSendRow[];
+  failedCount: number;
+  returned: number;
+  limit: number;
+  truncated: boolean;
+}
+
+/**
+ * The stored row. `certificateJson` is jsonb on the backend and typed there as
+ * `Record<string, unknown>`, so it stays unknown here too — the sheet narrows it
+ * through a Zod schema rather than asserting a shape it cannot prove.
+ */
+export interface SignCertificate {
+  id: number;
+  orgId: string;
+  envelopeId: number;
+  certificateNumber: string;
+  certificateFileKey: string;
+  finalPdfFileKey: string;
+  finalPdfHash: string;
+  watermarked: boolean;
+  generatedAt: string;
+  certificateJson: Record<string, unknown>;
+}
+
+export interface SignCertificateResponse {
+  url: string;
+  expiresInSeconds: number;
+  certificate: SignCertificate;
 }
 
 export interface SignAuditEvent {

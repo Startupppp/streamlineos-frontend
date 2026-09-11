@@ -89,12 +89,17 @@ export const usersAndCommerceQueryKeys = {
         ] as const,
       settings: () => [...base, "timesheets", "payroll", "settings"] as const,
     },
+    /** Org holidays for a week, so the grid can mark closed days. */
+    holidays: (startDate: string, endDate: string) =>
+      [...base, "timesheets", "holidays", startDate, endDate] as const,
     entries: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "entries", params] as const,
     timerActive: () => [...base, "timesheets", "timer", "active"] as const,
     periods: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "periods", "list", params] as const,
     periodCurrent: () => [...base, "timesheets", "periods", "current"] as const,
+    periodsOverdue: (params?: Record<string, unknown>) =>
+      [...base, "timesheets", "periods", "overdue", params] as const,
     period: (periodId: number) =>
       [...base, "timesheets", "periods", "detail", periodId] as const,
     approvals: (params?: Record<string, unknown>) =>
@@ -120,6 +125,7 @@ export const usersAndCommerceQueryKeys = {
     budgets: () => [...base, "timesheets", "budgets"] as const,
     audit: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "audit", params] as const,
+    auditVerify: () => [...base, "timesheets", "audit", "verify"] as const,
   },
 
 } as const;

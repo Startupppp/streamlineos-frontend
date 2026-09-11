@@ -140,6 +140,8 @@ export const growthAndSignQueryKeys = {
     all: [...base, "signBulkSend"] as const,
     job: (bulkSendJobId: number) =>
       [...base, "signBulkSend", "job", bulkSendJobId] as const,
+    errorReport: (bulkSendJobId: number) =>
+      [...base, "signBulkSend", "job", bulkSendJobId, "errorReport"] as const,
   },
 
   signAdmin: {

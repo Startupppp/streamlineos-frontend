@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
+import { APPROVALS_PAGE_SIZE, useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ const TAB_EMPTY: Record<ApprovalTab, string> = {
   REJECTED: "No rejected timesheets for this period.",
 };
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = APPROVALS_PAGE_SIZE;
 
 interface ApprovalsTableProps {
   periods: TimesheetPeriod[];
@@ -242,9 +242,18 @@ export function ApprovalsTabPanel({
 }: ApprovalsTabPanelProps) {
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
+  /**
+   * Reset to page 1 when the filters change. Done during render rather than in
+   * an effect: an effect renders page 4 of the old filter first, fires a
+   * request for it, and only then corrects itself — two renders and a wasted
+   * round trip on every filter keystroke.
+   */
+  const filterKey = `${status}|${memberFilter}|${dateFrom}|${dateTo}`;
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey);
     setPage(1);
-  }, [memberFilter, dateFrom, dateTo, status]);
+  }
 
   const {
     data,

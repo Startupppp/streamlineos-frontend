@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type {
   ExceptionsQueryInput,
   ExceptionsSummary,
@@ -29,17 +30,29 @@ function invalidateExceptionQueries(qc: QueryClient) {
   });
 }
 
+/**
+ * The most rows one request can return.
+ *
+ * `exceptionsQuerySchema` caps `limit` at 100 and `listExceptions` returns a
+ * bare array — no `{ data, pagination }` envelope, no total — so a server-mode
+ * table cannot be built against this endpoint. The queue therefore reads one
+ * capped window and says so when it is full, rather than quietly showing the
+ * first hundred as if they were all of them.
+ */
+export const EXCEPTIONS_PAGE_LIMIT = 100;
+
 export function useTimesheetExceptions(
   query: ExceptionsQueryInput = {},
   enabled = true,
 ) {
+  const canView = useCan("timesheets:exceptions:view");
   const params = {
     status: query.status,
     severity: query.severity,
     rule: query.rule,
     userId: query.userId,
     page: query.page,
-    limit: query.limit,
+    limit: query.limit ?? EXCEPTIONS_PAGE_LIMIT,
   };
   return useQuery({
     queryKey: queryKeys.timesheets.exceptions(params),
@@ -47,17 +60,18 @@ export function useTimesheetExceptions(
       apiClient.get<TimesheetException[]>("/timesheets/exceptions", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useExceptionsSummary(enabled = true) {
+  const canView = useCan("timesheets:exceptions:view");
   return useQuery({
     queryKey: queryKeys.timesheets.exceptionsSummary(),
     queryFn: () =>
       apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary"),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

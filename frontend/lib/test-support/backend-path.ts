@@ -43,6 +43,33 @@ function frontendRoot(): string {
 }
 
 /**
+ * The backend checked out *beside this one*, found by name rather than by
+ * assuming there is only one.
+ *
+ * `LAYOUTS` below finds `streamlineos-backend`, and on the main checkout that is
+ * right. In a git worktree it is not: a feature worktree lives at
+ * `<feature>-frontend/frontend`, its backend at `<feature>-backend`, and
+ * `streamlineos-backend` is still there beside them holding *somebody else's
+ * branch*. Every cross-repo guard then compares this branch's frontend against
+ * that unrelated backend and reports the difference between two branches as
+ * drift — the timesheets worktree failed `catalog-sync` on two `crm:segments:*`
+ * keys that exist only on the CRM branch, and nothing about the failure said so.
+ *
+ * So the paired sibling is tried first: `ts-wt-frontend` → `ts-wt-backend`. On
+ * the main checkout the same rule yields `streamlineos-frontend` →
+ * `streamlineos-backend`, which is what `LAYOUTS` already said, so this changes
+ * nothing there.
+ */
+function pairedSibling(root: string, relative: string): string | null {
+  const repoDir = path.dirname(root);
+  const repoName = path.basename(repoDir);
+  const suffix = "-frontend";
+  if (!repoName.endsWith(suffix)) return null;
+  const paired = `${repoName.slice(0, -suffix.length)}-backend`;
+  return path.resolve(path.dirname(repoDir), paired, relative);
+}
+
+/**
  * Resolve a path inside the backend repository.
  *
  * `relative` is relative to the backend repository root, e.g.
@@ -50,9 +77,17 @@ function frontendRoot(): string {
  */
 export function backendPath(relative: string): string {
   const root = frontendRoot();
-  const candidates = LAYOUTS.map(([frontendDir, backendDir]) =>
-    path.resolve(root, "..", root.endsWith(frontendDir) ? backendDir : `../${backendDir}`, relative),
-  );
+  const candidates = [
+    ...(pairedSibling(root, relative) === null ? [] : [pairedSibling(root, relative)!]),
+    ...LAYOUTS.map(([frontendDir, backendDir]) =>
+      path.resolve(
+        root,
+        "..",
+        root.endsWith(frontendDir) ? backendDir : `../${backendDir}`,
+        relative,
+      ),
+    ),
+  ];
 
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]!;
 }

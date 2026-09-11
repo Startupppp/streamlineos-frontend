@@ -396,7 +396,6 @@ const NOT_YET_CONVERTED: readonly string[] = [
   "features/settings/webhooks/webhooks-page.tsx",
   "features/shared/automations/module-automations-settings.tsx",
   "features/timesheets/approvals/approvals-tab-panel.tsx",
-  "features/timesheets/approvals/approvals-view.tsx",
   "features/timesheets/billing/billing-view.tsx",
   "features/timesheets/payroll/payroll-exports-history.tsx",
   "features/timesheets/payroll/payroll-page-client.tsx",
@@ -462,8 +461,30 @@ function claimsEmptiness(source: string): boolean {
   return /EmptyState|No .{0,30} yet|isEmpty/.test(source);
 }
 
+/**
+ * There are two ways to state a refusal here, not one, and this only knew about
+ * the first.
+ *
+ * `<Gated>` is the newer of them. The older is `usePermissionGate` plus
+ * `<EmptyState access={gate}>`: `EmptyState` returns `NoPermissionState` when
+ * `access.denied`, and the gate keeps "denied" apart from "not known yet" the
+ * same way `resolveGate` does. That is the same fix, reached through a
+ * different component, and a surface using it does not have this bug.
+ *
+ * Recognising only `<Gated>` reported two already-correct files as broken —
+ * `timesheets/approvals` (which was even listed below as unconverted, though it
+ * had been converted) and `timesheets/exceptions`. A ratchet that names a fixed
+ * file is a ratchet people learn to disbelieve, so it must know both.
+ *
+ * Note what this deliberately does NOT accept: a page-level server
+ * `requirePermission()`. That does keep a denied user off the page, but it is a
+ * property of a route the component knows nothing about, and a second caller
+ * mounting the same component elsewhere would silently lose it.
+ */
 function handlesDenial(source: string): boolean {
-  return source.includes("NoPermissionState") || /<Gated\b/.test(source);
+  if (source.includes("NoPermissionState")) return true;
+  if (/<Gated\b/.test(source)) return true;
+  return /usePermissionGate\(/.test(source) && /\baccess=\{/.test(source);
 }
 
 function surfacesTellingDeniedUsersTheyAreEmpty(): string[] {

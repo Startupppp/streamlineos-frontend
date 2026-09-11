@@ -105,8 +105,25 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * holding the key the page actually wants. All three now name what their
  * destination checks.
  */
+/*
+ * Updated 2026-09-10, for a destination that had a backend and no way in.
+ *
+ * **Overdue** (/timesheets/overdue), gated on `timesheets:approvals:view`,
+ * matching `PeriodsController`'s own `@RequirePermission` on the endpoint the
+ * page reads. `GET /timesheets/periods/overdue` shipped with no caller: the
+ * submission grace and reminder thresholds were read by the nightly sweep to
+ * decide whom to email and by nothing else, so the only person who ever learned
+ * a timesheet was late was the person who owed it. It carries the approvals key
+ * rather than one of its own for the same reason the nurture note above does —
+ * the backend already declares that key, and a new one would need a catalogue
+ * entry in both repos plus a backfill for every organisation that exists.
+ *
+ * It sits above Exceptions rather than below: both are queues an approver works,
+ * and the overdue one is upstream — a period that was never submitted cannot
+ * have produced an exception yet.
+ */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "dd7568d00f697a3c4f4ec53908c72ec97b284a9445c60df0265adebd64baecd3";
+  "a0eb7b1062d42968b4a821cc878fbebb94b8df1825fe872f263c5c75eb6bc7a2";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

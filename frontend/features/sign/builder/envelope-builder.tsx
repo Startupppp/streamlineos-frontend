@@ -71,7 +71,7 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <BuilderTopBar envelope={data.envelope} onShowAudit={() => setAuditOpen(true)} />
+      <BuilderTopBar envelope={data.envelope} recipients={data.recipients} onShowAudit={() => setAuditOpen(true)} />
       <div className="flex flex-1 min-h-0">
         <BuilderLeftPanel envelopeId={envelopeId} documents={data.documents} recipients={data.recipients} editable={editable} />
         <BuilderCanvasArea
