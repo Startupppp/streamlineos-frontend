@@ -673,7 +673,7 @@ function runSelfTest() {
   assert(rScratch.cls === "OUT-OF-SCOPE",
     `(m0) a scratch path → expected OUT-OF-SCOPE, got ${rScratch.cls}`);
 
-  const rGen = classifyFile(".next-buildmart/dev/chunk.js", new Set([".next-buildmart/dev/chunk.js"]), new Map(), synthRoot);
+  const rGen = classifyFile(".next-custom/dev/chunk.js", new Set([".next-custom/dev/chunk.js"]), new Map(), synthRoot);
   assert(rGen.cls === "OUT-OF-SCOPE",
     `(m1) a generated build path → expected OUT-OF-SCOPE, got ${rGen.cls}`);
 

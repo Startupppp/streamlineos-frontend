@@ -76,7 +76,7 @@ function runSelfTest() {
   const fixture = mkdtempSync(join(tmpdir(), "icon-labels-"));
   try {
     mkdirSync(join(fixture, "features", "deep"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom"), { recursive: true });
 
     writeFileSync(
       join(fixture, "features", "deep", "bad.tsx"),
@@ -114,7 +114,7 @@ function runSelfTest() {
         "}",
       ].join("\n"),
     );
-    writeFileSync(join(fixture, ".next-buildmart", "chunk.jsx"), 'x(<Button size="icon"><I/></Button>);');
+    writeFileSync(join(fixture, ".next-custom", "chunk.jsx"), 'x(<Button size="icon"><I/></Button>);');
 
     const { violations, scannedFiles } = scan(fixture);
     const joined = violations.join("\n");

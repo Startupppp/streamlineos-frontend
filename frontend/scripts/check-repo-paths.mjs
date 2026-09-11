@@ -99,7 +99,7 @@ export function reportBackendUnreachable(gateName, whatIsSkipped) {
 /**
  * Directory-walk exclusion for every frontend source scan.
  *
- * A name-exact `.next` blocklist let `.next-buildmart` — 718 MB of minified
+ * A name-exact `.next` blocklist let `.next-custom` — 718 MB of minified
  * build output from an alternate distDir — into the corpus of every gate that
  * scans .js, producing findings in generated chunks. No frontend SOURCE
  * directory begins with a dot, so skipping dot-directories wholesale is both
@@ -121,7 +121,7 @@ export function runScanDirSelfTest(assert) {
   assert("the default build dir is excluded", isExcludedScanDir(".next") === true);
   assert(
     "an alternate distDir is excluded — the defect that let 718MB of chunks into the corpus",
-    isExcludedScanDir(".next-buildmart") === true,
+    isExcludedScanDir(".next-custom") === true,
   );
   assert("the swc cache is excluded", isExcludedScanDir(".swc") === true);
   assert("the scratch dir is excluded", isExcludedScanDir(".scratch") === true);

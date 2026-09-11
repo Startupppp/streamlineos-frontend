@@ -139,7 +139,7 @@ function runSelfTest() {
   const fixture = mkdtempSync(join(tmpdir(), "no-effect-fetches-"));
   try {
     mkdirSync(join(fixture, "features", "deep"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom"), { recursive: true });
 
     writeFileSync(
       join(fixture, "features", "deep", "async-effect.tsx"),
@@ -223,7 +223,7 @@ function runSelfTest() {
     );
 
     writeFileSync(
-      join(fixture, ".next-buildmart", "chunk.js"),
+      join(fixture, ".next-custom", "chunk.js"),
       'import{apiClient}from"@/lib/api-client";useEffect(async()=>{await apiClient.get("/x")},[]);',
     );
 

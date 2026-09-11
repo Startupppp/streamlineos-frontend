@@ -26,7 +26,6 @@ package-lock.json
 # directory named exactly `.next`, so two of them went red over compiled chunks.
 /.next-*/
 /.next-baseline/
-/.next-buildmart/
 /out/
 
 # production

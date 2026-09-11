@@ -103,12 +103,12 @@ const CLASSES = [
 // hooks/api/build/ and app/(authenticated)/build/ are live product code. An
 // earlier draft of this gate skipped them as build output and reported OK over
 // 17 live test files — the exact defect this ticket exists to remove. Next.js
-// output is .next/ and .next-buildmart/; neither is a directory named "build".
+// output is .next/ and .next-custom/; neither is a directory named "build".
 const SKIP_DIRS = new Set([
   "node_modules",
   ".git",
   ".next",
-  ".next-buildmart",
+  ".next-custom",
   "dist",
   "coverage",
   "public",

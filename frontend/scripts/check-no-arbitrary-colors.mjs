@@ -53,14 +53,14 @@ function runSelfTest() {
   const fixture = mkdtempSync(join(tmpdir(), "no-arbitrary-colors-"));
   try {
     mkdirSync(join(fixture, "features", "deep"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart", "chunks"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom", "chunks"), { recursive: true });
     mkdirSync(join(fixture, "node_modules", "pkg"), { recursive: true });
 
     writeFileSync(join(fixture, "features", "deep", "bad.tsx"), 'const a = <div className="text-[#3b82f6]" />;\n');
     writeFileSync(join(fixture, "features", "deep", "bad-style.tsx"), 'const b = <div className="bg-[#0b1220]" />;\n');
     writeFileSync(join(fixture, "good.tsx"), 'const c = <div className="text-primary" />;\n');
     writeFileSync(join(fixture, "token-arbitrary.tsx"), 'const d = <div className="w-[calc(100%-1rem)]" />;\n');
-    writeFileSync(join(fixture, ".next-buildmart", "chunks", "gen.js"), 'e.className="text-[#ffffff]";\n');
+    writeFileSync(join(fixture, ".next-custom", "chunks", "gen.js"), 'e.className="text-[#ffffff]";\n');
     writeFileSync(join(fixture, "node_modules", "pkg", "vendor.js"), 'f.className="text-[#000000]";\n');
     writeFileSync(join(fixture, "notes.md"), "text-[#123456]\n");
 

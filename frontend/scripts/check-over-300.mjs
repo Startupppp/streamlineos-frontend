@@ -129,7 +129,7 @@ function runSelfTests() {
   const fixture = mkdtempSync(join(tmpdir(), "fe-over-300-self-test-"));
   try {
     mkdirSync(join(fixture, "features", "nested"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart", "dev"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom", "dev"), { recursive: true });
     mkdirSync(join(fixture, "next-intl"), { recursive: true });
     mkdirSync(join(fixture, "node_modules"), { recursive: true });
 
@@ -140,7 +140,7 @@ function runSelfTests() {
     writeFileSync(join(fixture, "over.spec.tsx"), "x\n".repeat(400));
     writeFileSync(join(fixture, "over.d.ts"), "x\n".repeat(400));
     writeFileSync(join(fixture, "over.js"), "x\n".repeat(400));
-    writeFileSync(join(fixture, ".next-buildmart", "dev", "chunk.ts"), "x\n".repeat(9000));
+    writeFileSync(join(fixture, ".next-custom", "dev", "chunk.ts"), "x\n".repeat(9000));
     writeFileSync(join(fixture, "next-intl", "authored.tsx"), "x\n".repeat(400));
     writeFileSync(join(fixture, "node_modules", "dep.ts"), "x\n".repeat(900));
 
@@ -155,7 +155,7 @@ function runSelfTests() {
     assert("spec files are excluded", !collected.some((f) => f.includes(".spec.")));
     assert("declaration files are excluded", !collected.some((f) => f.endsWith(".d.ts")));
     assert("non-TypeScript files are excluded", !collected.some((f) => f.endsWith(".js")));
-    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-buildmart")));
+    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-custom")));
     assert("node_modules is excluded", !collected.some((f) => f.includes("node_modules")));
     assert(
       "an authored directory merely starting with 'next-' is still scanned",

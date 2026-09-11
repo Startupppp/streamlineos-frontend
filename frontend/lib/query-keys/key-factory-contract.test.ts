@@ -154,7 +154,6 @@ describe("no call site in the app under-supplies a key factory", () => {
   const SKIP_DIRS = new Set([
     "node_modules",
     ".next",
-    ".next-buildmart",
     ".git",
     "coverage",
     "public",
@@ -163,7 +162,7 @@ describe("no call site in the app under-supplies a key factory", () => {
 
   function* walk(dir: string): Generator<string> {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (SKIP_DIRS.has(entry.name)) continue;
+      if (SKIP_DIRS.has(entry.name) || entry.name.startsWith(".next")) continue;
       const full = join(dir, entry.name);
       if (entry.isDirectory()) yield* walk(full);
       else if (/\.tsx?$/.test(entry.name)) yield full;

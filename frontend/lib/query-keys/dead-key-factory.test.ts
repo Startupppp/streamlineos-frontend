@@ -27,7 +27,6 @@ const KEY_DIR = __dirname;
 const SKIP_DIRS = new Set([
   "node_modules",
   ".next",
-  ".next-buildmart",
   ".git",
   ".claude",
   ".scratch",
@@ -113,7 +112,7 @@ function parseRegistryLeaves(keyDir: string, root: string): Leaf[] {
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.has(entry.name)) continue;
+    if (SKIP_DIRS.has(entry.name) || entry.name.startsWith(".next")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) yield* walk(full);
     else if (/\.(tsx?|mjs)$/.test(entry.name)) yield full;
