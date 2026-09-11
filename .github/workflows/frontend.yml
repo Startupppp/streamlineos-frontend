@@ -483,6 +483,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
+      - name: No customer proper noun in the source every tenant runs
+        if: ${{ !cancelled() }}
+        run: pnpm run check:tenant-neutral:self-test && pnpm run check:tenant-neutral
+
       # BLOCKING AND NEWLY RED, deliberately. 2026-09-03 (ticket 35) bite-proved
       # this gate and it did not bite: it reported "No useEffect-driven API
       # fetches found (5,278 files scanned)" over a real one, because both of
