@@ -1,4 +1,4 @@
-import { inviteEmailSchema } from "@/features/directory/users/user-invite-schema";
+import { inviteEmailSchema } from "@/lib/validation/user-invite";
 import type { Invitee } from "./wizard-data-schema";
 
 export type InviteEmailResult =
