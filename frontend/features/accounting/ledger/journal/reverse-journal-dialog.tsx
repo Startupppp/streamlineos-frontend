@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useReverseJournal } from "@/hooks/api/accounting/ledger";
+import { useReverseJournal } from "@/hooks/api/accounting/ledger-mutations";
 import type { Journal } from "@/types/accounting-kernel";
 
 interface ReverseJournalDialogProps {

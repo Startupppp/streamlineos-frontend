@@ -26,6 +26,8 @@ jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => can(key) }));
 jest.mock("@/hooks/api/accounting/ledger", () => ({
   useAccountMappings: () => mappings(),
   usePostableAccounts: () => postable(),
+}));
+jest.mock("@/hooks/api/accounting/ledger-mutations", () => ({
   useSetAccountSystemTag: () => ({ mutate, isPending: false }),
 }));
 

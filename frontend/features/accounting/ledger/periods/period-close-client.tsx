@@ -13,13 +13,12 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
+import { useAccountingPeriods, useFiscalYears } from "@/hooks/api/accounting/ledger";
 import {
-  useAccountingPeriods,
-  useFiscalYears,
   useLockPeriod,
   useOpenNextFiscalYear,
   useUnlockPeriod,
-} from "@/hooks/api/accounting/ledger";
+} from "@/hooks/api/accounting/ledger-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";

@@ -15,11 +15,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
-import {
-  useAccountingBook,
-  usePostableAccounts,
-  usePostJournal,
-} from "@/hooks/api/accounting/ledger";
+import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
+import { usePostJournal } from "@/hooks/api/accounting/ledger-mutations";
 import { getApiErrorCode, isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTodayString } from "@/lib/date-utils";

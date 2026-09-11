@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCan } from "@/hooks/api/access";
-import { useCurrencies, useFxRates, useUpsertFxRate } from "@/hooks/api/accounting/ledger";
+import { useCurrencies, useFxRates } from "@/hooks/api/accounting/ledger";
+import { useUpsertFxRate } from "@/hooks/api/accounting/ledger-mutations";
 import { formatRate } from "@/lib/accounting/money";
 import { formatShortDate, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";

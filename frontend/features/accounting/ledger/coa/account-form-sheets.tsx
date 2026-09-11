@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { EntityFormSheet } from "@/components/shared";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateAccount, useUpdateAccount } from "@/hooks/api/accounting/ledger";
+import { useCreateAccount, useUpdateAccount } from "@/hooks/api/accounting/ledger-mutations";
 import type { AccountNode } from "@/types/accounting-kernel";
 import {
   createAccountFormSchema,

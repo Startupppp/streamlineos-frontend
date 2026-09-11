@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useEnableAccounting, useLocalizationPacks } from "@/hooks/api/accounting/ledger";
+import { useLocalizationPacks } from "@/hooks/api/accounting/ledger";
+import { useEnableAccounting } from "@/hooks/api/accounting/ledger-mutations";
 import { enableAccountingSchema, type EnableAccountingFormValues } from "./enable-accounting-schema";
 
 interface EnableAccountingCardProps {

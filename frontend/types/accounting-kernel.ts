@@ -395,3 +395,77 @@ export type LedgerRejectionCode =
   | "JOURNAL_NOT_FOUND"
   | "ALREADY_REVERSED"
   | "IDEMPOTENCY_CONFLICT";
+
+export interface EnableAccountingInput {
+  countryCode: string;
+  baseCurrency?: string;
+  packCode?: string;
+  name?: string;
+  legalEntityId?: string;
+  openFrom?: string;
+}
+
+export interface CreateAccountInput {
+  code: string;
+  name: string;
+  accountType: GlAccountType;
+  parentAccountId?: string | null;
+  isHeader?: boolean;
+  isCash?: boolean;
+  systemTag?: GlSystemTag | null;
+  currencyRestriction?: string | null;
+  description?: string | null;
+}
+
+export interface UpdateAccountInput {
+  name?: string;
+  parentAccountId?: string | null;
+  isActive?: boolean;
+  isCash?: boolean;
+  currencyRestriction?: string | null;
+  description?: string | null;
+}
+
+export interface PostJournalLineInput {
+  accountId: string;
+  debitMinor?: number;
+  creditMinor?: number;
+  txnCurrency?: string;
+  txnAmountMinor?: number;
+  fxRate?: string;
+  partyId?: string;
+  description?: string;
+  dimensionProjectId?: number;
+  dimensionBranchId?: string;
+}
+
+export interface PostJournalInput {
+  idempotencyKey: string;
+  journalDate: string;
+  memo?: string;
+  sourceType?: GlJournalSource;
+  sourceId?: string;
+  lines: PostJournalLineInput[];
+}
+
+export interface OpeningBalanceLineInput {
+  accountId: string;
+  amountMinor: number;
+}
+
+export interface OpeningBalancesInput {
+  asOfDate: string;
+  lines: OpeningBalanceLineInput[];
+  memo?: string;
+}
+
+export interface OpeningBalancesPreview {
+  asOfDate: string;
+  journalDate: string;
+  totalDebitMinor: number;
+  totalCreditMinor: number;
+  differenceMinor: number;
+  balancingAccountCode: string | null;
+  currency: string;
+  alreadyPosted: boolean;
+}
