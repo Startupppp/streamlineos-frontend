@@ -160,15 +160,7 @@ const CONTRACTED_ROUTES = [
   "/invoices/:p",
   "/invoices/stats",
   // money — accounting
-  "/accounting/ar-payments",
-  "/accounting/credit-notes",
-  "/accounting/coa/tree",
-  "/accounting/settings/setup-status",
   "/accounting/reports/tax-summary",
-  "/accounting/reports/expense-by-category",
-  "/accounting/general-ledger",
-  "/accounting/general-ledger/accounts",
-  "/finance/bank-accounts",
   // money — payroll
   "/payroll/runs",
   "/payroll/runs/:p",
