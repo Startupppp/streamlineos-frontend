@@ -3,7 +3,6 @@
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -25,26 +24,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useUpdateNumberSequence,
   useUpsertSystemAccount,
-  useUpdatePaymentTerms,
 } from "@/hooks/api/accounting/fin-settings";
-import {
-  useCreateApprovalPolicy,
-  useUpdateApprovalPolicy,
-  useUpsertExchangeRate,
-} from "@/hooks/api/accounting/settings";
+import { useUpsertExchangeRate } from "@/hooks/api/accounting/settings";
 import { useAccounts } from "@/hooks/api/accounting";
-import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/accounting/fin-settings";
-import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
+import type { NumberSequence, SystemAccountMapping } from "@/types/accounting/fin-settings";
 import { PURPOSE_LABELS } from "./fin-settings-labels";
 
-const RECORD_TYPES: ReadonlyArray<string> = [
-  "MANUAL_JOURNAL", "PURCHASE_BILL", "VENDOR_PAYMENT",
-  "EXPENSE", "CREDIT_NOTE", "PERIOD_REOPEN", "BANK_ADJUSTMENT",
-];
-
-function isApprovalRecordType(value: string): value is ApprovalRecordType {
-  return RECORD_TYPES.includes(value);
-}
+export { PolicyDialog } from "./approval-policy-dialog";
+export { PaymentTermDialog } from "./payment-term-dialog";
 
 const sequenceSchema = z.object({
   prefix: z.string().min(1),
@@ -57,14 +44,6 @@ const systemAccountSchema = z.object({
   accountId: z.string().min(1, "Select an account"),
 });
 type SystemAccountFormValues = z.infer<typeof systemAccountSchema>;
-
-const policySchema = z.object({
-  recordType: z.enum(["MANUAL_JOURNAL", "PURCHASE_BILL", "VENDOR_PAYMENT", "EXPENSE", "CREDIT_NOTE", "PERIOD_REOPEN", "BANK_ADJUSTMENT"]),
-  minAmount: z.string(),
-  approverRole: z.string(),
-  isActive: z.boolean(),
-});
-type PolicyFormValues = z.infer<typeof policySchema>;
 
 const rateSchema = z.object({
   fromCurrency: z.string().min(1),
@@ -220,102 +199,6 @@ export function SystemAccountMapDialog({
   );
 }
 
-export function PolicyDialog({
-  policy,
-  open,
-  onOpenChange,
-}: {
-  policy: ApprovalPolicy | null;
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
-  const create = useCreateApprovalPolicy();
-  const update = useUpdateApprovalPolicy(policy?.id ?? 0);
-  const isPending = policy ? update.isPending : create.isPending;
-
-  function handleSubmit(values: PolicyFormValues) {
-    const payload = {
-      recordType: values.recordType,
-      minAmount: values.minAmount || undefined,
-      approverRole: values.approverRole || undefined,
-      isActive: values.isActive,
-    };
-    const onSuccess = () => { toast.success(policy ? "Policy updated" : "Policy created"); onOpenChange(false); };
-    const onError = (err: Error) => toast.error(getErrorMessage(err));
-    if (policy) { update.mutate(payload, { onSuccess, onError }); }
-    else { create.mutate(payload, { onSuccess, onError }); }
-  }
-
-  return (
-    <EntityFormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={policy ? "Edit approval policy" : "Add approval policy"}
-      resolver={zodResolver(policySchema)}
-      defaultValues={{
-        recordType: policy?.recordType ?? "MANUAL_JOURNAL",
-        minAmount: policy?.minAmount ?? "",
-        approverRole: policy?.approverRole ?? "",
-        isActive: policy?.isActive ?? true,
-      }}
-      onSubmit={handleSubmit}
-      isSubmitting={isPending}
-      resetOnOpen
-    >
-      {(form) => {
-        function handleRecordTypeChange(v: string): void {
-          if (isApprovalRecordType(v)) form.setValue("recordType", v, { shouldValidate: true });
-        }
-
-        return (
-        <>
-          <div className="space-y-1.5">
-            <Label>Record type</Label>
-            <Select
-              value={form.watch("recordType")}
-              onValueChange={handleRecordTypeChange}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RECORD_TYPES.map((rt) => (
-                  <SelectItem key={rt} value={rt}>{rt.replace(/_/g, " ")}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Min amount (optional)</Label>
-            <Input {...form.register("minAmount")} placeholder="e.g. 1000" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Approver role (optional)</Label>
-            <Input {...form.register("approverRole")} placeholder="e.g. FINANCE_MANAGER" />
-          </div>
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Checkbox
-                    id="policy-isActive"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel htmlFor="policy-isActive" className="!mt-0">Active</FormLabel>
-              </FormItem>
-            )}
-          />
-        </>
-        );
-      }}
-    </EntityFormDialog>
-  );
-}
-
 export function RateDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const upsert = useUpsertExchangeRate();
 
@@ -361,119 +244,6 @@ export function RateDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             <Input {...form.register("asOfDate")} type="date" />
             {form.formState.errors.asOfDate && <p className="text-xs text-destructive">{form.formState.errors.asOfDate.message}</p>}
           </div>
-        </>
-      )}
-    </EntityFormDialog>
-  );
-}
-
-const paymentTermSchema = z.object({
-  label: z.string().min(1, "Label is required"),
-  days: z.string().min(1, "Days is required"),
-  isDefault: z.boolean(),
-});
-type PaymentTermFormValues = z.infer<typeof paymentTermSchema>;
-
-export function PaymentTermDialog({
-  term,
-  existingTerms,
-  open,
-  onOpenChange,
-}: {
-  term: PaymentTerm | null;
-  existingTerms: PaymentTerm[];
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
-  const updateTerms = useUpdatePaymentTerms();
-
-  function handleSubmit(values: PaymentTermFormValues) {
-    const days = Number(values.days);
-    const key = term?.key ?? values.label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-
-    let updated: PaymentTerm[];
-
-    if (term) {
-      updated = existingTerms.map((t) =>
-        t.key === term.key
-          ? { key, label: values.label, days, isDefault: values.isDefault }
-          : values.isDefault ? { ...t, isDefault: false } : t,
-      );
-    } else {
-      const withoutDefault = values.isDefault
-        ? existingTerms.map((t) => ({ ...t, isDefault: false }))
-        : existingTerms;
-      updated = [...withoutDefault, { key, label: values.label, days, isDefault: values.isDefault }];
-    }
-
-    updateTerms.mutate(
-      { terms: updated },
-      {
-        onSuccess: () => { toast.success(term ? "Payment term updated" : "Payment term added"); onOpenChange(false); },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
-  return (
-    <EntityFormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={term ? "Edit payment term" : "Add payment term"}
-      resolver={zodResolver(paymentTermSchema)}
-      defaultValues={{
-        label: term?.label ?? "",
-        days: term ? String(term.days) : "",
-        isDefault: term?.isDefault ?? false,
-      }}
-      onSubmit={handleSubmit}
-      isSubmitting={updateTerms.isPending}
-      resetOnOpen
-    >
-      {(form) => (
-        <>
-          <FormField
-            control={form.control}
-            name="label"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Label <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Net 30" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="days"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Days <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" min={0} placeholder="30" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="isDefault"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Checkbox
-                    id="term-isDefault"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel htmlFor="term-isDefault" className="!mt-0">Set as default</FormLabel>
-              </FormItem>
-            )}
-          />
         </>
       )}
     </EntityFormDialog>
