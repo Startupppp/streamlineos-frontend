@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 export type ActivationStep =
   | "invite-a-colleague"
@@ -39,8 +40,9 @@ export interface ActivationReport {
  */
 export function useActivation() {
   return useQuery({
-    queryKey: ["onboarding", "activation"] as const,
-    queryFn: () => apiClient.get<ActivationReport>("/onboarding/activation"),
+    queryKey: platformCoreQueryKeys.onboardingFlow.activation(),
+    queryFn: ({ signal }) =>
+      apiClient.get<ActivationReport>("/onboarding/activation", undefined, signal),
     // Counts move as the workspace is used, and the checklist is read while
     // somebody is actively doing the thing it asks for.
     staleTime: 30_000,
