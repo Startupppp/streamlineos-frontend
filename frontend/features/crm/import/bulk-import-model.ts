@@ -50,8 +50,6 @@ export interface BulkEntity {
   columns: BulkPreviewColumn[];
   /** A file that shows the shape, for somebody who has nothing to start from. */
   template: string;
-  /** Everything this write invalidates, beyond the CRM as a whole. */
-  queryKey: readonly unknown[];
   /** The one choice this entity's import offers, if it offers one. */
   option?: { key: "autoDistribute"; label: string; hint: string };
   /**

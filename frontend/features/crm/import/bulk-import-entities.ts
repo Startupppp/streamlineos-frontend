@@ -1,5 +1,4 @@
 import { personNameSchema } from "@/lib/person-name-schema";
-import { queryKeys } from "@/lib/query-keys";
 import type { BulkEntity } from "./bulk-import-model";
 
 /**
@@ -76,7 +75,6 @@ const LEADS: BulkEntity = {
   permission: "crm:leads:create",
   endpoint: "/leads/import",
   maxRows: 1_000,
-  queryKey: queryKeys.leads.all,
   option: {
     key: "autoDistribute",
     label: "Share these out across the sales team",
@@ -163,7 +161,6 @@ const CONTACTS: BulkEntity = {
   permission: "crm:contacts:manage",
   endpoint: "/contacts/bulk-import",
   maxRows: 500,
-  queryKey: queryKeys.contacts.all,
   fields: [
     { key: "first_name", label: "First name", required: true, aliases: ["fname", "given name"] },
     { key: "last_name", label: "Last name", aliases: ["lname", "surname", "family name"] },
@@ -224,7 +221,6 @@ const DEALS: BulkEntity = {
   permission: "crm:deals:create",
   endpoint: "/deals/bulk-import",
   maxRows: 500,
-  queryKey: queryKeys.deals.all,
   fields: [
     { key: "name", label: "Deal name", required: true, aliases: ["deal name", "title", "deal title"] },
     { key: "value", label: "Value", aliases: ["amount", "deal value", "budget", "price"] },
