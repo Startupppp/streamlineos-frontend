@@ -145,19 +145,26 @@ export function RecordPaymentSheet({
       resetOnOpen
       className="sm:max-w-2xl"
     >
-      {(form) => (
-        <PaymentFormFields
-          form={form}
-          openBills={openBills}
-          isLoadingBills={!!partyId && openBillsQuery.isPending}
-          onVendorChange={(nextPartyId, vendor: VendorSummary | undefined) => {
-            setPartyId(nextPartyId);
-            form.setValue("partyId", nextPartyId, { shouldValidate: true });
-            form.setValue("amounts", []);
-            if (vendor) form.setValue("currency", vendor.defaultCurrency);
-          }}
-        />
-      )}
+      {(form) => {
+        function handleVendorChange(
+          nextPartyId: string,
+          vendor: VendorSummary | undefined,
+        ): void {
+          setPartyId(nextPartyId);
+          form.setValue("partyId", nextPartyId, { shouldValidate: true });
+          form.setValue("amounts", []);
+          if (vendor) form.setValue("currency", vendor.defaultCurrency);
+        }
+
+        return (
+          <PaymentFormFields
+            form={form}
+            openBills={openBills}
+            isLoadingBills={!!partyId && openBillsQuery.isPending}
+            onVendorChange={handleVendorChange}
+          />
+        );
+      }}
     </EntityFormSheet>
   );
 }

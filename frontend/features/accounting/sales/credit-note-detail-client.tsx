@@ -9,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -23,6 +23,7 @@ import {
   useUpdateCreditNoteDraft,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
+import type { AllocationLineInput } from "@/types/accounting-ar";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ArStatusBadge } from "./ar-labels";
 import { ArDraftEditor } from "./ar-draft-editor";
@@ -92,6 +93,19 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
     });
   }
 
+  function handleApplyCreditNote(allocations: AllocationLineInput[]): void {
+    allocate.mutate(
+      { creditNoteId, allocations },
+      {
+        onSuccess: () => {
+          toast.success("Credit note applied");
+          setApplyOpen(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
   function handleDelete(): void {
     deleteDraft.mutate(creditNoteId, {
       onSuccess: () => {
@@ -143,7 +157,7 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
   return (
     <PageWrapper
       title={creditNote.documentNumber ?? "Unissued draft credit note"}
-      subtitle={`${partyName} · ${formatMoney(creditNote.grossMinor, creditNote.currency)}`}
+      subtitle={`${partyName} · ${formatMinorMoney(creditNote.grossMinor, creditNote.currency)}`}
       badge={<ArStatusBadge status={creditNote.status} />}
       backHref="/accounting/credit-notes"
       backLabel="Back to credit notes"
@@ -205,7 +219,7 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
         open={postOpen}
         onOpenChange={setPostOpen}
         title="Post this credit note?"
-        description={`Posting writes ${formatMoney(creditNote.grossMinor, creditNote.currency)} back into your books and locks the note. You can then apply it to their open invoices.`}
+        description={`Posting writes ${formatMinorMoney(creditNote.grossMinor, creditNote.currency)} back into your books and locks the note. You can then apply it to their open invoices.`}
         confirmLabel="Post credit note"
         isPending={postCreditNote.isPending}
         onConfirm={handlePost}
@@ -231,18 +245,7 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
         currency={creditNote.currency}
         availableMinor={creditNote.openMinor}
         isPending={allocate.isPending}
-        onSubmit={(allocations) =>
-          allocate.mutate(
-            { creditNoteId, allocations },
-            {
-              onSuccess: () => {
-                toast.success("Credit note applied");
-                setApplyOpen(false);
-              },
-              onError: (error) => toast.error(getErrorMessage(error)),
-            },
-          )
-        }
+        onSubmit={handleApplyCreditNote}
       />
     </PageWrapper>
   );

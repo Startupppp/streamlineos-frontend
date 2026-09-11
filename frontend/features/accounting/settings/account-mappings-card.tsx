@@ -14,11 +14,8 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { useCan } from "@/hooks/api/access";
-import {
-  useAccountMappings,
-  usePostableAccounts,
-  useSetAccountSystemTag,
-} from "@/hooks/api/accounting/ledger";
+import { useAccountMappings, usePostableAccounts } from "@/hooks/api/accounting/ledger";
+import { useSetAccountSystemTag } from "@/hooks/api/accounting/ledger-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AccountSystemTagMapping, GlSystemTag } from "@/types/accounting-kernel";
 
@@ -93,6 +90,16 @@ export function AccountMappingsCard({ enabled }: AccountMappingsCardProps) {
 
   const unmappedRequired = rows.filter((r) => r.requiredByInventory && !r.account).length;
 
+  function handleSelect(accountId: string, tag: GlSystemTag): void {
+    setTag.mutate(
+      { accountId, systemTag: tag },
+      {
+        onSuccess: () => toast.success(`${roleLabel(tag)} now posts to this account`),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
   if (!enabled) return null;
 
   return (
@@ -134,16 +141,7 @@ export function AccountMappingsCard({ enabled }: AccountMappingsCardProps) {
                   row.allowedAccountTypes.includes(a.accountType),
                 )}
                 isSaving={setTag.isPending}
-                onSelect={(accountId) => {
-                  setTag.mutate(
-                    { accountId, systemTag: row.tag },
-                    {
-                      onSuccess: () =>
-                        toast.success(`${roleLabel(row.tag)} now posts to this account`),
-                      onError: (error) => toast.error(getErrorMessage(error)),
-                    },
-                  );
-                }}
+                onSelect={handleSelect}
               />
             ))}
           </ul>
@@ -162,7 +160,7 @@ interface MappingRowProps {
   canManage: boolean;
   options: { id: string; code: string; name: string }[];
   isSaving: boolean;
-  onSelect: (accountId: string) => void;
+  onSelect: (accountId: string, tag: GlSystemTag) => void;
 }
 
 function MappingRow({ mapping, canManage, options, isSaving, onSelect }: MappingRowProps) {
@@ -199,7 +197,7 @@ function MappingRow({ mapping, canManage, options, isSaving, onSelect }: Mapping
             value={mapping.account?.id ?? UNMAPPED}
             disabled={isSaving || options.length === 0}
             onValueChange={(value) => {
-              if (value !== UNMAPPED) onSelect(value);
+              if (value !== UNMAPPED) onSelect(value, mapping.tag);
             }}
           >
             <SelectTrigger className="w-full">

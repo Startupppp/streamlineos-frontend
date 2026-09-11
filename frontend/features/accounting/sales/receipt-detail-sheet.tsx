@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -20,6 +20,7 @@ import {
   useReverseArReceipt,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
+import type { AllocationLineInput } from "@/types/accounting-ar";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ReceiptStatusBadge } from "./ar-labels";
 
@@ -56,6 +57,20 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
       { receiptId },
       {
         onSuccess: () => toast.success("Applied to their oldest invoices"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  function handleApplyReceipt(allocations: AllocationLineInput[]): void {
+    if (!receipt) return;
+    allocate.mutate(
+      { receiptId: receipt.id, allocations },
+      {
+        onSuccess: () => {
+          toast.success("Payment applied");
+          setApplyOpen(false);
+        },
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
@@ -133,14 +148,14 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
           </div>
 
           <div className="divide-y divide-border/60">
-            <Row label="Received" value={formatMoney(receipt.amountMinor, receipt.currency)} />
+            <Row label="Received" value={formatMinorMoney(receipt.amountMinor, receipt.currency)} />
             <Row
               label="Applied to invoices"
-              value={formatMoney(receipt.appliedMinor, receipt.currency)}
+              value={formatMinorMoney(receipt.appliedMinor, receipt.currency)}
             />
             <Row
               label="Still unapplied"
-              value={formatMoney(receipt.unappliedMinor, receipt.currency)}
+              value={formatMinorMoney(receipt.unappliedMinor, receipt.currency)}
             />
             {receipt.paymentMethod ? (
               <Row label="Paid by" value={receipt.paymentMethod} />
@@ -165,7 +180,7 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
                       {allocation.documentNumber ?? "Invoice"}
                     </span>
                     <span className="font-mono text-label tabular-nums">
-                      {formatMoney(allocation.amountMinor, receipt.currency)}
+                      {formatMinorMoney(allocation.amountMinor, receipt.currency)}
                     </span>
                   </li>
                 ))}
@@ -186,18 +201,7 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
             currency={receipt.currency}
             availableMinor={receipt.unappliedMinor}
             isPending={allocate.isPending}
-            onSubmit={(allocations) =>
-              allocate.mutate(
-                { receiptId: receipt.id, allocations },
-                {
-                  onSuccess: () => {
-                    toast.success("Payment applied");
-                    setApplyOpen(false);
-                  },
-                  onError: (error) => toast.error(getErrorMessage(error)),
-                },
-              )
-            }
+            onSubmit={handleApplyReceipt}
           />
 
           <ConfirmDialog

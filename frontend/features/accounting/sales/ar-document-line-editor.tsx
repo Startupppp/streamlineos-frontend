@@ -34,6 +34,10 @@ export function ArDocumentLineEditor({
   disabled = false,
 }: ArDocumentLineEditorProps) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "lines" });
+
+  function handleAddLine(): void {
+    append(emptyArLine());
+  }
   const danger = statusToneClasses("danger");
   const linesError = form.formState.errors.lines?.message;
 
@@ -208,7 +212,7 @@ export function ArDocumentLineEditor({
         variant="outline"
         size="sm"
         disabled={disabled}
-        onClick={() => append(emptyArLine())}
+        onClick={handleAddLine}
       >
         Add a line
       </AnimatedIconButton>
