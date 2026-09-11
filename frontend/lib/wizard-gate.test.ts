@@ -131,7 +131,7 @@ describe("resolveWizardGate", () => {
             orgId: "org-1",
             organizationAccess: "active",
           }),
-          withCookie(gateCookieName("onboarding-done", "user-1")),
+          withCookie(gateCookieName("onboarding-done", "user-1--org-1")),
         ),
       ).toBeNull();
     });
