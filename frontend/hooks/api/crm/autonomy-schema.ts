@@ -146,4 +146,5 @@ export const autonomySettingsContract = z.object({
   shadowSampleRate: z.number(),
   shadowDailyCap: z.number().int(),
   holdWindowSeconds: z.number().int(),
+  autoQuoteEnabled: z.boolean(),
 });
