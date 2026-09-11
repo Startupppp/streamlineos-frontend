@@ -21,7 +21,14 @@ import { join, relative, extname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const LIMIT = 300;
-const BASELINE = 519;
+// 522 after the 2026-09-11 merge of the CRM/Timesheets lane (7486adb99). The
+// inventory-lane baseline of 519 never counted that lane's files: 35 of the 36
+// files the merge newly counts were already over 300 there, and none grew in
+// the merge except lib/query-keys/access-and-crm.ts (+9 lines, already 358 on
+// that lane). The 36th, sidebar-nav-inventory.test.ts, grew past 300 in the
+// merge and was split instead. 32 inventory-side files left the count, replaced
+// by the accounting rewrite: 519 + 35 - 32 = 522.
+const BASELINE = 522;
 const MIN_FILES = 100;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
