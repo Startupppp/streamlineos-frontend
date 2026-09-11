@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { cn } from "@/lib/utils";
 
 export interface StatementRow {
@@ -38,7 +38,7 @@ function rowClassName(row: StatementRow): string {
 
 function Amount({ value, currency }: { value: number | null; currency: string }) {
   if (value === null) return <span className="text-muted-foreground">—</span>;
-  return <span>{formatMoney(value, currency)}</span>;
+  return <span>{formatMinorMoney(value, currency)}</span>;
 }
 
 export function StatementTable({

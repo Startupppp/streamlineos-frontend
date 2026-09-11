@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import type { ApDocumentSummary, VendorSummary } from "@/types/accounting-ap";
@@ -139,7 +139,7 @@ export function PaymentFormFields({
                   </p>
                   <p className="text-dense text-muted-foreground">
                     Dated {formatShortDate(bill.issueDate)} · still owed{" "}
-                    {formatMoney(bill.openMinor, bill.currency)}
+                    {formatMinorMoney(bill.openMinor, bill.currency)}
                   </p>
                 </div>
                 <div className="w-32 shrink-0">

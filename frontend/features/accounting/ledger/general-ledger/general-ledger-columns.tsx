@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { balanceDirection, formatMoney } from "@/lib/accounting/money";
+import { balanceDirection, formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { AccountLedgerEntry } from "@/types/accounting-kernel";
 import { JOURNAL_SOURCE_LABELS, sourceDocumentHref } from "./journal-source";
@@ -59,14 +59,14 @@ export function buildLedgerColumns(currency: string): DataTableColumn<AccountLed
       header: "Debit",
       className: "font-mono text-dense tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => (row.debitMinor > 0 ? formatMoney(row.debitMinor, currency) : "—"),
+      cell: (row) => (row.debitMinor > 0 ? formatMinorMoney(row.debitMinor, currency) : "—"),
     },
     {
       key: "creditMinor",
       header: "Credit",
       className: "font-mono text-dense tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => (row.creditMinor > 0 ? formatMoney(row.creditMinor, currency) : "—"),
+      cell: (row) => (row.creditMinor > 0 ? formatMinorMoney(row.creditMinor, currency) : "—"),
     },
     {
       key: "runningBalanceMinor",
@@ -75,7 +75,7 @@ export function buildLedgerColumns(currency: string): DataTableColumn<AccountLed
       headerClassName: "text-right",
       cell: (row) => (
         <span>
-          {formatMoney(Math.abs(row.runningBalanceMinor), currency)}
+          {formatMinorMoney(Math.abs(row.runningBalanceMinor), currency)}
           <span className="ml-1 text-micro uppercase tracking-wider text-muted-foreground">
             {balanceDirection(row.runningBalanceMinor) === "debit" ? "Dr" : "Cr"}
           </span>

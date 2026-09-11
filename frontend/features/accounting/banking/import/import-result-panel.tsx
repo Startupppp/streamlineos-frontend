@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { StatementImportResult } from "@/types/accounting-banking";
 
@@ -39,9 +39,9 @@ export function ImportResultPanel({ result, onImportAnother }: ImportResultPanel
         >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            Opened at {formatMoney(result.openingMinor, result.currency)}, closed at{" "}
-            {formatMoney(result.closingMinor, result.currency)}, a movement of{" "}
-            {formatMoney(result.movementMinor, result.currency)}.
+            Opened at {formatMinorMoney(result.openingMinor, result.currency)}, closed at{" "}
+            {formatMinorMoney(result.closingMinor, result.currency)}, a movement of{" "}
+            {formatMinorMoney(result.movementMinor, result.currency)}.
           </span>
         </div>
 

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import type { ApDocumentLine } from "@/types/accounting-ap";
 import { TAX_CATEGORY_LABELS } from "../lib/ap-labels";
@@ -58,28 +58,28 @@ export function BillLinesTable({ lines, currency }: BillLinesTableProps) {
       header: "Price each",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.unitPriceMinor, currency),
+      cell: (row) => formatMinorMoney(row.unitPriceMinor, currency),
     },
     {
       key: "net",
       header: "Before tax",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.lineNetMinor, currency),
+      cell: (row) => formatMinorMoney(row.lineNetMinor, currency),
     },
     {
       key: "tax",
       header: "Tax",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.lineTaxMinor, currency),
+      cell: (row) => formatMinorMoney(row.lineTaxMinor, currency),
     },
     {
       key: "gross",
       header: "Total",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.lineGrossMinor, currency),
+      cell: (row) => formatMinorMoney(row.lineGrossMinor, currency),
     },
     {
       key: "capitalize",

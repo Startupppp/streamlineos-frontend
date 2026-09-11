@@ -21,7 +21,7 @@ import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/conte
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
@@ -95,7 +95,7 @@ export function CreditNotesPageClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.grossMinor, row.currency)}
+          {formatMinorMoney(row.grossMinor, row.currency)}
         </span>
       ),
     },
@@ -105,7 +105,7 @@ export function CreditNotesPageClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense font-medium tabular-nums">
-          {formatMoney(row.openMinor, row.currency)}
+          {formatMinorMoney(row.openMinor, row.currency)}
         </span>
       ),
     },

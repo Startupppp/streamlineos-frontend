@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
@@ -94,7 +94,7 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
       header: "Still owed",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.openMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.openMinor, row.currency),
     },
   ];
 

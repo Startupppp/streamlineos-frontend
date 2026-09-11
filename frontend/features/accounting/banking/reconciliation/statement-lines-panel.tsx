@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { StatementLine } from "@/types/accounting-banking";
 
@@ -90,7 +90,7 @@ export function StatementLinesPanel({
                     </button>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <span className="font-mono text-sm tabular-nums">
-                        {formatMoney(line.amountMinor, currency, { signDisplay: "always" })}
+                        {formatMinorMoney(line.amountMinor, currency, { signDisplay: "always" })}
                       </span>
                       {isMatched ? (
                         <div className="flex items-center gap-1">

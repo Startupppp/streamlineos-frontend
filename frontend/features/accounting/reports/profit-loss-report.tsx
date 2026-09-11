@@ -2,7 +2,7 @@
 
 import { useCan } from "@/hooks/api/access";
 import { useProfitLossReport } from "@/hooks/api/accounting/reports";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { ProfitLossReport as ProfitLossReportData, ProfitLossSection } from "@/types/accounting-reports";
@@ -141,7 +141,7 @@ export function ProfitLossReport() {
               </p>
             </div>
             <p className="font-mono text-2xl font-semibold tabular-nums text-foreground">
-              {formatMoney(data.netProfitMinor, data.currency)}
+              {formatMinorMoney(data.netProfitMinor, data.currency)}
             </p>
           </div>
 

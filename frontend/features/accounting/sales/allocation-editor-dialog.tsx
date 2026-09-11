@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney, parseMoneyInput } from "@/lib/accounting/money";
+import { formatMinorMoney, parseMoneyInput } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArInvoices } from "@/hooks/api/accounting/ar";
@@ -57,7 +57,7 @@ function buildSchema(currency: string, invoices: ArDocumentSummary[]) {
         ctx.addIssue({
           code: "custom",
           path: ["rows", index, "amount"],
-          message: `More than the ${formatMoney(invoice.openMinor, currency)} still open`,
+          message: `More than the ${formatMinorMoney(invoice.openMinor, currency)} still open`,
         });
         return;
       }
@@ -115,7 +115,7 @@ function AllocationForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
         <p className="text-label text-muted-foreground">
-          {formatMoney(availableMinor, currency)} left to apply.
+          {formatMinorMoney(availableMinor, currency)} left to apply.
         </p>
         <ul className="space-y-2">
           {invoices.map((invoice, index) => (
@@ -129,7 +129,7 @@ function AllocationForm({
                 </p>
                 <p className="text-dense text-muted-foreground">
                   {invoice.dueDate ? `Due ${formatShortDate(invoice.dueDate)}` : "Due on receipt"} ·{" "}
-                  {formatMoney(invoice.openMinor, invoice.currency)} open
+                  {formatMinorMoney(invoice.openMinor, invoice.currency)} open
                 </p>
               </div>
               <FormField

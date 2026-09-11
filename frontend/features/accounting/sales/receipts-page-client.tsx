@@ -19,7 +19,7 @@ import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/conte
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
@@ -107,7 +107,7 @@ export function ReceiptsPageClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.amountMinor, row.currency)}
+          {formatMinorMoney(row.amountMinor, row.currency)}
         </span>
       ),
     },
@@ -117,7 +117,7 @@ export function ReceiptsPageClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense font-medium tabular-nums">
-          {formatMoney(row.unappliedMinor, row.currency)}
+          {formatMinorMoney(row.unappliedMinor, row.currency)}
         </span>
       ),
     },

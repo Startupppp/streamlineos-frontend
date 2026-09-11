@@ -18,7 +18,7 @@ import {
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -70,7 +70,7 @@ export function AgedReceivablesClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.buckets[bucket], row.currency)}
+          {formatMinorMoney(row.buckets[bucket], row.currency)}
         </span>
       ),
     })),
@@ -80,7 +80,7 @@ export function AgedReceivablesClient() {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense font-medium tabular-nums">
-          {formatMoney(row.totalMinor, row.currency)}
+          {formatMinorMoney(row.totalMinor, row.currency)}
         </span>
       ),
     },
@@ -138,11 +138,11 @@ export function AgedReceivablesClient() {
             </p>
             <p className={cn("mt-1 text-label", danger.ink)}>
               This report adds up to{" "}
-              {formatMoney(aging.reconciliation.agingFunctionalMinor, aging.baseCurrency)} but the
+              {formatMinorMoney(aging.reconciliation.agingFunctionalMinor, aging.baseCurrency)} but the
               customer control account in your ledger says{" "}
-              {formatMoney(aging.reconciliation.arControlBalanceMinor, aging.baseCurrency)} — a
+              {formatMinorMoney(aging.reconciliation.arControlBalanceMinor, aging.baseCurrency)} — a
               difference of{" "}
-              {formatMoney(aging.reconciliation.differenceMinor, aging.baseCurrency)}. Do not send
+              {formatMinorMoney(aging.reconciliation.differenceMinor, aging.baseCurrency)}. Do not send
               statements or chase payment from this report until it is reconciled.
             </p>
           </div>
@@ -154,14 +154,14 @@ export function AgedReceivablesClient() {
           <StatCard
             key={bucket}
             label={AGING_BUCKET_LABEL[bucket]}
-            value={aging ? formatMoney(aging.totals[bucket], aging.baseCurrency) : "—"}
+            value={aging ? formatMinorMoney(aging.totals[bucket], aging.baseCurrency) : "—"}
             tone={bucket === "days91Plus" ? "red" : bucket === "days0to30" ? "emerald" : "amber"}
             isLoading={agingQuery.isLoading}
           />
         ))}
         <StatCard
           label="Owed in total"
-          value={aging ? formatMoney(aging.totals.functionalTotalMinor, aging.baseCurrency) : "—"}
+          value={aging ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency) : "—"}
           tone="blue"
           isLoading={agingQuery.isLoading}
         />

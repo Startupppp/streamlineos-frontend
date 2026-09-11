@@ -1,7 +1,7 @@
 import {
   balanceDirection,
   formatBasisPoints,
-  formatMoney,
+  formatMinorMoney,
   majorToMinor,
   minorToMajor,
   minorUnitsOf,
@@ -27,9 +27,9 @@ describe("minor unit scales", () => {
 
 describe("formatting", () => {
   it("renders the right number of decimals per currency", () => {
-    expect(formatMoney(832500, "INR")).toContain("8,325.00");
-    expect(formatMoney(1000, "JPY")).not.toContain(".");
-    expect(formatMoney(1234, "KWD")).toContain("1.234");
+    expect(formatMinorMoney(832500, "INR")).toContain("8,325.00");
+    expect(formatMinorMoney(1000, "JPY")).not.toContain(".");
+    expect(formatMinorMoney(1234, "KWD")).toContain("1.234");
   });
 
   it("formats a basis-point rate as a percentage", () => {

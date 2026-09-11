@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { useBankAccountBalance } from "@/hooks/api/accounting/banking";
 
 interface BankAccountBalanceCellProps {
@@ -24,7 +24,7 @@ export const BankAccountBalanceCell = forwardRef<HTMLSpanElement, BankAccountBal
 
     return (
       <span ref={ref}>
-        {formatMoney(balanceQuery.data.balanceMinor, balanceQuery.data.currency)}
+        {formatMinorMoney(balanceQuery.data.balanceMinor, balanceQuery.data.currency)}
       </span>
     );
   },

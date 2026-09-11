@@ -6,7 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useTrialBalanceReport } from "@/hooks/api/accounting/reports";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import type { TrialBalanceLine } from "@/types/accounting-reports";
 import { AsOfControls } from "./report-date-controls";
 import { ExportReportButton } from "./export-report-button";
@@ -57,7 +57,7 @@ export function TrialBalanceReport() {
         row.debitMinor === 0 ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatMoney(row.debitMinor, currency)
+          formatMinorMoney(row.debitMinor, currency)
         ),
     },
     {
@@ -69,7 +69,7 @@ export function TrialBalanceReport() {
         row.creditMinor === 0 ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatMoney(row.creditMinor, currency)
+          formatMinorMoney(row.creditMinor, currency)
         ),
     },
   ];
@@ -141,10 +141,10 @@ export function TrialBalanceReport() {
                 footer={
                   <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
                     <span>
-                      {data.columns.debit}: {formatMoney(data.totalDebitMinor, data.currency)}
+                      {data.columns.debit}: {formatMinorMoney(data.totalDebitMinor, data.currency)}
                     </span>
                     <span>
-                      {data.columns.credit}: {formatMoney(data.totalCreditMinor, data.currency)}
+                      {data.columns.credit}: {formatMinorMoney(data.totalCreditMinor, data.currency)}
                     </span>
                   </div>
                 }

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
@@ -99,21 +99,21 @@ export function VendorPaymentsPage() {
       header: "They invoiced",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.grossMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.grossMinor, row.currency),
     },
     {
       key: "withheld",
       header: "Tax withheld",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.withheldMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.withheldMinor, row.currency),
     },
     {
       key: "net",
       header: "Left the account",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.netPaidMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.netPaidMinor, row.currency),
     },
     {
       key: "status",

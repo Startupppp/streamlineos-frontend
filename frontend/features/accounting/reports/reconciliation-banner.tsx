@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ export function ReconciliationBanner({
           <>
             <p className="text-label text-foreground/80">{failDescription}</p>
             <p className="font-mono text-label font-semibold tabular-nums text-foreground">
-              {differenceLabel} {formatMoney(Math.abs(differenceMinor), currency)}
+              {differenceLabel} {formatMinorMoney(Math.abs(differenceMinor), currency)}
             </p>
           </>
         ) : null}

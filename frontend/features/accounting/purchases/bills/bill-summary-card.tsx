@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { ApDocumentDetail } from "@/types/accounting-ap";
 import {
@@ -40,25 +40,25 @@ export function BillSummaryCard({ document }: BillSummaryCardProps) {
       </CardHeader>
       <CardContent className="space-y-3 p-4 pt-0">
         <div>
-          <Row label="Before tax" value={formatMoney(document.netMinor, document.currency)} />
-          <Row label="Tax" value={formatMoney(document.taxMinor, document.currency)} />
+          <Row label="Before tax" value={formatMinorMoney(document.netMinor, document.currency)} />
+          <Row label="Tax" value={formatMinorMoney(document.taxMinor, document.currency)} />
           {document.roundingMinor !== 0 ? (
             <Row
               label="Rounding"
-              value={formatMoney(document.roundingMinor, document.currency)}
+              value={formatMinorMoney(document.roundingMinor, document.currency)}
             />
           ) : null}
           <div className="mt-1 flex items-center justify-between gap-3 border-t border-border pt-2">
             <span className="text-sm font-medium">Bill total</span>
             <span className="font-mono text-sm font-semibold tabular-nums">
-              {formatMoney(document.grossMinor, document.currency)}
+              {formatMinorMoney(document.grossMinor, document.currency)}
             </span>
           </div>
-          <Row label="Paid so far" value={formatMoney(document.settledMinor, document.currency)} />
+          <Row label="Paid so far" value={formatMinorMoney(document.settledMinor, document.currency)} />
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-medium">Still owed</span>
             <span className="font-mono text-sm font-semibold tabular-nums">
-              {formatMoney(document.openMinor, document.currency)}
+              {formatMinorMoney(document.openMinor, document.currency)}
             </span>
           </div>
         </div>

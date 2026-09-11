@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { PARTIES_READ, PARTIES_UPDATE, useParty } from "@/hooks/api/accounting/parties";
@@ -93,7 +93,7 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.grossMinor, row.currency)}
+          {formatMinorMoney(row.grossMinor, row.currency)}
         </span>
       ),
     },
@@ -103,7 +103,7 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense font-medium tabular-nums">
-          {formatMoney(row.openMinor, row.currency)}
+          {formatMinorMoney(row.openMinor, row.currency)}
         </span>
       ),
     },
@@ -146,9 +146,9 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
 
   const aging = agingQuery.data;
   const owedLabel = aging
-    ? formatMoney(aging.totals.functionalTotalMinor, aging.baseCurrency)
+    ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency)
     : "—";
-  const overdueLabel = aging ? formatMoney(aging.totals.days91Plus, aging.baseCurrency) : "—";
+  const overdueLabel = aging ? formatMinorMoney(aging.totals.days91Plus, aging.baseCurrency) : "—";
   const address = [
     party.billingLine1,
     party.billingLine2,

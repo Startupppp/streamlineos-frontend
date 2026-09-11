@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AppSheet } from "@/components/shared";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { ApAgingPartyRow } from "@/types/accounting-ap";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
@@ -27,7 +27,7 @@ export function VendorAgingSheet({
       title={party ? `What we owe ${party.partyName}` : "Vendor"}
       description={
         party
-          ? `${formatMoney(party.totalMinor, functionalCurrency)} across ${party.items.length} document(s)`
+          ? `${formatMinorMoney(party.totalMinor, functionalCurrency)} across ${party.items.length} document(s)`
           : undefined
       }
       className="sm:max-w-xl"
@@ -67,7 +67,7 @@ export function VendorAgingSheet({
                   </div>
                 </div>
                 <span className="shrink-0 font-mono text-sm tabular-nums">
-                  {formatMoney(item.openMinor, item.currency)}
+                  {formatMinorMoney(item.openMinor, item.currency)}
                 </span>
               </div>
             </li>

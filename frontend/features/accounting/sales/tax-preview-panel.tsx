@@ -3,7 +3,7 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatBasisPoints, formatMoney } from "@/lib/accounting/money";
+import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -111,24 +111,24 @@ export function TaxPreviewPanel({
             <ProblemList problems={preview.warnings} tone="warning" />
 
             <div className="divide-y divide-border/60">
-              <TotalRow label="Before tax" value={formatMoney(preview.netMinor, currency)} />
+              <TotalRow label="Before tax" value={formatMinorMoney(preview.netMinor, currency)} />
               {components.map(({ line, component }) => (
                 <TotalRow
                   key={`${line.documentLineId}-${component.component}-${component.jurisdiction}`}
                   label={`${component.component} ${formatBasisPoints(component.rateBp)} · ${component.jurisdiction}`}
-                  value={formatMoney(component.taxMinor, currency)}
+                  value={formatMinorMoney(component.taxMinor, currency)}
                 />
               ))}
-              <TotalRow label="Tax" value={formatMoney(preview.taxMinor, currency)} />
+              <TotalRow label="Tax" value={formatMinorMoney(preview.taxMinor, currency)} />
               {preview.roundingMinor !== 0 ? (
                 <TotalRow
                   label="Rounding"
-                  value={formatMoney(preview.roundingMinor, currency)}
+                  value={formatMinorMoney(preview.roundingMinor, currency)}
                 />
               ) : null}
               <TotalRow
                 label="Total to pay"
-                value={formatMoney(preview.grossMinor, currency)}
+                value={formatMinorMoney(preview.grossMinor, currency)}
                 emphasis
               />
             </div>

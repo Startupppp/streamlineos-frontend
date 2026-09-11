@@ -3,7 +3,7 @@
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCan } from "@/hooks/api/access";
 import { useCashFlowReport } from "@/hooks/api/accounting/reports";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import type { CashFlowReport as CashFlowReportData } from "@/types/accounting-reports";
 import { ExportReportButton } from "./export-report-button";
 import { RangeControls } from "./report-date-controls";
@@ -124,7 +124,7 @@ export function CashFlowReport() {
                 movement in your bank and cash accounts.
               </p>
               <p className="mt-1 font-mono text-label font-semibold tabular-nums text-foreground">
-                Out by {formatMoney(
+                Out by {formatMinorMoney(
                   Math.abs(data.reconciliationDifferenceMinor),
                   data.currency,
                 )}
@@ -135,20 +135,20 @@ export function CashFlowReport() {
           <StatCardGrid className="shrink-0">
             <StatCard
               label="Cash at the start"
-              value={formatMoney(data.openingCashMinor, data.currency)}
+              value={formatMinorMoney(data.openingCashMinor, data.currency)}
             />
             <StatCard
               label="Change in cash"
-              value={formatMoney(data.netMovementMinor, data.currency)}
+              value={formatMinorMoney(data.netMovementMinor, data.currency)}
               tone={data.netMovementMinor >= 0 ? "emerald" : "red"}
             />
             <StatCard
               label="Cash from running the business"
-              value={formatMoney(data.operatingCashMinor, data.currency)}
+              value={formatMinorMoney(data.operatingCashMinor, data.currency)}
             />
             <StatCard
               label="Cash at the end"
-              value={formatMoney(data.closingCashMinor, data.currency)}
+              value={formatMinorMoney(data.closingCashMinor, data.currency)}
             />
           </StatCardGrid>
 

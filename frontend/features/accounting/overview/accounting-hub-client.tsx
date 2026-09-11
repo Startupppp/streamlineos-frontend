@@ -14,7 +14,7 @@ import {
   useProfitLossReport,
   useTrialBalanceReport,
 } from "@/hooks/api/accounting/reports";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoneyCompact } from "@/lib/accounting/money";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ReconciliationBanner } from "@/features/accounting/reports";
@@ -99,28 +99,28 @@ export function AccountingHubClient() {
             <StatCardGrid className="shrink-0">
               <StatCard
                 label="Cash in the bank"
-                value={formatMoney(cashFlow.data?.closingCashMinor ?? 0, currency)}
+                value={formatMinorMoneyCompact(cashFlow.data?.closingCashMinor ?? 0, currency)}
                 icon={Banknote}
                 tone="emerald"
                 href="/accounting/cash-flow"
               />
               <StatCard
                 label="What customers owe us"
-                value={formatMoney(receivable.data?.totalOpenMinor ?? 0, currency)}
+                value={formatMinorMoneyCompact(receivable.data?.totalOpenMinor ?? 0, currency)}
                 icon={Users}
                 tone="blue"
                 href="/accounting/reports/aging?side=ar"
               />
               <StatCard
                 label="What we owe"
-                value={formatMoney(payable.data?.totalOpenMinor ?? 0, currency)}
+                value={formatMinorMoneyCompact(payable.data?.totalOpenMinor ?? 0, currency)}
                 icon={Receipt}
                 tone="amber"
                 href="/accounting/reports/aging?side=ap"
               />
               <StatCard
                 label="Profit so far this month"
-                value={formatMoney(profitLoss.data?.netProfitMinor ?? 0, currency)}
+                value={formatMinorMoneyCompact(profitLoss.data?.netProfitMinor ?? 0, currency)}
                 icon={TrendingUp}
                 tone={(profitLoss.data?.netProfitMinor ?? 0) >= 0 ? "emerald" : "red"}
                 href="/accounting/profit-loss"

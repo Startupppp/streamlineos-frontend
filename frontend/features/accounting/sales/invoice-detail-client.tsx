@@ -9,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -150,7 +150,7 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
   return (
     <PageWrapper
       title={title}
-      subtitle={`${partyName} · ${formatMoney(invoice.grossMinor, invoice.currency)}`}
+      subtitle={`${partyName} · ${formatMinorMoney(invoice.grossMinor, invoice.currency)}`}
       badge={<ArStatusBadge status={invoice.status} />}
       backHref="/accounting/invoices"
       backLabel="Back to invoices"
@@ -229,7 +229,7 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
         open={postOpen}
         onOpenChange={setPostOpen}
         title="Post this invoice?"
-        description={`Posting writes ${formatMoney(invoice.grossMinor, invoice.currency)} into your books and locks the invoice. To change it afterwards you issue a credit note.`}
+        description={`Posting writes ${formatMinorMoney(invoice.grossMinor, invoice.currency)} into your books and locks the invoice. To change it afterwards you issue a credit note.`}
         confirmLabel="Post invoice"
         isPending={postInvoice.isPending}
         onConfirm={handlePost}

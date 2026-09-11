@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared";
-import { formatBasisPoints, formatMoney } from "@/lib/accounting/money";
+import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -152,24 +152,24 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
             <div className="grid gap-2 sm:grid-cols-3">
               <FigureTile
                 label="They invoiced"
-                value={formatMoney(payment.grossMinor, payment.currency)}
+                value={formatMinorMoney(payment.grossMinor, payment.currency)}
                 hint="Before anything was held back"
               />
               <FigureTile
                 label="Tax withheld"
-                value={formatMoney(payment.withheldMinor, payment.currency)}
+                value={formatMinorMoney(payment.withheldMinor, payment.currency)}
                 hint={withheldRates ? `At ${withheldRates}` : "Nothing held back"}
               />
               <FigureTile
                 label="Actually left the account"
-                value={formatMoney(payment.netPaidMinor, payment.currency)}
+                value={formatMinorMoney(payment.netPaidMinor, payment.currency)}
                 hint="What the vendor received"
               />
             </div>
 
             {payment.unappliedMinor > 0 ? (
               <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-label">
-                {formatMoney(payment.unappliedMinor, payment.currency)} of this payment is not against
+                {formatMinorMoney(payment.unappliedMinor, payment.currency)} of this payment is not against
                 any bill yet. It sits as money on account with this vendor.
               </p>
             ) : null}
@@ -193,7 +193,7 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
                           "Unnumbered bill"}
                       </span>
                       <span className="font-mono text-sm tabular-nums">
-                        {formatMoney(allocation.amountMinor, payment.currency)}
+                        {formatMinorMoney(allocation.amountMinor, payment.currency)}
                       </span>
                     </li>
                   ))}

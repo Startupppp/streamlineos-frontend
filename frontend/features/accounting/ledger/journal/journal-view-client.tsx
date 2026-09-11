@@ -13,7 +13,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { useJournal } from "@/hooks/api/accounting/ledger";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type { JournalLine } from "@/types/accounting-kernel";
@@ -67,7 +67,7 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
         row.debitMinor === 0 ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatMoney(row.debitMinor, currency)
+          formatMinorMoney(row.debitMinor, currency)
         ),
     },
     {
@@ -79,7 +79,7 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
         row.creditMinor === 0 ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatMoney(row.creditMinor, currency)
+          formatMinorMoney(row.creditMinor, currency)
         ),
     },
   ];
@@ -123,7 +123,7 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
               <Detail label="What it is for" value={data.memo ?? "No note was left"} />
               <Detail
                 label="Total"
-                value={formatMoney(data.totalDebitMinor, data.functionalCurrency)}
+                value={formatMinorMoney(data.totalDebitMinor, data.functionalCurrency)}
               />
               <Detail label="Currency" value={data.functionalCurrency} />
             </CardContent>
@@ -154,9 +154,9 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
                 pagination={{ pageSize: 50 }}
                 footer={
                   <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
-                    <span>Debits {formatMoney(data.totalDebitMinor, data.functionalCurrency)}</span>
+                    <span>Debits {formatMinorMoney(data.totalDebitMinor, data.functionalCurrency)}</span>
                     <span>
-                      Credits {formatMoney(data.totalCreditMinor, data.functionalCurrency)}
+                      Credits {formatMinorMoney(data.totalCreditMinor, data.functionalCurrency)}
                     </span>
                   </div>
                 }

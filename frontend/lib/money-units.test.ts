@@ -1,21 +1,21 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { formatMoney as formatMajor, type MoneyDisplay } from "./format-utils";
-import { formatMoney as formatMinor } from "./accounting/money";
+import { formatMinorMoney as formatMinor } from "./accounting/money";
 
 /**
- * TWO `formatMoney` FUNCTIONS EXIST ON PURPOSE, AND THAT IS THE HAZARD.
+ * TWO MONEY FORMATTERS EXIST ON PURPOSE, AND THAT IS THE HAZARD.
  *
  * This codebase stores money two ways, and both are correct for what they hold:
  *
  *   - The accounting/GL kernel uses integer minor units — `bigint("debit_minor")`,
  *     `bigint("amount_minor")`, 123 columns, every one of them NAMED `*Minor`.
- *     `lib/accounting/money.ts#formatMoney(minor, currency)` renders those.
+ *     `lib/accounting/money.ts#formatMinorMoney(minor, currency)` renders those.
  *   - Timesheets, HR and payroll use `decimal(precision, scale: 2)` — 74 columns,
  *     already in major units. `lib/format-utils.ts#formatMoney(value, display)`
  *     renders those.
  *
- * So "unify the two formatMoney functions" is the WRONG fix, and this file exists
+ * So "unify the two money formatters" is the WRONG fix, and this file exists
  * partly to say so where someone proposing it will see it: collapsing them would
  * make one of the two families render 100x wrong. What is missing is not a merge,
  * it is a pin. Nothing asserted that the two disagree, and nothing checked that a
@@ -85,12 +85,12 @@ function moneyCalls(): Call[] {
   const calls: Call[] = [];
   for (const file of sourceFiles()) {
     const raw = readFileSync(file, "utf8");
-    if (!raw.includes("formatMoney")) continue;
+    if (!/format(?:Minor)?Money/.test(raw)) continue;
     const src = codeOnly(raw);
     const major = /from "@\/lib\/format-utils"/.test(src) && /formatMoney/.test(src);
     const minor = /from "@\/lib\/accounting\/money"/.test(src);
     if (!major && !minor) continue;
-    const re = /\bformatMoney(?:Compact)?\s*\(/g;
+    const re = /\bformat(?:Minor)?Money(?:Compact)?\s*\(/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(src))) {
       const open = m.index + m[0].length - 1;
@@ -108,7 +108,7 @@ function moneyCalls(): Call[] {
 const MINOR_VALUE = /\b\w*(?:Minor|Cents)\b|\b(?:minor|cents)\b/;
 const CONVERTS_DOWN = /\/\s*100\b|minorToMajor\s*\(/;
 
-describe("the two formatMoney functions disagree by exactly 100x, on purpose", () => {
+describe("the major and minor money formatters disagree by exactly 100x, on purpose", () => {
   const INR: MoneyDisplay = { currency: "INR", locale: "en-IN" };
 
   it("renders the same number 100x apart, so a swap is never cosmetic", () => {
@@ -159,10 +159,10 @@ describe("no minor-unit value reaches the major-unit formatter", () => {
     // without anything looking wrong at the call site.
     const both = sourceFiles().filter((f) => {
       const src = codeOnly(readFileSync(f, "utf8"));
-      if (!/\bformatMoney\b/.test(src)) return false;
+      if (!/\bformat(?:Minor)?Money\b/.test(src)) return false;
       return (
         /import[^;]*\bformatMoney\b[^;]*from "@\/lib\/format-utils"/.test(src) &&
-        /import[^;]*\bformatMoney\b[^;]*from "@\/lib\/accounting\/money"/.test(src)
+        /import[^;]*\bformatMinorMoney\b[^;]*from "@\/lib\/accounting\/money"/.test(src)
       );
     });
     expect(both.map((f) => relative(REPO, f))).toEqual([]);

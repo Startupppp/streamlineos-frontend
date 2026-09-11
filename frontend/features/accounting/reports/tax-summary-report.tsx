@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCan } from "@/hooks/api/access";
 import { useTaxSummaryReport } from "@/hooks/api/accounting/reports";
-import { formatBasisPoints, formatMoney } from "@/lib/accounting/money";
+import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import type { TaxSummaryRow } from "@/types/accounting-reports";
 import { ExportReportButton } from "./export-report-button";
 import { RangeControls } from "./report-date-controls";
@@ -49,14 +49,14 @@ export function TaxSummaryReport() {
       header: "Amount taxed",
       className: "text-right font-mono tabular-nums whitespace-nowrap",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.taxableMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.taxableMinor, row.currency),
     },
     {
       key: "tax",
       header: "Tax",
       className: "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.taxMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.taxMinor, row.currency),
     },
     {
       key: "documents",
@@ -104,20 +104,20 @@ export function TaxSummaryReport() {
           <StatCardGrid className="shrink-0">
             <StatCard
               label="Tax we charged customers"
-              value={formatMoney(data.totals.outputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(data.totals.outputTaxMinor, data.totals.currency)}
             />
             <StatCard
               label="Tax we paid and can claim back"
-              value={formatMoney(data.totals.recoverableInputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(data.totals.recoverableInputTaxMinor, data.totals.currency)}
             />
             <StatCard
               label="Tax we paid and cannot claim"
-              value={formatMoney(data.totals.blockedInputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(data.totals.blockedInputTaxMinor, data.totals.currency)}
               tone="amber"
             />
             <StatCard
               label="Net tax payable"
-              value={formatMoney(data.totals.netPayableMinor, data.totals.currency)}
+              value={formatMinorMoney(data.totals.netPayableMinor, data.totals.currency)}
               tone={data.totals.netPayableMinor > 0 ? "amber" : "emerald"}
             />
           </StatCardGrid>

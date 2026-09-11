@@ -6,7 +6,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMatchStatementLine, useMatchSuggestions } from "@/hooks/api/accounting/banking";
@@ -101,7 +101,7 @@ export function MatchSuggestionsPanel({
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="font-mono text-sm tabular-nums">
-                      {formatMoney(suggestion.amountMinor, suggestion.currency, {
+                      {formatMinorMoney(suggestion.amountMinor, suggestion.currency, {
                         signDisplay: "always",
                       })}
                     </span>

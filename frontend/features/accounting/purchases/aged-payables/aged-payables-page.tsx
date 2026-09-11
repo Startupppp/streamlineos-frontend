@@ -10,7 +10,7 @@ import { ErrorState, NoPermissionState } from "@/components/shared";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
 import { useApAging } from "@/hooks/api/accounting/ap";
 import { AP_AGING_BUCKETS, type ApAgingPartyRow } from "@/types/accounting-ap";
@@ -55,14 +55,14 @@ export function AgedPayablesPage() {
       header: AGING_BUCKET_LABELS[bucket],
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.buckets[bucket], currency),
+      cell: (row) => formatMinorMoney(row.buckets[bucket], currency),
     })),
     {
       key: "total",
       header: "Total owed",
       className: "font-mono tabular-nums text-right font-semibold",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.totalMinor, currency),
+      cell: (row) => formatMinorMoney(row.totalMinor, currency),
     },
   ];
 
@@ -99,14 +99,14 @@ export function AgedPayablesPage() {
           <StatCard
             key={bucket}
             label={AGING_BUCKET_LABELS[bucket]}
-            value={formatMoney(agingQuery.data?.buckets[bucket] ?? 0, currency)}
+            value={formatMinorMoney(agingQuery.data?.buckets[bucket] ?? 0, currency)}
             tone={bucket === "0-30" ? "default" : bucket === "91+" ? "red" : "amber"}
             isLoading={agingQuery.isPending}
           />
         ))}
         <StatCard
           label="Owed in total"
-          value={formatMoney(agingQuery.data?.totalMinor ?? 0, currency)}
+          value={formatMinorMoney(agingQuery.data?.totalMinor ?? 0, currency)}
           tone="blue"
           isLoading={agingQuery.isPending}
         />

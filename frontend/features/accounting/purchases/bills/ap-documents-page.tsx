@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { useApDocuments } from "@/hooks/api/accounting/ap";
@@ -42,7 +42,7 @@ const STATUS_VALUES: readonly ApDocumentStatus[] = [
 ];
 
 function isStatus(value: string): value is ApDocumentStatus {
-  return (STATUS_VALUES as readonly string[]).includes(value);
+  return STATUS_VALUES.some((status) => status === value);
 }
 
 interface ApDocumentsPageProps {
@@ -135,14 +135,14 @@ export function ApDocumentsPage({
       header: "Total",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.grossMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.grossMinor, row.currency),
     },
     {
       key: "open",
       header: "Still owed",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.openMinor, row.currency),
+      cell: (row) => formatMinorMoney(row.openMinor, row.currency),
     },
   ];
 

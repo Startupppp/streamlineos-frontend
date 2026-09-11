@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatBasisPoints, formatMoney } from "@/lib/accounting/money";
+import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { ArDocumentLineView, ArDocumentView, FrozenTaxLine } from "@/types/accounting-ar";
@@ -60,7 +60,7 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.unitPriceMinor, arDocument.currency)}
+          {formatMinorMoney(row.unitPriceMinor, arDocument.currency)}
         </span>
       ),
     },
@@ -70,7 +70,7 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.discountMinor, arDocument.currency)}
+          {formatMinorMoney(row.discountMinor, arDocument.currency)}
         </span>
       ),
     },
@@ -80,7 +80,7 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.lineNetMinor, arDocument.currency)}
+          {formatMinorMoney(row.lineNetMinor, arDocument.currency)}
         </span>
       ),
     },
@@ -90,7 +90,7 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense tabular-nums">
-          {formatMoney(row.lineTaxMinor, arDocument.currency)}
+          {formatMinorMoney(row.lineTaxMinor, arDocument.currency)}
         </span>
       ),
     },
@@ -100,7 +100,7 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       className: "text-right",
       cell: (row) => (
         <span className="font-mono text-dense font-medium tabular-nums">
-          {formatMoney(row.lineGrossMinor, arDocument.currency)}
+          {formatMinorMoney(row.lineGrossMinor, arDocument.currency)}
         </span>
       ),
     },
@@ -159,27 +159,27 @@ export function ArDocumentTotalsCard({
         <div className="divide-y divide-border/60">
           <AmountRow
             label="Before tax"
-            value={formatMoney(arDocument.netMinor, arDocument.currency)}
+            value={formatMinorMoney(arDocument.netMinor, arDocument.currency)}
           />
-          <AmountRow label="Tax" value={formatMoney(arDocument.taxMinor, arDocument.currency)} />
+          <AmountRow label="Tax" value={formatMinorMoney(arDocument.taxMinor, arDocument.currency)} />
           {arDocument.roundingMinor !== 0 ? (
             <AmountRow
               label="Rounding"
-              value={formatMoney(arDocument.roundingMinor, arDocument.currency)}
+              value={formatMinorMoney(arDocument.roundingMinor, arDocument.currency)}
             />
           ) : null}
           <AmountRow
             label="Total"
-            value={formatMoney(arDocument.grossMinor, arDocument.currency)}
+            value={formatMinorMoney(arDocument.grossMinor, arDocument.currency)}
             emphasis
           />
           <AmountRow
             label="Settled"
-            value={formatMoney(arDocument.settledMinor, arDocument.currency)}
+            value={formatMinorMoney(arDocument.settledMinor, arDocument.currency)}
           />
           <AmountRow
             label="Still open"
-            value={formatMoney(arDocument.openMinor, arDocument.currency)}
+            value={formatMinorMoney(arDocument.openMinor, arDocument.currency)}
             emphasis
           />
         </div>
@@ -209,7 +209,7 @@ export function FrozenTaxLinesCard({
           <AmountRow
             key={`${line.component}-${line.jurisdiction}-${line.documentLineId ?? index}`}
             label={`${line.component} ${formatBasisPoints(line.rateBp)} · ${line.jurisdiction}`}
-            value={formatMoney(line.taxMinor, line.currency || currency)}
+            value={formatMinorMoney(line.taxMinor, line.currency || currency)}
           />
         ))}
       </CardContent>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUnreconciled } from "@/hooks/api/accounting/banking";
@@ -47,7 +47,7 @@ export function UnreconciledSplitView({ accountId, asOf }: UnreconciledSplitView
             The bank showed it, the books have not recorded it
           </CardTitle>
           <CardDescription className="text-label">
-            {formatMoney(view.statementLinesTotalMinor, view.currency)} across{" "}
+            {formatMinorMoney(view.statementLinesTotalMinor, view.currency)} across{" "}
             {view.statementLines.length} line(s)
           </CardDescription>
         </CardHeader>
@@ -76,7 +76,7 @@ export function UnreconciledSplitView({ accountId, asOf }: UnreconciledSplitView
                     </p>
                   </div>
                   <span className="shrink-0 font-mono text-sm tabular-nums">
-                    {formatMoney(line.amountMinor, view.currency, { signDisplay: "always" })}
+                    {formatMinorMoney(line.amountMinor, view.currency, { signDisplay: "always" })}
                   </span>
                 </li>
               ))}
@@ -91,7 +91,7 @@ export function UnreconciledSplitView({ accountId, asOf }: UnreconciledSplitView
             The books recorded it, the bank has not shown it
           </CardTitle>
           <CardDescription className="text-label">
-            {formatMoney(view.glLinesTotalMinor, view.currency)} across {view.glLines.length}{" "}
+            {formatMinorMoney(view.glLinesTotalMinor, view.currency)} across {view.glLines.length}{" "}
             entry(ies)
           </CardDescription>
         </CardHeader>
@@ -119,7 +119,7 @@ export function UnreconciledSplitView({ accountId, asOf }: UnreconciledSplitView
                     </p>
                   </div>
                   <span className="shrink-0 font-mono text-sm tabular-nums">
-                    {formatMoney(line.amountMinor, view.currency, { signDisplay: "always" })}
+                    {formatMinorMoney(line.amountMinor, view.currency, { signDisplay: "always" })}
                   </span>
                 </li>
               ))}

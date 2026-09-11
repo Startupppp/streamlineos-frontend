@@ -49,7 +49,7 @@ export function majorToMinor(major: number, currency: string): number {
   return Math.round(major * 10 ** minorUnitsOf(currency));
 }
 
-export function formatMoney(
+export function formatMinorMoney(
   minor: number,
   currency: string,
   options: { showSymbol?: boolean; signDisplay?: "auto" | "never" | "always" } = {},
@@ -65,7 +65,7 @@ export function formatMoney(
   }).format(minorToMajor(minor, currency));
 }
 
-export function formatMoneyCompact(minor: number, currency: string): string {
+export function formatMinorMoneyCompact(minor: number, currency: string): string {
   return new Intl.NumberFormat(localeFor(currency), {
     style: "currency",
     currency,
@@ -111,5 +111,5 @@ export function balanceDirection(balanceMinor: number): BalanceDirection {
 }
 
 export function formatSignedBalance(balanceMinor: number, currency: string): string {
-  return formatMoney(Math.abs(balanceMinor), currency);
+  return formatMinorMoney(Math.abs(balanceMinor), currency);
 }

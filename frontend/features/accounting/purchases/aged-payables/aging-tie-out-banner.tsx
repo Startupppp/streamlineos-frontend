@@ -3,7 +3,7 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { useApLedgerTieOut } from "@/hooks/api/accounting/ap";
 
 interface AgingTieOutBannerProps {
@@ -41,7 +41,7 @@ export function AgingTieOutBanner({ asOf }: AgingTieOutBannerProps) {
           <p>
             This adds up to what the books say you owe:{" "}
             <span className="font-mono tabular-nums">
-              {formatMoney(tieOut.controlAccountBalanceMinor, tieOut.currency)}
+              {formatMinorMoney(tieOut.controlAccountBalanceMinor, tieOut.currency)}
             </span>
             .
           </p>
@@ -54,15 +54,15 @@ export function AgingTieOutBanner({ asOf }: AgingTieOutBannerProps) {
             <p className="mt-0.5">
               The unpaid bills add up to{" "}
               <span className="font-mono tabular-nums">
-                {formatMoney(tieOut.totalOpenMinor, tieOut.currency)}
+                {formatMinorMoney(tieOut.totalOpenMinor, tieOut.currency)}
               </span>
               , the books say{" "}
               <span className="font-mono tabular-nums">
-                {formatMoney(tieOut.controlAccountBalanceMinor, tieOut.currency)}
+                {formatMinorMoney(tieOut.controlAccountBalanceMinor, tieOut.currency)}
               </span>
               , a gap of{" "}
               <span className="font-mono tabular-nums">
-                {formatMoney(tieOut.differenceMinor, tieOut.currency)}
+                {formatMinorMoney(tieOut.differenceMinor, tieOut.currency)}
               </span>
               .
             </p>

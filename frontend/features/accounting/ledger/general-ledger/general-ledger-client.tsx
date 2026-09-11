@@ -13,7 +13,7 @@ import { ErrorState, NoPermissionState } from "@/components/shared";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { useCan } from "@/hooks/api/access";
 import { useAccountLedger, usePostableAccounts } from "@/hooks/api/accounting/ledger";
-import { balanceDirection, formatMoney } from "@/lib/accounting/money";
+import { balanceDirection, formatMinorMoney } from "@/lib/accounting/money";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useListUrlState } from "../../sales/use-list-url-state";
@@ -120,23 +120,23 @@ export function GeneralLedgerClient() {
           <StatCardGrid cols={4} className="mb-2">
             <StatCard
               label={`Brought forward to ${from}`}
-              value={formatMoney(Math.abs(openingMinor), currency)}
+              value={formatMinorMoney(Math.abs(openingMinor), currency)}
               hint={balanceDirection(openingMinor) === "debit" ? "Debit balance" : "Credit balance"}
               isLoading={ledger.isPending}
             />
             <StatCard
               label="Debits in this window"
-              value={formatMoney(ledger.data?.periodDebitMinor ?? 0, currency)}
+              value={formatMinorMoney(ledger.data?.periodDebitMinor ?? 0, currency)}
               isLoading={ledger.isPending}
             />
             <StatCard
               label="Credits in this window"
-              value={formatMoney(ledger.data?.periodCreditMinor ?? 0, currency)}
+              value={formatMinorMoney(ledger.data?.periodCreditMinor ?? 0, currency)}
               isLoading={ledger.isPending}
             />
             <StatCard
               label={`Balance on ${to}`}
-              value={formatMoney(Math.abs(closingMinor), currency)}
+              value={formatMinorMoney(Math.abs(closingMinor), currency)}
               hint={balanceDirection(closingMinor) === "debit" ? "Debit balance" : "Credit balance"}
               tone="blue"
               isLoading={ledger.isPending}

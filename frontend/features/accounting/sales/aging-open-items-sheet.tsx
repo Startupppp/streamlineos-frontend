@@ -5,7 +5,7 @@ import { AppSheet, ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArOpenItems } from "@/hooks/api/accounting/ar";
@@ -100,7 +100,7 @@ export function AgingOpenItemsSheet({
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="font-mono text-label tabular-nums">
-                    {formatMoney(item.openMinor, item.currency)}
+                    {formatMinorMoney(item.openMinor, item.currency)}
                   </span>
                   {item.daysOverdue > 0 ? (
                     <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">

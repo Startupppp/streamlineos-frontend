@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
 import { useAgingReport } from "@/hooks/api/accounting/reports";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { AGING_BUCKET_KEYS, type AgingPartyRow } from "@/types/accounting-reports";
 import { AsOfControls } from "./report-date-controls";
 import { ExportReportButton } from "./export-report-button";
@@ -47,7 +47,7 @@ export function AgingReport() {
         row.buckets[bucket] === 0 ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatMoney(row.buckets[bucket], currency)
+          formatMinorMoney(row.buckets[bucket], currency)
         ),
     })),
     {
@@ -55,7 +55,7 @@ export function AgingReport() {
       header: "Total",
       className: "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
       headerClassName: "text-right",
-      cell: (row) => formatMoney(row.totalMinor, currency),
+      cell: (row) => formatMinorMoney(row.totalMinor, currency),
     },
     {
       key: "oldest",
@@ -143,7 +143,7 @@ export function AgingReport() {
                 }
                 footer={
                   <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
-                    <span>Total outstanding: {formatMoney(data.totalOpenMinor, data.currency)}</span>
+                    <span>Total outstanding: {formatMinorMoney(data.totalOpenMinor, data.currency)}</span>
                   </div>
                 }
               />

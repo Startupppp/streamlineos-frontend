@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { formatBasisPoints, formatMoney } from "@/lib/accounting/money";
+import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useApDocumentTaxPreview } from "@/hooks/api/accounting/ap";
 import { TAX_CATEGORY_LABELS } from "../lib/ap-labels";
@@ -99,16 +99,16 @@ export function BillTaxPreviewCard({ apDocumentId, lineDescriptions }: BillTaxPr
             <div>
               <AmountRow
                 label="Before tax"
-                value={formatMoney(previewQuery.data.netMinor, previewQuery.data.currency)}
+                value={formatMinorMoney(previewQuery.data.netMinor, previewQuery.data.currency)}
               />
               <AmountRow
                 label="Tax the vendor charges"
-                value={formatMoney(previewQuery.data.taxMinor, previewQuery.data.currency)}
+                value={formatMinorMoney(previewQuery.data.taxMinor, previewQuery.data.currency)}
               />
               {previewQuery.data.selfAssessedTaxMinor !== 0 ? (
                 <AmountRow
                   label="Tax you account for yourself"
-                  value={formatMoney(
+                  value={formatMinorMoney(
                     previewQuery.data.selfAssessedTaxMinor,
                     previewQuery.data.currency,
                   )}
@@ -117,13 +117,13 @@ export function BillTaxPreviewCard({ apDocumentId, lineDescriptions }: BillTaxPr
               {previewQuery.data.blockedTaxMinor !== 0 ? (
                 <AmountRow
                   label="Tax you cannot reclaim"
-                  value={formatMoney(previewQuery.data.blockedTaxMinor, previewQuery.data.currency)}
+                  value={formatMinorMoney(previewQuery.data.blockedTaxMinor, previewQuery.data.currency)}
                 />
               ) : null}
               <div className="mt-1 flex items-center justify-between gap-3 border-t border-border pt-2">
                 <span className="text-sm font-medium">Total to pay</span>
                 <span className="font-mono text-sm font-semibold tabular-nums">
-                  {formatMoney(previewQuery.data.grossMinor, previewQuery.data.currency)}
+                  {formatMinorMoney(previewQuery.data.grossMinor, previewQuery.data.currency)}
                 </span>
               </div>
             </div>
@@ -161,8 +161,8 @@ export function BillTaxPreviewCard({ apDocumentId, lineDescriptions }: BillTaxPr
                     </p>
                     <p className="text-dense text-muted-foreground">
                       {TAX_CATEGORY_LABELS[line.category]} ·{" "}
-                      {formatMoney(line.totalTaxMinor, previewQuery.data.currency)} on{" "}
-                      {formatMoney(line.taxableMinor, previewQuery.data.currency)}
+                      {formatMinorMoney(line.totalTaxMinor, previewQuery.data.currency)} on{" "}
+                      {formatMinorMoney(line.taxableMinor, previewQuery.data.currency)}
                     </p>
                     {line.components.length > 0 ? (
                       <ul className="mt-1 space-y-0.5">
@@ -176,7 +176,7 @@ export function BillTaxPreviewCard({ apDocumentId, lineDescriptions }: BillTaxPr
                               {component.recoverable ? "" : " · not reclaimable"}
                             </span>
                             <span className="font-mono tabular-nums">
-                              {formatMoney(component.taxMinor, previewQuery.data.currency)}
+                              {formatMinorMoney(component.taxMinor, previewQuery.data.currency)}
                             </span>
                           </li>
                         ))}

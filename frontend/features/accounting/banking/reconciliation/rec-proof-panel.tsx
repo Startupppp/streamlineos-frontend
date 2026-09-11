@@ -6,7 +6,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { formatMoney } from "@/lib/accounting/money";
+import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import type { ReconciliationProof } from "@/types/accounting-banking";
 
@@ -84,26 +84,26 @@ export function RecProofPanel({
         <div>
           <ProofLine
             label="What your books say the account holds"
-            value={formatMoney(proof.glBalanceMinor, proof.currency)}
+            value={formatMinorMoney(proof.glBalanceMinor, proof.currency)}
             note={`On ${formatShortDate(proof.periodEnd)}`}
           />
           <ProofLine
             label="Movements the books recorded that the bank has not shown"
-            value={formatMoney(proof.unmatchedGlMinor, proof.currency)}
+            value={formatMinorMoney(proof.unmatchedGlMinor, proof.currency)}
             note={`${proof.unmatchedGlLines.length} item(s) — uncleared payments and the like`}
           />
           <ProofLine
             label="What the bank says the account closed at"
-            value={formatMoney(proof.statementClosingMinor, proof.currency)}
+            value={formatMinorMoney(proof.statementClosingMinor, proof.currency)}
           />
           <ProofLine
             label="Movements the bank showed that the books have not recorded"
-            value={formatMoney(proof.unmatchedStatementMinor, proof.currency)}
+            value={formatMinorMoney(proof.unmatchedStatementMinor, proof.currency)}
             note={`${proof.unmatchedStatementLines.length} item(s) — fees, interest, direct debits`}
           />
           <ProofLine
             label="Left unexplained"
-            value={formatMoney(proof.differenceMinor, proof.currency)}
+            value={formatMinorMoney(proof.differenceMinor, proof.currency)}
             note={
               proof.holds
                 ? "Nothing. The two sides agree once each is stripped of what the other cannot see."
@@ -113,7 +113,7 @@ export function RecProofPanel({
           {proof.openingVarianceMinor !== 0 ? (
             <ProofLine
               label="Already disagreed before this period began"
-              value={formatMoney(proof.openingVarianceMinor, proof.currency)}
+              value={formatMinorMoney(proof.openingVarianceMinor, proof.currency)}
               note="Carried in from an earlier period, so it will not be fixed by matching this one."
             />
           ) : null}
