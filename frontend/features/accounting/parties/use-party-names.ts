@@ -40,7 +40,8 @@ export function usePartyNames(partyIds: readonly string[]): PartyNameResolver {
   const details = useQueries({
     queries: missing.map((partyId) => ({
       queryKey: accountingArQueryKeys.accountingAr.party(partyId),
-      queryFn: () => apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`, undefined, signal),
       staleTime: ENTITY_STALE,
       enabled: canRead,
     })),
