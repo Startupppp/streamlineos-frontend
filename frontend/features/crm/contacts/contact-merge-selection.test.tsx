@@ -22,13 +22,14 @@ function contact(id: number, partyId: string, name: string): Contact {
     avatarUrl: null,
     leadId: null,
     dealId: null,
-    source: null,
-    status: null,
     notes: null,
-    ownerId: null,
     tags: [],
+    deletedAt: null,
+    mergedIntoId: null,
     createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: null,
+    updatedAt: "2025-01-01T00:00:00.000Z",
+    lead: null,
+    deal: null,
   };
 }
 
