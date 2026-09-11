@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
 
 interface TokenRowProps {
   token: AgentToken;
-  onRevoke: (id: string) => void;
+  onRevoke: (id: string | number) => void;
 }
 
 export function TokenRow({ token, onRevoke }: TokenRowProps) {

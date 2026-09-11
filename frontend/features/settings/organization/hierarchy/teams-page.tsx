@@ -184,8 +184,6 @@ export function OrgTeamsPage() {
       key: "name",
       header: "Name",
       cell: (team) => <span className="font-medium">{team.name}</span>,
-      sortable: true,
-      sortValue: (team) => team.name,
     },
     {
       key: "code",

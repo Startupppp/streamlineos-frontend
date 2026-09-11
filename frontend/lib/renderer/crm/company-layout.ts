@@ -61,11 +61,11 @@ export const COMPANY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search companies…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "domain" },
+      { field: "name", primary: true, subtitle: "domain" },
       { field: "industry", width: "w-40 shrink-0" },
       { field: "size", width: "w-36 shrink-0" },
       { field: "website", width: "w-48 shrink-0" },
-      { field: "healthScore", sortable: true, width: "w-24 shrink-0" },
+      { field: "healthScore", width: "w-24 shrink-0" },
     ],
   },
   detail: {

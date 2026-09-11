@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   type ColumnDef,
   type SortingState,
   type RowSelectionState,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -41,6 +40,53 @@ import type {
 export type { DataTableColumn, DataTableProps };
 
 
+const INTERACTIVE_DESCENDANT_SELECTOR = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '[role="button"]',
+  '[role="checkbox"]',
+  '[role="combobox"]',
+  '[role="link"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="option"]',
+  '[role="radio"]',
+  '[role="switch"]',
+  '[role="tab"]',
+  '[role="textbox"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+/**
+ * The mouse path guards the row with `stopPropagation` on every interactive
+ * cell; the keyboard path has no twin, so an activation key over a descendant
+ * control reached the row handler and opened the row instead of working the
+ * control. Matching on the target rather than one known element keeps row
+ * action menus and links working, not just the selection checkbox.
+ */
+function isKeyFromInteractiveDescendant(event: KeyboardEvent<HTMLElement>): boolean {
+  const { target, currentTarget } = event;
+  if (!(target instanceof Element) || target === currentTarget) return false;
+  const interactive = target.closest(INTERACTIVE_DESCENDANT_SELECTOR);
+  return interactive !== null && interactive !== currentTarget;
+}
+
+function createRowActivationKeyHandler(activate: () => void) {
+  return function handleRowActivationKey(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (isKeyFromInteractiveDescendant(event)) return;
+    event.preventDefault();
+    activate();
+  };
+}
+
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
   if (sorted === "asc")
     return <ArrowUp className="h-3 w-3 text-primary" />;
@@ -67,8 +113,8 @@ export function DataTable<T>({
   sortState,
   mobileCard,
 }: DataTableProps<T>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const externalSorting: SortingState = sortState?.field
+  const sortFields = sortState?.fields;
+  const sorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
     : [];
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
@@ -135,32 +181,30 @@ export function DataTable<T>({
     }
 
     for (const col of columns) {
-      const sortValueFn = col.sortValue;
+      const sortable = sortFields?.includes(col.key) ?? false;
       defs.push({
         id: col.key,
         header: col.header,
         cell: ({ row }) => col.cell(row.original),
-        enableSorting: col.sortable ?? false,
-        sortingFn: sortValueFn
-          ? (rowA, rowB) => {
-              const a = sortValueFn(rowA.original);
-              const b = sortValueFn(rowB.original);
-              return a < b ? -1 : a > b ? 1 : 0;
-            }
-          : "auto",
+        enableSorting: sortable,
+        sortDescFirst: false,
+        // `getCanSort()` ends in `!!column.accessorFn`, so a display column can
+        // never be sortable however its flags read. The value is never used:
+        // the rows arrive in the server's order and are rendered in it.
+        accessorFn: sortable ? () => null : undefined,
         meta: { className: col.className, headerClassName: col.headerClassName },
       });
     }
 
     return defs;
-  }, [columns, selection]);
+  }, [columns, selection, sortFields]);
 
   const table = useReactTable<T>({
     data,
     columns: columnDefs,
     getRowId: (row, index) => String(getRowKey(row, index)),
     state: {
-      sorting: sortState ? externalSorting : sorting,
+      sorting,
       rowSelection,
       pagination: serverPag
         ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
@@ -168,7 +212,10 @@ export function DataTable<T>({
           ? { pageIndex: cursorPag.pageNumber - 1, pageSize: cursorPag.pageSize }
           : { pageIndex: internalPage, pageSize: clientPageSize },
     },
-    manualSorting: sortState !== undefined,
+    manualSorting: true,
+    // Table-core drops the sort on the third click by default, which leaves no
+    // field to send and makes the header look broken.
+    enableSortingRemoval: false,
     manualPagination: isServerPagination || isCursorPagination,
     // -1 is TanStack's "the page count is unknowable", which is the literal
     // truth for a keyset walk.
@@ -183,14 +230,10 @@ export function DataTable<T>({
         ? (row) => isRowSelectable(row.original)
         : true,
     onSortingChange: (updater) => {
-      const prev = sortState ? externalSorting : sorting;
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      if (sortState) {
-        const first = next[0];
-        if (first) sortState.onChange(first.id, first.desc ? "desc" : "asc");
-      } else {
-        setSorting(next);
-      }
+      if (!sortState) return;
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      const first = next[0];
+      if (first) sortState.onChange(first.id, first.desc ? "desc" : "asc");
     },
     onRowSelectionChange: (updater) => {
       const next =
@@ -218,7 +261,6 @@ export function DataTable<T>({
       }
     },
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: sortState ? undefined : getSortedRowModel(),
     getPaginationRowModel:
       isServerPagination || isCursorPagination ? undefined : getPaginationRowModel(),
   });
@@ -342,12 +384,7 @@ export function DataTable<T>({
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   onKeyDown={
                     onRowClick
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onRowClick(row.original);
-                          }
-                        }
+                      ? createRowActivationKeyHandler(() => onRowClick(row.original))
                       : undefined
                   }
                   className={cn(
@@ -426,12 +463,7 @@ export function DataTable<T>({
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                     onKeyDown={
                       onRowClick
-                        ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              onRowClick(row.original);
-                            }
-                          }
+                        ? createRowActivationKeyHandler(() => onRowClick(row.original))
                         : undefined
                     }
                     tabIndex={onRowClick ? 0 : undefined}

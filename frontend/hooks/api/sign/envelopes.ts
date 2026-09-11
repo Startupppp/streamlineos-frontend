@@ -27,6 +27,15 @@ export interface EnvelopeValidationResult {
   errors: string[];
 }
 
+export interface CorrectSignEnvelopeInput {
+  reason?: string;
+  recipients?: { id: number; name?: string; email?: string; phone?: string }[];
+}
+
+export interface ExtendSignEnvelopeExpirationInput {
+  expiresAt: string;
+}
+
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
   qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(id) });
   qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all });
@@ -101,6 +110,31 @@ export function useVoidSignEnvelope(id: number) {
   });
 }
 
+export function useCorrectSignEnvelope(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["signEnvelopes", "correct", id],
+    mutationFn: (input: CorrectSignEnvelopeInput) => apiClient.post<SignEnvelopeFull>(`/sign/envelopes/${id}/correct`, input),
+    onSuccess: () => {
+      invalidateEnvelope(qc, id);
+      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.audit(id) });
+    },
+  });
+}
+
+export function useExtendSignEnvelopeExpiration(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["signEnvelopes", "extend-expiration", id],
+    mutationFn: (input: ExtendSignEnvelopeExpirationInput) =>
+      apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/extend-expiration`, input),
+    onSuccess: () => {
+      invalidateEnvelope(qc, id);
+      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.audit(id) });
+    },
+  });
+}
+
 export function useResendSignEnvelope(id: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -132,5 +166,28 @@ export function useDownloadSignEnvelopeFinalPdf(id: number) {
   return useMutation({
     mutationKey: ["signEnvelopes", "final-pdf", id],
     mutationFn: () => apiClient.get<{ url: string }>(`/sign/envelopes/${id}/final-pdf`),
+  });
+}
+
+/**
+ * The Certificate of Completion, which the API has always produced and nothing
+ * could fetch.
+ *
+ * `GET sign/envelopes/:id/certificate` sits beside `/final-pdf` on the same
+ * controller, and only `/final-pdf` had a caller. So the signed document was
+ * downloadable and the record of HOW it came to be signed -- the audit timeline,
+ * each signer's authentication method, the per-document SHA-256 hashes, and the
+ * statement that this is tamper evidence rather than a DSC or an Aadhaar eSign
+ * -- was reachable only by someone typing the URL. That is the artifact a
+ * counterparty asks for in a dispute, so producing it and not handing it over is
+ * the whole feature missing rather than a rough edge.
+ *
+ * A mutation and not a query, matching its sibling: it mints a short-lived
+ * signed URL, so caching it would hand back a link that has since expired.
+ */
+export function useDownloadSignEnvelopeCertificate(id: number) {
+  return useMutation({
+    mutationKey: ["signEnvelopes", "certificate", id],
+    mutationFn: () => apiClient.get<{ url: string }>(`/sign/envelopes/${id}/certificate`),
   });
 }

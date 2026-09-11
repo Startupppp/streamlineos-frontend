@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, Suspense } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "@/hooks/api/crm/inbox";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -156,6 +157,19 @@ function InboxContent() {
 }
 
 export default function CrmInboxPage() {
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:leads:view") === "denied")
+    return <NoPermissionState permission="crm:leads:view" />;
+
   return (
     <Suspense fallback={<InboxSkeleton />}>
       <InboxContent />

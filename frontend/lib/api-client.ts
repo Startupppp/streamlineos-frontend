@@ -121,6 +121,20 @@ function requestHost(url: string): string {
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+/**
+ * Exported because a caller that needs a key stable across *retries* has to
+ * mint it once, outside the request. The per-fetch key below is minted inside
+ * `authedFetch`, so a retried mutation would carry a new one and replay
+ * nothing — which is fine for a request that is cheap to repeat and wrong for
+ * one that spends money or holds a message.
+ *
+ * The same UUID `authedFetch` mints, from `randomId`, which does not depend
+ * on a secure context.
+ */
+export function newIdempotencyKey(): string {
+  return randomId();
+}
+
 export async function authedFetch(
   url: string,
   init: RequestInit,

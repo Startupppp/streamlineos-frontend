@@ -128,9 +128,7 @@ export function useHrCheckIn(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus();
+    const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
@@ -205,9 +203,7 @@ export function useHrCheckOut(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus();
+    const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: () =>
@@ -264,7 +260,6 @@ export function useHrToggleBreak(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
   const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],

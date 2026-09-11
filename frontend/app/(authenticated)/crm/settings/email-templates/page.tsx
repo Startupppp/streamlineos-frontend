@@ -46,7 +46,7 @@ export default function EmailTemplatesPage() {
   const [previewTarget, setPreviewTarget] = useState<EmailTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EmailTemplate | null>(null);
 
-  const { data, isLoading, isError, refetch, access} = useEmailTemplates({ limit: 50, offset: 0 });
+  const { data, isLoading, isError, refetch } = useEmailTemplates({ limit: 50, offset: 0 });
   const deleteTemplate = useDeleteEmailTemplate();
 
   const templates = useMemo(() => data ?? [], [data]);
@@ -166,7 +166,6 @@ export default function EmailTemplatesPage() {
           />
         ) : templates.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyMailIllustration />}
             title="No templates yet"
             description="Write the email once and leave the name, the company and the amount as variables — the rest fills itself in."

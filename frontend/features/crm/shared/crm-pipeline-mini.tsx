@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
@@ -15,10 +17,23 @@ interface CrmPipelineMiniProps {
 
 export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
   const prefersReducedMotion = useReducedMotion();
-  const { data: statusOptions = [], access } = useCrmOptions("lead_status");
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
   const stages = statusOptions.filter((o) => o.key !== "LOST");
   const maxCount = Math.max(1, ...Object.values(byStatus));
   const isEmpty = total === 0 || stages.length === 0;
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:leads:view") === "denied")
+    return <NoPermissionState permission="crm:leads:view" />;
 
   return (
     <Card className="shadow-sm h-full">
@@ -30,7 +45,6 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
       <CardContent className="space-y-2 px-3 pb-3">
         {isEmpty ? (
           <EmptyState
-            access={access}
             illustration={<EmptyChartIllustration className="h-20 w-20" />}
             title="No pipeline data"
             description="Add leads to see your conversion funnel."

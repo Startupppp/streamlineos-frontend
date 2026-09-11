@@ -40,10 +40,10 @@ export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search templates…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "isDefault", width: "w-28 shrink-0" },
       { field: "terms" },
-      { field: "updatedAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "updatedAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

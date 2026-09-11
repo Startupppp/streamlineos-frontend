@@ -65,7 +65,7 @@ function ArticleToc({ items }: ArticleTocProps) {
             <li key={item.id} className={item.level === 3 ? "ml-3" : ""}>
               <a
                 href={`#${item.id}`}
-                className="text-[13px] text-muted-foreground hover:text-foreground transition-colors line-clamp-2"
+                className="text-label text-muted-foreground hover:text-foreground transition-colors line-clamp-2"
               >
                 {item.text}
               </a>
@@ -145,7 +145,7 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
               {article.tags && article.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-6">
                   {article.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-[11px]">
+                    <Badge key={tag} variant="outline" className="text-dense">
                       {tag}
                     </Badge>
                   ))}

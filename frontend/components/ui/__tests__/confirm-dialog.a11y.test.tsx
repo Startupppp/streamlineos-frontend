@@ -77,7 +77,7 @@ jest.mock("@/components/ui/alert-dialog", () => {
 });
 
 function openDialog(
-  props: Partial<React.ComponentProps<typeof ConfirmDialog>> = {},
+  props: Partial<Omit<React.ComponentProps<typeof ConfirmDialog>, "trigger" | "open" | "onOpenChange">> = {},
 ) {
   const onConfirm = jest.fn();
   const onOpenChange = jest.fn();

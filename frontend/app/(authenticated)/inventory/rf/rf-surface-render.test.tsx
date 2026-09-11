@@ -65,7 +65,7 @@ function expectNothingWiderThanTheDevice(container: HTMLElement): void {
 // ---------------------------------------------------------------------------
 
 const rfQueue = jest.fn();
-const useCan = jest.fn(() => true);
+const useCan = jest.fn((_key: string) => true);
 const pickWave = jest.fn();
 const putawayTask = jest.fn();
 

@@ -82,8 +82,6 @@ function RecallsPageInner() {
           {r.title}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => r.title,
     },
     {
       key: "recallNumber",
@@ -91,8 +89,6 @@ function RecallsPageInner() {
       headerClassName: "w-[120px]",
       className: "font-mono text-muted-foreground",
       cell: (r) => r.recallNumber,
-      sortable: true,
-      sortValue: (r) => r.recallNumber,
     },
     {
       key: "status",
@@ -148,8 +144,6 @@ function RecallsPageInner() {
       headerClassName: "w-[130px]",
       className: "text-muted-foreground",
       cell: (r) => format(new Date(r.createdAt), "dd MMM yyyy"),
-      sortable: true,
-      sortValue: (r) => r.createdAt,
     },
   ];
 

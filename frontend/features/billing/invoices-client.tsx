@@ -192,8 +192,6 @@ export function InvoicesClient() {
       key: "invoiceNumber",
       header: "Invoice #",
       cell: (inv) => <span className="font-mono text-dense font-medium">{inv.invoiceNumber}</span>,
-      sortable: true,
-      sortValue: (inv) => inv.invoiceNumber,
     },
     {
       key: "client",
@@ -206,8 +204,6 @@ export function InvoicesClient() {
       cell: (inv) => (
         <span className="font-mono font-semibold tabular-nums">{formatCurrencyFull(inv.total)}</span>
       ),
-      sortable: true,
-      sortValue: (inv) => inv.total,
       className: "font-mono tabular-nums",
     },
     {

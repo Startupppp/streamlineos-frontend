@@ -63,8 +63,8 @@ describe("RBAC administration query gates", () => {
     can.mockReturnValue(true);
 
     useAuditLogs({
-      page: 3,
-      pageSize: 25,
+      cursor: "cursor-3",
+      limit: 25,
       actions: ["role.created", "role.deleted"],
     });
 
@@ -73,7 +73,7 @@ describe("RBAC administration query gates", () => {
     expect(options.enabled).toBe(true);
     expect(options.queryKey).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ page: 3, pageSize: 25 }),
+        expect.objectContaining({ cursor: "cursor-3", limit: 25 }),
       ]),
     );
   });

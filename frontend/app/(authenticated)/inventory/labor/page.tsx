@@ -33,8 +33,6 @@ const COLUMNS: DataTableColumn<LaborBoardRow>[] = [
     key: "person",
     header: "Person",
     cell: (row) => <span className="text-sm font-medium">{row.userName ?? row.userId}</span>,
-    sortable: true,
-    sortValue: (row) => row.userName ?? row.userId,
   },
   {
     key: "lines",
@@ -42,8 +40,6 @@ const COLUMNS: DataTableColumn<LaborBoardRow>[] = [
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums text-muted-foreground",
     cell: (row) => row.lines,
-    sortable: true,
-    sortValue: (row) => row.lines,
   },
   {
     key: "units",
@@ -51,8 +47,6 @@ const COLUMNS: DataTableColumn<LaborBoardRow>[] = [
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
     cell: (row) => row.unitsDone.toLocaleString(undefined, { maximumFractionDigits: 2 }),
-    sortable: true,
-    sortValue: (row) => row.unitsDone,
   },
   {
     key: "worked",
@@ -70,8 +64,6 @@ const COLUMNS: DataTableColumn<LaborBoardRow>[] = [
       row.unitsPerHour === null
         ? "—"
         : row.unitsPerHour.toLocaleString(undefined, { maximumFractionDigits: 1 }),
-    sortable: true,
-    sortValue: (row) => row.unitsPerHour ?? 0,
   },
   {
     key: "performance",
@@ -93,8 +85,6 @@ const COLUMNS: DataTableColumn<LaborBoardRow>[] = [
         {row.performancePct.toFixed(0)}%
       </Badge>
     ),
-    sortable: true,
-    sortValue: (row) => row.performancePct,
   },
 ];
 

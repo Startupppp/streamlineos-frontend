@@ -21,13 +21,15 @@ import {
 } from "@/components/ui/content-fill-panel";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordList, asRecordValues } from "@/features/renderer";
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
-import { useCan } from "@/hooks/api/access";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { CampaignSheet } from "./campaign-sheet";
 
@@ -60,8 +62,9 @@ export function CampaignListPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [density, setDensity] = useDensity();
   const canManageCampaigns = useCan("crm:campaigns:manage");
+  const canViewReports = useCan("crm:reports:view");
 
-  const { data, isLoading, isError, refetch, access } = useCampaigns({
+  const { data, isLoading, isError, refetch } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
     limit: 50,
   });
@@ -76,6 +79,19 @@ export function CampaignListPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:campaigns:view") === "denied")
+    return <NoPermissionState permission="crm:campaigns:view" />;
 
   return (
     <PageWrapper
@@ -99,12 +115,26 @@ export function CampaignListPage() {
         </div>
       }
       actions={
-        canManageCampaigns ? (
-          <LoadingButton size="sm" onClick={handleOpenSheet}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Create campaign
-          </LoadingButton>
-        ) : undefined
+        <div className="flex items-center gap-gap-toolbar">
+          {/*
+            CRM-P1-01. The multi-touch report had no way in at all — the only
+            attribution on screen was first-touch and last-touch, the two models
+            that make the strongest claim about which single touch mattered.
+            Gated on the report key, so somebody who cannot read reports is not
+            offered a link that 403s.
+          */}
+          {canViewReports ? (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/crm/campaigns/attribution">Attribution</Link>
+            </Button>
+          ) : null}
+          {canManageCampaigns ? (
+            <LoadingButton size="sm" onClick={handleOpenSheet}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Create campaign
+            </LoadingButton>
+          ) : null}
+        </div>
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
@@ -119,7 +149,6 @@ export function CampaignListPage() {
           />
         ) : campaigns.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyReportIllustration />}
             title="No campaigns yet"
             description={

@@ -9,6 +9,9 @@ import { defineConfig, devices } from "@playwright/test";
  * `CORS_ORIGINS` is `http://localhost:1000,http://localhost:3000`, so 3000 is
  * the only other origin the API will answer a browser call from. Any other port
  * needs a backend env change, which is not ours to make.
+ *
+ * `E2E_BASE_URL` still points the suite somewhere deliberate (the app's own
+ * `http://localhost:1000`, a staging host) when that is what a run is for.
  */
 const PORT = Number(process.env.E2E_PORT ?? 3000);
 
@@ -94,9 +97,21 @@ export default defineConfig({
    */
   testMatch: "**/*.spec.ts",
 
+  /**
+   * Not parallel, and one worker, in CI too. Each worker is a browser, and this
+   * machine is also running several dev servers, a Postgres and other agents'
+   * suites. It is also the honest setting for specs that mutate shared stock:
+   * two workers receiving against the same bin race each other's assertions.
+   */
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
-  retries: 0,
+
+  /**
+   * Retries in CI only. Locally a retry hides the first failure, which is the
+   * one worth reading; in CI a retry is also what makes `trace: "on-first-retry"`
+   * record anything at all.
+   */
+  retries: process.env.CI ? 2 : 0,
 
   /**
    * 90s, against a default of 30. Not padding for flakiness: a flow spec here
@@ -116,15 +131,11 @@ export default defineConfig({
    */
   expect: { timeout: 10_000 },
 
-  /**
-   * One worker. Each worker is a browser, and this machine is also running
-   * several dev servers, a Postgres and other agents' suites. It is also the
-   * honest setting for specs that mutate shared stock: two workers receiving
-   * against the same bin race each other's assertions.
-   */
   workers: 1,
 
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }]]
+    : [["list"], ["html", { open: "never" }]],
 
   use: {
     baseURL: BASE_URL,

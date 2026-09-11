@@ -185,8 +185,6 @@ function ProductsPageInner() {
             </Link>
           </div>
         ),
-        sortable: true,
-        sortValue: (p) => p.name,
       },
       {
         key: "sku",

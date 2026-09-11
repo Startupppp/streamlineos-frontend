@@ -152,8 +152,6 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         cell: (row) => (
           <span className="text-dense text-muted-foreground">{formatDate(row.createdAt)}</span>
         ),
-        sortable: true,
-        sortValue: (r) => r.createdAt,
       },
       {
         key: "actions",

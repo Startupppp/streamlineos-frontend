@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
 import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -118,7 +118,7 @@ export const useUnreadNotificationCount = (
 };
 
 export const useMarkNotificationRead = () => {
-  const { invalidateInbox, orgId, queryClient } = useNotificationInboxInvalidation();
+  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<
     { success: boolean },
     Error,
@@ -167,7 +167,7 @@ export const useMarkNotificationRead = () => {
 };
 
 export const useMarkAllNotificationsRead = () => {
-  const { invalidateInbox, orgId, queryClient } =
+  const { invalidateInbox, queryClient } =
     useNotificationInboxInvalidation();
   return useMutation<
     { success: boolean },
@@ -210,7 +210,7 @@ export const useMarkAllNotificationsRead = () => {
 };
 
 export const useBulkMarkRead = () => {
-  const { invalidateInbox, orgId, queryClient } = useNotificationInboxInvalidation();
+  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<
     { success: boolean },
     Error,

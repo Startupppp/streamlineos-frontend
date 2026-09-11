@@ -1,18 +1,18 @@
 # 19 — Every remaining CRM record type on the engine
 
-**Status:** done — 39 registered descriptions, and measured on `main` with comments stripped: **0** hand-built CRM tables outside the import plan's two files, **1** raw `<table>` (the blueprint transition matrix), **0** hand-rolled forms. The 14 settings surfaces this ticket originally left behind are migrated.
+**Status:** done — 39 registered descriptions, with six surfaces deliberately left and argued below. Measured with comments stripped: **0** hand-built CRM tables outside the import plan's two files, **1** raw `<table>` (the blueprint transition matrix), **4** hand-rolled forms, each argued below. The 14 settings surfaces this ticket originally left behind are migrated.
 **Track:** E — records and renderer
 **Blocked by:** 03
 
 ## Acceptance criteria
 
 - [x] Every remaining CRM record type renders through the Phase 1 engine.
-      Thirty descriptions in `lib/renderer/crm/`, all registered in
+      Thirty-eight descriptions in `lib/renderer/crm/`, all registered in
       `lib/renderer/registry.ts`.
 - [x] **No hand-written CRM list, table or form remains**, except the surfaces
       Phase 1 deliberately crafted — the timeline and the action review feed —
       plus the import plan, which is a workflow rather than a record surface.
-      Three further exceptions are argued below rather than forced.
+      Six further exceptions are argued below rather than forced.
 - [x] The renderer is tested as a unit against layout descriptions. Individual
       generated screens are not tested; that is the point of having one engine.
       `features/renderer/renderer.test.tsx` drives descriptions no screen uses;
@@ -141,6 +141,16 @@ is the *done* case rather than the *first use* one.
 render an em dash on every row forever. `withColumns` narrows a description for
 exactly this case and is the fix; it is a leads-domain call and is noted here
 rather than done blind.
+
+## Measured
+
+Before: 31 files built `DataTableColumn[]` by hand, 3 used a raw `<table>`,
+24 hand-rolled `useForm`.
+
+After: **0 hand-built tables** in the CRM outside the import plan's two files;
+**1 raw `<table>`**, the blueprint transition matrix; **4 hand-rolled forms**,
+each argued above. 38 record descriptions live in `lib/renderer/crm/`, all
+registered and all held to the engine's rules by `lib/renderer/registry.test.ts`.
 
 ## Notes
 

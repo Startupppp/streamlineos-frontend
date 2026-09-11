@@ -77,7 +77,6 @@ describe("directory engagement mutations", () => {
       await result.current.mutateAsync({
         workerId: "worker-1",
         workerEngagementId: "engagement-1",
-        expectedVersion: 1,
       });
     });
 

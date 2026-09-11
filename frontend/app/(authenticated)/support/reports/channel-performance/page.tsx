@@ -41,15 +41,11 @@ export default function ChannelPerformanceReportPage() {
           {formatChannelLabel(row.channel)}
         </Link>
       ),
-      sortable: true,
-      sortValue: (row) => row.channel,
     },
     {
       key: "ticketsHandled",
       header: "Tickets Handled",
       cell: (row) => row.ticketsHandled,
-      sortable: true,
-      sortValue: (row) => row.ticketsHandled,
     },
     {
       key: "avgFirstResponseMinutes",

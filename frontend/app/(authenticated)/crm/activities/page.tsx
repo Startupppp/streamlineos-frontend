@@ -198,7 +198,7 @@ function ActivitiesContent() {
     [searchParams, router],
   );
 
-  const { data, isLoading, isError, refetch, access} = useCrmActivities({
+  const { data, isLoading, isError, refetch } = useCrmActivities({
     type: typeFilter || undefined,
     entityType: entityTypeFilter || undefined,
     status: statusFilter || undefined,
@@ -330,7 +330,6 @@ function ActivitiesContent() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyActivityIllustration />}
             title={hasActiveFilters ? "No activities match these filters" : "No activities yet"}
             description={

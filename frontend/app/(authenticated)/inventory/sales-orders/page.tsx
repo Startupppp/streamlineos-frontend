@@ -84,8 +84,6 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
         {so.soNumber}
       </Link>
     ),
-    sortable: true,
-    sortValue: (so) => so.soNumber,
   },
   {
     key: "customerName",
@@ -114,8 +112,6 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     ),
     className: "text-right",
     headerClassName: "text-right",
-    sortable: true,
-    sortValue: (so) => Number(so.total),
   },
   {
     key: "status",

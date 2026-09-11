@@ -1,8 +1,8 @@
-import { backendPath } from "@/test-support/backend-checkout";
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
+import { backendPath } from "@/lib/test-support/backend-path";
 
 /**
  * `backend/` and `frontend/` are siblings inside one checkout, so this walks up
@@ -16,6 +16,21 @@ import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
  * before asserting anything — including the ghost-key check this file exists to
  * provide. The first test below is the guard against a third time: it fails
  * loudly rather than letting the suite pass while proving nothing.
+ */
+/**
+ * Resolved by looking, not by counting `..` segments.
+ *
+ * The comment above documents two wrong guesses; the hardcoded path was a third,
+ * resolving to `streamlineos-frontend/backend/...` on the checkout this actually
+ * runs in. Each time the five cross-repo assertions below returned before
+ * asserting anything, and the suite stayed green while the drift guard it exists
+ * to be was switched off.
+ *
+ * A list of candidates ends that argument: the layout may be `backend/` beside
+ * `frontend/` in one checkout or `streamlineos-backend/` beside
+ * `streamlineos-frontend/` in another, and this finds whichever is there. The
+ * first test still fails loudly if none of them is, because a fourth layout is
+ * likelier than this list being complete.
  */
 const BACKEND_PERMS_DIR = backendPath("src/modules/rbac/permissions");
 

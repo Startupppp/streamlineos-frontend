@@ -33,17 +33,19 @@ export function useReportsOverview(query: OverviewQuery = {}, enabled = true) {
 }
 
 export function useUtilizationReport(query: ReportRangeParams = {}, enabled = true) {
+  const canView = useCan("timesheets:reports:view");
   const params = { startDate: query.startDate, endDate: query.endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.report("utilization", params),
     queryFn: () => apiClient.get<UtilizationReport>("/timesheets/reports/utilization", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useClientProfitabilityReport(query: ReportRangeParams = {}, enabled = true) {
+  const canView = useCan("timesheets:reports:view");
   const params = { startDate: query.startDate, endDate: query.endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.report("client-profitability", params),
@@ -51,39 +53,42 @@ export function useClientProfitabilityReport(query: ReportRangeParams = {}, enab
       apiClient.get<ClientProfitabilityReport>("/timesheets/reports/client-profitability", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useComplianceReport(query: ReportRangeParams = {}, enabled = true) {
+  const canView = useCan("timesheets:reports:view");
   const params = { startDate: query.startDate, endDate: query.endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.report("compliance", params),
     queryFn: () => apiClient.get<ComplianceReport>("/timesheets/reports/compliance", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useApprovalSlaReport(query: ReportRangeParams = {}, enabled = true) {
+  const canView = useCan("timesheets:reports:view");
   const params = { startDate: query.startDate, endDate: query.endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.report("approval-sla", params),
     queryFn: () => apiClient.get<ApprovalSlaReport>("/timesheets/reports/approval-sla", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useBillingLeakageReport(query: ReportRangeParams = {}, enabled = true) {
+  const canView = useCan("timesheets:reports:view");
   const params = { startDate: query.startDate, endDate: query.endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.report("billing-leakage", params),
     queryFn: () => apiClient.get<BillingLeakageReport>("/timesheets/reports/billing-leakage", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }

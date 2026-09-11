@@ -55,6 +55,17 @@ jobs:
       - name: Type Check
         run: pnpm run type-check
 
+      # tsconfig.json excludes every test path and jest transforms with SWC, so
+      # without this no gate ever typechecks a spec.
+      - name: Type Check (specs)
+        run: pnpm run type-check:specs
+
+      # tsconfig.specs.json excludes `e2e`, so the Playwright suite was outside
+      # both typecheck gates. Its own config, because those specs are checked
+      # against Playwright's types rather than jest's ambient globals.
+      - name: Type Check (e2e)
+        run: pnpm run type-check:e2e
+
       - name: Query keys and caches stay tenant-scoped
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 

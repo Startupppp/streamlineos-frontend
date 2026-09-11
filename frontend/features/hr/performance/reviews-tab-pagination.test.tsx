@@ -47,15 +47,18 @@ jest.mock("@/components/illustrations", () => ({
 }));
 
 jest.mock("@/components/ui/tabs", () => {
+  // A `jest.mock` factory is hoisted above the imports, so React has to be
+  // reached at call time rather than imported at the top.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createContext, useContext, createElement } = require("react") as typeof import("react");
   type OnChange = (value: string) => void;
   const Ctx = createContext<OnChange>(() => {});
   return {
-    Tabs: ({ children, onValueChange }: { children: unknown; onValueChange?: OnChange }) =>
+    Tabs: ({ children, onValueChange }: { children: ReactNode; onValueChange?: OnChange }) =>
       createElement(Ctx.Provider, { value: onValueChange ?? (() => {}) }, children),
-    TabsList: ({ children }: { children: unknown }) =>
+    TabsList: ({ children }: { children: ReactNode }) =>
       createElement("div", { role: "tablist" }, children),
-    TabsTrigger: ({ children, value }: { children: unknown; value: string }) => {
+    TabsTrigger: ({ children, value }: { children: ReactNode; value: string }) => {
       const onChange = useContext(Ctx);
       return createElement("button", { type: "button", role: "tab", onClick: () => onChange(value) }, children);
     },

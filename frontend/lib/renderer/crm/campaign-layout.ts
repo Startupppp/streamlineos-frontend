@@ -77,13 +77,13 @@ export const CAMPAIGN_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search campaigns…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "status", width: "w-28 shrink-0" },
       { field: "channel", width: "w-32 shrink-0" },
       { field: "budgetAllocated", width: "w-32 shrink-0" },
       { field: "spend", width: "w-32 shrink-0" },
-      { field: "leads", sortable: true, width: "w-20 shrink-0" },
-      { field: "roi", sortable: true, width: "w-24 shrink-0" },
+      { field: "leads", width: "w-20 shrink-0" },
+      { field: "roi", width: "w-24 shrink-0" },
     ],
   },
   detail: {

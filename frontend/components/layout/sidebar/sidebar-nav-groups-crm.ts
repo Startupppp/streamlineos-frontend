@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3 } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw, GitMerge } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -10,6 +10,8 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
       "crm:leads:view",
       "crm:reports:view",
       "crm:settings:manage",
+      "crm:lifecycle:view",
+      "crm:customer-health:view",
       "party:parties:view",
     ],
     routes: [
@@ -75,6 +77,14 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Building2,
         href: "/parties",
         requiredPermission: "party:parties:view",
+        children: [
+          {
+            label: "Duplicates",
+            icon: GitMerge,
+            href: "/parties/duplicates",
+            requiredPermission: "party:duplicates:view",
+          },
+        ],
       },
       {
         label: "Clients",
@@ -150,6 +160,18 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Bot,
         href: "/crm/autonomy",
         requiredPermission: "crm:autonomy:view",
+        children: [
+          {
+            // The nurture engine's authoring surface. Same key as its parent
+            // because the controller declares the same one on every read —
+            // enrolling somebody schedules autonomous messages, which is what
+            // `crm:autonomy:manage` already governs, so no key of its own.
+            label: "Nurture sequences",
+            icon: RefreshCw,
+            href: "/crm/autonomy/nurture",
+            requiredPermission: "crm:autonomy:view",
+          },
+        ],
       },
       {
         // Gated on reading parties, not on importing: export is ungated by
@@ -177,7 +199,52 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             href: "/crm/analytics",
             requiredPermission: "crm:reports:view",
           },
+          {
+            /*
+              `crm:reporting:*` and `crm:reports:*` are two different features
+              that read alike: the parent is the fixed dashboard, this is the
+              query engine, and the endpoints behind it declare
+              `crm:reporting:run`. Listed in its own right so somebody who may
+              run a query but not read the dashboard can still reach it — an
+              inaccessible parent may promote an accessible child, and gating
+              this on the parent's key would hide the builder from the people
+              the backend grants it to.
+            */
+            label: "Query builder",
+            icon: BarChart2,
+            href: "/crm/reports/builder",
+            requiredPermission: "crm:reporting:run",
+          },
         ],
+      },
+      {
+        // Every CRM member holds the earnings key for their own rows, so this is
+        // a rep's destination as much as a manager's — the server narrows to the
+        // caller's scope rather than the nav hiding it.
+        label: "Commissions",
+        icon: Coins,
+        href: "/crm/commissions",
+        requiredPermission: "crm:commission-earnings:view",
+      },
+      {
+        label: "Renewals",
+        icon: RefreshCw,
+        href: "/crm/renewals",
+        requiredPermission: "crm:lifecycle:view",
+      },
+      {
+        label: "Customer health",
+        icon: HeartPulse,
+        href: "/crm/health",
+        requiredPermission: "crm:customer-health:view",
+      },
+      {
+        // The team digest, so `view-team` and not `:view`. A rep reads their own
+        // calls' analyses on the calls themselves.
+        label: "Call intelligence",
+        icon: PhoneCall,
+        href: "/crm/intelligence",
+        requiredPermission: "crm:call-analysis:view-team",
       },
       {
         label: "Access",
@@ -225,6 +292,11 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Record Layouts",
             icon: Rows3,
             href: "/crm/settings/layouts",
+            // Matches the page's own `requirePermission("crm:settings:view")`.
+            // It read `settings:manage` -- a platform-wide key on a CRM page,
+            // which every sibling here avoids -- so the nav hid the entry from
+            // people the page would have let in, and showed it to people it
+            // would not.
             requiredPermission: "crm:settings:view",
           },
           {

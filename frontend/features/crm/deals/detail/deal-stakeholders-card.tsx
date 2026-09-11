@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import { Star, Users } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +32,6 @@ import {
 import { useContacts } from "@/hooks/api/crm/contacts";
 
 const SELECT_NONE = "__none__";
-import { NoPermissionState } from "@/components/shared";
 
 interface StakeholderRowProps {
   id: string;
@@ -96,7 +97,7 @@ interface DealStakeholdersCardProps {
 }
 
 export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
-  const { data: stakeholders = [], isLoading: stakeholdersLoading, access } =
+  const { data: stakeholders = [], isLoading: stakeholdersLoading } =
     useStakeholders(dealId);
   const createStakeholder = useCreateStakeholder(dealId);
   const deleteStakeholder = useDeleteStakeholder(dealId);
@@ -179,6 +180,19 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
   const handleRoleKeyChange = useCallback((v: string) => setRoleKey(v), []);
   const handleInfluenceChange = useCallback((v: string) => setInfluence(v), []);
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
+
   return (
     <Card className="shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -257,9 +271,7 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
             </div>
           </div>
         )}
-        {access.denied ? (
-          <NoPermissionState permission={access.permission} compact />
-        ) : stakeholdersLoading ? (
+        {stakeholdersLoading ? (
           <div className="space-y-3" aria-busy="true">
             {[0, 1, 2].map((i) => (
               <div key={i} className="space-y-1.5">

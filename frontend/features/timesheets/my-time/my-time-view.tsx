@@ -11,30 +11,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
+import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
-import { useWeek, type WeekStartDay } from "./use-week";
+import type { AttendanceDraftResult } from "@/features/timesheets/types";
+import { missingOnSubmit } from "@/features/timesheets/settings/required-fields";
+import { IncompleteEntriesNotice } from "./incomplete-entries-notice";
+import { FillFromClockButton, FillFromClockNotice } from "./fill-from-clock";
+import { resolveWeekStart, useWeek } from "./use-week";
 import { TimerPanel } from "./timer-panel";
 import { WeekGrid } from "./week-grid";
 import { DayTimeline } from "./day-timeline";
 import { cn } from "@/lib/utils";
-
-const WEEK_START_DAYS: readonly WeekStartDay[] = [0, 1, 2, 3, 4, 5, 6];
 
 export function MyTimeView() {
   const shouldReduceMotion = useReducedMotion();
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
 
   const { data: periodDetail, isLoading: periodLoading, isError: periodError, refetch: refetchPeriod } = useCurrentPeriod();
+  const { data: settings } = useTimesheetSettings();
 
-  const weekStartsOn = useMemo<WeekStartDay>(() => {
-    const start = periodDetail?.period?.periodStart;
-    if (!start) return 1;
-    const dow = parseISO(start).getDay();
-    return WEEK_START_DAYS.find((d) => d === dow) ?? 1;
-  }, [periodDetail?.period?.periodStart]);
+  const weekStartsOn = resolveWeekStart(
+    settings?.workWeekStart,
+    periodDetail?.period?.periodStart,
+  );
 
   const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
+  /*
+   * The result is stored WITH the week it ran for, and rendered only while that
+   * week is still on screen.
+   *
+   * A summary saying "3 draft entries created" is about one week; left on screen
+   * after paging it attributes those rows to a week that never had them. Storing
+   * the week and comparing beats clearing in an effect — there is no moment where
+   * the stale summary is shown before an effect gets round to removing it.
+   */
+  const [draftResult, setDraftResult] = useState<{ week: string; result: AttendanceDraftResult } | null>(
+    null,
+  );
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
     { startDate: weekStart, endDate: weekEnd },
     true,
@@ -58,9 +71,30 @@ export function MyTimeView() {
     return label;
   }, [weekStart, weekEnd, totalHours]);
 
+  /*
+   * The same rule `periods.service.ts#submitPeriod` applies, run before the
+   * button rather than after it. The server refuses the whole period naming a
+   * row id — "Entry 4211 is missing a required description" — which is a
+   * number that appears on no screen, so the refusal arrived with nowhere to go.
+   *
+   * Scoped by `timesheetPeriodId` exactly as the server scopes it, over the
+   * entries this week has loaded. Anything in the period but outside the week
+   * on screen is still the server's to catch; this only ever removes surprises,
+   * never adds one.
+   */
+  const incomplete = useMemo(() => {
+    const required = settings?.requiredFields ?? [];
+    if (!period || required.length === 0) return [];
+    return entries
+      .filter((entry) => entry.timesheetPeriodId === period.id && !entry.voidedAt)
+      .map((entry) => ({ entry, missing: missingOnSubmit(required, entry) }))
+      .filter((row) => row.missing.length > 0);
+  }, [entries, period, settings]);
+
   const canSubmit =
     isCurrentWeek &&
     !!period &&
+    incomplete.length === 0 &&
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
   const canRecall = isCurrentWeek && period?.status === "SUBMITTED";
 
@@ -140,6 +174,12 @@ export function MyTimeView() {
         />
       </div>
 
+      <FillFromClockButton
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+        onResult={(result) => setDraftResult({ week: weekStart, result })}
+      />
+
       {canRecall ? (
         <LoadingButton
           variant="outline"
@@ -181,8 +221,14 @@ export function MyTimeView() {
           />
         )}
 
+        {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
+
+        <FillFromClockNotice
+          result={draftResult?.week === weekStart ? draftResult.result : null}
+        />
+
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
-          <div className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
+          <div role="alert" className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-status-danger-ink">Timesheet rejected</p>
               {period.rejectionReason && (
@@ -239,7 +285,12 @@ export function MyTimeView() {
             </TabsContent>
 
             <TabsContent value="day" className="mt-4">
-              <DayTimeline entries={entriesData?.data} days={days} />
+              <DayTimeline
+                entries={entriesData?.data}
+                days={days}
+                weekStart={weekStart}
+                weekEnd={weekEnd}
+              />
             </TabsContent>
           </Tabs>
         )}

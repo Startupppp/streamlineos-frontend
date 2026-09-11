@@ -73,8 +73,6 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
       key: "productName",
       header: "Product",
       cell: (row) => <span className="font-medium">{row.productName}</span>,
-      sortable: true,
-      sortValue: (row) => row.productName,
     },
     {
       key: "variantSku",
@@ -89,15 +87,11 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
       cell: (row) => (
         <span className="font-mono tabular-nums">{parseFloat(row.totalOnHand)}</span>
       ),
-      sortable: true,
-      sortValue: (row) => parseFloat(row.totalOnHand),
     },
     {
       key: "expiryDate",
       header: "Expiry Date",
       cell: (row) => <span className="text-dense">{formatShortDate(row.expiryDate) || ""}</span>,
-      sortable: true,
-      sortValue: (row) => row.expiryDate,
     },
     {
       key: "daysUntilExpiry",
@@ -105,8 +99,6 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => <DaysUntilExpiryCell days={row.daysUntilExpiry} />,
-      sortable: true,
-      sortValue: (row) => row.daysUntilExpiry,
     },
     {
       key: "status",

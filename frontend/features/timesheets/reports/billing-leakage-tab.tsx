@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBillingLeakageReport } from "@/hooks/api/timesheets-core/reports";
+import type { BillingLeakageReport } from "./reports-types";
 import { formatReportHours, formatReportMoney, formatReportPercent } from "./report-format";
 
 interface BillingLeakageTabProps {
@@ -22,28 +24,34 @@ export function BillingLeakageTab({ params, enabled }: BillingLeakageTabProps) {
     void refetch();
   }, [refetch]);
 
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load billing leakage"
-        description="Something went wrong while loading the billing leakage report."
-        onRetry={handleRetry}
-      />
-    );
-  }
-
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        <StatCardGridSkeleton cols={4} count={4} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-[160px] rounded-lg" />
-          <Skeleton className="h-[160px] rounded-lg" />
+  return (
+    <Gated
+      permission="timesheets:reports:view"
+      isLoading={!isError && (isLoading || !data)}
+      isError={isError}
+      loading={
+        <div className="space-y-4">
+          <StatCardGridSkeleton cols={4} count={4} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-[160px] rounded-lg" />
+            <Skeleton className="h-[160px] rounded-lg" />
+          </div>
         </div>
-      </div>
-    );
-  }
+      }
+      error={
+        <ErrorState
+          title="Couldn't load billing leakage"
+          description="Something went wrong while loading the billing leakage report."
+          onRetry={handleRetry}
+        />
+      }
+    >
+      {data ? <BillingLeakageBody data={data} /> : null}
+    </Gated>
+  );
+}
 
+function BillingLeakageBody({ data }: { data: BillingLeakageReport }) {
   const hasActivity =
     data.billableHours > 0 ||
     data.nonBillableHours > 0 ||

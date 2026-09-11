@@ -35,8 +35,6 @@ const POOL_COLUMNS: DataTableColumn<ChannelPool>[] = [
     key: "variant",
     header: "Variant",
     cell: (row) => <span className="text-sm font-medium">#{row.productVariantId}</span>,
-    sortable: true,
-    sortValue: (row) => row.productVariantId,
   },
   {
     key: "warehouse",
@@ -57,8 +55,6 @@ const POOL_COLUMNS: DataTableColumn<ChannelPool>[] = [
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums font-semibold",
     cell: (row) => formatQty(row.reservedQty),
-    sortable: true,
-    sortValue: (row) => Number(row.reservedQty),
   },
   {
     key: "published",

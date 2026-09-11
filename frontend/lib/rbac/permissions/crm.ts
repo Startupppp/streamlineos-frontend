@@ -61,7 +61,6 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:incentives:approve", resource: "crm:incentives", action: "approve", description: "Approve incentives" },
   { name: "crm:contacts:view", resource: "crm:contacts", action: "view", description: "View CRM contacts" },
   { name: "crm:contacts:manage", resource: "crm:contacts", action: "manage", description: "Create and manage CRM contacts" },
-  { name: "crm:contacts:merge", resource: "crm:contacts", action: "merge", description: "Merge duplicate CRM contacts" },
   { name: "crm:organizations:view", resource: "crm:organizations", action: "view", description: "View CRM companies" },
   { name: "crm:organizations:manage", resource: "crm:organizations", action: "manage", description: "Create and manage CRM companies" },
   { name: "crm:organizations:merge", resource: "crm:organizations", action: "merge", description: "Merge duplicate CRM companies" },
@@ -75,6 +74,10 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:autonomy:view", resource: "crm:autonomy", action: "view", description: "Review what the CRM decided and did on its own", baselineScope: "all" },
   { name: "crm:autonomy:reverse", resource: "crm:autonomy", action: "reverse", description: "Reverse an autonomous CRM action" },
   { name: "crm:autonomy:manage", resource: "crm:autonomy", action: "manage", description: "Turn autonomous CRM action types on or off for the organisation" },
+  // Separate from `:manage`, which governs whether an action type runs at all.
+  // This one governs whether the system may change stored customer data with
+  // nobody watching, and that is a different thing to hand somebody.
+  { name: "crm:autonomy:repair", resource: "crm:autonomy", action: "repair", description: "Choose which classes of data problem the CRM may repair unattended, and run the repair loop" },
   { name: "crm:imports:manage", resource: "crm:imports", action: "manage", description: "Bring a CRM export into StreamlineOS, and take an import back out" },
   { name: "crm:activities:view", resource: "crm:activities", action: "view", description: "Read the unified timeline of calls, emails, meetings, notes and tasks" },
   { name: "crm:activities:manage", resource: "crm:activities", action: "manage", description: "Log, edit, complete and remove activities on the timeline" },
@@ -113,4 +116,150 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:quotes:delete", resource: "crm:quotes", action: "delete", description: "Delete CRM quotes" },
   { name: "crm:quotes:approve", resource: "crm:quotes", action: "approve", description: "Approve or reject quotes requiring approval" },
   { name: "crm:ai:use", resource: "crm:ai", action: "use", description: "Use CRM AI features (scoring, enrichment, briefs, email generation)" },
+  {
+    name: "crm:call-analysis:view",
+    resource: "crm:call-analysis",
+    action: "view",
+    description:
+      "Read the analysis of a completed call: talk ratio, question rate, objections and how they were handled, competitors named, and whether a next step was committed",
+  },
+  {
+    name: "crm:call-analysis:run",
+    resource: "crm:call-analysis",
+    action: "run",
+    description:
+      "Analyse a completed call's transcript. A transcript that has already been analysed is returned from cache and costs nothing",
+  },
+  {
+    // `view-team`, not `team-view`: the backend seeds every `:view`/`:read` key
+    // to CRM_MODULE_MEMBER, so the other spelling would hand every rep the whole
+    // team's calls. Keep the suffix in step with `rbac/permissions/crm.ts`.
+    name: "crm:call-analysis:view-team",
+    resource: "crm:call-analysis",
+    action: "view-team",
+    description:
+      "Read call analyses for calls you were not on, once the rep has shared one or their private window has elapsed, and see the team's coaching digest",
+  },
+  {
+    name: "crm:commission-plans:view",
+    resource: "crm:commission-plans",
+    action: "view",
+    description: "View commission plans and the version in force on a given date",
+  },
+  {
+    name: "crm:commission-plans:manage",
+    resource: "crm:commission-plans",
+    action: "manage",
+    description: "Define commission plans, seal plan versions, and assign reps to them",
+  },
+  {
+    // Also gates the accrual reads. An accrual is a set of earnings summed, so a
+    // key that granted the total while withholding the parts would be a
+    // permission to see a number nobody could check.
+    name: "crm:commission-earnings:view",
+    resource: "crm:commission-earnings",
+    action: "view",
+    description: "View commission earnings and the accrual that decomposes them",
+  },
+  {
+    name: "crm:commission-earnings:calculate",
+    resource: "crm:commission-earnings",
+    action: "calculate",
+    description: "Calculate a commission earning for a deal, sealing the plan version it used",
+  },
+  {
+    name: "crm:commission-earnings:approve",
+    resource: "crm:commission-earnings",
+    action: "approve",
+    description: "Approve a commission earning for payout",
+  },
+  {
+    name: "crm:commission-accruals:rebuild",
+    resource: "crm:commission-accruals",
+    action: "rebuild",
+    description: "Re-derive the accrual decomposition over a bounded date range",
+  },
+  {
+    name: "crm:call-recording-consent:attest",
+    resource: "crm:call-recording-consent",
+    action: "attest",
+    description:
+      "Record where a call took place and who consented to it being recorded, and read the ledger of calls the consent rule refused to analyse",
+  },
+  {
+    name: "crm:lifecycle:view",
+    resource: "crm:lifecycle",
+    action: "view",
+    description:
+      "Read the renewal book: which customer contracts come up when, what they are worth, and the signals behind each risk score",
+  },
+  {
+    name: "crm:lifecycle:manage",
+    resource: "crm:lifecycle",
+    action: "manage",
+    description:
+      "File a lifecycle signal, renew a customer contract into its next term, or close it as churned or cancelled",
+  },
+  {
+    name: "crm:lifecycle-triggers:view",
+    resource: "crm:lifecycle-triggers",
+    action: "view",
+    description:
+      "Read the renewal and churn trigger log: which contracts opened a renewal conversation, why, and what the outbound loop answered",
+  },
+  {
+    // `run`, not `:view`/`:read`: a sweep offers work to the autonomous outbound
+    // loop, which is not an authority every CRM member should hold by default.
+    name: "crm:lifecycle-triggers:run",
+    resource: "crm:lifecycle-triggers",
+    action: "run",
+    description:
+      "Run a renewal sweep: open renewal opportunities for contracts that are due or at risk, and offer them to the autonomous outbound loop",
+  },
+  {
+    name: "crm:customer-health:view",
+    resource: "crm:customer-health",
+    action: "view",
+    description:
+      "Read customer health scores and the usage, engagement, support and sentiment inputs each one decomposes into",
+  },
+  {
+    name: "crm:customer-health:manage",
+    resource: "crm:customer-health",
+    action: "manage",
+    description:
+      "Recompute a customer's health score from its sources and update the score shown on the customer record",
+  },
+  {
+    name: "crm:reporting:view",
+    resource: "crm:reporting",
+    action: "view",
+    description: "View saved report definitions and the log of report runs",
+  },
+  {
+    name: "crm:reporting:manage",
+    resource: "crm:reporting",
+    action: "manage",
+    description:
+      "Create, edit and delete report definitions, and compile one without running it",
+  },
+  {
+    name: "crm:reporting:run",
+    resource: "crm:reporting",
+    action: "run",
+    description: "Run a report and return its rows",
+  },
+  {
+    name: "crm:segments:view",
+    resource: "crm:segments",
+    action: "view",
+    description:
+      "View saved CRM segments and evaluate one to see how many parties it matches and who they are",
+  },
+  {
+    name: "crm:segments:manage",
+    resource: "crm:segments",
+    action: "manage",
+    description: "Create, edit and delete CRM segments",
+  },
 ];

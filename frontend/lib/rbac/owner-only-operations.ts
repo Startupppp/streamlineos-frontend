@@ -38,11 +38,6 @@ export const OWNER_ONLY_OPERATIONS = {
     reason:
       "Whoever may schedule destruction must be the only one who may call it off, or the two decisions can be split between people.",
   },
-  "finance.expense.grant-without-approval": {
-    summary: "Grant an expense that still has a pending approval",
-    reason:
-      "It overrides the approval control itself, so the person who may skip it must not be the person the control exists to check.",
-  },
   "organization.legal-hold": {
     summary: "Place or release an organization-wide legal hold",
     reason:

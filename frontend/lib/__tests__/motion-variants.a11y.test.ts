@@ -59,7 +59,7 @@ describe("useMotionVariants — respects prefers-reduced-motion", () => {
     useReducedMotion.mockReturnValue(true);
     const { result } = renderHook(() => useMotionVariants());
     const stagger = result.current.staggerContainer;
-    const visible = stagger.visible as Record<string, { transition?: { staggerChildren?: number } }>;
+    const visible = stagger.visible as unknown as { transition?: { staggerChildren?: number } } | undefined;
     expect(visible?.transition?.staggerChildren).toBe(0);
   });
 });

@@ -28,12 +28,12 @@ export const TEAM_LEADERBOARD_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search the leaderboard…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "rank", width: "w-16 shrink-0" },
-      { field: "leadsAssigned", sortable: true, width: "w-20 shrink-0" },
-      { field: "leadsConverted", sortable: true, width: "w-24 shrink-0" },
-      { field: "totalRevenue", sortable: true, width: "w-32 shrink-0" },
-      { field: "conversionRate", sortable: true, width: "w-24 shrink-0" },
+      { field: "leadsAssigned", width: "w-20 shrink-0" },
+      { field: "leadsConverted", width: "w-24 shrink-0" },
+      { field: "totalRevenue", width: "w-32 shrink-0" },
+      { field: "conversionRate", width: "w-24 shrink-0" },
     ],
   },
   detail: {

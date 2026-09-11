@@ -15,7 +15,35 @@ import { BOOLEAN_VALUES, type FieldSpec, type RecordLayout } from "./layout";
  * cast.
  */
 
-export type RecordFormShape = Record<string, string>;
+/**
+ * One row of a repeating group.
+ *
+ * A row is columns of strings for the same reason the record itself is: every
+ * control the engine renders hands back a string, so one generated resolver
+ * matches the form's own values without a cast, and the surface converts at the
+ * boundary where it already converts a date to an instant.
+ */
+export type RecordLine = Record<string, string>;
+
+/**
+ * What the engine's form state holds.
+ *
+ * Wider than what a surface receives. A `lines` field carries rows, and the
+ * form has to hold them, but a caller that has no repeating group should not
+ * have to narrow a union on every read — so `RecordForm` splits the two apart
+ * at submit and hands scalars and rows down separate parameters. This is the
+ * internal shape; `RecordFormValues` is the public one.
+ */
+export type RecordFormShape = Record<string, string | RecordLine[]>;
+
+export function isLineRows(value: string | RecordLine[] | undefined): value is RecordLine[] {
+  return Array.isArray(value);
+}
+
+/** The scalar reading of a form value; rows read as empty rather than "[object Object]". */
+export function scalarValue(value: string | RecordLine[] | undefined): string {
+  return typeof value === "string" ? value : "";
+}
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const NUMERIC = /^-?\d*\.?\d+$/;
@@ -48,7 +76,43 @@ export function isFieldVisible(
   return condition.equals.includes(raw === null || raw === undefined ? "" : String(raw));
 }
 
-function checkField(field: FieldSpec, raw: string, ctx: z.RefinementCtx): void {
+/**
+ * A repeating group, checked row by row against the row's own description.
+ *
+ * The columns of a line are `FieldSpec`s, so they go through exactly the check
+ * a top-level field does — one implementation of "this is not an email", not a
+ * second one for small tables. The path carries the row index so react-hook-form
+ * puts each message on the control that earned it rather than at the top of the
+ * group, which on a five-row quote is the difference between a fixable error and
+ * a form that says no.
+ */
+function checkLines(field: FieldSpec, rows: RecordLine[], ctx: z.RefinementCtx): void {
+  const minimum = field.minLines ?? (field.required ? 1 : 0);
+  if (rows.length < minimum) {
+    ctx.addIssue({
+      code: "custom",
+      message:
+        minimum === 1
+          ? `Add at least one ${(field.lineLabel ?? field.label).toLowerCase()}`
+          : `Add at least ${minimum} ${field.label.toLowerCase()}`,
+      path: [field.name],
+    });
+    return;
+  }
+
+  rows.forEach((row, index) => {
+    for (const line of field.lineFields ?? [])
+      checkField(line, row[line.name] ?? "", ctx, [field.name, index, line.name]);
+  });
+}
+
+function checkField(
+  field: FieldSpec,
+  raw: string,
+  ctx: z.RefinementCtx,
+  /** Where the message lands. Defaults to the field's own control. */
+  path: (string | number)[] = [field.name],
+): void {
   {
     const value = raw.trim();
 
@@ -57,13 +121,13 @@ function checkField(field: FieldSpec, raw: string, ctx: z.RefinementCtx): void {
         ctx.addIssue({
           code: "custom",
           message: `${field.label} is required`,
-          path: [field.name],
+          path,
         });
       return;
     }
 
     const reject = (message: string): void => {
-      ctx.addIssue({ code: "custom", message, path: [field.name] });
+      ctx.addIssue({ code: "custom", message, path });
     };
 
     switch (field.kind) {
@@ -148,14 +212,22 @@ export function schemaForLayout(
   context: Readonly<Record<string, unknown>> = {},
 ): z.ZodType<RecordFormShape, RecordFormShape> {
   const fields = formFields(layout, mode);
-  const shape: Record<string, z.ZodType<string, string>> = {};
-  for (const field of fields) shape[field.name] = z.string();
+  const line = z.record(z.string(), z.string());
+  const shape: Record<string, z.ZodType<string | RecordLine[], string | RecordLine[]>> = {};
+  for (const field of fields)
+    shape[field.name] = field.kind === "lines" ? z.array(line) : z.string();
 
   return z.object(shape).superRefine((values, ctx) => {
     const record = { ...context, ...values };
     for (const field of fields) {
       if (!isFieldVisible(field, record)) continue;
-      checkField(field, values[field.name] ?? "", ctx);
+
+      const held = values[field.name];
+      if (field.kind === "lines") {
+        checkLines(field, isLineRows(held) ? held : [], ctx);
+        continue;
+      }
+      checkField(field, scalarValue(held), ctx);
     }
   });
 }
@@ -183,9 +255,52 @@ export function visibleFormValues(
   context: Readonly<Record<string, unknown>> = values,
 ): RecordFormShape {
   const kept: RecordFormShape = {};
-  for (const field of formFields(layout, mode))
-    if (isFieldVisible(field, context)) kept[field.name] = values[field.name] ?? "";
+  for (const field of formFields(layout, mode)) {
+    if (!isFieldVisible(field, context)) continue;
+    const held = values[field.name];
+    kept[field.name] =
+      field.kind === "lines" ? (isLineRows(held) ? held : []) : scalarValue(held);
+  }
   return kept;
+}
+
+/** A blank row: every column of the line at its empty value. */
+export function blankLine(field: FieldSpec): RecordLine {
+  const row: RecordLine = {};
+  for (const line of field.lineFields ?? [])
+    row[line.name] = line.kind === "boolean" ? "false" : "";
+  return row;
+}
+
+/**
+ * The rows a `lines` field opens on, normalised to the columns it declares.
+ *
+ * Rows arrive from an API as objects of numbers, nulls and booleans; the form
+ * carries strings. Normalising here rather than at each surface is what lets a
+ * sheet hand the engine the record it already had, unchanged, and get a form
+ * back — the same bargain `defaultValuesForLayout` makes for every other kind.
+ */
+function linesFrom(field: FieldSpec, value: unknown): RecordLine[] {
+  const rows = Array.isArray(value)
+    ? value.map((entry) => {
+        const source =
+          entry !== null && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+        const row: RecordLine = {};
+        for (const line of field.lineFields ?? []) {
+          const held = source[line.name];
+          if (line.kind === "boolean") {
+            row[line.name] = String(held === true || held === "true" || held === 1);
+            continue;
+          }
+          row[line.name] = held === null || held === undefined ? "" : String(held);
+        }
+        return row;
+      })
+    : [];
+
+  const minimum = field.minLines ?? (field.required ? 1 : 0);
+  while (rows.length < minimum) rows.push(blankLine(field));
+  return rows;
 }
 
 export function defaultValuesForLayout(
@@ -196,6 +311,17 @@ export function defaultValuesForLayout(
   const values: RecordFormShape = {};
   for (const field of formFields(layout, mode)) {
     const value = initial?.[field.name];
+
+    /*
+      A repeating group opens on the rows the record already has, and on the
+      minimum it may not go below when it has none — an empty conditions list
+      renders an add button over nothing, and the first thing anybody does is
+      press it.
+    */
+    if (field.kind === "lines") {
+      values[field.name] = linesFrom(field, value);
+      continue;
+    }
 
     /*
       A switch has no third position. An absent boolean therefore defaults to
@@ -237,6 +363,12 @@ export function patchForUpdate(
   for (const field of formFields(layout, "edit")) {
     const raw = values[field.name];
     if (raw === undefined) continue;
+    /*
+      A repeating group is not text and has no null. It goes to the API as rows,
+      which the surface reads with `lines` on submit; flattening it into this
+      map would send "[object Object]" and clear a quote's line items.
+    */
+    if (field.kind === "lines" || isLineRows(raw)) continue;
     const text = raw.trim();
     patch[field.name] = text === "" ? null : text;
   }
@@ -258,7 +390,9 @@ export function payloadForCreate(
   const payload: Record<string, string> = {};
 
   for (const field of formFields(layout, "create")) {
-    const text = values[field.name]?.trim();
+    const raw = values[field.name];
+    if (field.kind === "lines" || isLineRows(raw)) continue;
+    const text = raw?.trim();
     if (text) payload[field.name] = text;
   }
 

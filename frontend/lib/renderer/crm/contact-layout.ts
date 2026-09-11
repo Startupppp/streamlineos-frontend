@@ -53,11 +53,11 @@ export const CONTACT_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search contacts…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "title" },
+      { field: "name", primary: true, subtitle: "title" },
       { field: "email" },
       { field: "phone", width: "w-40 shrink-0" },
       { field: "company", width: "w-44 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-28 shrink-0" },
+      { field: "createdAt", width: "w-28 shrink-0" },
     ],
   },
   detail: {

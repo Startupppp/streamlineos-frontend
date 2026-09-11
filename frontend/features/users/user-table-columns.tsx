@@ -123,16 +123,15 @@ export function getUserTableColumns(
   }
 
   return [
-    { key: "name", header: "User", sortable: true, cell: renderUser },
+    { key: "name", header: "User", cell: renderUser },
     { key: "email", header: "Email", cell: renderEmail },
     { key: "role", header: "Role", cell: renderRole },
-    { key: "status", header: "Status", sortable: true, cell: renderStatus },
+    { key: "status", header: "Status", cell: renderStatus },
     { key: "branch", header: "Branch", cell: renderBranch },
     { key: "dept", header: "Dept", cell: renderDepartment },
     {
       key: "joinedAt",
       header: "Joined",
-      sortable: true,
       className: "tabular-nums font-mono",
       cell: renderJoinedAt,
     },

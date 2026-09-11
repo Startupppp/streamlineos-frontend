@@ -148,7 +148,6 @@ jest.mock("date-fns", () => ({
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { MyTicketsSkeleton } from "@/features/build/my-tickets/my-tickets-skeleton";
-import { OverviewSkeleton } from "@/features/accounting/overview/overview-skeleton";
 import { BillingPageSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { KnowledgeGapStatusBadge } from "@/features/support/components/knowledge-gap-status-badge";
 import { KbPageNotFound } from "@/features/wiki/components/kb-page-not-found";
@@ -232,13 +231,6 @@ describe("Module-level a11y — Support (KnowledgeGapStatusBadge)", () => {
     render(<KnowledgeGapStatusBadge status="OPEN" />);
     expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.queryByText("OPEN")).not.toBeInTheDocument();
-  });
-});
-
-describe("Module-level a11y — Accounting (OverviewSkeleton)", () => {
-  it("renders without crash", () => {
-    const { container } = render(<OverviewSkeleton />);
-    expect(container.firstChild).toBeInTheDocument();
   });
 });
 

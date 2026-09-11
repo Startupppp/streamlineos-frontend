@@ -184,8 +184,6 @@ export default function VendorsListPage() {
           {v.name}
         </Link>
       ),
-      sortable: true,
-      sortValue: (v) => v.name,
     },
     {
       key: "code",

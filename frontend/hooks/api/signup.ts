@@ -3,16 +3,20 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-interface SignupData {
+export interface SignupData {
+  firstName: string;
+  lastName?: string;
   email: string;
-  password: string;
-  fullName: string;
-  orgName: string;
+  companyName: string;
+  phone?: string;
+  country?: string;
+  plan?: string;
 }
 
 export function useSignup() {
   return useMutation({
+    mutationKey: ["auth", "register"],
     mutationFn: (data: SignupData) =>
-      apiClient.post<{ success: boolean }>("/auth/register", data),
+      apiClient.post<{ success: true }>("/auth/register", data),
   });
 }

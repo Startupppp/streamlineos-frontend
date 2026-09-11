@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordList } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import {
@@ -42,7 +43,7 @@ interface ValidationRuleListProps {
 
 export function ValidationRuleList({ entityType, canManage }: ValidationRuleListProps) {
   const layout = useTenantLayout(VALIDATION_RULE_LAYOUT);
-  const { data, isLoading, isError, refetch, access} = useValidationRules({ entity: entityType });
+  const { data, isLoading, isError, refetch, access } = useValidationRules({ entity: entityType });
   const { data: metadata } = useCrmMetadata();
   const updateRule = useUpdateValidationRule();
   const deleteRule = useDeleteValidationRule();
@@ -132,6 +133,19 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
     [rules, canManage, handleToggle],
   );
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:settings:view") === "denied")
+    return <NoPermissionState permission="crm:settings:view" />;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-gap-section">
       {isLoading ? (
@@ -145,7 +159,7 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
         />
       ) : rows.length === 0 ? (
         <EmptyState
-            access={access}
+          access={access}
           compact
           illustrationPreset="settings"
           title={`No rules on ${entityType}s yet`}

@@ -9,14 +9,20 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignTemplates } from "@/hooks/api/sign/templates";
-import { useBulkSendJobs, useCancelBulkSendJob } from "@/hooks/api/sign/bulk-send";
+import {
+  ACTIVE_BULK_SEND_STATUSES,
+  useBulkSendJobs,
+  useCancelBulkSendJob,
+} from "@/hooks/api/sign/bulk-send";
 import type { SignBulkSendJob } from "@/types/sign";
 import { CreateBulkSendDialog } from "./create-bulk-send-dialog";
+import { BulkSendJobSheet } from "./bulk-send-job-sheet";
 
 const STATUS_VARIANT: Record<SignBulkSendJob["status"], "default" | "secondary" | "destructive" | "outline"> = {
   pending: "outline",
@@ -27,10 +33,33 @@ const STATUS_VARIANT: Record<SignBulkSendJob["status"], "default" | "secondary" 
   cancelled: "destructive",
 };
 
-const ACTIVE_STATUSES = new Set<SignBulkSendJob["status"]>(["pending", "validating", "running"]);
+/**
+ * What "pending" means to a reader. The backend status is accurate but terse,
+ * and "pending" on its own reads as stuck rather than queued — which, since
+ * SIGN-P0-05 moved the work onto a worker, is now the state most jobs are in
+ * for their first few seconds.
+ */
+const STATUS_LABEL: Record<SignBulkSendJob["status"], string> = {
+  pending: "queued",
+  validating: "validating",
+  running: "sending",
+  completed: "completed",
+  failed: "failed",
+  cancelled: "cancelled",
+};
 
-function BulkSendJobRow({ job }: { job: SignBulkSendJob }) {
+interface BulkSendJobRowProps {
+  job: SignBulkSendJob;
+  templateName?: string;
+  onOpen: (job: SignBulkSendJob) => void;
+}
+
+function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
   const cancel = useCancelBulkSendJob();
+  const isActive = ACTIVE_BULK_SEND_STATUSES.has(job.status);
+  const settled = job.successCount + job.failedCount;
+  /** Guard the divide: a job can exist with no rows, and 0/0 is not 0%. */
+  const percent = job.totalCount > 0 ? Math.round((settled / job.totalCount) * 100) : 0;
 
   async function handleCancel() {
     try {
@@ -41,18 +70,36 @@ function BulkSendJobRow({ job }: { job: SignBulkSendJob }) {
     }
   }
 
+  function handleOpen() {
+    onOpen(job);
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-sm">Job #{job.id}</p>
-          <Badge variant={STATUS_VARIANT[job.status]}>{job.status}</Badge>
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {job.successCount}/{job.totalCount} sent · {job.failedCount} failed
-        </p>
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="w-full cursor-pointer text-left"
+          aria-label={`Open bulk send job ${job.id}`}
+        >
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm">{templateName ?? `Job #${job.id}`}</p>
+            <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+            {job.successCount}/{job.totalCount} sent · {job.failedCount} failed
+          </p>
+        </button>
+        {isActive && (
+          <Progress
+            value={percent}
+            valueLabel={`${settled} of ${job.totalCount} rows processed`}
+            className="mt-2 h-1.5"
+          />
+        )}
       </div>
-      {ACTIVE_STATUSES.has(job.status) && (
+      {isActive && (
         <Button variant="ghost" size="sm" onClick={handleCancel}>
           <Ban className="size-4" />
           Cancel
@@ -64,9 +111,18 @@ function BulkSendJobRow({ job }: { job: SignBulkSendJob }) {
 
 export function BulkSendList() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [openJob, setOpenJob] = useState<SignBulkSendJob | null>(null);
   const { data: templates } = useSignTemplates();
   const { data: jobs, isLoading, isError, refetch } = useBulkSendJobs();
   const hasPublished = (templates ?? []).some((t) => t.status === "published");
+
+  function templateNameFor(job: SignBulkSendJob): string | undefined {
+    return (templates ?? []).find((template) => template.id === job.templateId)?.name;
+  }
+
+  function handleJobSheetOpenChange(next: boolean) {
+    if (!next) setOpenJob(null);
+  }
 
   return (
     <PageWrapper
@@ -97,11 +153,17 @@ export function BulkSendList() {
       ) : (
         <div className="space-y-3">
           {jobs.map((job) => (
-            <BulkSendJobRow key={job.id} job={job} />
+            <BulkSendJobRow key={job.id} job={job} templateName={templateNameFor(job)} onOpen={setOpenJob} />
           ))}
         </div>
       )}
       <CreateBulkSendDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <BulkSendJobSheet
+        jobId={openJob?.id}
+        templateName={openJob ? templateNameFor(openJob) : undefined}
+        open={openJob !== null}
+        onOpenChange={handleJobSheetOpenChange}
+      />
     </PageWrapper>
   );
 }

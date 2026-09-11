@@ -74,8 +74,6 @@ export function VendorReturnsTable({
       key: "returnNumber",
       header: "Return #",
       cell: (row) => <span className="font-mono text-dense">{row.returnNumber}</span>,
-      sortable: true,
-      sortValue: (row) => row.returnNumber,
     },
     { key: "vendor", header: "Vendor", cell: (row) => row.vendor?.name ?? "—" },
     {

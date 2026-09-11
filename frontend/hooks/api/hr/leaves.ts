@@ -64,10 +64,7 @@ interface LeaveApprovalsResult {
 
 function useInvalidateLeaveDashboard() {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-
-  return function invalidateLeaveDashboard() {
+    return function invalidateLeaveDashboard() {
     void qc.invalidateQueries({
       queryKey: queryKeys.dashboard.leavesToday(),
       exact: true,

@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
+import { AuditChainCheck } from "./audit-chain-check";
 
 const SELECT_ALL = "__all__";
 const PAGE_LIMIT = 20;
@@ -207,6 +208,7 @@ export function AuditTab() {
 
   return (
     <>
+      <AuditChainCheck />
       <DataTable
         data={events}
         columns={COLUMNS}

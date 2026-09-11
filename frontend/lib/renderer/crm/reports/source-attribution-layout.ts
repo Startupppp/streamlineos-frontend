@@ -90,12 +90,12 @@ export const SOURCE_ATTRIBUTION_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search sources…",
     columns: [
-      { field: "source", primary: true, sortable: true },
-      { field: "count", sortable: true, width: "w-20 shrink-0" },
-      { field: "converted", sortable: true, width: "w-24 shrink-0" },
-      { field: "conversionRate", sortable: true, width: "w-24 shrink-0" },
-      { field: "totalValue", sortable: true, width: "w-32 shrink-0" },
-      { field: "averageValue", sortable: true, width: "w-32 shrink-0" },
+      { field: "source", primary: true },
+      { field: "count", width: "w-20 shrink-0" },
+      { field: "converted", width: "w-24 shrink-0" },
+      { field: "conversionRate", width: "w-24 shrink-0" },
+      { field: "totalValue", width: "w-32 shrink-0" },
+      { field: "averageValue", width: "w-32 shrink-0" },
     ],
   },
   detail: {

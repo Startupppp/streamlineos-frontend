@@ -39,10 +39,10 @@ const EVERY_KIND: RecordLayout = {
   list: {
     searchPlaceholder: "Search specimens…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "email" },
+      { field: "name", primary: true, subtitle: "email" },
       { field: "quantity" },
       { field: "band" },
-      { field: "opened", sortable: true },
+      { field: "opened" },
     ],
   },
   detail: {

@@ -35,6 +35,9 @@ export const growthAndSignQueryKeys = {
       [...base, "crmCampaigns", "roi", campaignId] as const,
     leads: (campaignId: number, params?: Record<string, unknown>) =>
       [...base, "crmCampaigns", "leads", campaignId, params] as const,
+    /** Half-life is part of the answer for time_decay, so it is part of the key. */
+    attributionByModel: (model: string, halfLifeDays: number) =>
+      [...base, "crmCampaigns", "attributionByModel", model, halfLifeDays] as const,
     attribution: (model: string) =>
       [...base, "crmCampaigns", "attribution", model] as const,
   },
@@ -55,6 +58,49 @@ export const growthAndSignQueryKeys = {
       [...base, "crmSequences", "steps", sequenceId] as const,
     enrollments: (sequenceId: string, page: number) =>
       [...base, "crmSequences", "enrollments", sequenceId, page] as const,
+  },
+
+  crmCommission: {
+    all: [...base, "crmCommission"] as const,
+    plans: () => [...base, "crmCommission", "plans"] as const,
+    plan: (planId: string) => [...base, "crmCommission", "plan", planId] as const,
+    versionInForce: (planId: string, on: string) =>
+      [...base, "crmCommission", "plan", planId, "version-in-force", on] as const,
+    earnings: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "earnings", params] as const,
+    /** The period accrual and its decomposition are one cache entry per period. */
+    accrual: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "accrual", params] as const,
+    accrualCurve: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "accrual", "curve", params] as const,
+    accrualByDeal: (dealId: string) =>
+      [...base, "crmCommission", "accrual", "by-deal", dealId] as const,
+    earningBreakdown: (earningId: string) =>
+      [...base, "crmCommission", "accrual", "earning", earningId] as const,
+  },
+
+  crmCallIntelligence: {
+    all: [...base, "crmCallIntelligence"] as const,
+    /** Keyed by activity: one analysis belongs to one call, never to a list. */
+    analysis: (activityId: string) =>
+      [...base, "crmCallIntelligence", "analysis", activityId] as const,
+    coaching: (sinceDays: number) =>
+      [...base, "crmCallIntelligence", "coaching", sinceDays] as const,
+    /**
+     * Per-rep metrics and the best-call search, keyed by every parameter that
+     * changes the answer.
+     *
+     * The window is in the key and so is the page, because these are aggregates
+     * over a period: a 7-day summary cached under a 30-day key would show a
+     * manager last week's numbers under this month's heading. The scope is NOT
+     * in the key and does not need to be — `scopedQueryKeyHashFn` already hashes
+     * every key under `authenticated:<orgId>:<userId>`, so one person's own-scope
+     * rows can never be served to another person's team-scope read.
+     */
+    reps: (params: Record<string, unknown>) =>
+      [...base, "crmCallIntelligence", "reps", params] as const,
+    exemplars: (params: Record<string, unknown>) =>
+      [...base, "crmCallIntelligence", "exemplars", params] as const,
   },
 
   crmInbox: {
@@ -94,12 +140,15 @@ export const growthAndSignQueryKeys = {
     all: [...base, "signBulkSend"] as const,
     job: (bulkSendJobId: number) =>
       [...base, "signBulkSend", "job", bulkSendJobId] as const,
+    errorReport: (bulkSendJobId: number) =>
+      [...base, "signBulkSend", "job", bulkSendJobId, "errorReport"] as const,
   },
 
   signAdmin: {
     settings: () => [...base, "signAdmin", "settings"] as const,
     watermarkPolicies: () =>
       [...base, "signAdmin", "watermarkPolicies"] as const,
+    sweepStatus: () => [...base, "signAdmin", "sweepStatus"] as const,
   },
 
   signPublic: {

@@ -52,8 +52,6 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     cell: (row) => (
       <span className="font-mono tabular-nums text-right block">{row.totalHours.toFixed(1)}</span>
     ),
-    sortable: true,
-    sortValue: (r) => r.totalHours,
     className: "text-right",
     headerClassName: "text-right",
   },
@@ -78,8 +76,6 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
         {formatCurrencyForBilling(row.billableAmount, row.currency)}
       </span>
     ),
-    sortable: true,
-    sortValue: (r) => r.billableAmount,
     className: "text-right",
     headerClassName: "text-right",
   },
@@ -326,7 +322,14 @@ export function BillingView() {
             className="flex-1 min-h-0"
             data={groups}
             columns={BILLING_COLUMNS}
-            getRowKey={(r) => r.projectId ?? r.projectName}
+            /**
+             * The currency belongs in the key. Billing rows are one per
+             * (project, currency) — a project billed in USD and INR is two
+             * rows, because summing them would be a cross-currency total and
+             * the API refuses to produce one. Keyed on the project alone, those
+             * two rows collide.
+             */
+            getRowKey={(r) => `${r.projectId ?? r.projectName}-${r.currency}`}
             isLoading={isLoading}
             emptyState={emptyState}
             minWidth="700px"

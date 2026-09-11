@@ -96,44 +96,6 @@ interface UpdateKbArticleInput {
   tags?: string[] | null;
 }
 
-interface PublicKbCategory {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon: string | null;
-  sortOrder: number;
-}
-
-interface PublicKbArticleListItem {
-  id: number;
-  categoryId: number | null;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  views: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  tags: string[] | null;
-  publishedAt: string | null;
-}
-
-interface PublicKbArticle {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  content: string;
-  categoryId: number | null;
-  categoryName: string | null;
-  categorySlug: string | null;
-  views: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  tags: string[] | null;
-  publishedAt: string | null;
-}
-
 interface SubmitKbFeedbackInput {
   orgId: string;
   slug: string;

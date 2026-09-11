@@ -249,8 +249,6 @@ export function OrgCostCentersPage() {
       key: "name",
       header: "Name",
       cell: (c) => <span className="font-medium">{c.name}</span>,
-      sortable: true,
-      sortValue: (c) => c.name,
     },
     {
       key: "status",

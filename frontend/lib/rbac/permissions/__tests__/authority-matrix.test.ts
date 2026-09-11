@@ -1,4 +1,4 @@
-import { backendPath } from "@/test-support/backend-checkout";
+import { backendPath } from "@/lib/test-support/backend-path";
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";

@@ -13,6 +13,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 
+/** One page of the approvals queue. Shared by the page header and the tab panel
+ * so the two ask for the same rows under one cache key. */
+export const APPROVALS_PAGE_SIZE = 25;
+
 interface ApprovalsQuery {
   status?: PeriodStatus;
   userId?: string;

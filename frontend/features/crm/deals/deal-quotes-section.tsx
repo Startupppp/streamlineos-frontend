@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,12 +31,13 @@ import { useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useCreateQuote,
   useDealQuotes,
   useDeleteQuote,
   useUpdateQuoteStatus,
+  useSendQuote,
 } from "@/hooks/api/crm/quotes";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -71,6 +72,7 @@ interface QuoteRowActionsProps {
 
 function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProps) {
   const updateStatus = useUpdateQuoteStatus();
+  const sendQuote = useSendQuote();
   const id = Number(quote.id);
   const status = typeof quote.status === "string" ? quote.status : "";
   const quoteNumber = typeof quote.quoteNumber === "string" ? quote.quoteNumber : "this quote";
@@ -88,7 +90,20 @@ function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProp
     [id, dealId, updateStatus],
   );
 
-  const handleMarkSent = useCallback(() => changeStatus("SENT"), [changeStatus]);
+  /*
+   * Sending goes through its own endpoint, not `changeStatus`. Only that route
+   * refuses a quote pending discount approval or one with no linked contact,
+   * writes the audit row and emits `quote.sent` for the automation rules.
+   */
+  const handleMarkSent = useCallback(() => {
+    sendQuote.mutate(
+      { id, dealId },
+      {
+        onSuccess: () => toast.success("Quote sent"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [id, dealId, sendQuote]);
   const handleMarkAccepted = useCallback(() => changeStatus("ACCEPTED"), [changeStatus]);
   const handleMarkRejected = useCallback(() => changeStatus("REJECTED"), [changeStatus]);
   const handleDeleteRequest = useCallback(() => onDeleteRequest(id), [id, onDeleteRequest]);
@@ -101,7 +116,7 @@ function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProp
             variant="ghost"
             size="sm"
             className="shrink-0 px-2 text-xs"
-            disabled={updateStatus.isPending}
+            disabled={updateStatus.isPending || sendQuote.isPending}
             aria-label={`Actions for ${quoteNumber}`}
           >
             Actions
@@ -133,7 +148,7 @@ interface DealQuotesSectionProps {
 
 export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { data, isLoading, isError, refetch, access} = useDealQuotes(dealId);
+  const { data, isLoading, isError, refetch } = useDealQuotes(dealId);
   const canCreateQuote = useCan("crm:quotes:create");
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
@@ -197,6 +212,19 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
     [dealId, handleDeleteRequest],
   );
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:quotes:read") === "denied")
+    return <NoPermissionState permission="crm:quotes:read" />;
+
   return (
     <>
       <Card className="shadow-sm">
@@ -234,7 +262,6 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             />
           ) : rows.length === 0 ? (
             <EmptyState
-            access={access}
               compact
               title="No quotes yet"
               description="A quote prices this deal for the client, line by line. Create one to send it out."

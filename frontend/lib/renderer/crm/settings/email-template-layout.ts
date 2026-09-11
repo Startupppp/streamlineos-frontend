@@ -35,9 +35,9 @@ export const EMAIL_TEMPLATE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search templates…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "subject" },
-      { field: "updatedAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "updatedAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

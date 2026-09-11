@@ -10,6 +10,8 @@ process.env.NEXT_PUBLIC_API_URL ||= "http://localhost:1500";
 
 expect.extend(toHaveNoViolations);
 
+process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1500";
+
 // jsdom has no ResizeObserver — components like TruncatedText (used inside PageWrapper,
 // ubiquitous across authenticated pages) need at least a no-op stub to mount under Jest.
 if (typeof globalThis.ResizeObserver === "undefined") {

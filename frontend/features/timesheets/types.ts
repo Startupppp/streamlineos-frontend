@@ -33,6 +33,25 @@ export interface TicketRef {
   project: ProjectRef | null;
 }
 
+/**
+ * What `POST /timesheets/entries/from-attendance` answers.
+ *
+ * Five outcomes, and they are not degrees of the same thing — `enabled: false`
+ * means the organisation never turned the policy on, so nothing was read and
+ * nothing was written. Rendering that as "0 entries created" tells somebody
+ * their clock produced no hours, which is a different and wrong statement.
+ */
+export interface AttendanceDraftResult {
+  enabled: boolean;
+  segmentsFound: number;
+  entriesCreated: number;
+  /** Days that already had an entry. Not an error — the point of running twice. */
+  skippedExisting: number;
+  /** Days whose clock produced no usable hours. */
+  skippedEmpty: number;
+  periodIds: number[];
+}
+
 export interface TimesheetEntry {
   id: number;
   orgId: string;
@@ -227,6 +246,11 @@ export interface CreateBudgetInput {
   status?: "ACTIVE" | "ARCHIVED";
 }
 
+/**
+ * One row per (project, currency), not per project. A project billed in two
+ * currencies arrives as two rows: the API will not sum across currencies, so
+ * `billableAmount` is always money in exactly the `currency` beside it.
+ */
 export interface BillingGroup {
   projectId: number | null;
   projectName: string;
@@ -497,3 +521,116 @@ export const EXCEPTION_STATUS_BADGE: Record<ExceptionStatus, string> = {
   DISMISSED:
     "bg-muted text-foreground border-border",
 };
+
+/**
+ * TS-11. One period that is late, and how late.
+ *
+ * Mirrors `OverduePeriodRow` in `overdue.service.ts`. `dueDate` is derived on
+ * the server from `period_end + submissionGraceDays` rather than stored, so it
+ * always reflects the policy as it stands right now — raise the grace from two
+ * days to five and the whole queue is correct on the next read.
+ */
+export interface OverduePeriod {
+  periodId: number;
+  userId: string;
+  userName: string | null;
+  userEmail: string | null;
+  periodStart: string;
+  periodEnd: string;
+  /**
+   * Only ever `OPEN`, `DRAFT` or `REJECTED` — the endpoint's `UNSETTLED` set,
+   * which is deliberately a status test rather than `submitted_at IS NULL`: a
+   * rejected period has been submitted once and is owed again.
+   */
+  status: Extract<PeriodStatus, "OPEN" | "DRAFT" | "REJECTED">;
+  totalHours: string;
+  dueDate: string;
+  daysOverdue: number;
+  /**
+   * How many configured reminder thresholds this period has passed.
+   *
+   * **Zero is ambiguous on its own** and the server says so: it means "passed
+   * none" for an organisation that configured thresholds, and it also means
+   * "there are none to pass" for one that did not. `escalationThresholds` on
+   * the response is what separates the two, and any surface rendering this
+   * number has to read both or it will tell half its tenants something false.
+   */
+  escalationLevel: number;
+}
+
+export interface OverdueQueueResult {
+  /** The org's `remindAfterDueDays`, ascending. Empty when reminders are off. */
+  escalationThresholds: number[];
+  /** The grace added to every period end to get its due date. */
+  graceDays: number;
+  asOf: string;
+  items: OverduePeriod[];
+  total: number;
+}
+
+export interface OverdueQueryInput {
+  userId?: string;
+  asOf?: string;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * TS. The result of walking the audit hash chain.
+ *
+ * `truncated` is the field that makes this readable. The server verifies the
+ * OLDEST `limit` events (10,000), so on a longer chain everything past the cut
+ * is unexamined — and `valid: true` comes back either way. A surface showing a
+ * green tick without saying which of the two it is looking at is worse than no
+ * check, because it is believed. `legacyRows` carries the same weight: a chain
+ * "valid" over 400 rows of which 380 predate hashing is a much weaker statement.
+ */
+export interface AuditChainVerification {
+  valid: boolean;
+  /** Present only on a break. */
+  brokenAtId?: number;
+  /** Rows examined, hashed and legacy together. */
+  checked: number;
+  /** Rows whose stored hash was recomputed and matched. */
+  verified: number;
+  /** Rows written before hashing existed, which prove nothing either way. */
+  legacyRows: number;
+  /** Every audit event the org has, not just those examined. */
+  total: number;
+  /** True when `total` exceeds what this pass could read. */
+  truncated: boolean;
+}
+
+/**
+ * One numbered snapshot of the org's timesheet settings.
+ *
+ * `changeReason` is nullable because the column shipped nullable and nothing
+ * required it until TS-16 — so old rows record a change nobody can now explain.
+ * That is the failure the requirement exists to stop repeating, and the surface
+ * must show the gap rather than hiding it behind an em dash.
+ */
+export interface SettingsHistoryEntry {
+  id: number;
+  orgId: string;
+  version: number;
+  settings: Record<string, unknown>;
+  changedBy: string | null;
+  changeReason: string | null;
+  createdAt: string;
+}
+
+/**
+ * What the rate resolver returns for one project/person combination.
+ *
+ * Mirrors `ResolvedRate` in `timesheets/core/rate-resolver.service.ts`.
+ * `source: null` with `billRate: null` is the case that matters and the reason
+ * this is worth showing: it means no rate card matched and no project-member
+ * rate exists, so work on that combination bills at nothing. That is a finding,
+ * not an empty state.
+ */
+export interface ResolvedRatePreview {
+  billRate: number | null;
+  costRate: number | null;
+  currency: string;
+  source: "RATE_CARD" | "PROJECT_MEMBER" | null;
+}

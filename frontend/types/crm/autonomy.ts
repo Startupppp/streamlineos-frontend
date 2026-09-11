@@ -6,6 +6,18 @@ export const DECISION_KINDS = [
   "party.created",
   "activity.logged",
   "quote.sent",
+  /**
+   * The last three lagged the backend, and the switches panel is where it cost
+   * something: `GET /crm/autonomy/switches` resolves `effective` over every kind
+   * the backend enumerates, so it was already returning eight while this listed
+   * five. The panel renders `KIND_LABELS[kind]`, so the three newest — and most
+   * consequential — action types drew a switch with no name on it, and a tenant
+   * had no way to turn off outbound, cold outreach or unattended repair from the
+   * UI at all.
+   */
+  "outbound.sent",
+  "cold_outbound.sent",
+  "field.repaired",
 ] as const;
 export type DecisionKind = (typeof DECISION_KINDS)[number];
 
@@ -86,6 +98,9 @@ export const KIND_LABELS: Record<DecisionKind, string> = {
   "party.created": "Added a contact",
   "activity.logged": "Filed a message",
   "quote.sent": "Sent a quote",
+  "outbound.sent": "Sent a follow-up",
+  "cold_outbound.sent": "Sent cold outreach",
+  "field.repaired": "Repaired a field",
 };
 
 export const OUTCOME_LABELS: Record<DecisionOutcome, string> = {
@@ -201,6 +216,14 @@ export interface AutonomySettings {
   shadowSampleRate: number;
   shadowDailyCap: number;
   holdWindowSeconds: number;
+  /**
+   * CRM-P1-17. Whether the system may draft a quote without being asked.
+   *
+   * Was missing from this type while the endpoint had returned it all along, so
+   * the field could not be read or written from anywhere typed — an opt-in that
+   * existed only as a raw PATCH.
+   */
+  autoQuoteEnabled: boolean;
 }
 
 export interface LiveHold {
@@ -213,4 +236,186 @@ export interface LiveHold {
   summary: string | null;
   /** Server-computed at fetch time; the browser counts down from it. */
   secondsRemaining: number;
+}
+
+/**
+ * A class of outbound message that may no longer reach one party.
+ *
+ * Created when somebody stops a message: the stop applies to that class for
+ * that party, not to the single message and not to the party everywhere.
+ * Open-ended by design — only a person clears it, because a stop that quietly
+ * expired is a stop the customer never agreed to.
+ */
+export interface LiveClassStop {
+  outboundClassStopId: string;
+  partyId: string;
+  outboundClass: string;
+  outboundMessageId: string | null;
+  reason: string | null;
+  stoppedByUserId: string | null;
+  stoppedAt: string;
+}
+
+/** The deterministic field repairs a tenant may grant, and its answer to each. */
+export const REPAIR_CLASSES = [
+  "email.whitespace",
+  "email.domain-dot-edge",
+  "phone.non-ascii-characters",
+] as const;
+export type RepairClass = (typeof REPAIR_CLASSES)[number];
+
+export interface EffectiveRepairPolicy {
+  repairClass: RepairClass;
+  findingKind: string;
+  field: string;
+  /** Whether this class is on for a tenant that has never said anything. */
+  conservative: boolean;
+  reversibility: ReversibilityClass;
+  description: string;
+  enabled: boolean;
+  /** Whether the answer came from the tenant's own row or the platform default. */
+  source: "tenant" | "default";
+  reason: string | null;
+  /**
+   * `enabled` AND the wider kill switch. Reported separately from `enabled`
+   * because a tenant looking at a screen of granted classes while nothing is
+   * repaired needs to be told the switch is what stopped it.
+   */
+  effective: boolean;
+}
+
+export interface RepairPoliciesResponse {
+  autonomy: { allowed: boolean; decidedBy: string; reason: string | null };
+  classes: EffectiveRepairPolicy[];
+}
+
+/** What a domain is registered to send, and what the cold track will accept. */
+export const SENDING_DOMAIN_PURPOSES = ["transactional", "cold"] as const;
+export type SendingDomainPurpose = (typeof SENDING_DOMAIN_PURPOSES)[number];
+
+export interface SendingDomain {
+  sendingDomainId: string;
+  domain: string;
+  purpose: SendingDomainPurpose;
+  /** DNS proved it. Null means the domain still sends nothing on the cold track. */
+  verifiedAt: string | null;
+  /** The day the ramp counts from. Null means warm-up never began. */
+  warmupStartedAt: string | null;
+  /**
+   * What to publish, and where. Null once the domain is verified — a record that
+   * has already done its job is noise on the screen.
+   */
+  verificationRecord: { name: string; value: string } | null;
+}
+
+export interface ColdOutboundOverview {
+  enabled: boolean;
+  enabledAt: string | null;
+  /**
+   * Set by the send path itself when bounces or complaints cross their ceiling,
+   * and cleared only by a person. Distinct from `enabled: false`, which is
+   * somebody choosing not to run the track at all.
+   */
+  pausedAt: string | null;
+  pauseReason: string | null;
+  domains: SendingDomain[];
+}
+
+/** One field the system changed on its own, and whether a person took it back. */
+export interface AutonomyRepair {
+  autonomyRepairId: string;
+  autonomousDecisionId: string | null;
+  repairClass: RepairClass;
+  findingId: string | null;
+  partyId: string | null;
+  partyName: string | null;
+  field: string;
+  previousValue: string | null;
+  repairedValue: string | null;
+  appliedAt: string;
+  revertedAt: string | null;
+  revertedByUserId: string | null;
+  revertedReason: string | null;
+}
+
+export interface AutonomyRepairPage {
+  items: AutonomyRepair[];
+  nextCursor: string | null;
+}
+
+/**
+ * How much of the queue the system cleared, against how much a person did, and
+ * what is left.
+ *
+ * `automatedShare` is null rather than zero when nothing was decided: a ratio
+ * over an empty window is not "no automation", it is no evidence, and the two
+ * look the same on a chart only if one of them lies. `remaining` sits beside it
+ * because the ratio alone is gameable — a loop that repaired every trivial
+ * finding and left every hard one would show a rising share while the queue got
+ * harder.
+ */
+export interface RepairMeasure {
+  windowDays: number;
+  resolution: {
+    automated: number;
+    manual: number;
+    automatedShare: number | null;
+  };
+  repairs: {
+    byClass: { repairClass: RepairClass; applied: number; reverted: number }[];
+    applied: number;
+    reverted: number;
+  };
+  remaining: {
+    total: number;
+    weighted: number;
+    byProducer: { producer: string; open: number }[];
+    oldestOpenAgeDays: number | null;
+  };
+}
+
+/**
+ * The classes of autonomous outbound message, mirroring `OUTBOUND_CLASSES`.
+ *
+ * The class is never a caller's choice — `judgeOutbound` picks it — so this
+ * exists to read one back, not to send one.
+ */
+export const OUTBOUND_CLASSES = [
+  "follow_up",
+  "nudge",
+  "check_in",
+  "meeting_request",
+  "cold_outreach",
+] as const;
+export type OutboundClass = (typeof OUTBOUND_CLASSES)[number];
+
+/**
+ * What `POST /crm/autonomy/outbound` answers.
+ *
+ * The route is not "send a message" — it is "consider this customer", and its
+ * most common honest answer is a refusal with a reason. Modelled as a
+ * discriminated union on `held` because those two answers share no fields and a
+ * screen that treated a refusal as a failed request would report an outage
+ * every time the system correctly declined to write to somebody.
+ */
+export type ComposeOutboundOutcome =
+  | {
+      readonly held: false;
+      /** Where it stopped, so a refusal is distinguishable from an outage. */
+      readonly stage: "eligibility" | "draft" | "confidence";
+      readonly reason: string;
+    }
+  | {
+      readonly held: true;
+      readonly outboundMessageId: string;
+      readonly autonomyHoldId: string;
+      readonly decisionId: string;
+      readonly outboundClass: OutboundClass;
+      readonly holdUntil: string;
+      readonly windowSeconds: number;
+    };
+
+export interface ComposeOutboundInput {
+  readonly partyId: string;
+  readonly dealId?: string;
 }

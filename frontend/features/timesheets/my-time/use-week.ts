@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
-import { addDays, format, startOfWeek } from "date-fns";
+import { addDays, format, isValid, parseISO, startOfWeek } from "date-fns";
 
 export interface WeekState {
   weekOffset: number;
@@ -15,7 +15,45 @@ export interface WeekState {
 
 export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export function useWeek(weekStartsOn: WeekStartDay = 1): WeekState {
+const DEFAULT_WEEK_START: WeekStartDay = 1;
+
+function asWeekStartDay(value: number): WeekStartDay | null {
+  if (!Number.isInteger(value) || value < 0 || value > 6) return null;
+  return value as WeekStartDay;
+}
+
+/**
+ * Which day the organisation's week begins on.
+ *
+ * `workWeekStart` on the org settings is the authority, but `GET
+ * /timesheets/settings` requires `timesheets:settings:view`, which the people
+ * who actually fill in a timesheet do not hold — so for most viewers the hook
+ * is disabled and this argument is `undefined`. The fallback is not a guess:
+ * `PeriodsService.getCurrent` builds the period from `weekRange(now,
+ * workWeekStart)`, so the current period's `periodStart` lands on exactly that
+ * day and is readable with `timesheets:entries:view`. Monday is the last
+ * resort, matching the column default, and is reached only when neither call
+ * has answered.
+ */
+export function resolveWeekStart(
+  settingsWeekStart: number | null | undefined,
+  currentPeriodStart: string | null | undefined,
+): WeekStartDay {
+  if (typeof settingsWeekStart === "number") {
+    const fromSettings = asWeekStartDay(settingsWeekStart);
+    if (fromSettings !== null) return fromSettings;
+  }
+  if (currentPeriodStart) {
+    const parsed = parseISO(currentPeriodStart);
+    if (isValid(parsed)) {
+      const fromPeriod = asWeekStartDay(parsed.getDay());
+      if (fromPeriod !== null) return fromPeriod;
+    }
+  }
+  return DEFAULT_WEEK_START;
+}
+
+export function useWeek(weekStartsOn: WeekStartDay = DEFAULT_WEEK_START): WeekState {
   const [weekOffset, setWeekOffset] = useState(0);
 
   const { weekStart, weekEnd, days } = useMemo(() => {

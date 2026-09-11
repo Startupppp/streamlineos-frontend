@@ -218,8 +218,6 @@ export function ProgramsPage() {
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span className={cn("font-medium text-foreground", TEXT_ONE_LINE)} title={row.name}>

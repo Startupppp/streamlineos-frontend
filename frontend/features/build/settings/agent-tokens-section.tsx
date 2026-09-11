@@ -26,7 +26,7 @@ export function AgentTokensSection() {
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
 
-  const handleRevoke = useCallback((id: string) => setRevokeId(id), []);
+  const handleRevoke = useCallback((id: string | number) => setRevokeId(String(id)), []);
 
   const handleRevokeDialogChange = useCallback((open: boolean) => {
     if (!open) setRevokeId(null);

@@ -50,8 +50,6 @@ export function useApprovalsColumns({
       cell: (row) => (
         <TruncatedText text={row.title} className="font-medium text-foreground" />
       ),
-      sortable: true,
-      sortValue: (row) => row.title,
     },
     {
       key: "approver",
@@ -80,8 +78,6 @@ export function useApprovalsColumns({
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
-      sortable: true,
-      sortValue: (row) => row.dueAt ?? "",
     },
     {
       key: "status",

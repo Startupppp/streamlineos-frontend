@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { use, useState, useCallback, useMemo } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -44,11 +45,12 @@ import {
   CreateProjectDialog,
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
+import { DealForecastScoreCard } from "@/features/crm/deals/detail/deal-forecast-score-card";
 import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
 import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 export default function DealDetailPage({
@@ -244,6 +246,20 @@ export default function DealDetailPage({
 
   const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
   const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Placed after the last hook and before the first branch that can return:
+   * denial outranks loading, error and emptiness alike, and a hook below a
+   * conditional return would run in a different order on different renders.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
 
   if (isLoading) {
     return (
@@ -458,6 +474,7 @@ export default function DealDetailPage({
               nextStep={deal.nextStep}
               pipelineId={deal.pipelineId}
             />
+            <DealForecastScoreCard dealId={dealId} />
             <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
             <DealStageHistory dealId={dealId} card />
             <DealQuotesSection dealId={dealId} />

@@ -46,6 +46,17 @@ import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
+/**
+ * The orders `GET /organization/users` will actually apply. It is also what the
+ * table hands a header control to, so a column can never offer an order the
+ * endpoint would drop on the floor.
+ */
+const USER_SORT_FIELDS = ["name", "status", "joinedAt"] as const;
+
+function parseSortBy(value: string | null): (typeof USER_SORT_FIELDS)[number] {
+  return USER_SORT_FIELDS.find((field) => field === value) ?? "joinedAt";
+}
+
 export function UsersPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,8 +68,8 @@ export function UsersPage() {
   const role = searchParams.get("role") ?? "all";
   const departmentId = searchParams.get("departmentId") ?? "all";
   const branchId = searchParams.get("branchId") ?? "all";
-  const sortBy = (searchParams.get("sortBy") as "name" | "joinedAt" | "status") ?? "joinedAt";
-  const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") ?? "desc";
+  const sortBy = parseSortBy(searchParams.get("sortBy"));
+  const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
 
@@ -364,6 +375,7 @@ export function UsersPage() {
                 isRowSelectable: (user) => !user.isOwner,
               }}
               sortState={{
+                fields: USER_SORT_FIELDS,
                 field: sortBy,
                 direction: sortOrder,
                 onChange: handleSortChange,

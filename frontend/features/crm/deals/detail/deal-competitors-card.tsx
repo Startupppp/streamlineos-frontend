@@ -15,6 +15,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { NoPermissionState } from "@/components/shared";
+import { DealCompetitorSuggestions } from "./deal-competitor-suggestions";
 
 interface DealCompetitorsCardProps {
   dealId: number;
@@ -108,6 +109,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
             </div>
           ))
         )}
+        <DealCompetitorSuggestions dealId={dealId} />
       </CardContent>
     </Card>
   );

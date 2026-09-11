@@ -167,8 +167,6 @@ export function BusinessUnitsPage() {
       cell: (businessUnit) => (
         <span className="font-medium">{businessUnit.name}</span>
       ),
-      sortable: true,
-      sortValue: (businessUnit) => businessUnit.name,
     },
     {
       key: "code",

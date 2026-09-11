@@ -105,8 +105,6 @@ function ThreePlContent() {
         key: "name",
         header: "Name",
         cell: (row) => <span className="font-medium text-sm">{row.name}</span>,
-        sortable: true,
-        sortValue: (row) => row.name,
       },
       {
         key: "providerKey",

@@ -15,7 +15,7 @@ export interface ScoringRule {
   createdAt: string | null;
 }
 
-interface CreateScoringRuleInput {
+export interface CreateScoringRuleInput {
   field: string;
   operator: string;
   value: string;

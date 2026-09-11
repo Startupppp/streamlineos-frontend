@@ -5,6 +5,7 @@ export { FormSheetChrome } from "./form-sheet-chrome";
 export { LoadingState } from "./loading-state";
 export { ErrorState } from "./error-state";
 export { NoPermissionState } from "./no-permission-state";
+export { Gated, type GatedProps } from "./gated";
 export { ListToolbar } from "./list-toolbar";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";

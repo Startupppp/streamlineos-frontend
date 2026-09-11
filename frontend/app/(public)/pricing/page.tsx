@@ -4,10 +4,22 @@ import { ArrowRight, BadgeCheck, Layers, Sparkles } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
 import { Button } from "@/components/ui/button";
 import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
-import { PRICING, COMPETITOR_PRICES, cheapestAnnualLabel } from "@/lib/pricing";
+import {
+  PRICING,
+  COMPETITOR_PRICES,
+  cheapestAnnualLabel,
+  type PricingTier,
+} from "@/lib/pricing";
 import { faqs } from "@/features/landing/data/faqs";
 import { FAQJsonLd } from "@/features/seo/structured-data";
 import { PricingTierGrid } from "@/features/landing/components/pricing-tier-grid";
+import { DataResidencySection } from "@/features/landing/components/data-residency-section";
+import {
+  applyLivePrices,
+  currencyNotice,
+  fetchDataResidency,
+  fetchPublicPricing,
+} from "@/lib/pricing-live";
 import { SavingsCalculator } from "@/features/landing/components/savings-calculator";
 import {
   PricingFeatureMatrix,
@@ -94,25 +106,68 @@ const pricingFaqs = [
   },
 ];
 
-const highlights = [
-  {
-    icon: Sparkles,
-    label: `${cheapestAnnualLabel()} / mo`,
-    detail: "Starter on annual billing",
-  },
-  {
-    icon: BadgeCheck,
-    label: "Every app included",
-    detail: "no per-module fees",
-  },
-  {
-    icon: Layers,
-    label: `Free for ${PRICING.starterSeatLimit} seats`,
-    detail: "no credit card required",
-  },
-];
+/**
+ * The headline figure, from the same tiers the cards below use.
+ *
+ * Built from the resolved tiers rather than from `cheapestAnnualLabel()`,
+ * because a band quoting a rupee price directly above a grid quoting euros is
+ * worse than either alone -- a visitor cannot tell which one they will be
+ * charged, and the page has answered the only question they came with twice,
+ * differently.
+ */
+function highlightsFor(tiers: readonly PricingTier[]) {
+  const cheapestPaid = tiers
+    .filter((tier) => tier.annual !== null && tier.annual > 0)
+    .sort((a, b) => (a.annual ?? 0) - (b.annual ?? 0))[0];
 
-export default function PricingPage() {
+  return [
+    {
+      icon: Sparkles,
+      label: `${cheapestPaid?.priceLabel.annual ?? cheapestAnnualLabel()} / mo`,
+      detail: `${cheapestPaid?.name ?? "Starter"} on annual billing`,
+    },
+    {
+      icon: BadgeCheck,
+      label: "Every app included",
+      detail: "no per-module fees",
+    },
+    {
+      icon: Layers,
+      label: `Free for ${PRICING.starterSeatLimit} seats`,
+      detail: "no credit card required",
+    },
+  ];
+}
+
+/**
+ * Ticket 12. The prices and the residency list are read from the public API at
+ * request time, so this page quotes the number the checkout will actually
+ * charge, in the visitor's currency rather than always in rupees.
+ *
+ * Both reads are allowed to fail. `applyLivePrices(null)` is the compiled-in
+ * table and `DataResidencySection` renders nothing without an answer -- a
+ * marketing page that 500s because an API is slow costs more than a stale price.
+ *
+ * `?currency=` and `?country=` rather than sniffing headers: a visitor who wants
+ * to see euros can ask for them, and the result is a URL that can be shared and
+ * cached.
+ */
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ currency?: string; country?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+
+  const [livePricing, residency] = await Promise.all([
+    fetchPublicPricing(params.currency),
+    fetchDataResidency(params.country),
+  ]);
+
+  const tiers = applyLivePrices(livePricing);
+  const notice = currencyNotice(livePricing);
+  const highlights = highlightsFor(tiers);
+
   return (
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
@@ -150,9 +205,14 @@ export default function PricingPage() {
         {/* Plans */}
         <section className="mt-14 lg:mt-16">
           <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
-            <PricingTierGrid showAppsGrid />
+            <PricingTierGrid showAppsGrid tiers={tiers} />
+            {notice ? (
+              <p className="mt-6 text-center text-xs text-muted-foreground">{notice}</p>
+            ) : null}
           </div>
         </section>
+
+        <DataResidencySection residency={residency} />
 
         {/* Savings */}
         <section className="mt-20 lg:mt-24 border-t border-border bg-muted">

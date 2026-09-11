@@ -12,8 +12,6 @@ import type {
   UpdateContactInput,
   ContactRole,
   ContactRoleCreateInput,
-  MergeContactsInput,
-  DuplicateContactPair,
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
@@ -103,28 +101,6 @@ export function useRemoveContactRole() {
       apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
-    },
-  });
-}
-
-export function useContactDuplicates(params?: { page?: number; limit?: number }) {
-  return useGatedQuery("crm:contacts:view", {
-    queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>),
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useMergeContacts() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["contacts", "merge"] as const,
-    mutationFn: (input: MergeContactsInput) =>
-      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/contacts/merge", input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.contactDuplicates.all });
     },
   });
 }

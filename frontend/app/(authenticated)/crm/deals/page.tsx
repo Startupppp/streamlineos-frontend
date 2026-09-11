@@ -89,7 +89,7 @@ export default function DealsPage() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [assigneeFilter, stageFilter]);
 
-  const { data: allDeals, isLoading, isError, refetch, access } = useDeals(dealFilters);
+  const { data: allDeals, isLoading, isError, refetch } = useDeals(dealFilters);
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees?.data ?? []);
 
@@ -380,7 +380,6 @@ export default function DealsPage() {
           {view === "table" && (
             <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
               <DealList
-              access={access}
                 deals={filteredDeals}
                 isLoading={isLoading}
                 isError={isError}

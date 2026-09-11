@@ -80,8 +80,6 @@ export function CustomerReturnsTable({
       key: "returnNumber",
       header: "Return #",
       cell: (row) => <span className="font-mono text-dense">{row.returnNumber}</span>,
-      sortable: true,
-      sortValue: (row) => row.returnNumber,
     },
     { key: "client", header: "Customer", cell: (row) => row.client?.name ?? "—" },
     {

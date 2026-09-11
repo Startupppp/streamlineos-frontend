@@ -31,9 +31,9 @@ const LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search specimens…",
     columns: [
-      { field: "label", primary: true, sortable: true, subtitle: "site" },
+      { field: "label", primary: true, subtitle: "site" },
       { field: "owner" },
-      { field: "collectedAt", sortable: true },
+      { field: "collectedAt" },
       { field: "mass" },
     ],
   },

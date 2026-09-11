@@ -47,8 +47,6 @@ const columns: DataTableColumn<StockTransaction>[] = [
     cell: (tx) => (
       <span className="font-mono tabular-nums text-dense">{formatShortDate(tx.createdAt) || "—"}</span>
     ),
-    sortable: true,
-    sortValue: (tx) => tx.createdAt,
   },
   {
     key: "product",

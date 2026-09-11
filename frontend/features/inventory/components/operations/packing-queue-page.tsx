@@ -120,8 +120,6 @@ export function PackingQueuePage() {
           {row.soNumber}
         </Link>
       ),
-      sortable: true,
-      sortValue: (row) => row.soNumber,
     },
     {
       key: "customerName",
@@ -145,8 +143,6 @@ export function PackingQueuePage() {
       ),
       className: "text-right",
       headerClassName: "text-right",
-      sortable: true,
-      sortValue: (row) => unitsOf(row.pickedQuantity),
     },
     {
       key: "packed",
@@ -156,8 +152,6 @@ export function PackingQueuePage() {
       ),
       className: "text-right",
       headerClassName: "text-right",
-      sortable: true,
-      sortValue: (row) => unitsOf(row.packedQuantity),
     },
     {
       key: "cartons",

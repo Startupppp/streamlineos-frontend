@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
@@ -75,6 +77,19 @@ export default function LeadSourceReportPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:leads:view") === "denied")
+    return <NoPermissionState permission="crm:leads:view" />;
 
   return (
     <PageWrapper

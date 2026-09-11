@@ -1,5 +1,5 @@
-import { backendPath } from "@/test-support/backend-checkout";
 import { readFileSync } from "node:fs";
+import { backendPath } from "@/lib/test-support/backend-path";
 import { resolve } from "node:path";
 import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -75,7 +75,7 @@ describe("Home cache follows the backend permission version", () => {
 
 describe("the Home cache key dimensions match the backend key", () => {
   const backendKeyBuilder = readFileSync(
-    backendPath("src/modules/dashboard/dashboard-cache-key.ts") ?? "",
+    backendPath("src/modules/dashboard/dashboard-cache-key.ts"),
     "utf8",
   );
 

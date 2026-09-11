@@ -328,6 +328,7 @@ describe("a field that points at another record — controls", () => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ ownerId: "u-42" }),
         expect.anything(),
+        {},
       ),
     );
   });

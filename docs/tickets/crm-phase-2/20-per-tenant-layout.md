@@ -81,3 +81,54 @@ the description as declared. Nothing is broken; nothing is adjustable.
   a tenant wants; `withColumns` is how one screen frames a related-records panel,
   and it is applied after the tenant's arrangement so it can only narrow what
   they already see.
+
+## Notes (2026-08-26)
+
+The blocking dependency is cleared. All four routes are built, and the client
+needed no change beyond swapping the placeholder gate for the real key.
+
+**The read is ungated.** An arrangement carries no record data — only field names
+the layout description already publishes — and every list, detail view and form
+reads it to render at all. Gating it would mean a member without an
+administration permission renders the declared layout while their colleague
+renders the tenant's, which is a worse failure than the one the gate prevents.
+`PermissionGuard` is not global, so it sits on the three writing handlers rather
+than the class; on the class it would deny the read, which carries no key.
+
+**`settings:record-layouts:manage` is the write gate**, in both catalogues, with
+`0266` backfilling it onto whoever already holds `settings:custom-fields:manage`.
+The hook had been using `settings:manage` with a note that a dedicated key was
+right and had to exist on the backend first; it now does, and it is deliberately
+narrower.
+
+**Reverting deletes the row.** Storing `{order: [], hidden: []}` would mean
+"arranged to have nothing arranged", which reads identically to the default and
+then needs special-casing at every render.
+
+### Usage is partial, and says so
+
+Thirty-nine layouts are registered; the usage endpoint knows two — `party`, over
+the nullable columns a tenant may or may not populate, and `subject:<key>`, over
+the fields a tenant declared itself. A backend map of all thirty-nine would be a
+second copy of the frontend registry drifting from it silently, and **a wrong
+proposal is worse than none**: it tells an administrator to hide a field their
+team uses. An unknown key returns an empty proposal *without querying*, which the
+client already renders as "no suggestion".
+
+Widening it is cheap when a layout earns it. It is not cheap to un-mislead an
+administrator who hid a field on bad advice.
+
+### Verification
+
+Backend `tsc` 0, `madge --circular` 0, 15 new tests over the service and the
+usage mapper. Frontend `tsc` clean on every file this touched, 24 tests across
+`lib/rbac` and `hooks/api/renderer`, catalogue-sync green in both directions.
+
+**Not run against a real database.** The table, its RLS policy and the backfill
+are unexercised until `0265`/`0266` are applied.
+
+One thing left for whoever commits `migrations/meta/_journal.json`: it carries
+this branch's other workstreams' entries alongside these two, and six of the
+`.sql` files it references are still untracked in their sessions, so committing
+it here would have referenced files that do not exist in the commit. The entries
+for `0265` and `0266` are in the working tree and land with it.

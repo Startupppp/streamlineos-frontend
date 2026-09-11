@@ -88,10 +88,10 @@ export function subjectLayout(type: SubjectType): RecordLayout {
       columns: [
         ...titleFirst.map((field, index) => ({
           field: field.name,
-          ...(index === 0 ? { primary: true, sortable: true } : {}),
+          ...(index === 0 ? { primary: true } : {}),
         })),
         { field: "reference", width: "w-32 shrink-0" },
-        { field: "createdAt", sortable: true, width: "w-32 shrink-0" },
+        { field: "createdAt", width: "w-32 shrink-0" },
       ],
     },
     detail: { sections: detailSections(declared, type.singular) },

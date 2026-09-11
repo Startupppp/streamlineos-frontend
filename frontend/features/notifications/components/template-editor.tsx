@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus, BadgeCheck } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
-
-import { TemplateApprovalDialog } from "@/features/notifications/components/template-approval-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   Sheet,
   SheetContent,
@@ -22,22 +13,6 @@ import {
   SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Form,
   FormControl,
@@ -55,17 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { cn } from "@/lib/utils";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { EyeIcon, UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
 import {
-  useNotificationTemplates,
   useCreateNotificationTemplate,
   useUpdateNotificationTemplate,
-  useDeleteNotificationTemplate,
-  usePreviewTemplate,
 } from "@/hooks/api/notifications";
 import {
   NOTIFICATION_CATEGORIES,

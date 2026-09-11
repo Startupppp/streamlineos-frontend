@@ -62,11 +62,11 @@ export const SLA_POLICY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search policies…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "appliesTo", width: "w-36 shrink-0" },
       { field: "priority", width: "w-28 shrink-0" },
-      { field: "firstResponseHours", sortable: true, width: "w-36 shrink-0" },
-      { field: "resolutionHours", sortable: true, width: "w-32 shrink-0" },
+      { field: "firstResponseHours", width: "w-36 shrink-0" },
+      { field: "resolutionHours", width: "w-32 shrink-0" },
     ],
   },
   detail: {

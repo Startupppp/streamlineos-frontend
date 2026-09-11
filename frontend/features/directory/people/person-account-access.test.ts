@@ -71,22 +71,18 @@ describe("person account access", () => {
   });
 
   it("shows pending and expired invitations instead of directory-only", () => {
+    const invitation = {
+      state: "INVITED",
+      invitationId: "invite-1",
+      email: "jane@example.com",
+      role: "MEMBER",
+      expiresAt: "2026-01-08T00:00:00.000Z",
+    } as const;
     const pending = person({
-      accountAccess: {
-        state: "INVITED",
-        invitationId: "invite-1",
-        invitationStatus: "PENDING",
-        email: "jane@example.com",
-        role: "MEMBER",
-        expiresAt: "2026-01-08T00:00:00.000Z",
-      },
+      accountAccess: { ...invitation, invitationStatus: "PENDING" },
     });
     const expired = person({
-      accountAccess: {
-        ...pending.accountAccess!,
-        state: "INVITED",
-        invitationStatus: "EXPIRED",
-      },
+      accountAccess: { ...invitation, invitationStatus: "EXPIRED" },
     });
 
     expect(getPersonAccessBadge(pending)).toBe("Invitation pending");

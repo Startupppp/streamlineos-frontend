@@ -27,7 +27,7 @@ import MyOnboardingRoute from "@/app/(authenticated)/me/onboarding/page";
 
 const mockedGetServerAccess = getServerAccess as jest.Mock;
 const mockedRequireModulePermission = requireModulePermission as jest.Mock;
-const mockedRedirect = redirect as jest.Mock;
+const mockedRedirect = redirect as unknown as jest.Mock;
 
 describe("MyOnboardingRoute — access guards", () => {
   beforeEach(() => jest.clearAllMocks());

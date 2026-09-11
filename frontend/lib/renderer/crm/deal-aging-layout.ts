@@ -69,13 +69,13 @@ export const DEAL_AGING_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search stalled deals…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "stage", width: "w-32 shrink-0" },
       { field: "assigneeName", width: "min-w-[140px]" },
-      { field: "daysInStage", sortable: true, width: "w-28 shrink-0" },
+      { field: "daysInStage", width: "w-28 shrink-0" },
       { field: "severity", width: "w-24 shrink-0" },
-      { field: "value", sortable: true, width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-28 shrink-0" },
+      { field: "value", width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-28 shrink-0" },
     ],
   },
   detail: {

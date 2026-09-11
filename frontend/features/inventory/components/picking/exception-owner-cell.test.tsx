@@ -66,7 +66,7 @@ function mockException(over: Partial<PickExceptionSummary> = {}): PickExceptionS
     pickNumber: "PW-0044",
     soNumber: "SO-1",
     soLineId: 5,
-    reason: "SHORT_PICK",
+    reason: "SHORT",
     status: "OPEN",
     resolution: null,
     notes: null,

@@ -59,7 +59,6 @@ export type FoundationPermissionKey =
   | "crm:leads:delete"
   | "crm:contacts:view"
   | "crm:contacts:manage"
-  | "crm:contacts:merge"
   | "crm:organizations:view"
   | "crm:organizations:manage"
   | "crm:organizations:merge"

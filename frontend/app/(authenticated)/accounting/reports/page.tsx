@@ -1,5 +1,5 @@
-import { ReportsHubClient } from "@/features/accounting/reports/reports-hub-client";
+import { ReportsHubClient } from "@/features/accounting/reports";
 
-export default function ReportsHubPage() {
+export default function AccountingReportsPage() {
   return <ReportsHubClient />;
 }

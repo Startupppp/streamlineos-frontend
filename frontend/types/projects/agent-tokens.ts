@@ -1,7 +1,8 @@
 export interface AgentToken {
-  id: string;
+  id: string | number;
   name: string;
   tokenPrefix: string;
+  scopes: string[];
   lastUsedAt: string | null;
   expiresAt: string | null;
   revokedAt: string | null;
@@ -13,6 +14,7 @@ export interface CreateAgentTokenResponse {
   id: string;
   name: string;
   tokenPrefix: string;
+  scopes: string[];
   expiresAt: string | null;
   createdAt: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, Suspense } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -19,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { type RecordValue } from "@/features/renderer";
 import { useDensity } from "@/features/renderer/density-toggle";
@@ -37,7 +38,6 @@ import {
   type TasksFilters,
 } from "@/hooks/api/tasks";
 import { useCalendarOrgMembers } from "@/hooks/api/calendar";
-import { MyTasksPanel } from "@/features/crm/timeline/my-tasks-panel";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { TasksToolbar } from "@/features/crm/tasks/tasks-toolbar";
@@ -292,9 +292,6 @@ function CrmTasksContent() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-        {/* Tasks logged on a customer, deal or subject timeline — same rows, read by assignee. */}
-        <MyTasksPanel />
-
         <StatCardGrid cols={5}>
           <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" isLoading={isLoading} />
           <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" isLoading={isLoading} />
@@ -364,6 +361,19 @@ function CrmTasksContent() {
 }
 
 export default function CrmTasksPage() {
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("directory:people:view") === "denied")
+    return <NoPermissionState permission="directory:people:view" />;
+
   return (
     <Suspense
       fallback={

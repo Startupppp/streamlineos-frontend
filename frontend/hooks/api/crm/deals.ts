@@ -31,7 +31,15 @@ export type {
 
 export { useDealApprovals, useDealAging, useResolveDealApproval } from "./deal-approvals";
 export { useForecastSnapshots, useCaptureForecastSnapshot, useOverrideForecast } from "./deal-forecast";
-export { useDealCompetitors, useAddDealCompetitor, useDeleteDealCompetitor } from "./deal-competitors";
+export {
+  useDealCompetitors,
+  useAddDealCompetitor,
+  useDeleteDealCompetitor,
+  useDealCompetitorSuggestions,
+  useScanDealCompetitorSuggestions,
+  useAcceptDealCompetitorSuggestion,
+  useDismissDealCompetitorSuggestion,
+} from "./deal-competitors";
 export { useStakeholders, useCreateStakeholder, useDeleteStakeholder } from "./deal-stakeholders";
 
 export function useDeals(filters?: DealFilters) {

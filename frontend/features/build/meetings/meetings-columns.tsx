@@ -37,8 +37,6 @@ export function buildMeetingsColumns(
     {
       key: "title",
       header: "Title",
-      sortable: true,
-      sortValue: (row) => row.title,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
@@ -72,8 +70,6 @@ export function buildMeetingsColumns(
     {
       key: "scheduledAt",
       header: "Date / Duration",
-      sortable: true,
-      sortValue: (row) => row.scheduledAt ?? "",
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
           {row.scheduledAt ? (

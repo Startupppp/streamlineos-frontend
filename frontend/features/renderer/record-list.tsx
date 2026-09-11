@@ -24,6 +24,14 @@ type BorrowedProps = Pick<
     stops every list growing its own.
   */
   | "selection"
+  /*
+    A load-more control under the rows. Borrowed rather than described for the
+    same reason selection is: whether there is another page to fetch is a fact
+    about the caller's query, not about the shape of the record. Two nurture
+    lists page by cursor and had nowhere to put the control, which is the only
+    reason a keyset list could not be described.
+  */
+  | "footer"
 >;
 
 export interface RecordListProps extends BorrowedProps {
@@ -65,6 +73,25 @@ export interface RecordListProps extends BorrowedProps {
    * hook once and hand the value down, the same way they hand down the layout.
    */
   money?: MoneyDisplay;
+  /**
+   * A cell for a described field whose value the engine has no vocabulary to
+   * draw. Keyed by field name.
+   *
+   * Symmetric with `RecordForm`'s `controls`, and deliberately weaker than the
+   * two slots above it: `leading` and `actions` add a column the description
+   * does not declare, whereas this one can only replace the *value* of a column
+   * it does. The header, the alignment, the width, the position, the mobile
+   * card and whether the tenant sees the column at all all still come from the
+   * layout — what the surface supplies is the pixels of one value.
+   *
+   * It exists for a field that is a series rather than a figure: a rep's talk
+   * ratio across the window is drawn as a sparkline, and a description can say
+   * "this field is that rep's trend" without the engine having to know what a
+   * basis point is or how to word the chart's label. A key naming a field the
+   * description does not carry draws nothing, because a column nobody declared
+   * is a column no tenant could rearrange or hide.
+   */
+  cells?: Record<string, (row: RecordValue) => ReactNode>;
 }
 
 /**
@@ -90,10 +117,12 @@ export function RecordList({
   pagination,
   onRowClick,
   selection,
+  footer,
   minWidth,
   className,
   density = "comfortable",
   money = DEFAULT_MONEY_DISPLAY,
+  cells,
 }: RecordListProps) {
   const columns = useMemo<DataTableColumn<RecordValue>[]>(
     () =>
@@ -104,20 +133,14 @@ export function RecordList({
         return {
           key: column.field,
           header: field.label,
-          sortable: column.sortable,
-          // Sorting compares the underlying value, never the formatted string:
-          // a localised date sorts alphabetically and lands in the wrong order.
-          sortValue: column.sortable
-            ? (row) => {
-                const value = row[column.field];
-                return typeof value === "number" ? value : String(value ?? "");
-              }
-            : undefined,
           className: cn(numeric && "text-right font-mono tabular-nums", column.width),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
             const display = moneyDisplayFor(field, row, money);
-            const value = renderFieldValue(field, row[column.field], display, row);
+            const drawn = cells?.[column.field];
+            const value = drawn
+              ? drawn(row)
+              : renderFieldValue(field, row[column.field], display, row);
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
@@ -140,7 +163,7 @@ export function RecordList({
           },
         };
       }),
-    [layout, money],
+    [layout, money, cells],
   );
 
   const allColumns = useMemo<DataTableColumn<RecordValue>[]>(
@@ -180,12 +203,32 @@ export function RecordList({
 
         <div className="flex min-w-0 flex-1 flex-col gap-gap-inline">
           <span className="truncate text-sm font-medium">
-            {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
+            {cells?.[primaryField.name]
+              ? cells[primaryField.name](row)
+              : renderFieldValue(
+                  primaryField,
+                  row[primaryField.name],
+                  moneyDisplayFor(primaryField, row, money),
+                  row,
+                )}
           </span>
           <span className="flex flex-wrap items-center gap-gap-field">
             {layout.list.columns
               .filter((column) => column.field !== primaryField.name)
               .map((column) => {
+                /*
+                  A drawn cell has no text to be empty, so it is asked for
+                  directly rather than gated on `formatFieldText` -- which reads
+                  a series as nothing and would drop the column off the phone.
+                */
+                const drawn = cells?.[column.field];
+                if (drawn)
+                  return (
+                    <span key={column.field} className="text-dense text-muted-foreground">
+                      {drawn(row)}
+                    </span>
+                  );
+
                 const field = resolveField(layout, column.field);
                 const display = moneyDisplayFor(field, row, money);
                 const text = formatFieldText(field, row[column.field], display);
@@ -221,6 +264,7 @@ export function RecordList({
         pagination={pagination}
         onRowClick={onRowClick}
         selection={selection}
+        footer={footer}
         minWidth={minWidth}
         mobileCard={mobileCard}
         className={className}

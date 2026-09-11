@@ -73,8 +73,6 @@ export default function SupportSettingsAuditLogPage() {
       key: "createdAt",
       header: "When",
       cell: (row) => new Date(row.createdAt).toLocaleString(),
-      sortable: true,
-      sortValue: (row) => row.createdAt,
     },
     {
       key: "user",

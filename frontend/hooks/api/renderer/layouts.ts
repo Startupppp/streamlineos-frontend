@@ -17,8 +17,7 @@ import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
  * another. It would also pass an isolation test for the wrong reason — two
  * tenants never collide if nothing is ever shared.
  *
- * The endpoints below do not exist yet. They are written out rather than
- * substituted for, because the substitute is what would ship.
+ * The endpoints:
  *
  *   GET    /renderer/layouts/:layoutKey        -> LayoutAdjustment | null
  *   PUT    /renderer/layouts/:layoutKey        <- LayoutAdjustmentInput
@@ -86,13 +85,14 @@ export function useLayoutAdjustment(layoutKey: string) {
  * already publishes — so every user needs to read their tenant's in order to
  * render anything at all. Rearranging it is administration, and is gated.
  *
- * `settings:manage` is the key in force because it is the one that exists in
- * both catalogues today. A dedicated `settings:record-layouts:manage` is the
- * right key and needs adding on the backend first; the catalogue-sync test
- * fails a frontend-only key, and rightly.
+ * `settings:record-layouts:manage` is that gate. It is deliberately narrower than
+ * `settings:manage`, which this used while the key did not exist on the backend:
+ * arranging a record type is not the same authority as administering the
+ * organisation, and an administrator who should be able to do one is not
+ * necessarily meant to do the other.
  */
 export function useCanAdjustLayouts(): boolean {
-  return useCan("settings:manage");
+  return useCan("settings:record-layouts:manage");
 }
 
 export function useSaveLayoutAdjustment(layoutKey: string) {

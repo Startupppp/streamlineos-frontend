@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckSquare, ChevronDown, FileText, HelpCircle, Mail, MoveRight, Undo2, UserPlus } from "lucide-react";
+import { CheckSquare, ChevronDown, FileText, HelpCircle, Mail, MoveRight, Send, Snowflake, Undo2, UserPlus, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
@@ -26,6 +26,9 @@ const KIND_ICON: Record<DecisionKind, typeof CheckSquare> = {
   "party.created": UserPlus,
   "activity.logged": Mail,
   "quote.sent": FileText,
+  "outbound.sent": Send,
+  "cold_outbound.sent": Snowflake,
+  "field.repaired": Wrench,
 };
 
 /**

@@ -51,22 +51,16 @@ export default function AgentPerformanceReportPage() {
           {resolveAgentName(row)}
         </Link>
       ),
-      sortable: true,
-      sortValue: resolveAgentName,
     },
     {
       key: "ticketsHandled",
       header: "Tickets Handled",
       cell: (row) => row.ticketsHandled,
-      sortable: true,
-      sortValue: (row) => row.ticketsHandled,
     },
     {
       key: "ticketsResolved",
       header: "Resolved",
       cell: (row) => row.ticketsResolved,
-      sortable: true,
-      sortValue: (row) => row.ticketsResolved,
     },
     {
       key: "avgFirstResponseMinutes",

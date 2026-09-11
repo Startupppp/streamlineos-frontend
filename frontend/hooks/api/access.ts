@@ -13,6 +13,7 @@ import type {
 } from "@/types/access";
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { accessState, type AccessState } from "@/lib/rbac/gate";
 import { permissionGate, type PermissionGate } from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
@@ -48,6 +49,27 @@ export function usePermissionGate(permission: PermissionKey): PermissionGate {
 
 export function useCan(permissionKey: PermissionKey): boolean {
   return usePermissionGate(permissionKey).allowed;
+}
+
+/**
+ * The same question, answered in three values instead of two.
+ *
+ * `useCan` cannot distinguish "denied" from "not known yet" -- both are `false`,
+ * because until the access response lands there is nothing to check against.
+ * That is fine for deciding whether to *enable* a query, which is all it was
+ * built for, and wrong for deciding what to *render*: a screen that branches on
+ * the boolean tells a user who does hold the permission that access is
+ * restricted, for as long as their own rights take to arrive.
+ *
+ * Ticket 26 is the other half of the same conflation, one layer down. Use this
+ * with `resolveGate` wherever the answer decides what a person sees.
+ */
+export function useCanState(permissionKey: PermissionKey): AccessState {
+  const { data, isLoading } = useAccess();
+  return accessState({
+    isLoading: isLoading || !data,
+    granted: !!data && (data.isOrgOwner || permissionKey in data.scopes),
+  });
 }
 
 export function useScope(permissionKey: PermissionKey): DataScope {

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type {
   CursorPage,
   ExceptionsQueryInput,
@@ -31,16 +32,26 @@ function invalidateExceptionQueries(qc: QueryClient) {
   });
 }
 
+/**
+ * The most rows one page can return.
+ *
+ * `exceptionsQuerySchema` caps `limit` at 100. The list is a keyset walk
+ * (`{ data, pagination: { nextCursor } }`), so this is the size of one page,
+ * not a ceiling on the queue: "Load more" follows the cursor to the rest.
+ */
+export const EXCEPTIONS_PAGE_LIMIT = 100;
+
 export function useTimesheetExceptions(
   query: ExceptionsQueryInput = {},
   enabled = true,
 ) {
+  const canView = useCan("timesheets:exceptions:view");
   const filters = {
     status: query.status,
     severity: query.severity,
     rule: query.rule,
     userId: query.userId,
-    limit: query.limit ?? 50,
+    limit: query.limit ?? EXCEPTIONS_PAGE_LIMIT,
   };
   return useInfiniteQuery<CursorPage<TimesheetException>>({
     queryKey: queryKeys.timesheets.exceptions(filters),
@@ -55,17 +66,18 @@ export function useTimesheetExceptions(
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useExceptionsSummary(enabled = true) {
+  const canView = useCan("timesheets:exceptions:view");
   return useQuery({
     queryKey: queryKeys.timesheets.exceptionsSummary(),
     queryFn: () =>
       apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary"),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

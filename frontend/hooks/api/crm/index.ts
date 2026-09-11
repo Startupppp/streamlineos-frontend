@@ -2,6 +2,7 @@
 
 export * from "./leads";
 export * from "./deals";
+export * from "./deal-forecast";
 export * from "./contacts";
 export * from "./clients";
 export * from "./organizations";
@@ -18,3 +19,8 @@ export * from "./customer360";
 export * from "./campaigns";
 export * from "./automations";
 export * from "./sequences";
+export * from "./commission";
+export * from "./call-intelligence";
+export * from "./lifecycle";
+export * from "./mcp-agent-tokens";
+export * from "./consent";

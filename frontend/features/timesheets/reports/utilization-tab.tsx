@@ -8,8 +8,9 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { useUtilizationReport } from "@/hooks/api/timesheets-core/reports";
-import type { UtilizationReportUser } from "./reports-types";
+import type { UtilizationReport, UtilizationReportUser } from "./reports-types";
 import { formatReportHours, formatReportPercent, memberLabel } from "./report-format";
 
 const ByMemberChart = dynamic(
@@ -34,30 +35,22 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
         ) : null}
       </div>
     ),
-    sortable: true,
-    sortValue: (row) => memberLabel(row.name, row.email).toLowerCase(),
     className: "max-w-[220px]",
   },
   {
     key: "totalHours",
     header: "Total",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.totalHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.totalHours,
   },
   {
     key: "billableHours",
     header: "Billable",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.billableHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.billableHours,
   },
   {
     key: "nonBillableHours",
     header: "Non-billable",
     cell: (row) => <span className="tabular-nums">{formatReportHours(row.nonBillableHours)}</span>,
-    sortable: true,
-    sortValue: (row) => row.nonBillableHours,
   },
   {
     key: "billableUtilization",
@@ -65,8 +58,6 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
     cell: (row) => (
       <span className="tabular-nums font-medium">{formatReportPercent(row.billableUtilization)}</span>
     ),
-    sortable: true,
-    sortValue: (row) => row.billableUtilization,
   },
 ];
 
@@ -108,26 +99,37 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
     [data],
   );
 
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load utilization"
-        description="Something went wrong while loading the utilization report."
-        onRetry={handleRetry}
-      />
-    );
-  }
+  return (
+    <Gated
+      permission="timesheets:reports:view"
+      isLoading={!isError && (isLoading || !data)}
+      isError={isError}
+      loading={
+        <div className="space-y-4">
+          <StatCardGridSkeleton cols={5} count={5} />
+          <Skeleton className="h-[220px] rounded-md" />
+          <DataTableSkeleton rows={8} columns={5} />
+        </div>
+      }
+      error={
+        <ErrorState
+          title="Couldn't load utilization"
+          description="Something went wrong while loading the utilization report."
+          onRetry={handleRetry}
+        />
+      }
+    >
+      {data ? <UtilizationReportBody data={data} chartData={chartData} /> : null}
+    </Gated>
+  );
+}
 
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        <StatCardGridSkeleton cols={5} count={5} />
-        <Skeleton className="h-[220px] rounded-md" />
-        <DataTableSkeleton rows={8} columns={5} />
-      </div>
-    );
-  }
+interface UtilizationReportBodyProps {
+  data: UtilizationReport;
+  chartData: { name: string; billableHours: number; nonBillableHours: number }[];
+}
 
+function UtilizationReportBody({ data, chartData }: UtilizationReportBodyProps) {
   const { summary, users } = data;
 
   return (

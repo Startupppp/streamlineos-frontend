@@ -74,8 +74,6 @@ export function PayrollQueueTable({
         cell: (row) => (
           <span className="font-mono tabular-nums text-right block">{row.regularHours.toFixed(1)}</span>
         ),
-        sortable: true,
-        sortValue: (r) => r.regularHours,
         className: "text-right",
         headerClassName: "text-right",
       },
@@ -87,8 +85,6 @@ export function PayrollQueueTable({
             {row.overtimeHours.toFixed(1)}
           </span>
         ),
-        sortable: true,
-        sortValue: (r) => r.overtimeHours,
         className: "text-right",
         headerClassName: "text-right",
       },
@@ -143,8 +139,6 @@ export function PayrollQueueTable({
         cell: (row) => (
           <span className="font-mono tabular-nums text-right block font-semibold">{row.totalPayableHours.toFixed(1)}</span>
         ),
-        sortable: true,
-        sortValue: (r) => r.totalPayableHours,
         className: "text-right",
         headerClassName: "text-right",
       },

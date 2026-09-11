@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,7 @@ import type {
   TimesheetSettings,
   UpdateTimesheetSettingsInput,
 } from "@/features/timesheets/types";
+import { describeMaterialChanges, materialChangesIn } from "./settings-material-changes";
 
 function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
   return {
@@ -36,6 +37,12 @@ function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
     expectedDailyHours: s.expectedDailyHours != null ? String(parseFloat(s.expectedDailyHours)) : "",
     expectedWeeklyHours: s.expectedWeeklyHours != null ? String(parseFloat(s.expectedWeeklyHours)) : "",
     submissionGraceDays: s.submissionGraceDays != null ? String(s.submissionGraceDays) : "",
+    /*
+     * Never carried back from the server. The stored reason explains the change
+     * that produced these values, not the next one — pre-filling it would let
+     * an unrelated edit inherit somebody else's justification.
+     */
+    changeReason: "",
   };
 }
 
@@ -129,8 +136,28 @@ export function GeneralSettingsForm() {
       expectedDailyHours: "",
       expectedWeeklyHours: "",
       submissionGraceDays: "",
+      changeReason: "",
     },
   });
+
+  const { control, reset, setError, clearErrors } = form;
+
+  /**
+   * Which pending changes the server will refuse without a reason.
+   *
+   * Derived from the same diff `handleSave` sends, not from the form's dirty
+   * state: a value typed and typed back is not a change, and asking for a
+   * justification when nothing was altered is a prompt people answer with a
+   * full stop. Watching every field is what makes the prompt appear as soon as
+   * a material control moves rather than only after a rejected save.
+   */
+  const watched = useWatch({ control });
+  const pendingMaterial = useMemo(() => {
+    if (!settings) return [];
+    return materialChangesIn(
+      buildChanges(watched as GeneralSettingsFormValues, settings),
+    );
+  }, [watched, settings]);
 
   useEffect(() => {
     if (settings) form.reset(toFormValues(settings));
@@ -139,11 +166,35 @@ export function GeneralSettingsForm() {
   const handleSave = form.handleSubmit((values) => {
     if (!settings) return;
     const changes = buildChanges(values, settings);
-    if (Object.keys(changes).length > 0) {
-      update.mutate(changes, {
-        onError: (err) => toast.error(getErrorMessage(err)),
+    if (Object.keys(changes).length === 0) return;
+
+    /*
+     * The same rule the server applies, applied here first. Not to replace the
+     * server check — that stays the boundary — but so the answer arrives beside
+     * the empty box instead of as a toast naming a JSON key.
+     */
+    const material = materialChangesIn(changes);
+    const reason = values.changeReason.trim();
+    if (material.length > 0 && !reason) {
+      setError("changeReason", {
+        type: "required",
+        message: `Say why you are changing ${describeMaterialChanges(material)}.`,
       });
+      return;
     }
+    clearErrors("changeReason");
+
+    update.mutate(
+      { ...changes, ...(reason ? { changeReason: reason } : {}) },
+      {
+        /*
+         * The reason belongs to the change that was just made, so it is cleared
+         * rather than left to be attached to the next one.
+         */
+        onSuccess: () => reset({ ...values, changeReason: "" }),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
   });
 
   const handleRetry = () => { void refetch(); };
@@ -174,6 +225,7 @@ export function GeneralSettingsForm() {
         form={form}
         canManage={canManage}
         isPending={update.isPending}
+        pendingMaterial={pendingMaterial}
       />
     </form>
   );
