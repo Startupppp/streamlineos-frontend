@@ -3,29 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { lazyContract } from "@/lib/api-envelope";
+import type { z } from "zod";
+import { activationReportContract, activationStepContract } from "./activation-schema";
 
-export type ActivationStep =
-  | "invite-a-colleague"
-  | "bring-your-data"
-  | "connect-a-channel"
-  | "open-a-deal";
+export type ActivationStep = z.infer<typeof activationStepContract>;
 
-export interface ActivationReport {
-  isActivated: boolean;
-  completed: ActivationStep[];
-  remaining: ActivationStep[];
-  /** 0-100. Derived on the server, never stored. */
-  percent: number;
-  signals: {
-    realParties: number;
-    realDeals: number;
-    realActivities: number;
-    activeMembers: number;
-    hasCompletedImport: boolean;
-    hasConnectedChannel: boolean;
-  };
-  next: { step: ActivationStep; prompt: string } | null;
-}
+export type ActivationReport = z.infer<typeof activationReportContract>;
 
 /**
  * How far this workspace is from first value.
@@ -38,11 +22,15 @@ export interface ActivationReport {
  * Which also means this hook is not one of the 365 surfaces ticket 26 is about:
  * a query that is never disabled cannot be mistaken for an empty one.
  */
+const activationLazy = lazyContract(() =>
+  import("./activation-schema").then((m) => m.activationReportContract),
+);
+
 export function useActivation() {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.activation(),
     queryFn: ({ signal }) =>
-      apiClient.get<ActivationReport>("/onboarding/activation", undefined, signal),
+      apiClient.get<ActivationReport>("/onboarding/activation", undefined, signal, activationLazy),
     // Counts move as the workspace is used, and the checklist is read while
     // somebody is actively doing the thing it asks for.
     staleTime: 30_000,

@@ -6,6 +6,7 @@ import { createOutboxStorage } from "./indexeddb-outbox-storage";
 import { startDrainLoop, type DrainLoop, type DrainReport, type OutboxTransport } from "./outbox-drain";
 import { OutboxQueue } from "./outbox-queue";
 import type { OutboxEntry, SyncBatchResult } from "./outbox-types";
+import { lazyContract } from "@/lib/api-envelope";
 
 /**
  * B8 — the outbox, mounted.
@@ -33,6 +34,10 @@ export function getOutboxQueue(): OutboxQueue {
  * body, where the server reads it; this is belt and braces for the proxy layer
  * in between.
  */
+const syncBatchLazy = lazyContract(() =>
+  import("./sync-batch-schema").then((m) => m.syncBatchResultContract),
+);
+
 export const outboxTransport: OutboxTransport = {
   send: (operations) =>
     apiClient.post<SyncBatchResult>(
@@ -45,6 +50,7 @@ export const outboxTransport: OutboxTransport = {
             .join(",")}`,
         },
       },
+      syncBatchLazy,
     ),
 };
 
