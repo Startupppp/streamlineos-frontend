@@ -19,6 +19,16 @@ const LOCAL_FORMATTER = /new\s+Intl\.NumberFormat\s*\(/;
 const CANONICAL_PATH = "lib/format-utils.ts";
 
 export const KNOWN_EXCEPTIONS = [
+  {
+    file: "lib/accounting/money.ts",
+    line: 59,
+    reason: "GL money library: renders integer minor units at the currency's ISO 4217 scale (minimum = maximum = 0, 2 or 3 digits) in a per-currency locale, with an optional symbol-less decimal style and signDisplay. format-utils takes major units at Intl's default digits and has no fixed-scale or symbol-less form, so routing through it is not output-identical.",
+  },
+  {
+    file: "lib/accounting/money.ts",
+    line: 69,
+    reason: "GL money library's compact form over minor units. format-utils' formatMoneyCompact matches it for finite amounts but coerces NaN and Infinity to 0, so routing through it is not output-identical.",
+  },
 ];
 
 export function isLocalFormatterLine(line) {
