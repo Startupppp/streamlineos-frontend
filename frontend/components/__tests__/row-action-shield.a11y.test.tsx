@@ -3,19 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { propagationShield } from "@/lib/keyboard-activation";
 
-/**
- * A `DataTable` row with `onRowClick` carries its own `onKeyDown`, and that
- * handler does not look at the event target. So an Enter or a Space pressed on
- * a control INSIDE an action cell bubbles to the row and fires the row's
- * navigation as well as the control's own action — the keyboard user gets two
- * things for one keystroke.
- *
- * A mouse user was already protected: every action cell stopped the click.
- * Only the keyboard half was missing, which is what `propagationShield`
- * supplies. The bite proofs are the unshielded cells, which show the defect is
- * real rather than hypothetical.
- */
-
 interface Row {
   id: string;
   name: string;
@@ -82,15 +69,21 @@ function renderTable(wrapper: (node: React.ReactNode) => React.ReactNode): {
 }
 
 describe("an action control inside a clickable row", () => {
-  it("BITE PROOF — an unshielded cell lets Enter reach the row as well", () => {
+  it("the row ignores Enter from a nested control even in an unshielded cell", () => {
     const { onRowClick, action } = renderTable(bare);
     fireEvent.keyDown(action, { key: "Enter" });
-    expect(onRowClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).not.toHaveBeenCalled();
   });
 
-  it("BITE PROOF — stopping only the click leaves the keyboard defect in place", () => {
+  it("the row ignores Enter from a nested control behind a click-only shield", () => {
     const { onRowClick, action } = renderTable(clickOnlyShield);
     fireEvent.keyDown(action, { key: "Enter" });
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+
+  it("BITE PROOF — Enter on the row itself still opens it, so the guard is not a blanket block", () => {
+    const { onRowClick, row } = renderTable(bare);
+    fireEvent.keyDown(row, { key: "Enter" });
     expect(onRowClick).toHaveBeenCalledTimes(1);
   });
 
