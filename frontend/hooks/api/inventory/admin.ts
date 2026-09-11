@@ -269,6 +269,7 @@ export interface ExportJob {
   errorRows: number;
   errors: { row: number; field: string; message: string }[] | null;
   createdBy: string;
+  createdByMembershipId: number | null;
   createdAt: string;
   updatedAt: string;
 }
