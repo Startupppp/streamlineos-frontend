@@ -19,6 +19,8 @@
  * isomorphic side of the line, where either runtime may have it.
  */
 
+import { formatMoneyRounded } from "@/lib/format-utils";
+
 /**
  * Money for reading, which is a different job from money for charging.
  *
@@ -30,11 +32,7 @@
  */
 export function formatMinor(minor: number, currency: string, locale = "en"): string {
   try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: minor % 100 === 0 ? 0 : 2,
-    }).format(minor / 100);
+    return formatMoneyRounded(minor / 100, { currency, locale }, minor % 100 === 0 ? 0 : 2);
   } catch {
     // An unknown currency code must still render a number rather than nothing.
     return `${currency} ${(minor / 100).toLocaleString(locale)}`;

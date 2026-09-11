@@ -3,6 +3,7 @@ import type {
   CustomerLifecycleStatus,
   LifecycleRiskBand,
 } from "@/types/crm/lifecycle";
+import { formatMoneyRounded, formatRatioAsPercent } from "@/lib/format-utils";
 
 export const RISK_LABEL: Record<LifecycleRiskBand, string> = {
   healthy: "Healthy",
@@ -44,16 +45,9 @@ export function formatDate(value: string | null | undefined, locale: string) {
 }
 
 export function formatMinor(value: number, currency: string, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: value % 100 === 0 ? 0 : 2,
-  }).format(value / 100);
+  return formatMoneyRounded(value / 100, { currency, locale }, value % 100 === 0 ? 0 : 2);
 }
 
 export function formatBps(value: number, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    style: "percent",
-    maximumFractionDigits: 0,
-  }).format(value / 10_000);
+  return formatRatioAsPercent(value / 10_000, locale, 0);
 }
