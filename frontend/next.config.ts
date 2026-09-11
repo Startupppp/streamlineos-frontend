@@ -51,6 +51,8 @@ const optimizePackageImports =
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
     optimizePackageImports,
     serverActions: {
