@@ -91,8 +91,14 @@ export function NurtureEnrollmentsPanel({
 
   const canEnrol = canManage && sequenceStatus === "active" && stepCount > 0;
 
-  const handleStatusChange = (value: string) =>
-    setStatus(value === ALL ? undefined : (value as NurtureEnrollmentStatus));
+  const handleStatusChange = (value: string) => {
+    if (value === ALL) {
+      setStatus(undefined);
+      return;
+    }
+    const next = NURTURE_ENROLLMENT_STATUSES.find((candidate) => candidate === value);
+    if (next) setStatus(next);
+  };
 
   const handleStop = () => {
     if (!stopping) return;

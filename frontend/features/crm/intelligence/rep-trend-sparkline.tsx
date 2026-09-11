@@ -78,8 +78,8 @@ export function RepTrendSparkline({
     open = true;
   });
 
-  const first = present[0]!;
-  const last = present[present.length - 1]!;
+  const first = present[0];
+  const last = present[present.length - 1];
 
   return (
     <svg

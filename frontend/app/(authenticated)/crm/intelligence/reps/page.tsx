@@ -77,7 +77,9 @@ export default function RepCallMetricsPage() {
   }, []);
 
   const handleMetricChange = useCallback((value: string) => {
-    setMetric(value as ExemplarMetric);
+    const next = EXEMPLAR_METRICS.find((candidate) => candidate === value);
+    if (!next) return;
+    setMetric(next);
     // A new metric is a new ranking, so the shortlist starts short again.
     setExemplarLimit(EXEMPLAR_PAGE_SIZE);
   }, []);

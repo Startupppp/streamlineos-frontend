@@ -72,6 +72,11 @@ export function ScheduleReportSheet({
   const remove = useDeleteReportSchedule();
 
   const [cadence, setCadence] = useState<ReportCadence>("weekly");
+
+  function handleCadenceChange(value: string) {
+    const next = REPORT_CADENCES.find((candidate) => candidate === value);
+    if (next) setCadence(next);
+  }
   const [hourOfDay, setHourOfDay] = useState(8);
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [dayOfMonth, setDayOfMonth] = useState(1);
@@ -185,10 +190,7 @@ export function ScheduleReportSheet({
               <div className="grid grid-cols-2 gap-gap-field">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="report-cadence">How often</Label>
-                  <Select
-                    value={cadence}
-                    onValueChange={(next) => setCadence(next as ReportCadence)}
-                  >
+                  <Select value={cadence} onValueChange={handleCadenceChange}>
                     <SelectTrigger id="report-cadence" className="w-full">
                       <SelectValue />
                     </SelectTrigger>

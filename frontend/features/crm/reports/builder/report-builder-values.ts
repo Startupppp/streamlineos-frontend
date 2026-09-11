@@ -95,8 +95,11 @@ function flattenFilter(
   if (filter === undefined) return [];
   if (filter.kind === "compare") return [filter];
   if (filter.kind !== "and") return null;
-  if (filter.nodes.some((node) => node.kind !== "compare")) return null;
-  return filter.nodes as readonly ReportingFilterLeaf[];
+  const leaves = filter.nodes.filter(
+    (node): node is ReportingFilterLeaf => node.kind === "compare",
+  );
+  if (leaves.length !== filter.nodes.length) return null;
+  return leaves;
 }
 
 export function toBuilderValues(

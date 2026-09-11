@@ -47,7 +47,10 @@ export default function CommissionsPage() {
   const earnings = useCommissionEarnings({ limit: 100 });
   const plans = useCommissionPlans();
 
-  const handleTabChange = useCallback((value: string) => setTab(value as CommissionTab), []);
+  const handleTabChange = useCallback((value: string) => {
+    const next = TABS.find((entry) => entry.value === value);
+    if (next) setTab(next.value);
+  }, []);
 
   const stepBack = useCallback(() => {
     const start = accrual.data?.periodStart;

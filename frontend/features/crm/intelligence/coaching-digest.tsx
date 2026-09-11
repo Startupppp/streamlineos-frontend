@@ -12,6 +12,13 @@ interface CoachingDigestViewProps {
   response: CoachingDigestResponse;
 }
 
+const HANDLING_ORDER: readonly ObjectionHandling[] = [
+  "answered",
+  "acknowledged",
+  "deflected",
+  "unaddressed",
+];
+
 const HANDLING_LABEL: Record<ObjectionHandling, string> = {
   answered: "Answered",
   acknowledged: "Acknowledged",
@@ -156,8 +163,8 @@ function ObjectionChart({
       </Section>
     );
 
-  const entries = Object.entries(handling) as [ObjectionHandling, number][];
-  const total = entries.reduce((sum, [, count]) => sum + count, 0);
+  const entries = HANDLING_ORDER.map((key) => ({ key, count: handling[key] }));
+  const total = entries.reduce((sum, entry) => sum + entry.count, 0);
 
   return (
     <Section title="Objection handling" caption="How raised objections were dealt with">
@@ -165,7 +172,7 @@ function ObjectionChart({
         <p className="text-sm text-muted-foreground">No objections recorded in this window.</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {entries.map(([key, count]) => (
+          {entries.map(({ key, count }) => (
             <li key={key} className="flex items-center gap-3">
               <span className="w-28 shrink-0 text-sm text-muted-foreground">
                 {HANDLING_LABEL[key]}

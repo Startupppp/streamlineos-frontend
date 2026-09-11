@@ -42,8 +42,9 @@ interface AgingResponse {
 
 export function useDealApprovals(params?: { status?: string }) {
   return useGatedQuery("crm:deals:read", {
-    queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>, signal, dealApprovalsListLazy),
+    queryKey: queryKeys.deals.approvals(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<DealApproval[]>("/deals/approvals", params, signal, dealApprovalsListLazy),
     staleTime: 2 * 60_000,
   });
 }
