@@ -186,6 +186,7 @@ function LineControl({ column, path, index, disabled, render }: LineControlProps
       render={({ field: bound }) => {
         const value = typeof bound.value === "string" ? bound.value : "";
         const handleChange = (next: string): void => bound.onChange(next);
+        const handleCheckedChange = (next: boolean): void => handleChange(String(next));
 
         return (
           <FormItem className={cn(column.kind === "longText" && "sm:col-span-2")}>
@@ -203,7 +204,7 @@ function LineControl({ column, path, index, disabled, render }: LineControlProps
                 <Switch
                   checked={value === "true"}
                   disabled={disabled}
-                  onCheckedChange={(next) => handleChange(String(next))}
+                  onCheckedChange={handleCheckedChange}
                   aria-label={column.label}
                 />
               </FormControl>
