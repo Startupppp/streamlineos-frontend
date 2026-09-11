@@ -50,16 +50,10 @@ function ViewCountButton({ href }: { href: string }) {
 const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
 const PAGE_LIMIT = 20;
 
-function isCycleCountStatus(s: string): s is CycleCountStatus {
-  return s === "PLANNED" || s === "COUNTING" || s === "REVIEW" || s === "POSTED" || s === "CANCELLED";
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cls = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_BADGE[status] : "";
-  const label = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_LABEL[status] : status;
+function StatusBadge({ status }: { status: CycleCountStatus }) {
   return (
-    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${cls}`}>
-      {label}
+    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
+      {CYCLE_COUNT_STATUS_LABEL[status]}
     </Badge>
   );
 }
@@ -112,26 +106,26 @@ export function CycleCountsClient() {
     {
       key: "warehouse",
       header: "Warehouse",
-      cell: (row) => <TruncatedText text={String(row.warehouseId)} className="text-sm font-mono tabular-nums" />,
+      cell: (row) => <TruncatedText text={row.warehouseName} className="text-sm" />,
     },
     {
       key: "location",
       header: "Location",
       className: "text-muted-foreground",
-      cell: (row) => <span className="text-sm text-muted-foreground">{row.locationId !== null ? String(row.locationId) : "—"}</span>,
+      cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "category",
       header: "Category",
       className: "text-muted-foreground",
-      cell: (row) => <span className="text-sm text-muted-foreground">{row.categoryId !== null ? String(row.categoryId) : "—"}</span>,
+      cell: (row) => <TruncatedText text={row.categoryName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "lineCount",
       header: "Lines",
       headerClassName: "w-[70px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (row) => row.lines?.length ?? "—",
+      cell: (row) => row.lineCount,
     },
     {
       key: "status",
