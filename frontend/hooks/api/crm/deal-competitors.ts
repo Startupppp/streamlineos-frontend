@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type {
   DealCompetitor,
   CreateDealCompetitorInput,
@@ -62,9 +63,11 @@ export function useDeleteDealCompetitor(dealId: number) {
 export function useDealCompetitorSuggestions(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.dealCompetitorSuggestions.list(dealId, "pending"),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DealCompetitorSuggestion[]>(
         `/deals/${dealId}/competitor-suggestions?status=pending`,
+        undefined,
+        signal,
       ),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
@@ -83,7 +86,7 @@ export function useDealCompetitorSuggestions(dealId: number) {
  */
 export function useScanDealCompetitorSuggestions(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitorSuggestions", "scan", dealId] as const,
     mutationFn: () =>
       apiClient.post<DealCompetitorScanResult>(
@@ -108,15 +111,17 @@ export function useScanDealCompetitorSuggestions(dealId: number) {
  */
 export function useAcceptDealCompetitorSuggestion(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    DealCompetitorSuggestion,
+    Error,
+    AcceptDealCompetitorSuggestionInput
+  >("crm:deals:update", {
     mutationKey: ["deals", "competitorSuggestions", "accept", dealId] as const,
-    mutationFn: ({
-      suggestionId,
-      ...body
-    }: AcceptDealCompetitorSuggestionInput) =>
+    mutationFn: ({ suggestionId, ...body }, idempotencyKey) =>
       apiClient.post<DealCompetitorSuggestion>(
         `/deals/${dealId}/competitor-suggestions/${suggestionId}/accept`,
         body,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       qc.invalidateQueries({
@@ -129,7 +134,7 @@ export function useAcceptDealCompetitorSuggestion(dealId: number) {
 
 export function useDismissDealCompetitorSuggestion(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitorSuggestions", "dismiss", dealId] as const,
     mutationFn: ({
       suggestionId,

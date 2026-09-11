@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { usePermissionGate } from "@/hooks/api/access";
@@ -22,6 +22,7 @@ import type {
   SwitchesResponse,
 } from "@/types/crm/autonomy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 
 import { lazyContract } from "@/lib/api-envelope";
@@ -162,7 +163,8 @@ export function useSetAutonomySwitch() {
 export function useRepairPolicies() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyRepairPolicies(),
-    queryFn: () => apiClient.get<RepairPoliciesResponse>("/crm/autonomy/repair-policies"),
+    queryFn: ({ signal }) =>
+      apiClient.get<RepairPoliciesResponse>("/crm/autonomy/repair-policies", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -177,10 +179,16 @@ export function useRepairPolicies() {
 export function useSetRepairPolicy() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    RepairPoliciesResponse,
+    Error,
+    { repairClass: RepairClass; enabled: boolean; reason?: string }
+  >("crm:autonomy:repair", {
     mutationKey: ["crm", "autonomy", "repair-policies", "set"],
-    mutationFn: (input: { repairClass: RepairClass; enabled: boolean; reason?: string }) =>
-      apiClient.patch<RepairPoliciesResponse>("/crm/autonomy/repair-policies", input),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.patch<RepairPoliciesResponse>("/crm/autonomy/repair-policies", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomyRepairPolicies(), data);
     },
@@ -202,8 +210,12 @@ export function useRepairs(filters: { limit?: number; revertedOnly?: boolean } =
 
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyRepairs(filters),
-    queryFn: () =>
-      apiClient.get<AutonomyRepairPage>(`/crm/autonomy/repairs${query ? `?${query}` : ""}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<AutonomyRepairPage>(
+        `/crm/autonomy/repairs${query ? `?${query}` : ""}`,
+        undefined,
+        signal,
+      ),
     staleTime: 30_000,
   });
 }
@@ -212,7 +224,8 @@ export function useRepairs(filters: { limit?: number; revertedOnly?: boolean } =
 export function useRepairMeasure(days = 30) {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyRepairMeasure(days),
-    queryFn: () => apiClient.get<RepairMeasure>(`/crm/autonomy/repair-measure?days=${days}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<RepairMeasure>(`/crm/autonomy/repair-measure?days=${days}`, undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -226,12 +239,18 @@ export function useRepairMeasure(days = 30) {
 export function useRevertRepair() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    { reverted: boolean },
+    Error,
+    { repairId: string; reason?: string }
+  >("crm:autonomy:reverse", {
     mutationKey: ["crm", "autonomy", "repairs", "revert"],
-    mutationFn: ({ repairId, reason }: { repairId: string; reason?: string }) =>
-      apiClient.post<{ reverted: boolean }>(`/crm/autonomy/repairs/${repairId}/revert`, {
-        ...(reason ? { reason } : {}),
-      }),
+    mutationFn: ({ repairId, reason }, idempotencyKey) =>
+      apiClient.post<{ reverted: boolean }>(
+        `/crm/autonomy/repairs/${repairId}/revert`,
+        { ...(reason ? { reason } : {}) },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },
@@ -321,7 +340,8 @@ export function useLiveHolds() {
 export function useLiveClassStops() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyClassStops(),
-    queryFn: () => apiClient.get<LiveClassStop[]>("/crm/autonomy/class-stops"),
+    queryFn: ({ signal }) =>
+      apiClient.get<LiveClassStop[]>("/crm/autonomy/class-stops", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -330,12 +350,17 @@ export function useLiveClassStops() {
 export function useReleaseClassStop() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    { released: boolean },
+    Error,
+    { outboundClassStopId: string }
+  >("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "class-stops", "release"],
-    mutationFn: ({ outboundClassStopId }: { outboundClassStopId: string }) =>
+    mutationFn: ({ outboundClassStopId }, idempotencyKey) =>
       apiClient.post<{ released: boolean }>(
         `/crm/autonomy/class-stops/${outboundClassStopId}/release`,
         {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyClassStops() });
@@ -376,7 +401,7 @@ export function useCancelHold() {
 export function useComposeOutbound() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "outbound", "compose"],
     mutationFn: ({
       intentKey,

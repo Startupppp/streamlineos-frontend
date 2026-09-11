@@ -32,6 +32,7 @@ jest.mock("sonner", () => ({
 const mockGranted = new Set<string>();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: PermissionKey) => mockGranted.has(permission),
+  useAccess: () => ({ data: { scopes: {}, isOrgOwner: false }, refetch: jest.fn() }),
 }));
 
 const mockedPost = apiClient.post as jest.Mock;

@@ -1,10 +1,12 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { usePermissionGate } from "@/hooks/api/access";
 import { gated, useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type {
   CreateNurtureSequenceInput,
   EnrolInNurtureSequenceInput,
@@ -20,7 +22,7 @@ import type {
   UpdateNurtureSequenceInput,
 } from "@/types/crm/nurture";
 
-const ROOT = "/crm/autonomy/nurture/sequences";
+const FIRST_PAGE: string | undefined = undefined;
 
 /**
  * Every read is `crm:autonomy:view` and every write `crm:autonomy:manage`,
@@ -28,8 +30,6 @@ const ROOT = "/crm/autonomy/nurture/sequences";
  * Enrolling somebody schedules autonomous messages, so it sits under the same
  * key that governs turning the autonomy switches on.
  */
-const VIEW = "crm:autonomy:view";
-
 function toParams(limit: number, status?: string, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
   if (status) params.set("status", status);
@@ -50,18 +50,20 @@ export function useNurtureSequences(
   filters: { status?: NurtureSequenceStatus } = {},
   limit = 25,
 ) {
-  const access = usePermissionGate(VIEW);
+  const access = usePermissionGate("crm:autonomy:view");
 
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.autonomyNurtureSequences({ ...filters, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<NurtureCursorPage<NurtureSequenceSummary>>(
-          `${ROOT}?${toParams(limit, filters.status, pageParam)}`,
+          `/crm/autonomy/nurture/sequences?${toParams(limit, filters.status, pageParam)}`,
+          undefined,
+          signal,
         ),
       getNextPageParam: (last: NurtureCursorPage<NurtureSequenceSummary>) =>
         last.pagination.nextCursor ?? undefined,
-      initialPageParam: undefined as string | undefined,
+      initialPageParam: FIRST_PAGE,
       staleTime: 30_000,
       enabled: access.allowed,
     }),
@@ -70,10 +72,14 @@ export function useNurtureSequences(
 }
 
 export function useNurtureSequence(nurtureSequenceId: string) {
-  return useGatedQuery(VIEW, {
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyNurtureSequence(nurtureSequenceId),
-    queryFn: () =>
-      apiClient.get<NurtureSequenceDetail>(`${ROOT}/${nurtureSequenceId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<NurtureSequenceDetail>(
+        `/crm/autonomy/nurture/sequences/${nurtureSequenceId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 30_000,
     enabled: nurtureSequenceId.length > 0,
   });
@@ -91,7 +97,7 @@ export function useNurtureEnrollments(
   filters: { status?: NurtureEnrollmentStatus } = {},
   limit = 25,
 ) {
-  const access = usePermissionGate(VIEW);
+  const access = usePermissionGate("crm:autonomy:view");
 
   return gated(
     useInfiniteQuery({
@@ -99,13 +105,15 @@ export function useNurtureEnrollments(
         ...filters,
         limit,
       }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<NurtureCursorPage<NurtureEnrollment>>(
-          `${ROOT}/${nurtureSequenceId}/enrollments?${toParams(limit, filters.status, pageParam)}`,
+          `/crm/autonomy/nurture/sequences/${nurtureSequenceId}/enrollments?${toParams(limit, filters.status, pageParam)}`,
+          undefined,
+          signal,
         ),
       getNextPageParam: (last: NurtureCursorPage<NurtureEnrollment>) =>
         last.pagination.nextCursor ?? undefined,
-      initialPageParam: undefined as string | undefined,
+      initialPageParam: FIRST_PAGE,
       staleTime: 15_000,
       enabled: access.allowed && nurtureSequenceId.length > 0,
     }),
@@ -129,10 +137,16 @@ function useNurtureInvalidate() {
 export function useCreateNurtureSequence() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    NurtureSequenceSummary,
+    Error,
+    CreateNurtureSequenceInput
+  >("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "sequences", "create"],
-    mutationFn: (input: CreateNurtureSequenceInput) =>
-      apiClient.post<NurtureSequenceSummary>(ROOT, input),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<NurtureSequenceSummary>("/crm/autonomy/nurture/sequences", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: invalidate,
   });
 }
@@ -140,13 +154,18 @@ export function useCreateNurtureSequence() {
 export function useUpdateNurtureSequence() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    NurtureSequenceSummary,
+    Error,
+    UpdateNurtureSequenceInput & { nurtureSequenceId: string }
+  >("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "sequences", "update"],
-    mutationFn: ({
-      nurtureSequenceId,
-      ...input
-    }: UpdateNurtureSequenceInput & { nurtureSequenceId: string }) =>
-      apiClient.patch<NurtureSequenceSummary>(`${ROOT}/${nurtureSequenceId}`, input),
+    mutationFn: ({ nurtureSequenceId, ...input }, idempotencyKey) =>
+      apiClient.patch<NurtureSequenceSummary>(
+        `/crm/autonomy/nurture/sequences/${nurtureSequenceId}`,
+        input,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
     onSuccess: invalidate,
   });
 }
@@ -155,10 +174,10 @@ export function useUpdateNurtureSequence() {
 export function useDeleteNurtureSequence() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "sequences", "delete"],
     mutationFn: (nurtureSequenceId: string) =>
-      apiClient.delete<NurtureSequenceRemoved>(`${ROOT}/${nurtureSequenceId}`),
+      apiClient.delete<NurtureSequenceRemoved>(`/crm/autonomy/nurture/sequences/${nurtureSequenceId}`),
     onSuccess: invalidate,
   });
 }
@@ -173,13 +192,18 @@ export function useDeleteNurtureSequence() {
 export function useReplaceNurtureSteps() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    NurtureStep[],
+    Error,
+    ReplaceNurtureStepsInput & { nurtureSequenceId: string }
+  >("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "steps", "replace"],
-    mutationFn: ({
-      nurtureSequenceId,
-      ...input
-    }: ReplaceNurtureStepsInput & { nurtureSequenceId: string }) =>
-      apiClient.put<NurtureStep[]>(`${ROOT}/${nurtureSequenceId}/steps`, input),
+    mutationFn: ({ nurtureSequenceId, ...input }, idempotencyKey) =>
+      apiClient.put<NurtureStep[]>(
+        `/crm/autonomy/nurture/sequences/${nurtureSequenceId}/steps`,
+        input,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
     onSuccess: invalidate,
   });
 }
@@ -187,13 +211,18 @@ export function useReplaceNurtureSteps() {
 export function useEnrolInNurtureSequence() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    NurtureEnrollment,
+    Error,
+    EnrolInNurtureSequenceInput & { nurtureSequenceId: string }
+  >("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "enrollments", "create"],
-    mutationFn: ({
-      nurtureSequenceId,
-      ...input
-    }: EnrolInNurtureSequenceInput & { nurtureSequenceId: string }) =>
-      apiClient.post<NurtureEnrollment>(`${ROOT}/${nurtureSequenceId}/enrollments`, input),
+    mutationFn: ({ nurtureSequenceId, ...input }, idempotencyKey) =>
+      apiClient.post<NurtureEnrollment>(
+        `/crm/autonomy/nurture/sequences/${nurtureSequenceId}/enrollments`,
+        input,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
     onSuccess: invalidate,
   });
 }
@@ -202,7 +231,7 @@ export function useEnrolInNurtureSequence() {
 export function useUnenrolFromNurtureSequence() {
   const invalidate = useNurtureInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "nurture", "enrollments", "delete"],
     mutationFn: ({
       nurtureSequenceId,
@@ -212,7 +241,7 @@ export function useUnenrolFromNurtureSequence() {
       nurtureEnrollmentId: string;
     }) =>
       apiClient.delete<NurtureEnrollment>(
-        `${ROOT}/${nurtureSequenceId}/enrollments/${nurtureEnrollmentId}`,
+        `/crm/autonomy/nurture/sequences/${nurtureSequenceId}/enrollments/${nurtureEnrollmentId}`,
       ),
     onSuccess: invalidate,
   });

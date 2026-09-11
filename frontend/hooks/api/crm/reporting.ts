@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CreateReportDefinitionInput,
   CreateReportScheduleInput,
@@ -37,7 +38,8 @@ import type {
 export function useReportingSources() {
   return useGatedQuery("crm:reporting:run", {
     queryKey: queryKeys.crm.reportingSources(),
-    queryFn: () => apiClient.get<ReportingSource[]>("/crm/reporting/sources"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReportingSource[]>("/crm/reporting/sources", undefined, signal),
     staleTime: 30 * 60_000,
   });
 }
@@ -45,8 +47,8 @@ export function useReportingSources() {
 export function useReportRun(description: ReportingQueryDescription | null) {
   return useGatedQuery("crm:reporting:run", {
     queryKey: queryKeys.crm.reportingRun(description),
-    queryFn: () =>
-      apiClient.post<ReportingRunResult>("/crm/reporting/run", { query: description }),
+    queryFn: ({ signal }) =>
+      apiClient.post<ReportingRunResult>("/crm/reporting/run", { query: description }, { signal }),
     enabled: description !== null,
     staleTime: 2 * 60_000,
   });
@@ -68,8 +70,8 @@ const DEFINITIONS_STALE_MS = 60_000;
 export function useReportDefinitions(params: { limit: number; offset: number }) {
   return useGatedQuery("crm:reporting:view", {
     queryKey: queryKeys.crm.reportingDefinitions(params),
-    queryFn: () =>
-      apiClient.get<ReportDefinitionSummary[]>("/crm/reporting/definitions", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReportDefinitionSummary[]>("/crm/reporting/definitions", params, signal),
     staleTime: DEFINITIONS_STALE_MS,
   });
 }
@@ -77,8 +79,12 @@ export function useReportDefinitions(params: { limit: number; offset: number }) 
 export function useReportDefinition(reportDefinitionId: string | null) {
   return useGatedQuery("crm:reporting:view", {
     queryKey: queryKeys.crm.reportingDefinition(reportDefinitionId ?? ""),
-    queryFn: () =>
-      apiClient.get<ReportDefinition>(`/crm/reporting/definitions/${reportDefinitionId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReportDefinition>(
+        `/crm/reporting/definitions/${reportDefinitionId}`,
+        undefined,
+        signal,
+      ),
     enabled: reportDefinitionId !== null,
     staleTime: DEFINITIONS_STALE_MS,
   });
@@ -102,10 +108,11 @@ export function useReportDefinitionRun(
 ) {
   return useGatedQuery("crm:reporting:run", {
     queryKey: queryKeys.crm.reportingDefinitionRun(reportDefinitionId ?? "", overrides),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.post<ReportingRunResult>(
         `/crm/reporting/definitions/${reportDefinitionId}/run`,
         overrides ?? {},
+        { signal },
       ),
     enabled: reportDefinitionId !== null && overrides !== null,
     staleTime: 2 * 60_000,
@@ -122,8 +129,12 @@ export function useReportDefinitionRun(
 export function useReportExplain(description: ReportingQueryDescription | null) {
   return useGatedQuery("crm:reporting:manage", {
     queryKey: queryKeys.crm.reportingExplain(description),
-    queryFn: () =>
-      apiClient.post<ReportingExplainResult>("/crm/reporting/explain", { query: description }),
+    queryFn: ({ signal }) =>
+      apiClient.post<ReportingExplainResult>(
+        "/crm/reporting/explain",
+        { query: description },
+        { signal },
+      ),
     enabled: description !== null,
     staleTime: 30 * 60_000,
   });
@@ -132,7 +143,8 @@ export function useReportExplain(description: ReportingQueryDescription | null) 
 export function useReportRuns(params: { limit: number; offset: number }) {
   return useGatedQuery("crm:reporting:view", {
     queryKey: queryKeys.crm.reportingRuns(params),
-    queryFn: () => apiClient.get<ReportRunLogEntry[]>("/crm/reporting/runs", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReportRunLogEntry[]>("/crm/reporting/runs", params, signal),
     staleTime: 30_000,
   });
 }
@@ -140,7 +152,7 @@ export function useReportRuns(params: { limit: number; offset: number }) {
 export function useCreateReportDefinition() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "definitions", "create"],
     mutationFn: (input: CreateReportDefinitionInput) =>
       apiClient.post<ReportDefinition>("/crm/reporting/definitions", input),
@@ -155,7 +167,7 @@ export function useCreateReportDefinition() {
 export function useUpdateReportDefinition() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "definitions", "update"],
     mutationFn: ({
       reportDefinitionId,
@@ -176,7 +188,7 @@ export function useUpdateReportDefinition() {
 export function useDeleteReportDefinition() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "definitions", "delete"],
     mutationFn: ({ reportDefinitionId }: { reportDefinitionId: string }) =>
       apiClient.delete<{ deleted: boolean }>(
@@ -201,7 +213,8 @@ export function useDeleteReportDefinition() {
 export function useReportSchedules() {
   return useGatedQuery("crm:reporting:view", {
     queryKey: queryKeys.crm.reportingSchedules(),
-    queryFn: () => apiClient.get<ReportSchedule[]>("/crm/reporting/schedules"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReportSchedule[]>("/crm/reporting/schedules", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -216,7 +229,7 @@ function useSchedulesInvalidate() {
 export function useCreateReportSchedule() {
   const invalidate = useSchedulesInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "schedules", "create"],
     mutationFn: (input: CreateReportScheduleInput) =>
       apiClient.post<ReportSchedule>("/crm/reporting/schedules", input),
@@ -227,7 +240,7 @@ export function useCreateReportSchedule() {
 export function useUpdateReportSchedule() {
   const invalidate = useSchedulesInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "schedules", "update"],
     mutationFn: ({
       reportScheduleId,
@@ -244,7 +257,7 @@ export function useUpdateReportSchedule() {
 export function useDeleteReportSchedule() {
   const invalidate = useSchedulesInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "schedules", "delete"],
     mutationFn: ({ reportScheduleId }: { reportScheduleId: string }) =>
       apiClient.delete<{ deleted: boolean }>(

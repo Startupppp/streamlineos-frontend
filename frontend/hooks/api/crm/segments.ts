@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CreateSegmentInput,
   Segment,
@@ -54,7 +55,8 @@ const EVALUATION_STALE_MS = 15_000;
 export function useSegmentSources() {
   return useGatedQuery("crm:segments:view", {
     queryKey: queryKeys.crm.segmentSources(),
-    queryFn: () => apiClient.get<SegmentSource[]>("/crm/segments/sources"),
+    queryFn: ({ signal }) =>
+      apiClient.get<SegmentSource[]>("/crm/segments/sources", undefined, signal),
     staleTime: SOURCES_STALE_MS,
   });
 }
@@ -62,7 +64,7 @@ export function useSegmentSources() {
 export function useSegments(params: { limit: number; offset: number }) {
   return useGatedQuery("crm:segments:view", {
     queryKey: queryKeys.crm.segments(params),
-    queryFn: () => apiClient.get<SegmentSummary[]>("/crm/segments", params),
+    queryFn: ({ signal }) => apiClient.get<SegmentSummary[]>("/crm/segments", params, signal),
     staleTime: SEGMENTS_STALE_MS,
   });
 }
@@ -70,7 +72,8 @@ export function useSegments(params: { limit: number; offset: number }) {
 export function useSegment(segmentId: string | null) {
   return useGatedQuery("crm:segments:view", {
     queryKey: queryKeys.crm.segment(segmentId ?? ""),
-    queryFn: () => apiClient.get<Segment>(`/crm/segments/${segmentId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<Segment>(`/crm/segments/${segmentId}`, undefined, signal),
     enabled: segmentId !== null,
     staleTime: SEGMENTS_STALE_MS,
   });
@@ -87,8 +90,8 @@ export function useSegment(segmentId: string | null) {
 export function useSegmentMembers(segmentId: string | null, limit: number) {
   return useGatedQuery("crm:segments:view", {
     queryKey: queryKeys.crm.segmentMembers(segmentId ?? "", limit),
-    queryFn: () =>
-      apiClient.get<SegmentMembers>(`/crm/segments/${segmentId}/members`, { limit }),
+    queryFn: ({ signal }) =>
+      apiClient.get<SegmentMembers>(`/crm/segments/${segmentId}/members`, { limit }, signal),
     enabled: segmentId !== null,
     staleTime: EVALUATION_STALE_MS,
   });
@@ -105,7 +108,8 @@ export function useSegmentMembers(segmentId: string | null, limit: number) {
 export function useSegmentPreview(input: SegmentPreviewInput | null) {
   return useGatedQuery("crm:segments:view", {
     queryKey: queryKeys.crm.segmentPreview(input?.source ?? "", input?.criteria ?? null),
-    queryFn: () => apiClient.post<SegmentPreviewResult>("/crm/segments/preview", input),
+    queryFn: ({ signal }) =>
+      apiClient.post<SegmentPreviewResult>("/crm/segments/preview", input, { signal }),
     enabled: input !== null,
     staleTime: EVALUATION_STALE_MS,
   });
@@ -129,7 +133,7 @@ function useSegmentsInvalidate() {
 export function useCreateSegment() {
   const invalidate = useSegmentsInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:segments:manage", {
     mutationKey: ["crm", "segments", "create"],
     mutationFn: (input: CreateSegmentInput) =>
       apiClient.post<Segment>("/crm/segments", input),
@@ -140,7 +144,7 @@ export function useCreateSegment() {
 export function useUpdateSegment() {
   const invalidate = useSegmentsInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:segments:manage", {
     mutationKey: ["crm", "segments", "update"],
     mutationFn: ({
       segmentId,
@@ -154,7 +158,7 @@ export function useUpdateSegment() {
 export function useDeleteSegment() {
   const invalidate = useSegmentsInvalidate();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:segments:manage", {
     mutationKey: ["crm", "segments", "delete"],
     mutationFn: ({ segmentId }: { segmentId: string }) =>
       apiClient.delete<{ deleted: boolean }>(`/crm/segments/${segmentId}`),

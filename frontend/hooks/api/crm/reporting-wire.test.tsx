@@ -39,6 +39,8 @@ jest.mock("@/hooks/api/access", () => {
   return {
     usePermissionGate: (permission: PermissionKey) =>
       permissionGate(permission, mockGranted.has(permission), true),
+    useCan: (permission: PermissionKey) => mockGranted.has(permission),
+    useAccess: () => ({ data: { scopes: {}, isOrgOwner: false }, refetch: jest.fn() }),
   };
 });
 
@@ -228,6 +230,7 @@ describe("the reporting builder's data layer", () => {
 
   describe("authoring", () => {
     it("addresses only crm/reporting, whichever write it is", async () => {
+      mockGranted.add("crm:reporting:manage");
       const { result } = renderHook(
         () => ({
           createDefinition: useCreateReportDefinition(),

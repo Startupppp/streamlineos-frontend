@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type {
   AccrualParams,
   CommissionAccrual,
@@ -33,15 +34,16 @@ import type {
 export function useCommissionPlans() {
   return useGatedQuery("crm:commission-plans:view", {
     queryKey: queryKeys.crmCommission.plans(),
-    queryFn: () => apiClient.get<CommissionPlanSummary[]>("/crm/commission/plans"),
+    queryFn: ({ signal }) =>
+      apiClient.get<CommissionPlanSummary[]>("/crm/commission/plans", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
 
 export function useCommissionEarnings(params?: ListEarningsParams) {
   return useGatedQuery("crm:commission-earnings:view", {
-    queryKey: queryKeys.crmCommission.earnings(params as Record<string, unknown>),
-    queryFn: () => {
+    queryKey: queryKeys.crmCommission.earnings(params),
+    queryFn: ({ signal }) => {
       const query: Record<string, string | number> = {};
       if (params?.userId !== undefined) query.userId = params.userId;
       if (params?.planId !== undefined) query.planId = params.planId;
@@ -50,7 +52,7 @@ export function useCommissionEarnings(params?: ListEarningsParams) {
       if (params?.to !== undefined) query.to = params.to;
       if (params?.limit !== undefined) query.limit = params.limit;
       if (params?.offset !== undefined) query.offset = params.offset;
-      return apiClient.get<CommissionEarning[]>("/crm/commission/earnings", query);
+      return apiClient.get<CommissionEarning[]>("/crm/commission/earnings", query, signal);
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -66,13 +68,13 @@ export function useCommissionEarnings(params?: ListEarningsParams) {
  */
 export function useCommissionAccrual(params?: AccrualParams) {
   return useGatedQuery("crm:commission-earnings:view", {
-    queryKey: queryKeys.crmCommission.accrual(params as Record<string, unknown>),
-    queryFn: () => {
+    queryKey: queryKeys.crmCommission.accrual(params),
+    queryFn: ({ signal }) => {
       const query: Record<string, string> = {};
       if (params?.userId !== undefined) query.userId = params.userId;
       if (params?.planId !== undefined) query.planId = params.planId;
       if (params?.on !== undefined) query.on = params.on;
-      return apiClient.get<CommissionAccrual>("/crm/commission/accrual", query);
+      return apiClient.get<CommissionAccrual>("/crm/commission/accrual", query, signal);
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -83,11 +85,11 @@ export function useCommissionAccrual(params?: AccrualParams) {
 export function useCommissionAccrualByDeal(dealId: number) {
   return useGatedQuery("crm:commission-earnings:view", {
     queryKey: queryKeys.crmCommission.accrualByDeal(String(dealId)),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         deals: CommissionDealContribution[];
         rules: CommissionRuleContribution[];
-      }>("/crm/commission/accrual/by-deal", { dealId }),
+      }>("/crm/commission/accrual/by-deal", { dealId }, signal),
     staleTime: 60_000,
     enabled: dealId > 0,
   });
@@ -97,11 +99,11 @@ export function useCommissionAccrualByDeal(dealId: number) {
 export function useCommissionEarningBreakdown(earningId: string) {
   return useGatedQuery("crm:commission-earnings:view", {
     queryKey: queryKeys.crmCommission.earningBreakdown(earningId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         deals: CommissionDealContribution[];
         rules: CommissionRuleContribution[];
-      }>(`/crm/commission/accrual/earnings/${earningId}`),
+      }>(`/crm/commission/accrual/earnings/${earningId}`, undefined, signal),
     staleTime: 60_000,
     enabled: earningId.length > 0,
   });
@@ -116,16 +118,20 @@ export function useCommissionEarningBreakdown(earningId: string) {
  */
 export function useApproveCommissionEarning() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crm", "commission", "earnings", "approve"],
-    mutationFn: (earningId: string) =>
-      apiClient.post<CommissionEarning>(
-        `/crm/commission/earnings/${earningId}/approve`,
-        {},
-      ),
-    onSuccess: () => {
-      // The accrual is a roll-up of these rows, so it goes stale with them.
-      void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.all });
+  return useAuthorizedIdempotentMutation<CommissionEarning, Error, string>(
+    "crm:commission-earnings:approve",
+    {
+      mutationKey: ["crm", "commission", "earnings", "approve"],
+      mutationFn: (earningId, idempotencyKey) =>
+        apiClient.post<CommissionEarning>(
+          `/crm/commission/earnings/${earningId}/approve`,
+          {},
+          { headers: { "Idempotency-Key": idempotencyKey } },
+        ),
+      onSuccess: () => {
+        // The accrual is a roll-up of these rows, so it goes stale with them.
+        void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.all });
+      },
     },
-  });
+  );
 }

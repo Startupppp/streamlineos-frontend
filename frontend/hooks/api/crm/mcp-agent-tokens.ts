@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AgentToken, CreateAgentTokenResponse } from "@/types/projects/agent-tokens";
 
 export interface CrmMcpTool {
@@ -27,7 +28,8 @@ export function useCrmMcpTools() {
   const canViewTokens = useCan("settings:api-tokens:read");
   return useQuery<{ tools: CrmMcpTool[] }>({
     queryKey: queryKeys.crmSettings.mcpTools(),
-    queryFn: () => apiClient.get<{ tools: CrmMcpTool[] }>("/crm/mcp/tools"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ tools: CrmMcpTool[] }>("/crm/mcp/tools", undefined, signal),
     enabled: canViewTokens,
     staleTime: 60_000,
   });
@@ -37,7 +39,7 @@ export function useCrmAgentTokens() {
   const canViewTokens = useCan("settings:api-tokens:read");
   return useQuery<AgentToken[]>({
     queryKey: queryKeys.crmSettings.mcpAgentTokens(),
-    queryFn: () => apiClient.get<AgentToken[]>("/agent-tokens"),
+    queryFn: ({ signal }) => apiClient.get<AgentToken[]>("/agent-tokens", undefined, signal),
     enabled: canViewTokens,
     staleTime: 60_000,
   });
@@ -45,7 +47,7 @@ export function useCrmAgentTokens() {
 
 export function useCreateCrmAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["crm", "mcp", "agent-tokens", "create"],
     mutationFn: (data: CreateCrmAgentTokenPayload) =>
       apiClient.post<CreateAgentTokenResponse>("/agent-tokens", data),
@@ -59,7 +61,7 @@ export function useCreateCrmAgentToken() {
 
 export function useRevokeCrmAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["crm", "mcp", "agent-tokens", "revoke"],
     mutationFn: (tokenId: string | number) =>
       apiClient.delete<void>(`/agent-tokens/${tokenId}`),
@@ -95,7 +97,7 @@ export function useCrmMcpAccess() {
   const canViewTokens = useCan("settings:api-tokens:read");
   return useQuery<CrmMcpAccess>({
     queryKey: queryKeys.crmSettings.mcpAccess(),
-    queryFn: () => apiClient.get<CrmMcpAccess>("/crm/settings/mcp"),
+    queryFn: ({ signal }) => apiClient.get<CrmMcpAccess>("/crm/settings/mcp", undefined, signal),
     enabled: canViewTokens,
     staleTime: 60_000,
   });
@@ -103,7 +105,7 @@ export function useCrmMcpAccess() {
 
 export function useSetCrmMcpAccess() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["crm", "mcp", "access", "set"],
     mutationFn: (enabled: boolean) =>
       apiClient.put<CrmMcpAccess>("/crm/settings/mcp", { enabled }),

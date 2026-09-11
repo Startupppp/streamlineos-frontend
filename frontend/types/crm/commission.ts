@@ -114,7 +114,7 @@ export interface CommissionAccrualCurvePoint {
   cumulativeAmountMinor: number;
 }
 
-export interface ListEarningsParams {
+export type ListEarningsParams = {
   userId?: string;
   planId?: string;
   status?: CommissionEarningStatus;
@@ -122,11 +122,11 @@ export interface ListEarningsParams {
   to?: string;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface AccrualParams {
+export type AccrualParams = {
   userId?: string;
   planId?: string;
   /** Any date inside the period. The plan version decides how long that is. */
   on?: string;
-}
+};

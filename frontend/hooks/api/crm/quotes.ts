@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -130,7 +130,7 @@ export function useUpdateQuote() {
  */
 export function useSendQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "send"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/send`),

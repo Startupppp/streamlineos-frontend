@@ -24,6 +24,7 @@ jest.mock("@/hooks/api/access", () => {
     usePermissionGate: (permission: PermissionKey) =>
       permissionGate(permission, mockGranted.has(permission), true),
     useCan: (permission: PermissionKey) => mockGranted.has(permission),
+    useAccess: () => ({ data: { scopes: {}, isOrgOwner: false }, refetch: jest.fn() }),
   };
 });
 
@@ -105,7 +106,11 @@ describe("RepairPoliciesPanel", () => {
     renderPanel();
 
     await waitFor(() =>
-      expect(mockedGet).toHaveBeenCalledWith("/crm/autonomy/repair-policies"),
+      expect(mockedGet).toHaveBeenCalledWith(
+        "/crm/autonomy/repair-policies",
+        undefined,
+        expect.anything(),
+      ),
     );
   });
 
@@ -122,10 +127,11 @@ describe("RepairPoliciesPanel", () => {
     await user.click(switchFor(WHITESPACE.description));
 
     await waitFor(() => expect(mockedPatch).toHaveBeenCalledTimes(1));
-    expect(mockedPatch).toHaveBeenCalledWith("/crm/autonomy/repair-policies", {
-      repairClass: "email.whitespace",
-      enabled: true,
-    });
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/crm/autonomy/repair-policies",
+      { repairClass: "email.whitespace", enabled: true },
+      { headers: { "Idempotency-Key": expect.any(String) } },
+    );
   });
 
   it("takes one back", async () => {

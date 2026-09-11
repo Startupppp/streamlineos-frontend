@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CustomerHealthRosterParams,
   CustomerHealthRosterResponse,
@@ -22,7 +23,8 @@ export function useCustomerLifecycles(params?: ListLifecyclesParams) {
   const query = cleanParams(params);
   return useGatedQuery("crm:lifecycle:view", {
     queryKey: queryKeys.crmLifecycle.list(query),
-    queryFn: () => apiClient.get<ListLifecyclesResponse>("/crm/lifecycles", query),
+    queryFn: ({ signal }) =>
+      apiClient.get<ListLifecyclesResponse>("/crm/lifecycles", query, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -32,7 +34,8 @@ export function useCustomerHealthRoster(params?: CustomerHealthRosterParams) {
   const query = cleanParams(params);
   return useGatedQuery("crm:customer-health:view", {
     queryKey: queryKeys.crmLifecycle.healthRoster(query),
-    queryFn: () => apiClient.get<CustomerHealthRosterResponse>("/crm/customer-health", query),
+    queryFn: ({ signal }) =>
+      apiClient.get<CustomerHealthRosterResponse>("/crm/customer-health", query, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -40,7 +43,7 @@ export function useCustomerHealthRoster(params?: CustomerHealthRosterParams) {
 
 export function useRecomputeCustomerHealth() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:customer-health:manage", {
     mutationKey: ["crm", "customer-health", "recompute"],
     mutationFn: (partyId: string) =>
       apiClient.post<{ data: unknown }>(`/crm/customer-health/${partyId}/recompute`, {}),

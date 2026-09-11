@@ -70,6 +70,7 @@ jest.mock("@/hooks/api/access", () => {
     usePermissionGate: (permission: PermissionKey) =>
       permissionGate(permission, mockGranted.has(permission), true),
     useCan: (permission: PermissionKey) => mockGranted.has(permission),
+    useAccess: () => ({ data: { scopes: {}, isOrgOwner: false }, refetch: jest.fn() }),
   };
 });
 

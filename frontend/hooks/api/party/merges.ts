@@ -1,11 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, newIdempotencyKey } from "@/lib/api-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type {
   MergePartiesInput,
   MergePartiesResult,
@@ -41,7 +43,8 @@ export function usePartyDuplicates(params: PartyDuplicatesParams = {}) {
 
   return useGatedQuery("party:duplicates:view", {
     queryKey: directoryAndOwnershipQueryKeys.party.duplicates(query),
-    queryFn: () => apiClient.get<PartyDuplicatesPage>("/party/duplicates", query),
+    queryFn: ({ signal }) =>
+      apiClient.get<PartyDuplicatesPage>("/party/duplicates", query, signal),
     // A queue a person works through: fast-changing enough that a stale page
     // means merging a pair somebody else just resolved.
     staleTime: 30_000,
@@ -60,7 +63,7 @@ export function usePartyMerges(params: PartyMergesParams = {}) {
 
   return useGatedQuery("party:merges:manage", {
     queryKey: directoryAndOwnershipQueryKeys.party.merges(query),
-    queryFn: () => apiClient.get<PartyMergesPage>("/party/merges", query),
+    queryFn: ({ signal }) => apiClient.get<PartyMergesPage>("/party/merges", query, signal),
     staleTime: 30_000,
   });
 }
@@ -83,42 +86,39 @@ function invalidateMergeSurfaces(qc: ReturnType<typeof useQueryClient>) {
 
 export function useMergeParties() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "merges", "create"] as const,
-    mutationFn: (input: MergePartiesInput) =>
-      apiClient.post<MergePartiesResult>("/party/merges", input, {
-        /*
-         * Minted per intent, not per request. `authedFetch` supplies a fresh key
-         * to any mutation that arrives without one, which stops `@Idempotent`
-         * from 400ing but makes every retry a new operation — so a merge the
-         * user fired once, whose response was lost to a flaky connection, would
-         * merge again on retry. `newIdempotencyKey` here is minted when the
-         * mutation is called and reused for its retries, which is what the
-         * server's replay is for.
-         */
-        headers: { "Idempotency-Key": newIdempotencyKey() },
-      }),
-    onSuccess: () => invalidateMergeSurfaces(qc),
-  });
+  return useAuthorizedIdempotentMutation<MergePartiesResult, Error, MergePartiesInput>(
+    "party:merges:manage",
+    {
+      mutationKey: ["party", "merges", "create"] as const,
+      mutationFn: (input, idempotencyKey) =>
+        apiClient.post<MergePartiesResult>("/party/merges", input, {
+          headers: { "Idempotency-Key": idempotencyKey },
+        }),
+      onSuccess: () => invalidateMergeSurfaces(qc),
+    },
+  );
 }
 
 export function useRevertPartyMerge() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "merges", "revert"] as const,
-    mutationFn: (partyMergeId: string) =>
-      apiClient.post<RevertMergeResult>(
-        `/party/merges/${partyMergeId}/revert`,
-        {},
-        { headers: { "Idempotency-Key": newIdempotencyKey() } },
-      ),
-    onSuccess: () => invalidateMergeSurfaces(qc),
-  });
+  return useAuthorizedIdempotentMutation<RevertMergeResult, Error, string>(
+    "party:merges:manage",
+    {
+      mutationKey: ["party", "merges", "revert"] as const,
+      mutationFn: (partyMergeId, idempotencyKey) =>
+        apiClient.post<RevertMergeResult>(
+          `/party/merges/${partyMergeId}/revert`,
+          {},
+          { headers: { "Idempotency-Key": idempotencyKey } },
+        ),
+      onSuccess: () => invalidateMergeSurfaces(qc),
+    },
+  );
 }
 
 export function useDismissPartyDuplicate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:merges:manage", {
     mutationKey: ["party", "duplicates", "dismiss"] as const,
     mutationFn: (candidateId: string) =>
       apiClient.delete<{ dismissed: boolean }>(`/party/duplicates/${candidateId}`),
@@ -137,16 +137,23 @@ export function useDismissPartyDuplicate() {
  */
 export function useDetectPartyDuplicates() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedIdempotentMutation<
+    {
+      autoMerged: { survivorPartyId: string; mergedPartyId: string }[];
+      queued: { candidateId: string; otherPartyId: string; score: number }[];
+    },
+    Error,
+    string
+  >("party:merges:manage", {
     mutationKey: ["party", "duplicates", "detect"] as const,
-    mutationFn: (partyId: string) =>
+    mutationFn: (partyId, idempotencyKey) =>
       apiClient.post<{
         autoMerged: { survivorPartyId: string; mergedPartyId: string }[];
         queued: { candidateId: string; otherPartyId: string; score: number }[];
       }>(
         `/party/parties/${partyId}/detect-duplicates`,
         {},
-        { headers: { "Idempotency-Key": newIdempotencyKey() } },
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => invalidateMergeSurfaces(qc),
   });

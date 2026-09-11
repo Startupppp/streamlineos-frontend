@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CallAnalysisReleaseResponse,
   CallAnalysisResponse,
@@ -32,8 +33,12 @@ import type {
 export function useCallAnalysis(activityId: string) {
   return useGatedQuery("crm:call-analysis:view", {
     queryKey: queryKeys.crmCallIntelligence.analysis(activityId),
-    queryFn: () =>
-      apiClient.get<CallAnalysisResponse>(`/crm/calls/${activityId}/analysis`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CallAnalysisResponse>(
+        `/crm/calls/${activityId}/analysis`,
+        undefined,
+        signal,
+      ),
     staleTime: 5 * 60_000,
     enabled: activityId.length > 0,
     /**
@@ -52,7 +57,7 @@ export function useCallAnalysis(activityId: string) {
  */
 export function useRunCallAnalysis() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:call-analysis:run", {
     mutationKey: ["crm", "call-intelligence", "run"],
     mutationFn: (activityId: string) =>
       apiClient.post<CallAnalysisResponse>(`/crm/calls/${activityId}/analysis`, {}),
@@ -76,7 +81,7 @@ export function useRunCallAnalysis() {
  */
 export function useReleaseCallAnalysis() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:call-analysis:view", {
     mutationKey: ["crm", "call-intelligence", "release"],
     mutationFn: ({ activityId, note }: { activityId: string; note?: string }) =>
       apiClient.post<CallAnalysisReleaseResponse>(
@@ -102,8 +107,8 @@ export function useReleaseCallAnalysis() {
 export function useCoachingDigest(sinceDays = 30) {
   return useGatedQuery("crm:call-analysis:view-team", {
     queryKey: queryKeys.crmCallIntelligence.coaching(sinceDays),
-    queryFn: () =>
-      apiClient.get<CoachingDigestResponse>("/crm/calls/coaching", { sinceDays }),
+    queryFn: ({ signal }) =>
+      apiClient.get<CoachingDigestResponse>("/crm/calls/coaching", { sinceDays }, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -124,7 +129,8 @@ export function useCoachingDigest(sinceDays = 30) {
 export function useCallRepMetrics(params: { sinceDays: number; page: number; limit: number }) {
   return useGatedQuery("crm:call-analysis:view", {
     queryKey: queryKeys.crmCallIntelligence.reps(params),
-    queryFn: () => apiClient.get<RepCallMetricsResponse>("/crm/calls/reps", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<RepCallMetricsResponse>("/crm/calls/reps", params, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
@@ -146,7 +152,8 @@ export function useCallExemplars(params: {
 }) {
   return useGatedQuery("crm:call-analysis:view", {
     queryKey: queryKeys.crmCallIntelligence.exemplars(params),
-    queryFn: () => apiClient.get<CallExemplarsResponse>("/crm/calls/exemplars", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<CallExemplarsResponse>("/crm/calls/exemplars", params, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
