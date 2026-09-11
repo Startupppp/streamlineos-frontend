@@ -1,12 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
-  CUSTOMER_RETURNS_PERMISSION,
   returnListParams,
   type ApproveReturnInput,
   type CancelReturnInput,
@@ -84,13 +84,14 @@ export function useCustomerReturns(
   filters?: ReturnFilters,
   options?: ListOptions<PaginatedResponse<CustomerReturnSummary>>,
 ) {
-  const canView = useCan(CUSTOMER_RETURNS_PERMISSION);
+  const canView = useCan("inventory:customer-returns:manage");
   return useQuery<PaginatedResponse<CustomerReturnSummary>, Error>({
     queryKey: queryKeys.inventory.customerReturns(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<CustomerReturnSummary>>(
         "/inventory/customer-returns",
         returnListParams(filters),
+        signal,
       ),
     staleTime: 30_000,
     ...options,
@@ -99,10 +100,15 @@ export function useCustomerReturns(
 }
 
 export function useCustomerReturn(returnId: number | null) {
-  const canView = useCan(CUSTOMER_RETURNS_PERMISSION);
+  const canView = useCan("inventory:customer-returns:manage");
   return useQuery<CustomerReturnSummary, Error>({
     queryKey: queryKeys.inventory.customerReturn(returnId ?? 0),
-    queryFn: () => apiClient.get<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CustomerReturnSummary>(
+        `/inventory/customer-returns/${returnId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 30_000,
     enabled: canView && returnId !== null,
   });
@@ -126,11 +132,11 @@ export function useCreateCustomerReturn() {
  */
 export function useInspectCustomerReturnLine() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { lineId: number; disposition: CustomerReturnDisposition },
     Error,
     InspectReturnLineInput
-  >({
+  >("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "inspect"],
     mutationFn: ({ returnId, lineId, disposition, inspectionNotes }) =>
       apiClient.post<{ lineId: number; disposition: CustomerReturnDisposition }>(

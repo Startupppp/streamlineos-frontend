@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * The resumable import, which was written on the backend and called by nothing.
@@ -100,7 +101,7 @@ export function useStageImportRows() {
  * replaying one would stall the loop rather than protect it.
  */
 export function useProcessImportChunk() {
-  return useMutation<StagedImportProgress, Error, number>({
+  return useAuthorizedMutation<StagedImportProgress, Error, number>("inventory:import", {
     mutationKey: ["inventory", "import", "staged", "process"],
     mutationFn: (jobId) =>
       apiClient.post<StagedImportProgress>(`/inventory/import/staged/${jobId}/process`, {}),
@@ -124,24 +125,15 @@ export function useCancelStagedImport() {
   });
 }
 
-export function useStagedImportProgress(jobId: number | null) {
-  const canImport = useCan("inventory:import");
-  return useQuery<StagedImportProgress, Error>({
-    queryKey: queryKeys.inventoryStagedImport.progress(jobId ?? 0),
-    queryFn: () => apiClient.get<StagedImportProgress>(`/inventory/import/staged/${jobId ?? 0}`),
-    staleTime: 0,
-    enabled: canImport && jobId !== null,
-  });
-}
-
 export function useStagedImportErrors(jobId: number | null, page = 1, limit = 50) {
   const canImport = useCan("inventory:import");
   return useQuery<{ items: StagedImportRowError[]; total: number }, Error>({
     queryKey: queryKeys.inventoryStagedImport.errors(jobId ?? 0, page),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ items: StagedImportRowError[]; total: number }>(
         `/inventory/import/staged/${jobId ?? 0}/errors`,
         { page: String(page), limit: String(limit) },
+        signal,
       ),
     staleTime: 0,
     enabled: canImport && jobId !== null,

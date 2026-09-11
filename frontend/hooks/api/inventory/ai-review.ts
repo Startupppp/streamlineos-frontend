@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 /* ------------------------------------------------------------------ *
@@ -89,7 +90,7 @@ export function useInventoryAnomalies(filters?: InvAnomalyFilters) {
   const canView = useCan("inventory:ai:read");
   return useQuery<InvAnomalyPage, Error>({
     queryKey: queryKeys.inventoryAiReview.anomalies(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InvAnomalyPage>("/inventory/ai/anomalies", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.type ? { type: filters.type } : {}),
@@ -99,21 +100,9 @@ export function useInventoryAnomalies(filters?: InvAnomalyFilters) {
           : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 60_000,
-  });
-}
-
-/** What each detector claims and how. Static, so it is cached hard. */
-export function useInventoryAnomalyDetectors() {
-  const canView = useCan("inventory:ai:read");
-  return useQuery<{ detectors: InvAnomalyDetector[] }, Error>({
-    queryKey: queryKeys.inventoryAiReview.detectors,
-    queryFn: () =>
-      apiClient.get<{ detectors: InvAnomalyDetector[] }>("/inventory/ai/anomalies/detectors"),
-    enabled: canView,
-    staleTime: 30 * 60_000,
   });
 }
 
@@ -125,7 +114,7 @@ export interface ReviewAnomalyInput {
 
 export function useReviewInventoryAnomaly() {
   const qc = useQueryClient();
-  return useMutation<InvAnomalyRow, Error, ReviewAnomalyInput>({
+  return useAuthorizedMutation<InvAnomalyRow, Error, ReviewAnomalyInput>("inventory:ai:manage", {
     mutationKey: queryKeys.inventoryAiReview.review,
     mutationFn: ({ insightId, action, note }) =>
       apiClient.patch<InvAnomalyRow>(`/inventory/ai/anomalies/${insightId}/review`, {
@@ -223,11 +212,11 @@ export interface InvDemandRiskResult {
  * could refetch it on a window focus.
  */
 export function useInventoryDemandRisk() {
-  return useMutation<
+  return useAuthorizedMutation<
     InvDemandRiskResult,
     Error,
     { variantId: number; warehouseId?: number }
-  >({
+  >("inventory:ai:read", {
     mutationKey: queryKeys.inventoryAiReview.demandRisk,
     mutationFn: (body) =>
       apiClient.post<InvDemandRiskResult>("/inventory/ai/demand-risk", body),
@@ -274,7 +263,6 @@ export interface SubmitInvAiFeedbackInput {
  * gateway's own usage log rather than believing the browser.
  */
 export function useSubmitInventoryAiFeedback() {
-  const qc = useQueryClient();
   return useIdempotentMutation<
     { id: number; verdict: InvAiVerdict; surface: string; createdAt: string },
     Error,
@@ -285,38 +273,5 @@ export function useSubmitInventoryAiFeedback() {
       apiClient.post("/inventory/ai/feedback", body, {
         headers: { "Idempotency-Key": idempotencyKey },
       }),
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.inventoryAiReview.feedbackSummary(),
-      });
-    },
-  });
-}
-
-export interface InvAiFeedbackSummary {
-  days: number;
-  surfaces: Array<{
-    surface: string;
-    useful: number;
-    wrong: number;
-    stale: number;
-    unsafe: number;
-    total: number;
-    /** Excludes `unsafe` — an incident is not a low score. */
-    usefulRatio: number | null;
-  }>;
-  unsafeTotal: number;
-}
-
-export function useInventoryAiFeedbackSummary(days = 30) {
-  const canManage = useCan("inventory:ai:manage");
-  return useQuery<InvAiFeedbackSummary, Error>({
-    queryKey: queryKeys.inventoryAiReview.feedbackSummary({ days }),
-    queryFn: () =>
-      apiClient.get<InvAiFeedbackSummary>("/inventory/ai/feedback/summary", {
-        days: String(days),
-      }),
-    enabled: canManage,
-    staleTime: 5 * 60_000,
   });
 }

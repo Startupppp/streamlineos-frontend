@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * NEO-9, NEO-11 and NEO-12 - kits, consignment and the dock.
@@ -67,7 +68,8 @@ export function useKitBom(kitVariantId: number | null) {
   const canView = useCan("inventory:products:read");
   return useQuery<KitComponent[], Error>({
     queryKey: queryKeys.inventory.kitBom(kitVariantId ?? 0),
-    queryFn: () => apiClient.get<KitComponent[]>(`/inventory/kits/${kitVariantId}/bom`),
+    queryFn: ({ signal }) =>
+      apiClient.get<KitComponent[]>(`/inventory/kits/${kitVariantId}/bom`, undefined, signal),
     enabled: canView && (kitVariantId ?? 0) > 0,
     staleTime: 60_000,
   });
@@ -77,11 +79,11 @@ export function useKitBuildable(kitVariantId: number | null, warehouseId?: numbe
   const canView = useCan("inventory:stock:read");
   return useQuery<{ kitVariantId: number; warehouseId: number | null; buildable: string }, Error>({
     queryKey: queryKeys.inventory.kitBuildable(kitVariantId ?? 0, warehouseId ?? null),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get("/inventory/kits/buildable", {
         kitVariantId: String(kitVariantId ?? 0),
         ...(warehouseId ? { warehouseId: String(warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView && (kitVariantId ?? 0) > 0,
     staleTime: 30_000,
   });
@@ -89,11 +91,11 @@ export function useKitBuildable(kitVariantId: number | null, warehouseId?: numbe
 
 export function useSetKitBom() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     KitComponent[],
     Error,
     { kitVariantId: number; components: Array<{ componentVariantId: number; quantityPer: string }> }
-  >({
+  >("inventory:products:update", {
     mutationKey: ["inventory", "kits", "set-bom"],
     mutationFn: ({ kitVariantId, components }) =>
       apiClient.put<KitComponent[]>(`/inventory/kits/${kitVariantId}/bom`, { components }),
@@ -114,7 +116,7 @@ export function useAssembleKit() {
     mutationKey: ["inventory", "kits", "assemble"],
     mutationFn: ({ disassemble, ...data }, idempotencyKey) =>
       apiClient.post<KitAssemblyResult>(
-        disassemble ? "/inventory/kits/disassemble" : "/inventory/kits/assemble",
+        `/inventory/kits/${disassemble ? "disassemble" : "assemble"}`,
         data, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
@@ -130,10 +132,10 @@ export function useConsignedStock(warehouseId?: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ConsignedRow[], Error>({
     queryKey: queryKeys.inventory.consignedStock(warehouseId ?? null),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ConsignedRow[]>("/inventory/ownership/consigned", {
         ...(warehouseId ? { warehouseId: String(warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -166,10 +168,10 @@ export function useDockDoors(warehouseId?: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<DockDoor[], Error>({
     queryKey: queryKeys.inventory.dockDoors(warehouseId ?? null),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DockDoor[]>("/inventory/dock/doors", {
         ...(warehouseId ? { warehouseId: String(warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 5 * 60_000,
   });
@@ -179,12 +181,12 @@ export function useDockAppointments(range: { from: string; to: string; warehouse
   const canView = useCan("inventory:dock:manage");
   return useQuery<DockAppointment[], Error>({
     queryKey: queryKeys.inventory.dockAppointments(range),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DockAppointment[]>("/inventory/dock/appointments", {
         from: range.from,
         to: range.to,
         ...(range.warehouseId ? { warehouseId: String(range.warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -216,11 +218,11 @@ export function useBookAppointment() {
 
 export function useSetAppointmentStatus() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     DockAppointment,
     Error,
     { appointmentId: number; status: "ARRIVED" | "COMPLETED" | "CANCELLED" | "NO_SHOW" }
-  >({
+  >("inventory:dock:manage", {
     mutationKey: ["inventory", "dock", "status"],
     mutationFn: ({ appointmentId, status }) =>
       apiClient.patch<DockAppointment>(`/inventory/dock/appointments/${appointmentId}`, { status }),

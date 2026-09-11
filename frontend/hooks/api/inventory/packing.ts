@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /** Exactly the shape `GET /inventory/packages/queue` returns. */
 export interface PackingQueueRow {
@@ -77,12 +78,12 @@ export function usePackingQueue(params?: PackingQueueParams) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<PackingQueueResponse, Error>({
     queryKey: queryKeys.packing.queue(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PackingQueueResponse>("/inventory/packages/queue", {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 15_000,
     enabled: canView,
   });
@@ -95,8 +96,12 @@ export function usePackageReconciliation(
   const canView = useCan("inventory:packages:manage");
   return useQuery<PackingReconciliation, Error>({
     queryKey: queryKeys.packing.reconciliation(packageId),
-    queryFn: () =>
-      apiClient.get<PackingReconciliation>(`/inventory/packages/${packageId}/reconciliation`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PackingReconciliation>(
+        `/inventory/packages/${packageId}/reconciliation`,
+        undefined,
+        signal,
+      ),
     staleTime: 15_000,
     ...options,
     enabled: canView && packageId > 0 && (options?.enabled ?? true),
@@ -138,7 +143,11 @@ export function useScanIntoPackage() {
  * packing.
  */
 export function useSuggestCarton() {
-  return useMutation<CartonSuggestion, Error, { lines: { productVariantId: number; quantity: number }[] }>({
+  return useAuthorizedMutation<
+    CartonSuggestion,
+    Error,
+    { lines: { productVariantId: number; quantity: number }[] }
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "cartonization", "suggest"],
     mutationFn: (body) => apiClient.post<CartonSuggestion>("/inventory/cartonization/suggest", body),
   });

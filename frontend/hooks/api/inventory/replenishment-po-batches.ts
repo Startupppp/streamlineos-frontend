@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface BatchableProposal {
   proposalId: number;
@@ -122,7 +123,7 @@ export function useBatchableProposals(params?: BatchableProposalsParams) {
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<BatchableProposalsResponse, Error>({
     queryKey: queryKeys.inventoryPlanning.batchableProposals(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<BatchableProposalsResponse>(
         "/inventory/replenishment/po-batches/proposals",
         {
@@ -131,6 +132,7 @@ export function useBatchableProposals(params?: BatchableProposalsParams) {
           ...(params?.page ? { page: String(params.page) } : {}),
           ...(params?.limit ? { limit: String(params.limit) } : {}),
         },
+        signal,
       ),
     staleTime: 60_000,
   enabled: canRead,
@@ -150,11 +152,15 @@ export function usePoBatchPreview(
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<PoBatchPreview, Error>({
     queryKey: queryKeys.inventoryPlanning.poBatchPreview(proposalIds, overrides),
-    queryFn: () =>
-      apiClient.post<PoBatchPreview>("/inventory/replenishment/po-batches/preview", {
-        proposalIds: [...proposalIds],
-        overrides: [...overrides],
-      }),
+    queryFn: ({ signal }) =>
+      apiClient.post<PoBatchPreview>(
+        "/inventory/replenishment/po-batches/preview",
+        {
+          proposalIds: [...proposalIds],
+          overrides: [...overrides],
+        },
+        { signal },
+      ),
     staleTime: 30_000,
     ...options,
     enabled: canRead && proposalIds.length > 0 && (options?.enabled ?? true),
@@ -190,18 +196,21 @@ export interface RefreshedProposals {
  */
 export function useRefreshProposals() {
   const qc = useQueryClient();
-  return useMutation<RefreshedProposals, Error, RefreshProposalsInput>({
-    mutationKey: ["inventory", "planning", "proposals", "refresh"],
-    mutationFn: (input) =>
-      apiClient.post<RefreshedProposals>("/inventory/forecasting/versions/refresh", input),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.inventoryPlanning.batchableProposalsList,
-      });
-      qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.poBatchPreviewList });
-      qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.driftWatchlistList });
+  return useAuthorizedMutation<RefreshedProposals, Error, RefreshProposalsInput>(
+    "inventory:replenishment:manage",
+    {
+      mutationKey: ["inventory", "planning", "proposals", "refresh"],
+      mutationFn: (input) =>
+        apiClient.post<RefreshedProposals>("/inventory/forecasting/versions/refresh", input),
+      onSuccess: () => {
+        qc.invalidateQueries({
+          queryKey: queryKeys.inventoryPlanning.batchableProposalsList,
+        });
+        qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.poBatchPreviewList });
+        qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.driftWatchlistList });
+      },
     },
-  });
+  );
 }
 
 export function useCreatePoBatch() {

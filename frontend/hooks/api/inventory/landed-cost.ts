@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * Freight, duty, insurance and handling, landed into the cost layers of the
@@ -126,6 +127,7 @@ export interface LandedCostApplyResult {
 }
 
 export interface LandedCostFilters {
+  [key: string]: unknown;
   grnId?: number;
   status?: LandedCostStatus;
   page?: number;
@@ -138,8 +140,8 @@ export function useLandedCostVouchers(filters?: LandedCostFilters) {
     { items: LandedCostVoucherListItem[]; total: number; page: number; totalPages: number },
     Error
   >({
-    queryKey: queryKeys.inventoryLandedCost.list(filters as Record<string, unknown>),
-    queryFn: () => {
+    queryKey: queryKeys.inventoryLandedCost.list(filters),
+    queryFn: ({ signal }) => {
       const params: Record<string, string> = {};
       if (filters?.grnId) params.grnId = String(filters.grnId);
       if (filters?.status) params.status = filters.status;
@@ -150,7 +152,7 @@ export function useLandedCostVouchers(filters?: LandedCostFilters) {
         total: number;
         page: number;
         totalPages: number;
-      }>("/inventory/landed-cost", params);
+      }>("/inventory/landed-cost", params, signal);
     },
     staleTime: 60_000,
     enabled: canView,
@@ -161,8 +163,12 @@ export function useLandedCostVoucher(voucherId: number | null) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<LandedCostVoucherDetail, Error>({
     queryKey: queryKeys.inventoryLandedCost.detail(voucherId ?? 0),
-    queryFn: () =>
-      apiClient.get<LandedCostVoucherDetail>(`/inventory/landed-cost/${voucherId ?? 0}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<LandedCostVoucherDetail>(
+        `/inventory/landed-cost/${voucherId ?? 0}`,
+        undefined,
+        signal,
+      ),
     staleTime: 60_000,
     enabled: canView && voucherId !== null,
   });
@@ -228,12 +234,15 @@ export function useApplyLandedCostVoucher() {
 
 export function useDeleteLandedCostVoucher() {
   const qc = useQueryClient();
-  return useMutation<{ deleted: boolean }, Error, number>({
-    mutationKey: ["inventory", "landed-cost", "delete"],
-    mutationFn: (voucherId) =>
-      apiClient.delete<{ deleted: boolean }>(`/inventory/landed-cost/${voucherId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventoryLandedCost.listAll });
+  return useAuthorizedMutation<{ deleted: boolean }, Error, number>(
+    "inventory:landed-cost:manage",
+    {
+      mutationKey: ["inventory", "landed-cost", "delete"],
+      mutationFn: (voucherId) =>
+        apiClient.delete<{ deleted: boolean }>(`/inventory/landed-cost/${voucherId}`),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: queryKeys.inventoryLandedCost.listAll });
+      },
     },
-  });
+  );
 }

@@ -173,15 +173,9 @@ function readFencedRoutes(): FencedRoute[] {
   return routes;
 }
 
-function readCallSites(): CallSite[] {
-  const files = [
-    ...walk(FRONTEND_INVENTORY_HOOKS, (n) => /\.tsx?$/.test(n) && !/\.test\.tsx?$/.test(n)),
-    join(FRONTEND_API_HOOKS, "inv-ai-explain.ts"),
-  ];
+function parseCallSites(source: string, file: string): CallSite[] {
   const sites: CallSite[] = [];
-
-  for (const file of files) {
-    const source = readFileSync(file, "utf8");
+  {
     const constants = new Map<string, string>();
     for (const m of source.matchAll(
       /\b(?:const|let)\s+([A-Za-z0-9_$]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|`([^`$]*)`)/g,
@@ -239,7 +233,7 @@ function readCallSites(): CallSite[] {
         .sort((a, b) => b.at - a.at)[0]?.name;
 
       sites.push({
-        file: file.slice(FRONTEND_API_HOOKS.length + 1),
+        file,
         method: (m[1] ?? "").toUpperCase(),
         path: normalised,
         segments: normalised.split("/").filter(Boolean),
@@ -256,6 +250,16 @@ function readCallSites(): CallSite[] {
     }
   }
   return sites;
+}
+
+function readCallSites(): CallSite[] {
+  const files = [
+    ...walk(FRONTEND_INVENTORY_HOOKS, (n) => /\.tsx?$/.test(n) && !/\.test\.tsx?$/.test(n)),
+    join(FRONTEND_API_HOOKS, "inv-ai-explain.ts"),
+  ];
+  return files.flatMap((file) =>
+    parseCallSites(readFileSync(file, "utf8"), file.slice(FRONTEND_API_HOOKS.length + 1)),
+  );
 }
 
 /** A backend `:param` and a frontend `${…}` both match any single segment. */
@@ -291,7 +295,14 @@ describe("inventory commands carry a key scoped to the operator's intent", () =>
     expect(new Set(sites.map((s) => s.file)).size).toBeGreaterThan(15);
     expect(fencedCalls.length).toBeGreaterThan(80);
     // The literal-only matcher this replaced could not see `apiClient.post(BASE, …)`.
-    expect(sites.some((s) => s.viaConstant)).toBe(true);
+    const fromConstant = parseCallSites(
+      'const BASE = "/inventory/quality/inspection-plans";\n' +
+        'apiClient.post(BASE, payload, { headers: { "Idempotency-Key": key } });',
+      "fixture.ts",
+    );
+    expect(fromConstant.map((s) => ({ path: s.path, viaConstant: s.viaConstant }))).toEqual([
+      { path: "/inventory/quality/inspection-plans", viaConstant: true },
+    ]);
   });
 
   it("never leaves a fenced command relying on the per-attempt key api-client mints", () => {

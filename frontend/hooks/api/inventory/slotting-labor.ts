@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { LocationType } from "@/hooks/api/inventory/warehouses";
 
 /**
@@ -81,10 +82,10 @@ export function useSlottingRules(warehouseId?: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<SlottingRule[], Error>({
     queryKey: queryKeys.inventory.slottingRules(warehouseId ?? null),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SlottingRule[]>("/inventory/slotting/rules", {
         ...(warehouseId ? { warehouseId: String(warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -123,15 +124,18 @@ export function useCreateSlottingRule() {
  */
 export function useSetSlottingRuleActive() {
   const qc = useQueryClient();
-  return useMutation<SlottingRule, Error, { ruleId: number; isActive: boolean }>({
-    mutationKey: ["inventory", "slotting", "rule", "setActive"],
-    mutationFn: ({ ruleId, isActive }) =>
-      apiClient.patch<SlottingRule>(`/inventory/slotting/rules/${ruleId}`, { isActive }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRulesAll });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
+  return useAuthorizedMutation<SlottingRule, Error, { ruleId: number; isActive: boolean }>(
+    "inventory:warehouses:manage",
+    {
+      mutationKey: ["inventory", "slotting", "rule", "setActive"],
+      mutationFn: ({ ruleId, isActive }) =>
+        apiClient.patch<SlottingRule>(`/inventory/slotting/rules/${ruleId}`, { isActive }),
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRulesAll });
+        qc.invalidateQueries({ queryKey: queryKeys.inventory.slottingRecommendationsAll });
+      },
     },
-  });
+  );
 }
 
 export function useSlottingRecommendations(filters?: {
@@ -141,11 +145,11 @@ export function useSlottingRecommendations(filters?: {
   const canView = useCan("inventory:stock:read");
   return useQuery<SlottingRecommendation[], Error>({
     queryKey: queryKeys.inventory.slottingRecommendations(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SlottingRecommendation[]>("/inventory/slotting/recommendations", {
         status: filters?.status ?? "PENDING",
         ...(filters?.warehouseId ? { warehouseId: String(filters.warehouseId) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -196,12 +200,12 @@ export function useLaborBoard(filters?: {
   const canView = useCan("inventory:labor:read");
   return useQuery<LaborBoardRow[], Error>({
     queryKey: queryKeys.inventory.laborBoard(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LaborBoardRow[]>("/inventory/labor/board", {
         windowDays: String(filters?.windowDays ?? 7),
         ...(filters?.warehouseId ? { warehouseId: String(filters.warehouseId) } : {}),
         ...(filters?.taskKind ? { taskKind: filters.taskKind } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 60_000,
   });

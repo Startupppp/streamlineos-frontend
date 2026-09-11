@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 import type {
   CreatePickWaveInput,
@@ -45,14 +46,14 @@ export function usePickWaves(
 
   return useQuery<PickWaveListResponse, Error>({
     queryKey: queryKeys.picking.waves(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PickWaveListResponse>("/inventory/picking/waves", {
         page: String(params.page),
         limit: String(params.limit),
         assignment: params.assignment,
         ...(params.status ? { status: params.status } : {}),
         ...(params.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-      }),
+      }, signal),
     // A queue whose whole value is being current. A picker looking at a wave
     // somebody else claimed thirty seconds ago is the failure this screen exists
     // to prevent.
@@ -69,8 +70,12 @@ export function usePickWave(
   const canView = useCan(WAVE_READ_KEY);
   return useQuery<PickWaveDetail, Error>({
     queryKey: queryKeys.picking.wave(pickListId),
-    queryFn: () =>
-      apiClient.get<PickWaveDetail>(`/inventory/picking/waves/${pickListId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PickWaveDetail>(
+        `/inventory/picking/waves/${pickListId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 15_000,
     ...options,
     enabled: canView && pickListId > 0 && (options?.enabled ?? true),
@@ -107,11 +112,14 @@ export interface WaveJoinDecision {
 }
 
 export function useProposeWaveJoin() {
-  return useMutation<WaveJoinDecision, Error, CreatePickWaveInput>({
-    mutationKey: ["inventory", "picking", "proposeJoin"],
-    mutationFn: (data) =>
-      apiClient.post<WaveJoinDecision>("/inventory/picking/waves/propose-join", data),
-  });
+  return useAuthorizedMutation<WaveJoinDecision, Error, CreatePickWaveInput>(
+    "inventory:sales-orders:ship",
+    {
+      mutationKey: ["inventory", "picking", "proposeJoin"],
+      mutationFn: (data) =>
+        apiClient.post<WaveJoinDecision>("/inventory/picking/waves/propose-join", data),
+    },
+  );
 }
 
 /**
@@ -159,7 +167,11 @@ export function useClaimPickWave() {
 
 export function useAbandonPickWave() {
   const qc = useQueryClient();
-  return useMutation<{ pickListId: number; assignedTo: null; released: boolean }, Error, number>({
+  return useAuthorizedMutation<
+    { pickListId: number; assignedTo: null; released: boolean },
+    Error,
+    number
+  >("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "picking", "abandon"],
     mutationFn: (pickListId) =>
       apiClient.post(`/inventory/picking/waves/${pickListId}/abandon`, {}),

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * The gauges that say whether the module is healthy, and the two switches that
@@ -29,7 +30,8 @@ export function useInventoryMetrics() {
   const canView = useCan("inventory:settings:manage");
   return useQuery<InventoryMetricsSnapshot, Error>({
     queryKey: queryKeys.inventorySystemHealth.metrics,
-    queryFn: () => apiClient.get<InventoryMetricsSnapshot>("/inventory/metrics"),
+    queryFn: ({ signal }) =>
+      apiClient.get<InventoryMetricsSnapshot>("/inventory/metrics", undefined, signal),
     // Gauges an operator watches while they fix something. Cheap by design —
     // one round trip for every gauge — so it is safe to keep this short.
     staleTime: 15_000,
@@ -46,7 +48,7 @@ export function useInventoryMetrics() {
  */
 export function useRunExpirySweep() {
   const qc = useQueryClient();
-  return useMutation<{ events: number }, Error, void>({
+  return useAuthorizedMutation<{ events: number }, Error, void>("inventory:settings:manage", {
     mutationKey: ["inventory", "maintenance", "expiry-sweep"],
     mutationFn: () => apiClient.post<{ events: number }>("/inventory/maintenance/expiry-sweep", {}),
     onSuccess: () => {
@@ -84,7 +86,8 @@ export function useShelfLifeRules() {
   const canManage = useCan("inventory:settings:manage");
   return useQuery<ShelfLifeRule[], Error>({
     queryKey: queryKeys.inventorySystemHealth.shelfLifeRules,
-    queryFn: () => apiClient.get<ShelfLifeRule[]>("/inventory/settings/shelf-life-rules"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ShelfLifeRule[]>("/inventory/settings/shelf-life-rules", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });
@@ -92,12 +95,15 @@ export function useShelfLifeRules() {
 
 export function usePutShelfLifeRule() {
   const qc = useQueryClient();
-  return useMutation<ShelfLifeRule, Error, PutShelfLifeRuleInput>({
-    mutationKey: ["inventory", "settings", "shelf-life-rule", "put"],
-    mutationFn: (input) =>
-      apiClient.put<ShelfLifeRule>("/inventory/settings/shelf-life-rules", input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventorySystemHealth.shelfLifeRules });
+  return useAuthorizedMutation<ShelfLifeRule, Error, PutShelfLifeRuleInput>(
+    "inventory:settings:manage",
+    {
+      mutationKey: ["inventory", "settings", "shelf-life-rule", "put"],
+      mutationFn: (input) =>
+        apiClient.put<ShelfLifeRule>("/inventory/settings/shelf-life-rules", input),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: queryKeys.inventorySystemHealth.shelfLifeRules });
+      },
     },
-  });
+  );
 }

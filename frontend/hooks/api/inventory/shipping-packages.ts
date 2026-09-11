@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PackageStatus } from "@/features/inventory/lib";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * B6. These are the column names the API actually returns and accepts.
@@ -63,14 +64,14 @@ export function usePackages(params?: PackageQueryParams) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<PackageListResponse, Error>({
     queryKey: queryKeys.inventory.packages(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PackageListResponse>("/inventory/packages", {
         ...(params?.shipmentId ? { shipmentId: String(params.shipmentId) } : {}),
         ...(params?.soId ? { soId: String(params.soId) } : {}),
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -80,7 +81,8 @@ export function usePackageDetail(packageId: number) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<Package, Error>({
     queryKey: queryKeys.inventory.packageDetail(packageId),
-    queryFn: () => apiClient.get<Package>(`/inventory/packages/${packageId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<Package>(`/inventory/packages/${packageId}`, undefined, signal),
     enabled: canView && packageId > 0,
     staleTime: 60_000,
   });
@@ -104,17 +106,20 @@ export function useCreatePackage() {
 
 export function useUpdatePackageLines() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, { packageId: number; lines: PackageWriteLine[] }>({
-    mutationKey: ["inventory", "package", "lines", "update"],
-    mutationFn: ({ packageId, lines }) =>
-      apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
-      void qc.invalidateQueries({ queryKey: queryKeys.packing.reconciliation(vars.packageId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
+  return useAuthorizedMutation<Package, Error, { packageId: number; lines: PackageWriteLine[] }>(
+    "inventory:packages:manage",
+    {
+      mutationKey: ["inventory", "package", "lines", "update"],
+      mutationFn: ({ packageId, lines }) =>
+        apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }),
+      onSuccess: (_, vars) => {
+        qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
+        qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
+        void qc.invalidateQueries({ queryKey: queryKeys.packing.reconciliation(vars.packageId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
+      },
     },
-  });
+  );
 }
 
 export function useClosePackage() {

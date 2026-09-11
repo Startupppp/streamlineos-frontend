@@ -33,6 +33,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, refetch: jest.fn() }),
   usePermissionGate: (permission: string) => ({
     permission,
     allowed: true,

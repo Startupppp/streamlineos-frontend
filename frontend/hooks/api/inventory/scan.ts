@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * B2 — `POST /inventory/barcode/scan/capture`, as the API actually shapes it.
@@ -128,14 +128,17 @@ export interface CaptureScanInput {
  * invalidates.
  */
 export function useCaptureScan() {
-  return useMutation<ScanCaptureResult, Error, CaptureScanInput>({
-    mutationKey: ["inventory", "barcode", "capture"],
-    mutationFn: ({ payload, idempotencyKey }) =>
-      apiClient.post<ScanCaptureResult>(
-        "/inventory/barcode/scan/capture",
-        { payload },
-        { headers: { "Idempotency-Key": idempotencyKey } },
-      ),
-  });
+  return useAuthorizedMutation<ScanCaptureResult, Error, CaptureScanInput>(
+    "inventory:stock:read",
+    {
+      mutationKey: ["inventory", "barcode", "capture"],
+      mutationFn: ({ payload, idempotencyKey }) =>
+        apiClient.post<ScanCaptureResult>(
+          "/inventory/barcode/scan/capture",
+          { payload },
+          { headers: { "Idempotency-Key": idempotencyKey } },
+        ),
+    },
+  );
 }
 

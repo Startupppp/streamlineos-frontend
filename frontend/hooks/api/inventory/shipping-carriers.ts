@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface Carrier {
   id: number;
@@ -21,7 +22,7 @@ export function useCarriers() {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<Carrier[], Error>({
     queryKey: queryKeys.inventory.carriers(),
-    queryFn: () => apiClient.get<Carrier[]>("/inventory/carriers"),
+    queryFn: ({ signal }) => apiClient.get<Carrier[]>("/inventory/carriers", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -44,11 +45,11 @@ export function useCreateCarrier() {
 
 export function useUpdateCarrier() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Carrier,
     Error,
     { carrierId: number; name?: string; code?: string; trackingUrlTemplate?: string; isActive?: boolean }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "carrier", "update"],
     mutationFn: ({ carrierId, ...data }) =>
       apiClient.patch<Carrier>(`/inventory/carriers/${carrierId}`, data),

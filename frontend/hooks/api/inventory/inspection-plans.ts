@@ -1,10 +1,14 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useIdempotentMutation } from "./use-idempotent-mutation";
+import {
+  useAuthorizedIdempotentMutation,
+  useIdempotentMutation,
+} from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type SamplingMethod = "ALL" | "PERCENTAGE" | "FIXED_QUANTITY";
 export type PlanVersionStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED";
@@ -88,8 +92,6 @@ export interface CreatePlanVersionPayload {
   activate: boolean;
 }
 
-const BASE = "/inventory/quality/inspection-plans";
-
 export function useInspectionPlans(
   params?: InspectionPlansParams,
   options?: { enabled?: boolean },
@@ -97,14 +99,14 @@ export function useInspectionPlans(
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionPlanListResponse, Error>({
     queryKey: queryKeys.inspectionPlans.plans(params),
-    queryFn: () =>
-      apiClient.get<InspectionPlanListResponse>(BASE, {
+    queryFn: ({ signal }) =>
+      apiClient.get<InspectionPlanListResponse>("/inventory/quality/inspection-plans", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.isActive ? { isActive: params.isActive } : {}),
         ...(params?.appliesOn ? { appliesOn: params.appliesOn } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -114,7 +116,12 @@ export function useInspectionPlan(planId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionPlan, Error>({
     queryKey: queryKeys.inspectionPlans.plan(planId),
-    queryFn: () => apiClient.get<InspectionPlan>(`${BASE}/${planId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<InspectionPlan>(
+        `/inventory/quality/inspection-plans/${planId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 60_000,
     enabled: canView && planId > 0,
   });
@@ -136,33 +143,44 @@ export function useCreateInspectionPlan() {
   const invalidate = useInvalidatePlans();
   return useIdempotentMutation<InspectionPlan, Error, CreateInspectionPlanPayload>({
     mutationKey: ["inventory", "quality", "inspection-plan", "create"],
-    mutationFn: (payload, idempotencyKey) => apiClient.post<InspectionPlan>(BASE, payload, { headers: { "Idempotency-Key": idempotencyKey } }),
+    mutationFn: (payload, idempotencyKey) =>
+      apiClient.post<InspectionPlan>("/inventory/quality/inspection-plans", payload, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => invalidate(),
   });
 }
 
 export function useUpdateInspectionPlan() {
   const invalidate = useInvalidatePlans();
-  return useMutation<
+  return useAuthorizedMutation<
     InspectionPlan,
     Error,
     { planId: number; payload: UpdateInspectionPlanPayload }
-  >({
+  >("inventory:quality:plans:manage", {
     mutationKey: ["inventory", "quality", "inspection-plan", "update"],
     mutationFn: ({ planId, payload }) =>
-      apiClient.patch<InspectionPlan>(`${BASE}/${planId}`, payload),
+      apiClient.patch<InspectionPlan>(
+        `/inventory/quality/inspection-plans/${planId}`,
+        payload,
+      ),
     onSuccess: (_, variables) => invalidate(variables.planId),
   });
 }
 
 export function useDeleteInspectionPlan() {
   const invalidate = useInvalidatePlans();
-  return useMutation<{ deleted: boolean; planId: number }, Error, number>({
-    mutationKey: ["inventory", "quality", "inspection-plan", "delete"],
-    mutationFn: (planId) =>
-      apiClient.delete<{ deleted: boolean; planId: number }>(`${BASE}/${planId}`),
-    onSuccess: (_, planId) => invalidate(planId),
-  });
+  return useAuthorizedMutation<{ deleted: boolean; planId: number }, Error, number>(
+    "inventory:quality:plans:manage",
+    {
+      mutationKey: ["inventory", "quality", "inspection-plan", "delete"],
+      mutationFn: (planId) =>
+        apiClient.delete<{ deleted: boolean; planId: number }>(
+          `/inventory/quality/inspection-plans/${planId}`,
+        ),
+      onSuccess: (_, planId) => invalidate(planId),
+    },
+  );
 }
 
 /**
@@ -171,16 +189,17 @@ export function useDeleteInspectionPlan() {
  */
 export function useCreatePlanVersion() {
   const invalidate = useInvalidatePlans();
-  return useMutation<
+  return useAuthorizedIdempotentMutation<
     { planId: number; versionId: number },
     Error,
     { planId: number; payload: CreatePlanVersionPayload }
-  >({
+  >("inventory:quality:plans:manage", {
     mutationKey: ["inventory", "quality", "inspection-plan", "version"],
-    mutationFn: ({ planId, payload }) =>
+    mutationFn: ({ planId, payload }, idempotencyKey) =>
       apiClient.post<{ planId: number; versionId: number }>(
-        `${BASE}/${planId}/versions`,
+        `/inventory/quality/inspection-plans/${planId}/versions`,
         payload,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => invalidate(variables.planId),
   });
@@ -188,12 +207,17 @@ export function useCreatePlanVersion() {
 
 export function useActivatePlanVersion() {
   const invalidate = useInvalidatePlans();
-  return useMutation<InspectionPlan, Error, { planId: number; versionId: number }>({
-    mutationKey: ["inventory", "quality", "inspection-plan", "activate"],
-    mutationFn: ({ planId, versionId }) =>
-      apiClient.post<InspectionPlan>(`${BASE}/${planId}/versions/${versionId}/activate`),
-    onSuccess: (_, variables) => invalidate(variables.planId),
-  });
+  return useAuthorizedMutation<InspectionPlan, Error, { planId: number; versionId: number }>(
+    "inventory:quality:plans:manage",
+    {
+      mutationKey: ["inventory", "quality", "inspection-plan", "activate"],
+      mutationFn: ({ planId, versionId }) =>
+        apiClient.post<InspectionPlan>(
+          `/inventory/quality/inspection-plans/${planId}/versions/${versionId}/activate`,
+        ),
+      onSuccess: (_, variables) => invalidate(variables.planId),
+    },
+  );
 }
 
 /** How a rule reads on a card or a row. */

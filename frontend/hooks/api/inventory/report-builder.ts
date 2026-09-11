@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { downloadBlob } from "@/lib/download-blob";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 /* ------------------------------------------------------------------ *
@@ -135,7 +136,8 @@ export function useInvReportCatalog() {
   const canRead = useCan("inventory:ai:read");
   return useQuery<InvReportCatalog, Error>({
     queryKey: queryKeys.inventoryReportBuilder.catalog(),
-    queryFn: () => apiClient.get<InvReportCatalog>("/inventory/ai/reports/catalog"),
+    queryFn: ({ signal }) =>
+      apiClient.get<InvReportCatalog>("/inventory/ai/reports/catalog", undefined, signal),
     staleTime: 30 * 60_000,
     enabled: canRead,
   });
@@ -148,11 +150,14 @@ export function useInvReportCatalog() {
  * window focus.
  */
 export function useInvReportAsk() {
-  return useMutation<InvReportPreview, Error, InvReportAskInput>({
-    mutationKey: queryKeys.inventoryReportBuilder.ask,
-    mutationFn: (body) =>
-      apiClient.post<InvReportPreview>("/inventory/ai/reports/ask", body),
-  });
+  return useAuthorizedMutation<InvReportPreview, Error, InvReportAskInput>(
+    "inventory:ai:read",
+    {
+      mutationKey: queryKeys.inventoryReportBuilder.ask,
+      mutationFn: (body) =>
+        apiClient.post<InvReportPreview>("/inventory/ai/reports/ask", body),
+    },
+  );
 }
 
 /**
@@ -172,7 +177,7 @@ export function useInvReportAsk() {
  * above the control already says how much of the report it is showing.
  */
 export function useInvReportExport() {
-  return useMutation<void, Error, InvReportSpec>({
+  return useAuthorizedMutation<void, Error, InvReportSpec>("inventory:export", {
     mutationKey: queryKeys.inventoryReportBuilder.export,
     mutationFn: async (spec) => {
       const blob = await apiClient.download("/inventory/ai/reports/export", undefined, {

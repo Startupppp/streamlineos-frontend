@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type PutawayTaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PutawayDisposition = "STORAGE" | "QUARANTINE";
@@ -151,14 +152,14 @@ export function usePutawayTasks(
 
   return useQuery<PutawayTaskListResponse, Error>({
     queryKey: queryKeys.putaway.tasks(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PutawayTaskListResponse>("/inventory/putaway/tasks", {
         page: String(params.page),
         limit: String(params.limit),
         assignment: params.assignment,
         ...(params.status ? { status: params.status } : {}),
         ...(params.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-      }),
+      }, signal),
     // A queue whose whole value is being current. An operator looking at a task
     // somebody else claimed thirty seconds ago is the failure this screen exists
     // to prevent.
@@ -172,7 +173,12 @@ export function usePutawayTask(taskId: number, options?: QueryOptions<PutawayTas
   const canView = useCan(PUTAWAY_READ_KEY);
   return useQuery<PutawayTaskDetail, Error>({
     queryKey: queryKeys.putaway.task(taskId),
-    queryFn: () => apiClient.get<PutawayTaskDetail>(`/inventory/putaway/tasks/${taskId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PutawayTaskDetail>(
+        `/inventory/putaway/tasks/${taskId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 15_000,
     ...options,
     enabled: canView && taskId > 0 && (options?.enabled ?? true),
@@ -206,7 +212,11 @@ export function useClaimPutawayTask() {
 
 export function useAbandonPutawayTask() {
   const qc = useQueryClient();
-  return useMutation<{ taskId: number; assignedTo: null; released: boolean }, Error, number>({
+  return useAuthorizedMutation<
+    { taskId: number; assignedTo: null; released: boolean },
+    Error,
+    number
+  >("inventory:stock:transfer", {
     mutationKey: ["inventory", "putaway", "abandon"],
     mutationFn: (taskId) => apiClient.post(`/inventory/putaway/tasks/${taskId}/abandon`, {}),
     onSuccess: (_, taskId) => {
@@ -294,12 +304,12 @@ export function usePutawaySuggestions(input: {
       input.productVariantId ?? 0,
       input.quantity,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PutawaySuggestion[]>("/inventory/warehouses/putaway/suggestions", {
         warehouseId: String(input.warehouseId ?? 0),
         productVariantId: String(input.productVariantId ?? 0),
         quantity: input.quantity,
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView && ready,
   });
