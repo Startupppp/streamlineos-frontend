@@ -60,7 +60,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - Create a new file only when no existing file owns the responsibility and adding the symbol to the correct cohesive module would make that module less clear. File-size limits do not justify duplicate helpers, one-symbol wrapper files, re-export shells or artificial fragmentation.
 - In the final review, search again for the new symbol's purpose and confirm there is one canonical definition, all consumers use it, obsolete definitions/files are removed, and the import graph remains acyclic.
 
-**Architecture re-review is a delta audit.** Read `architecture-refactor/PRD-IN-SCOPE.md` §27, verify prior findings against current source, and classify them as VERIFIED DONE, REGRESSED, STILL PENDING or NEW. A verified fix appears once under DONE and is not reintroduced as pending without current regression evidence.
+**Architecture re-review is a delta audit.** Use `architecture-refactor/prd/completion-plan.md`, verify prior findings against current source, and classify them as VERIFIED DONE, REGRESSED, STILL PENDING or NEW. A verified fix is not reintroduced as pending without current regression evidence. Keep one execution checklist: update task evidence and reservations in place. Preserve necessary evidence in its original format; do not rename Markdown to text merely to reduce the Markdown count. Remove only superseded or unnecessary documents after preserving every required pending acceptance item.
 
 ## 5. Frontend ↔ Backend Boundary
 

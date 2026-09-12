@@ -4,9 +4,26 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.PRD_TRACEABILITY_ROOT ? resolve(process.env.PRD_TRACEABILITY_ROOT) : resolve(HERE, "..", "..");
-const PRD_DIR = join(ROOT, "architecture-refactor", "prd");
-const PLAN_NAME = "completion-plan.md";
-const CRITERIA = join(ROOT, "architecture-refactor", "PRD-10-10-CODE-RELEASE-TODO.md");
+const ARCHITECTURE_DIR = join(ROOT, "architecture-refactor");
+const PLAN_NAME = "prd/completion-plan.md";
+// These are consumed by evidence seals or the S7 collector, not execution plans.
+// Exact paths only: adding a new report requires review, not a directory exemption.
+export const REQUIRED_EVIDENCE_MD = new Set([
+  "final-refactor/evidence/42-production-ops/data-catalogue-c183/README.md",
+  "final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/C187-downstream-store-trace.md",
+  "final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/FINDINGS.md",
+  "final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/README.md",
+  "final-refactor/evidence/s02-bootstrap-parity.md",
+  "final-refactor/evidence/s02-tenant-integrity.md",
+  "final-refactor/evidence/bootstrap-head-637/README.md",
+  "final-refactor/evidence/bootstrap-head-685/README.md",
+  "final-refactor/evidence/SUPERSEDED-FORMER-HEAD.md",
+  "final-refactor/evidence/REDACTION-AND-RESEAL-LEDGER.md",
+  "final-refactor/evidence/perf-budget-manifest.md",
+  "final-refactor/evidence/42-production-ops/RB-06-live-alert-delivery/README.md",
+  "final-refactor/evidence/42-production-ops/RB-06-live-alert-delivery/operator-attestation-UNSIGNED.md",
+  "final-refactor/evidence/45-scale/S7-LIVE-DEV-EVIDENCE.md",
+]);
 
 // Markdown examples and comments cannot manufacture traceability.
 function visibleLines(source) {
@@ -23,13 +40,33 @@ function visibleLines(source) {
     });
 }
 
-export function validateBacklog({ planText, prdFiles, legacyText, minTasks = 10 }) {
+export function validateBacklog({ planText, prdFiles, minTasks = 10 }) {
   const failures = [];
   const lines = visibleLines(planText);
-  const known = new Set(visibleLines(legacyText).join("\n").match(/\bPRD-C\d{3}\b/g) ?? []);
+  const known = new Set();
+  let inRegistry = false;
+  let registryCount = 0;
+  for (const line of lines) {
+    const heading = /^ {0,3}#\s+(.+?)\s*#*\s*$/.exec(line);
+    if (heading) {
+      inRegistry = heading[1] === "Criterion registry";
+      if (inRegistry && ++registryCount > 1) failures.push("DUPLICATE REGISTRY: keep one criterion registry.");
+      continue;
+    }
+    if (!inRegistry) continue;
+    const row = /^- \*\*(PRD-C\d{3})\*\* — (\S.*)$/.exec(line);
+    if (!row) {
+      if (/\bPRD-C\d/.test(line)) failures.push("MALFORMED CRITERION: " + line);
+      continue;
+    }
+    if (known.has(row[1])) failures.push("DUPLICATE CRITERION: " + row[1]);
+    known.add(row[1]);
+  }
   if (!known.size) failures.push("EMPTY REGISTRY: no known PRD criteria.");
   if (!prdFiles.includes(PLAN_NAME)) failures.push("MISSING PLAN: completion-plan.md must exist.");
-  for (const file of prdFiles) if (/\.md$/i.test(file) && file !== PLAN_NAME) failures.push("COMPETING PRD: " + file);
+  for (const file of prdFiles)
+    if (/\.md$/i.test(file) && file !== PLAN_NAME && !REQUIRED_EVIDENCE_MD.has(file))
+      failures.push("COMPETING PRD: " + file);
   if (!lines.some(line => /the only execution checklist/i.test(line) && !/^\s*(?:>|[-+*] |\d+[.)] )/.test(line))) failures.push("PLAN AUTHORITY: declare 'The only execution checklist'.");
   const sections = [];
   const tasks = [];
@@ -84,14 +121,21 @@ export function validateBacklog({ planText, prdFiles, legacyText, minTasks = 10 
   return { failures, taskCount: tasks.length, sectionCount: sections.length, tasks };
 }
 
+export function architectureFiles(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+    const path = prefix + entry.name;
+    if (entry.isSymbolicLink()) throw new Error("UNSUPPORTED SYMLINK: " + path);
+    return entry.isDirectory() ? architectureFiles(join(directory, entry.name), path + "/") : [path];
+  });
+}
+
 function main() {
-  const plan = join(PRD_DIR, PLAN_NAME);
-  if (!existsSync(plan) || !existsSync(CRITERIA)) {
-    console.error("FAIL: completion-plan.md or criterion registry is missing.");
+  const plan = join(ARCHITECTURE_DIR, PLAN_NAME);
+  if (!existsSync(plan)) {
+    console.error("FAIL: completion-plan.md is missing.");
     process.exit(1);
   }
-  const prdFiles = readdirSync(PRD_DIR, { withFileTypes: true }).filter(entry => entry.isFile() || entry.isSymbolicLink()).map(entry => entry.name);
-  const result = validateBacklog({ planText: readFileSync(plan, "utf8"), prdFiles, legacyText: readFileSync(CRITERIA, "utf8") });
+  const result = validateBacklog({ planText: readFileSync(plan, "utf8"), prdFiles: architectureFiles(ARCHITECTURE_DIR) });
   if (result.failures.length) {
     for (const failure of result.failures) console.error("FAIL: " + failure);
     process.exit(1);

@@ -4,7 +4,7 @@
   "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/data-catalogue-c183",
   "covers": "every file in this directory.",
   "note": "pd-columns.csv is regenerated in place by pd-column-scan.sql; re-hash after any re-run",
-  "reseal": "RESEALED 2026-09-04. The original seal recorded its four hashes under an `artifacts` array; check-evidence-seal reads `hashes`, so it saw a 0/0 seal and reported all five files UNSEALED. All four originally-recorded hashes were re-verified against the bytes on disk before this rewrite and every one matched, so nothing about the evidence changed \u2014 only the shape of the record. README.md, added to the directory after the first seal, is now covered too.",
+  "reseal": "RESEALED 2026-09-04. The original seal recorded its four hashes under an `artifacts` array; check-evidence-seal reads `hashes`, so it saw a 0/0 seal and reported all five files UNSEALED. All four originally-recorded hashes were re-verified against the bytes on disk before this rewrite and every one matched, so nothing about the evidence changed — only the shape of the record. README.md, added to the directory after the first seal, is now covered too.",
   "algorithm": "sha256 over the exact bytes on disk. No transform is applied before hashing. Text digests are taken over the file content with CRLF normalised to LF: this tree holds seals recorded on both line-ending forms, so a raw byte digest can never verify on one platform. Content is unchanged; every re-pointed digest was proved to match the previously sealed bytes under the other line ending before it was rewritten (2026-09-06).",
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
   "backend_commit": "45f8a2e99",

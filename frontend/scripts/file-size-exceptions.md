@@ -18,7 +18,7 @@ any failure fails the gate rather than silently granting or dropping an exemptio
 A path mentioned only in the audit trail below is not an exception; only table rows are read.
 
 The backend has its own registry at
-`architecture-refactor/final-refactor/issues/file-size-exceptions.md`, enforced by the same
+`architecture-refactor/prd/completion-plan.md` (backend exception table), enforced by the same
 rules.
 
 ---

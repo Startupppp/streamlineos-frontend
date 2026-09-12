@@ -10,7 +10,7 @@ For launch, separate **technical readiness** from **commercial validation**: an 
 
 ## Start and resume
 
-1. Read root and affected backend/frontend CLAUDE.md and architecture-refactor/AGENTS.md. Inspect current source and working changes; the findings below are a dated baseline, not permission to redo a repaired defect.
+1. Read root and affected backend/frontend CLAUDE.md. Inspect current source and working changes; the findings below are a dated baseline, not permission to redo a repaired defect.
 2. Start with P10 privacy, AB-13 payment recovery and OS-R6 harness safety. For each task, trace the actual screen → hook → API/guard → service/transaction → event/cache → visible outcome; preserve one existing owner and contract.
 3. Reproduce, make the smallest correct repair, verify the actual caller and required negative cases, then update that task here. A mock/helper pass alone cannot certify browser, committed DB or provider behavior. Do not stop after producing another plan.
 4. When interrupted, leave a one-line checkpoint beside the current task: status, verified result, exact next action. Resume there; do not restart the audit. Mark [x] only when all its acceptance passes. Keep implemented-but-unverified tasks open.
@@ -52,9 +52,43 @@ Broad Build redesign is deferred; it does not block repairing existing screens.
 
 ### Previously approved decisions — reuse, do not ask again
 
-For an affected decision, read [the existing owner-input register](../decisions/CODE-RELEASE-HUMAN-INPUTS.md). It records H01–H17 approved on September 4 for code release; D01–D08 were deferred for deployment, not waived. Root/current user instructions take precedence; a recorded code-level disposition is not production approval.
+The repository owner approved H01–H17 on 2026-09-04 for code release; D01–D08 were deferred for deployment, not waived. These consolidated decisions replace the former owner-input register. Current user/root instructions take precedence. Verify current implementation before reopening a repaired requirement; approval is not completion evidence. Public landing-page visuals and motion remain unchanged; loading optimizations must preserve their appearance and behavior.
 
-Approved directions: durable idempotency for access and workflow commands (H01/H09); cross-module organization webhooks (H02); versioned public KB cursor compatibility (H03); history-preserving FK policies (H04); source-proven removal of unused HR/autonomy surfaces while retaining compliance records (H05); canonical Accounting GL wiring (H06); stronger payroll correction permissions (H07); private-by-default Build visibility as **scheduled, not shipped** work (H08); remove unimplemented workflow templates/unused secrets surfaces (H10/H11); stable INVOICE_IMMUTABLE 409 (H12); post-commit durable KB ingestion (H13); exact totals only for justified consumers (H14); benchmark pooler-specific prepare behavior (H15); split local calendar series for “this and following” (H16); local-first provider reconciliation with visible retry/conflict state (H17). Verify current implementation before reopening any of these. H08 must have an explicit release-scope disposition, never a false completion claim.
+| Decision | Approved implementation contract |
+| --- | --- |
+| H01 | Require durable Idempotency-Key/replay records for grant, revoke, standing and module-access mutations; migrate frontend callers together. Natural upserts alone do not deduplicate effects. |
+| H02 | Keep /settings/webhooks for organization-wide cross-module integrations; module-specific webhook configuration belongs to its module. |
+| H03 | Public KB attachment pagination uses a versioned cursor/envelope endpoint, migrated callers and deprecation of the published bare-array endpoint; preserve compatibility rather than break that endpoint in place. |
+| H04 | Financial/audit/authority/tenant-root FKs default RESTRICT; genuinely owned ephemeral children/joins CASCADE; optional display/actor references SET NULL. Prove and document domain exceptions. |
+| H05 | Remove autonomy-repair tables only if no registered worker uses them; career-path tables remain only if career planning ships. Preserve/wire subprocessor compliance records. Check current callers, migrations and dependencies before removal. |
+| H06 | Accounting remains in scope: wire the canonical GL posting boundary; remove only proven retired/redundant columns after dependency and migration proof. |
+| H07 | Separate ordinary payroll management/locking from stronger reopen/reversal/destructive financial-correction permissions. |
+| H08 | Private-by-default project visibility with project membership plus organization/module access is approved **scheduled, not shipped** work. S0 records its explicit release disposition; approval must never be reported as delivered behavior. |
+| H09 | Workflow trigger, publish and execution-producing commands require durable idempotency with matching frontend callers. |
+| H10/H11 | Hide/remove unimplemented Workflow templates and unused secrets write/decryption surfaces after current-consumer proof. A future executor receives secrets only at execution, never through returned/logged values. These are not launch features to invent. |
+| H12 | Immutable invoices return provider-neutral HTTP409 INVOICE_IMMUTABLE without database/provider internals. |
+| H13 | KB ingestion commits tenant-scoped durable intent before storage/embedding; use post-commit idempotent retry, compensation and visible status. |
+| H14 | Exact list totals are opt-in for justified consumers meeting budget; otherwise use cursor/hasMore and suitable estimated/asynchronous counts. Preserve approved exact timesheet totals. |
+| H15 | Select prepared-statement behavior for the actual pooler/environment after measurement; no global prepare:false guess. |
+| H16 | Calendar “this and following” splits a local series, truncates the original RRULE, re-parents future exceptions and copies attendees; reset RSVP when timing materially changes, then reconcile providers asynchronously. |
+| H17 | Accepted local calendar state wins over provider drift. Show pending/failed/conflict detail and retry/reconnect controls; preserve local edits. |
+
+| Deployment input | Required disposition; not a code-release blocker |
+| --- | --- |
+| D01/D02 | Name Product/Security/Operations approvers and the dedicated platform-operator population. Requester/approver/beneficiary remain separate with two-person approval, scoped short expiry, quarterly/event-triggered review and emergency retrospective. App-role grant/audit history is append-only; notify tenant owner/admin on request, approval and revocation. |
+| D03 | Name Privacy/DPO and Legal owners to approve lawful basis, retention and sensitive-field controls. Historical three-year security audit/eight-year payroll proposals are not approval or deletion authority; reconcile immutable records, legal holds, field encryption and least privilege before deployed use. |
+| D04/D05 | Approve regions, transfers, DPAs and subprocessors: historical proposal India-default payroll with pinned EU/US options and 30-day subprocessor notice. Neon/private R2/Upstash/Razorpay/Turnstile/ZeptoMail require actual regional approval; Resend needs separate approval, OpenAI/Google personal data requires redaction, OpenRouter personal data remains blocked, Composio needs disclosure. Google Meet approval remains explicit; retired TURN/STUN work stays excluded. |
+| D06 | Supply authorized cell/environment/API/DB/bucket/backfill/physical-replica/PITR targets and alert route/acknowledgement resources through secret storage. Validate every destination before any drill. |
+| D07 | Named Finance/Operations approve actual invoice/API-derived unit cost and workload-demonstrated capacity with at least 40% headroom. |
+| D08 | Actual release authority records accountable Product/Security/Privacy/Operations/Legal/Finance names, date, revisions/environment, evidence and accepted risks. Local mocks never manufacture signatures. |
+
+### Accepted architecture constraints — preserve during repairs
+
+- Retain existing integer identities in organization_members, roles, permissions, role_permission_grants and user_module_access. No renumbering, parallel UUID column or broad authorization-key migration. New identities follow backend rules; revisit only for a real exhaustion/merge/security requirement.
+- FORCE RLS is advisory under the approved non-owner, non-BYPASSRLS application topology. Verify actual roles, policies and all worker/request connections; blanket FORCE is not a substitute and does not constrain BYPASSRLS. Production must refuse unsafe application credentials.
+- AuthContext is actor/unit-of-work scoped, with shared in-flight module/membership/MFA promises and preserved failures. Guards and detached workers use the canonical factory/MembershipReader, including user and organization liveness. Reuse seeded membership; consult a context only for its matching user/org. Keep module resolution fail-closed. Guards execute before interceptor ALS, so moving their authority into interceptor-only context is incorrect.
+- ScopedRead owns tenant plus data-scope predicates, actor-qualified own/team cache discriminators, none-before-query and declared rawScope escapes. Verify the caller actually spends its predicate. Preserve canonical subject gates for universal self-service and participation; resolving none for management does not automatically deny self access. Team currently narrows like own until materialized; no silent widening or duplicate resolver.
+- No consumer is required for the un-emitted accounting.journal.posted event. Payroll uses existing posting-intent consumers and canonical Accounting commands; their remaining retry acceptance belongs to REL-001 below.
 
 ### Standing answers to recurring blockers
 
@@ -102,6 +136,17 @@ credentials/approval, silently waive the requirement, or report the product comp
 ## Mandatory full-stack completion contract
 
 Every task includes its architecture, code, schema, API, cache, UI/UX, security and tests—not separate competing rewrites. Inventory every in-scope route/action/async consumer/model/cache before changing it. Classify KEEP / REPAIR / CONSOLIDATE / REMOVE / DEFER with evidence; an uninspected entry point remains a coverage gap.
+
+### Required safe cleanup within every flow
+
+Completion includes removing proven unnecessary files/folders, constants/enums/configuration, functions/classes/helpers, duplicate checks/roles, types/interfaces/DTOs/Zod schemas, hooks/query keys/cache entries, components/routes/endpoints, assets/styles, imports/exports/barrels, dependencies and obsolete tests/fixtures. This is execution work, not merely a list of cleanup suggestions. CRM/Inventory remain excluded; retain shared code they genuinely consume.
+
+1. Search both repositories for the symbol's purpose and consumers. Combine dependency-graph findings with dynamic/side-effect imports, framework routes/DI/reflection, queue/cron/event registration, package/CI entry points, generated contracts, raw SQL, migrations and external consumers. Unused by one screen, an empty table, or a zero-reference text search alone is insufficient proof.
+2. For duplicates, preserve the correct canonical owner and migrate every consumer first. Keep distinct validation/authorization at separate trust boundaries: apparent repetition is not dead code. Maintain one authoritative type/role/cache factory; use schema-derived types rather than copying shapes.
+3. Remove the obsolete implementation and stale registrations/imports/keys/documentation in the same bounded change. Preserve error/loading/offline states, authorization, audit history, retention/legal holds, idempotency, outbox/worker behavior and cache invalidation. Do not delete immutable migrations, stored customer data or published API fields without the supported migration/compatibility contract and required authority.
+4. Re-run the actual repaired journey plus affected types/lint, dependency and dead-code checks, relevant tests and build. Exercise tenant denial, retries, rollback and cache invalidation for changed boundaries. Inspect final diff and repeat the consumer search. A failed or unrun safety check keeps cleanup acceptance open; fix/revert the specific unsafe change without discarding concurrent work.
+
+Record removed paths/symbols, replacement owner where applicable and verification beside the owning task. Do not create a cleanup report or weaken a detector to hide remaining unused code. Unknown ownership means inspect further or retain with a precise unresolved reason—not automatic deletion. These checks reduce regression risk; they do not justify a zero-bug guarantee.
 
 | Gate | Required evidence before the flow is complete |
 | --- | --- |
@@ -463,28 +508,29 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
 
 ## Remaining work
 
-- [ ] **IN4/IN7 + CA6 + CH7 — Shared-shell acceptance dependencies.** S0/S4 implement;
-  S3 supplies repros and reruns all affected cells. Current source confirms
-  `frontend/components/workspace-onboarding/success-checklist.tsx` starts
-  `collapsed=false`; its mobile portal obstructs page controls. Use a collapsed/mobile
-  docking behavior preserving checklist access; prove actual pointer hit targets and
-  keyboard reachability at 360/640/768/1280 and 200% zoom. Also reconcile
-  `components/layout/mobile/chat-mobile-chrome-layout.ts` (`sm:hidden` bottom nav vs
-  `md` sidebar) so chat navigation and composer insets cover 640–767 without overlap.
-  Audit `components/layout/mobile/mobile-shell-fab.tsx`'s permanently mounted inert
-  `aria-modal` dialog against the real accessibility tree and harness: correct hidden/open
-  semantics rather than treating DOM presence alone as an open modal.
-  Complete the recorded shared scroll-area keyboard access, onboarding text-opacity,
-  sidebar contrast and Feedbucket ARIA checks; reuse S4 token work, not local color forks.
+- [ ] **IN4/IN7 + CA6 + CH7 — Shared-shell acceptance dependencies.** S0/S4 own repairs;
+  S3 reruns all affected cells. Later September13 source evidence records SSR-safe
+  below-md collapse in frontend/components/workspace-onboarding/success-checklist.tsx,
+  matching md chat navigation/composer insets, conditional open-only modal ARIA,
+  scroll-area viewport tabIndex and light muted-foreground #556377. Recheck these
+  implementations before editing: the earlier collapsed=false/sm-nav/contrast findings
+  are not current repair instructions. The six shared fixes lacked browser reproof.
+  Prove actual pointer targets, keyboard access and checklist reopening at
+  360/640/768/1280 and 200% zoom; verify mobile-shell-fab hidden/open accessibility tree,
+  no duplicate focus traps, tinted-theme contrast and Feedbucket ARIA. DOM presence
+  alone does not mean an open modal. Reuse S4 semantic tokens, not local color forks.
   Completion: corresponding failing/obstructed cells pass with screenshot and axe evidence,
   no focus trap or blocked page action, and shared ErrorState change receives owner review.
 
 - [ ] **CA6 — Calendar grid accessibility and mobile fallback.** S3 with S0 dependency
-  approval. `frontend/features/calendar/big-calendar-wrapper.tsx` still renders the vendor
-  calendar; recorded react-big-calendar 1.19.4 all-day markup has orphan rowgroup/row roles.
-  Choose the smallest supported vendor patch/upgrade or semantically sound wrapper repair;
-  preserve day/week/month interaction and test actual accessibility tree. Do not mark the
-  defect complete merely because the source is third-party. Investigate why useShellVariant
+  approval. frontend/features/calendar/big-calendar-wrapper.tsx uses the vendor calendar.
+  Later source evidence records timed-view all-day role normalization; preserve it and
+  recheck actual day/week/month accessibility. Month-grid roles were clean in the focused
+  tests: applying the timed-view normalization there creates orphan cells. Reproduce any
+  remaining browser failure before the smallest supported repair; third-party origin
+  does not waive accessibility acceptance. Recheck the historical missing localVersion
+  fixture in event-detail-mutation-authority.test.tsx against current test types.
+  Investigate why useShellVariant
   did not select list mode at 360 in the recorded capture; prove breakpoint behavior after
   clearing the overlay. Completion: all 32 matrix cells PASS, including deep links,
   keyboard/detail Sheet, source failure and foreign-zone dynamic row at 200% zoom;
@@ -612,7 +658,7 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   fire-and-forget; reproduce rollback vs Redis dedup and committed alert delivery.
   Reuse durable outbox/commit hooks with committed idempotency. Failed-cache, racing
   fill/bust, rollback and retry must not widen authority, oversell quota or suppress
-  a never-delivered warning. [Prior source findings](evidence/frontend-data/fd5-quota-admission-atomicity.md)
+  a never-delivered warning. The source findings above
   are not fault-injection proof or an approved waiver.
 - [ ] **FD6 — Current build/bundle/performance evidence.** Reserve .next and the
   capture DB; rebuild API before web for strict response-contract additions. Verify
@@ -719,6 +765,7 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
 - [ ] Preserve today's frontend size/growth passes; recheck at the final revision
   alongside backend size, cycle, types, relevant regressions and detector self-tests.
   No baseline/exclusion increase, whitespace compression or arbitrary fragmentation.
+  Documentation-integration recheck found backend billing-payment-activation.ts at 515 lines and modules/reporting/reporting.service.ts at 585; verify current counts and resolve in-scope violations by cohesive ownership, not fabricated exemptions. Inventory shopify-admin.adapter.ts was 734 and remains excluded scope; report that distinction rather than claim the whole gate passed.
 - [ ] Resolve the current ten-file accounting island with its existing domain owner:
   types/accounting.ts; hooks/api/accounting/overview.ts;
   features/accounting/overview/bank-accounts-list.tsx;
@@ -752,8 +799,7 @@ Status: ACTIONABLE after safe preflight. Maps to: PRD-C135, PRD-C149. Owner: S5.
   Use current artifacts and real authorized/denied principals; source/component
   checks and screenshots of an error boundary are not successful navigation.
 - [ ] Capture each state and viewport with before/after defect evidence. Repair
-  blocking defects with the domain owner and recheck. Reference the existing
-  [state matrix](../final-refactor/evidence/42-production-ops/release-authority/KB-DOCUMENTS-CERTIFICATION-2026-09-09.md#doc-002-state-acceptance-matrix).
+  blocking defects with the domain owner and recheck. Cover Plate editing/save/reload and revision conflict; real search-result/citation navigation; signed-in permission changes; actual upload/index processing, failed, ready and empty states; browser offline/reconnect; compose/reply/edit with keyboard and screen reader; all 375/768/1280 layouts. Existing component/axe checks remain narrower evidence.
   Completion: current-head acceptance matrix and visual/interaction evidence.
 
 - [ ] DOC-002 also requires Documents-specific Web Vitals on the current production build using the existing route/SLO budgets and authenticated target-route samples; a passing Build INP run is not Documents performance proof.
@@ -795,33 +841,48 @@ Local preparation is actionable; actual external actions require identified auth
 
 These requirements were found outside prd/. They remain part of this single checklist; do not execute the old reports as separate assignments. Local safety repairs below are actionable before deployed credentials arrive. S0 schedules confirmed security/privacy/payment/lease defects ahead of cosmetic work.
 
-- [ ] **OPS-DEPLOY — Lease fencing and actual rollout safety (PRD-C176/C177).** S5 with S0; source anchors backend/src/common/workflow/workflow-store.ts:128, common/placement/canary-rollout.ts:40 and src/scripts/run-cell-rollout.ts:53. Reproduce a step outliving its lease and a successor claiming the run; fence every terminal/retry/suspend/dead-letter write against the actual lease/claim token so the former worker updates zero rows. Preserve existing outbox fencing and real lease-recovery proof. Replace hardcoded schema/event version 1 with authoritative compatibility evidence and wire the existing check to the actual rollout entry point. Reconcile unused feature_flags governance versus working autonomy switches and boot-only worker flags; do not invent another flag engine or label restart-only controls incident-time switches. Extend the existing release runbook with rolling N/N−1 deployment, at least 30-minute canary/abort, kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and autoscaling tests. Prove no duplicated/lost work at deployed artifacts; local probes do not certify an actual rollout. R1–R6 from the former unsigned deploy form are owned here, with actual operator/engineering/release decisions under OPS-004.
+- [ ] **OPS-DEPLOY — Lease fencing and actual rollout safety (PRD-C176/C177).** S5 with S0; source anchors backend/src/common/workflow/workflow-store.ts:128, common/placement/canary-rollout.ts:40 and src/scripts/run-cell-rollout.ts:53. Reproduce a step outliving its lease and a successor claiming the run; fence every terminal/retry/suspend/dead-letter write against the actual lease/claim token so the former worker updates zero rows. Preserve existing outbox fencing and real lease-recovery proof. Replace hardcoded schema/event version 1 with authoritative compatibility evidence and wire the existing check to the actual rollout entry point. Reconcile unused feature_flags governance versus working autonomy switches and boot-only worker flags; do not invent another flag engine or label restart-only controls incident-time switches. Verify the rollout contract in this plan with rolling N/N−1 deployment, at least 30-minute canary/abort, kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and autoscaling tests. Prove no duplicated/lost work at deployed artifacts; local probes do not certify an actual rollout. R1–R6 from the former unsigned deploy form are owned here, with actual operator/engineering/release decisions under OPS-004.
 
-- [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Read existing retention/data-catalogue policies and approved inputs before proposing new durations.
+- [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Use the consolidated OPS-CATALOGUE retention baseline and approved/deferred decisions here before proposing new durations.
 
-- [ ] **OPS-OPERATOR — Platform access and immutable audit (PRD-C180/C181).** S2 implements under S0 reservation; S5 proves deployed behavior. Trace modules/platform/platform-operator-access.controller.ts:58 and platform-operator-access.service.ts:108 at the actual guard/service boundary. Verify eligibility is the approved distinct platform population rather than tenant owner/admin plus a shared secret; enforce requester/approver/beneficiary separation, scoped short expiry, revocation and concurrent-approval controls. Verify organization owner/admin notification and denied-attempt audit, not only operator notification; audit failure must not silently grant access. Beneficiary self-approval refusal and migration1069 already exist—preserve them. Test migration1111 regranting UPDATE/DELETE against operator_access_log privileges and append-only triggers, including future objects. Direct HTTP/jobs and cross-tenant, wrong-scope, revoked/expired principal negatives are required.
+- [ ] **OPS-OPERATOR — Platform access and immutable audit (PRD-C180/C181).** S2 implements under S0 reservation; S5 proves deployed behavior. Trace modules/platform/platform-operator-access.controller.ts:58 and platform-operator-access.service.ts:108 at the actual guard/service boundary. Verify eligibility is the approved distinct platform population rather than tenant owner/admin plus a shared secret; enforce requester/approver/beneficiary separation, scoped expiry no later than four hours from request (not reset at approval), a meaningful 3–1000-character reason distinct from incident_ref, revocation and concurrent-approval controls. Recheck request/use/revoke/expiry tenant-notification behavior against actual approved policy; unsigned options are not decisions. Verify organization owner/admin notification and denied-attempt audit, not only operator notification; audit failure must not silently grant access. Beneficiary self-approval refusal and migration1069 already exist—preserve them. Test migration1111 regranting UPDATE/DELETE against operator_access_log privileges and append-only triggers, including future objects. Direct HTTP/jobs and cross-tenant, wrong-scope, revoked/expired principal negatives are required.
 
 - [ ] **OPS-OBSERVABILITY — Meaningful inputs and real alerts (PRD-C173/C174/C178).** S5 extends OPS-002. backend/src/scripts/alert-tenant-ctx-errors.mjs must distinguish empty/malformed/no-relevant-event input from healthy measured traffic; add bite tests, do not report clear from no signal. Verify check-alert-system.mjs coverage for workflow-stranded and retention-dead-man; the latter script and alert-dispatch registration already exist. Bind APP_RELEASE/CELL_ID to the actual API and workers, configure logs/traces/collector with tested redaction, and prove heartbeat/dead-letter/detection/recovery. Confirm provider-specific alert payload shape and supported routing credentials before an authorized send. Real acknowledgement needs channel receipt and an accountable person; reading the nonce from terminal output is not channel-delivery proof. Preserve the sealed RB06 attestation as evidence, never copy its synthetic ACK fixture as a real ACK. Publish on-call ownership, escalation, severity, customer/status communication and post-incident review using existing procedures.
 
 - [ ] **OPS-SECURITY — Environment, edge and provider/data controls (PRD-C163/C164/C184/C185).** S2/S5. Recheck common/security/turnstile.service.ts missing-secret behavior against production policy; a deliberately no-send/local test config is not permission for production verification to fail open. Reverify current env-coverage and production dependency-vulnerability/licence gates rather than copying historical advisory counts. Preserve repaired XFF extraction, Ably CSP and powered-by behavior. At authorized deployed endpoints prove TLS/headers/CORS/CSP/request limits/WAF/rate limits and malicious-traffic negatives; prove encryption at rest, per-environment/cell secret isolation, key ownership and rotation/revocation. Validate every owner/app/regional DB URL and API destination before tests or background workers—not only DATABASE_URL. Complete the data catalogue's purpose/lawful basis/subjects/processors/region/retention/owner/deletion fields for current in-scope data. Review AI/free-text flows and Indian identifiers against modules/ai/core/redaction.util.ts and the approved provider policy. Preserve P16 Google Meet/Composio approval requirements; retired TURN/STUN work stays excluded. Reuse approved owner code defaults; actual deployed/legal/provider scope still needs its accountable decision.
 
-- [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run the existing 14 workload objectives under sustained/burst production-shaped load; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use current RB07 collector/runbook sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
+- [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run all existing 14 workload objectives simultaneously under sustained production-shaped load, plus a 60-second burst at twice normal RPS with zero 5xx and p95 within 20% of normal; include a separate mobile-3G run; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use the current RB07 collector's sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
 
-- [ ] **OPS-BACKUP — Complete restore, replica and recovery proof (PRD-C170/C171/C179).** S5 extends OPS-003. Verify five-minute-or-better PITR/RPO requirement against the recorded six-hour backup cadence; distinguish logical NDJSON data extraction from complete schema/ledger/restore. Fix cell-backup.mjs prerequisite parsing so --self-test is isolated while real execution still refuses missing/unsafe targets. Demonstrate encrypted/access-controlled backup, key ownership, recurring restore testing, RTO/RPO recovery and relocation, retained-subject/hold/erasure behavior on restore. Verify actual physical-replica lag, watermark privileges, fallback and routing; recheck zero-row versus 42501 isolation assertions against the real contract. Keep auth/access/financial authority on primary. A missing replica is not a primary-snapshot pass: obtain explicit release-scope/topology disposition if the intended deployment differs from the existing requirement.
+- [ ] **OPS-BACKUP — Complete restore, replica and recovery proof (PRD-C170/C171/C179).** S5 extends OPS-003. Retain measured RPO ≤300 seconds, PITR history ≥24 hours and database-cell-failure RTO ≤600 seconds. Verify the five-minute-or-better PITR/RPO requirement against the recorded six-hour backup cadence; distinguish logical NDJSON data extraction from complete schema/ledger/restore. Fix cell-backup.mjs prerequisite parsing so --self-test is isolated while real execution still refuses missing/unsafe targets. Demonstrate encrypted/access-controlled backup, key ownership, recurring restore testing, RTO/RPO recovery and relocation, retained-subject/hold/erasure behavior on restore. Verify actual physical-replica lag under write load: peak <10 seconds, steady-state p50 <2 seconds, probe WAL distance ≤64 MB, distinct replica host and watermark parity; missing prerequisites exit inconclusive. Verify privileges, fallback and routing; recheck zero-row versus 42501 isolation assertions against the real contract. Keep auth/access/financial authority on primary. A missing replica is not a primary-snapshot pass: obtain explicit release-scope/topology disposition if the intended deployment differs from the existing requirement.
 
 - [ ] **ARCH-PERF — Full in-scope performance coverage (PRD-C140–148/C151).** S4/domain owners. Preserve approved synchronous exact timesheet totals and legacy page>1 rejection; do not turn future optional pagination proposals into new mandatory features. Verify every in-scope module benchmark manifest, representative/skew dataset, bounded worker/pool behavior and authorized cache-hit/failure path. Existing targets: ordinary API p95 ≤300 ms (approved complex aggregate/search application overhead ≤800 ms, excluding provider/internet time); ordinary SQL ≤50 ms; approved complex SQL ≤200 ms; authorized cache-hit p95 ≤100 ms. Use current documented SLO exceptions, not invented thresholds. Produce statistically meaningful latency/query/buffer/payload/memory regressions and route JS/CSS/server-payload/image/font/third-party budgets. Historical timing detection was DISARMED: establish noise-aware executable acceptance rather than waive timing or reuse noisy measurements. Do not reopen the 152 redundant FKs: later evidence assigns all of them to excluded CRM/Inventory.
 
 - [ ] **AI-RELEASE — Every supported AI stream and billed effect (PRD-C152–155).** S4 frontend with S5/backend owner reserved by S0. Verify text/tool-progress dispatch, actual abort propagation, deadlines/circuit breakers, replay-safe pre-stream retries, paid-request deduplication and settlement/refund. Cover credit exhaustion, queueing, streaming, cancellation, partial/error output, citation/source integrity, provider failure and permission revocation. Measure supported newly streamed routes, not chat alone: existing target application overhead before provider dispatch p95 ≤250 ms and first visible streamed state within100 ms. Use the actual provider/transaction seam, not a source-only “streaming implemented” claim. Verify relevant focused abort tests at current source; historical flaky timings are not a new proven defect. Validate transactional email advertised locale, English fallback and template version; shared registry/wrapper and recipient migration0844 already exist. Distributed Redis circuit breakers are conditional on measured multi-node recovery need, not an unconditional rewrite.
 
-- [ ] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: PRD-IN-SCOPE §13 P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
+- [ ] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: Historical P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
 
-- [ ] **OPS-CATALOGUE — Resolve all in-scope catalogue decisions without policy invention.** S5 with actual approvers. Reconcile DATA-CATALOGUE §18 D1–D26 and every in-scope DECISION REQUIRED cell against existing C184/C185 records, approved H01–H17 and deferred D01–D08. Cover third-party-subject notices, device-fingerprint lawful basis/retention, sensitive HR collection/encryption/retention, model-influenced compensation human review/contest, Support versus Helpdesk retention, browser-log/screenshot sanitization/retention, subprocessor publication/change notice, in-scope webhook-secret rotation, and AI/terminal-model provider redaction/residency. Reuse answered decisions; dated legal periods are proposals, not authoritative current jurisdiction-specific advice or approved deletion policy. Keep actual Legal/privacy approval open only where missing. Old D16 missing export/object-delete/physical-purge claims have newer repairs; verify live behavior instead of recreating them.
+- [ ] **OPS-CATALOGUE — Resolve in-scope data decisions without policy invention.** S5 with actual approvers; approved H decisions and deployment D inputs above replace the deleted catalogue/unsigned forms. Rebuild the current data inventory from schema, actual writers and outbound calls, recording purpose, subject class, owner, lawful-basis decision, processor/region, retention authority, legal holds, export/correction/erasure and downstream proof. Existing unsigned C184/C185 drafts were not approvals. Resolve only still-unanswered categories below; preserve current controls instead of restoring old missing-adapter claims.
+  - Identity/security: registration email in audit metadata; login IP/device/fingerprint data; invite/portal tokens and addresses after expiry; platform waitlist/contact/visit data; pseudonymous voting IP hashes; financial/signature/operator audit evidence. Preserve immutable history until an approved legal change explicitly reconciles it; fingerprint security-necessity/consent is a real privacy decision, not a guessed retention number.
+  - HR/recruitment: personal email after exit; bank/identifier records; biometric raw/device templates and deletion outside platform control; travel location; wellness/safety/accommodation/medical/blood-group data; disciplinary/grievance/POSH narratives; background checks; rejected offers/interview recordings/booking tokens; dependants, emergency contacts, referees, referrals, alumni and vendor-submitted candidates. Record lawful collection, encryption/access, retention and third-party notices per purpose. Anonymous surveys must genuinely sever identity as promised. Model-influenced pay recommendations need a real human-review/contest path where applicable.
+  - Collaboration/support: distinguish KB history from KB chat, ordinary chat from mail projection, Support from employee Helpdesk, and closed projects from organization governance. Cover intake/custom-form respondent fields, feedback, screenshots/logs, notification consent/body/audit data and signed evidence. Customer-defined forms need declared data classes/purpose, not a universal invented duration. Sanitize browser console/network logs, URLs and screenshots before storage/model use; keep bearer tokens and unrelated personal data out.
+  - Providers: verify actual primary/cache/bucket/AI/embedding/communications regions and disclosures, not region labels or auto settings. Review Neon, private R2, Upstash, ZeptoMail/Resend, Twilio, Ably, OpenAI embeddings, Google AI, Composio, Razorpay, Turnstile, Web Push and Google Calendar/Meet only where currently used. Preserve OpenRouter personal-data restriction, redaction-by-default, justified opt-outs and Indian identifier coverage (PAN/Aadhaar/UAN/GSTIN/IFSC/mobile); check free text separately. Disclose embedding and terminal-model processors independent of the chat-provider setting, Composio content access, retention/no-training terms, DPAs/transfers, disconnect deletion and subprocessor publication/change notices. Retired TURN and CRM/Inventory remain excluded.
+  - Operations: classify each in-scope webhook secret/payload/metadata and all rotation/revocation consumers, not one example; define organization/subject erasure across DB/storage/search/vector/cache/provider/backup restoration. Existing export/object-purge repairs require current live proof, not replacement. Name breach decision-maker/channel and applicable notification clocks with Legal; old jurisdiction-specific legal statements/durations are proposals, never authority to send notifications or delete data.
+
+  **Retention baseline for OPS-PRIVACY:** the following describes recorded application contracts, not newly approved law or permission to run a destructive sweep. Recheck current source/config and signed policy, resolve conflicts through D03, then prove scheduled bounded/idempotent tenant-safe execution, legal-hold refusal, heartbeat/retry and downstream result. KB chunks prune only orphaned/non-live parents; immutable KB versions retain throttled append-only history with paged reads. AI usage analytics 730 days remains separate from immutable AI credit ledger, with dry-run default; KB chat uses organization chat_history_retention_days default 90 days. Completed Build webhook attempts 90 days retain pending attempts. Notifications 180 days; notification event/delivery bodies and email-outbox bodies 90 days, records 13 months. Terminal notification_outbox/outbox_events 30 days must preserve pending/in-flight and unreconciled failure/replay evidence. Documents/attendance/hr_people use actual organization hr_retention_policies (people soft-delete); Helpdesk resolved/closed 730 days, mail projection 365 days from synced_at, announcements expired + 90 days or created + 730 days. Legal holds apply to metadata and shared partitions too. Ordinary chat 365-day partitioning was only a historical proposal; no new partitioning assignment. Parent FK/global uniqueness must include the partition key where required; per-partition indexes do not establish parent-wide uniqueness. Preserve performance_reviews and payroll/timesheet/employment/reporting-line/financial/audit records from automatic sweeps, and permission/grant configuration from age-based retention. Record missing approved periods for AI conversations/jobs, support tickets, audit/consent, signatures, webhook payloads and sensitive categories above rather than reuse unsigned recommendations.
 
 DOC-004 additional retrieval acceptance: kb-retrieval-strategy.ts already has the repaired 8,000-row threshold. Above it, supported cap120 can still choose ANN; reproduce the recorded recall-floor0.95 failure on representative embeddings/tenant sizes and supported caps. Report synthetic versus customer-representative recall separately, preserve permissions and exact-fallback behavior, and meet the existing latency/recall contract before closure.
 
 REL-001 must include current-head representative E2E for Home/Settings/Directory/Me, HRMS employee lifecycle, Payroll calculation/lock/publish/reversal/reconciliation, Workflow execution/retry/cancel, Accounting ledger/expense/reconciliation, uploads and shared adapters alongside the named foundation/communication/Build/Documents flows. Reuse valid exact-entrypoint evidence; add missing negative cases, do not infer completion from aggregate test counts. This is verification of existing in-scope products, not new feature development. Reconcile durable-rule differences (including root CLAUDE's deliberate unused-symbol/strictness deferrals) with the criterion registry explicitly; neither silently enable a repository-wide migration nor report a deferred rule as enforced.
 
 REL-001 additional integrated checks: SBOM/artifact hashes, vulnerability/licence and deployment-env gates; hosted CI execution and guarded DB suite coverage, not merely YAML presence. Preserve later BOLA/response-schema/conditional-suppression/one-attempt-payment repairs. Verify detached-worker deactivated/deleted-user/inactive-org refusal using current canonical MembershipReader, HR export liveness and workflow trigger checks; the old missing-liveness claim is source-stale. H08 private Build visibility remains approved scheduled work: record its explicit release disposition, never silently claim shipped.
+
+- [ ] **PAY-POST — Payroll posting retry acceptance.** S5/payroll owner, integrated through REL-001: reproduce the real PayrollPostingService.postPaid → PayrollPayoutPostingIntentConsumer.handle seam. Current source postPaid catches posting/baseCurrency failures and only logs; the consumer then marks COMPLETED, defeating durable retry. Propagate genuine failures to the existing outbox/inbox retry machinery while preserving explicit Accounting-not-enabled skips and the immutable paid-run outcome. Fault-inject posting failure, rollback, crash/restart and replay; require a durable unresolved state followed by exactly one valid journal. LockingService.commitLock already emits its posting intent in the same transaction: preserve that repair, rather than replace it with volatile after-commit callbacks or a second outbox.
+
+OPS-002/003 and REL-002 operational acceptance: existing release contract requires canary soak at least 30 minutes, all-domain smoke, at least 40% CPU/memory/pool/queue headroom, no unacknowledged critical alerts or canary 5xx, and measured latency budget before promotion. Pause/rollback for two consecutive smoke failures, P0 unresolved 10 minutes after acknowledgement, headroom below 20%, DB errors above 1%, or any confirmed cross-tenant leak immediately; execute only within actual deployment authority. Preserve compatible schema/API rollout and previous-artifact recovery. Record trigger, detect/recover times and impacted cells. Incident SEV1 escalation after missing acknowledgement at 5 minutes (secondary), 15 minutes (incident commander/leadership), and unmitigated 30 minutes (leadership/comms); SEV2 secondary 15 / commander 30 minutes. SEV1 public update within 30 minutes then every 30 minutes; SEV2 within 60 minutes then every 60 minutes. Assign real contacts/status channel; review SEV1/2 draft within 3 business days and meeting within 5 business days. Do not publish or notify external parties without authority.
+
+ARCH-PERF/OPS-CAPACITY measurement boundaries: ordinary API/SQL budgets above and module-seam budgets measure different intervals. Existing module cached-read seam p95 ≤150 ms and write seam ≤500 ms (declared async work excluded), with alert thresholds 112/375 ms, must not be silently substituted for whole-request/cache-hit targets. Queue contracts: oldest pending outbox ≤300 seconds, retry pressure ≤500; oldest queued/running job ≤900 seconds; zero DEAD delivery/durability rows per 24-hour window. Reconcile these with canonical current SEAM_BUDGETS/SLO definitions, named module/queue owner and real alert path; a role label is not an on-call human or measured SLO pass.
+
+OPS-CAPACITY retained workload thresholds (scenario-specific end-to-end measurements, not replacements for application-only budgets): ticket list/board/my-work/detail each p95 <300 ms; sprint/ticket create and global search <500 ms; Home aggregate <800 ms; notification delivery <1,000 ms; 100-ticket import <3,000 ms; report <5,000 ms; AI summary <8,000 ms (provider time not infrastructure-headroom proof); mobile-3G ticket list <500 ms. The fourteenth objective is the burst above. Verify the current driver's actual supported scenarios and inputs before execution; a missing scenario/threshold is an owned harness gap, not a silent pass. Bind dataset scale/skew and concurrency to the capacity claim; do not generate a large shared dataset without S0's explicit disposable-target reservation.
 
 # S0 — Final integration and completion
 
@@ -831,6 +892,10 @@ Maps to: PRD-C016, PRD-C017, PRD-C018, PRD-C019, PRD-C020, PRD-C021, PRD-C104, P
 ## REL-001 — Integrated revision-pair acceptance
 
 Run the existing integrated gates without silently weakening them. If a gate reports a genuinely CRM/Inventory-only failure, record it explicitly as excluded rather than fixing that module or claiming the unqualified whole-repository gate passed. Shared infrastructure and in-scope regressions still require repair.
+
+OpenAPI generation preflight: inspect current applyOpenApiEnv before boot. Its minimum contract is nonempty DATABASE_URL, CORS_ORIGINS and APP_URL, BACKEND_JWT_SECRET and PORTAL_JWT_SECRET each at least 44 characters, ENCRYPTION_KEY at least 32; downstream validation may be stricter. The helper forces absent/production NODE_ENV to test, but that does not make configured destinations safe. Use isolated contract-generation placeholders or explicitly identified disposable targets, isolate every regional/provider destination, and never load production defaults. These placeholders are not deployment credentials and six-variable validation is not safe-boot proof.
+
+OPS-CAPACITY egress evidence must come from actual CDN/load-balancer analytics or host bandwidth/vendor billing with cell attribution. Application/database span duration or row counts do not establish network egress cost.
 
 - [ ] Resolve the current migration-integrity and payment-resolver failures through
   their S2 tasks. Preserve tenant/ambient-transaction boundaries; do not weaken tests
@@ -881,18 +946,349 @@ Run the existing integrated gates without silently weakening them. If a gate rep
   A smaller backlog, a passing build or this document is not product completion.
 
 
-## Reference evidence and progress format
+## Progress and retained evidence
 
-Open these only for the named task; their dated statuses do not assign work or override this plan:
-
-- FD3: [revocation controls and limits](evidence/frontend-data/fd3-revocation-acceptance.md).
-- FD4: [measured query plans](evidence/frontend-data/fd4-measured-query-plans.md) and [existing query/cache seams](evidence/frontend-data/fd4-source-gap-resolution.md).
-- FD5: [quota writer inventory](evidence/frontend-data/fd5-quota-admission-atomicity.md).
-- FD9/OPS: [provider inventory and deadline evidence](evidence/frontend-data/fd9-provider-failure-and-handoff.md).
-- DOC-002: [existing Documents state matrix](../final-refactor/evidence/42-production-ops/release-authority/KB-DOCUMENTS-CERTIFICATION-2026-09-09.md#doc-002-state-acceptance-matrix).
-- DOC-004: [e-sign certification](../final-refactor/evidence/42-production-ops/release-authority/E-SIGN-CERTIFICATION-2026-09-10.md).
-- REL: [criterion registry](../PRD-10-10-CODE-RELEASE-TODO.md), [release engineering](../RELEASE-ENGINEERING.md), [SLO catalogue](../SLO-CATALOGUE.md), [retention policy](../RETENTION-POLICY.md). These supply requirements/policy, not parallel task lists.
-
-Update the owning task in place using:
+Update the owning task in place:
 `STATUS | current revision/artifact | evidence/command/exit | remaining acceptance | next action`.
-For external input add the exact missing resource/action, accountable owner and independent work continuing. Keep secrets and synthetic identity tokens outside this file. At a context boundary report the next actionable ID; when only genuine external gates remain, report them honestly. GO requires verified acceptance and actual approvals—not merely reaching the bottom of this file.
+For external input add the exact missing resource/action, accountable owner and independent work continuing. Keep secrets and synthetic identity tokens outside this file. At a context boundary report the next actionable ID; when only genuine external gates remain, report them honestly.
+
+This is the only execution checklist in architecture-refactor. Superseded policies, PRDs and session reports are consolidated here, not falsely marked complete. Necessary machine-checked evidence and the existing generated S7 evidence document stay in their original Markdown format; do not rename them to text to reduce a file count. Existing JSON, SQL, logs and captures are evidence, not additional assignments. Historical references inside sealed content are provenance, not instructions to recreate deleted documents. Current evidence-seal and redaction gates must continue rejecting missing, changed or unsealed artifacts. Keep every required unimplemented or unverified acceptance item here; delete other documents only after preserving their necessary content. Update existing evidence stores rather than creating duplicate plans/session reports.
+
+The reference sections below support the checklist and existing gates. They introduce no second task list, new feature scope, approval or product-completion claim.
+
+# Criterion registry
+
+Read-only acceptance vocabulary for the existing traceability gate, not a second backlog or a claim that all criteria are unfinished. Execute only the owning unchecked tasks above. Current scope, approved decisions and caller-specific contracts take precedence over generic wording. Preserve identifiers; retain already-verified guarantees without reimplementing them.
+
+- **PRD-C001** — Schema/contracts: cross-repository reachability, canonical keys, safe deletion and current catalog parity.
+- **PRD-C002** — AI: streaming, cancellation, deadlines, structured output, citations, metering and failure states.
+- **PRD-C003** — Authorization/security: live BOLA/IDOR with valid writes, same-tenant controls, abuse protection and privacy.
+- **PRD-C004** — Organization/RBAC/Settings: fixed authority standings, permissions, owner protection, invalidation and UI contracts.
+- **PRD-C005** — Query/database cost: bounded projections, N+1 prevention, tenant predicates, indexes, pagination and cache invalidation.
+- **PRD-C006** — Frontend speed: current production-build Web Vitals, bundle, rendering and interaction budgets; retain verified gains.
+- **PRD-C007** — TanStack: endpoint-correct gating, identifiers, keys, pagination, parsing, cancellation, invalidation and optimistic concurrency.
+- **PRD-C008** — Calendar/Inbox/Knowledge: provider drift, synchronization, bounded reads, ACL-aware retrieval and current performance evidence.
+- **PRD-C009** — UX/accessibility: responsive, keyboard, screen-reader, loading, empty, error, offline, denied and retry states.
+- **PRD-C010** — Uploads/operator cutover: private object lifecycle and authorized deployment/backfill evidence.
+- **PRD-C011** — Gate integrity: known-bad controls and portable non-vacuous verification harness.
+- **PRD-C012** — Repository hygiene/types: bounded expand-migrate-contract cleanup of unused symbols, dead surfaces, assertions and cycles.
+- **PRD-C013** — Handlers: named thin entry points, cohesive ownership and justified exceptions; no empty wrapper chains.
+- **PRD-C014** — Current P0/P1 audit: financial integrity, notification/email permission/delivery and security failures; disposition every surviving risk.
+- **PRD-C015** — Release harness: resolve nested/paired repositories portably or use explicit validated roots, without workstation-specific paths.
+- **PRD-C016** — Final integration: one verified frontend/backend revision pair and actual deployment authority; skipped or blocked is not passing.
+- **PRD-C017** — Traceability: preserve criterion identifiers and one editor per pending task; mappings and checked boxes alone are not acceptance proof.
+- **PRD-C018** — Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
+- **PRD-C019** — Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
+- **PRD-C020** — At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
+- **PRD-C021** — Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
+- **PRD-C022** — Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+- **PRD-C023** — Run fail-closed dead-code analysis over the backend, frontend, shared packages, workers and scripts; require zero unclassified unused files, dependencies, exports and exported types in the in-scope code. CRM/Inventory and generated/vendor artifacts must be reported separately, not silently included or deleted.
+- **PRD-C024** — Remove every in-scope compile-time and runtime dependency cycle across backend modules, frontend features, shared packages, barrels and NestJS DI. Replace cycles with correct ownership, dependency inversion or a neutral seam; do not hide them with `forwardRef`, lazy/dynamic imports, re-export indirection, duplicated types or an exception baseline. The cycle gate and a bite-proven self-test must report zero cycles.
+- **PRD-C025** — Enable and enforce TypeScript/ESLint unused-symbol checks for imports, locals, parameters and private members. Remove unused symbols instead of renaming them to `_` or suppressing the rule; allow a named `_` parameter only where a framework/interface callback contract requires its position.
+- **PRD-C026** — Remove unused imports, variables, parameters, functions, classes, constants, enums, types, interfaces, Zod schemas, DTOs, hooks, query keys, context values, feature flags and re-exports. An exported symbol is not considered used merely because a barrel exports it.
+- **PRD-C027** — Remove unreachable branches, obsolete compatibility shims, commented-out implementation, debug logging, stale TODO scaffolding and constants that duplicate an authoritative enum/config/schema. Retain a compatibility path only with a named consumer, removal date and contract test.
+- **PRD-C028** — Remove unused files and folders including abandoned routes, controllers, providers, modules, components, hooks, workers, jobs, adapters, tests, fixtures, mocks, scripts, assets and styles after proving that no static, dynamic, reflective, generated, CLI, package-script or side-effect entry point reaches them.
+- **PRD-C029** — Remove unused runtime and development dependencies, package scripts, environment variables, configuration keys, feature flags and asset references; update lockfiles, deployment manifests, validation schemas and documentation in the same change.
+- **PRD-C030** — Eliminate unsafe forced typing: no `as any`, `as unknown as T`, unjustified non-null assertions, `@ts-ignore`, `@ts-nocheck`, error-suppressing casts or broad index signatures used to bypass a contract. Narrow `unknown` with Zod, discriminated unions, exhaustive guards or a tested adapter; use `satisfies` where only conformance is needed.
+- **PRD-C031** — Permit a type assertion only at a proven external/framework seam where TypeScript cannot express an already runtime-validated invariant. Each exception must be local, narrow, documented with the invariant and covered by a negative/runtime contract test; maintain a zero-growth, named exception ledger.
+- **PRD-C032** — Replace duplicated or weakly owned constants with the canonical domain-owned schema/catalog only when at least two real callers share the invariant; do not create generic dumping-ground helpers or speculative seams. Apply the deletion test to pass-through wrappers and retain modules that provide real depth, policy or adaptation.
+- **PRD-C033** — Reduce public interfaces and barrel surfaces to verified consumers. Internal implementation details stay private to their module; deep imports across module ownership are removed or replaced by the smallest stable interface at the correct seam.
+- **PRD-C034** — Prove every deletion with import/dependency graph results plus checks for Nest metadata/DI, Next.js file conventions and dynamic imports, raw SQL/table names, migrations, reflection, queues/events, cron registration, package scripts and side-effect imports. Text search or a successful editor rename alone is insufficient evidence.
+- **PRD-C035** — After each cleanup batch, run focused behavior tests and the affected package typecheck/build; at final integration run both dead-code gates and their self-tests so a broken or under-scanning analyzer cannot report a false green result.
+- **PRD-C036** — Record before/after counts for unused files, exports/types, dependencies, suppressions, unsafe assertions and exceptions. Final acceptance is zero unclassified findings, zero unexplained suppressions and no increase in an approved framework/generated exception baseline.
+- **PRD-C037** — Confirm the cleanup does not remove authorization, validation, cache invalidation, outbox/worker registration, observability, accessibility, SEO metadata or error/offline states merely because those paths are uncommon in local development.
+- **PRD-C038** — Enforce a repository-wide default maximum of 500 physical lines for authored production, frontend, backend, shared-package, worker, script and test files (`.ts`, `.tsx`, `.js` and `.mjs`). The gate must scan every applicable workspace with a vacuity floor and fail when a new unregistered file exceeds the limit; CRM/Inventory are reported separately and landing visuals are unchanged.
+- **PRD-C039** — Treat 300 lines as a review/refactoring target, not a reason for mechanical fragmentation. Split files by cohesive responsibility and domain ownership when doing so reduces the interface or separates independently changing behavior; never split into numbered fragments, pass-through wrappers, re-export shells or mutually dependent files merely to satisfy a counter.
+- **PRD-C040** — Permit a file above 500 lines only for a generated/vendor artifact, declaration, immutable migration, cohesive declarative catalog or an implementation whose documented split alternatives would reduce locality or introduce a cycle. Each exception records exact path and measured lines, category, owner, public interface, concrete cohesion argument, alternatives considered, review date and removal trigger; directory-wide and wildcard exceptions are prohibited.
+- **PRD-C041** — Make the exception registry fail closed: missing/stale paths, line counts, owners, interfaces, reasons or review dates fail; any file that falls to 500 lines or below automatically loses its exception. Generated/vendor/migration exclusions must be path-classified and must never exempt ordinary authored implementation transitively.
+- **PRD-C042** — Review functions, classes, React components, hooks, forms, controllers and workers inside an allowed large file for mixed responsibilities, hidden state, duplicated validation/query logic and excessive public surface. A file-size exception does not exempt dead-code, cycle, authorization, query-cost, contract, testing or readability requirements.
+- **PRD-C043** — Run the hard-size gate and bite-proven self-test for backend and frontend at the final commit, publish all over-300 and over-500 inventories, require zero unexplained violations and prove each extraction preserves behavior, import direction, DI registration, route ownership, caching and authorization.
+- **PRD-C044** — Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
+- **PRD-C045** — Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
+- **PRD-C046** — Use named event handlers only; JSX event props must not contain inline arrow/function expressions. Do not create meaningless handler-to-handler chains: the named handler performs event orchestration and delegates reusable rules to explicitly named domain functions. Use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify every dependency.
+- **PRD-C047** — Prove strict TypeScript with no new `any`, suppression directives, unsafe double casts, non-null assertion abuse or parallel hand-written types that drift from schemas.
+- **PRD-C048** — Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
+- **PRD-C049** — Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
+- **PRD-C050** — Audit primary-key strategy, tenant-scoped uniqueness, FK indexes, named constraints, referential actions, checks, money units, timestamps and audit columns.
+- **PRD-C051** — Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
+- **PRD-C052** — Verify soft-delete/archive policy and every active read's deleted/archived predicate; use partial indexes where the access pattern requires them.
+- **PRD-C053** — Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and current-catalog parity. Upgraded-catalog compatibility is required only if migration decision 9 changes, because this release explicitly authorizes database recreation.
+- **PRD-C054** — Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
+- **PRD-C055** — Compare two independent clean bootstraps and an interrupted-then-resumed bootstrap at the same release commit: tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and RLS state must match exactly.
+- **PRD-C056** — Retain release SHA, commands, database identity, journal hash/count, catalog diff, sanitized logs and artifact hashes for the current-head bootstrap and migration evidence.
+- **PRD-C057** — Inventory and classify in-scope database columns, primary/foreign/unique/check constraints, indexes and JSONB keys plus executable code registries for routes, permissions, modules, events, commands, query/cache keys, configuration, environment variables, feature flags and translations. Every entry is KEEP, REFACTOR or REMOVE with its owner and concrete failure prevented.
+- **PRD-C058** — Remove unused database columns and JSONB properties only after proving zero reads/writes through Drizzle, raw SQL, migrations, exports, search/vector ingestion, audit/retention jobs, analytics and external contracts. Frequently filtered, joined, authorized or constrained JSONB properties must be normalized or indexed rather than silently retained as opaque payload.
+- **PRD-C059** — Detect redundant or overlapping foreign keys, unique constraints, checks and indexes using schema declarations, `pg_catalog`, representative `EXPLAIN (ANALYZE, BUFFERS)` plans and workload/index statistics. Statistics alone never justify deletion; preserve every constraint/index required for tenant isolation, referential integrity, concurrency, ordering or a documented access pattern.
+- **PRD-C060** — Require each tenant-owned relationship to use the canonical composite organization-scoped key and supporting index. Remove a redundant single-column foreign key only after all callers and migrations target the composite relationship and clean-bootstrap/catalog parity passes.
+- **PRD-C061** — Remove dead or duplicate code keys and aliases from permission catalogs, route/operation registries, module manifests, event/command catalogs, TanStack factories, cache namespaces, configuration schemas, feature flags and translation catalogs only after static and runtime registration/caller proof. Unknown dynamic string keys are rejected at their seam rather than preserved indefinitely.
+- **PRD-C062** — Keep one typed, domain-owned factory/catalog for each surviving key family; prohibit ad-hoc string literals, parallel aliases and generic global dumping grounds. Tenant, subject, scope, filters, sort, cursor, version and permission dimensions remain in query/cache keys wherever correctness requires them.
+- **PRD-C063** — Remove unused request/response/DTO/Zod fields and object properties across backend, OpenAPI, frontend hooks/forms and persisted events as one contract change. Never remove server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions, audit fields or compatibility fields with a published consumer without an explicit migration/deprecation path.
+- **PRD-C064** — After every key/schema cleanup, regenerate affected artifacts and prove migration chain/ledger, two clean bootstraps, catalog parity, tenant relationships/indexes/RLS, query plans, OpenAPI/contract compatibility, cache invalidation and focused behavior tests. Final acceptance is zero unclassified unnecessary keys and no orphaned schema/code reference.
+- **PRD-C065** — Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
+- **PRD-C066** — Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
+- **PRD-C067** — Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
+- **PRD-C068** — Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
+- **PRD-C069** — Record a maximum database-call count for every critical route and worker batch; fail regression tests when an implementation adds unexpected calls.
+- **PRD-C070** — Execute tenant-owned request work inside the minimum correct tenant transaction and reuse its handle; never open nested/per-row transactions or borrow a committed request transaction.
+- **PRD-C071** — Select named columns only and return minimal DTO projections; never hydrate full ORM rows, global users or large JSON/blob/vector fields for list/count/existence paths.
+- **PRD-C072** — Batch relationship, permission, unread, attachment, assignee and metadata lookups with joins, CTEs or bounded multi-key queries; forbid database/cache calls inside growing loops.
+- **PRD-C073** — Implement existence/authorization probes with tenant-correlated indexed predicates and `LIMIT 1`; do not fetch records or counts when only existence is required.
+- **PRD-C074** — Make exact totals opt-in and independently budgeted; cursor pages must not run an expensive `COUNT(*)` automatically on every request.
+- **PRD-C075** — Use bounded bulk insert/update/upsert operations and conflict-safe unique keys instead of one write per row; keep transactional batches below documented lock/payload limits.
+- **PRD-C076** — Verify concurrent counters, unread state, seats, balances, ordering and idempotency use atomic SQL/upsert/locking semantics without read-then-write races.
+- **PRD-C077** — Apply statement/query timeouts and cancellation propagation to interactive work; move reports, exports, reindexing and wide aggregates to resumable jobs.
+- **PRD-C078** — Measure connection acquisition, transaction duration and idle-in-transaction behavior; release connections before external provider calls or long CPU work.
+- **PRD-C079** — Benchmark under the application role with tenant context and RLS, never only as the database owner; plans must include real authorization predicates.
+- **PRD-C080** — Capture slow-query fingerprints, call counts, rows read/returned, buffers and lock waits in test evidence without logging sensitive bind values.
+- **PRD-C081** — Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
+- **PRD-C082** — Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
+- **PRD-C083** — Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
+- **PRD-C084** — Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
+- **PRD-C085** — Define route budgets for database calls, downstream calls, application latency, response bytes and memory; record p50/p95/p99 at the release commit.
+- **PRD-C086** — Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
+- **PRD-C087** — Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
+- **PRD-C088** — Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.
+- **PRD-C089** — Enable Brotli/gzip for eligible JSON/text/OpenAPI/static responses with minimum-size and already-compressed-content exclusions; never compress secrets in a cross-origin reflection context.
+- **PRD-C090** — Stream AI responses, downloads and large exports or return durable asynchronous jobs; do not buffer growing payloads in NestJS or Next.js memory.
+- **PRD-C091** — Propagate cancellation and deadlines through NestJS, database, cache and provider adapters; enforce upstream timeouts, concurrency limits and backpressure.
+- **PRD-C092** — Require idempotency and optimistic concurrency/version checks for replayable or conflict-prone mutations; return stable 409/412 semantics.
+- **PRD-C093** — Avoid serial downstream/provider calls when independent, cap parallel fanout and use batch adapters where providers support them.
+- **PRD-C094** — Verify frontend route loaders and TanStack consumers reuse/prefetch the canonical request instead of issuing duplicate server/client fetches.
+- **PRD-C095** — Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
+- **PRD-C096** — Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
+- **PRD-C097** — Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
+- **PRD-C098** — Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
+- **PRD-C099** — Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
+- **PRD-C100** — Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
+- **PRD-C101** — Prove frontend types and runtime parsing cannot silently accept a backend contract change.
+- **PRD-C102** — Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
+- **PRD-C103** — Enforce one tenant-private upload interface for attachments and documents: validate declared size and magic-byte MIME, sanitize names, use organization-scoped object keys, idempotent multipart completion, malware quarantine, authorization recheck before short-lived download URLs and asynchronous compression/preview/transcoding with bounded jobs. Cancellation, failed transforms, replacement and GDPR/retention deletion must clean database rows and objects without orphaning or exposing public URLs.
+- **PRD-C104** — Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
+- **PRD-C105** — Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
+- **PRD-C106** — Verify every folder/file has one canonical domain owner, kebab-case naming, correct import direction and no parallel legacy/duplicate location.
+- **PRD-C107** — Classify every inventoried file as KEEP, REFACTOR or REMOVE; name the concrete failure prevented for each REFACTOR/REMOVE verdict.
+- **PRD-C108** — Verify each file has one cohesive responsibility, stays within size policy or a documented exception, exposes the smallest useful interface and contains no pass-through/dead/commented/debug implementation.
+- **PRD-C109** — Prove removals and moves with dependency-graph, dynamic/side-effect import, route registration, raw table-name/FK, build/typecheck and relevant migration-integrity evidence.
+- **PRD-C110** — Record the final module folder tree and public interfaces so future work cannot recreate retired paths, duplicated schemas, hooks, query keys or endpoints.
+- **PRD-C111** — Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
+- **PRD-C112** — Frontend/TanStack/tests: verify workspace/onboarding gates, organization switch state, query-key tenant isolation, auth error states and allow/deny/cross-tenant E2E.
+- **PRD-C113** — Routes/contracts: verify role/grant/module-access CRUD has strict Zod contracts, stable OpenAPI, idempotent mutations and exhaustive owner/descendant protections.
+- **PRD-C114** — Queries/performance: verify effective-permission resolution is batched/cached, scope expansion is bounded and indexes cover subject, role, permission, module and tenant access paths.
+- **PRD-C115** — Reconstruct current-head Home evidence across folder ownership, universal-versus-module composition, section-level authorization/privacy, bounded parallel queries, independent loading/error states, cache/query keys, responsive accessibility and representative E2E; classify every Home file KEEP, REFACTOR or REMOVE without changing public landing-page visuals or animations.
+- **PRD-C116** — Architecture/schema: prove global settings contain organization configuration/access governance only while operational and module-owned settings remain with their modules.
+- **PRD-C117** — Queries/cache: verify bounded settings reads, tenant-leading indexes and invalidation of organization, hierarchy, access, navigation and entitlement caches.
+- **PRD-C118** — Reconstruct current-head Directory/Me evidence across canonical ownership, self-versus-administrative authorization, tenant-scoped schema and indexes, bounded search/list projections, privacy-safe caching, TanStack keys, responsive accessibility and allow/deny/cross-tenant E2E.
+- **PRD-C119** — Reconstruct current-head HRMS evidence across employee lifecycle schema, tenant-composite integrity, module/record/DataScope authorization, bounded indexed queries, async imports/exports, cache invalidation, frontend states, folder cohesion and representative HR workflows.
+- **PRD-C120** — Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
+- **PRD-C121** — Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
+- **PRD-C122** — Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
+- **PRD-C123** — Reconstruct current-head Build/PM evidence across workspace/project/ticket schema, tenant and record authorization, bounded boards/backlogs/search, cursor and cache contracts, async/realtime workflows, frontend states, folder cohesion and representative E2E.
+- **PRD-C124** — Reconstruct current-head Workflow evidence across definition/version/execution schema, permission rung, bounded execution history, idempotent queue/outbox processing, retry/DLQ/cancellation, secrets/redaction, frontend states and representative E2E.
+- **PRD-C125** — Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
+- **PRD-C126** — Reconstruct current-head Accounting/Finance evidence across immutable tenant-safe ledgers, normalized expenses and reconciliation, bounded indexed reads, queue-backed exports/reminders, idempotent consumers, retention, authorization, frontend states and production-shaped workflow tests.
+- **PRD-C127** — Reconstruct current-head Chat evidence across channel/thread/member/message/reaction/attachment schema, tenant-composite integrity, channel and mutation authorization, scalable ordering/fanout/unread state, bounded history/search, cache/realtime invalidation, offline UI and representative E2E.
+- **PRD-C128** — Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
+- **PRD-C129** — Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, persist per-event monotonic operation/version ordering plus delete tombstones, discard stale jobs/webhooks, reconcile provider drift, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
+- **PRD-C130** — Queries/cache/workers: verify indexed conversation ordering/search/unread, incremental sync, idempotent send/receive, bounce/retry/DLQ and invalidation of list/thread/count keys.
+- **PRD-C131** — Frontend/TanStack/tests: verify infinite lists, thread hydration, optimistic read/label rollback, compose/send states, offline/reconnect, sanitization and account-revocation E2E.
+- **PRD-C132** — Re-verify provider-response schemas, tenant-fair delivery/backpressure, consent and suppression enforcement, durable retry/DLQ behavior, offline/revocation UI and cross-tenant notification delivery E2E at the release commit.
+- **PRD-C133** — Architecture/schema: verify spaces, memberships, documents/pages, immutable revisions, attachments, ingestion jobs, chunks/embeddings and deletion/reindex state have tenant-composite integrity.
+- **PRD-C134** — Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
+- **PRD-C135** — Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
+- **PRD-C136** — Reconstruct current-head shared-adapter evidence across tenant-safe interfaces, bounded retries/timeouts/circuit breakers, idempotency, backpressure, schema-validated provider responses, cache/credential isolation, observability, failure-mode tests and removal of duplicate provider-specific policy from product modules.
+- **PRD-C137** — TanStack/contracts: verify query-key factories, parsing, invalidation, hydration, cancellation, retry, optimistic concurrency and pagination rules across every module above.
+- **PRD-C138** — UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
+- **PRD-C139** — Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
+- **PRD-C140** — Publish a benchmark manifest for every module: dataset size, concurrency, warm/cold state, machine/container limits, command, repetitions, p50/p95/p99, error rate and release SHA.
+- **PRD-C141** — Keep application-controlled overhead for ordinary authenticated reads/mutations at p95 ≤ 300 ms and approved complex aggregate/search operations at p95 ≤ 800 ms, excluding internet/provider time.
+- **PRD-C142** — Keep ordinary database statements at p95 ≤ 50 ms and explicitly approved complex statements at p95 ≤ 200 ms on the production-shaped seed; retain plans for every exception.
+- **PRD-C143** — Keep cache-hit application paths at p95 ≤ 100 ms while preserving authorization correctness; a cache miss or Redis outage must degrade safely without a request storm.
+- **PRD-C144** — Prove Home loads sections concurrently and independently, renders available sections without waiting for the slowest one and never starts an unbounded fanout.
+- **PRD-C145** — Prove Chat, Calendar, Inbox and Notifications list, unread/count, range/history and realtime-token paths meet their budgets without table scans, N+1 or per-item cache/database calls.
+- **PRD-C146** — Move compression, previews, malware scanning, exports, ingestion, reminders and other CPU/IO-heavy work off request threads; return a durable job/status contract promptly.
+- **PRD-C147** — Verify connection-pool, worker-concurrency, queue, provider and per-tenant limits apply backpressure instead of exhausting memory, sockets or database connections.
+- **PRD-C148** — Add automated performance-regression gates for declared critical paths; fail on statistically meaningful latency, query-count, buffer, payload or memory regression.
+- **PRD-C149** — Meet Core Web Vitals targets on production builds for in-scope authenticated routes: LCP ≤ 2.5 s, INP ≤ 200 ms and CLS ≤ 0.1 at the defined reference viewport/device profile.
+- **PRD-C150** — Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
+- **PRD-C151** — Record route-level JavaScript, CSS, server payload, image/font and third-party budgets; lazy-load module editors, charts, calendars, chat media and AI interfaces not required for first render.
+- **PRD-C152** — Stream text/tool progress to the client rather than buffering a complete answer; target application overhead before provider dispatch at p95 ≤ 250 ms and first visible streamed state within 100 ms.
+- **PRD-C153** — Propagate client aborts, enforce deadlines and circuit breakers, and retry only replay-safe pre-stream operations; never duplicate a paid request or continue spending after cancellation.
+- **PRD-C154** — Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
+- **PRD-C155** — Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
+- **PRD-C156** — Every applicable code-level acceptance item in this plan is complete with fresh evidence.
+- **PRD-C157** — CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
+- **PRD-C158** — Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
+- **PRD-C159** — Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
+- **PRD-C160** — No unresolved code-level P0/P1 finding remains.
+- **PRD-C161** — Release authority records commit, evidence, accepted code-level residual risks and date.
+- **PRD-C162** — Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
+- **PRD-C163** — Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
+- **PRD-C164** — Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
+- **PRD-C165** — Produce production-build/reference-device Web Vitals evidence; obtain Product acceptance if frozen landing animation prevents its agreed target.
+- **PRD-C166** — Run realistic load and capture pools, queues, CPU, memory, errors, replica behavior and sustained/burst capacity.
+- **PRD-C167** — Prove declared SLOs with at least 40% capacity headroom.
+- **PRD-C168** — Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
+- **PRD-C169** — Prove credentials, routing, jobs, namespaces and data cannot cross cells with the isolation and resource-account checks in OPS-CAPACITY.
+- **PRD-C170** — Provision a physical replica and prove lag/fallback with OPS-BACKUP.
+- **PRD-C171** — Configure five-minute-or-better PITR/RPO and run recovery/relocation drills with OPS-BACKUP.
+- **PRD-C172** — Measure/approve per-cell and active-tenant cost with OPS-CAPACITY.
+- **PRD-C173** — Configure production logs, traces and release metadata with redaction.
+- **PRD-C174** — Test live alerts and human acknowledgement with OPS-002.
+- **PRD-C175** — Capture passing RB-01-RB-08 manifests under production evidence with identity, topology, SHA, operator, timestamps, exit code and hashes.
+- **PRD-C176** — Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
+- **PRD-C177** — Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling.
+- **PRD-C178** — Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures.
+- **PRD-C179** — Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
+- **PRD-C180** — Approve operator/break-glass roles, reason, two-person/no-self approval, duration, expiry, tenant scope, notification, immutable audit and revocation.
+- **PRD-C181** — Verify deployed sensitive routes reject expired, revoked, cross-tenant, wrong-scope, concurrent-approval and audit-failure cases.
+- **PRD-C182** — Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using OPS-004 and the in-file approval record.
+- **PRD-C183** — Complete the current in-scope data catalogue defined by OPS-CATALOGUE with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
+- **PRD-C184** — Decide PII policy for audit metadata, residency/transfers, subprocessors, breach handling, payroll/tax jurisdiction and controller/processor duties.
+- **PRD-C185** — Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure.
+- **PRD-C186** — Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills.
+- **PRD-C187** — Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
+- **PRD-C188** — Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
+- **PRD-C189** — Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
+- **PRD-C190** — Immediate code-level gate remains green at the deployed commit.
+- **PRD-C191** — Every applicable deferred production acceptance item is complete with current evidence.
+- **PRD-C192** — Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
+- **PRD-C193** — Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
+- **PRD-C194** — No unresolved production/compliance P0/P1 finding remains.
+- **PRD-C195** — Release authority records commit, environment, evidence, accepted residual risks and date.
+
+# Backend file-size exceptions
+
+Gate metadata, not a task list. Only exact rows below grant exceptions; preserve the existing fail-closed checks for paths, counts, interfaces and expiry. Review date is the next review deadline. File size alone does not justify fragmentation. Frontend keeps its separately installed registry in frontend/scripts/file-size-exceptions.md.
+
+## Exceptions
+
+| Path (relative to backend repo root) | Lines | Category | Owner | Public interface | Cohesion argument | Alternatives considered | Review date | Removal trigger |
+|---|---|---|---|---|---|---|---|---|
+| `src/scripts/relocate-org-data.ts` | 767 | CLI script | Platform / DB | `main()` entry point | Top-level conductor for a multi-step data-migration CLI; the phases share one `db` handle and a fixed execution order, and already delegate their table work to `relocation/catalog-tables.ts` and `relocation/copy-org.ts`. | Splitting per phase was tried in the S01 pass and rejected: the phases have no shared interface, so the split produced numbered fragments that had to change together. | 2026-12-01 | Drops to 500 lines or below, or the migration it performs is retired. |
+| `src/scripts/seed-enterprise-workspace.ts` | 668 | CLI script | Platform / DB | `main()` entry point | Enterprise-workspace seed that must execute in a fixed order; each block is a distinct seeding phase sharing local bindings and a single `db` handle. | Extracting per-entity seeders was considered and rejected: every block reads ids produced by the block above it, so the extraction would pass a growing bag of ids between mutually dependent files. | 2026-12-01 | Drops to 500 lines or below, or the seed moves to a fixture-driven loader. |
+| `src/scripts/check-referential-action-drift.ts` | 606 | Gate script | Platform / DB | 20 exports: the `main()` entry point and `--self-test` harness plus the 18 symbols the self-test drives directly (`MIN_DECLARED_FKS`, `MIN_LIVE_FKS`, `LIVE_FK_QUERY`, the `Action`/`DeclaredFk`/`LiveFk`/`Stated`/`Verdict`/`Mismatch` types, and `normalizeDeclared`, `normalizeCatalog`, `classify`, `blastRadiusOf`, `statedActionsFrom`, `statedOf`, `declaredFksOf`, `liveFksOf`, `matchLive`, `compare`, `unbaselined`) | One detector for one invariant: it reads every declared `foreignKey(...).onDelete(...)` from the Drizzle tree, reads `confdeltype` from `pg_catalog`, and reports the difference. The declaration reader, the catalog reader and the comparison share the normalisation table that maps drizzle`s referential-action words onto Postgres`s single-character codes; separating them would put that mapping behind an interface and let the two halves drift, which is the exact defect class the gate exists to detect. Its 32-case self-test fixture is co-located so a planted mismatch and its expected verdict are read together. | Splitting the catalog reader into a sibling was rejected: it would need the same normalisation table, so the two files would have to change together on every drizzle or Postgres version bump. Extracting the self-test fixture was rejected because it is the gate`s bite proof and reads as documentation of the invariant. | 2026-12-01 | Drops to 500 lines or below, or the 62 baselined mismatches are resolved and the gate retires to a simple assertion. |
+
+# Approval record
+
+Record genuine decisions in this section or the existing structured approval store, never a new Markdown file. Empty fields are not approval. One record may cover several items only when scope and accountable approvers are explicit.
+
+## Decision identity
+
+- Record ID:
+- Decision date (UTC):
+- Review/expiry date:
+- Decision status: `approved` / `approved-with-conditions` / `rejected` / `deferred`
+- Scope: organizations, regions, data categories, providers, and environments covered
+
+## Accountable approval
+
+| Function | Name | Role/title | Decision | Date | Signature or approval reference |
+|---|---|---|---|---|---|
+| Product | | | | | |
+| Security | | | | | |
+| Privacy/DPO | | | | | |
+| Operations | | | | | |
+| Legal | | | | | |
+| Finance | | | | | |
+
+## Decision
+
+- Item(s) and chosen option:
+- Purpose and lawful basis (where applicable):
+- Retention period and accountable owner:
+- Residency, transfer, DPA/SCC, and subprocessor position:
+- Operator-access parameters (if applicable):
+- Customer-facing commitment or disclosure:
+- Rationale:
+
+## Evidence index
+
+| Evidence | Commit/environment | Timestamp (UTC) | Result | Artifact path or hash |
+|---|---|---|---|---|
+| Repository source/test evidence | | | | |
+| Deployed drill output (redacted) | | | | |
+| Provider/configuration evidence | | | | |
+
+## Conditions and residual risk
+
+| Condition or risk | Owner | Due date | Mitigation | Release-authority disposition |
+|---|---|---|---|---|
+| | | | | |
+
+## Attestation
+
+I confirm that this decision covers the stated scope, that the evidence index is
+accurate and redacted appropriately, and that deferred conditions remain tracked.
+
+- Release authority:
+- Name/title:
+- Date:
+- Signature or approval reference:
+
+# Operational response reference
+
+These are the alert-linked response branches, not additional TODOs. Before running a script, inspect its arguments and environment loading; identify the authorized target and operator. Never source default production credentials for a diagnostic. Use sanitized, populated input windows; exit 2, absent data and silence are inconclusive. Capture detection, containment, recovery and customer impact under OPS-001–003. Thresholds and routing come from current SLO/alert definitions, with measured acceptance above.
+
+### provider-outage
+
+Inspect the affected adapter, provider status, queue state and structured errors using the existing dead-outbox/dead-delivery/queue-age diagnostics with explicit safe inputs. Preserve durable pending intent and bounded retries. DEAD work does not resume automatically: investigate the terminal cause, confirm provider-side outcome, then use authorized scoped reconciliation/replay with the original idempotency identity. Verify restored delivery and no duplicate effects; a restored provider alone is not recovery proof.
+
+### queue-backlog
+
+Inspect oldest pending intent, retry pressure, relay/cron health and consumer registration. Distinguish unavailable worker, missing consumer, throttled provider and database contention before restart or scaling. Preserve bounded tenant-fair admission. Recovery means pending age returns inside its actual budget under load with no lost intent, not just a running process.
+
+### cache-loss
+
+Check Redis connectivity, cache seam timing, database pool/load and permission/session behavior. Verify actual fallback and cross-node revocation; a local in-memory limiter does not prove distributed protection. Restore the dependency or apply an approved degraded mode. Do not flush shared Redis as a default diagnostic. Verify cold/warm recovery, no request storm, no stale-authority disclosure and no correctness dependence on an unavailable cache.
+
+### database-cell-failure
+
+Inspect pool saturation, tenant-context errors, health and signed placement separately. A signed placement cache can help during control-plane failure; it cannot restore an unreachable data-plane database. Refuse unknown placement. Contain the failed cell without routing its tenant data to another cell's resources. Perform authorized restore/relocation under OPS-BACKUP; prove grants, catalog/ledger, isolation and application recovery.
+
+### bad-release
+
+Correlate faults with actual APP_RELEASE/artifact identities and deployment time; check release probes, error/latency windows, queues and tenant safety. Apply the explicit canary/rollback criteria above through the authorized deployment process. Check schema/event compatibility before selecting the prior artifact; a destructive migration may require forward repair. Verify all-domain smoke and durable worker/effect recovery on the resulting release.
+
+### tenant-cost
+
+Separate relative AI-credit spend (tenant-cost alert) from actual infrastructure/vendor cost (OPS-CAPACITY). Confirm populated comparable tenants and feature/model attribution; one tenant cannot establish a cross-tenant median. Apply only existing authorized quota/rate/access policy. Preserve ledgers and reconcile provider usage; prove recovery without double charging or silently changing customer entitlement.
+
+### dead-outbox
+
+Inspect terminal outbox_events and consumer registration. Fix or contain the cause, check whether the external effect already happened, and use the established authorized replay procedure for the exact rows. Never blanket-reset state, delete evidence or assume every provider is idempotent. Verify one effect per durable intent and no unreconciled DEAD work in the measured window.
+
+### dead-notification-outbox
+
+Inspect notification_outbox independently of outbox_events; they have different relays. Identify event/template/routing/recipient failures, then reconcile and replay only eligible intents through the canonical path. Retain consent, recipient ACLs, suppression and idempotency. Prove populated-window health and no missed/duplicate notification, not a zero-row green.
+
+### dead-delivery
+
+Inspect the outbound channel/provider after domain intent persistence. Confirm provider outcome and current suppression/bounce/consent before any authorized requeue. Never send again solely because an acknowledgement was lost. Verify reconciled recipient delivery and preserved failure history.
+
+### job-queue-age
+
+Distinguish queued/no claimant from stalled running/expired lease. Inspect worker/cron registration and lease owner/expiry. Never clear a live lease manually. Recover through the existing fenced claim/retry mechanism and prove a stale worker cannot commit after its successor, with no duplicate or lost job.
+
+### tenant-ctx-errors
+
+Inspect sanitized populated logs and classify guard, request, after-commit, detached worker or sweep caller. A 42501 can have several causes; verify the actual role/GUC/privilege failure instead of assuming missing context or no leak. Restore the correct explicit tenant transaction and current membership/authorization using canonical helpers. Durable effects remain in the existing outbox. Reproduce negative controls and verify actual affected writes without suppressing the error.
+
+### sig-failures
+
+Treat signature failure as a possible forgery/replay until verified. Identify provider/endpoint and inspect authorized secret-rotation history without exposing secrets. Keep verification fail-closed; rotate/reconcile only with authority. Verify valid callback positive control, invalid/replayed/wrong-tenant negatives and one reconciled payment effect.
+
+### p95
+
+Use populated current-release traces, rank routes and separate pool/query/cache/provider/serialization timing. Inspect representative application-role plans with tenant context; DB-owner plans cannot certify RLS cost. Apply a measured bounded repair, then compare equivalent cold/warm load. Do not enlarge pools or add cache/indexes solely from a latency symptom.
+
+### seam-latency
+
+Use the canonical SEAM_BUDGETS and actual alert thresholds, not a copied stale number. Attribute pool wait, tenant setup, query execution, cache and event-loop delay independently. Check connection ownership across external waits and bounded CPU/jobs. Verify the repaired seam and end-to-end user intent; a fast seam alone cannot close a slow journey.
+
+### retention-dead-man
+
+Check current RETENTION_JOBS, scheduler enablement and successful heartbeat plus per-tenant error/truncation state. Missing heartbeats or unavailable Redis are unproven, not healthy. Preserve live leases and legal holds; do not disable the scheduler or erase rows to silence the alert. Reconcile approved retention, retry failed tenants through authorized bounded sweeps and verify downstream deletion and fresh heartbeat. Prioritize overdue downloadable personal-data exports; record incomplete purge truthfully.
+
+### cell-recovery
+
+Identify the failed cell/assertion and verify blast radius and placement. Follow OPS-BACKUP with a named target, actual recovery authority, expected catalog and RTO/RPO. Restore private credentials/namespaces and tenant identity without cross-cell fallback. Verify complete application, replica and queue recovery plus isolation negatives, not just process health.
