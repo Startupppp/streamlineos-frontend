@@ -40,7 +40,7 @@ function entry(over: Partial<TimesheetEntry>): TimesheetEntry {
   return {
     id: 1,
     orgId: "org_1",
-    userId: "usr_1",
+    userMembershipId: 201,
     ticketId: null,
     projectId: 10,
     timesheetPeriodId: 1,

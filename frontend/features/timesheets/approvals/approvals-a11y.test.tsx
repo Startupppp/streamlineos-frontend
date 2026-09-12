@@ -51,7 +51,7 @@ function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
   return {
     id: 1,
     orgId: "org_1",
-    userId: "usr_worker",
+    userMembershipId: 201,
     periodStart: "2026-09-07",
     periodEnd: "2026-09-13",
     status: "SUBMITTED",
@@ -62,11 +62,11 @@ function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
     approvedAt: null,
     rejectedAt: null,
     lockedAt: null,
-    currentApproverId: "usr_me",
+    currentApproverMembershipId: 200,
     rejectionReason: null,
     createdAt: "2026-09-07T00:00:00.000Z",
     updatedAt: "2026-09-14T09:00:00.000Z",
-    user: { id: "usr_worker", name: "Dana Wu", email: "dana@example.com" },
+    user: { membershipId: 201, name: "Dana Wu", email: "dana@example.com" },
     ...over,
   };
 }
@@ -75,8 +75,8 @@ const ROWS = [
   period({ id: 1 }),
   period({
     id: 2,
-    userId: "usr_other",
-    user: { id: "usr_other", name: "Sam Ray", email: "sam@example.com" },
+    userMembershipId: 202,
+    user: { membershipId: 202, name: "Sam Ray", email: "sam@example.com" },
   }),
 ];
 
