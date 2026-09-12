@@ -95,8 +95,7 @@ export default function StockLevelsPage() {
   const { data: warehousesData } = useWarehouses();
   const { data: locationsData = [] } = useLocations(warehouseId ?? 0);
 
-  const warehouses = Array.isArray(warehousesData) ? warehousesData : [];
-  const totalPages = stockData?.totalPages ?? 1;
+  const warehouses = warehousesData?.items ?? [];
   const total = stockData?.total ?? stockData?.items?.length ?? 0;
 
   const rows = useMemo(() => {
@@ -166,14 +165,6 @@ export default function StockLevelsPage() {
 
   function handleRetry(): void {
     void refetch();
-  }
-
-  function handlePrevPage(): void {
-    setPage((p) => Math.max(1, p - 1));
-  }
-
-  function handleNextPage(): void {
-    setPage((p) => Math.min(totalPages, p + 1));
   }
 
   function handleOpenOpeningStock(): void {
@@ -351,35 +342,18 @@ export default function StockLevelsPage() {
         ) : (
           <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
             <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
-              <StockLevelsTable rows={rows} onShowAvailability={handleShowAvailability} className="flex-1 min-h-0" />
+              <StockLevelsTable
+                rows={rows}
+                onShowAvailability={handleShowAvailability}
+                className="flex-1 min-h-0"
+                pagination={{
+                  page,
+                  pageSize: PAGE_LIMIT,
+                  total,
+                  onPageChange: setPage,
+                }}
+              />
             </motion.div>
-            {totalPages > 1 && (
-              <div className="mt-3 shrink-0 flex items-center justify-between px-1 py-2">
-                <span className="text-xs text-muted-foreground">
-                  Showing {rows.length > 0 ? (page - 1) * PAGE_LIMIT + 1 : 0}–{Math.min(page * PAGE_LIMIT, total)} of {total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    disabled={page <= 1}
-                    onClick={handlePrevPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    disabled={page >= totalPages}
-                    onClick={handleNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
         </div>

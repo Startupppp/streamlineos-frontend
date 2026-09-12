@@ -25,6 +25,7 @@ import { toBuilderValues } from "./report-builder-values";
 import { planReportRun, type ReportRunRequest } from "./report-run-mode";
 import { ReportBuilderActions } from "./report-builder-actions";
 import { ReportBuilderPanel } from "./report-builder-panel";
+import { ReportNlProposePanel } from "./report-nl-propose-panel";
 import {
   ReportBuilderFormSkeleton,
   UnshowableReport,
@@ -81,6 +82,16 @@ export function ReportBuilderPage() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [explainOf, setExplainOf] = useState<ReportingQueryDescription | null>(null);
   const [pendingSave, setPendingSave] = useState<ReportBuilderValues | null>(null);
+  /**
+   * Ticket 15. What the model proposed and the person accepted, plus a
+   * counter so accepting a SECOND proposal while still on "new report"
+   * still re-keys `ReportBuilderPanel` — the id-based key below is stable
+   * across two such acceptances, which a counter is not.
+   */
+  const [nlProposal, setNlProposal] = useState<{
+    description: ReportingQueryDescription;
+    version: number;
+  } | null>(null);
 
   const setDefinitionId = useCallback(
     (nextId: string | null) => {
@@ -114,6 +125,18 @@ export function ReportBuilderPage() {
   }, [definition, sources]);
 
   const savedValues = loaded?.kind === "loaded" ? loaded.values : null;
+
+  /**
+   * Ticket 15. The accepted proposal, read through the SAME inverse a saved
+   * report goes through — `toBuilderValues` doesn't know or care whether the
+   * description it is handed came from a person or a model.
+   */
+  const nlLoaded = useMemo(() => {
+    if (!nlProposal) return null;
+    const source = sources.find((entry) => entry.key === nlProposal.description.source);
+    return toBuilderValues(nlProposal.description, sourceFieldOptions(source));
+  }, [nlProposal, sources]);
+  const nlValues = nlLoaded?.kind === "loaded" ? nlLoaded.values : null;
 
   const plan = planReportRun({
     request,
@@ -159,13 +182,27 @@ export function ReportBuilderPage() {
     setRequest(null);
     setOffset(0);
     setSavedReportsOpen(false);
+    setNlProposal(null);
     setDefinitionId(nextId);
   }
 
   function handleNewReport() {
     setRequest(null);
     setOffset(0);
+    setNlProposal(null);
     setDefinitionId(null);
+  }
+
+  /**
+   * Ticket 15. Accepting behaves like starting a new report pre-filled —
+   * `setDefinitionId(null)` is what makes `savedValues` fall away so the
+   * proposal, not a stale saved report, is what the form actually shows.
+   */
+  function handleAcceptProposal(description: ReportingQueryDescription) {
+    setRequest(null);
+    setOffset(0);
+    setDefinitionId(null);
+    setNlProposal((previous) => ({ description, version: (previous?.version ?? 0) + 1 }));
   }
 
   function handleOpenSavedReports() {
@@ -234,7 +271,9 @@ export function ReportBuilderPage() {
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-          <div className={cn(CONTENT_PANEL_SOLID, "flex min-h-0 flex-col p-4 lg:w-96 lg:shrink-0")}>
+          <div className="flex min-h-0 flex-col gap-4 lg:w-96 lg:shrink-0">
+            {canManage ? <ReportNlProposePanel onAccept={handleAcceptProposal} /> : null}
+            <div className={cn(CONTENT_PANEL_SOLID, "flex min-h-0 flex-1 flex-col p-4")}>
             {access === "loading" || sourcesQuery.isLoading || isOpening ? (
               <ReportBuilderFormSkeleton />
             ) : loaded?.kind === "unrepresentable" ? (
@@ -252,8 +291,8 @@ export function ReportBuilderPage() {
                   </p>
                 ) : null}
                 <ReportBuilderPanel
-                  key={definitionId ?? "new"}
-                  initialValues={savedValues ?? DEFAULT_REPORT_BUILDER_VALUES}
+                  key={`${definitionId ?? "new"}:${nlProposal?.version ?? 0}`}
+                  initialValues={nlValues ?? savedValues ?? DEFAULT_REPORT_BUILDER_VALUES}
                   sources={sources}
                   isRunning={run.isFetching}
                   canSave={canManage}
@@ -264,6 +303,7 @@ export function ReportBuilderPage() {
                 />
               </>
             )}
+            </div>
           </div>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">

@@ -10,6 +10,7 @@ import type {
   CreateReportScheduleInput,
   ReportDefinition,
   ReportDefinitionSummary,
+  ReportNlProposal,
   ReportRunLogEntry,
   ReportSchedule,
   ReportingExplainResult,
@@ -137,6 +138,25 @@ export function useReportExplain(description: ReportingQueryDescription | null) 
       ),
     enabled: description !== null,
     staleTime: 30 * 60_000,
+  });
+}
+
+/**
+ * `POST /crm/reporting/nl-propose` — a plain-language question, proposed as
+ * a query description, never run.
+ *
+ * A mutation, not a query: asking spends a model call every time, so
+ * re-asking the same words is a new request rather than a cache read — the
+ * opposite choice from `useReportRun`, where re-asking the same DESCRIPTION
+ * is exactly what a cache is for. Gated on `crm:reporting:manage`, matching
+ * `useReportExplain`: the response's `preview` carries the same physical
+ * table and column names.
+ */
+export function useReportNlPropose() {
+  return useAuthorizedMutation<ReportNlProposal, Error, string>("crm:reporting:manage", {
+    mutationKey: ["crm", "reporting", "nl-propose"],
+    mutationFn: (question: string) =>
+      apiClient.post<ReportNlProposal>("/crm/reporting/nl-propose", { question }),
   });
 }
 

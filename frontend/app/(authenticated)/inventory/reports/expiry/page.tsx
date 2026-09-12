@@ -139,7 +139,7 @@ function ExpiryReportContent() {
   const currentPage = pageParam > 0 ? pageParam : 1;
 
   const warehousesQuery = useWarehouses();
-  const warehouses = warehousesQuery.data ?? [];
+  const warehouses = warehousesQuery.data?.items ?? [];
 
   const query = useExpiryReport({
     withinDays,

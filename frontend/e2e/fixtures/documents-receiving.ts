@@ -68,7 +68,7 @@ const E2E_DOCK_NAME = "E2E receiving dock";
 const E2E_DOCK_CAPACITY = "1000000";
 
 export async function seedTarget(api: ApiOracle, qty: number): Promise<SeedTarget> {
-  const warehouses = await api.get<Warehouse[]>("/inventory/warehouses");
+  const warehouses = await api.get<{ items: Warehouse[] }>("/inventory/warehouses");
   const variants = await api.get<{ items: VariantRow[] }>("/inventory/products/variants", {
     page: 1,
     limit: 10,
@@ -76,7 +76,7 @@ export async function seedTarget(api: ApiOracle, qty: number): Promise<SeedTarge
   const variant = variants.items?.[0];
   if (!variant) throw new Error("This tenant has no product variant to receive.");
 
-  const warehouse = warehouses.find((w) => w.isActive);
+  const warehouse = warehouses.items.find((w) => w.isActive);
   if (!warehouse) throw new Error("This tenant has no active warehouse.");
 
   const locations = await api.get<WarehouseLocation[]>(

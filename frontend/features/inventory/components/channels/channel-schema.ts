@@ -15,7 +15,9 @@ export const channelSchema = z.object({
   safetyBuffer: decimalField,
   publishThreshold: decimalField,
   warehouseIds: z.array(z.number()),
+  apiCredential: z.string().optional(),
 });
+
 
 export type ChannelFormValues = z.infer<typeof channelSchema>;
 

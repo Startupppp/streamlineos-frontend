@@ -52,7 +52,8 @@ export function RequirementAddSheet({
   const add = useAddRequirement();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const { data: variants, isLoading: variantsLoading } = useProductVariants({ activeOnly: true });
-  const { data: warehouses } = useWarehouses({ status: "active" });
+  const { data: warehousesData } = useWarehouses({ status: "active" });
+  const warehouses = warehousesData?.items;
 
   const sortedStores = useMemo(() => {
     const list = warehouses ?? [];

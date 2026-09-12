@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,8 @@ import { WarehouseCard } from "@/features/inventory/components/warehouse-card";
 import { WarehouseCreateSheet } from "@/features/inventory/components/warehouse/warehouse-create-sheet";
 import { useCan } from "@/hooks/api/access";
 
+const WAREHOUSES_PAGE_SIZE = 24;
+
 export default function WarehousesPage() {
   const canView = useCan("inventory:warehouses:read");
   const searchParams = useSearchParams();
@@ -50,6 +53,7 @@ export default function WarehousesPage() {
   const [localSearch, setLocalSearch] = useState(searchParams.get("q") ?? "");
   const [showFilters, setShowFilters] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   const debouncedSearch = useDebouncedValue(localSearch, 350);
 
@@ -65,13 +69,21 @@ export default function WarehousesPage() {
             : undefined,
       country: countryFilter || undefined,
       city: cityFilter || undefined,
+      page,
+      limit: WAREHOUSES_PAGE_SIZE,
     }),
-    [debouncedSearch, statusValue, isDefaultFilter, countryFilter, cityFilter],
+    [debouncedSearch, statusValue, isDefaultFilter, countryFilter, cityFilter, page],
   );
 
   const { data, isLoading, isError, refetch } = useWarehouses(filters);
 
-  const warehouses = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const warehouses = data?.items ?? [];
+  const total = data?.total ?? 0;
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusValue, isDefaultFilter, countryFilter, cityFilter]);
+
   const hasActiveFilters =
     !!localSearch.trim() ||
     statusValue !== "all" ||
@@ -233,16 +245,25 @@ export default function WarehousesPage() {
             )}
 
             {warehouses.length > 0 ? (
-              <motion.div
-                className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {warehouses.map((wh) => (
-                  <WarehouseCard key={wh.id} warehouse={wh} />
-                ))}
-              </motion.div>
+              <>
+                <motion.div
+                  className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {warehouses.map((wh) => (
+                    <WarehouseCard key={wh.id} warehouse={wh} />
+                  ))}
+                </motion.div>
+                <TablePagination
+                  page={page}
+                  pageSize={WAREHOUSES_PAGE_SIZE}
+                  total={total}
+                  onPageChange={setPage}
+                  className="shrink-0"
+                />
+              </>
             ) : hasActiveFilters ? (
               <InventoryEmptyState
                 illustration={<EmptySearchIllustration />}

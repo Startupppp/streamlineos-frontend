@@ -71,6 +71,12 @@ export function useLeadDetail(id: number) {
   });
 }
 
+/**
+ * CRM-P4-AUDIT. Fetches every lead on the board with no limit. `GET
+ * /leads/board` takes no query parameters in the current API contract (see
+ * `contracts/openapi.json`), so a limit cannot be added here without the
+ * backend accepting one first -- see the note in `features/crm/leads/leads-kanban.tsx`.
+ */
 export function useLeadBoard() {
   const canView = useCan("crm:leads:view");
   return useQuery({

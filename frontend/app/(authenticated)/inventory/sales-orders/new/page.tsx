@@ -42,7 +42,7 @@ export default function NewSalesOrderPage() {
   const createMutation = useCreateSalesOrder();
 
   const allVariants = useMemo(() => variantsQuery.data ?? [], [variantsQuery.data]);
-  const allWarehouses = useMemo(() => warehousesQuery.data ?? [], [warehousesQuery.data]);
+  const allWarehouses = useMemo(() => warehousesQuery.data?.items ?? [], [warehousesQuery.data]);
 
   const variants = useMemo(
     () => allVariants.filter((v) => isValidVariantName(v.productName)),

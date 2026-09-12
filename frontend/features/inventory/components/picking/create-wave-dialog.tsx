@@ -183,7 +183,7 @@ export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDi
               <SelectValue placeholder="Which building is this walk in?" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-              {(warehouses.data ?? []).map((warehouse) => (
+              {(warehouses.data?.items ?? []).map((warehouse) => (
                 <SelectItem key={warehouse.id} value={String(warehouse.id)}>
                   {warehouse.name}
                 </SelectItem>

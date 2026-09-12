@@ -141,6 +141,21 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
     setCancelReason(e.target.value);
   }
 
+  // G8. The action keys were gated and the read was not, so somebody who may
+  // not see sales orders got the order — just without the buttons. Denied is
+  // its own answer, not a read with the controls removed. Checked before the
+  // not-found branch: `useSalesOrder` gates its query on this same key
+  // (`enabled: canView`), so a denied user's `so` is always undefined and the
+  // not-found check below would otherwise fire first, making this branch
+  // unreachable.
+  if (!canRead) {
+    return (
+      <PageWrapper title="Sales Order">
+        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
   if (!so)
@@ -157,17 +172,6 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   const isMutating =
     confirmMutation.isPending || reserveMutation.isPending ||
     packMutation.isPending || cancelMutation.isPending || invoiceMutation.isPending;
-
-  // G8. The action keys were gated and the read was not, so somebody who may
-  // not see sales orders got the order — just without the buttons. Denied is
-  // its own answer, not a read with the controls removed.
-  if (!canRead) {
-    return (
-      <PageWrapper title="Sales Order">
-        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper

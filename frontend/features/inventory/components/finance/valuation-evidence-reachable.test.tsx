@@ -37,7 +37,7 @@ jest.mock("@/hooks/api/org-display", () => ({
 }));
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [] }),
+  useWarehouses: () => ({ data: { items: [], total: 0, page: 1, totalPages: 0 } }),
 }));
 
 const idle = { isLoading: false, isError: false, error: null, refetch: jest.fn() };

@@ -90,10 +90,10 @@ export async function findLocationWithHeadroom(
   api: ApiOracle,
   qty: number,
 ): Promise<PutTarget> {
-  const warehouses = await api.get<Warehouse[]>("/inventory/warehouses");
+  const warehouses = await api.get<{ items: Warehouse[] }>("/inventory/warehouses");
   const tried: string[] = [];
 
-  for (const warehouse of warehouses.filter((w) => w.isActive)) {
+  for (const warehouse of warehouses.items.filter((w) => w.isActive)) {
     const locations = await api.get<WarehouseLocation[]>(
       `/inventory/warehouses/${warehouse.id}/locations`,
     );

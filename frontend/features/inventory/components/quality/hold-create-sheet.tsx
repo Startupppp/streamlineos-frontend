@@ -55,7 +55,8 @@ interface Props {
 
 export function HoldCreateSheet({ open, onOpenChange }: Props) {
   const createMut = useCreateQualityHold();
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

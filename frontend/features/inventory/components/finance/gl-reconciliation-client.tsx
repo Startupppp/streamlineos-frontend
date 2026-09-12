@@ -55,7 +55,8 @@ export function GlReconciliationClient() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const { data: periods } = useGlReconPeriods();
   const { data, isLoading, isError, error, refetch } = useGlReconciliation({
     periodId,
