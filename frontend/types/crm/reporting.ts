@@ -287,3 +287,19 @@ export interface UpdateReportScheduleInput {
   readonly enabled?: boolean;
   readonly recipients?: readonly string[];
 }
+
+/**
+ * `POST /crm/reporting/nl-propose` — a plain-language question, proposed as
+ * a query description, never run. Mirrors the backend's discriminated union
+ * exactly: `accepted` carries the same shape `ReportingExplainResult` does
+ * (a compile preview, never rows) alongside the description that produced
+ * it, so the builder form can be pre-filled from one response.
+ */
+export type ReportNlProposal =
+  | {
+      readonly accepted: true;
+      readonly description: ReportingQueryDescription;
+      readonly explanation: string;
+      readonly preview: ReportingExplainResult;
+    }
+  | { readonly accepted: false; readonly reason: string };
