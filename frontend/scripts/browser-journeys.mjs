@@ -51,6 +51,7 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { findBrowser } from "./lib/chrome-launcher.mjs";
+import { makeScreenshotter } from "./lib/screenshot.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -93,6 +94,15 @@ const JOURNEYS = [
   { name: "accounting", steps: ["/accounting", "/accounting/coa"] },
   { name: "workspace", steps: ["/directory/workers", "/calendar", "/workflows"] },
   { name: "settings", steps: ["/settings", "/settings/roles"] },
+  {
+    name: "documents",
+    steps: [
+      "/knowledge/wiki",
+      "/knowledge/wiki/recent",
+      "/knowledge/wiki/pages/{pageId}",
+      "/knowledge/chat",
+    ],
+  },
 ];
 
 /**
@@ -464,6 +474,22 @@ export function writesIncomplete(asserted, planned) {
  * would then measure a 404 while reporting a route name that sounds right.
  */
 const DISCOVERIES = [
+  {
+    token: "pageId",
+    from: "/knowledge/wiki/recent",
+    /**
+     * Recent pages renders hrefs of the form /knowledge/wiki/pages/<id>. The id
+     * may be a UUID, a slug, or a numeric string depending on the backend — the
+     * pattern captures everything up to a query or hash so it works for all three.
+     */
+    extract: `(() => {
+      for (const a of document.querySelectorAll('a[href^="/knowledge/wiki/pages/"]')) {
+        const m = /^\\/knowledge\\/wiki\\/pages\\/([^/?#]+)/.exec(a.getAttribute("href") || "");
+        if (m) return m[1];
+      }
+      return null;
+    })()`,
+  },
   {
     token: "projectId",
     from: "/build/all",
@@ -983,6 +1009,39 @@ function runSelfTest() {
     /if \(from === -1\) return false;/.test(pickCalendarDayFromSubject(25)),
   );
 
+  assert(
+    "documents journey is present so DOC-002 visual evidence can be produced",
+    JOURNEYS.some((j) => j.name === "documents"),
+  );
+  assert(
+    "BITE — a journeys list without a documents entry fails the DOC-002 presence check",
+    !JOURNEYS.filter((j) => j.name !== "documents").some((j) => j.name === "documents"),
+  );
+  assert(
+    "documents journey visits the wiki editor surface",
+    JOURNEYS.find((j) => j.name === "documents")?.steps.some((s) => s.includes("/knowledge/wiki")) === true,
+  );
+  assert(
+    "documents journey visits the search surface for search-state evidence",
+    JOURNEYS.find((j) => j.name === "documents")?.steps.some((s) => s.includes("/knowledge/chat")) === true,
+  );
+  assert(
+    "BITE — a documents journey whose steps skip /knowledge/wiki fails the wiki surface check",
+    JOURNEYS.find((j) => j.name === "documents")?.steps.every((s) => !s.includes("/knowledge/wiki")) === false,
+  );
+  assert(
+    "pageId is discoverable so the editor step is reachable at runtime",
+    DISCOVERIES.some((d) => d.token === "pageId"),
+  );
+  assert(
+    "BITE — a DISCOVERIES list without pageId makes every {pageId} step permanently unresolved",
+    !DISCOVERIES.filter((d) => d.token !== "pageId").some((d) => d.token === "pageId"),
+  );
+  assert(
+    "BITE — makeScreenshotter must be a function; if the shared lib removes it, screenshot evidence gaps",
+    typeof makeScreenshotter === "function",
+  );
+
   const axeSample = {
     ran: true,
     rulesEvaluated: 90,
@@ -1063,6 +1122,8 @@ async function main() {
    * a run that took it is not evidence that CORS is configured.
    */
   const allowCrossOriginApi = argv.includes("--allow-cross-origin-api");
+  const screenshotDir = flag("screenshot-dir", "");
+  const captureScreenshot = screenshotDir ? makeScreenshotter(screenshotDir) : null;
 
   if (!browserPath) throw new Error("no Chrome/Chromium found — pass --browser=<path>");
   if (!cookieFile || !existsSync(cookieFile))
@@ -1222,6 +1283,10 @@ async function main() {
           }
 
           const state = stateVerdict(probe);
+          if (captureScreenshot) {
+            const shotKey = `${journey.name}--${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}`;
+            await captureScreenshot(cdp, shotKey, width, state).catch(() => {});
+          }
           const measured = probe.contrast.map((c) => ({
             ...c,
             ratio: contrastRatio(c.fg, c.bg),

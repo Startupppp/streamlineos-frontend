@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -54,6 +54,7 @@ import {
   runKeyboard,
   runResponsive,
 } from "./lib/build-acceptance-states.mjs";
+import { makeScreenshotter } from "./lib/screenshot.mjs";
 
 function runSelfTest() {
   const failures = [];
@@ -208,8 +209,6 @@ async function main() {
     throw new Error("--cookie-file is required: these are authenticated surfaces");
   const cookieValue = readFileSync(cookieFile, "utf8").trim();
   if (!cookieValue) throw new Error("cookie file is empty");
-  mkdirSync(shotDir, { recursive: true });
-
   const axeSource = readFileSync(axeSourcePath(), "utf8");
   const started = Date.now();
   const log = (m) => console.log(`[${((Date.now() - started) / 1000).toFixed(1)}s] ${m}`);
@@ -262,13 +261,7 @@ async function main() {
         deviceScaleFactor: 1,
         mobile: width < 768,
       });
-    const screenshot = async (session, state, width, variant) => {
-      const name = screenshotName(state, width, variant);
-      const path = join(shotDir, name);
-      const shot = await session.send("Page.captureScreenshot", { format: "png" });
-      writeFileSync(path, Buffer.from(shot.data, "base64"));
-      return path;
-    };
+    const screenshot = makeScreenshotter(shotDir);
     const runAxe = async (session) =>
       axeVerdict(
         await evaluate(session, axeExpression(undefined, undefined, THIRD_PARTY_EXCLUDED_CONTEXT), true),
