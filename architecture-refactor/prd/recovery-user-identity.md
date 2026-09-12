@@ -196,12 +196,36 @@ Deletion evidence for I3: `pnpm exec knip --no-progress` reports 4 unused export
 `modules/auth`** — the register removal left no orphan. `insertTrialSubscription` is retained
 and still used by the live org-creation path (`bootstrap-cell-organization.ts:81`).
 
+### Browser evidence — CAPTURED
+
+`pnpm --filter streamlineos-web exec node scripts/verify-identity-journey.mjs` drives Chrome over
+CDP against the running dev server, reusing `scripts/lib/{cdp,chrome-launcher,axe}.mjs` (46
+self-tests). 12 screenshots + `identity-acceptance-results.json` in
+`D:/localstack/identity-acceptance/`. Captured at **320px and 1280px**.
+
+PASS: email stage renders; submitting advances to the code stage; **0 and 3 digits render no
+Verify control** (both halves of the old contradiction gone); **six digits submit exactly once**
+even when the control is clicked again while the request is held paused; a wrong code returns a
+real backend 401 into `role="alert" aria-live="assertive"` with the field re-enabled; no
+horizontal overflow at 320px; **0 console errors**; no unexpected 4xx/5xx.
+
+Three defects the browser found, all now fixed and pinned:
+1. **axe critical** — the OTP input had no accessible name (`<Label>` without `htmlFor`, input without `id`). Now associated, with `aria-describedby` → hint, and → error plus `aria-invalid` once a verify fails.
+2. **The Verify control was never observably actionable** — reaching six digits auto-submits in the same React batch, so its only painted state was "Verifying…", and the error path cleared the field to zero digits. It is now the retry for the one case where retrying is valid: a request that reached **no server verdict** keeps the digits (that code is still live), while a 401/429 still clears them (that code is spent). Reachable exactly when useful.
+3. **axe color-contrast** — "or continue with email" at `text-muted-foreground/60`, raised to the full token.
+
+Runtime confirmation of the I5 premise against the live app, not just source:
+`GET /api/auth/providers` on the running server returns **`google, credentials`** and no
+Microsoft entry — the removed button could never have worked.
+
+Build: `tsc -p tsconfig.build.json` is clean and a full emit to a scratch `outDir` produced
+**4174 .js files**. `nest build` itself fails only with `ENOTEMPTY` on `dist/modules/build/qa`,
+because the running backend holds `dist` open — an environment artifact, not a compile error.
+
 ### BLOCKED — do not read the above as a passing release
 
-- **Real email delivery**, provider retry and true delivery inversion — the transport is a stub throughout.
-- **Browser evidence.** No screenshots, no keyboard/mobile/zoom pass, no 320px check in a real browser. `verify-email`, `magic-link` and `invitation/[token]` page branches are typecheck-and-source verified only; no component test covers them.
-- **Combined journey** at one root/backend revision pair: signup → correct gate → two devices → org switch → revocation. Not exercised.
-- `nest build` not green because of the billing-lane errors above, so the backend build gate is unproven for this lane in isolation.
+- **Real email delivery.** `pnpm verify:otp-delivery` exists for it (`--send` then `--confirm=<code>`, comparing sha256 of the delivered code against the stored hash), but it deliberately refuses to default a recipient, and the send goes through the **live ZeptoMail token** in `backend/.env`: `buildEmailClients` only returns null clients at `NODE_ENV=test` without `EMAIL_ALLOW_LIVE_SEND=1` (`email-no-live-send-under-test.spec.ts` pins that guard, including a NEUTER case proving it is scoped and not a kill switch). Running it is an outbound send from the org's domain and needs a named recipient. **Provider retry and true delivery inversion remain untested.**
+- **Combined journey** at one root/backend revision pair: signup → correct gate → two devices → org switch → revocation. Individually covered; not exercised as one sequence against real delivery.
 
 ### Cross-lane contract changes the coordinator must integrate
 
