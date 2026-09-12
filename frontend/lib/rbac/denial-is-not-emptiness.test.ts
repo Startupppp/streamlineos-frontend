@@ -509,3 +509,60 @@ describe("no surface tells a denied user their data is empty", () => {
     expect(stale).toEqual([]);
   });
 });
+
+/**
+ * The other half of ticket 26, which the ratchet above cannot see.
+ *
+ * `surfacesTellingDeniedUsersTheyAreEmpty` only asks whether a surface
+ * *handles* denial at all -- `source.includes("NoPermissionState")` is true
+ * whether the key inside it is right or not. The deals list regressed exactly
+ * that way: `deal-list.tsx` checked `useCanState("crm:leads:view")` while its
+ * data (`useDeals`) is gated on `crm:deals:read`. A near-universal permission
+ * stood in for the real one, so the guard always read "granted" and a caller
+ * who could not read deals saw "No deals yet" instead of "Access Restricted".
+ *
+ * A fully general version of this check would need to know, for an arbitrary
+ * component, which gated hook's result it is rendering -- not always answerable
+ * from source text alone, since the fetch can live in a parent (deal-list.tsx
+ * itself never calls `useDeals`; `app/(authenticated)/crm/deals/page.tsx`
+ * does, and passes rows down). Rather than guess, this pins the one pair the
+ * regression was in: the permission key is read out of `useDeals`'s own
+ * definition, not retyped here, so a future rename of that key still has to
+ * agree with every denial check below it or this fails.
+ */
+function permissionKeyForGatedHook(relativeFile: string, hookName: string): string | null {
+  const source = fs.readFileSync(path.join(ROOT, relativeFile), "utf8");
+  const start = source.search(new RegExp(`export function ${hookName}\\b`));
+  if (start === -1) return null;
+  const body = source.slice(start, start + 2000);
+  const match = body.match(/useGatedQuery(?:<[^>]*>)?\(\s*["']([^"']+)["']/);
+  return match?.[1] ?? null;
+}
+
+function deniedPermissionKeys(source: string): string[] {
+  return [...source.matchAll(/useCanState\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] as string);
+}
+
+describe("the deals list denies on the permission that actually gates its data", () => {
+  const dealsReadKey = permissionKeyForGatedHook("hooks/api/crm/deals.ts", "useDeals");
+
+  it("finds useDeals' own gate key to check against", () => {
+    expect(dealsReadKey).not.toBeNull();
+  });
+
+  it("deal-list.tsx's table-view denial check uses it", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "features/crm/deals/deal-list.tsx"),
+      "utf8",
+    );
+    expect(deniedPermissionKeys(source)).toContain(dealsReadKey);
+  });
+
+  it("the deals page's kanban-view denial check uses it too", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "app/(authenticated)/crm/deals/page.tsx"),
+      "utf8",
+    );
+    expect(deniedPermissionKeys(source)).toContain(dealsReadKey);
+  });
+});

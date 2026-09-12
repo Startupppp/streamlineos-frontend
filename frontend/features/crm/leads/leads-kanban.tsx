@@ -17,6 +17,22 @@ const FALLBACK_OPTIONS = [
   { key: "LOST", label: "Lost", color: "red", isTerminal: true },
 ] as const;
 
+/**
+ * CRM-P4-AUDIT. `columnLeads.map(...)` below renders every card in the column
+ * with no windowing, and `useLeadBoard` (`hooks/api/leads.ts`) fetches the
+ * whole board with no limit -- `GET /leads/board` takes no query parameters at
+ * all in the current API contract, so a limit cannot be threaded from here
+ * without a backend change first.
+ *
+ * The canonical windowing fix is `features/build/views/kanban-virtual-ticket-list.tsx`
+ * (`react-window` v2 `List` + `Droppable mode="virtual"` + `renderClone` + the
+ * `display:contents` shell it documents for `provided.innerRef`). This
+ * column's own bounded, internally-scrolling height (`max-h-[...] overflow-y-auto`
+ * below) is closer to what `List` wants than the deals board's is, but wiring
+ * it up still means reshaping `KanbanCard` into a row-rendering component and
+ * changing how `@hello-pangea/dnd` attaches to it -- not done in this pass
+ * without a browser on hand to confirm drag-and-drop still works after.
+ */
 interface LeadsKanbanProps {
   filteredBoard: Record<string, BoardLead[]> | null;
   onDragEnd: (result: DropResult) => void;

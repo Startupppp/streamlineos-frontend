@@ -32,11 +32,15 @@ import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCan, useCanState } from "@/hooks/api/access";
+
+const PAGE_SIZE = 25;
 
 export default function DealsPage() {
   const canCreateDeal = useCan("crm:deals:create");
   const canUpdateDeal = useCan("crm:deals:update");
+  const dealsReadState = useCanState("crm:deals:read");
   const [density, setDensity] = useDensity();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -48,6 +52,7 @@ export default function DealsPage() {
   const view: "table" | "kanban" = rawView === "kanban" ? "kanban" : "table";
   const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
   const debouncedSearchInput = useDebouncedValue(searchInput, 300);
+  const page = Number(searchParams.get("page")) || 1;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -66,7 +71,7 @@ export default function DealsPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearchInput === current) return;
-    updateParams({ q: debouncedSearchInput || null });
+    updateParams({ q: debouncedSearchInput || null, page: null });
   }, [debouncedSearchInput, searchParams, updateParams]);
 
   const { data: dealPipelines = [] } = useCrmPipelines("deal");
@@ -117,12 +122,17 @@ export default function DealsPage() {
   }, []);
 
   const handleStageFilterChange = useCallback((value: string) => {
-    updateParams({ stage: value === "all" ? null : value });
+    updateParams({ stage: value === "all" ? null : value, page: null });
   }, [updateParams]);
 
   const handleAssigneeFilterChange = useCallback((value: string) => {
-    updateParams({ assignee: value === "all" ? null : value });
+    updateParams({ assignee: value === "all" ? null : value, page: null });
   }, [updateParams]);
+
+  const handlePageChange = useCallback(
+    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
+    [updateParams],
+  );
 
   const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
   const handleViewKanban = useCallback(() => updateParams({ view: "kanban" }), [updateParams]);
@@ -290,7 +300,7 @@ export default function DealsPage() {
 
   const handleClearDealFilters = useCallback(() => {
     setSearchInput("");
-    updateParams({ q: null, stage: null, assignee: null });
+    updateParams({ q: null, stage: null, assignee: null, page: null });
   }, [updateParams]);
 
   const handleRetry = useCallback(() => {
@@ -303,6 +313,22 @@ export default function DealsPage() {
   const itemVariants = shouldReduceMotion
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : fadeUp;
+
+  /**
+   * Ticket 26. The table view guards this in `DealList`, but the kanban view
+   * renders its own board straight off `allDeals` with no equivalent check --
+   * a denied caller saw empty stage columns and nothing telling them why.
+   *
+   * Checked before the loading branch on purpose: a query that was never
+   * allowed to run has no loading state worth waiting for.
+   */
+  if (view === "kanban" && dealsReadState === "denied") {
+    return (
+      <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
+        <NoPermissionState permission="crm:deals:read" />
+      </PageWrapper>
+    );
+  }
 
   if (view === "kanban" && isLoading) return <DealsLoadingSkeleton />;
 
@@ -394,6 +420,9 @@ export default function DealsPage() {
                 canCreate={canCreateDeal}
                 canUpdate={canUpdateDeal}
                 activeFilterLabels={activeFilterLabels}
+                page={page}
+                pageSize={PAGE_SIZE}
+                onPageChange={handlePageChange}
                 onRetry={handleRetry}
                 onClearFilters={handleClearDealFilters}
                 onCreateDeal={handleOpenCreate}
