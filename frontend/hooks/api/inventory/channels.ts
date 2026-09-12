@@ -22,6 +22,7 @@ export interface Channel {
   safetyBuffer: string | null;
   publishThreshold: string | null;
   warehouseIds: number[];
+  apiCredentialHint?: string | null;
   lastSyncStatus: SyncStatus | null;
   lastSyncAt: string | null;
   createdAt: string;
@@ -49,6 +50,7 @@ export interface ThreePlConnection {
   lastSyncAt: string | null;
   lastSyncError: string | null;
   config?: Record<string, string> | null;
+  apiCredentialHint?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +61,7 @@ interface CreateChannelInput {
   safetyBuffer?: string;
   publishThreshold?: string;
   warehouseIds?: number[];
+  apiCredential?: string;
 }
 
 interface UpdateChannelInput {
@@ -68,11 +71,14 @@ interface UpdateChannelInput {
   publishThreshold?: string;
   warehouseIds?: number[];
   status?: ChannelStatus;
+  apiCredential?: string;
 }
+
 
 interface CreateThreePlInput {
   name: string;
   providerKey: string;
+  apiCredential?: string;
   config?: Record<string, string>;
 }
 
@@ -80,6 +86,7 @@ interface UpdateThreePlInput {
   connectionId: number;
   name?: string;
   isActive?: boolean;
+  apiCredential?: string;
   config?: Record<string, string>;
 }
 
