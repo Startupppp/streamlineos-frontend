@@ -48,12 +48,36 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   // surface like the rest, and the point of this map is that what remains stays
   // countable until it is described to the renderer.
   "careers": 1,
-  "hr": 122,
-  "inventory": 136, // 96 on the CRM lane; +40 from the inventory lane on merge
+  /*
+   * Re-measured on 2026-09-12 against the tree `final/inventory-into-main`
+   * produced, when origin/main merged into the Inventory/CRM/Timesheets/SignOS
+   * branch. Every surface that pushed a module up arrived WITH main and none is
+   * new work on this branch — checked file by file against the merge's two
+   * parents:
+   *
+   *   hr        122 -> 125   15 of main's HR surfaces arrived (benefits, cases,
+   *                          devices, documents, skills matrix, recruitment,
+   *                          reimbursements, templates, travel)
+   *   inventory 136 -> 138   main's category-select, uom-select and
+   *                          opening-stock-line-row
+   *   chat        2 ->   3   main's chat-settings-form
+   *   directory   7 ->  17   NOT growth: main keeps the users surfaces under
+   *                          `features/directory/users/`, so the 10 that were
+   *                          counted as `users` moved module. `users` is gone
+   *                          from this map for that reason, not because anything
+   *                          was migrated.
+   *
+   * The four modules that fell are lowered to their measured values rather than
+   * banked as headroom: settings 27 -> 25, landing 4 -> 3, renderer 2 -> 0 and
+   * users 10 -> 0 (both keys dropped). Direction of travel is unchanged — the
+   * numbers below may still only fall.
+   */
+  "hr": 125,
+  "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
   "build": 76,
   "payroll": 53,
   "accounting": 32,
-  "settings": 27,
+  "settings": 25,
   /*
    * 23 -> 24 for `features/timesheets/overdue/overdue-columns.tsx`, the TS-11
    * queue that closed `GET /timesheets/periods/overdue` — a route that had
@@ -69,21 +93,19 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    */
   "timesheets": 24,
   "support": 15,
+  "directory": 17,
   "billing": 10,
-  "users": 10,
   "sign": 8,
-  "directory": 7,
   "surveys": 6,
   "wiki": 5,
-  "landing": 4,
   "notifications": 4,
+  "chat": 3,
   "help-centre": 3,
-  "chat": 2,
+  "landing": 3,
   "crm": 2,
   "employee-onboarding": 2,
   "module-access": 2,
   "portal-access": 2,
-  "renderer": 2,
   "workflows": 2,
   "auth": 2,
   "blog": 2, // main's blog admin tables, arrived on merge

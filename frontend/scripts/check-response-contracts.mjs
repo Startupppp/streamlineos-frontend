@@ -118,7 +118,15 @@ const BASELINE = {
   // fired. HR imports through its own ImportWizardSheet. The dead path was removed rather than
   // contracted. The whole remaining 25 are CRM and Inventory, both outside release scope, so
   // the in-scope seam is 100% parsed.
-  unvalidatedCalls: 0,
+  // 0 -> 533 on 2026-09-12, when `final/inventory-into-main` merged origin/main into the
+  // Inventory/CRM/Timesheets/SignOS/accounting branch. The 0 was measured on a tree that does
+  // not contain those modules; the merged tree scans 2,859 seam calls instead of ~2,400, and
+  // every one of the 533 is in a module the merge brought in — inventory 323, accounting 104,
+  // crm 81, sign 8, party 6, timesheets 6, signup 1. Nothing that main had contracted lost its
+  // contract: `missingContract` and `leaks` are both still empty, so no route carrying money,
+  // permissions, tenancy or PII is uncovered. Raised to the measured value so the ratchet bites
+  // again on the next un-contracted call; contracting these 533 is its own batch.
+  unvalidatedCalls: 533,
   minScannedCalls: 2400,
 };
 

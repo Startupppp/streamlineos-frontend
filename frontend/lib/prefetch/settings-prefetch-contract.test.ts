@@ -22,6 +22,7 @@ const USER = "user-contract";
 const NO_PARAMS = new URLSearchParams();
 
 const ACCESS = {
+  membershipId: 4711,
   isOrgOwner: true,
   canManageOrganizationMembership: true,
   modules: {},
