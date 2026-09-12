@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Copy, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,37 +17,8 @@ import {
 } from "@/hooks/api/timesheets-core";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TimesheetEntry } from "@/features/timesheets";
-
-interface GridRow {
-  rowKey: string;
-  projectId: number | null;
-  ticketId: number | null;
-  projectName: string;
-  ticketLabel: string | null;
-}
-
-function deriveRows(entries: TimesheetEntry[]): GridRow[] {
-  const map = new Map<string, GridRow>();
-  for (const e of entries) {
-    const key = `${e.projectId ?? 0}-${e.ticketId ?? 0}`;
-    if (!map.has(key)) {
-      map.set(key, {
-        rowKey: key,
-        projectId: e.projectId,
-        ticketId: e.ticketId,
-        projectName: e.project?.name ?? "No project",
-        ticketLabel: e.ticket
-          ? `#${e.ticket.ticketNumber}: ${e.ticket.title}`
-          : null,
-      });
-    }
-  }
-  return [...map.values()];
-}
-
-function isCellLocked(entry: TimesheetEntry | undefined): boolean {
-  return !!entry?.lockedAt || entry?.status === "APPROVED";
-}
+import { deriveRows, isCellLocked, rowKeyOf, type GridRow } from "./week-grid-rows";
+import { useWeekGridCells } from "./use-week-grid-cells";
 
 interface WeekGridProps {
   entries: TimesheetEntry[] | undefined;
@@ -80,8 +51,6 @@ export function WeekGrid({
   const updateEntry = useUpdateTimesheetEntry();
   const voidEntry = useVoidTimesheetEntry();
 
-  const [editingCell, setEditingCell] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState("");
   const [pendingRows, setPendingRows] = useState<GridRow[]>([]);
   const [addingRow, setAddingRow] = useState(false);
   const [newRowProject, setNewRowProject] = useState<number | null>(null);
@@ -105,7 +74,7 @@ export function WeekGrid({
   const entryMap = useMemo(() => {
     const m = new Map<string, TimesheetEntry>();
     for (const e of entryList) {
-      m.set(`${e.projectId ?? 0}-${e.ticketId ?? 0}-${e.date}`, e);
+      m.set(`${rowKeyOf(e)}-${e.date}`, e);
     }
     return m;
   }, [entryList]);
@@ -131,165 +100,23 @@ export function WeekGrid({
   );
   const grandTotal = dayTotals.reduce((a, b) => a + b, 0);
 
-  const cellRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
-  /**
-   * What the grid announces when a cell writes.
-   *
-   * Every edit here is a silent background mutation — the number just stays
-   * where you typed it — so a screen reader user had no signal that anything
-   * had been saved, or that it had failed. Errors already toast; this covers
-   * the success and in-flight halves.
-   */
-  const saveStatus = useMemo(() => {
-    const pending =
-      createEntry.isPending || updateEntry.isPending || voidEntry.isPending;
-    if (pending) return "Saving hours…";
-    if (createEntry.isError || updateEntry.isError || voidEntry.isError)
-      return "Could not save hours.";
-    if (createEntry.isSuccess || updateEntry.isSuccess || voidEntry.isSuccess)
-      return "Hours saved.";
-    return "";
-  }, [createEntry, updateEntry, voidEntry]);
-
-  const commitCell = useCallback(
-    (rowKey: string, date: string, value: string, row: GridRow) => {
-      const hours = parseFloat(value) || 0;
-      const existing = entryMap.get(`${rowKey}-${date}`);
-      // A locked cell is read-only rather than disabled now, so it can be
-      // focused and left; nothing it reports may reach a mutation.
-      if (isCellLocked(existing)) {
-        setEditingCell(null);
-        return;
-      }
-      if (hours > 0 && !existing) {
-        createEntry.mutate({
-          date,
-          hours,
-          projectId: row.projectId ?? undefined,
-          ticketId: row.ticketId ?? undefined,
-          source: "MANUAL",
-        });
-      } else if (hours > 0 && existing && hours !== Number(existing.hours)) {
-        updateEntry.mutate({ entryId: existing.id, data: { hours } });
-      } else if (hours === 0 && existing && !isCellLocked(existing)) {
-        voidEntry.mutate({ entryId: existing.id, reason: "Cleared via grid" });
-      }
-      setEditingCell(null);
-    },
-    [entryMap, createEntry, updateEntry, voidEntry],
-  );
-
-  const handleCellFocus = useCallback(
-    (e: React.FocusEvent<HTMLInputElement>) => {
-      const key = e.currentTarget.dataset.cellKey ?? "";
-      const existingHours = e.currentTarget.dataset.hours ?? "";
-      setEditingCell(key);
-      setEditingValue(existingHours);
-    },
-    [],
-  );
-
-  const handleCellChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEditingValue(e.target.value);
-    },
-    [],
-  );
-
-  const handleCellBlur = useCallback(
-    (e: React.FocusEvent<HTMLInputElement>) => {
-      const rowKey = e.currentTarget.dataset.rowKey ?? "";
-      const date = e.currentTarget.dataset.date ?? "";
-      const rowJson = e.currentTarget.dataset.row ?? "{}";
-      let row: GridRow;
-      try {
-        row = JSON.parse(rowJson) as GridRow;
-      } catch {
-        return;
-      }
-      commitCell(rowKey, date, editingValue, row);
-    },
-    [editingValue, commitCell],
-  );
-
-  const focusCell = useCallback(
-    (rowIdx: number, dayIdx: number) => {
-      const row = allRows[rowIdx];
-      const day = days[dayIdx];
-      if (!row || !day) return false;
-      const target = cellRefs.current[`${row.rowKey}-${day}`];
-      if (!target) return false;
-      target.focus();
-      target.select();
-      return true;
-    },
-    [allRows, days],
-  );
-
-  /**
-   * Move around the grid with the arrow keys.
-   *
-   * Enter alone used to be the whole keyboard story, and a number input eats
-   * Up and Down natively to step its own value — so a keyboard user pressing
-   * Down on Monday silently changed Monday's hours instead of moving to the
-   * next project. Arrow keys now navigate (and are prevented from stepping),
-   * Home/End jump to the ends of the week, and Enter still commits and moves
-   * down. Typing a value is unaffected: only the movement keys are captured.
-   */
-  const handleCellKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const NAV_KEYS = [
-        "Enter",
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        "Home",
-        "End",
-      ];
-      if (!NAV_KEYS.includes(e.key)) return;
-
-      const rowKey = e.currentTarget.dataset.rowKey ?? "";
-      const date = e.currentTarget.dataset.date ?? "";
-      const dayIdx = days.indexOf(date);
-      const rowIdx = allRows.findIndex((r) => r.rowKey === rowKey);
-      if (dayIdx < 0 || rowIdx < 0) return;
-
-      // `selectionStart` is null on `input[type=number]`, which reads as "the
-      // whole value", so Left/Right always navigate here. They still leave a
-      // text-mode cell only from its edges if this ever stops being a number.
-      const start = e.currentTarget.selectionStart;
-      const end = e.currentTarget.selectionEnd;
-      const caretAtStart = start === null || start === 0;
-      const caretAtEnd = end === null || end === e.currentTarget.value.length;
-      if (e.key === "ArrowLeft" && !caretAtStart) return;
-      if (e.key === "ArrowRight" && !caretAtEnd) return;
-
-      e.preventDefault();
-
-      if (e.key === "Enter") {
-        const rowJson = e.currentTarget.dataset.row ?? "{}";
-        let row: GridRow;
-        try {
-          row = JSON.parse(rowJson) as GridRow;
-        } catch {
-          return;
-        }
-        commitCell(rowKey, date, editingValue, row);
-        focusCell(rowIdx + 1, dayIdx);
-        return;
-      }
-
-      if (e.key === "ArrowUp") focusCell(rowIdx - 1, dayIdx);
-      else if (e.key === "ArrowDown") focusCell(rowIdx + 1, dayIdx);
-      else if (e.key === "ArrowLeft") focusCell(rowIdx, dayIdx - 1);
-      else if (e.key === "ArrowRight") focusCell(rowIdx, dayIdx + 1);
-      else if (e.key === "Home") focusCell(rowIdx, 0);
-      else if (e.key === "End") focusCell(rowIdx, days.length - 1);
-    },
-    [editingValue, commitCell, days, allRows, focusCell],
-  );
+  const {
+    cellRefs,
+    editingCell,
+    editingValue,
+    saveStatus,
+    handleCellFocus,
+    handleCellChange,
+    handleCellBlur,
+    handleCellKeyDown,
+  } = useWeekGridCells({
+    entryMap,
+    allRows,
+    days,
+    createEntry,
+    updateEntry,
+    voidEntry,
+  });
 
   const handleAddRow = useCallback(() => setAddingRow(true), []);
   const handleCancelAddRow = useCallback(() => {
@@ -396,10 +223,12 @@ export function WeekGrid({
               {days.map((d) => (
                 <th
                   key={d}
+                  scope="col"
+                  aria-label={format(parseISO(d), "EEEE d MMMM")}
                   className="text-center px-1 py-2 font-medium text-muted-foreground w-16"
                 >
-                  <div>{format(parseISO(d), "EEE")}</div>
-                  <div className="text-micro text-muted-foreground">
+                  <div aria-hidden="true">{format(parseISO(d), "EEE")}</div>
+                  <div aria-hidden="true" className="text-micro text-muted-foreground">
                     {format(parseISO(d), "d")}
                   </div>
                 </th>
