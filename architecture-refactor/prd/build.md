@@ -159,17 +159,40 @@ ticket page URL contains "ticket", so it replaced the top-level **document** wit
 its JSON body and the product never rendered. Both are fixed; the three
 error-and-retry FAILs are therefore **not yet real** and must be re-run.
 
-### Open — BUILD-002 is NOT closed
+### The four defect classes are REPAIRED — 2026-09-12. The matrix is not yet re-run.
 
-The five FAIL cells are **real product accessibility defects**, deliberately left
-failing rather than accepted or scoped away. BUILD-002's completion clause
-requires blocking defects fixed and rechecked, or explicit coordinator acceptance
-of a residual — neither has happened, so this task stays open.
+All four are fixed at the shared owner rather than patched per screen, so they close
+everywhere and not only on Build. The lane no longer needs an owner for them.
 
-They are **not Build-specific**: `color-contrast` lands on `text-muted-foreground/80`
-and `/50` token usages, and `aria-required-children` / `button-name` sit on shared
-table, list and combobox primitives used by every module. Fixing them is a design-token
-and shared-primitive change, which is why it is not folded into this lane. **Owner needed.**
+**One premise in the section above was wrong, and it matters.** The base
+`--muted-foreground` token **passes AA** — 4.55:1 in light, 7.73:1 in dark. Only the
+opacity modifiers failed: `/70` at 2.66:1, `/50` at 1.93:1, `/30` at 1.46:1. So this was
+never a design-token defect and the token is untouched; the call sites lost their
+modifier instead. Anyone re-reading the original finding should not go changing
+`--muted-foreground`.
+
+| Rule | Real cause | Repair |
+| --- | --- | --- |
+| `color-contrast` | opacity modifiers on an otherwise-compliant token | modifier dropped at the text call sites; token unchanged |
+| `aria-required-children` | `cmdk` renders an empty `role="listbox"` | the empty state is now a live status region **outside** the listbox |
+| `scrollable-region-focusable` | `cmdk` hard-codes `tabIndex={-1}` after the prop spread, so the prop could not win | the scroll container is now a focusable wrapper with an accessible name |
+| `button-name` | three combobox triggers, which cannot take a name from their content | explicit accessible names |
+
+A regression gate was added so `color-contrast` cannot come back: an opacity modifier on
+a foreground text utility now fails `check-no-arbitrary-colors`, with a self-test proving
+it bites. 25 colour self-tests, 23 icon-label self-tests, and new a11y suites for list
+semantics, focusable scroll regions and combobox naming all pass.
+
+**Also fixed, and it unblocks the route-model note below:** project rows carried
+`tabindex` and a click handler but **no `href`**, so they were unreachable by keyboard
+*and* invisible to the journey script's anchor scan. That was one defect presenting as
+two problems.
+
+**BUILD-002 still is not closed**, for one reason only: the acceptance matrix has not
+been re-run against the repaired markup. The five FAIL cells stand as the last measured
+result and must not be reported as passing until a capture says so. That re-run needs a
+production build with the API forced local, which is queued behind the `.next` build
+lock — see [BUILD-003](#build-003--re-run-build-acceptance-after-performance-closure).
 
 ### Route model — correction worth keeping
 
@@ -217,14 +240,33 @@ readings were taken against a build that may have inlined
 `https://api.streamlineos.in`; a capture pointed at the local API can differ
 substantially. Rebuild with the API URL forced local, confirm
 `grep -rl api.streamlineos.in .next/static` is empty, then capture alone on a
-quiet host **with no other session writing to `scratch_local`**.
+quiet host **with no other session writing to `scratch_local` or to `.next`**.
 
-Before trusting any prior mobile-INP number, note the standing 728 ms / 1152 ms
-readings were taken against a build that may have inlined
-`https://api.streamlineos.in`; a capture pointed at the local API can differ
-substantially. Rebuild with the API URL forced local, confirm
-`grep -rl api.streamlineos.in .next/static` is empty, then capture alone on a
-quiet host.
+### Why the production API gets baked in, and how to stop it — 2026-09-12
+
+`frontend/.env.production.local` sets `NEXT_PUBLIC_API_URL=https://api.streamlineos.in`,
+and **both `next build` and `next start` load it automatically**. Nothing warns. That is
+the mechanism behind the paragraph above: a local production build points the browser at
+production unless something overrides it, which is why the standing INP readings cannot
+be trusted and why `.env` alone does not save you — `.env.production.local` wins over it.
+
+Do **not** move or edit that file; it is the real production configuration and two
+sessions share this checkout. Override in the process environment instead, which Next
+honours over any `.env` file because it never overwrites a variable already present:
+
+```
+NEXT_PUBLIC_API_URL=http://127.0.0.1:1500 NEXTAUTH_URL=http://localhost:1000 npx next build
+```
+
+Measured 2026-09-12 on a build made this way: `grep -rl "api.streamlineos.in" .next/static`
+returned **0** files and `grep -rl "127.0.0.1:1500"` returned **6**. Use `127.0.0.1` rather
+than `localhost` for the API — loopback over IPv6 stalls here — but serve the app on
+`localhost:1000`, because that is the origin `CORS_ORIGINS` names.
+
+**One session owns `.next` at a time.** A `next build` while another session's `next start`
+is serving deletes `BUILD_ID` under it and throws
+`InvariantError: The client reference manifest for route "..." does not exist`. That is a
+lock to claim explicitly, not a race to win.
 
 ### Blocking defect found while unblocking this lane — owner: billing
 
