@@ -168,6 +168,34 @@ actor beyond that cap can lose standing; `couponRedemptions.amountPaise` changed
 meaning from the discount to the charged amount (no runtime consumer reads it,
 and the discount is now on `subscription_purchases.discountAmountMinor`).
 
+## Live evidence on localstack + Razorpay sandbox — 2026-09-12
+
+Environment: `scratch_local` on `127.0.0.1:5432` (PostgreSQL 18.6, 957 tables), driven
+from `backend/.env.localstack`. **Production Aurora was never contacted.** Razorpay
+calls used the `rzp_test_` key only; no live charge was made.
+
+| Check | Result |
+|---|---|
+| Migration `1090` applies | Applied to `scratch_local`; 25 columns, 3 FKs, both unique indexes, partial index on `provider_payment_id` |
+| Its guards bite | duplicate `provider_order_id` → `23505`; duplicate `provider_payment_id` → `23505`; unknown `org_id` → `23503`; null `amount_minor` → `23502`; two NULL payment ids correctly allowed; probe transaction rolled back leaving 0 rows |
+| Platform merchant with ZERO tenant `payment_providers` rows | `readiness.configured: true`, `environment: test`, `resolve().isReady() === true` — this is the AB-F01 P0, reproduced as fixed |
+| Real sandbox order, monthly | `order_Tb6T6JHAeStPiw`, 99900 paise INR (₹999) |
+| Real sandbox order, annual | `order_Tb6T6Z66gI3Cwm`, 959040 paise INR (₹9,590.40) — correct 12-month term and discount |
+| Provider failure mapping (live) | `pnpm verify:razorpay-sandbox` exit 0; observed HTTP 401 and 400 from `api.razorpay.com`, each mapped to `BadGatewayException` after exactly one attempt |
+| Concurrent confirmation, REAL database | Two separate connections raced the conditional `UPDATE … WHERE status IN (…) RETURNING`; **exactly one won**. This closes the gap the audit recorded as "real DB concurrency pending" |
+| Duplicate/replayed confirmation | Re-running the claim after activation matched no row — a no-op, not a second activation |
+| Two-tenant receipt substitution | The same claim under another `org_id` matched no row |
+
+Found by running it, not by reading: the catalog published only `annualPrice` (the
+rounded MONTHLY figure), so a UI multiplying it by 12 quoted ₹9,588 while the provider
+order was for ₹9,590.40. `annualTotalPaise` is now on the wire and rendered.
+
+STILL NOT DONE, and not closable without the running app in a browser: retry after
+browser close, reordered webhook-before-callback, live member/module-admin denials
+over HTTP, last-seat admission, and the whole of the 375/768/1280 + keyboard +
+focus-restoration check. A forced provider 5xx remains impossible to induce in the
+Razorpay sandbox, which is why BILL-001 stays open.
+
 ## Verification and acceptance
 
 ### AB-09 cleanup evidence — 2026-09-12 (root `cb55134fd`, backend `0d5af8f2f`)
