@@ -3,21 +3,43 @@
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
-import { formatShortDate } from "@/lib/date-utils";
-import type { ReorderEvidence, ReorderProposalResponse } from "@/hooks/api/inv-ai-explain";
+import type {
+  ReorderEvidence,
+  ReorderForecast,
+  ReorderProposalResponse,
+} from "@/hooks/api/inv-ai-explain";
+import { AiSuggestedActions } from "../ai-suggested-actions";
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-IN", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 interface EvidenceGridProps {
   evidence: ReorderEvidence;
+  forecast: ReorderForecast;
 }
 
-const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps) {
+/**
+ * F4. Quantities arrive as exact decimal strings and are rendered as they
+ * arrived. `Number(...)` on one of these would put an 18,4 ledger figure through
+ * a float on its way to a cell a buyer reads before signing an order.
+ */
+const EvidenceGrid = memo(function EvidenceGrid({ evidence, forecast }: EvidenceGridProps) {
   const fields: Array<{ label: string; value: string }> = [
-    { label: "Current On-Hand", value: String(evidence.currentOnHand) },
-    { label: "Forecasted Stock", value: String(evidence.forecastedQty) },
-    { label: "Suggested Reorder Qty", value: String(evidence.suggestedOrderQty) },
-    { label: "Lead Time", value: `${evidence.leadTimeDays} days` },
-    { label: "Expected Arrival", value: formatShortDate(evidence.expectedDeliveryDate) || "—" },
     { label: "SKU", value: evidence.variantSku },
+    { label: "Order Quantity", value: evidence.suggestedQuantity },
+    { label: "Reorder Point", value: evidence.reorderPoint ?? "—" },
+    { label: "Safety Stock", value: forecast.safetyStock ?? "—" },
+    { label: "Supplier", value: evidence.vendorName ?? "—" },
+    { label: "Warehouse", value: evidence.warehouseName ?? "Organisation-wide" },
+    { label: "Unit Cost", value: evidence.unitCost },
+    { label: "Lead Time", value: `${forecast.leadTimeWeeks} weeks` },
+    { label: "Forecast Generated", value: formatDate(evidence.generatedAt) },
   ];
 
   return (
@@ -36,10 +58,17 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
           </div>
         ))}
       </div>
-      {evidence.reorderReason && (
-        <p className="mt-2 text-dense text-muted-foreground">
-          <span className="font-medium text-foreground">Reason: </span>
-          {evidence.reorderReason}
+      <p className="mt-2 text-dense text-muted-foreground">
+        <span className="font-medium text-foreground">Forecast: </span>
+        {forecast.method ?? "no method committed"} over {forecast.demandCategory} demand
+        {" "}(mean {forecast.demandMean}, sd {forecast.demandStdDev}) at service level{" "}
+        {forecast.serviceLevel}
+        {forecast.stockoutCensored ? ", adjusted for stockout censoring" : ""}.
+      </p>
+      {forecast.refusalReason && (
+        <p className="mt-1 text-dense text-muted-foreground">
+          <span className="font-medium text-foreground">Caveat: </span>
+          {forecast.refusalReason}
         </p>
       )}
     </div>
@@ -47,7 +76,7 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
 });
 
 interface AiNarrationSectionProps {
-  explanation: ReorderProposalResponse["explanation"];
+  explanation: NonNullable<ReorderProposalResponse["explanation"]>;
 }
 
 export const AiNarrationSection = memo(function AiNarrationSection({
@@ -103,40 +132,29 @@ export const AiNarrationSection = memo(function AiNarrationSection({
         </div>
       )}
 
-      {explanation.suggestedActions.length > 0 && (
-        <div>
-          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-            Suggested Actions
-          </p>
-          <ul className="space-y-1">
-            {explanation.suggestedActions.map((action, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
-                <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-micro font-bold text-primary">
-                  {i + 1}
-                </span>
-                {action}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AiSuggestedActions actions={explanation.actions} />
     </div>
   );
 });
 
 interface ReorderEvidenceCardProps {
   evidence: ReorderEvidence;
+  forecast: ReorderForecast;
   explanation: ReorderProposalResponse["explanation"];
 }
 
 export const ReorderEvidenceCard = memo(function ReorderEvidenceCard({
   evidence,
+  forecast,
   explanation,
 }: ReorderEvidenceCardProps) {
   return (
     <div className="space-y-4">
-      <EvidenceGrid evidence={evidence} />
-      <AiNarrationSection explanation={explanation} />
+      <EvidenceGrid evidence={evidence} forecast={forecast} />
+      {/* Null whenever the server declined to propose: there is no narration to
+          show, and an empty AI panel would read as a model with nothing to say
+          rather than as a proposal that was never made. */}
+      {explanation && <AiNarrationSection explanation={explanation} />}
     </div>
   );
 });

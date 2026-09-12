@@ -64,7 +64,7 @@ export default function ProductCatalogPage() {
   }, [debouncedSearch, searchParams, router, pathname]);
 
   const query = debouncedSearch.trim();
-  const { data, isLoading, isError, refetch, access} = useProducts(query || undefined);
+  const { data, isLoading, isError, refetch } = useProducts(query || undefined);
   const deleteProduct = useDeleteProduct();
 
   // Memoised because a row renderer depends on it; a fresh [] each render
@@ -169,7 +169,6 @@ export default function ProductCatalogPage() {
           />
         ) : products.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyProductsIllustration />}
             title={query ? "No products match that search" : "No products yet"}
             description={

@@ -11,6 +11,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
@@ -22,6 +23,7 @@ import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inv
 import type { InspectionStatus } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -30,6 +32,7 @@ const INSPECTION_STATUSES: InspectionStatus[] = [
 ];
 
 function InspectionsPageInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -119,17 +122,17 @@ function InspectionsPageInner() {
       ),
     },
     {
-      key: "sourceType",
+      key: "source",
       header: "Source",
       className: "text-muted-foreground",
-      cell: (r) => r.sourceType ?? "—",
+      cell: (r) => r.source ?? "—",
     },
     {
       key: "lines",
       header: "Lines",
       headerClassName: "w-[60px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (r) => r.lines?.length ?? 0,
+      cell: (r) => r.lines.length,
     },
     {
       key: "createdAt",
@@ -137,8 +140,6 @@ function InspectionsPageInner() {
       headerClassName: "w-[130px]",
       className: "text-muted-foreground",
       cell: (r) => format(new Date(r.createdAt), "dd MMM yyyy"),
-      sortable: true,
-      sortValue: (r) => r.createdAt,
     },
   ];
 
@@ -162,6 +163,16 @@ function InspectionsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Inspections"
+        subtitle="Manage quality inspections"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

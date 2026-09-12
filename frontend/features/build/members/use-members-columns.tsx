@@ -32,8 +32,6 @@ export function useMembersColumns({
       {
         key: "name",
         header: "Name",
-        sortable: true,
-        sortValue: (m) => getUserDisplayName(m),
         cell: (member) => {
           const displayName = getUserDisplayName(member);
           const handle = member.email.split("@")[0] ?? member.email;
@@ -73,8 +71,6 @@ export function useMembersColumns({
       cols.push({
         key: "addedAt",
         header: "Added",
-        sortable: true,
-        sortValue: (m) => m.addedAt,
         className: "tabular-nums",
         cell: (member) => (
           <span className="text-dense text-muted-foreground tabular-nums">

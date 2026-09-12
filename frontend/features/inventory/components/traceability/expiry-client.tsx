@@ -14,10 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatCalendarDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -46,16 +49,14 @@ const DAY_OPTIONS = [
   { value: "90", label: "90 days" },
 ] as const;
 
-function getExpiryColorClass(daysUntilExpiry: number | null): string {
-  if (daysUntilExpiry === null) return "text-muted-foreground";
+function getExpiryColorClass(daysUntilExpiry: number): string {
   if (daysUntilExpiry < 0) return "text-status-danger-ink font-semibold";
   if (daysUntilExpiry <= 30) return "text-status-warning-ink font-semibold";
   if (daysUntilExpiry <= 60) return "text-status-warning-ink font-medium";
   return "text-muted-foreground";
 }
 
-function formatDaysLabel(days: number | null): string {
-  if (days === null) return "—";
+function formatDaysLabel(days: number): string {
   if (days < 0) return `${Math.abs(days)}d expired`;
   if (days === 0) return "Today";
   return `${days}d`;
@@ -64,10 +65,8 @@ function formatDaysLabel(days: number | null): string {
 type ExpiryItem = NonNullable<ReturnType<typeof useExpiryItems>["data"]>[number];
 
 function getExpiryRowClassName(row: ExpiryItem): string {
-  const days = row.daysUntilExpiry;
-  if (days === null) return "";
-  if (days < 0) return "bg-status-danger-surface hover:bg-status-danger-surface";
-  if (days <= 30) return "bg-status-warning-surface hover:bg-status-warning-surface";
+  if (row.daysUntilExpiry < 0) return "bg-status-danger-surface hover:bg-status-danger-surface";
+  if (row.daysUntilExpiry <= 30) return "bg-status-warning-surface hover:bg-status-warning-surface";
   return "";
 }
 
@@ -97,7 +96,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     className: "tabular-nums",
     cell: (row) => (
       <span className={getExpiryColorClass(row.daysUntilExpiry)}>
-        {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+        {row.expiryDate ? formatCalendarDate(row.expiryDate) : "—"}
       </span>
     ),
   },
@@ -113,24 +112,25 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     ),
   },
   {
-    key: "onHand",
-    header: "Stock Qty",
+    key: "totalOnHand",
+    header: "On Hand",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
-    cell: (row) => <>{row.onHand}</>,
+    cell: (row) => <>{formatQuantity(row.totalOnHand)}</>,
   },
   {
     key: "actions",
     header: "",
-    cell: (row) => <ExpiryLotViewButton lotId={row.lotId} lotNumber={row.lotNumber} />,
+    cell: (row) => <ExpiryLotViewButton lotId={row.id} lotNumber={row.lotNumber} />,
   },
 ];
 
 export function ExpiryClient() {
+  const canView = useCan("inventory:stock:read");
   const { fadeUp } = useMotionVariants();
   const [days, setDays] = useState("30");
 
-  const { data, isLoading, isError, refetch } = useExpiryItems({ days: Number(days) });
+  const { data, isLoading, isError, refetch } = useExpiryItems({ withinDays: Number(days) });
 
   const items = data ?? [];
 
@@ -152,6 +152,18 @@ export function ExpiryClient() {
       />
     </motion.div>
   );
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Expiry Management">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper
@@ -188,7 +200,7 @@ export function ExpiryClient() {
             data={items}
             columns={EXPIRY_COLUMNS}
             className="flex-1 min-h-0"
-            getRowKey={(row) => row.lotId}
+            getRowKey={(row) => row.id}
             isLoading={isLoading}
             emptyState={emptyState}
             rowClassName={getExpiryRowClassName}

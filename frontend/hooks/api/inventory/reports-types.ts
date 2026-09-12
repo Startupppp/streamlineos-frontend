@@ -18,23 +18,28 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface StockSummaryParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface ReorderReportParams {
-  page?: number;
-  limit?: number;
-}
-
 export interface MovementsParams {
   warehouseId?: number;
-  type?: string;
+  transactionType?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
   limit?: number;
+  /**
+   * G1. Keyset position over `(created_at, id)`. Sent, it supersedes `page` and
+   * the response carries no `total` — see `useCursorPagination`.
+   */
+  cursor?: string;
+}
+
+/** What a keyset-paginated list answers with instead of a total. */
+export interface CursorResponse<T> {
+  items: T[];
+  total: number | null;
+  page: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface SlowMovingParams {
@@ -107,7 +112,18 @@ export interface ReorderReportRow {
   sku: string;
   variantSku: string;
   categoryName: string | null;
+  /**
+   * B4. Which store is short. The report is one row per stock level, so a SKU
+   * low at two dark stores is two rows — and until the warehouse was projected
+   * they were identical, which made the list's React key collide and silently
+   * drop one of them.
+   */
+  warehouseId: number;
+  warehouseCode: string | null;
   warehouseName: string | null;
+  /** The bin. A SKU can be low in two bins of the same store, so this is the identity. */
+  locationId: number;
+  locationCode: string | null;
   onHand: number;
   availableQty: number;
   reorderPoint: number;
@@ -137,7 +153,7 @@ export interface MovementReportRow {
 
 export interface InventoryDashboardMovement {
   id: number;
-  transactionType: string;
+  transactionType: MovementType;
   quantityChange: number;
   createdAt: string;
   notes: string | null;
@@ -166,6 +182,23 @@ export interface InventoryDashboard {
   recentInsights: AiInsight[];
 }
 
+export interface RawProductRef {
+  id: number;
+  name: string;
+  sku: string;
+  costPrice?: string | null;
+  reorderPoint?: string | null;
+  minStockLevel?: string | null;
+}
+
+export interface RawVariantRef {
+  id: number;
+  name: string;
+  sku: string;
+  costPrice: string | null;
+  product: RawProductRef | null;
+}
+
 export interface RawWarehouseRef {
   id: number;
   name: string;
@@ -174,90 +207,50 @@ export interface RawWarehouseRef {
 export interface RawLocationRef {
   id: number;
   name: string;
-  code?: string;
+  code: string;
   warehouse?: RawWarehouseRef | null;
 }
 
 export interface RawUserRef {
   id: string;
-  name: string | null;
+  name: string;
+}
+
+export interface RawStockLevelRow {
+  id: number;
+  onHand: string;
+  /**
+   * A1. Server-computed availability: on hand less committed, blocked,
+   * quality-held and outgoing. Recomputing `onHand - committed` here was an
+   * eighth copy of the formula, two terms short.
+   */
+  availableQty: string;
+  committed: string;
+  onOrder: string;
+  productVariant: RawVariantRef | null;
+  location: RawLocationRef | null;
 }
 
 export interface RawTransactionRow {
   id: number;
-  transactionType: string;
+  transactionType: MovementType;
   quantityChange: string;
   quantityAfter: string | null;
   referenceType: string | null;
   referenceId: string | null;
-  notes?: string | null;
+  notes: string | null;
   createdAt: string;
-  productVariant?: {
-    id: number;
-    name: string;
-    sku: string;
-    product?: { id: number; name: string; sku: string } | null;
-  } | null;
-  location?: RawLocationRef | null;
-  creator?: RawUserRef | null;
-}
-
-export interface RawFlatStockItem {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productId: number;
-  productName: string;
-  onHand: string;
-  committed: string;
-  available: string;
-  onOrder: string;
-  averageCost?: string | null;
-  totalValue?: number;
-  reorderPoint?: string | null;
-  isLowStock?: boolean;
-}
-
-export interface RawFlatMovementItem {
-  id: number;
-  transactionType: string;
-  quantityChange: string;
-  createdAt: string;
-  productVariantId?: number;
-  variantSku?: string;
-  variantName?: string;
-}
-
-export interface RawSlowMovingItem {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productId: number;
-  productName: string;
-  onHand: string;
-  lastMovementDate: string | null;
-  daysSinceMovement: number | null;
-  totalValue: string | null;
-}
-
-export interface RawExpiryItem {
-  lotId: number;
-  lotNumber: string;
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productName: string;
-  expiryDate: string | null;
-  daysUntilExpiry: number | null;
-  totalOnHand: string;
+  productVariant: RawVariantRef | null;
+  location: RawLocationRef | null;
+  creator: RawUserRef | null;
 }
 
 export interface RawDashboardResponse {
-  stockSummary?: {
+  stockSummary: {
     totalSkus: number;
-    totalOnHand: string;
-    totalCommitted: string;
-    totalOnOrder: string;
+    totalOnHand: number;
+    totalCommitted: number;
+    totalOnOrder: number;
   } | null;
   lowStockCount: number;
   draftPoCount: number;
@@ -274,7 +267,7 @@ export interface RawDashboardResponse {
 }
 
 export interface RawStockSummaryEnvelope {
-  items: RawFlatStockItem[];
+  items: RawStockLevelRow[];
   total: number;
   page: number;
   totalPages: number;
@@ -286,11 +279,27 @@ export interface RawReorderRow {
   variantName: string;
   productId: number;
   productName: string;
-  onHand: string;
-  reorderPoint: string;
-  suggestedQty?: number;
-  vendorId?: number | null;
-  vendorName?: string | null;
+  productSku: string;
+  onHand: number;
+  onOrder: number;
+  committed: number;
+  /** A1. Server-computed; the client must not re-derive it. */
+  availableQty: number;
+  reorderPoint: number;
+  minStockLevel: number;
+  reorderRuleId: number | null;
+  minQty: number | null;
+  maxQty: number | null;
+  reorderQty: number | null;
+  suggestedQty: number;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+  warehouseId: number;
+  warehouseName: string;
+  warehouseCode: string;
+  locationId: number;
+  locationName: string;
+  locationCode: string;
 }
 
 export interface RawReorderEnvelope {
@@ -301,8 +310,11 @@ export interface RawReorderEnvelope {
 }
 
 export interface RawMovementsEnvelope {
-  items: RawFlatMovementItem[];
-  total: number;
+  items: RawTransactionRow[];
+  /** Null on a keyset walk: the server is never asked to count the ledger. */
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }

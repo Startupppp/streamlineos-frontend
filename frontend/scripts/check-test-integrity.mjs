@@ -103,12 +103,12 @@ const CLASSES = [
 // hooks/api/build/ and app/(authenticated)/build/ are live product code. An
 // earlier draft of this gate skipped them as build output and reported OK over
 // 17 live test files — the exact defect this ticket exists to remove. Next.js
-// output is .next/ and .next-buildmart/; neither is a directory named "build".
+// output is .next/ and .next-custom/; neither is a directory named "build".
 const SKIP_DIRS = new Set([
   "node_modules",
   ".git",
   ".next",
-  ".next-buildmart",
+  ".next-custom",
   "dist",
   "coverage",
   "public",
@@ -121,6 +121,13 @@ const SPEC_RE = /(\.|-)(spec|test)\.(ts|tsx|mts|js|jsx)$/;
 const TEST_FNS = new Set(["it", "test", "fit", "xit", "xtest"]);
 const SUITE_FNS = new Set(["describe", "fdescribe", "xdescribe", "suite"]);
 const SUPPRESSORS = ["skip", "todo", "failing"];
+/**
+ * Playwright spells its hooks and its suites on the test object —
+ * `test.beforeEach`, `test.describe` — so the callee's base name is `test` and
+ * this scanner, written for Jest's bare `beforeEach`, read every hook as a test
+ * body with no assertion in it.
+ */
+const HOOK_MODS = ["beforeEach", "afterEach", "beforeAll", "afterAll", "step", "use", "slow", "setTimeout"];
 
 function walk(dir, out = []) {
   let entries;
@@ -410,10 +417,24 @@ function scanFile(file, rel, counters, findings) {
       const ct = calleeText(node);
       const mods = ct.split(".").slice(1);
       const base = ct.split(".")[0].replace("()", "");
-      const isTest = TEST_FNS.has(base);
-      const isSuite = SUITE_FNS.has(base);
+      const isTestFn = TEST_FNS.has(base);
+      const isHookCall = isTestFn && HOOK_MODS.some((m) => mods.includes(m));
+      const isSuite = SUITE_FNS.has(base) || (isTestFn && mods.includes("describe"));
+      const isTest = isTestFn && !isHookCall && !isSuite;
+      /**
+       * `test.skip(condition, reason)` is a runtime guard, not a suppression:
+       * the test runs whenever the condition is false. Only the title form
+       * (`it.skip("name", fn)`) and the bare `test.skip()` drop a test
+       * unconditionally, which is what this class is defined as.
+       */
+      const first = node.arguments?.[0];
+      const titleForm =
+        first === undefined ||
+        ts.isStringLiteral(first) ||
+        ts.isNoSubstitutionTemplateLiteral(first) ||
+        ts.isTemplateExpression(first);
       const suppressed =
-        SUPPRESSORS.some((s) => mods.includes(s)) ||
+        (SUPPRESSORS.some((s) => mods.includes(s)) && titleForm) ||
         ((isTest || isSuite) && base.startsWith("x"));
 
       if ((isTest || isSuite) && (mods.includes("only") || base === "fit" || base === "fdescribe"))
@@ -512,6 +533,18 @@ describe("not caught", () => {
   });
 });
 `,
+  "playwright-runtime.spec.ts": `
+import { expect, test } from "@playwright/test";
+test.describe("P runtime", () => {
+  test.skip(!process.env.E2E, "needs a seeded tenant");
+  test.beforeEach(async ({ page }) => { await page.goto("/"); });
+  test("P a real playwright test", async ({ page }) => { await expect(page).toHaveURL(/\\//); });
+});
+`,
+  "playwright-suppressed.spec.ts": `
+import { expect, test } from "@playwright/test";
+test.skip("P unconditional skip", async () => { expect(1).toBe(1); });
+`,
 };
 
 function selfTest() {
@@ -573,6 +606,18 @@ function selfTest() {
     [
       "G a suppressed test is NOT also counted as vacuous",
       none("G suppressed", "TAUTOLOGY"),
+    ],
+    [
+      "a conditional test.skip(condition, reason) is NOT a suppression",
+      !findings.some((f) => f.file.endsWith("playwright-runtime.spec.ts") && f.cls === "SUPPRESSION"),
+    ],
+    [
+      "a Playwright hook or describe is NOT a test body with no assertion",
+      !findings.some((f) => f.file.endsWith("playwright-runtime.spec.ts") && f.cls === "NO_ASSERTION"),
+    ],
+    [
+      "an unconditional test.skip(title, fn) is STILL a suppression",
+      at("playwright-suppressed.spec.ts", "P unconditional skip", "SUPPRESSION"),
     ],
     ["the fixture tree produced findings at all", findings.length > 0],
     ["every finding carries a class this gate knows", findings.every((f) => CLASSES.includes(f.cls))],

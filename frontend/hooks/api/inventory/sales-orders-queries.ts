@@ -14,17 +14,6 @@ import type {
   RawAtpEntry,
 } from "./sales-orders-types";
 import { mapListItem, mapDetail, mapAtp } from "./sales-orders-types";
-import { lazyContract } from "@/lib/api-envelope";
-
-const listSalesOrdersContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.listSalesOrdersContract),
-);
-const getSalesOrderContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.getSalesOrderContract),
-);
-const rawAtpArrayContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.rawAtpArrayContract),
-);
 
 export function useSalesOrders(filters?: SalesOrderFilters) {
   const canView = useCan("inventory:sales-orders:read");
@@ -49,7 +38,7 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }, signal, listSalesOrdersContract);
+      }, signal);
       return {
         items: raw.items.map(mapListItem),
         total: raw.total,
@@ -68,7 +57,7 @@ export function useSalesOrder(soId: number) {
     queryKey: queryKeys.inventory.salesOrder(soId),
     queryFn: async ({ signal }) =>
       mapDetail(
-        await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`, undefined, signal, getSalesOrderContract),
+        await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`, undefined, signal),
       ),
     staleTime: 2 * 60_000,
     enabled: canView && soId > 0,
@@ -81,7 +70,7 @@ export function useSoAtp(soId: number) {
     queryKey: [...queryKeys.inventory.salesOrder(soId), "atp"] as const,
     queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawAtpEntry[]>(
-        `/inventory/sales-orders/${soId}/atp`, undefined, signal, rawAtpArrayContract,
+        `/inventory/sales-orders/${soId}/atp`, undefined, signal,
       );
       return raw.map(mapAtp);
     },

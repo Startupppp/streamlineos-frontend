@@ -66,6 +66,7 @@ export const EditableLineRow = memo(function EditableLineRow({
           value={line.variantId}
           onChange={handleVariantChange}
           className="text-xs"
+          ariaLabel={`Variant, line ${String(index + 1)}`}
         />
       </div>
       <div className="space-y-0.5">

@@ -189,6 +189,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
                     onChange={field.onChange}
                     activeOnly
                     disabled={!!editRule}
+                    ariaLabel="Product Variant"
                   />
                 </FormControl>
                 <FormMessage />
@@ -207,6 +208,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
                     value={field.value}
                     onChange={field.onChange}
                     disabled={!!editRule}
+                    ariaLabel="Warehouse"
                   />
                 </FormControl>
                 <FormMessage />
@@ -295,6 +297,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
                   <VendorSelect
                     value={field.value === SENTINEL ? "" : field.value}
                     onChange={(v) => field.onChange(v || SENTINEL)}
+                    ariaLabel="Preferred Vendor"
                   />
                 </FormControl>
                 <FormMessage />

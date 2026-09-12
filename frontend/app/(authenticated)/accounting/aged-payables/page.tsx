@@ -1,5 +1,5 @@
-import { AgedPayablesPage } from "@/features/accounting/reports/aged-payables-page";
+import { AgedPayablesPage } from "@/features/accounting/purchases/aged-payables/aged-payables-page";
 
-export default function Page() {
+export default function AccountingAgedPayablesPage() {
   return <AgedPayablesPage />;
 }

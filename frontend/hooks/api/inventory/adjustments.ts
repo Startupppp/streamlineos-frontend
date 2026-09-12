@@ -1,13 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AdjustmentDetail } from "@/types/inventory";
 import type { AdjustmentStatus } from "@/features/inventory/lib";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type AdjustmentReason =
   | "PURCHASE"
@@ -17,7 +16,23 @@ export type AdjustmentReason =
   | "EXPIRY"
   | "THEFT"
   | "RECOUNT"
-  | "OTHER";
+  | "OTHER"
+  | "SCRAP";
+
+/**
+ * D8. The reasons that condemn stock. A write-off is one of these on an
+ * ordinary adjustment — there is no second document and no second endpoint —
+ * so the client asks the same questions of it that the server does: every line
+ * must remove stock, and a scrap location is only meaningful here.
+ */
+export const WRITE_OFF_REASONS: readonly AdjustmentReason[] = ["DAMAGE", "EXPIRY", "THEFT", "SCRAP"];
+
+const WRITE_OFF_REASON_SET: ReadonlySet<string> = new Set(WRITE_OFF_REASONS);
+
+/** Takes a plain string, so a detail payload's `reason` needs no cast. */
+export function isWriteOffReason(reason: string): boolean {
+  return WRITE_OFF_REASON_SET.has(reason);
+}
 
 type AdjustmentType = "IN" | "OUT" | "SET";
 
@@ -30,6 +45,8 @@ export interface AdjustmentListItem {
   createdAt: string;
   createdByName: string | null;
   lineCount: number;
+  /** Absent for a caller without `inventory:valuation:read`. */
+  writtenOffValue: string | null | undefined;
 }
 
 interface AdjustmentsResult {
@@ -46,55 +63,19 @@ interface CreateAdjustmentInput {
   quantity: number;
   reason: AdjustmentReason;
   notes?: string;
-}
-
-interface AdjDetailApiLine {
-  id: number;
-  adjustmentId: number;
-  productVariantId: number;
-  locationId: number;
-  quantityChange: string;
-  uomId: number | null;
-  quantityEntered: string | null;
-  notes: string | null;
-  productVariant?: { id: number; name: string; sku: string };
-  location?: { id: number; name: string; code: string };
-}
-
-interface AdjDetailApi {
-  id: number;
-  referenceNumber: string;
-  reason: string;
-  status: string;
-  notes: string | null;
-  createdAt: string;
-  approvedAt: string | null;
-  postedAt: string | null;
-  creator?: { id: string; name: string | null };
-  lines?: AdjDetailApiLine[];
+  scrapLocationId?: number;
 }
 
 interface RawAdjustment {
   id: number;
   referenceNumber: string;
-  reason: string;
-  status: string;
+  reason: AdjustmentReason;
+  status: AdjustmentStatus;
   notes: string | null;
   createdAt: string;
-  creator?: { id: string; name: string | null } | null;
-  lines?: Array<{ id: number }>;
-}
-
-function toAdjStatus(s: string): AdjustmentStatus {
-  if (s === "DRAFT" || s === "PENDING_APPROVAL" || s === "APPROVED" || s === "POSTED" || s === "CANCELLED")
-    return s;
-  throw new Error(`Unknown adjustment status: ${s}`);
-}
-
-function toAdjReason(s: string): AdjustmentReason {
-  if (s === "PURCHASE" || s === "SALE" || s === "RETURN" || s === "DAMAGE" || s === "EXPIRY" || s === "THEFT" || s === "RECOUNT" || s === "OTHER")
-    return s;
-  throw new Error(`Unknown adjustment reason: ${s}`);
+  creator: { id: string; name: string | null } | null;
+  lines: Array<{ id: number }>;
+  writtenOffValue?: string | null;
 }
 
 interface RawAdjustmentsResponse {
@@ -104,40 +85,17 @@ interface RawAdjustmentsResponse {
   totalPages: number;
 }
 
-function toAdjustmentDetail(raw: AdjDetailApi): AdjustmentDetail {
-  return {
-    id: raw.id,
-    referenceNumber: raw.referenceNumber,
-    reason: raw.reason,
-    status: toAdjStatus(raw.status),
-    notes: raw.notes,
-    createdAt: raw.createdAt,
-    approvedAt: raw.approvedAt,
-    postedAt: raw.postedAt,
-    createdByName: raw.creator?.name ?? null,
-    lines: (raw.lines ?? []).map((l) => ({
-      id: l.id,
-      productVariantId: l.productVariantId,
-      locationId: l.locationId,
-      quantityChange: Number(l.quantityChange),
-      variantName: l.productVariant?.name ?? null,
-      variantSku: l.productVariant?.sku ?? null,
-      locationName: l.location?.name ?? null,
-      notes: l.notes,
-    })),
-  };
-}
-
 function toAdjustmentListItem(r: RawAdjustment): AdjustmentListItem {
   return {
     id: r.id,
     referenceNumber: r.referenceNumber,
-    reason: toAdjReason(r.reason),
-    status: toAdjStatus(r.status),
+    reason: r.reason,
+    status: r.status,
     notes: r.notes,
     createdAt: r.createdAt,
     createdByName: r.creator?.name ?? null,
     lineCount: r.lines?.length ?? 0,
+    writtenOffValue: "writtenOffValue" in r ? r.writtenOffValue : undefined,
   };
 }
 
@@ -146,14 +104,76 @@ function signedQuantity(type: AdjustmentType, quantity: number): number {
   return type === "OUT" ? -magnitude : magnitude;
 }
 
-const listAdjustmentsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.listAdjustmentsContract),
-);
-const getAdjustmentContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.getAdjustmentContract),
-);
+/**
+ * The wire shape of an adjustment document, as `getAdjustment` and every command
+ * on it return it: the row with its relations nested (`creator`,
+ * `lines[].productVariant`, `lines[].location`) and quantities as decimal
+ * strings. `AdjustmentDetail` is the flattened view the screens read, so without
+ * this mapping the detail sheet rendered a fallback for "Created by" and for
+ * every line's variant and location. Everything past the row is optional: a
+ * command answers with its lines bare, not with their variant and location.
+ */
+interface RawAdjustmentDetailLine {
+  id: number;
+  productVariantId: number;
+  locationId: number;
+  quantityChange: string;
+  notes: string | null;
+  productVariant?: { id: number; name: string | null; sku: string | null } | null;
+  location?: { id: number; name: string; code: string } | null;
+}
 
-export function useAdjustments(filters?: { page?: number; limit?: number; status?: string }) {
+interface RawAdjustmentDetail {
+  id: number;
+  referenceNumber: string;
+  reason: string;
+  status: AdjustmentDetail["status"];
+  notes: string | null;
+  createdAt: string;
+  approvedAt?: string | null;
+  postedAt?: string | null;
+  scrapLocationId?: number | null;
+  scrapLocation?: { id: number; name: string; code: string } | null;
+  writtenOffValue?: string | null;
+  creator?: { id: string; name: string | null } | null;
+  lines?: RawAdjustmentDetailLine[];
+}
+
+function toAdjustmentDetail(raw: RawAdjustmentDetail): AdjustmentDetail {
+  return {
+    id: raw.id,
+    referenceNumber: raw.referenceNumber,
+    reason: raw.reason,
+    status: raw.status,
+    notes: raw.notes,
+    createdAt: raw.createdAt,
+    approvedAt: raw.approvedAt ?? null,
+    postedAt: raw.postedAt ?? null,
+    createdByName: raw.creator?.name ?? null,
+    scrapLocationId: raw.scrapLocationId ?? null,
+    scrapLocation: raw.scrapLocation ?? null,
+    // Absent, not null, for a caller without `inventory:valuation:read`.
+    ...("writtenOffValue" in raw ? { writtenOffValue: raw.writtenOffValue } : {}),
+    lines: (raw.lines ?? []).map((line) => ({
+      id: line.id,
+      productVariantId: line.productVariantId,
+      locationId: line.locationId,
+      quantityChange: Number(line.quantityChange),
+      variantName: line.productVariant?.name ?? null,
+      variantSku: line.productVariant?.sku ?? null,
+      locationName: line.location?.name ?? null,
+      notes: line.notes,
+    })),
+  };
+}
+
+export function useAdjustments(filters?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  reason?: string;
+  writeOffsOnly?: boolean;
+}) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentsResult, Error>({
     queryKey: queryKeys.inventory.adjustments(filters),
@@ -162,7 +182,9 @@ export function useAdjustments(filters?: { page?: number; limit?: number; status
         page: filters?.page,
         limit: filters?.limit,
         status: filters?.status,
-      }, signal, listAdjustmentsContract);
+        reason: filters?.reason,
+        writeOffsOnly: filters?.writeOffsOnly,
+      }, signal);
       return {
         items: res.items.map(toAdjustmentListItem),
         total: res.total,
@@ -179,10 +201,10 @@ export function useAdjustmentDetail(adjustmentId: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentDetail, Error>({
     queryKey: [...queryKeys.inventory.adjustments(), adjustmentId] as const,
-    queryFn: async ({ signal }) => {
-      const raw = await apiClient.get<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal, getAdjustmentContract);
-      return toAdjustmentDetail(raw);
-    },
+    queryFn: async ({ signal }) =>
+      toAdjustmentDetail(
+        await apiClient.get<RawAdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal),
+      ),
     enabled: canView && adjustmentId > 0,
     staleTime: 60_000,
   });
@@ -190,23 +212,30 @@ export function useAdjustmentDetail(adjustmentId: number) {
 
 export function useCreateAdjustment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<AdjustmentDetail, Error, CreateAdjustmentInput>("inventory:stock:adjust", {
+  return useAuthorizedIdempotentMutation<AdjustmentDetail, Error, CreateAdjustmentInput>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "create"],
-    mutationFn: async (data) => {
-      const raw = await apiClient.post<AdjDetailApi>("/inventory/stock/adjustments", {
-        reason: data.reason,
-        notes: data.notes,
-        lines: [
-          {
-            productVariantId: data.productVariantId,
-            locationId: data.locationId,
-            quantityChange: signedQuantity(data.adjustmentType, data.quantity),
-            notes: data.notes,
-          },
-        ],
-      }, undefined, getAdjustmentContract);
-      return toAdjustmentDetail(raw);
-    },
+    mutationFn: async (data, idempotencyKey) =>
+      toAdjustmentDetail(await apiClient.post<RawAdjustmentDetail>(
+        "/inventory/stock/adjustments",
+        {
+          reason: data.reason,
+          notes: data.notes,
+          scrapLocationId: data.scrapLocationId,
+          lines: [
+            {
+              productVariantId: data.productVariantId,
+              locationId: data.locationId,
+              quantityChange: signedQuantity(data.adjustmentType, data.quantity),
+              notes: data.notes,
+            },
+          ],
+        },
+        // A write-off is the case where a duplicate is not cosmetic: two
+        // documents, both approvable, both postable, against the same missing
+        // stock. The key `apiClient` mints is per fetch, so it cannot prevent
+        // that; this one belongs to the operator's intent and survives a retry.
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      )),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -217,12 +246,13 @@ export function useCreateAdjustment() {
 
 export function useApproveAdjustment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:approve", {
+  return useAuthorizedIdempotentMutation<AdjustmentDetail, Error, number>("inventory:adjustments:approve", {
     mutationKey: ["inventory", "adjustment", "approve"],
-    mutationFn: async (adjustmentId) => {
-      const raw = await apiClient.post<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}, undefined, getAdjustmentContract);
-      return toAdjustmentDetail(raw);
-    },
+    mutationFn: async (adjustmentId, idempotencyKey) =>
+      toAdjustmentDetail(await apiClient.post<RawAdjustmentDetail>(
+        `/inventory/stock/adjustments/${adjustmentId}/approve`,
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
+      )),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },
@@ -231,17 +261,13 @@ export function useApproveAdjustment() {
 
 export function usePostAdjustment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:post", {
+  return useAuthorizedIdempotentMutation<AdjustmentDetail, Error, number>("inventory:adjustments:post", {
     mutationKey: ["inventory", "adjustment", "post"],
-    mutationFn: async (adjustmentId) => {
-      const raw = await apiClient.post<AdjDetailApi>(
+    mutationFn: async (adjustmentId, idempotencyKey) =>
+      toAdjustmentDetail(await apiClient.post<RawAdjustmentDetail>(
         `/inventory/stock/adjustments/${adjustmentId}/post`,
-        {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        getAdjustmentContract,
-      );
-      return toAdjustmentDetail(raw);
-    },
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
+      )),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -252,12 +278,10 @@ export function usePostAdjustment() {
 
 export function useCancelAdjustment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:stock:adjust", {
+  return useAuthorizedIdempotentMutation<AdjustmentDetail, Error, number>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "cancel"],
-    mutationFn: async (adjustmentId) => {
-      const raw = await apiClient.post<AdjDetailApi>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, undefined, getAdjustmentContract);
-      return toAdjustmentDetail(raw);
-    },
+    mutationFn: async (adjustmentId, idempotencyKey) =>
+      toAdjustmentDetail(await apiClient.post<RawAdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } })),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

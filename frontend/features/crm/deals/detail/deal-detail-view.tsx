@@ -10,9 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useCanState } from "@/hooks/api/access";
 import {
   useDealDetail,
   useUpdateDeal,
@@ -125,6 +127,13 @@ export function DealDetailView({ dealIdParam }: DealDetailViewProps) {
   const handleRefetch = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  /*
+   * Ticket 26: without crm:deals:read the detail read disables itself and looks
+   * like an empty result. Checked after the last hook, before any return.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
 
   if (isLoading) {
     return (

@@ -120,10 +120,14 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
   );
 }
 
-export function ProjectBudgetsTab() {
+interface ProjectBudgetsTabProps {
+  enabled: boolean;
+}
+
+export function ProjectBudgetsTab({ enabled }: ProjectBudgetsTabProps) {
   const canView = useCan("timesheets:budgets:view");
   const canManage = useCan("timesheets:budgets:manage");
-  const { data: budgets, isLoading, isError, refetch } = useBudgets(canView);
+  const { data: budgets, isLoading, isError, refetch } = useBudgets(canView && enabled);
   const deleteBudget = useDeleteBudget();
 
   const [formOpen, setFormOpen] = useState(false);

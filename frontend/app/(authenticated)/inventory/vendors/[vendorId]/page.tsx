@@ -2,122 +2,75 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Pencil, Package, CheckCircle2, RotateCcw, Clock, FileText, DollarSign } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatShortDate } from "@/lib/date-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EditVendorSheet } from "@/features/inventory/components/edit-vendor-sheet";
 import { VendorAiActions } from "@/features/inventory/components/vendor-ai-actions";
-import { useVendor, useVendorPurchaseOrders } from "@/hooks/api/inventory";
-import { useVendorPerformance, useToggleVendorActive } from "@/hooks/api/inventory/vendors";
-import type { PurchaseOrderStatus } from "@/types/inventory";
+import { VendorScorecardPanel } from "@/features/inventory/components/vendor-scorecard-panel";
+import { VendorDeliveriesTable } from "@/features/inventory/components/vendor-deliveries-table";
+import { useVendor } from "@/hooks/api/inventory";
+import {
+  useVendorPerformance,
+  useVendorDeliveries,
+  useToggleVendorActive,
+} from "@/hooks/api/inventory/vendors";
+import { useCan } from "@/hooks/api/access";
 
 interface VendorDetailPageProps {
   params: Promise<{ vendorId: string }>;
 }
 
-const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
-  DRAFT: "bg-muted text-muted-foreground border-border",
-  SENT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  PARTIAL: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  RECEIVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  CLOSED: "bg-muted text-muted-foreground border-border",
-  CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-};
-
-type VendorPoRow = {
-  id: number;
-  poNumber: string;
-  orderDate: string | null;
-  expectedDeliveryDate: string | null;
-  total: string;
-  currency: string;
-  status: PurchaseOrderStatus;
-};
-
-const VENDOR_PO_COLUMNS: DataTableColumn<VendorPoRow>[] = [
-  {
-    key: "poNumber",
-    header: "PO #",
-    className: "font-mono",
-    cell: (row) => (
-      <Link
-        href={`/inventory/purchase-orders/${row.id}`}
-        className="text-primary hover:underline transition-colors"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {row.poNumber}
-      </Link>
-    ),
-  },
-  {
-    key: "orderDate",
-    header: "Order date",
-    className: "font-mono tabular-nums",
-    cell: (row) => <span>{formatShortDate(row.orderDate) || "—"}</span>,
-  },
-  {
-    key: "expectedDeliveryDate",
-    header: "Expected delivery",
-    className: "font-mono tabular-nums",
-    cell: (row) => <span>{formatShortDate(row.expectedDeliveryDate) || "—"}</span>,
-  },
-  {
-    key: "total",
-    header: "Total",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    cell: (row) => <span>{row.currency} {Number(row.total).toFixed(2)}</span>,
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => (
-      <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", STATUS_BADGE[row.status])}>
-        {row.status}
-      </Badge>
-    ),
-  },
-];
+const DELIVERIES_PAGE_SIZE = 10;
 
 export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   const { vendorId } = use(params);
   const id = parseInt(vendorId, 10);
+  const canView = useCan("inventory:vendors:read");
   const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [deliveriesPage, setDeliveriesPage] = useState<number>(1);
 
   const vendorQuery = useVendor(id);
-  const posQuery = useVendorPurchaseOrders(id);
-  const perfQuery = useVendorPerformance(id);
+  const scorecardQuery = useVendorPerformance(id);
+  const deliveriesQuery = useVendorDeliveries(id, {
+    page: deliveriesPage,
+    limit: DELIVERIES_PAGE_SIZE,
+  });
   const toggleMutation = useToggleVendorActive(id);
 
   function handleVendorRetry(): void {
     void vendorQuery.refetch();
   }
 
-  function handlePosRetry(): void {
-    void posQuery.refetch();
+  function handleScorecardRetry(): void {
+    void scorecardQuery.refetch();
+  }
+
+  function handleDeliveriesRetry(): void {
+    void deliveriesQuery.refetch();
   }
 
   function handleEditOpen(): void {
     setEditOpen(true);
   }
 
+  // Denial and absence are different answers. Without this a reader who may not
+  // see vendors is told the vendor does not exist, because the gated query
+  // never fired.
+  if (!canView) return <NoPermissionState permission="inventory:vendors:read" className="flex-1" />;
   if (vendorQuery.isLoading) return <LoadingState variant="form" />;
   if (vendorQuery.error) return <ErrorState description={getErrorMessage(vendorQuery.error)} onRetry={handleVendorRetry} />;
   if (!vendorQuery.data) return <ErrorState title="Not found" description={`Vendor #${vendorId}`} />;
 
   const vendor = vendorQuery.data;
-  const poItems: VendorPoRow[] = posQuery.data?.items ?? [];
 
   function handleToggleActive(): void {
     toggleMutation.mutate(
@@ -206,68 +159,22 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
 
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">Performance</h2>
-            <StatCardGrid cols={3}>
-              <StatCard
-                label="On-Time Delivery"
-                value={perfQuery.data ? `${(perfQuery.data.onTimeRate * 100).toFixed(1)}%` : "—"}
-                icon={CheckCircle2}
-                tone={
-                  perfQuery.data && perfQuery.data.onTimeRate >= 0.9
-                    ? "emerald"
-                    : perfQuery.data && perfQuery.data.onTimeRate >= 0.7
-                      ? "amber"
-                      : "red"
-                }
-                isLoading={perfQuery.isLoading}
-              />
-              <StatCard
-                label="Fill Rate"
-                value={perfQuery.data ? `${(perfQuery.data.fillRate * 100).toFixed(1)}%` : "—"}
-                icon={Package}
-                tone={perfQuery.data && perfQuery.data.fillRate >= 0.9 ? "emerald" : "amber"}
-                isLoading={perfQuery.isLoading}
-              />
-              <StatCard
-                label="Return Rate"
-                value={perfQuery.data ? `${(perfQuery.data.returnRate * 100).toFixed(1)}%` : "—"}
-                icon={RotateCcw}
-                tone={perfQuery.data && perfQuery.data.returnRate <= 0.05 ? "emerald" : "amber"}
-                isLoading={perfQuery.isLoading}
-              />
-              <StatCard
-                label="Avg Lead Time"
-                value={perfQuery.data ? `${perfQuery.data.avgLeadTimeDays} days` : "—"}
-                icon={Clock}
-                tone="default"
-                isLoading={perfQuery.isLoading}
-              />
-              <StatCard
-                label="Open POs"
-                value={perfQuery.data?.openPoCount ?? 0}
-                icon={FileText}
-                tone="blue"
-                isLoading={perfQuery.isLoading}
-              />
-              <StatCard
-                label="Total Spend"
-                value={
-                  perfQuery.data
-                    ? `$${Number(perfQuery.data.totalSpend).toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}`
-                    : "—"
-                }
-                icon={DollarSign}
-                tone="default"
-                isLoading={perfQuery.isLoading}
-              />
-            </StatCardGrid>
+            <VendorScorecardPanel
+              scorecard={scorecardQuery.data}
+              isLoading={scorecardQuery.isLoading}
+              error={scorecardQuery.error}
+              onRetry={handleScorecardRetry}
+            />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Purchase Orders</h2>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Deliveries</h2>
+                <p className="text-dense text-muted-foreground">
+                  Every purchase order the rates above were computed from.
+                </p>
+              </div>
               <Button size="sm" asChild>
                 <Link href={`/inventory/purchase-orders/new?vendorId=${vendor.id}`}>
                   New PO
@@ -275,32 +182,17 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
               </Button>
             </div>
 
-            {posQuery.error && (
-              <ErrorState description={getErrorMessage(posQuery.error)} onRetry={handlePosRetry} compact />
-            )}
-
-            {!posQuery.error && poItems.length === 0 && !posQuery.isLoading && (
-              <InventoryEmptyState
-                illustrationPreset="inventory"
-                title="No purchase orders"
-                description="Create a purchase order for this vendor."
-                action={{
-                  label: "New PO",
-                  href: `/inventory/purchase-orders/new?vendorId=${vendor.id}`,
-                }}
-                compact
-              />
-            )}
-
-            {(poItems.length > 0 || posQuery.isLoading) && (
-              <DataTable
-                data={poItems}
-                columns={VENDOR_PO_COLUMNS}
-                getRowKey={(row) => row.id}
-                isLoading={posQuery.isLoading}
-                minWidth="640px"
-              />
-            )}
+            <VendorDeliveriesTable
+              vendorId={vendor.id}
+              items={deliveriesQuery.data?.items ?? []}
+              total={deliveriesQuery.data?.total ?? 0}
+              page={deliveriesPage}
+              pageSize={DELIVERIES_PAGE_SIZE}
+              isLoading={deliveriesQuery.isLoading}
+              error={deliveriesQuery.error}
+              onPageChange={setDeliveriesPage}
+              onRetry={handleDeliveriesRetry}
+            />
           </div>
         </div>
       </PageWrapper>

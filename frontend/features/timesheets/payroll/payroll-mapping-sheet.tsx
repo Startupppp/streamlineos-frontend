@@ -163,6 +163,7 @@ export function PayrollMappingSheet({
     defaultValues: {
       provider: settings.payrollMapping.provider,
       columns: settings.payrollMapping.columns,
+      changeReason: "",
     },
   });
 
@@ -173,6 +174,7 @@ export function PayrollMappingSheet({
       form.reset({
         provider: settings.payrollMapping.provider,
         columns: settings.payrollMapping.columns,
+        changeReason: "",
       });
     }
   }, [open, settings, form]);
@@ -200,7 +202,7 @@ export function PayrollMappingSheet({
       columns: values.columns,
     };
     updateSettings.mutate(
-      { payrollMapping: mapping },
+      { payrollMapping: mapping, changeReason: values.changeReason.trim() },
       { onSuccess: () => onOpenChange(false) },
     );
   });
@@ -235,6 +237,20 @@ export function PayrollMappingSheet({
             />
           ))}
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="payroll-mapping-reason" className="text-xs font-medium">
+          Reason for change
+        </Label>
+        <Input
+          id="payroll-mapping-reason"
+          {...form.register("changeReason")}
+          placeholder="Why is this mapping changing?"
+        />
+        {form.formState.errors.changeReason && (
+          <p className="text-xs text-destructive">{form.formState.errors.changeReason.message}</p>
+        )}
       </div>
     </div>
   );

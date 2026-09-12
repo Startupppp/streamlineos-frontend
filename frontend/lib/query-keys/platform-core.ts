@@ -91,6 +91,7 @@ export const platformCoreQueryKeys = {
     moduleChecklist: (moduleKey: string) =>
       [...base, "onboarding-flow", "module-checklists", moduleKey] as const,
     tours: () => [...base, "onboarding-flow", "tours"] as const,
+    activation: () => [...base, "onboarding-flow", "activation"] as const,
   },
 
   payments: {

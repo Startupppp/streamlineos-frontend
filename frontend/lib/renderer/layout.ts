@@ -29,7 +29,34 @@ export type FieldKind =
   | "badge"
   | "boolean"
   | "longText"
-  | "reference";
+  | "reference"
+  | "lines"
+  /*
+    A field whose value is a run of figures rather than one.
+
+    A rep's talk ratio across the reporting window is a real field of that
+    record -- it is what the row is about -- and until this existed a
+    description had no way to say so, which is why the one table that shows one
+    stayed hand-written after the CRM was migrated. Both alternatives were
+    worse: a `text` field whose value is secretly an array is a description
+    lying about its own shape, and dropping the column to migrate the screen
+    would be losing a feature to satisfy a count.
+
+    The engine deliberately does not draw it. What a chart of a series *means* --
+    that these are basis points, that the buckets are weeks, that a gap is a
+    fortnight nobody called anybody rather than a flat line -- is domain the
+    layout layer does not have and should not acquire; a sparkline drawn from
+    those numbers alone would join the line straight through the quiet week and
+    claim nothing changed. So the surface draws it through `RecordList`'s
+    `cells`, and the description owns everything around it: the header, the
+    width, the position, the mobile card, and whether the tenant sees the column
+    at all.
+
+    Read-only always. There is no control that types a series, and
+    `validateLayout` reports one that is not rather than letting a form render an
+    input over it.
+  */
+  | "series";
 
 /** Maps onto the status tokens from the design layer, never a raw colour. */
 export type FieldTone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -197,6 +224,53 @@ export interface FieldSpec {
    */
   readonly createOnly?: boolean;
   /**
+   * The shape of one row, when the field holds a repeating group.
+   *
+   * Four migrations stopped at the same wall independently — an assignment
+   * rule's conditions, a subject type's declared fields, a quote's line items,
+   * and the line-item grid rendered beside them. Each is a list of small
+   * records that belong to the record being edited and have no page of their
+   * own, and none of them could be described: `FieldSpec` could say a field
+   * holds text or a number or a pointer, and had no way to say it holds several
+   * of something. So each of the four was written by hand, with its own add
+   * button, its own remove button and its own idea of what an empty row is.
+   *
+   * That is the vocabulary gap this closes, once. A `lines` field is a field
+   * whose value is rows, and the rows are described with the same `FieldSpec`
+   * every other part of a layout uses — so a column in a line is validated,
+   * formatted, toned and aligned by exactly the code that handles a column
+   * anywhere else, rather than by a second engine for small tables.
+   *
+   * Deliberately one level deep. `validateLayout` reports a line field that is
+   * itself `lines`, because a description that can nest arbitrarily is a tree
+   * with no bound, and a form that renders one is a program rather than a
+   * screen. The four surfaces that needed this needed exactly one level.
+   *
+   * Line fields are also not conditional and not mode-scoped: `visibleWhen`,
+   * `editOnly` and `createOnly` are reported here rather than silently ignored.
+   * A row of a repeating group is the same shape on every row, which is what
+   * lets one header stand over all of them.
+   */
+  readonly lineFields?: readonly FieldSpec[];
+  /**
+   * What one row is called, for the add control and the empty state.
+   *
+   * Falls back to the field's own label, which reads acceptably ("Add
+   * Conditions") and is why this is optional rather than required — a
+   * description that forgot it still renders a working form.
+   */
+  readonly lineLabel?: string;
+  /**
+   * How many rows the record cannot go below.
+   *
+   * A rule with no conditions matches everything and a quote with no lines has
+   * no price; both are records the API rejects, and finding that out on submit
+   * is a form that wasted the person's time. One is the common case, so the
+   * engine keeps the last row rather than offering a remove control that
+   * produces an invalid record.
+   */
+  readonly minLines?: number;
+  /**
    * The field is only part of the record while a sibling holds one of these
    * values.
    *
@@ -226,7 +300,6 @@ export interface ColumnSpec {
   readonly field: string;
   /** The column the mobile card titles itself with. */
   readonly primary?: boolean;
-  readonly sortable?: boolean;
   readonly width?: string;
   /**
    * A second, quieter line under the value — a legal name beneath a trading
@@ -300,131 +373,6 @@ export function fieldByName(
   name: string,
 ): FieldSpec | undefined {
   return layout.fields.find((field) => field.name === name);
-}
-
-export interface LayoutProblem {
-  readonly where: string;
-  readonly message: string;
-}
-
-/**
- * Reports what a description refers to but does not define.
- *
- * Descriptions will eventually be written by the system and edited by
- * administrators, so they have to be checkable — a silent omission would show up
- * as a column that renders nothing.
- */
-export function validateLayout(layout: RecordLayout): LayoutProblem[] {
-  const problems: LayoutProblem[] = [];
-  const known = new Set(layout.fields.map((field) => field.name));
-
-  const require = (name: string, where: string): void => {
-    if (!known.has(name)) problems.push({ where, message: `unknown field "${name}"` });
-  };
-
-  require(layout.titleField, "titleField");
-  layout.list.columns.forEach((column, index) => {
-    require(column.field, `list.columns[${index}]`);
-    if (column.subtitle) require(column.subtitle, `list.columns[${index}].subtitle`);
-  });
-
-  for (const [area, sections] of [
-    ["detail", layout.detail.sections],
-    ["form", layout.form.sections],
-  ] as const) {
-    sections.forEach((section, sectionIndex) => {
-      section.fields.forEach((name) =>
-        require(name, `${area}.sections[${sectionIndex}] (${section.title})`),
-      );
-    });
-  }
-
-  /*
-    A description with no columns at all is a singleton — organisation-wide quote
-    settings, say: one record, reached from a settings page, never listed. That
-    is a real shape, so it is not an error; what is an error is a list that has
-    columns and no primary one, which renders a mobile card with no title.
-  */
-  if (layout.list.columns.length > 0 && !layout.list.columns.some((column) => column.primary))
-    problems.push({
-      where: "list.columns",
-      message: "no primary column, so the mobile card would have no title",
-    });
-
-  for (const field of layout.fields) {
-    if (field.sign !== undefined && !isNumericField(field))
-      problems.push({
-        where: `fields (${field.name})`,
-        message: `sign "${field.sign}" on a ${field.kind} field, which has no sign to read`,
-      });
-
-    if (field.currencyField !== undefined) {
-      if (field.kind !== "money")
-        problems.push({
-          where: `fields (${field.name})`,
-          message: `currencyField on a ${field.kind} field, which carries no amount`,
-        });
-      if (!known.has(field.currencyField))
-        problems.push({
-          where: `fields (${field.name}).currencyField`,
-          message: `unknown field "${field.currencyField}"`,
-        });
-    }
-
-    if (field.visibleWhen !== undefined) {
-      if (!known.has(field.visibleWhen.field))
-        problems.push({
-          where: `fields (${field.name}).visibleWhen`,
-          message: `unknown field "${field.visibleWhen.field}"`,
-        });
-      if (field.visibleWhen.field === field.name)
-        problems.push({
-          where: `fields (${field.name}).visibleWhen`,
-          message: "a field cannot depend on itself",
-        });
-      if (field.visibleWhen.equals.length === 0)
-        problems.push({
-          where: `fields (${field.name}).visibleWhen`,
-          message: "no values, so the field would never apply",
-        });
-    }
-
-    if (field.referenceToField !== undefined) {
-      if (field.kind !== "reference")
-        problems.push({
-          where: `fields (${field.name})`,
-          message: `referenceToField on a ${field.kind} field, which points at nothing`,
-        });
-      if (!known.has(field.referenceToField))
-        problems.push({
-          where: `fields (${field.name}).referenceToField`,
-          message: `unknown field "${field.referenceToField}"`,
-        });
-    }
-
-    if (field.referenceLabel !== undefined) {
-      if (field.kind !== "reference")
-        problems.push({
-          where: `fields (${field.name})`,
-          message: `referenceLabel on a ${field.kind} field, which points at nothing`,
-        });
-      // A label naming a field the record does not carry renders the raw
-      // identifier on every row — visible, but wrong, and silently so.
-      if (!known.has(field.referenceLabel))
-        problems.push({
-          where: `fields (${field.name}).referenceLabel`,
-          message: `unknown field "${field.referenceLabel}"`,
-        });
-    }
-  }
-
-  const duplicates = layout.fields
-    .map((field) => field.name)
-    .filter((name, index, all) => all.indexOf(name) !== index);
-  for (const name of new Set(duplicates))
-    problems.push({ where: "fields", message: `duplicate field "${name}"` });
-
-  return problems;
 }
 
 /**

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,26 +12,19 @@ import {
   SheetTitle,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
+  isWriteOffReason,
   useAdjustmentDetail,
   useApproveAdjustment,
   usePostAdjustment,
   useCancelAdjustment,
 } from "@/hooks/api/inventory/stock";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney } from "@/lib/format-utils";
 import {
   ADJUSTMENT_STATUS_BADGE,
   ADJUSTMENT_STATUS_LABEL,
@@ -96,9 +88,6 @@ interface AdjustmentDetailSheetProps {
 }
 
 export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: AdjustmentDetailSheetProps) {
-  const [confirmPost, setConfirmPost] = useState(false);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-
   const { data: detail, isLoading } = useAdjustmentDetail(adjustmentId ?? 0);
   const approveMutation = useApproveAdjustment();
   const postMutation = usePostAdjustment();
@@ -106,10 +95,12 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
   const canAdjust = useCan("inventory:stock:adjust");
   const canApprove = useCan("inventory:adjustments:approve");
   const canPost = useCan("inventory:adjustments:post");
+  const canSeeCost = useCan("inventory:valuation:read");
+  const moneyDisplay = useOrgDisplay();
 
   const status: AdjustmentStatus | undefined = detail?.status;
+  const writeOff = detail ? isWriteOffReason(detail.reason) : false;
   const isFinal = status === "POSTED" || status === "CANCELLED";
-  const isPending = approveMutation.isPending || postMutation.isPending || cancelMutation.isPending;
 
   function handleClose(): void {
     onOpenChange(false);
@@ -125,7 +116,6 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
 
   function handlePost(): void {
     if (!detail) return;
-    setConfirmPost(false);
     postMutation.mutate(detail.id, {
       onSuccess: () => toast.success("Adjustment posted — stock updated"),
       onError: (err) => toast.error(getErrorMessage(err)),
@@ -134,7 +124,6 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
 
   function handleCancel(): void {
     if (!detail) return;
-    setConfirmCancel(false);
     cancelMutation.mutate(detail.id, {
       onSuccess: () => toast.success("Adjustment cancelled"),
       onError: (err) => toast.error(getErrorMessage(err)),
@@ -194,6 +183,20 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                   {detail.notes}
                 </div>
               )}
+              {writeOff && detail.scrapLocation && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Scrap location: </span>
+                  {detail.scrapLocation.name} ({detail.scrapLocation.code})
+                </div>
+              )}
+              {writeOff && canSeeCost && detail.writtenOffValue != null && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Value written off: </span>
+                  <span className="font-mono tabular-nums text-foreground">
+                    {formatMoney(detail.writtenOffValue, moneyDisplay)}
+                  </span>
+                </div>
+              )}
               {detail.approvedAt && (
                 <div className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">Approved: </span>
@@ -224,60 +227,39 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                 </LoadingButton>
               )}
               {canPost && status === "APPROVED" && (
-                <AlertDialog open={confirmPost} onOpenChange={setConfirmPost}>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" className="text-xs" disabled={isPending}>
-                      Post to Stock
+                <ConfirmDialog
+                  trigger={
+                    <Button size="sm" className="text-xs">
+                      {writeOff ? "Write off stock" : "Post to stock"}
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Post adjustment?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently update stock quantities. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Back</AlertDialogCancel>
-                      <AlertDialogAction asChild>
-                        <LoadingButton isPending={postMutation.isPending} loadingText="Posting…" onClick={handlePost}>
-                          Post Adjustment
-                        </LoadingButton>
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                  }
+                  destructive
+                  title={writeOff ? "Write this stock off?" : "Post adjustment?"}
+                  description={
+                    writeOff
+                      ? "The goods leave inventory and their cost is written off against the layers they came from. This cannot be undone."
+                      : "This will permanently update stock quantities. This action cannot be undone."
+                  }
+                  confirmLabel={writeOff ? "Write off" : "Post adjustment"}
+                  isPending={postMutation.isPending}
+                  onConfirm={handlePost}
+                />
               )}
               {canAdjust && !isFinal && (
-                <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs text-destructive hover:text-destructive"
-                      disabled={isPending}
-                    >
+                <ConfirmDialog
+                  trigger={
+                    <Button size="sm" variant="outline" className="text-xs">
                       Cancel
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel adjustment?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Back</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleCancel}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Cancel Adjustment
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                  }
+                  destructive
+                  title="Cancel adjustment?"
+                  description="The document is closed without moving any stock. This action cannot be undone."
+                  confirmLabel="Cancel adjustment"
+                  cancelLabel="Back"
+                  isPending={cancelMutation.isPending}
+                  onConfirm={handleCancel}
+                />
               )}
             </div>
             <Button

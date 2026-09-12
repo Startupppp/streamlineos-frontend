@@ -29,13 +29,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useRoleMembers,
-  useAssignRoleMember,
-  useUnassignRoleMember,
-} from "@/hooks/api/roles";
+import { useRoleMembers, useAssignRoleMember, useUnassignRoleMember, useAssignableDepartments } from "@/hooks/api/roles";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useAssignableDepartments } from "@/hooks/api/roles";
+
 import { getInitials } from "@/lib/format-utils";
 import type { Role } from "@/types/organization";
 import {

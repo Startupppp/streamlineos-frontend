@@ -105,7 +105,7 @@ export const LEAD_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search leads…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "company" },
+      { field: "name", primary: true, subtitle: "company" },
       { field: "status", width: "w-28 shrink-0" },
       { field: "priority", width: "w-24 shrink-0" },
       { field: "source", width: "w-28 shrink-0" },
@@ -122,11 +122,11 @@ export const LEAD_LAYOUT: RecordLayout = {
       */
       { field: "email", width: "w-52 shrink-0" },
       { field: "city", width: "w-28 shrink-0" },
-      { field: "potentialValue", sortable: true, width: "w-32 shrink-0" },
+      { field: "potentialValue", width: "w-32 shrink-0" },
       { field: "investmentInterest", width: "w-32 shrink-0" },
-      { field: "score", sortable: true, width: "w-20 shrink-0" },
+      { field: "score", width: "w-20 shrink-0" },
       { field: "assignedToName", width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-28 shrink-0" },
+      { field: "createdAt", width: "w-28 shrink-0" },
     ],
   },
   detail: {

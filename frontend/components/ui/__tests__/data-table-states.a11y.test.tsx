@@ -186,7 +186,7 @@ describe("DataTable — sortable headers are keyboard-operable and expose sort o
         columns={columns}
         getRowKey={(row) => row.id}
         pagination={{ pageSize: 25 }}
-        sortState={{ field: "name", direction: "asc", onChange: () => {} }}
+        sortState={{ fields: ["name"], field: "name", direction: "asc", onChange: () => {} }}
       />,
     );
     expect(container.querySelector('[aria-sort="ascending"]')).not.toBeNull();

@@ -107,6 +107,9 @@ export const usersAndCommerceQueryKeys = {
         ] as const,
       settings: () => [...base, "timesheets", "payroll", "settings"] as const,
     },
+    /** Org holidays for a week, so the grid can mark closed days. */
+    holidays: (startDate: string, endDate: string) =>
+      [...base, "timesheets", "holidays", startDate, endDate] as const,
     entries: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "entries"] as const)
@@ -117,6 +120,10 @@ export const usersAndCommerceQueryKeys = {
         ? ([...base, "timesheets", "periods", "list"] as const)
         : ([...base, "timesheets", "periods", "list", params] as const),
     periodCurrent: () => [...base, "timesheets", "periods", "current"] as const,
+    periodsOverdue: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "timesheets", "periods", "overdue"] as const)
+        : ([...base, "timesheets", "periods", "overdue", params] as const),
     period: (periodId: number) =>
       [...base, "timesheets", "periods", "detail", periodId] as const,
     approvals: (params?: QueryKeyParams) =>
@@ -127,6 +134,10 @@ export const usersAndCommerceQueryKeys = {
       params === undefined
         ? ([...base, "timesheets", "billing", "uninvoiced"] as const)
         : ([...base, "timesheets", "billing", "uninvoiced", params] as const),
+    ratePreview: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "timesheets", "billing", "rate-preview"] as const)
+        : ([...base, "timesheets", "billing", "rate-preview", params] as const),
     reportsOverview: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "reports", "overview"] as const)
@@ -143,6 +154,8 @@ export const usersAndCommerceQueryKeys = {
         : ([...base, "timesheets", "exceptions", "list", params] as const),
     exceptionsSummary: () =>
       [...base, "timesheets", "exceptions", "summary"] as const,
+    settingsHistory: () =>
+      [...base, "timesheets", "settings", "history"] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,
@@ -150,6 +163,7 @@ export const usersAndCommerceQueryKeys = {
       params === undefined
         ? ([...base, "timesheets", "audit"] as const)
         : ([...base, "timesheets", "audit", params] as const),
+    auditVerify: () => [...base, "timesheets", "audit", "verify"] as const,
   },
 
 } as const;

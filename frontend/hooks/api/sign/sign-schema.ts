@@ -83,13 +83,10 @@ const signRecipientRowContract = z.object({
   routingOrder: z.number().int(),
   status: z.enum(["pending", "invited", "viewed", "authenticated", "signing", "completed", "declined", "delegated", "bounced", "expired"]),
   authMethod: z.enum(["email_link", "access_code", "otp_email", "otp_sms", "sso", "passkey", "kba", "id_verification"]),
-  accessCodeHash: z.string().nullable(),
-  otpCodeHash: z.string().nullable(),
   otpExpiresAt: z.string().nullable(),
   otpAttempts: z.number().int(),
   failedAuthAttempts: z.number().int(),
   authLockedUntil: z.string().nullable(),
-  signingTokenHash: z.string().nullable(),
   tokenExpiresAt: z.string().nullable(),
   tokenRevokedAt: z.string().nullable(),
   consentAcceptedAt: z.string().nullable(),
@@ -205,6 +202,7 @@ export const signBulkJobCreateContract = z.object({
   job: signBulkSendJobRowContract,
   dryRun: z.boolean(),
   preview: z.unknown().optional(),
+  queued: z.boolean().optional(),
 });
 
 export const signBulkJobListContract = z.array(signBulkSendJobRowContract);
@@ -223,7 +221,6 @@ const signSettingsContract = z.object({
   allowedAuthMethods: z.array(z.string()),
   certificateFormat: z.string(),
   retentionPolicyJson: z.record(z.string(), z.unknown()),
-  publicFormsEnabled: z.boolean(),
   bulkSendMaxRowsPerJob: z.number().int(),
   bulkSendMaxActiveJobs: z.number().int(),
   bulkSendMaxRecipientsPerEnvelope: z.number().int(),

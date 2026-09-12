@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { DollarSign, Layers } from "lucide-react";
+import { CalendarClock, DollarSign, Layers } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -16,133 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState, AppSheet } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { formatCurrencyFull } from "@/lib/format-utils";
-import { formatShortDate } from "@/lib/date-utils";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
+import { formatCalendarDate } from "@/lib/date-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import {
-  useValuationReport,
-  useValuationLayers,
-  type ValuationRow,
-} from "@/hooks/api/inventory/valuation";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
+import { useValuationReport, type ValuationRow } from "@/hooks/api/inventory/valuation";
+import { ValuationEvidenceSheet } from "./valuation-evidence-sheet";
+import { COSTING_METHOD_BADGE_CLASS, costingMethodLabel } from "./costing-method";
 
 const SENTINEL = "__all__";
-
-type CostingMethod = ValuationRow["costingMethod"];
-
-const METHOD_LABEL: Record<CostingMethod, string> = {
-  FIFO: "FIFO",
-  LIFO: "LIFO",
-  WEIGHTED_AVG: "Weighted Avg",
-  STANDARD: "Standard",
-};
-
-const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
-  FIFO: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  LIFO: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  WEIGHTED_AVG: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  STANDARD: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-};
-
-function formatCents(cents: number): string {
-  return formatCurrencyFull(cents / 100, "INR");
-}
-
-
-type ValuationLayerRow = {
-  id: number;
-  qty: number;
-  unitCost: number;
-  remainingQty: number;
-  receivedAt: string;
-};
-
-const layerColumns: DataTableColumn<ValuationLayerRow>[] = [
-  {
-    key: "receivedAt",
-    header: "Received",
-    className: "text-muted-foreground",
-    cell: (row) => formatShortDate(row.receivedAt),
-  },
-  {
-    key: "qty",
-    header: "Qty",
-    className: "tabular-nums",
-    cell: (row) => row.qty,
-  },
-  {
-    key: "remainingQty",
-    header: "Remaining",
-    className: "tabular-nums",
-    cell: (row) => row.remainingQty,
-  },
-  {
-    key: "unitCost",
-    header: "Unit Cost",
-    className: "tabular-nums",
-    cell: (row) => formatCents(row.unitCost),
-  },
-];
-
-function LayersSheet({
-  variantId,
-  open,
-  onClose,
-}: {
-  variantId: number;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [layersPage, setLayersPage] = useState(1);
-  const { data, isLoading, error } = useValuationLayers(variantId, layersPage);
-  const layers = data?.items ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const layersTotal = data?.total ?? 0;
-
-  function handleOpenChange(v: boolean): void {
-    if (!v) onClose();
-  }
-
-  return (
-    <AppSheet
-      open={open}
-      onOpenChange={handleOpenChange}
-      title="Cost Layers"
-      description="FIFO/LIFO cost layers for this variant."
-    >
-      <div className="px-6 py-4">
-        {error ? (
-          <ErrorState compact />
-        ) : !isLoading && layers.length === 0 ? (
-          <InventoryEmptyState
-            illustrationPreset="inventory"
-            title="No cost layers"
-            description="No stock layers recorded for this variant."
-            compact
-          />
-        ) : (
-          <DataTable
-            data={layers}
-            columns={layerColumns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            pagination={
-              totalPages > 1
-                ? { mode: "server", page: layersPage, pageSize: 20, total: layersTotal, onPageChange: setLayersPage }
-                : undefined
-            }
-            minWidth="400px"
-          />
-        )}
-      </div>
-    </AppSheet>
-  );
-}
+const PAGE_SIZE = 25;
 
 function ViewLayersButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -155,10 +46,11 @@ function ViewLayersButton({ onClick }: { onClick: () => void }) {
 }
 
 function buildValuationColumns(
+  display: MoneyDisplay,
   onViewLayers: (variantId: number) => void,
 ): DataTableColumn<ValuationRow>[] {
   function handleViewLayersFor(row: ValuationRow): void {
-    onViewLayers(row.variantId);
+    onViewLayers(row.productVariantId);
   }
 
   return [
@@ -176,34 +68,40 @@ function buildValuationColumns(
       key: "costingMethod",
       header: "Costing Method",
       cell: (row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
-          {METHOD_LABEL[row.costingMethod]}
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${COSTING_METHOD_BADGE_CLASS[row.costingMethod] ?? "bg-muted text-muted-foreground border-border"}`}
+        >
+          {costingMethodLabel(row.costingMethod)}
         </span>
       ),
     },
     {
-      key: "onHandQty",
+      key: "onHand",
       header: "On Hand",
-      className: "tabular-nums",
-      cell: (row) => row.onHandQty.toLocaleString(),
+      className: "tabular-nums text-right",
+      headerClassName: "text-right",
+      cell: (row) => formatQuantity(row.onHand),
     },
     {
       key: "unitCostBasis",
       header: "Unit Cost",
-      className: "tabular-nums text-muted-foreground",
-      cell: (row) => formatCents(row.unitCostBasis),
+      className: "tabular-nums text-right text-muted-foreground",
+      headerClassName: "text-right",
+      cell: (row) => formatMoney(row.unitCostBasis, display),
     },
     {
-      key: "totalValue",
+      key: "value",
       header: "Total Value",
-      className: "tabular-nums font-semibold",
-      cell: (row) => formatCents(row.totalValue),
+      className: "tabular-nums text-right font-semibold",
+      headerClassName: "text-right",
+      cell: (row) => formatMoney(row.value, display),
     },
     {
-      key: "warehouse",
-      header: "Warehouse",
-      className: "text-muted-foreground",
-      cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-sm text-muted-foreground" />,
+      key: "layerCount",
+      header: "Layers",
+      className: "tabular-nums text-right text-muted-foreground",
+      headerClassName: "text-right",
+      cell: (row) => String(row.layerCount),
     },
     {
       key: "actions",
@@ -214,17 +112,21 @@ function buildValuationColumns(
 }
 
 export function ValuationClient() {
-  const canRead = useCan("inventory:valuation:read");
+  const canView = useCan("inventory:valuation:read");
+  const display = useOrgDisplay();
   const [warehouseFilter, setWarehouseFilter] = useState<number | undefined>(undefined);
+  const [page, setPage] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<number>(0);
   const [layersOpen, setLayersOpen] = useState(false);
 
   const { data: warehouses = [] } = useWarehouses();
-  const { data, isLoading, error, refetch } = useValuationReport({ warehouseId: warehouseFilter });
+  const { data, isLoading, error, refetch } = useValuationReport({
+    warehouseId: warehouseFilter,
+    page,
+    limit: PAGE_SIZE,
+  });
 
-  const rows = data?.rows ?? [];
-  const totalValue = data?.totalValue ?? 0;
-  const byMethod = data?.byMethod ?? [];
+  const rows = data?.items ?? [];
 
   function handleViewLayers(variantId: number): void {
     setSelectedVariantId(variantId);
@@ -237,36 +139,31 @@ export function ValuationClient() {
 
   function handleWarehouseChange(val: string): void {
     setWarehouseFilter(val === SENTINEL ? undefined : Number(val));
+    setPage(1);
   }
 
   function handleRetry(): void {
     void refetch();
   }
 
-  if (!canRead) {
+  const columns = buildValuationColumns(display, handleViewLayers);
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
     return (
       <PageWrapper title="Inventory Valuation">
-        <InventoryEmptyState
-          illustrationPreset="security"
-          title="Access restricted"
-          description="You don't have permission to view inventory valuation."
-          className="flex-1 h-full"
-        />
+        <NoPermissionState permission="inventory:valuation:read" className="flex-1" />
       </PageWrapper>
     );
   }
 
-  function getMethodValue(method: CostingMethod): string {
-    const entry = byMethod.find((b) => b.method === method);
-    return entry ? formatCents(entry.value) : formatCents(0);
-  }
-
-  const columns = buildValuationColumns(handleViewLayers);
-
   return (
     <PageWrapper
       title="Inventory Valuation"
-      subtitle="Total stock value by costing method."
+      subtitle="Stock value as at the quoted date, with the layers behind each figure."
       actions={
         <Button variant="outline" size="sm" asChild>
           <Link href="/inventory/costing">Costing Setup</Link>
@@ -292,39 +189,33 @@ export function ValuationClient() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <StatCardGrid cols={4}>
+        <StatCardGrid cols={3}>
           <StatCard
             label="Total Value"
-            value={isLoading ? "—" : formatCents(totalValue)}
+            value={data ? formatMoney(data.totalValue, display) : "—"}
             icon={DollarSign}
             tone="blue"
             isLoading={isLoading}
           />
           <StatCard
-            label="FIFO Value"
-            value={isLoading ? "—" : getMethodValue("FIFO")}
+            label="Total On Hand"
+            value={data ? formatQuantity(data.totalOnHand) : "—"}
             icon={Layers}
             tone="default"
             isLoading={isLoading}
           />
           <StatCard
-            label="Weighted Avg Value"
-            value={isLoading ? "—" : getMethodValue("WEIGHTED_AVG")}
-            icon={Layers}
+            label="Valued As At"
+            value={data ? formatCalendarDate(data.grain.asOfDate) : "—"}
+            hint={data?.grain.live ? "Live projection" : (data?.grain.period?.name ?? undefined)}
+            icon={CalendarClock}
             tone="amber"
-            isLoading={isLoading}
-          />
-          <StatCard
-            label="Standard Value"
-            value={isLoading ? "—" : getMethodValue("STANDARD")}
-            icon={Layers}
-            tone="emerald"
             isLoading={isLoading}
           />
         </StatCardGrid>
 
         {error ? (
-          <ErrorState onRetry={handleRetry} />
+          <ErrorState description={getErrorMessage(error)} onRetry={handleRetry} />
         ) : !isLoading && rows.length === 0 ? (
           <InventoryEmptyState
             illustrationPreset="inventory"
@@ -337,15 +228,21 @@ export function ValuationClient() {
             data={rows}
             columns={columns}
             className="flex-1 min-h-0"
-            getRowKey={(row) => `${row.variantId}-${row.warehouseId ?? "all"}`}
+            getRowKey={(row) => row.productVariantId}
             isLoading={isLoading}
-            pagination={{ pageSize: 25 }}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: data?.total ?? 0,
+              onPageChange: setPage,
+            }}
             minWidth="760px"
           />
         )}
       </div>
 
-      <LayersSheet
+      <ValuationEvidenceSheet
         variantId={selectedVariantId}
         open={layersOpen}
         onClose={handleCloseLayersSheet}

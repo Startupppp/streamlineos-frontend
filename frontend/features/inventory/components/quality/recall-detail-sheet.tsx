@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
@@ -12,41 +12,22 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useRecall, useUpdateRecall, type RecallLine } from "@/hooks/api/inventory/quality";
+import { DataTable } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RECALL_STATUS_BADGE,
   RECALL_STATUS_LABEL,
 } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
+import { RECALL_LINE_COLUMNS, RecallQuarantineSummary } from "./recall-affected-lines";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   recallId: number | null;
 }
-
-const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
-  {
-    key: "productVariant",
-    header: "Product / SKU",
-    className: "text-xs",
-    cell: (line) => line.productVariant?.name ?? `Variant #${line.productVariantId}`,
-  },
-  {
-    key: "lotId",
-    header: "Lot #",
-    className: "text-muted-foreground text-xs",
-    cell: (line) => line.lotId ? `Lot #${line.lotId}` : "—",
-  },
-  {
-    key: "status",
-    header: "Status",
-    className: "text-muted-foreground text-xs",
-    cell: (line) => line.status,
-  },
-];
 
 export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const [editingNotes, setEditingNotes] = useState(false);
@@ -59,7 +40,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const isLoading = recallQuery.isLoading;
 
   function handleEditNotes(): void {
-    setNotesValue("");
+    setNotesValue(recall?.description ?? "");
     setEditingNotes(true);
   }
 
@@ -99,7 +80,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
     );
   }
 
-  function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+  function handleNotesChange(e: ChangeEvent<HTMLTextAreaElement>): void {
     setNotesValue(e.target.value);
   }
 
@@ -175,26 +156,17 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
             >
               {RECALL_STATUS_LABEL[recall.status]}
             </Badge>
-            {recall.severity && (
-              <Badge variant="outline" className="h-5 text-micro px-2 border border-status-warning-rule bg-status-warning-surface text-status-warning-ink">
-                {recall.severity}
-              </Badge>
-            )}
+            <Badge variant="outline" className="h-5 text-micro px-2 font-mono">
+              {recall.recallNumber}
+            </Badge>
             <span className="text-xs text-muted-foreground">
               {format(new Date(recall.createdAt), "dd MMM yyyy")}
             </span>
           </div>
 
-          {recall.description && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Description</p>
-              <p className="text-xs text-muted-foreground">{recall.description}</p>
-            </div>
-          )}
-
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-foreground">Notes</p>
+              <p className="text-xs font-medium text-foreground">Reason</p>
               {!editingNotes && (
                 <button
                   type="button"
@@ -218,18 +190,55 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">—</p>
+              <p className="text-xs text-muted-foreground">{recall.description || "—"}</p>
             )}
           </div>
 
-          {(recall.lines ?? []).length > 0 && (
+          {recall.lines.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Affected Lines ({(recall.lines ?? []).length})</p>
+              <p className="text-xs font-medium text-foreground">Affected Lines ({recall.lines.length})</p>
+              <RecallQuarantineSummary lines={recall.lines} />
               <DataTable
-                data={recall.lines ?? []}
+                data={recall.lines}
                 columns={RECALL_LINE_COLUMNS}
                 getRowKey={(line) => line.id}
               />
+            </div>
+          )}
+
+          {recall.affectedShipments && recall.affectedShipments.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">
+                Shipments carrying recalled goods ({recall.affectedShipments.length})
+              </p>
+              <div className="space-y-1.5">
+                {recall.affectedShipments.map((shipment) => (
+                  <div
+                    key={shipment.shipmentId}
+                    className="rounded-md border border-border/60 px-3 py-2"
+                  >
+                    <TruncatedText text={shipment.shipmentNumber} className="text-xs font-medium" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {recall.evidenceVersion ? (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Evidence</p>
+              <p className="text-micro text-muted-foreground">
+                Executed against simulated impact{" "}
+                <span className="font-mono">{recall.evidenceVersion}</span>. The server re-checked
+                that picture before acting.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Evidence</p>
+              <p className="text-micro text-muted-foreground">
+                Raised from an explicit line list, so no impact simulation was recorded.
+              </p>
             </div>
           )}
         </div>

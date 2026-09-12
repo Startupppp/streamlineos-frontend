@@ -1,5 +1,7 @@
 "use client";
 
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { RecordDetail } from "@/components/renderer";
 import { useIssue } from "@/hooks/api/crm/issues";
 import { formatRelativeTime, formatShortDate } from "@/lib/date-utils";
@@ -87,7 +88,8 @@ export function IssueDetailSheet({
   canManage,
   canEscalate,
 }: IssueDetailSheetProps) {
-  const { data, isLoading, isError, refetch, access } = useIssue(issueRecordId);
+  const { data, isLoading, isError, refetch } = useIssue(issueRecordId);
+  const viewAccess = useCanState("crm:issues:view");
 
   function handleRetry() {
     void refetch();
@@ -118,8 +120,21 @@ export function IssueDetailSheet({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
-          {access.denied ? (
-            <NoPermissionState permission={access.permission} />
+          {/*
+            Ticket 26. The read below disables itself without this permission,
+            and a disabled query in TanStack Query v5 reports `isLoading: false`
+            with no rows -- the same flags an empty result has. Without this
+            branch the ones under it tell somebody their data does not exist,
+            when the truth is that they are not allowed to see it.
+
+            Ahead of the loading branch on purpose: a query that was never
+            allowed to run has no loading state worth waiting for. Inside the
+            sheet rather than returned in its place, because the page mounts
+            this component unconditionally -- an early return would paint a
+            second permission panel into the list body behind it.
+          */}
+          {viewAccess === "denied" ? (
+            <NoPermissionState permission="crm:issues:view" />
           ) : isLoading ? (
             <div className="flex flex-col gap-3">
               <Skeleton className="h-6 w-1/2" />

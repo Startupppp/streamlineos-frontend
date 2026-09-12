@@ -36,14 +36,14 @@ export interface SlaPolicy {
   updatedAt: string | null;
 }
 
-interface SlaReport {
+export interface SlaReport {
   total: number;
   compliant: number;
   breached: number;
   complianceRate: number;
 }
 
-interface SlaBreachedLead {
+export interface SlaBreachedLead {
   id: number;
   name: string;
   status: string;

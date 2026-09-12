@@ -545,7 +545,7 @@ async function runSelfTests() {
 
   assert(
     "isExcludedDir keeps generated build output out of the corpus",
-    isExcludedDir(".next") && isExcludedDir(".next-buildmart") && isExcludedDir("node_modules"),
+    isExcludedDir(".next") && isExcludedDir(".next-custom") && isExcludedDir("node_modules"),
   );
   assert(
     "isExcludedDir also drops the non-source dirs this gate does not measure",

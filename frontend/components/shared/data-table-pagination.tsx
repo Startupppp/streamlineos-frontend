@@ -20,6 +20,7 @@ interface OffsetPaginationProps extends PaginationChrome {
   total: number;
   onPageChange: (page: number) => void;
   rowCount?: never;
+  pageNumber?: never;
   hasMore?: never;
   hasPrevious?: never;
   onNext?: never;
@@ -34,7 +35,13 @@ interface OffsetPaginationProps extends PaginationChrome {
  */
 interface CursorPaginationProps extends PaginationChrome {
   mode: "cursor";
+  /** Rows on this page — the only count that exists here. */
   rowCount: number;
+  /**
+   * Position in the walk, 1-based, when the caller keeps one. Not a page number
+   * a caller may jump to, so it is shown and never offered as a control.
+   */
+  pageNumber?: number;
   hasMore: boolean;
   hasPrevious: boolean;
   onNext: () => void;
@@ -76,15 +83,17 @@ function PageSizeSelect({ limit, onLimitChange, pageSizeOptions }: PaginationChr
 
 function CursorPagination({
   limit, onLimitChange, pageSizeOptions,
-  rowCount, hasMore, hasPrevious, onNext, onPrevious,
+  rowCount, pageNumber, hasMore, hasPrevious, onNext, onPrevious,
 }: CursorPaginationProps) {
-  if (rowCount === 0) return null;
+  // An empty page reached by Next still owes the reader a way back.
+  if (rowCount === 0 && !hasPrevious) return null;
 
   return (
     <nav aria-label="Pagination" className={NAV_CLASS}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="tabular-nums">
           {rowCount === 1 ? "1 result on this page" : `${rowCount} results on this page`}
+          {pageNumber ? ` · page ${pageNumber}` : null}
         </span>
         <PageSizeSelect limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
       </div>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { EyeIcon, PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -14,37 +13,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import {
   useCycleCounts,
-  useCreateCycleCount,
   type CycleCountListItem,
 } from "@/hooks/api/inventory/counts";
-import { useLocations } from "@/hooks/api/inventory/warehouses";
-import { WarehouseSelect } from "@/components/inventory/warehouse-select";
-import { useCategories } from "@/hooks/api/inventory/products";
 import {
   CYCLE_COUNT_STATUS_BADGE,
   CYCLE_COUNT_STATUS_LABEL,
   type CycleCountStatus,
+  isCycleCountStatus,
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { COUNT_READ_KEY, COUNT_WRITE_KEY } from "@/hooks/api/inventory/counts";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { NewCycleCountSheet } from "./new-cycle-count-sheet";
 
 function ViewCountButton({ href }: { href: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -60,140 +50,21 @@ function ViewCountButton({ href }: { href: string }) {
 const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
 const PAGE_LIMIT = 20;
 
-function isCycleCountStatus(s: string): s is CycleCountStatus {
-  return s === "PLANNED" || s === "COUNTING" || s === "REVIEW" || s === "POSTED" || s === "CANCELLED";
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cls = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_BADGE[status] : "";
-  const label = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_LABEL[status] : status;
+function StatusBadge({ status }: { status: CycleCountStatus }) {
   return (
-    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${cls}`}>
-      {label}
+    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
+      {CYCLE_COUNT_STATUS_LABEL[status]}
     </Badge>
   );
 }
 
-function NewCycleCountSheet({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [warehouseId, setWarehouseId] = useState<string>("");
-  const [locationId, setLocationId] = useState<string>("");
-  const [categoryId, setCategoryId] = useState<string>("");
-
-  const { data: locations = [] } = useLocations(warehouseId ? Number(warehouseId) : 0);
-  const { data: categories = [] } = useCategories();
-  const createMutation = useCreateCycleCount();
-
-  function handleWarehouseChange(value: string): void {
-    setWarehouseId(value === "none" ? "" : value);
-    setLocationId("");
-  }
-
-  function handleLocationChange(value: string): void {
-    setLocationId(value === "none" ? "" : value);
-  }
-
-  function handleCategoryChange(value: string): void {
-    setCategoryId(value === "none" ? "" : value);
-  }
-
-  function handleClose(): void {
-    setWarehouseId("");
-    setLocationId("");
-    setCategoryId("");
-    onClose();
-  }
-
-  function handleSubmit(): void {
-    if (!warehouseId) return;
-    createMutation.mutate(
-      {
-        warehouseId: Number(warehouseId),
-        locationId: locationId ? Number(locationId) : undefined,
-        categoryId: categoryId ? Number(categoryId) : undefined,
-      },
-      { onSuccess: handleClose },
-    );
-  }
-
-  return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <SheetContent side="right" className="w-full sm:max-w-[480px] p-0 flex flex-col overflow-hidden">
-        <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
-          <SheetTitle>New Cycle Count</SheetTitle>
-        </SheetHeader>
-        <SheetBody className="space-y-4 px-6 py-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="cc-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
-            <WarehouseSelect
-              value={warehouseId}
-              onChange={handleWarehouseChange}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="cc-location" className="text-xs font-semibold text-foreground/80">Location (optional)</Label>
-            <Select
-              value={locationId || "none"}
-              onValueChange={handleLocationChange}
-              disabled={!warehouseId}
-            >
-              <SelectTrigger id="cc-location" className="text-sm">
-                <SelectValue placeholder="All locations" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">All locations</SelectItem>
-                {locations.map((l) => (
-                  <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="cc-category" className="text-xs font-semibold text-foreground/80">Category (optional)</Label>
-            <Select value={categoryId || "none"} onValueChange={handleCategoryChange}>
-              <SelectTrigger id="cc-category" className="text-sm">
-                <SelectValue placeholder="All categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">All categories</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </SheetBody>
-        <SheetFooter className="shrink-0 flex-row gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <Button variant="outline" className="flex-1" onClick={handleClose} disabled={createMutation.isPending}>
-            Cancel
-          </Button>
-          <LoadingButton
-            className="flex-1"
-            onClick={handleSubmit}
-            disabled={!warehouseId}
-            isPending={createMutation.isPending}
-            loadingText="Creating…"
-          >
-            Create Count
-          </LoadingButton>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 export function CycleCountsClient() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<CycleCountStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { iconRef: plusRef, hoverHandlers: plusHandlers } = useAnimatedIcon();
+  const canView = useCan(COUNT_READ_KEY);
+  const canCount = useCan(COUNT_WRITE_KEY);
 
   const { data, isLoading, error, refetch } = useCycleCounts({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -204,7 +75,7 @@ export function CycleCountsClient() {
   const total = data?.total ?? 0;
 
   function handleStatusChange(value: string): void {
-    setStatusFilter(value);
+    setStatusFilter(value === "all" || isCycleCountStatus(value) ? value : "all");
     setPage(1);
   }
 
@@ -235,26 +106,26 @@ export function CycleCountsClient() {
     {
       key: "warehouse",
       header: "Warehouse",
-      cell: (row) => <TruncatedText text={String(row.warehouseId)} className="text-sm font-mono tabular-nums" />,
+      cell: (row) => <TruncatedText text={row.warehouseName} className="text-sm" />,
     },
     {
       key: "location",
       header: "Location",
       className: "text-muted-foreground",
-      cell: (row) => <span className="text-sm text-muted-foreground">{row.locationId !== null ? String(row.locationId) : "—"}</span>,
+      cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "category",
       header: "Category",
       className: "text-muted-foreground",
-      cell: (row) => <span className="text-sm text-muted-foreground">{row.categoryId !== null ? String(row.categoryId) : "—"}</span>,
+      cell: (row) => <TruncatedText text={row.categoryName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "lineCount",
       header: "Lines",
       headerClassName: "w-[70px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (row) => row.lines?.length ?? "—",
+      cell: (row) => row.lineCount,
     },
     {
       key: "status",
@@ -300,14 +171,27 @@ export function CycleCountsClient() {
         subtitle="Count inventory by location or category to verify stock accuracy."
         filters={filtersRow}
         actions={
-          <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
-            <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
-            New Cycle Count
-          </Button>
+          canCount ? (
+            <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
+              <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
+              New Cycle Count
+            </Button>
+          ) : undefined
         }
       >
         <div className="flex flex-1 min-h-0 flex-col">
-        {error ? (
+        {/*
+         * G8 — denied is a different answer from empty.
+         *
+         * The list query is gated on the read key inside its hook, so a reader
+         * without it received an empty page and was told the warehouse has no
+         * cycle counts. The branch sits below every hook on purpose: an early return
+         * above them would make hook order depend on a permission, which only
+         * breaks for the person who lacks it.
+         */}
+        {!canView ? (
+          <NoPermissionState className="flex-1" permission={COUNT_READ_KEY} />
+        ) : error ? (
           <ErrorState
             title="Failed to load cycle counts"
             description={getErrorMessage(error)}
@@ -326,7 +210,7 @@ export function CycleCountsClient() {
                 illustration={<EmptyWarehouseIllustration />}
                 title="No cycle counts yet"
                 description="Create a cycle count to verify stock accuracy."
-                action={{ label: "New Cycle Count", onClick: handleOpenSheet }}
+                action={canCount ? { label: "New Cycle Count", onClick: handleOpenSheet } : undefined}
                 className="border-0 bg-transparent"
               />
             }

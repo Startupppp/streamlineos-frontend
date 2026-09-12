@@ -47,7 +47,14 @@ export function useBillingExport() {
   return useAuthorizedMutation("timesheets:billing:export", {
     mutationKey: ["timesheets", "billing", "export"],
     mutationFn: (data: BillingExportInput) =>
-      apiClient.post<{ exportId: number; entryCount: number; totalHours: number; totalAmount: number }>(
+      apiClient.post<{
+        exportId: number;
+        entryCount: number;
+        totalHours: number;
+        totalAmount: number;
+        fileName?: string;
+        csv?: string;
+      }>(
         "/timesheets/billing/export",
         data,
         undefined,

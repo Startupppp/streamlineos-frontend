@@ -147,6 +147,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                           form.setValue("serialId", "");
                         }}
                         className="text-xs"
+                        ariaLabel="Variant"
                       />
                     </FormControl>
                     <FormMessage />

@@ -241,7 +241,7 @@ export function ReportsView() {
           </TabsContent>
 
           <TabsContent value="project-budgets" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-            <ProjectBudgetsTab />
+            <ProjectBudgetsTab enabled={activeTab === "project-budgets"} />
           </TabsContent>
 
           <TabsContent value="client-profitability" className={TABS_CONTENT_PAGE_BODY_CLASS}>

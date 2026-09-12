@@ -1,59 +1,25 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
+  PurchaseOrder,
   PurchaseOrderSummary,
   PurchaseOrderStatus,
-  PurchaseOrderLine,
   CreatePurchaseOrderInput,
   ReceiveGoodsInput,
+  GoodsReceiptNote,
 } from "@/types/inventory";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface PaginatedResponse<T> {
   items: T[];
   total: number;
   page: number;
   totalPages: number;
-}
-
-export interface LocalPurchaseOrder {
-  id: number;
-  orgId: string;
-  poNumber: string;
-  vendorId: number;
-  warehouseId: number | null;
-  status: PurchaseOrderStatus;
-  orderDate: string;
-  subtotal: string;
-  taxAmount: string;
-  discount: string;
-  total: string;
-  currency: string;
-  expectedDeliveryDate: string | null;
-  sentAt: string | null;
-  approvedBy: string | null;
-  approvedByMembershipId: number | null;
-  approvedAt: string | null;
-  notes: string | null;
-  createdBy: string;
-  createdByMembershipId: number | null;
-  createdAt: string;
-  updatedAt: string;
-  vendor?: { id: number; name: string; code: string };
-  warehouse?: { id: number; name: string; code: string };
-  creator?: { id: string; name: string | null };
-  lines: PurchaseOrderLine[];
-  grns: { id: number; grnNumber: string; receivedDate: string; notes: string | null; creator?: { id: string; name: string | null } }[];
-}
-
-interface LocalGrn {
-  id: number;
-  grnNumber: string;
 }
 
 type PurchaseOrderFilters = {
@@ -85,19 +51,6 @@ interface SendPurchaseOrderInput {
   poId?: number;
 }
 
-const listPosContract = lazyContract(() =>
-  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.listPosContract),
-);
-const getPoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getPoContract),
-);
-const getGrnContract = lazyContract(() =>
-  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.getGrnContract),
-);
-const invPoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/purchase-orders-schema").then((m) => m.invPoContract),
-);
-
 export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
@@ -108,30 +61,17 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
-      }, signal, listPosContract),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
 }
 
-export function useVendorPurchaseOrders(vendorId: number) {
-  const canView = useCan("inventory:purchase-orders:read");
-  return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
-    queryKey: queryKeys.inventory.purchaseOrders({ vendorId }),
-    queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
-        vendorId: String(vendorId),
-      }, signal, listPosContract),
-    staleTime: 2 * 60_000,
-    enabled: canView && vendorId > 0,
-  });
-}
-
 export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
-  return useQuery<LocalPurchaseOrder, Error>({
+  return useQuery<PurchaseOrder, Error>({
     queryKey: queryKeys.inventory.purchaseOrder(poId),
-    queryFn: ({ signal }) => apiClient.get<LocalPurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal, getPoContract),
+    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && poId > 0,
   });
@@ -139,9 +79,9 @@ export function usePurchaseOrder(poId: number) {
 
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>("inventory:purchase-orders:create", {
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>("inventory:purchase-orders:create", {
     mutationKey: ["inventory", "purchase-orders", "create"],
-    mutationFn: (data) => {
+    mutationFn: (data, idempotencyKey) => {
       const body: CreatePoWire = {
         vendorId: data.vendorId,
         orderDate: data.orderDate,
@@ -157,7 +97,7 @@ export function useCreatePurchaseOrder() {
           lineOrder: line.lineOrder ?? 0,
         })),
       };
-      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body, undefined, getPoContract);
+      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body, { headers: { "Idempotency-Key": idempotencyKey } });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -167,12 +107,12 @@ export function useCreatePurchaseOrder() {
 
 export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "send", poId],
-    mutationFn: (vars) => {
+    mutationFn: (vars, idempotencyKey) => {
       const id = poId ?? vars?.poId;
       if (!id) throw new Error("Purchase order id is required");
-      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {}, undefined, getPoContract);
+      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {}, { headers: { "Idempotency-Key": idempotencyKey } });
     },
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -181,16 +121,26 @@ export function useSendPurchaseOrder(poId?: number) {
   });
 }
 
+/**
+ * Record and post a delivery in one call.
+ *
+ * The header is not optional: the endpoint takes `@IdempotencyKey()`, which
+ * throws without it, so every receipt raised from this sheet was answered with
+ * "An Idempotency-Key header is required for this operation". It sent none.
+ */
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<LocalGrn, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
+  return useAuthorizedIdempotentMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
-    mutationFn: (data) =>
-      apiClient.post<LocalGrn>(`/inventory/purchase-orders/${poId}/receive`, data, undefined, getGrnContract),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.goodsReceiptsList,
+      });
     },
   });
 }
@@ -201,14 +151,12 @@ interface CancelPurchaseOrderInput {
 
 export function useApprovePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PurchaseOrderSummary, Error, void>("inventory:purchase-orders:approve", {
+  return useAuthorizedIdempotentMutation<PurchaseOrderSummary, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "approve", poId],
-    mutationFn: () =>
+    mutationFn: (_variables, idempotencyKey) =>
       apiClient.post<PurchaseOrderSummary>(
         `/inventory/purchase-orders/${poId}/approve`,
-        {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        getPoContract,
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -219,14 +167,12 @@ export function useApprovePurchaseOrder(poId: number) {
 
 export function useClosePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, void>("inventory:purchase-orders:approve", {
+  return useAuthorizedIdempotentMutation<void, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "close", poId],
-    mutationFn: () =>
-      apiClient.post<unknown>(
+    mutationFn: (_variables, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/close`,
-        {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        invPoContract,
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -237,14 +183,12 @@ export function useClosePurchaseOrder(poId: number) {
 
 export function useCancelPurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
+  return useAuthorizedIdempotentMutation<void, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "cancel", poId],
-    mutationFn: (vars) =>
-      apiClient.post<unknown>(
+    mutationFn: (vars, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/cancel`,
-        vars ?? {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        invPoContract,
+        vars ?? {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -290,7 +234,7 @@ export function useUpdatePurchaseOrder(poId: number) {
               })),
             }
           : {}),
-      }, undefined, getPoContract),
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });

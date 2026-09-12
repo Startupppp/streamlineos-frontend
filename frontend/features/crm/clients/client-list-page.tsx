@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition, type MouseEvent } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
@@ -23,7 +24,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -135,7 +136,7 @@ export function ClientListPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch, access} = useClientAccounts({
+  const { data, isLoading, isError, error, refetch } = useClientAccounts({
     search: debouncedSearch.trim() || undefined,
     status,
     page,
@@ -181,6 +182,19 @@ export function ClientListPage() {
 
   const statusField = layout.fields.find((field) => field.name === "status");
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:clients:read") === "denied")
+    return <NoPermissionState permission="crm:clients:read" />;
+
   return (
     <PageWrapper
       title="Clients"
@@ -221,7 +235,6 @@ export function ClientListPage() {
           />
         ) : accounts.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyClientsIllustration />}
             title="No clients yet"
             description={

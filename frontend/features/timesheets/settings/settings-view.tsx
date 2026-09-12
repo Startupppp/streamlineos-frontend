@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { GeneralSettingsForm } from "./general-settings-form";
 import { RatesTab } from "./rates-tab";
 import { AuditTab } from "./audit-tab";
+import { SettingsHistoryTab } from "./settings-history-tab";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
@@ -18,7 +19,7 @@ const tabMotion = {
   transition: { duration: 0.18, ease: "easeOut" as const },
 };
 
-const VALID_TABS = ["general", "rates", "audit"] as const;
+const VALID_TABS = ["general", "rates", "history", "audit"] as const;
 
 export function SettingsView() {
   const canViewSettings = useCan("timesheets:settings:view");
@@ -80,6 +81,9 @@ export function SettingsView() {
               Rates
             </TabsTrigger>
           )}
+          <TabsTrigger value="history">
+            Change history
+          </TabsTrigger>
           <TabsTrigger value="audit">
             Audit trail
           </TabsTrigger>
@@ -98,6 +102,18 @@ export function SettingsView() {
             </motion.div>
           </TabsContent>
         )}
+
+        {/*
+          Not forceMount, unlike its siblings. The history is a separate request
+          and mounting it eagerly would fire it for everyone who opens Settings
+          to change one switch. The tab is where somebody goes to ask a question
+          about the past, so it loads when they ask it.
+        */}
+        <TabsContent value="history" className="mt-0">
+          <motion.div key="history" {...motionProps}>
+            <SettingsHistoryTab />
+          </motion.div>
+        </TabsContent>
 
         <TabsContent value="audit" forceMount className="mt-0 data-[state=inactive]:hidden">
           <motion.div key="audit" {...motionProps}>

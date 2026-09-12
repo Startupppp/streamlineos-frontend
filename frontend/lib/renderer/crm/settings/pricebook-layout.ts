@@ -52,7 +52,7 @@ export const PRICEBOOK_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search pricebooks…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "description" },
+      { field: "name", primary: true, subtitle: "description" },
       { field: "currency", width: "w-24 shrink-0" },
       { field: "isDefault", width: "w-28 shrink-0" },
       { field: "isActive", width: "w-24 shrink-0" },

@@ -156,8 +156,6 @@ export const MODULE_CATALOG: Partial<Record<OrgModuleKey, { label: string; descr
   chat: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
 };
 
-export const INVITE_ROLES = ["ORG_ADMIN", "MEMBER"] as const;
-
 export const DEFAULT_DATA: WizardData = {
   goals: [],
   industry: "",

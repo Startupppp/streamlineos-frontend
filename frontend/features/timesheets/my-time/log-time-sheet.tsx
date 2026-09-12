@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { logTimeSchema, type LogTimeValues } from "./log-time-schema";
+import { logTimeSchemaFor, type LogTimeValues } from "./log-time-schema";
 import { format } from "date-fns";
 import {
   Form,
@@ -24,9 +24,11 @@ import { describeTimesheetEntry } from "@/hooks/api/timesheets-core/ai";
 import { useCan } from "@/hooks/api/access";
 import {
   useCreateTimesheetEntry,
+  useTimesheetSettings,
   useUpdateTimesheetEntry,
 } from "@/hooks/api/timesheets-core";
 import type { TimesheetEntry } from "@/features/timesheets";
+import type { RequiredField } from "@/features/timesheets/settings/required-fields";
 
 export interface LogTimeSheetProps {
   open: boolean;
@@ -61,10 +63,39 @@ export function LogTimeSheet({
     [entry, defaultDate, defaultProjectId, defaultTicketId],
   );
 
-  const form = useForm<LogTimeValues>({
-    resolver: zodResolver(logTimeSchema),
-    defaultValues,
-  });
+  const { data: settings } = useTimesheetSettings();
+
+  /*
+   * Empty while editing: the server enforces `requiredFields` on create and on
+   * period submit, never on update, so applying it here would refuse a save the
+   * API would have taken.
+   */
+  const requiredFields = useMemo<string[]>(
+    () => (isEdit ? [] : (settings?.requiredFields ?? [])),
+    [isEdit, settings],
+  );
+
+  const resolver = useMemo(
+    () => zodResolver(logTimeSchemaFor(requiredFields)),
+    [requiredFields],
+  );
+
+  const form = useForm<LogTimeValues>({ resolver, defaultValues });
+
+  const isRequired = useCallback(
+    (field: RequiredField) => requiredFields.includes(field),
+    [requiredFields],
+  );
+
+  /*
+   * The project/ticket pair shares one control and has no `FormField`, so its
+   * message is read out rather than rendered by `FormMessage`. Ticket wins when
+   * both fire: choosing a ticket satisfies the project rule too, so the shorter
+   * instruction is the complete one.
+   */
+  const fieldErrors = form.formState.errors;
+  const projectTicketError =
+    fieldErrors.ticketId?.message ?? fieldErrors.projectId?.message;
 
   useEffect(() => {
     if (open) form.reset(defaultValues);
@@ -72,14 +103,29 @@ export function LogTimeSheet({
 
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
+  /*
+   * Both halves are re-checked on either change. A ticket satisfies the project
+   * rule as well, so validating only the control that moved would leave the
+   * project message standing under a pair that is now complete.
+   */
+  const revalidateProjectTicket = useCallback(() => {
+    if (form.formState.isSubmitted) void form.trigger(["projectId", "ticketId"]);
+  }, [form]);
+
   const handleProjectChange = useCallback(
-    (id: number | null) => form.setValue("projectId", id),
-    [form],
+    (id: number | null) => {
+      form.setValue("projectId", id);
+      revalidateProjectTicket();
+    },
+    [form, revalidateProjectTicket],
   );
 
   const handleTicketChange = useCallback(
-    (id: number | null) => form.setValue("ticketId", id),
-    [form],
+    (id: number | null) => {
+      form.setValue("ticketId", id);
+      revalidateProjectTicket();
+    },
+    [form, revalidateProjectTicket],
   );
 
   const canUseAi = useCan("timesheets:entries:create");
@@ -203,13 +249,23 @@ export function LogTimeSheet({
             )}
           />
           <FormItem>
-            <FormLabel className="text-xs">Project &amp; Ticket</FormLabel>
+            <FormLabel className="text-xs">
+              Project &amp; Ticket{" "}
+              {isRequired("project") || isRequired("ticket") ? (
+                <span className="text-destructive">*</span>
+              ) : null}
+            </FormLabel>
             <ProjectTicketSelect
               projectId={form.watch("projectId")}
               ticketId={form.watch("ticketId")}
               onProjectChange={handleProjectChange}
               onTicketChange={handleTicketChange}
             />
+            {projectTicketError ? (
+              <p className="text-destructive text-xs" role="alert" aria-live="polite">
+                {projectTicketError}
+              </p>
+            ) : null}
           </FormItem>
           <FormField
             control={form.control}
@@ -217,7 +273,12 @@ export function LogTimeSheet({
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between gap-2">
-                  <FormLabel className="text-xs">Description</FormLabel>
+                  <FormLabel className="text-xs">
+                    Description{" "}
+                    {isRequired("description") ? (
+                      <span className="text-destructive">*</span>
+                    ) : null}
+                  </FormLabel>
                   {canUseAi ? (
                     <AiActionsMenu
                       actions={descriptionAiActions}

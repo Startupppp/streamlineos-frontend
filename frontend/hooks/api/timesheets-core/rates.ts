@@ -37,6 +37,8 @@ export function useCreateRate() {
     mutationFn: (data: CreateRateInput) => apiClient.post<TimesheetRate>("/timesheets/rates", data, undefined, rateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.rates() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
       toast.success("Rate added");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -51,6 +53,8 @@ export function useUpdateRate() {
       apiClient.patch<TimesheetRate>(`/timesheets/rates/${rateId}`, data, undefined, rateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.rates() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
       toast.success("Rate updated");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -65,6 +69,8 @@ export function useDeleteRate() {
       apiClient.delete<void>(`/timesheets/rates/${rateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.rates() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
       toast.success("Rate removed");
     },
     onError: (error) => toast.error(getErrorMessage(error)),

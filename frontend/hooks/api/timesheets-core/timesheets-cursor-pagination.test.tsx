@@ -68,7 +68,7 @@ function makeAuditPage(nextCursor: string | null): CursorPage<AuditEvent> {
         after: null,
         createdAt: "2026-01-08T10:00:00Z",
         reason: null,
-      },
+      } satisfies AuditEvent,
     ],
     pagination: { limit: 20, nextCursor, hasMore: nextCursor !== null },
   };

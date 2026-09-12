@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { format, parseISO } from "date-fns";
 import {
   AlertCircle,
   AlertTriangle,
@@ -10,14 +9,11 @@ import {
   Inbox,
   ScanLine,
 } from "lucide-react";
-import { CircleCheckIcon, XIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   StatCard,
   StatCardGrid,
@@ -31,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { useCan } from "@/hooks/api/access";
+import { usePermissionGate, useCan, useScope } from "@/hooks/api/access";
 import {
   useDismissException,
   useExceptionsSummary,
@@ -41,76 +37,79 @@ import {
 } from "@/hooks/api/timesheets-core/exceptions";
 import {
   EXCEPTION_RULE_LABEL,
-  EXCEPTION_SEVERITY_BADGE,
   EXCEPTION_SEVERITY_LABEL,
-  EXCEPTION_STATUS_BADGE,
   EXCEPTION_STATUS_LABEL,
   type ExceptionRule,
-  type ExceptionSeverity,
-  type ExceptionStatus,
   type TimesheetException,
 } from "@/features/timesheets/exception-types";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   ExceptionReasonDialog,
   type ExceptionAction,
 } from "./exception-reason-dialog";
+import { buildExceptionColumns } from "./exception-columns";
+import { ALL, useExceptionFilters } from "./use-exception-filters";
 
 const ALL_RULES = Object.keys(EXCEPTION_RULE_LABEL) as ExceptionRule[];
-
-function isExceptionStatus(value: string): value is ExceptionStatus {
-  return value in EXCEPTION_STATUS_LABEL;
-}
-
-function isExceptionSeverity(value: string): value is ExceptionSeverity {
-  return value in EXCEPTION_SEVERITY_LABEL;
-}
-
-function isExceptionRule(value: string): value is ExceptionRule {
-  return value in EXCEPTION_RULE_LABEL;
-}
 
 interface DialogState {
   action: ExceptionAction;
   exception: TimesheetException;
 }
 
+function getExceptionRowKey(row: TimesheetException) {
+  return row.id;
+}
+
 export function ExceptionsView() {
-  const canView = useCan("timesheets:exceptions:view");
+  const access = usePermissionGate("timesheets:exceptions:view");
   const canManage = useCan("timesheets:exceptions:manage");
+  /**
+   * The backend honours `?userId=` only when the caller's
+   * `timesheets:team:view` scope is `all` (`ExceptionsService.listExceptions`),
+   * so anyone narrower is offered a control that would silently do nothing.
+   */
+  const canFilterByMember = useScope("timesheets:team:view") === "all";
   const shouldReduceMotion = useReducedMotion();
 
-  const [statusFilter, setStatusFilter] = useState("OPEN");
-  const [severityFilter, setSeverityFilter] = useState("all");
-  const [ruleFilter, setRuleFilter] = useState("all");
+  const filters = useExceptionFilters();
   const [dialogState, setDialogState] = useState<DialogState | null>(null);
-
-  const statusParam = isExceptionStatus(statusFilter) ? statusFilter : undefined;
-  const severityParam = isExceptionSeverity(severityFilter)
-    ? severityFilter
-    : undefined;
-  const ruleParam = isExceptionRule(ruleFilter) ? ruleFilter : undefined;
 
   const {
     data: exceptions,
     isLoading,
     isError,
+    error,
     refetch,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useTimesheetExceptions(
-    {
-      status: statusParam,
-      severity: severityParam,
-      rule: ruleParam,
-      limit: 100,
-    },
-    canView,
-  );
+  } = useTimesheetExceptions({
+    status: filters.statusParam,
+    severity: filters.severityParam,
+    rule: filters.ruleParam,
+    userId: canFilterByMember ? filters.userIdParam : undefined,
+  });
 
-  const { data: summary, isLoading: isSummaryLoading } =
-    useExceptionsSummary(canView);
+  const { data: summary, isLoading: isSummaryLoading } = useExceptionsSummary();
+
+  const memberOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (exceptions) {
+      for (const page of exceptions.pages) {
+        for (const item of page.data) {
+          const u = item.user;
+          if (u?.membershipId) {
+            const id = String(u.membershipId);
+            const name = u.name ?? u.email ?? id;
+            if (!map.has(id)) map.set(id, { id, name });
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [exceptions]);
 
   const resolveMutation = useResolveException();
   const dismissMutation = useDismissException();
@@ -127,12 +126,6 @@ export function ExceptionsView() {
   const handleRunDetection = useCallback(() => {
     runDetectionMutation.mutate();
   }, [runDetectionMutation]);
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter("OPEN");
-    setSeverityFilter("all");
-    setRuleFilter("all");
-  }, []);
 
   const handleResolveRequest = useCallback((exception: TimesheetException) => {
     setDialogState({ action: "resolve", exception });
@@ -159,139 +152,15 @@ export function ExceptionsView() {
     [dialogState, resolveMutation, dismissMutation],
   );
 
-  const columns = useMemo<DataTableColumn<TimesheetException>[]>(
-    () => [
-      {
-        key: "severity",
-        header: "Severity",
-        cell: (row) => (
-          <Badge
-            className={cn(
-              "text-micro border px-1.5 py-0",
-              EXCEPTION_SEVERITY_BADGE[row.severity],
-            )}
-          >
-            {EXCEPTION_SEVERITY_LABEL[row.severity]}
-          </Badge>
-        ),
-        sortable: true,
-        sortValue: (row) => row.severity,
-      },
-      {
-        key: "rule",
-        header: "Rule",
-        cell: (row) => (
-          <span className="text-dense font-medium">
-            {EXCEPTION_RULE_LABEL[row.rule]}
-          </span>
-        ),
-        sortable: true,
-        sortValue: (row) => EXCEPTION_RULE_LABEL[row.rule],
-      },
-      {
-        key: "message",
-        header: "Message",
-        className: "max-w-[280px]",
-        cell: (row) => (
-          <span
-            className="block truncate text-dense text-muted-foreground"
-            title={row.message}
-          >
-            {row.message}
-          </span>
-        ),
-      },
-      {
-        key: "worker",
-        header: "Member",
-        cell: (row) => (
-          <div>
-            <p className="text-dense font-medium">
-              {row.user?.name ?? row.user?.email ?? "Unknown user"}
-            </p>
-            {row.user?.name && row.user?.email && (
-              <p className="text-micro text-muted-foreground">
-                {row.user.email}
-              </p>
-            )}
-          </div>
-        ),
-        sortable: true,
-        sortValue: (row) => row.user?.name ?? row.user?.email ?? "",
-      },
-      {
-        key: "status",
-        header: "Status",
-        cell: (row) => (
-          <Badge
-            className={cn(
-              "text-micro border px-1.5 py-0",
-              EXCEPTION_STATUS_BADGE[row.status],
-            )}
-          >
-            {EXCEPTION_STATUS_LABEL[row.status]}
-          </Badge>
-        ),
-      },
-      {
-        key: "dueDate",
-        header: "Due",
-        cell: (row) =>
-          row.dueDate ? (
-            <span className="text-dense tabular-nums">
-              {format(parseISO(row.dueDate), "MMM d, yyyy")}
-            </span>
-          ) : (
-            <span className="text-muted-foreground/30">—</span>
-          ),
-        sortable: true,
-        sortValue: (row) => row.dueDate ?? "",
-      },
-      {
-        key: "createdAt",
-        header: "Detected",
-        cell: (row) => (
-          <span className="text-dense text-muted-foreground">
-            {format(parseISO(row.createdAt), "MMM d, yyyy")}
-          </span>
-        ),
-        sortable: true,
-        sortValue: (row) => row.createdAt,
-      },
-      ...(canManage
-        ? [
-            {
-              key: "actions",
-              header: "",
-              className: "w-16",
-              cell: (row: TimesheetException) =>
-                row.status === "OPEN" ? (
-                  <div className="flex items-center gap-0.5">
-                    <AnimatedIconButton
-                      icon={CircleCheckIcon}
-                      iconSize={12}
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-status-success-ink hover:text-status-success-ink"
-                      aria-label="Resolve exception"
-                      onClick={() => handleResolveRequest(row)}
-                    />
-                    <AnimatedIconButton
-                      icon={XIcon}
-                      iconSize={12}
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-destructive hover:text-destructive"
-                      aria-label="Dismiss exception"
-                      onClick={() => handleDismissRequest(row)}
-                    />
-                  </div>
-                ) : null,
-            },
-          ]
-        : []),
-    ],
-    [canManage, handleResolveRequest, handleDismissRequest],
+  const columns = useMemo(
+    () =>
+      buildExceptionColumns({
+        canManage,
+        showResolution: filters.status !== "OPEN",
+        onResolve: handleResolveRequest,
+        onDismiss: handleDismissRequest,
+      }),
+    [canManage, filters.status, handleResolveRequest, handleDismissRequest],
   );
 
   const motionProps = shouldReduceMotion
@@ -302,11 +171,12 @@ export function ExceptionsView() {
         transition: { duration: 0.22, ease: "easeOut" as const },
       };
 
-  if (!canView) {
+  if (access.denied) {
     return (
       <PageWrapper title="Exceptions">
         <EmptyState
           illustrationPreset="permissions"
+          access={access}
           title="Access restricted"
           description="You don't have permission to view timesheet exceptions."
         />
@@ -314,6 +184,7 @@ export function ExceptionsView() {
     );
   }
 
+  const rows = exceptions?.pages.flatMap((p) => p.data) ?? [];
   const openCount = summary?.byStatus.OPEN ?? 0;
   const errorCount = summary?.openBySeverity.ERROR ?? 0;
   const warningCount = summary?.openBySeverity.WARNING ?? 0;
@@ -321,12 +192,12 @@ export function ExceptionsView() {
 
   const pageFilters = (
     <>
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")}>
+      <Select value={filters.status} onValueChange={filters.setStatus}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")} aria-label="Status">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value={ALL}>All statuses</SelectItem>
           {Object.entries(EXCEPTION_STATUS_LABEL).map(([value, label]) => (
             <SelectItem key={value} value={value}>
               {label}
@@ -334,12 +205,12 @@ export function ExceptionsView() {
           ))}
         </SelectContent>
       </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")}>
+      <Select value={filters.severity} onValueChange={filters.setSeverity}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")} aria-label="Severity">
           <SelectValue placeholder="Severity" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All severities</SelectItem>
+          <SelectItem value={ALL}>All severities</SelectItem>
           {Object.entries(EXCEPTION_SEVERITY_LABEL).map(([value, label]) => (
             <SelectItem key={value} value={value}>
               {label}
@@ -347,12 +218,12 @@ export function ExceptionsView() {
           ))}
         </SelectContent>
       </Select>
-      <Select value={ruleFilter} onValueChange={setRuleFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
+      <Select value={filters.rule} onValueChange={filters.setRule}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")} aria-label="Rule">
           <SelectValue placeholder="Rule" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All rules</SelectItem>
+          <SelectItem value={ALL}>All rules</SelectItem>
           {ALL_RULES.map((rule) => (
             <SelectItem key={rule} value={rule}>
               {EXCEPTION_RULE_LABEL[rule]}
@@ -360,6 +231,21 @@ export function ExceptionsView() {
           ))}
         </SelectContent>
       </Select>
+      {canFilterByMember && (
+        <Select value={filters.userId} onValueChange={filters.setUserId}>
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Member">
+            <SelectValue placeholder="All members" />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value={ALL}>All members</SelectItem>
+            {memberOptions.map((emp) => (
+              <SelectItem key={emp.id} value={emp.id}>
+                {emp.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </>
   );
 
@@ -377,20 +263,18 @@ export function ExceptionsView() {
     </LoadingButton>
   ) : undefined;
 
-  const filtersActive =
-    statusFilter !== "OPEN" || severityFilter !== "all" || ruleFilter !== "all";
-
   const emptyState = (
     <EmptyState
       illustrationPreset="alert"
+      access={access}
       title="No open exceptions"
       description={
-        filtersActive
-          ? undefined
-          : "Great data hygiene — nothing needs your attention right now."
+        filters.isDefault
+          ? "Great data hygiene — nothing needs your attention right now."
+          : undefined
       }
-      filtersActive={filtersActive}
-      onClearFilters={handleClearFilters}
+      filtersActive={!filters.isDefault}
+      onClearFilters={filters.clear}
       compact
     />
   );
@@ -415,18 +299,8 @@ export function ExceptionsView() {
           <StatCardGridSkeleton cols={4} count={4} />
         ) : (
           <StatCardGrid cols={4}>
-            <StatCard
-              label="Open"
-              value={openCount}
-              icon={Inbox}
-              tone="accent"
-            />
-            <StatCard
-              label="Errors"
-              value={errorCount}
-              icon={AlertCircle}
-              tone="red"
-            />
+            <StatCard label="Open" value={openCount} icon={Inbox} tone="accent" />
+            <StatCard label="Errors" value={errorCount} icon={AlertCircle} tone="red" />
             <StatCard
               label="Warnings"
               value={warningCount}
@@ -445,7 +319,7 @@ export function ExceptionsView() {
         {isError ? (
           <ErrorState
             title="Couldn't load exceptions"
-            description="Something went wrong loading the exceptions queue."
+            description={getErrorMessage(error)}
             onRetry={handleRetry}
             className="min-h-[30dvh]"
           />
@@ -453,7 +327,7 @@ export function ExceptionsView() {
           <>
             <DataTable
               className="flex-1 min-h-0"
-              data={exceptions?.pages.flatMap((p) => p.data) ?? []}
+              data={rows}
               columns={columns}
               getRowKey={getExceptionRowKey}
               isLoading={isLoading}
@@ -487,8 +361,4 @@ export function ExceptionsView() {
       />
     </PageWrapper>
   );
-}
-
-function getExceptionRowKey(row: TimesheetException) {
-  return row.id;
 }

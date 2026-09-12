@@ -53,7 +53,7 @@ export default function SlaPage() {
   const [editTarget, setEditTarget] = useState<SlaPolicy | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SlaPolicy | null>(null);
 
-  const { data, isLoading, isError, refetch, access} = useSlaPolicies();
+  const { data, isLoading, isError, refetch } = useSlaPolicies();
   const report = useSlaReport();
   const breaches = useSlaBreachedLeads({ limit: 10 });
   const deletePolicy = useDeleteSlaPolicy();
@@ -192,7 +192,6 @@ export default function SlaPage() {
               />
             ) : policies.length === 0 ? (
               <EmptyState
-            access={access}
                 illustrationPreset="security"
                 title="No service levels set"
                 description="A policy puts a clock on a lead: how long the team has to answer it, and how long to finish it."

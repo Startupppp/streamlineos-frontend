@@ -26,8 +26,6 @@ export function buildLocationColumns({
       key: "name",
       header: "Name",
       cell: (l) => <span className="font-medium">{l.name}</span>,
-      sortable: true,
-      sortValue: (l) => l.name,
     },
     {
       key: "type",

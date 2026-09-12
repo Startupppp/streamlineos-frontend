@@ -284,8 +284,6 @@ export default function ReviewsPage() {
     {
       key: "page",
       header: "Page",
-      sortable: true,
-      sortValue: (r) => r.pageTitle ?? "",
       cell: (review) => (
         <Link
           href={pageHref(review.pageId)}

@@ -94,7 +94,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
 
   const displayValues: Record<keyof LocalizationValues, string> = {
     timezone: org.timezone ?? "Asia/Kolkata",
-    currency: org.currency ?? "INR",
+    currency: toCurrencyCode(org.currency),
     fiscalYearStart: MONTHS[(org.fiscalYearStart ?? 4) - 1] ?? "April",
     language: LANGUAGES.find((l) => l.value === extracted.language)?.label ?? extracted.language,
     dateFormat: extracted.dateFormat,

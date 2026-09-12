@@ -67,10 +67,10 @@ export const SCORING_RULE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search rules…",
     columns: [
-      { field: "field", primary: true, sortable: true },
+      { field: "field", primary: true },
       { field: "operator", width: "w-36 shrink-0" },
       { field: "value" },
-      { field: "points", sortable: true, width: "w-24 shrink-0" },
+      { field: "points", width: "w-24 shrink-0" },
     ],
   },
   detail: {

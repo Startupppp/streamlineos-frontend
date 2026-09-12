@@ -6,6 +6,7 @@
  */
 
 export const ACCESS = {
+  membershipId: 4711,
   scopes: { "hr:employees:view": "all", "crm:deals:view": "team" },
   modules: { hr: true, crm: true, payroll: false },
   isOrgOwner: false,

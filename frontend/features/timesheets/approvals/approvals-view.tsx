@@ -13,28 +13,53 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
 import {
+  APPROVALS_PAGE_SIZE,
   useApprovals,
   useBulkApprove,
   useBulkReject,
 } from "@/hooks/api/timesheets-core/approvals";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
-import type { EmployeeListItem } from "@/types/hr";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
+import { summarizeBorrowedAuthority } from "./approval-standing";
+import { DelegateActingBanner } from "./delegate-acting-banner";
 import {
-  ALL_APPROVAL_TABS,
-  APPROVAL_TAB_LABEL,
+  APPROVALS_TABPANEL_ID,
   ApprovalsTabPanel,
   type ApprovalTab,
 } from "./approvals-tab-panel";
+import { ApprovalTabFilter } from "./approval-tab-filter";
 
 export function ApprovalsView() {
   const canManage = useCan("timesheets:approvals:manage");
-  const canView = useCan("timesheets:team:view");
+  /**
+   * The list this page renders is `GET /timesheets/approvals`, whose guard is
+   * `timesheets:approvals:view`. It was gated on `timesheets:team:view`, a
+   * different key: a viewer holding approvals-view but not team-view was told
+   * access was restricted, and one holding team-view but not approvals-view
+   * got the page with a permanently empty table instead of a denial.
+   */
+  const access = usePermissionGate("timesheets:approvals:view");
+  const { data: accessData } = useAccess();
+  const isOrgOwner = accessData?.isOrgOwner ?? false;
+  /**
+   * Whose authority the viewer would be using is decided on membership ids: a
+   * period names its owner and its assigned approver by `organization_members.id`
+   * on both backends, and the period contract parses nothing else. `/me/access`
+   * carries the caller's own membership id for exactly this, because the session
+   * holds a `users.id` that would match no period, and `/organization/members`
+   * needs `settings:view`, which a line manager's delegate need not hold. A
+   * principal with no membership (an agent token, a system job) reads null and
+   * the banner stays silent rather than claiming authority it cannot evidence.
+   */
+  const viewerMembershipId: string | null =
+    accessData?.membershipId === null || accessData?.membershipId === undefined
+      ? null
+      : String(accessData.membershipId);
   const shouldReduceMotion = useReducedMotion();
 
   const [activeTab, setActiveTab] = useState<ApprovalTab>("SUBMITTED");
@@ -45,8 +70,9 @@ export function ApprovalsView() {
   const [detailPeriod, setDetailPeriod] = useState<TimesheetPeriod | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+  const [bulkApproveOpen, setBulkApproveOpen] = useState(false);
 
-  const canAccess = canView || canManage;
+  const canAccess = access.allowed;
 
   const sharedFilters = {
     userId: memberFilter !== "all" ? memberFilter : undefined,
@@ -54,13 +80,52 @@ export function ApprovalsView() {
     endDate: dateTo || undefined,
   };
 
+  /**
+   * Page 1 of the pending queue, deliberately keyed identically to what
+   * `ApprovalsTabPanel` asks for on the Pending tab, so the two share one
+   * cache entry rather than issuing two requests for the same rows. It powers
+   * the pending count and the delegate banner, both of which have to be right
+   * even while another tab is showing.
+   */
   const { data: pendingData } = useApprovals(
-    { status: "SUBMITTED", ...sharedFilters },
+    { status: "SUBMITTED", ...sharedFilters, limit: APPROVALS_PAGE_SIZE },
     canAccess,
   );
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: EmployeeListItem[] = unwrapEmployees(employeesRaw);
+  const memberOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (pendingData) {
+      for (const page of pendingData.pages) {
+        for (const period of page.data) {
+          const u = period.user;
+          if (u?.membershipId) {
+            const id = String(u.membershipId);
+            const name = u.name ?? u.email ?? id;
+            if (!map.has(id)) map.set(id, { id, name });
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [pendingData]);
+
+  const resolveApproverName = useCallback(
+    (userId: string) => {
+      const match = memberOptions.find((m) => m.id === userId);
+      return match?.name ?? "another approver";
+    },
+    [memberOptions],
+  );
+
+  const borrowedAuthority = useMemo(
+    () =>
+      summarizeBorrowedAuthority(
+        viewerMembershipId,
+        isOrgOwner,
+        pendingData?.pages.flatMap((p) => p.data) ?? [],
+      ),
+    [viewerMembershipId, isOrgOwner, pendingData],
+  );
 
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();
@@ -77,10 +142,15 @@ export function ApprovalsView() {
     if (!open) setDetailPeriod(null);
   }, []);
 
-  const handleBulkApprove = useCallback(() => {
+  const handleBulkApproveOpen = useCallback(() => setBulkApproveOpen(true), []);
+
+  const handleBulkApproveConfirm = useCallback(() => {
     const ids = [...selection].map(Number);
     bulkApproveMutation.mutate(ids, {
-      onSuccess: () => setSelection(new Set()),
+      onSuccess: () => {
+        setSelection(new Set());
+        setBulkApproveOpen(false);
+      },
     });
   }, [selection, bulkApproveMutation]);
 
@@ -136,11 +206,12 @@ export function ApprovalsView() {
     return undefined;
   }, [activeTab, pendingCount]);
 
-  if (!canAccess) {
+  if (access.denied) {
     return (
       <PageWrapper title="Approvals">
         <EmptyState
           illustrationPreset="approval"
+          access={access}
           title="Access restricted"
           description="You don't have permission to view timesheet approvals."
         />
@@ -150,30 +221,16 @@ export function ApprovalsView() {
 
   const pageFilters = (
     <>
-      {ALL_APPROVAL_TABS.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          onClick={() => handleTabSelect(tab)}
-          className={cn(
-            "shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-            activeTab === tab
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted",
-          )}
-        >
-          {APPROVAL_TAB_LABEL[tab]}
-        </button>
-      ))}
+      <ApprovalTabFilter value={activeTab} onChange={handleTabSelect} />
       <Select value={memberFilter} onValueChange={setMemberFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Member">
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All members</SelectItem>
-          {employees.map((emp) => (
+          {memberOptions.map((emp) => (
             <SelectItem key={emp.id} value={emp.id}>
-              {emp.name ?? emp.email}
+              {emp.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -199,7 +256,7 @@ export function ApprovalsView() {
     selection,
     onSelectionChange: setSelection,
     onRowClick: handleRowClick,
-    onBulkApprove: handleBulkApprove,
+    onBulkApprove: handleBulkApproveOpen,
     onBulkReject: handleBulkRejectOpen,
     isBulkPending,
     onClearFilters: handleClearFilters,
@@ -211,22 +268,36 @@ export function ApprovalsView() {
       subtitle={subtitle}
       filters={pageFilters}
     >
-      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col">
-        {activeTab === "SUBMITTED" && (
-          <ApprovalsTabPanel status="SUBMITTED" {...tabPanelProps} />
-        )}
-        {activeTab === "APPROVED" && (
-          <ApprovalsTabPanel status="APPROVED" {...tabPanelProps} />
-        )}
-        {activeTab === "REJECTED" && (
-          <ApprovalsTabPanel status="REJECTED" {...tabPanelProps} />
-        )}
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-3">
+        <DelegateActingBanner
+          authority={borrowedAuthority}
+          resolveName={resolveApproverName}
+          className="shrink-0"
+        />
+        <div
+          id={APPROVALS_TABPANEL_ID}
+          role="tabpanel"
+          aria-labelledby={`approvals-tab-${activeTab}`}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <ApprovalsTabPanel status={activeTab} {...tabPanelProps} />
+        </div>
       </motion.div>
 
       <ApprovalDetailSheet
         period={detailPeriod}
         open={detailOpen}
         onOpenChange={handleDetailOpenChange}
+      />
+
+      <ConfirmDialog
+        open={bulkApproveOpen}
+        onOpenChange={setBulkApproveOpen}
+        title="Approve selected timesheets?"
+        description={`${selection.size} timesheet${selection.size === 1 ? "" : "s"} will be approved. This cannot be undone from this screen.`}
+        confirmLabel="Approve"
+        onConfirm={handleBulkApproveConfirm}
+        isPending={bulkApproveMutation.isPending}
       />
 
       <BulkRejectDialog

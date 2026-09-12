@@ -58,6 +58,53 @@ export const propagationShield = {
   onKeyDown: stopPropagation,
 } as const;
 
+const INTERACTIVE_DESCENDANT_SELECTOR = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '[role="button"]',
+  '[role="checkbox"]',
+  '[role="combobox"]',
+  '[role="link"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="option"]',
+  '[role="radio"]',
+  '[role="switch"]',
+  '[role="tab"]',
+  '[role="textbox"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+/**
+ * The mouse path guards the row with `stopPropagation` on every interactive
+ * cell; the keyboard path has no twin, so an activation key over a descendant
+ * control reached the row handler and opened the row instead of working the
+ * control. Matching on the target rather than one known element keeps row
+ * action menus and links working, not just the selection checkbox.
+ */
+function isKeyFromInteractiveDescendant(event: KeyboardEvent<HTMLElement>): boolean {
+  const { target, currentTarget } = event;
+  if (!(target instanceof Element) || target === currentTarget) return false;
+  const interactive = target.closest(INTERACTIVE_DESCENDANT_SELECTOR);
+  return interactive !== null && interactive !== currentTarget;
+}
+
+export function createRowActivationKeyHandler(activate: () => void) {
+  return function handleRowActivationKey(event: KeyboardEvent<HTMLElement>) {
+    if (!isActivationKey(event)) return;
+    if (isKeyFromInteractiveDescendant(event)) return;
+    event.preventDefault();
+    activate();
+  };
+}
+
 /**
  * The card pattern: a card that holds its own controls must not itself be a
  * button — nesting focusable content inside one is `nested-interactive`. The

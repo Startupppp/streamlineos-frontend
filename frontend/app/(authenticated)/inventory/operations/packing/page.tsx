@@ -1,12 +1,5 @@
-import { SoQueuePage } from "@/features/inventory/components/operations/so-queue-page";
+import { PackingQueuePage } from "@/features/inventory/components/operations/packing-queue-page";
 
-export default function PackingQueuePage() {
-  return (
-    <SoQueuePage
-      status="PICKED"
-      title="Packing Queue"
-      emptyTitle="Nothing to pack"
-      emptyDescription="Sales orders in Picked status will appear here ready for packing."
-    />
-  );
+export default function Page() {
+  return <PackingQueuePage />;
 }

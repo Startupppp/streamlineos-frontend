@@ -15,6 +15,7 @@ import type { DealMeeting } from "@/hooks/api/crm";
 import type { DealSubmission } from "@/features/crm/deals/deal-form";
 import { DealEditForm } from "./deal-edit-form";
 import { DealSidebarCards } from "./deal-sidebar-cards";
+import { DealForecastScoreCard } from "./deal-forecast-score-card";
 import { DealLinkedRecordsCard } from "./deal-linked-records-card";
 import { DealStageHistory } from "./deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
@@ -169,6 +170,7 @@ export function DealDetailBody({
             nextStep={deal.nextStep}
             pipelineId={deal.pipelineId}
           />
+          <DealForecastScoreCard dealId={dealId} />
           <DealLinkedRecordsCard
             partyId={deal.partyId}
             subjectId={deal.subjectId}

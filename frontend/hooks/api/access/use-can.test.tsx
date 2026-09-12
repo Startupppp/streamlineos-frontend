@@ -22,10 +22,8 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn() },
 }));
 
-const ORG_ID = "org-1";
-const USER_ID = "user-1";
-
 const GRANTED_SNAPSHOT: AccessResponse = {
+  membershipId: 4711,
   scopes: { "hr:employees:view": "all" },
   isOrgOwner: false,
   canManageOrganizationMembership: false,

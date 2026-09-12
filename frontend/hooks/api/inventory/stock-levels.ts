@@ -2,10 +2,9 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockAvailability } from "@/types/inventory";
+import type { StockAvailability } from "@/types/inventory-availability";
 
 export type TransactionType =
   | "PURCHASE"
@@ -43,6 +42,13 @@ type StockLevelFilters = {
   limit?: number;
 };
 
+/**
+ * Which quantity a movement moved. A quarantine or block movement leaves on-hand
+ * untouched and moves goods between buckets, so its balance pair describes the
+ * bucket named here rather than on-hand.
+ */
+export type QuantityBucket = "ON_HAND" | "BLOCKED" | "QUALITY_HOLD";
+
 export type StockTransactionDirection = "in" | "out";
 
 export type StockTransactionFilters = {
@@ -56,6 +62,12 @@ export type StockTransactionFilters = {
   toDate?: string;
   page?: number;
   limit?: number;
+  /**
+   * G1. Keyset position. Sent, it supersedes `page`: the ledger is append-only
+   * and a reader scrolling it while the engine posts loses or repeats a row at
+   * every offset boundary. Drive it with `useCursorPagination`.
+   */
+  cursor?: string;
 };
 
 export interface StockLevelRow {
@@ -80,7 +92,7 @@ export interface StockLevelRow {
 interface StockLevelsResult {
   items: StockLevelRow[];
   page: number;
-  limit?: number;
+  limit: number;
   total?: number;
   totalPages?: number;
 }
@@ -98,6 +110,8 @@ export interface StockTransaction {
   quantityChange: number;
   quantityBefore: number;
   quantityAfter: number;
+  /** Which quantity moved. The balance pair describes this bucket, not on-hand. */
+  quantityBucket: QuantityBucket;
   createdAt: string;
   notes: string | null;
   referenceType: string | null;
@@ -109,39 +123,53 @@ export interface StockTransaction {
 
 interface StockTransactionsResult {
   items: StockTransaction[];
-  total: number;
+  /** Null on a cursor page: the server was not asked to count. */
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
-interface RawStockLevel {
+/**
+ * The wire shape of `GET /inventory/stock`, exactly as the API sends it.
+ *
+ * Exported so the backend's response-shape drift gate
+ * (`src/modules/inventory/__tests__/inventory-response-shape-drift.spec.ts`) can
+ * read it. It compares this interface's own members against the service's
+ * `select()` projection: `apiClient.get<T>()` is an assertion about a payload,
+ * not a fact `tsc` can check, and this endpoint spent its whole life returning
+ * the driver's snake_case column names to a hook that reads camelCase --
+ * `NaN` in every quantity column and a dash for every name -- with both repos
+ * compiling green throughout.
+ */
+export interface RawStockLevel {
   id: number;
-  on_hand: string;
+  onHand: string;
   committed: string;
-  on_order: string;
+  onOrder: string;
   available: string;
-  blocked_qty: string | null;
-  quality_hold_qty: string | null;
-  average_cost?: string | null;
-  product_variant_id: number;
-  location_id: number;
-  productVariant?: {
+  blockedQty: string;
+  qualityHoldQty: string;
+  averageCost: string | null;
+  productVariant: {
     id: number;
     name: string | null;
     sku: string | null;
-    product?: { id: number; name: string; sku: string; reorderPoint: string | null } | null;
+    product: { id: number; name: string; sku: string; reorderPoint: string | null } | null;
   } | null;
-  location?: {
+  location: {
     id: number;
     name: string;
     code: string;
-    warehouse?: { id: number; name: string } | null;
+    warehouse: { id: number; name: string } | null;
   } | null;
 }
 
 interface RawStockLevelsResponse {
   items: RawStockLevel[];
   page: number;
+  limit: number;
   total?: number;
   totalPages?: number;
 }
@@ -152,25 +180,28 @@ interface RawTransaction {
   quantityChange: string;
   quantityBefore: string;
   quantityAfter: string;
+  quantityBucket: QuantityBucket | null;
   createdAt: string;
   notes: string | null;
   referenceType: string | null;
   referenceId: string | null;
   productVariant: {
     id: number;
-    name: string;
-    sku: string;
+    name: string | null;
+    sku: string | null;
     product: { id: number; name: string; sku: string } | null;
   } | null;
-  location: { id: number; name: string; code: string; warehouse?: { id: number; name: string } | null } | null;
+  location: { id: number; name: string; code: string; warehouse: { id: number; name: string } | null } | null;
   creator: { id: string; name: string | null } | null;
 }
 
 interface RawTransactionsResponse {
   items: RawTransaction[];
-  total: number;
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 function toStockLevelRow(r: RawStockLevel): StockLevelRow {
@@ -181,13 +212,13 @@ function toStockLevelRow(r: RawStockLevel): StockLevelRow {
     sku: product?.sku ?? r.productVariant?.sku ?? "—",
     warehouseName: r.location?.warehouse?.name ?? null,
     locationCode: r.location?.code ?? null,
-    onHand: Number(r.on_hand),
+    onHand: Number(r.onHand),
     committed: Number(r.committed),
-    onOrder: Number(r.on_order),
+    onOrder: Number(r.onOrder),
     available: Number(r.available),
-    blockedQty: Number(r.blocked_qty ?? 0),
-    qualityHoldQty: Number(r.quality_hold_qty ?? 0),
-    averageCost: r.average_cost ?? null,
+    blockedQty: Number(r.blockedQty),
+    qualityHoldQty: Number(r.qualityHoldQty),
+    averageCost: r.averageCost ?? null,
     reorderPoint: product?.reorderPoint != null ? Number(product.reorderPoint) : null,
     minStockLevel: null,
     variantId: r.productVariant?.id ?? null,
@@ -202,6 +233,7 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
     quantityChange: Number(r.quantityChange),
     quantityBefore: Number(r.quantityBefore),
     quantityAfter: Number(r.quantityAfter),
+    quantityBucket: r.quantityBucket ?? "ON_HAND",
     createdAt: r.createdAt,
     notes: r.notes,
     referenceType: r.referenceType,
@@ -226,16 +258,6 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
   };
 }
 
-const listStockLevelsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.listStockLevelsContract),
-);
-const stockAvailabilityContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.stockAvailabilityContract),
-);
-const listStockTransactionsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.listStockTransactionsContract),
-);
-
 export function useStockLevels(filters?: StockLevelFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<StockLevelsResult, Error>({
@@ -253,10 +275,11 @@ export function useStockLevels(filters?: StockLevelFilters) {
         search: filters?.search,
         page: filters?.page,
         limit: filters?.limit,
-      }, signal, listStockLevelsContract);
+      }, signal);
       return {
         items: res.items.map(toStockLevelRow),
         page: res.page,
+        limit: res.limit,
         total: res.total,
         totalPages: res.totalPages,
       };
@@ -275,7 +298,7 @@ export function useStockAvailability(variantId: number, warehouseId?: number) {
       apiClient.get<StockAvailability>("/inventory/stock/availability", {
         variantId,
         ...(warehouseId !== undefined ? { warehouseId } : {}),
-      }, signal, stockAvailabilityContract),
+      }, signal),
     enabled: canView && variantId > 0,
     staleTime: 30_000,
   });
@@ -297,15 +320,19 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
         toDate: filters?.toDate,
         page: filters?.page,
         limit: filters?.limit,
-      }, signal, listStockTransactionsContract);
+        cursor: filters?.cursor,
+      }, signal);
       return {
         items: res.items.map(toStockTransaction),
         total: res.total,
         page: res.page,
         totalPages: res.totalPages,
+        hasMore: res.hasMore,
+        nextCursor: res.nextCursor,
       };
     },
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }

@@ -318,8 +318,14 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Switch checked={startBillable} onCheckedChange={handleStartBillableChange} />
-              <Label className="text-xs">Billable</Label>
+              <Switch
+                id="timer-start-billable"
+                checked={startBillable}
+                onCheckedChange={handleStartBillableChange}
+              />
+              <Label htmlFor="timer-start-billable" className="text-xs">
+                Billable
+              </Label>
             </div>
             <LoadingButton size="sm" className="h-7 text-xs gap-1" onClick={handleStart} isPending={startTimer.isPending} loadingText="Starting…">
               <Play className="h-3 w-3" />
@@ -336,11 +342,13 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             {recentProjects.map((item) => (
               <button
                 key={item.projectId}
+                type="button"
                 data-project-id={String(item.projectId)}
+                aria-label={`Start a timer for ${item.name}`}
                 onClick={handleQuickStart}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-card text-xs font-medium hover:bg-muted/50 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-card text-xs font-medium hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Play className="h-2.5 w-2.5" />
+                <Play aria-hidden="true" className="h-2.5 w-2.5" />
                 {item.name}
               </button>
             ))}

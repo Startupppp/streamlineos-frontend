@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { useCan } from "@/hooks/api/access";
 import { useForecasting, type ForecastRow } from "@/hooks/api/inventory/planning";
+import { ReplenishmentSimulatorSheet } from "./replenishment-simulator-sheet";
 
 type StockoutRisk = ForecastRow["stockoutRisk"];
 
@@ -32,78 +35,113 @@ function getRiskBadge(risk: string): RiskBadgeEntry {
   return (RISK_BADGE as Record<string, RiskBadgeEntry>)[risk] ?? RISK_BADGE.NONE;
 }
 
-const columns: DataTableColumn<ForecastRow>[] = [
-  {
-    key: "product",
-    header: "Product / SKU",
-    cell: (row) => (
-      <div>
-        <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
-        <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
-      </div>
-    ),
-  },
-  {
-    key: "weeklyDemand",
-    header: "Weekly Demand",
-    className: "tabular-nums",
-    cell: (row) => row.weeklyDemand != null ? row.weeklyDemand.toLocaleString() : "—",
-  },
-  {
-    key: "week1",
-    header: "Week 1",
-    className: "tabular-nums",
-    cell: (row) => getProjectedQty(row, 1),
-  },
-  {
-    key: "week2",
-    header: "Week 2",
-    className: "tabular-nums",
-    cell: (row) => getProjectedQty(row, 2),
-  },
-  {
-    key: "week3",
-    header: "Week 3",
-    className: "tabular-nums",
-    cell: (row) => getProjectedQty(row, 3),
-  },
-  {
-    key: "week4",
-    header: "Week 4",
-    className: "tabular-nums",
-    cell: (row) => getProjectedQty(row, 4),
-  },
-  {
-    key: "currentStock",
-    header: "Current Stock",
-    className: "tabular-nums",
-    cell: (row) => row.currentStock.toLocaleString(),
-  },
-  {
-    key: "stockoutRisk",
-    header: "Stockout Risk",
-    cell: (row) => {
-      const badge = getRiskBadge(row.stockoutRisk);
-      return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${badge.className}`}>
-          {badge.label}
-        </span>
-      );
+interface SimulateButtonProps {
+  row: ForecastRow;
+  onSimulate: (row: ForecastRow) => void;
+}
+
+function SimulateButton({ row, onSimulate }: SimulateButtonProps) {
+  function handleClick(): void {
+    onSimulate(row);
+  }
+
+  return (
+    <Button variant="outline" size="sm" className="h-7 px-2 text-micro" onClick={handleClick}>
+      Simulate
+    </Button>
+  );
+}
+
+function buildColumns(
+  onSimulate: (row: ForecastRow) => void,
+): DataTableColumn<ForecastRow>[] {
+  return [
+    {
+      key: "product",
+      header: "Product / SKU",
+      cell: (row) => (
+        <div>
+          <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
+          <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
+        </div>
+      ),
     },
-  },
-];
+    {
+      key: "weeklyDemand",
+      header: "Weekly Demand",
+      className: "tabular-nums",
+      cell: (row) => (row.weeklyDemand != null ? row.weeklyDemand.toLocaleString() : "—"),
+    },
+    {
+      key: "week1",
+      header: "Week 1",
+      className: "tabular-nums",
+      cell: (row) => getProjectedQty(row, 1),
+    },
+    {
+      key: "week2",
+      header: "Week 2",
+      className: "tabular-nums",
+      cell: (row) => getProjectedQty(row, 2),
+    },
+    {
+      key: "week3",
+      header: "Week 3",
+      className: "tabular-nums",
+      cell: (row) => getProjectedQty(row, 3),
+    },
+    {
+      key: "week4",
+      header: "Week 4",
+      className: "tabular-nums",
+      cell: (row) => getProjectedQty(row, 4),
+    },
+    {
+      key: "currentStock",
+      header: "Current Stock",
+      className: "tabular-nums",
+      cell: (row) => row.currentStock.toLocaleString(),
+    },
+    {
+      key: "stockoutRisk",
+      header: "Stockout Risk",
+      cell: (row) => {
+        const badge = getRiskBadge(row.stockoutRisk);
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${badge.className}`}
+          >
+            {badge.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-24 text-right",
+      cell: (row) => <SimulateButton row={row} onSimulate={onSimulate} />,
+    },
+  ];
+}
 
 export function ForecastingClient() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
+  const [simulatorRow, setSimulatorRow] = useState<ForecastRow | null>(null);
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
 
-  const { data, isLoading, error, refetch } = useForecasting({ search: debouncedSearch.trim() || undefined, page });
+  const canView = useCan("inventory:reports:read");
+  const { data, isLoading, error, refetch } = useForecasting({
+    search: debouncedSearch.trim() || undefined,
+    page,
+  });
 
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
     setPage(1);
   }
@@ -112,18 +150,39 @@ export function ForecastingClient() {
     void refetch();
   }
 
+  function handleSimulate(row: ForecastRow): void {
+    setSimulatorRow(row);
+    setSimulatorOpen(true);
+  }
+
+  const columns = buildColumns(handleSimulate);
+
   return (
     <PageWrapper
       title="Demand Forecasting"
-      subtitle="SMA-based demand projections and stockout risk assessment."
+      subtitle="Projected demand and stockout risk. Simulate a SKU to see what a change in demand, lead time or service level does to its buffer."
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput className="min-w-0 flex-1" placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        canView ? (
+          <div className={FILTER_TOOLBAR_ROW}>
+            <SearchInput
+              className="min-w-0 flex-1"
+              placeholder="Search products..."
+              value={search}
+              onValueChange={handleSearchChange}
+            />
+          </div>
+        ) : undefined
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {error ? (
+        {!canView ? (
+          <NoPermissionState
+            permission="inventory:reports:read"
+            title="Forecasting is restricted"
+            description="Demand forecasts need inventory report access. This table is not empty — it is closed to you."
+            className="flex-1"
+          />
+        ) : error ? (
           <ErrorState onRetry={handleRetry} className="flex-1" />
         ) : !isLoading && rows.length === 0 ? (
           <InventoryEmptyState
@@ -140,10 +199,19 @@ export function ForecastingClient() {
             getRowKey={(row) => row.variantId}
             isLoading={isLoading}
             pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
-            minWidth="800px"
+            minWidth="900px"
           />
         )}
       </div>
+
+      <ReplenishmentSimulatorSheet
+        key={simulatorRow?.variantId ?? "none"}
+        open={simulatorOpen}
+        onOpenChange={setSimulatorOpen}
+        productVariantId={simulatorRow?.variantId ?? null}
+        productName={simulatorRow?.productName ?? ""}
+        variantSku={simulatorRow?.variantSku ?? ""}
+      />
     </PageWrapper>
   );
 }

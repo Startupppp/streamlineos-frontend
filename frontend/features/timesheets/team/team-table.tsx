@@ -58,8 +58,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
             {row.name && <TruncatedText text={row.email} className="text-micro text-muted-foreground" />}
           </div>
         ),
-        sortable: true,
-        sortValue: (row) => row.name || row.email,
       },
       ...days.map(
         (day): DataTableColumn<TeamMemberRow> => ({
@@ -78,8 +76,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
         className: "tabular-nums font-medium text-right w-16",
         headerClassName: "text-right",
         cell: (row) => `${row.totalHours.toFixed(1)}h`,
-        sortable: true,
-        sortValue: (row) => row.totalHours,
       },
       {
         key: "status",
@@ -98,8 +94,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
             </Badge>
           );
         },
-        sortable: true,
-        sortValue: (row) => row.status,
       },
     ],
     [days],

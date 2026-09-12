@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { validateLayout, type RecordLayout } from "@/lib/renderer/layout";
+import { type RecordLayout } from "@/lib/renderer/layout";
+import { validateLayout } from "@/lib/renderer/layout-validation";
 import { formatFieldText } from "./format-value";
 import { RecordDetail } from "./record-detail";
 import { RecordForm } from "./record-form";
@@ -39,10 +40,10 @@ const EVERY_KIND: RecordLayout = {
   list: {
     searchPlaceholder: "Search specimens…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "email" },
+      { field: "name", primary: true, subtitle: "email" },
       { field: "quantity" },
       { field: "band" },
-      { field: "opened", sortable: true },
+      { field: "opened" },
     ],
   },
   detail: {

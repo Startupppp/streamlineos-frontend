@@ -114,10 +114,6 @@ const EXPORT_VERDICTS = new Map([
    * alias is consumed at a distinct apiClient call — none is unreferenced. A group goes stale the
    * day one of its members stops being an alias or its route is deleted.
    */
-  ["hooks/api/accounting/planning-schema.ts:scenarioContract|scenarioCreatedContract|scenarioUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: scenarioContract builds scenarioListContract and ScenarioList, scenarioCreatedContract parses POST /accounting/scenarios, scenarioUpdatedContract parses PATCH /accounting/scenarios/:id — three live seams, one shape today" }],
-  ["hooks/api/accounting/settings-schema.ts:approvalPolicyContract|approvalPolicyCreatedContract|approvalPolicyUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: approvalPolicyContract builds approvalPolicyListContract, approvalPolicyCreatedContract parses POST /accounting/approval-policies, approvalPolicyUpdatedContract parses PATCH /accounting/approval-policies/:id" }],
-  ["hooks/api/accounting/assets-schema.ts:assetDetailContract|assetActivateContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: assetDetailContract parses GET /accounting/assets/:id and types AssetDetail, assetActivateContract parses POST /accounting/assets/:id/activate" }],
-  ["hooks/api/accounting/taxes-schema.ts:taxCodeContract|taxCodeCreatedContract|taxCodeUpdatedContract", { verdict: "KEEP", reason: "one row contract + per-route aliases: taxCodeContract builds taxCodeListContract, taxCodeCreatedContract parses POST /accounting/tax-codes, taxCodeUpdatedContract parses PATCH /accounting/tax-codes/:id" }],
   ["hooks/api/payments-schema.ts:webhookEventContract|webhookEventRowContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: webhookEventContract builds webhookEventListContract and types PaymentWebhookEvent, webhookEventRowContract parses POST /payments/providers/:key/webhooks/events/:id/retry" }],
   ["hooks/api/blog-schema.ts:blogPostWithRelationsContract|blogAdminPostDetailContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: blogPostWithRelationsContract builds the two admin list contracts and types AdminBlogPost, blogAdminPostDetailContract parses GET /blog/admin/posts/:id" }],
   ["hooks/api/support/support-channel-schema.ts:supportBusinessHoursRowContract|supportBusinessHoursContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: supportBusinessHoursRowContract builds supportBusinessHoursListContract, supportBusinessHoursContract parses POST and PATCH /support/business-hours" }],
@@ -131,6 +127,28 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/hr/workforce-schema.ts:headcountPlanRowContract|updateHeadcountPlanContract", { verdict: "KEEP", reason: "one row contract + a per-route alias: headcountPlanRowContract builds createHeadcountPlanContract (an array) and types HeadcountPlanRow, updateHeadcountPlanContract parses PATCH /hr/analytics-plus/workforce/plans/:id, which returns a single row" }],
   ["hooks/api/hr/recruitment/jobs-schema.ts:jobPostingRowContract|jobPostingDetailContract|createJobPostingContract|duplicateJobPostingContract", { verdict: "KEEP", reason: "all four are live and reached through lazyContract's dynamic import() -- jobs.ts:34/40/43 and candidates-schema.ts:3 -- which knip's static graph cannot follow. This is the dynamic-import blind spot section 10 names, not dead code; each was verified by grep to have a real consumer before this verdict was written." }],
 
+  /*
+   * Recorded on the integration branch (2026-09-11) for exports the CRM/Timesheets merge left
+   * unclassified. Two of those nineteen are omitted here: the hooks/api/payments.ts manual-method
+   * TYPES (ManualMethodStatus, SaveManualMethodPayload) are answered structurally by
+   * DATA_LAYER_CONTRACT_RE, so their verdicts would never be consulted and would read as stale.
+   */
+
+  ["components/shared/gated.tsx:GateState", { verdict: "KEEP", reason: "re-exports lib/rbac/gate's GateState beside <Gated>, the state Gated resolves; it is not part of GatedProps and nothing imports it from here (lib/rbac/gate.ts is its home). Deletion candidate for the components/shared owner" }],
+
+  ["hooks/api/party/merges.ts:useDetectPartyDuplicates", { verdict: "WIRE", reason: "per-party 'look for duplicates' action not wired; backend POST /party/parties/:partyId/detect-duplicates exists (party-merge.controller.ts) and its results land in the /parties/duplicates queue; add the action to features/party/parties/party-detail-sheet.tsx" }],
+
+
+  ["lib/accounting/money.ts:formatSignedBalance", { verdict: "WIRE", reason: "general-ledger-columns.tsx and general-ledger-client.tsx inline formatMoney(Math.abs(balance), currency) beside balanceDirection(); that expression is this function" }],
+  ["lib/accounting/money.ts:MoneyValue", { verdict: "KEEP", reason: "the { minor, currency } pair this money library is written around; no rewrite type adopted it (they carry *Minor and currency as sibling fields). Deletion candidate for the accounting-rewrite owner" }],
+  ["hooks/api/accounting/ledger.ts:useTrialBalance", { verdict: "KEEP", reason: "typed read of the kernel's GET /accounting/trial-balance, which the backend still serves (kernel.controller.ts); the trial balance page reads GET /accounting/reports/trial-balance through useTrialBalanceReport. Deletion candidate for the accounting-rewrite owner" }],
+  ["hooks/api/accounting/banking.ts:useBankAccount", { verdict: "WIRE", reason: "no bank-account detail surface in the accounting rewrite: /accounting/banking has only the list, import and reconciliation pages; backend GET /accounting/banking/accounts/:bankAccountId exists (bank-accounts.controller.ts)" }],
+  ["hooks/api/accounting/banking.ts:useUpdateBankAccount", { verdict: "WIRE", reason: "no edit action for a bank account: bank-accounts-page.tsx lists and add-bank-account-sheet.tsx creates, nothing edits; backend PATCH /accounting/banking/accounts/:bankAccountId exists (bank-accounts.controller.ts)" }],
+  ["hooks/api/accounting/parties.ts:usePartyTaxRegistrations", { verdict: "KEEP", reason: "standalone read of GET /accounting/parties/:partyId/tax-registrations; customer-detail-client.tsx passes PartyDetail.taxRegistrations from useParty to PartyTaxRegistrationsCard, and the add/remove mutations invalidate the party detail. Deletion candidate for the accounting-rewrite owner" }],
+  ["hooks/api/accounting/parties.ts:useDeleteParty", { verdict: "WIRE", reason: "no delete action on accounting customers or vendors (features/accounting/parties, features/accounting/purchases/vendors); backend DELETE /accounting/parties/:partyId exists (parties.controller.ts)" }],
+  ["features/accounting/purchases/lib/ap-labels.ts:withholdingExplainer", { verdict: "WIRE", reason: "never rendered; bill-summary-card.tsx renders its sibling reverse-charge and blocked-input-tax explainers, but the 'Tax withheld' tile in features/accounting/purchases/payments/payment-detail-sheet.tsx only states the rate" }],
+  ["features/accounting/sales/ar-labels.tsx:documentStatusLabel", { verdict: "KEEP", reason: "the only public text accessor for the module-private DOCUMENT_STATUS_LABEL map; ArStatusBadge and DOCUMENT_STATUS_OPTIONS cover every current surface, and this is the plain-text form for non-JSX contexts" }],
+  ["features/accounting/setup/enable-accounting-schema.ts:EnableAccountingPayload", { verdict: "WIRE", reason: "enable-accounting-card.tsx types handleSubmit as EnableAccountingFormValues (the z.input) and re-parses with enableAccountingSchema.parse, though zodResolver already passes the parsed z.output; useForm<EnableAccountingFormValues, unknown, EnableAccountingPayload> gives the handler this type and drops the second parse" }],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {
@@ -646,7 +664,7 @@ function runSelfTest() {
   assert(rScratch.cls === "OUT-OF-SCOPE",
     `(m0) a scratch path → expected OUT-OF-SCOPE, got ${rScratch.cls}`);
 
-  const rGen = classifyFile(".next-buildmart/dev/chunk.js", new Set([".next-buildmart/dev/chunk.js"]), new Map(), synthRoot);
+  const rGen = classifyFile(".next-custom/dev/chunk.js", new Set([".next-custom/dev/chunk.js"]), new Map(), synthRoot);
   assert(rGen.cls === "OUT-OF-SCOPE",
     `(m1) a generated build path → expected OUT-OF-SCOPE, got ${rGen.cls}`);
 

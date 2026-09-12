@@ -30,16 +30,32 @@ import {
   defaultValuesForLayout,
   formFields,
   isFieldVisible,
+  isLineRows,
+  scalarValue,
   schemaForLayout,
   visibleFormValues,
   type FormMode,
+  type RecordFormShape,
+  type RecordLine,
 } from "@/lib/renderer/layout-schema";
 import { cn } from "@/lib/utils";
+import { RecordLines, type LineFieldControl } from "./record-lines";
+import { controlType } from "./control-type";
 
 export type RecordFormValues = Record<string, string>;
 
+/**
+ * The repeating groups a form carries, by field name.
+ *
+ * Handed to `onSubmit` beside the record's own values rather than mixed into
+ * them, so the twenty-odd surfaces that have no repeating group keep reading
+ * `values.name.trim()` without narrowing a union they will never see. A record
+ * and its rows are different things; the submit says so.
+ */
+export type RecordFormLines = Record<string, RecordLine[]>;
+
 /** Stable, so a form with no conditional field never re-memoises on it. */
-const EMPTY_VALUES: RecordFormValues = {};
+const EMPTY_VALUES: RecordFormShape = {};
 
 export interface RecordFieldControl {
   value: string;
@@ -54,8 +70,18 @@ export interface RecordFormProps<T extends Record<string, unknown> = Record<stri
    * The submit event is forwarded as it always was, so a caller that needs to
    * stop propagation still can. The values it receives are the ones the record
    * is actually on — see `visibleFormValues`.
+   *
+   * `lines` carries the record's repeating groups, keyed by field name. It is a
+   * third parameter rather than a widened first one so that every surface
+   * without one is unchanged: a function of two parameters is assignable here,
+   * which is what kept twenty-odd migrated sheets from having to narrow a union
+   * on every field they read.
    */
-  onSubmit: (values: RecordFormValues, event?: BaseSyntheticEvent) => void;
+  onSubmit: (
+    values: RecordFormValues,
+    event?: BaseSyntheticEvent,
+    lines?: RecordFormLines,
+  ) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
   submitLabel?: string;
@@ -69,6 +95,16 @@ export interface RecordFormProps<T extends Record<string, unknown> = Record<stri
    * record's shape.
    */
   controls?: Record<string, (control: RecordFieldControl) => ReactNode>;
+  /**
+   * A control for one column of one repeating group, keyed
+   * `"<lines field>.<column>"`.
+   *
+   * Flat rather than nested for the same reason `controls` is: a surface
+   * supplies a handful of these and a map of maps would be a shape to remember
+   * for no gain. The row index reaches the control, because a quote line's
+   * product picker has to know which line it is filling in.
+   */
+  lineControls?: Record<string, (control: LineFieldControl, index: number) => ReactNode>;
 }
 
 function booleanFieldChange(
@@ -79,25 +115,22 @@ function booleanFieldChange(
   };
 }
 
-function controlType(kind: FieldSpec["kind"]): string {
-  switch (kind) {
-    case "email":
-      return "email";
-    case "phone":
-      return "tel";
-    case "url":
-      return "url";
-    case "number":
-    case "money":
-    case "percent":
-      return "number";
-    case "date":
-      return "date";
-    case "dateTime":
-      return "datetime-local";
-    default:
-      return "text";
-  }
+/**
+ * The controls belonging to one repeating group, re-keyed by column.
+ *
+ * The prop is flat (`"lineItems.productId"`) so a surface writes one map; the
+ * group only wants its own half, keyed the way it addresses a column.
+ */
+function lineControlsFor(
+  supplied: RecordFormProps["lineControls"],
+  name: string,
+): Record<string, (control: LineFieldControl, index: number) => ReactNode> | undefined {
+  if (!supplied) return undefined;
+  const prefix = `${name}.`;
+  const own: Record<string, (control: LineFieldControl, index: number) => ReactNode> = {};
+  for (const [key, render] of Object.entries(supplied))
+    if (key.startsWith(prefix)) own[key.slice(prefix.length)] = render;
+  return Object.keys(own).length > 0 ? own : undefined;
 }
 
 /**
@@ -119,11 +152,12 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
   className,
   mode = "edit",
   controls,
+  lineControls,
 }: RecordFormProps<T>) {
   const schema = useMemo(() => schemaForLayout(layout, mode, initial), [layout, mode, initial]);
   const fields = useMemo(() => formFields(layout, mode), [layout, mode]);
 
-  const form = useForm<RecordFormValues>({
+  const form = useForm<RecordFormShape>({
     resolver: zodResolver(schema),
     defaultValues: defaultValuesForLayout(layout, initial, mode),
   });
@@ -162,8 +196,23 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
     empty. Sending it would put a leftover on the record that nobody can see and
     the next reader has to explain.
   */
-  function handleSubmit(submitted: RecordFormValues, event?: BaseSyntheticEvent): void {
-    onSubmit(visibleFormValues(layout, mode, submitted, { ...initial, ...submitted }), event);
+  function handleSubmit(submitted: RecordFormShape, event?: BaseSyntheticEvent): void {
+    const kept = visibleFormValues(layout, mode, submitted, { ...initial, ...submitted });
+
+    /*
+      Split at the boundary rather than inside every caller. A record's own
+      fields and its repeating groups are different things and go to the API in
+      different shapes; handing a surface one map of both would push that
+      distinction into twenty sheets that do not have a repeating group.
+    */
+    const scalars: RecordFormValues = {};
+    const rows: RecordFormLines = {};
+    for (const [name, held] of Object.entries(kept)) {
+      if (isLineRows(held)) rows[name] = held;
+      else scalars[name] = scalarValue(held);
+    }
+
+    onSubmit(scalars, event, rows);
   }
 
   /*
@@ -211,12 +260,37 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
               ) : null}
 
               <div className="grid grid-cols-1 gap-gap-toolbar sm:grid-cols-2">
-                {sectionFields.map((field) => (
+                {sectionFields.map((field) =>
+                  /*
+                    A repeating group owns the full width and its own add and
+                    remove controls, so it steps out of the two-column grid
+                    rather than being squeezed into half of one.
+                  */
+                  field.kind === "lines" ? (
+                    <FormItem key={field.name} className="sm:col-span-2">
+                      <FormLabel>
+                        {field.label}
+                        {field.required ? <span aria-hidden="true"> *</span> : null}
+                      </FormLabel>
+                      <RecordLines
+                        field={field}
+                        disabled={isSubmitting}
+                        controls={lineControlsFor(lineControls, field.name)}
+                      />
+                      {field.hint ? <FormDescription>{field.hint}</FormDescription> : null}
+                      <FormMessage />
+                    </FormItem>
+                  ) : (
                   <FormField
                     key={field.name}
                     control={form.control}
                     name={field.name}
-                    render={({ field: control }) => (
+                    render={({ field: bound }) => {
+                      const control = {
+                        ...bound,
+                        value: scalarValue(bound.value),
+                      };
+                      return (
                       <FormItem className={cn(field.kind === "longText" && "sm:col-span-2")}>
                         <FormLabel>
                           {field.label}
@@ -285,9 +359,11 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
                         {field.hint ? <FormDescription>{field.hint}</FormDescription> : null}
                         <FormMessage />
                       </FormItem>
-                    )}
+                      );
+                    }}
                   />
-                ))}
+                  ),
+                )}
               </div>
             </div>
           );

@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
@@ -40,6 +41,7 @@ import { VendorFormSheet } from "@/features/inventory/components/vendor-form-she
 import { useVendors } from "@/hooks/api/inventory";
 import { useToggleVendorActive } from "@/hooks/api/inventory/vendors";
 import type { InventoryVendor } from "@/types/inventory";
+import { useCan } from "@/hooks/api/access";
 
 function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
   const toggleMutation = useToggleVendorActive();
@@ -94,6 +96,7 @@ function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
 }
 
 export default function VendorsListPage() {
+  const canView = useCan("inventory:vendors:read");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -182,8 +185,6 @@ export default function VendorsListPage() {
           {v.name}
         </Link>
       ),
-      sortable: true,
-      sortValue: (v) => v.name,
     },
     {
       key: "code",
@@ -267,6 +268,16 @@ export default function VendorsListPage() {
       router.replace(`?${params.toString()}`, { scroll: false });
     });
   }, [debouncedSearch, router, searchParams]);
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Vendors"
+        subtitle="Manage your suppliers and purchase order vendors."
+      >
+        <NoPermissionState permission="inventory:vendors:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

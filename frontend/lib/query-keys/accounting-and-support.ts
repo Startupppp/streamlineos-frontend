@@ -3,60 +3,6 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 export const accountingAndSupportQueryKeys = {
   accounting: {
     all: [...base, "accounting"] as const,
-    accounts: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "accounts"] as const)
-        : ([...base, "accounting", "accounts", params] as const),
-    journal: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "journal"] as const)
-        : ([...base, "accounting", "journal", params] as const),
-    journalEntry: (journalEntryId: number) =>
-      [...base, "accounting", "journalEntry", journalEntryId] as const,
-    trialBalance: (asOf: string) =>
-      [...base, "accounting", "trialBalance", asOf] as const,
-    profitLoss: (from: string, to: string) =>
-      [...base, "accounting", "profitLoss", from, to] as const,
-    customersOutstanding: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "customersOutstanding"] as const)
-        : ([...base, "accounting", "customersOutstanding", params] as const),
-    customerLedger: <P>(clientId: number, params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "customerLedger", clientId] as const)
-        : ([...base, "accounting", "customerLedger", clientId, params] as const),
-    gstr1: (params: { from: string; to: string }) =>
-      [...base, "accounting", "gstr1", params] as const,
-    balanceSheet: (params: { asOf: string }) =>
-      [...base, "accounting", "balanceSheet", params] as const,
-    agedReceivables: (params: { asOf: string }) =>
-      [...base, "accounting", "agedReceivables", params] as const,
-    purchaseBills: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "purchaseBills"] as const)
-        : ([...base, "accounting", "purchaseBills", params] as const),
-    purchaseBill: (purchaseBillId: number) =>
-      [...base, "accounting", "purchaseBill", purchaseBillId] as const,
-    gstr3B: (params: { from: string; to: string }) =>
-      [...base, "accounting", "gstr3B", params] as const,
-    vendorsOutstanding: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "vendorsOutstanding"] as const)
-        : ([...base, "accounting", "vendorsOutstanding", params] as const),
-    vendorLedger: <P>(vendorId: number, params?: P) =>
-      params === undefined
-        ? ([...base, "accounting", "vendorLedger", vendorId] as const)
-        : ([...base, "accounting", "vendorLedger", vendorId, params] as const),
-    agedPayables: (params: { asOf: string }) =>
-      [...base, "accounting", "agedPayables", params] as const,
-    cashFlow: (params: { from: string; to: string }) =>
-      [...base, "accounting", "cashFlow", params] as const,
-    coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
-    apAll: [...base, "accounting", "ap"] as const,
-    arReminderPolicies: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "accounting", "reminder-policies"] as const)
-        : ([...base, "accounting", "reminder-policies", params] as const),
   },
 
   recurringInvoices: {

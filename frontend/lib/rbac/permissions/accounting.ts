@@ -36,6 +36,8 @@ export const ACCOUNTING_PERMISSIONS: Permission[] = [
   { name: "accounting:banking:manage", resource: "accounting:banking", action: "manage", description: "Manage bank accounts and categorise transactions" },
   { name: "accounting:banking:import", resource: "accounting:banking", action: "import", description: "Import bank statements" },
   { name: "accounting:banking:reconcile", resource: "accounting:banking", action: "reconcile", description: "Reconcile bank accounts" },
+  { name: "accounting:attachments:read", resource: "accounting:attachments", action: "read", description: "List and download files attached to accounting documents" },
+  { name: "accounting:attachments:manage", resource: "accounting:attachments", action: "manage", description: "Attach files to accounting documents, and remove them" },
   { name: "accounting:taxes:read", resource: "accounting:taxes", action: "read", description: "View tax rates, returns, and filings" },
   { name: "accounting:taxes:manage", resource: "accounting:taxes", action: "manage", description: "Manage tax rates and prepare tax returns" },
   { name: "accounting:taxes:pay", resource: "accounting:taxes", action: "pay", description: "Submit and pay tax returns" },

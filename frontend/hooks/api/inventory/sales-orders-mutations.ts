@@ -1,35 +1,12 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-const salesOrderMutationContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.salesOrderMutationContract),
-);
-const invoiceContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.invoiceContract),
-);
-const reserveSoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.reserveSoContract),
-);
-const soSuccessContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.soSuccessContract),
-);
-const shipSoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.shipSoContract),
-);
-const pickSoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.pickSoContract),
-);
-const packSoContract = lazyContract(() =>
-  import("@/hooks/api/inventory/sales-orders-schema").then((m) => m.packSoContract),
-);
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
@@ -100,7 +77,8 @@ interface PickSalesOrderLine {
   locationId: number;
   lotId?: number;
   serialId?: number;
-  quantityPicked: number;
+  /** Decimal string at scale 4 — this closes a reservation and feeds the shipment. */
+  quantityPicked: string;
 }
 
 interface PickSalesOrderInput {
@@ -123,9 +101,9 @@ interface CancelSalesOrderInput {
 
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>("inventory:sales-orders:create", {
+  return useAuthorizedIdempotentMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>("inventory:sales-orders:create", {
     mutationKey: ["inventory", "salesOrders", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
         clientId: data.clientId,
         orderDate: data.orderDate ?? todayIso(),
@@ -141,7 +119,7 @@ export function useCreateSalesOrder() {
           taxRate: (line.taxRate ?? 0).toFixed(2),
           lineOrder: index,
         })),
-      }, undefined, salesOrderMutationContract),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
@@ -150,10 +128,10 @@ export function useCreateSalesOrder() {
 
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof soSuccessContract>, Error, ConfirmSalesOrderInput>("inventory:sales-orders:confirm", {
+  return useAuthorizedIdempotentMutation<void, Error, ConfirmSalesOrderInput>("inventory:sales-orders:confirm", {
     mutationKey: ["inventory", "salesOrders", "confirm"],
-    mutationFn: ({ soId }) =>
-      apiClient.post<z.infer<typeof soSuccessContract>>(`/inventory/sales-orders/${soId}/confirm`, {}, undefined, soSuccessContract),
+    mutationFn: ({ soId }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -163,19 +141,17 @@ export function useConfirmSalesOrder() {
 
 export function useShipSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof shipSoContract>, Error, ShipSalesOrderInput>("inventory:sales-orders:ship", {
+  return useAuthorizedIdempotentMutation<void, Error, ShipSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "ship"],
-    mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }) =>
-      apiClient.post<z.infer<typeof shipSoContract>>(
+    mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/sales-orders/${soId}/ship`,
         {
           shipDate: shipDate ?? todayIso(),
           ...(carrierId !== undefined ? { carrierId } : {}),
           ...(trackingNumber !== undefined ? { trackingNumber } : {}),
           ...(notes !== undefined ? { notes } : {}),
-        },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        shipSoContract,
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -187,10 +163,10 @@ export function useShipSalesOrder() {
 
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>("inventory:sales-orders:invoice", {
+  return useAuthorizedIdempotentMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>("inventory:sales-orders:invoice", {
     mutationKey: ["inventory", "salesOrders", "invoice"],
-    mutationFn: ({ soId }) =>
-      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}, undefined, invoiceContract),
+    mutationFn: ({ soId }, idempotencyKey) =>
+      apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -200,17 +176,15 @@ export function useInvoiceSalesOrder() {
 
 export function useReserveSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>("inventory:stock:reserve", {
+  return useAuthorizedIdempotentMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>("inventory:stock:reserve", {
     mutationKey: ["inventory", "salesOrders", "reserve"],
-    mutationFn: ({ soId, warehouseId, allocations }) =>
+    mutationFn: ({ soId, warehouseId, allocations }, idempotencyKey) =>
       apiClient.post<ReserveSalesOrderResult>(
         `/inventory/sales-orders/${soId}/reserve`,
         {
           ...(warehouseId !== undefined ? { warehouseId } : {}),
           ...(allocations !== undefined ? { allocations } : {}),
-        },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        reserveSoContract,
+        }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -222,10 +196,10 @@ export function useReserveSalesOrder() {
 
 export function usePickSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof pickSoContract>, Error, PickSalesOrderInput>("inventory:sales-orders:ship", {
+  return useAuthorizedIdempotentMutation<void, Error, PickSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pick"],
-    mutationFn: ({ soId, lines }) =>
-      apiClient.post<z.infer<typeof pickSoContract>>(`/inventory/sales-orders/${soId}/pick`, { lines }, undefined, pickSoContract),
+    mutationFn: ({ soId, lines }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -235,15 +209,15 @@ export function usePickSalesOrder() {
 
 export function usePackSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof packSoContract>, Error, PackSalesOrderInput>("inventory:sales-orders:ship", {
+  return useAuthorizedIdempotentMutation<void, Error, PackSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pack"],
-    mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }) =>
-      apiClient.post<z.infer<typeof packSoContract>>(`/inventory/sales-orders/${soId}/pack`, {
+    mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/pack`, {
         ...(weight !== undefined ? { weight } : {}),
         ...(dimensionsL !== undefined ? { dimensionsL } : {}),
         ...(dimensionsW !== undefined ? { dimensionsW } : {}),
         ...(dimensionsH !== undefined ? { dimensionsH } : {}),
-      }, undefined, packSoContract),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
@@ -253,14 +227,12 @@ export function usePackSalesOrder() {
 
 export function useCancelSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof soSuccessContract>, Error, CancelSalesOrderInput>("inventory:sales-orders:update", {
+  return useAuthorizedIdempotentMutation<void, Error, CancelSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "cancel"],
-    mutationFn: ({ soId, reason }) =>
-      apiClient.post<z.infer<typeof soSuccessContract>>(
+    mutationFn: ({ soId, reason }, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/sales-orders/${soId}/cancel`,
-        { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        soSuccessContract,
+        { ...(reason !== undefined ? { reason } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -272,10 +244,10 @@ export function useCancelSalesOrder() {
 
 export function useUpdateSalesOrder() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<z.infer<typeof salesOrderMutationContract>, Error, UpdateSalesOrderInput>("inventory:sales-orders:update", {
+  return useAuthorizedMutation<void, Error, UpdateSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "update"],
     mutationFn: ({ soId, lines, ...rest }) =>
-      apiClient.patch<z.infer<typeof salesOrderMutationContract>>(`/inventory/sales-orders/${soId}`, {
+      apiClient.patch<void>(`/inventory/sales-orders/${soId}`, {
         ...rest,
         ...(lines !== undefined
           ? {
@@ -288,7 +260,7 @@ export function useUpdateSalesOrder() {
               })),
             }
           : {}),
-      }, undefined, salesOrderMutationContract),
+      }),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });

@@ -13,6 +13,8 @@ const teamSummaryC = lazyContract(() =>
 
 export interface TeamMemberWeekSummary {
   userId: string;
+  name?: string | null;
+  email?: string | null;
   period: TimesheetPeriod | null;
   dailyHours: Record<string, number>;
   totalHours: number;
@@ -23,7 +25,7 @@ interface TeamWeekSummaryResponse {
 }
 
 type TeamWeekSummaryParams = {
-  userIds: string;
+  userIds?: string;
   startDate: string;
   endDate: string;
 };
@@ -35,13 +37,17 @@ export function useTeamWeekSummary(
   enabled = true,
 ) {
   const canView = useCan("timesheets:team:view");
-  const params: TeamWeekSummaryParams = { userIds: userIds.join(","), startDate, endDate };
+  const params: TeamWeekSummaryParams = {
+    startDate,
+    endDate,
+    ...(userIds.length > 0 ? { userIds: userIds.join(",") } : {}),
+  };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.teamWeekSummary(params),
     queryFn: ({ signal }) =>
       apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params, signal, teamSummaryC),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    enabled: enabled && canView && userIds.length > 0,
+    enabled: enabled && canView,
   });
 }

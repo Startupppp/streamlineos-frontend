@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { parseISO } from "date-fns";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCan } from "@/hooks/api/access";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -17,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
@@ -33,6 +35,7 @@ function isValidVariantName(name: string): boolean {
 }
 
 export default function NewSalesOrderPage() {
+  const canCreate = useCan("inventory:sales-orders:create");
   const router = useRouter();
   const variantsQuery = useProductVariants({ activeOnly: true });
   const warehousesQuery = useWarehouses();
@@ -136,6 +139,36 @@ export default function NewSalesOrderPage() {
   if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
   if (warehousesQuery.error) return <ErrorState description={getErrorMessage(warehousesQuery.error)} onRetry={handleWarehousesRetry} />;
 
+  const summaryFooter = (
+    <div className="flex justify-end mt-2">
+      <div className="space-y-1 text-sm w-64">
+        {lineTotals.map((total, index) => (
+          <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
+            <span>Line {index + 1}</span>
+            <span className="font-mono tabular-nums">{total.toFixed(2)}</span>
+          </div>
+        ))}
+        <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
+          <span>Grand Total</span>
+          <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // G8. A create form is not a list, so it has no empty state — but it can
+  // still be opened by somebody who may not save, and letting them fill it
+  // in before the server refuses is the worst version of that. Placed after
+  // every hook: an early return above one makes hook order depend on a
+  // permission, which React forbids.
+  if (!canCreate) {
+    return (
+      <PageWrapper title="New Sales Order">
+        <NoPermissionState permission="inventory:sales-orders:create" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
   if (warehouses.length === 0)
     return (
       <PageWrapper title="New Sales Order" backHref="/inventory/sales-orders">
@@ -159,23 +192,6 @@ export default function NewSalesOrderPage() {
         />
       </PageWrapper>
     );
-
-  const summaryFooter = (
-    <div className="flex justify-end mt-2">
-      <div className="space-y-1 text-sm w-64">
-        {lineTotals.map((total, index) => (
-          <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
-            <span>Line {index + 1}</span>
-            <span className="font-mono tabular-nums">{total.toFixed(2)}</span>
-          </div>
-        ))}
-        <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
-          <span>Grand Total</span>
-          <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <PageWrapper

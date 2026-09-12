@@ -5,7 +5,6 @@ import { useAnalyzeTicket, useImproveReply, useTranslateMessage } from "./suppor
 import { useKbPageSummarize } from "./kb/page-ai";
 import { useKbAsk } from "./kb/ask";
 import { useMailThreadSummary } from "./mail";
-import { useExplainVariance } from "./accounting/accounting-ai";
 import { useExplainPayslip } from "./payroll/use-explain-payslip";
 import {
   useAIAttritionRisk,
@@ -100,23 +99,6 @@ const FAMILIES: Family[] = [
     useDispatch: () => {
       const mutation = useMailThreadSummary();
       return (signal) => mutation.mutateAsync({ accountId: 1, threadId: "t1", signal });
-    },
-  },
-  {
-    name: "useExplainVariance",
-    useDispatch: () => {
-      const mutation = useExplainVariance();
-      return (signal) =>
-        mutation.mutateAsync({
-          periodLabel: "2026-09",
-          accountName: "Travel",
-          accountCode: "6100",
-          budgetAmount: 100,
-          actualAmount: 140,
-          varianceAmount: 40,
-          variancePct: 40,
-          signal,
-        });
     },
   },
   {

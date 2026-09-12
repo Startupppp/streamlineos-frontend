@@ -21,6 +21,7 @@ import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/billing-types";
+import { randomId } from "@/lib/random-id";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
 
@@ -70,7 +71,7 @@ export function BillingExportDialog({
   const billingExport = useBillingExport();
 
   const idempotencyKey = useMemo(
-    () => (open ? crypto.randomUUID() : ""),
+    () => (open ? randomId() : ""),
     [open],
   );
 
@@ -104,8 +105,22 @@ export function BillingExportDialog({
       },
       {
         onSuccess: (result) => {
-          const filename = `billing-export_${startDate}_${endDate}.${values.format.toLowerCase()}`;
-          void downloadBillingFile(values.format, filename, groups);
+          const filename =
+            result.fileName ??
+            `billing-export_${startDate}_${endDate}.${values.format.toLowerCase()}`;
+          if (result.csv) {
+            const blob = new Blob([String.fromCharCode(0xfeff), result.csv], {
+              type: "text/csv;charset=utf-8;",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename.replace(/\.xlsx$/i, ".csv");
+            a.click();
+            URL.revokeObjectURL(url);
+          } else {
+            void downloadBillingFile(values.format, filename, groups);
+          }
           toast.success(
             `Exported ${result.entryCount} entries · ${result.totalHours.toFixed(1)} h · ${formatCurrencyForBilling(result.totalAmount, fallbackCurrency)}`,
           );

@@ -1,5 +1,5 @@
-import { CashFlowPage } from "@/features/accounting/reports/cash-flow-page";
+import { CashFlowReport } from "@/features/accounting/reports";
 
-export default function Page() {
-  return <CashFlowPage />;
+export default function CashFlowPage() {
+  return <CashFlowReport />;
 }

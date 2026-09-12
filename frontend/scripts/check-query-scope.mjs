@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-
+/*
+  `isExcludedScanDir` (check-repo-paths.mjs) skips every dot-directory, the
+  `.next*` build outputs among them, plus node_modules and feedbucket-widget.
+  scripts/ holds the gates themselves and stays out of their own corpus, as it
+  was before the shared helper replaced this file's own list.
+*/
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts"]);
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 
 const SANCTIONED_QUERY_CLIENT = new Set([
@@ -139,7 +145,7 @@ function checkPrefetchDehydrate(content, relPath) {
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (isExcludedScanDir(entry.name)) continue;
+    if (isExcludedScanDir(entry.name) || EXTRA_EXCLUDED_DIRS.has(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);

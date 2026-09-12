@@ -12,10 +12,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { RoundingRule, ApprovalMode } from "@/features/timesheets/types";
 import type { GeneralSettingsFormValues } from "./general-settings-schema";
+import { CREATE_REQUIRED_FIELDS, requiredFieldLabel } from "./required-fields";
+import {
+  describeMaterialChanges,
+  type materialChangesIn,
+} from "./settings-material-changes";
 
 const WORK_WEEK_OPTIONS = [
   { value: "0", label: "Sunday" },
@@ -43,24 +49,33 @@ const APPROVAL_OPTIONS: { value: ApprovalMode; label: string }[] = [
   { value: "MULTI_LEVEL", label: "Multi-level approval" },
 ];
 
-const REQUIRED_FIELD_OPTIONS = [
-  { key: "project", label: "Project" },
-  { key: "ticket", label: "Ticket" },
-  { key: "description", label: "Description" },
-  { key: "billable", label: "Billable flag" },
-  { key: "workLink", label: "Work link" },
-];
+/*
+ * Only what the server enforces. "Billable flag" and "Work link" were offered
+ * here and checked nowhere — ticking either saved, showed a tick on reload, and
+ * changed nothing about what anyone could log. `required-fields.test.ts` reads
+ * the backend's own `if`s so a third inert option cannot appear.
+ */
+const REQUIRED_FIELD_OPTIONS = CREATE_REQUIRED_FIELDS.map((key) => ({
+  key,
+  label: requiredFieldLabel(key),
+}));
 
 interface GeneralSettingsFormFieldsProps {
   form: UseFormReturn<GeneralSettingsFormValues>;
   canManage: boolean;
   isPending: boolean;
+  /**
+   * The pending changes the server will refuse without a reason, derived by the
+   * form from the same diff its save sends.
+   */
+  pendingMaterial: ReturnType<typeof materialChangesIn>;
 }
 
 export function GeneralSettingsFormFields({
   form,
   canManage,
   isPending,
+  pendingMaterial,
 }: GeneralSettingsFormFieldsProps) {
   const { control, register, formState: { isDirty, errors } } = form;
   const allowBackdated = useWatch({ control, name: "allowBackdatedEntries" });
@@ -379,6 +394,35 @@ export function GeneralSettingsFormFields({
           </div>
         </CardContent>
       </Card>
+
+      {canManage && pendingMaterial.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3 pt-4 px-5">
+            <CardTitle className="text-sm font-medium">Why this change?</CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pb-4 space-y-2">
+            <p className="text-dense text-muted-foreground">
+              You are changing {describeMaterialChanges(pendingMaterial)}. These
+              settings decide how past timesheets are read, so the reason is kept
+              with the change and shown to whoever asks later why a period was
+              treated the way it was.
+            </p>
+            <Textarea
+              {...register("changeReason")}
+              rows={3}
+              maxLength={500}
+              placeholder="e.g. Finance asked for a 5-day grace period from October."
+              aria-label="Reason for this change"
+              aria-invalid={errors.changeReason ? true : undefined}
+            />
+            {errors.changeReason && (
+              <p role="alert" className="text-dense text-destructive">
+                {errors.changeReason.message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {canManage && (
         <div className="flex justify-end pb-2">

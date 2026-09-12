@@ -7,8 +7,23 @@ function isBackendRoot(candidate: string): boolean {
   return fs.existsSync(path.join(candidate, MARKER));
 }
 
-function candidateRoots(): string[] {
+function pairedWorktreeRoots(): string[] {
   const roots: string[] = [];
+  const suffix = "-frontend";
+  let dir = __dirname;
+  for (let depth = 0; depth < 8; depth++) {
+    const name = path.basename(dir);
+    if (name.endsWith(suffix))
+      roots.push(path.join(path.dirname(dir), `${name.slice(0, -suffix.length)}-backend`));
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return roots;
+}
+
+function candidateRoots(): string[] {
+  const roots: string[] = pairedWorktreeRoots();
   let dir = __dirname;
   for (let depth = 0; depth < 8; depth++) {
     roots.push(path.join(dir, "backend"));

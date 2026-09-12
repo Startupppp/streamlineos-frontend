@@ -1,15 +1,24 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockResult, StockRow, LocationType } from "@/hooks/api/inventory/warehouses-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { WarehouseStockResult } from "@/types/inventory";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-export type { LocationType };
+export type LocationType =
+  | "ZONE"
+  | "AISLE"
+  | "RACK"
+  | "BIN"
+  | "RECEIVING"
+  | "SHIPPING"
+  | "QUARANTINE"
+  | "SCRAP"
+  | "TRANSIT"
+  | "RETURNS";
 
 export interface WarehouseLocation {
   id: number;
@@ -21,14 +30,15 @@ export interface WarehouseLocation {
   locationType: LocationType;
   isPickable: boolean;
   isReceivable: boolean;
+  isSellable: boolean;
+  /** `numeric(18,4)`, so a decimal string — never a float. */
   capacity: string | null;
   isActive: boolean;
+  isSpecial?: boolean;
   createdAt: string;
   updatedAt: string;
   children?: WarehouseLocation[];
 }
-
-export type { StockRow, StockResult };
 
 export interface Warehouse {
   id: number;
@@ -41,6 +51,7 @@ export interface Warehouse {
   country: string | null;
   isDefault: boolean;
   isActive: boolean;
+  zone: string | null;
   branchId: number | null;
   managerUserId: string | null;
   createdBy: string;
@@ -79,27 +90,32 @@ interface CreateLocationInput {
   isPickable?: boolean;
   isReceivable?: boolean;
   isSellable?: boolean;
-  capacity?: number;
+  /**
+   * A decimal string, because the endpoint validates it as one. Sent as a
+   * number it was rejected by the `.strict()` schema, so a location created
+   * with a capacity 400d while one created without it worked.
+   */
+  capacity?: string;
 }
 
-const listWarehousesContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.listWarehousesContract),
-);
-const getWarehouseContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.getWarehouseContract),
-);
-const listLocationsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.listLocationsContract),
-);
-const invWarehouseContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.invWarehouseContract),
-);
-const invLocationContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.invLocationContract),
-);
-const getWarehouseStockContract = lazyContract(() =>
-  import("@/hooks/api/inventory/warehouses-schema").then((m) => m.getWarehouseStockContract),
-);
+/**
+ * `updateLocationSchema` is `createLocationSchema.partial()`, so every field is
+ * optional and `isActive` joins them. `parentLocationId` is a positive integer
+ * with no null: a parent can be changed, never cleared.
+ */
+interface UpdateLocationInput {
+  warehouseId: number;
+  locationId: number;
+  name?: string;
+  code?: string;
+  locationType?: LocationType;
+  parentLocationId?: number;
+  isPickable?: boolean;
+  isReceivable?: boolean;
+  isSellable?: boolean;
+  capacity?: string;
+  isActive?: boolean;
+}
 
 export function useWarehouses(filters?: WarehouseListFilters) {
   const canView = useCan("inventory:warehouses:read");
@@ -116,8 +132,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     queryKey: hasActiveFilters
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<Warehouse>>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal, listWarehousesContract)).items,
+    queryFn: ({ signal }) => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -128,7 +143,7 @@ export function useWarehouse(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<Warehouse, Error>({
     queryKey: queryKeys.inventory.warehouse(warehouseId),
-    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal, getWarehouseContract),
+    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -139,7 +154,7 @@ export function useLocations(warehouseId: number) {
   return useQuery<WarehouseLocation[], Error>({
     queryKey: queryKeys.inventory.locations(warehouseId),
     queryFn: ({ signal }) =>
-      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal, listLocationsContract),
+      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -147,9 +162,9 @@ export function useLocations(warehouseId: number) {
 
 export function useCreateWarehouse() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<Warehouse, Error, CreateWarehouseInput>("inventory:warehouses:manage", {
+  return useAuthorizedIdempotentMutation<Warehouse, Error, CreateWarehouseInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "create"],
-    mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data, undefined, invWarehouseContract),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Warehouse>("/inventory/warehouses", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
@@ -158,14 +173,37 @@ export function useCreateWarehouse() {
 
 export function useCreateLocation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<WarehouseLocation, Error, CreateLocationInput>("inventory:warehouses:manage", {
+  return useAuthorizedIdempotentMutation<WarehouseLocation, Error, CreateLocationInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "locations", "create"],
-    mutationFn: ({ warehouseId, ...data }) =>
-      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data, undefined, invLocationContract),
+    mutationFn: ({ warehouseId, ...data }, idempotencyKey) =>
+      apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventory.locations(vars.warehouseId),
       });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
+    },
+  });
+}
+
+/**
+ * Correcting a location, and taking one out of service.
+ *
+ * Deactivating one the warehouse still holds stock in is refused by the server
+ * with a 409 — a location nothing can reach is not the same as an empty one —
+ * and that message reaches the operator through `getErrorMessage`.
+ */
+export function useUpdateLocation() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<WarehouseLocation, Error, UpdateLocationInput>("inventory:warehouses:manage", {
+    mutationKey: ["inventory", "locations", "update"],
+    mutationFn: ({ warehouseId, locationId, ...data }) =>
+      apiClient.patch<WarehouseLocation>(
+        `/inventory/warehouses/${warehouseId}/locations/${locationId}`,
+        data,
+      ),
+    onSuccess: (_, vars) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
     },
   });
@@ -181,7 +219,7 @@ export function useSetDefaultWarehouse() {
   >("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
-      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }, undefined, invWarehouseContract),
+      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
     onMutate: async ({ warehouseId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.inventory.warehouses() });
       const previous = qc.getQueryData<Warehouse[]>(queryKeys.inventory.warehouses());
@@ -207,14 +245,125 @@ export function useWarehouseStock(
   filters?: { page?: number; limit?: number },
 ) {
   const canView = useCan("inventory:stock:read");
-  return useQuery<StockResult, Error>({
+  return useQuery<WarehouseStockResult, Error>({
     queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<StockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
+      apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
-      }, signal, getWarehouseStockContract),
+      }, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 60_000,
+  });
+}
+
+export interface WarehouseAssignee {
+  userId: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+  grantedBy: string;
+  grantedByName: string | null;
+  grantedAt: string;
+}
+
+export interface AssignableWarehouseUser {
+  userId: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+}
+
+/** The exact backend key on every warehouse-assignment handler. */
+export const WAREHOUSE_ASSIGNMENT_PERMISSION = "inventory:warehouses:manage" as const;
+
+export interface WarehouseAssigneePage {
+  items: WarehouseAssignee[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function warehouseAssigneesKey(warehouseId: number, page: number, limit: number) {
+  return [...queryKeys.inventory.warehouse(warehouseId), "users", { page, limit }] as const;
+}
+
+function assignableWarehouseUsersKey(warehouseId: number, search: string) {
+  return [...queryKeys.inventory.warehouse(warehouseId), "assignable-users", search] as const;
+}
+
+export function useWarehouseAssignees(
+  warehouseId: number,
+  filters: { page: number; limit: number },
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
+  return useQuery<WarehouseAssigneePage, Error>({
+    queryKey: warehouseAssigneesKey(warehouseId, filters.page, filters.limit),
+    queryFn: ({ signal }) =>
+      apiClient.get<WarehouseAssigneePage>(`/inventory/warehouses/${warehouseId}/users`, {
+        page: filters.page,
+        limit: filters.limit,
+      }, signal),
+    enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAssignableWarehouseUsers(
+  warehouseId: number,
+  search: string,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
+  return useQuery<AssignableWarehouseUser[], Error>({
+    queryKey: assignableWarehouseUsersKey(warehouseId, search),
+    queryFn: ({ signal }) =>
+      apiClient.get<AssignableWarehouseUser[]>(
+        `/inventory/warehouses/${warehouseId}/assignable-users`,
+        search ? { q: search } : undefined, signal,
+      ),
+    enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * A grant widens what the grantee may see, so every warehouse-scoped list has to
+ * be refetched, not just this warehouse's assignment table.
+ */
+function useWarehouseAssignmentInvalidation(warehouseId: number) {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(warehouseId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+  };
+}
+
+export function useGrantWarehouseUser(warehouseId: number) {
+  const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
+  return useAuthorizedMutation<{ granted: boolean }, Error, { userId: string }>("inventory:warehouses:manage", {
+    mutationKey: ["inventory", "warehouses", "grant-user", warehouseId],
+    mutationFn: (data) =>
+      apiClient.post<{ granted: boolean }>(`/inventory/warehouses/${warehouseId}/users`, data),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRevokeWarehouseUser(warehouseId: number) {
+  const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
+  return useAuthorizedMutation<{ revoked: true }, Error, { userId: string }>("inventory:warehouses:manage", {
+    mutationKey: ["inventory", "warehouses", "revoke-user", warehouseId],
+    mutationFn: ({ userId }) =>
+      apiClient.delete<{ revoked: true }>(
+        `/inventory/warehouses/${warehouseId}/users/${encodeURIComponent(userId)}`,
+      ),
+    onSuccess: invalidate,
   });
 }

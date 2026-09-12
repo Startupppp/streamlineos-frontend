@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
-import { AppSheet, ErrorState } from "@/components/shared";
+import { AppSheet } from "@/components/shared/app-sheet";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,11 +20,20 @@ import {
   useClosePackage,
   useReopenPackage,
 } from "@/hooks/api/inventory/shipping";
+import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { buildDefaultLines, type EditableLine } from "./package-line-types";
 import { EditableLineRow } from "./package-editable-line-row";
 import { PackageLifecycleDialogs } from "./package-lifecycle-dialogs";
+
+function variantLabel(
+  variants: { id: number; name: string; productName: string; sku: string }[],
+  variantId: number,
+): string {
+  const variant = variants.find((v) => v.id === variantId);
+  return variant ? `${variant.productName} — ${variant.name}` : "Unknown item";
+}
 
 interface PackageDetailSheetProps {
   open: boolean;
@@ -33,6 +43,9 @@ interface PackageDetailSheetProps {
 
 export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDetailSheetProps) {
   const pkgQuery = usePackageDetail(packageId ?? 0);
+  // §5: show names, never raw ids. The API returns the variant id alone, so the
+  // name is resolved from the catalogue list at the display boundary.
+  const { data: variants = [] } = useProductVariants({ activeOnly: false });
   const updateLinesMutation = useUpdatePackageLines();
   const closeMutation = useClosePackage();
   const reopenMutation = useReopenPackage();
@@ -50,7 +63,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
   if (pkg && hydratedPackageId !== pkg.id) {
     setHydratedPackageId(pkg.id);
-    setEditableLines(buildDefaultLines(pkg.items));
+    setEditableLines(buildDefaultLines(pkg.lines));
   }
 
   function handleAddLine(): void {
@@ -72,8 +85,8 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
     const lines = editableLines
       .filter((l) => l.variantId.trim() && Number(l.qty) > 0)
       .map((l) => ({
-        variantId: Number(l.variantId),
-        qty: Number(l.qty),
+        productVariantId: Number(l.variantId),
+        quantity: String(Number(l.qty)),
         ...(l.lotId ? { lotId: Number(l.lotId) } : {}),
         ...(l.serialId ? { serialId: Number(l.serialId) } : {}),
       }));
@@ -96,7 +109,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
   function handleConfirmClose(): void {
     if (!packageId) return;
-    closeMutation.mutate(packageId, {
+    closeMutation.mutate({ packageId }, {
       onSuccess: () => {
         toast.success("Package closed");
         setCloseConfirmOpen(false);
@@ -222,23 +235,27 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                 </div>
               ) : (
                 <div className="divide-y divide-border rounded-lg border">
-                  {pkg.items && pkg.items.length > 0 ? (
-                    pkg.items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between px-3 py-2">
+                  {pkg.lines && pkg.lines.length > 0 ? (
+                    pkg.lines.map((line) => (
+                      <div key={line.id} className="flex items-center justify-between px-3 py-2">
                         <div>
-                          <span className="text-sm font-medium">{item.productVariant?.name ?? `Variant #${item.productVariantId}`}</span>
-                          {item.lotId && (
-                            <span className="ml-2 text-xs text-muted-foreground">Lot #{item.lotId}</span>
+                          <span className="text-sm font-medium">
+                            {variantLabel(variants, line.productVariantId)}
+                          </span>
+                          {line.lotId && (
+                            <span className="ml-2 text-xs text-muted-foreground">Lot #{line.lotId}</span>
                           )}
-                          {item.serialId && (
-                            <span className="ml-2 text-xs text-muted-foreground">S/N #{item.serialId}</span>
+                          {line.serialId && (
+                            <span className="ml-2 text-xs text-muted-foreground">S/N #{line.serialId}</span>
                           )}
                         </div>
-                        <span className="text-sm tabular-nums">{item.quantity}</span>
+                        <span className="font-mono text-sm tabular-nums">
+                          {Number(line.quantity)}
+                        </span>
                       </div>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-xs text-muted-foreground">No items</div>
+                    <div className="px-3 py-3 text-xs text-muted-foreground">No lines</div>
                   )}
                 </div>
               )}

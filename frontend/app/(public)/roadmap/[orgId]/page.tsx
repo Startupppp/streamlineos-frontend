@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
+import { randomId } from "@/lib/random-id";
 import {
   usePublicRoadmap,
   usePublicVote,
@@ -56,11 +57,11 @@ function useVoterKey() {
         setVoterKey(existing);
         return;
       }
-      const generated = crypto.randomUUID();
+      const generated = randomId();
       window.localStorage.setItem(VOTER_KEY_STORAGE, generated);
       setVoterKey(generated);
     } catch {
-      setVoterKey(crypto.randomUUID());
+      setVoterKey(randomId());
     }
   }, []);
 

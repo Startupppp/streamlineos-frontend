@@ -1,58 +1,70 @@
 "use client";
 
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useCan } from "@/hooks/api/access";
-import { DownloadIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface ReportShellProps {
   title: string;
   subtitle?: string;
+  backHref?: string;
   filters?: ReactNode;
-  exportPending?: boolean;
-  onExport?: () => void;
-  exportLabel?: string;
+  actions?: ReactNode;
+  canView: boolean;
+  permission: PermissionKey;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  onRetry: () => void;
+  skeletonColumns?: number;
+  fill?: boolean;
   children: ReactNode;
 }
 
 export function ReportShell({
   title,
   subtitle,
+  backHref,
   filters,
-  exportPending = false,
-  onExport,
-  exportLabel = "Export CSV",
+  actions,
+  canView,
+  permission,
+  isLoading,
+  isError,
+  error,
+  onRetry,
+  skeletonColumns = 4,
+  fill = false,
   children,
 }: ReportShellProps) {
-  const canExport = useCan("accounting:reports:export");
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
   return (
     <PageWrapper
-      backHref="/accounting/reports"
       title={title}
       subtitle={subtitle}
-      filters={filters}
-      actions={
-        canExport && onExport ? (
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            className="text-xs gap-1.5"
-            isPending={exportPending}
-            loadingText="Exporting…"
-            onClick={onExport}
-            {...hoverHandlers}
-          >
-            <DownloadIcon ref={iconRef} className="h-3.5 w-3.5" />
-            {exportLabel}
-          </LoadingButton>
-        ) : undefined
-      }
+      backHref={backHref}
+      backLabel="Back to accounting"
+      filters={canView ? filters : undefined}
+      actions={canView ? actions : undefined}
+      className={fill ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" : undefined}
+      noInternalScroll={fill}
     >
-      {children}
+      {!canView ? (
+        <NoPermissionState permission={permission} />
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this report"
+          description={getErrorMessage(error)}
+          onRetry={onRetry}
+        />
+      ) : isLoading ? (
+        <DataTableSkeleton rows={10} columns={skeletonColumns} />
+      ) : (
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3">{children}</div>
+      )}
     </PageWrapper>
   );
 }

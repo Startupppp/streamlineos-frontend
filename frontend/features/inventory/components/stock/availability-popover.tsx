@@ -4,8 +4,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useStockAvailability } from "@/hooks/api/inventory/stock";
+import {
+  useChannelPoolAvailability,
+  useVariantChannelPools,
+} from "@/hooks/api/inventory/channel-pools";
 import { cn } from "@/lib/utils";
-import type { StockAvailabilityByWarehouse } from "@/types/inventory";
+import type { StockAvailabilityByWarehouse } from "@/types/inventory-availability";
 
 interface AvailabilityPopoverProps {
   open: boolean;
@@ -56,6 +60,12 @@ const WAREHOUSE_COLUMNS: DataTableColumn<StockAvailabilityByWarehouse>[] = [
 
 export function AvailabilityPopover({ open, onOpenChange, variantId, variantName }: AvailabilityPopoverProps) {
   const { data, isLoading } = useStockAvailability(variantId ?? 0);
+  // NEO-1. On-hand and ATP already differed by a number nobody on this screen
+  // could explain once a channel held stock back; these two answer "who has it".
+  const { data: pools } = useVariantChannelPools(variantId);
+  const { data: channelAtp } = useChannelPoolAvailability(variantId);
+  const reservedToChannels = channelAtp?.reservedByOthers ?? "0";
+  const hasChannelClaims = (pools?.length ?? 0) > 0;
 
   const title = variantName ? `Availability — ${variantName}` : "Stock Availability";
 
@@ -77,8 +87,43 @@ export function AvailabilityPopover({ open, onOpenChange, variantId, variantName
             <MetricRow label="Incoming (Open POs)" value={data.incoming} />
             <MetricRow label="Outgoing (Open SOs)" value={data.outgoing} />
             <MetricRow label="Available (ATP)" value={data.available} highlight />
+            {hasChannelClaims && (
+              <>
+                <MetricRow label="Reserved to sales channels" value={reservedToChannels} />
+                <MetricRow
+                  label="Available to promise here"
+                  value={channelAtp?.netAvailable ?? data.available}
+                  highlight
+                />
+              </>
+            )}
             <MetricRow label="Forecasted" value={data.forecasted} />
           </div>
+
+          {hasChannelClaims && (
+            <div>
+              <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                By Sales Channel
+              </p>
+              <div className="rounded-lg border border-border px-4 py-2">
+                {(pools ?? []).map((pool) => (
+                  <MetricRow
+                    key={pool.id}
+                    label={
+                      pool.warehouseId === null
+                        ? `${pool.channelName} (org-wide)`
+                        : `${pool.channelName} (warehouse #${pool.warehouseId})`
+                    }
+                    value={pool.reservedQty}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                A channel&apos;s reserved stock is held back from every other channel, including
+                direct sales. On-hand is unchanged — nothing here has moved.
+              </p>
+            </div>
+          )}
 
           {data.warehouseBreakdown.length > 0 && (
             <div>

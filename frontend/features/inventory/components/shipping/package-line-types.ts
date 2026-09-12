@@ -1,3 +1,5 @@
+import type { PackageLine } from "@/hooks/api/inventory/shipping";
+
 export interface EditableLine {
   variantId: string;
   qty: string;
@@ -5,11 +7,12 @@ export interface EditableLine {
   serialId: string;
 }
 
-export function buildDefaultLines(items?: { productVariantId: number; quantity: string; lotId: number | null; serialId: number | null }[]): EditableLine[] {
-  if (!items || items.length === 0) return [];
-  return items.map((l) => ({
+export function buildDefaultLines(lines?: PackageLine[]): EditableLine[] {
+  if (!lines || lines.length === 0) return [];
+  return lines.map((l) => ({
     variantId: String(l.productVariantId),
-    qty: l.quantity,
+    // A decimal string at scale 4 on the wire; the input edits the plain number.
+    qty: String(Number(l.quantity)),
     lotId: l.lotId ? String(l.lotId) : "",
     serialId: l.serialId ? String(l.serialId) : "",
   }));

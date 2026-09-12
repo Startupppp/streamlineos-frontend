@@ -5,205 +5,153 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type {
+  CostingVariants,
+  InventoryPeriod,
+  ValuationGrain,
+  ValuationReport,
+} from "@/hooks/api/inventory/valuation-schema";
 
-function toNumber(value: string | number | null | undefined): number {
-  if (value == null) return 0;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
+export type {
+  ValuationReport,
+  ValuationRow,
+  CostingVariant,
+} from "@/hooks/api/inventory/valuation-schema";
 
-export interface ValuationRow {
-  variantId: number;
-  variantSku: string;
-  productName: string;
+const valuationReportContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationReportContract),
+);
+const costingVariantsContract = lazyContract(() =>
+  import("@/hooks/api/inventory/valuation-schema").then((m) => m.costingVariantsContract),
+);
+
+/**
+ * Every quantity and money figure on the valuation evidence endpoints leaves
+ * Postgres as `text` and stays a string here. They are `numeric(18,4)` in the
+ * organisation's own currency — not minor units — so neither `/100` nor
+ * `parseFloat` belongs anywhere near them.
+ */
+export interface ValuationLayer {
+  layerId: number;
+  createdAt: string;
+  stockTransactionId: number | null;
   costingMethod: string;
-  onHandQty: number;
-  unitCostBasis: number;
-  totalValue: number;
-  warehouseId: number | null;
+  sourceType: string | null;
+  sourceId: string | null;
+  locationId: number | null;
+  locationName: string | null;
   warehouseName: string | null;
-}
-
-interface ValuationSummary {
-  totalValue: number;
-  byMethod: { method: string; value: number }[];
-  rows: ValuationRow[];
-}
-
-interface RawValuationItem {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productId: number;
-  productName: string;
-  costingMethod: string | null;
-  onHand: string;
-  averageCost: string | null;
-  totalValue: string;
-}
-
-interface RawValuationEnvelope {
-  items: RawValuationItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-  totalValue?: string;
-}
-
-function mapValuationRow(raw: RawValuationItem): ValuationRow {
-  const onHandQty = toNumber(raw.onHand);
-  const unitCostBasis = toNumber(raw.averageCost);
-  return {
-    variantId: raw.productVariantId,
-    variantSku: raw.variantSku,
-    productName: raw.productName,
-    costingMethod: raw.costingMethod ?? "UNKNOWN",
-    onHandQty,
-    unitCostBasis,
-    totalValue: toNumber(raw.totalValue),
-    warehouseId: null,
-    warehouseName: null,
-  };
-}
-
-interface RawValuationLayer {
-  id: number;
-  productVariantId: number;
-  costingMethod: string;
+  lotId: number | null;
+  lotNumber: string | null;
   quantity: string;
   unitCost: string;
   totalValue: string;
   remainingQuantity: string;
-  sourceType: string | null;
-  sourceId: string | null;
-  createdAt: string;
-}
-
-interface ValuationLayer {
-  id: number;
-  qty: number;
-  unitCost: number;
-  remainingQty: number;
-  receivedAt: string;
-  referenceType: string | null;
-  referenceId: string | null;
-}
-
-function mapValuationLayer(raw: RawValuationLayer): ValuationLayer {
-  return {
-    id: raw.id,
-    qty: toNumber(raw.quantity),
-    unitCost: toNumber(raw.unitCost),
-    remainingQty: toNumber(raw.remainingQuantity),
-    receivedAt: raw.createdAt,
-    referenceType: raw.sourceType,
-    referenceId: raw.sourceId,
-  };
-}
-
-interface RawValuationLayersEnvelope {
-  items: RawValuationLayer[];
-  total: number;
-  page: number;
-  totalPages: number;
+  remainingValue: string;
+  consumedQuantity: string;
+  consumptionCount: number;
+  remainingQuantityAsAt: string;
+  remainingValueAsAt: string;
 }
 
 interface ValuationLayersResponse {
+  grain: ValuationGrain;
   items: ValuationLayer[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-interface RawVariantForCosting {
-  id: number;
-  productId: number;
-  productName: string;
-  name: string;
-  sku: string;
-  costPrice?: string;
-  isActive: boolean;
+/**
+ * `installed: false` is the ordinary answer, not a failure: periods live in the
+ * accounting module and an organisation without it has none.
+ */
+interface ValuationPeriodsResponse {
+  installed: boolean;
+  items: InventoryPeriod[];
 }
 
-interface RawVariantsEnvelope {
-  items: RawVariantForCosting[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-export interface CostingProductRow {
-  variantId: number;
+/** One layer an issue drew from: how much it took, and what that draw cost. */
+export interface ValuationConsumption {
+  consumptionId: number;
+  createdAt: string;
+  stockTransactionId: number;
+  valuationLayerId: number;
+  quantity: string;
+  unitCost: string;
+  totalCost: string;
+  layerUnitCost: string;
+  layerCreatedAt: string;
+  layerSourceType: string | null;
+  layerSourceId: string | null;
+  costingMethod: string;
+  productVariantId: number;
+  transactionType: string;
+  referenceType: string | null;
+  referenceId: string | null;
+  postingDate: string;
   variantSku: string;
   productName: string;
-  costingMethod: string;
-  standardCost: number | null;
-  averageCost: number | null;
-  onHandQty: number;
-  isLocked: boolean;
+  locationName: string | null;
 }
 
-interface CostingListResponse {
-  items: CostingProductRow[];
+interface ValuationConsumptionsResponse {
+  window: { fromDate: string; toDate: string; period: InventoryPeriod | null };
+  items: ValuationConsumption[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-function mapCostingRow(raw: RawVariantForCosting): CostingProductRow {
-  return {
-    variantId: raw.id,
-    variantSku: raw.sku,
-    productName: raw.productName,
-    costingMethod: "WEIGHTED_AVG",
-    standardCost: null,
-    averageCost: raw.costPrice != null ? toNumber(raw.costPrice) : null,
-    onHandQty: 0,
-    isLocked: false,
-  };
+export interface ValuationConsumptionsParams {
+  [key: string]: unknown;
+  variantId?: number;
+  layerId?: number;
+  stockTransactionId?: number;
+  periodId?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 interface ValuationReportParams {
   [key: string]: unknown;
   warehouseId?: number;
   categoryId?: number;
+  asOfDate?: string;
+  periodId?: string;
+  page?: number;
+  limit?: number;
 }
 
 interface CostingParams {
   [key: string]: unknown;
-  search?: string;
+  activeOnly?: boolean;
   page?: number;
+  limit?: number;
 }
-
-const valuationSummaryContract = lazyContract(() =>
-  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationSummaryContract),
-);
-const valuationLayersContract = lazyContract(() =>
-  import("@/hooks/api/inventory/valuation-schema").then((m) => m.valuationLayersContract),
-);
-const listVariantsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.listVariantsContract),
-);
 
 export function useValuationReport(params?: ValuationReportParams) {
   const canView = useCan("inventory:valuation:read");
-  return useQuery<ValuationSummary, Error>({
+  return useQuery<ValuationReport, Error>({
     queryKey: queryKeys.inventory.valuationReport(params),
-    queryFn: async ({ signal }) => {
-      const envelope = await apiClient.get<RawValuationEnvelope>("/inventory/reports/valuation", {
-        ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
-        ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
-      }, signal, valuationSummaryContract);
-      const rows = (envelope.items ?? []).map(mapValuationRow);
-      const byMethodMap = new Map<string, number>();
-      for (const row of rows)
-        byMethodMap.set(row.costingMethod, (byMethodMap.get(row.costingMethod) ?? 0) + row.totalValue);
-      const byMethod = Array.from(byMethodMap.entries()).map(([method, value]) => ({ method, value }));
-      const totalValue = envelope.totalValue != null ? toNumber(envelope.totalValue) : rows.reduce((sum, r) => sum + r.totalValue, 0);
-      return { totalValue, byMethod, rows };
-    },
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/inventory/reports/valuation",
+        {
+          warehouseId: params?.warehouseId,
+          categoryId: params?.categoryId,
+          asOfDate: params?.asOfDate,
+          periodId: params?.periodId,
+          page: params?.page,
+          limit: params?.limit,
+        },
+        signal,
+        valuationReportContract,
+      ),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }
@@ -212,39 +160,81 @@ export function useValuationLayers(variantId: number, page?: number) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationLayersResponse, Error>({
     queryKey: queryKeys.inventory.valuationLayers(variantId, page),
-    queryFn: async ({ signal }) => {
-      const envelope = await apiClient.get<RawValuationLayersEnvelope>("/inventory/valuation/layers", {
+    queryFn: ({ signal }) =>
+      apiClient.get<ValuationLayersResponse>("/inventory/valuation/layers", {
         variantId: String(variantId),
         ...(page ? { page: String(page) } : {}),
-      }, signal, valuationLayersContract);
-      return {
-        items: envelope.items.map(mapValuationLayer),
-        total: envelope.total,
-        page: envelope.page,
-        totalPages: envelope.totalPages,
-      };
-    },
+      }, signal),
     enabled: canView && variantId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
-export function useCostingProducts(params?: CostingParams) {
+/**
+ * The accounting periods a valuation figure can be quoted against.
+ *
+ * Catalog-tier staleness: a period list changes when the books are closed, which
+ * is monthly at most. `installed: false` means the accounting module is absent —
+ * the caller renders no period filter rather than an empty one.
+ */
+export function useValuationPeriods() {
   const canView = useCan("inventory:valuation:read");
-  return useQuery<CostingListResponse, Error>({
-    queryKey: queryKeys.inventory.costingProducts(params),
-    queryFn: async ({ signal }) => {
-      const envelope = await apiClient.get<RawVariantsEnvelope>("/inventory/products/variants", {
-        ...(params?.search ? { search: params.search } : {}),
+  return useQuery<ValuationPeriodsResponse, Error>({
+    queryKey: queryKeys.inventory.valuationPeriods(),
+    queryFn: ({ signal }) => apiClient.get<ValuationPeriodsResponse>("/inventory/valuation/periods", undefined, signal),
+    staleTime: 30 * 60_000,
+    enabled: canView,
+  });
+}
+
+/**
+ * Which layer each issue drew from, and at what cost — the rows a cost of goods
+ * sold figure is reproducible from. Defaults to the current month server-side
+ * when no window is named.
+ */
+export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
+  const canView = useCan("inventory:valuation:read");
+  return useQuery<ValuationConsumptionsResponse, Error>({
+    queryKey: queryKeys.inventory.valuationConsumptions(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ValuationConsumptionsResponse>("/inventory/valuation/consumptions", {
+        ...(params?.variantId ? { variantId: String(params.variantId) } : {}),
+        ...(params?.layerId ? { layerId: String(params.layerId) } : {}),
+        ...(params?.stockTransactionId
+          ? { stockTransactionId: String(params.stockTransactionId) }
+          : {}),
+        ...(params?.periodId ? { periodId: String(params.periodId) } : {}),
+        ...(params?.fromDate ? { fromDate: params.fromDate } : {}),
+        ...(params?.toDate ? { toDate: params.toDate } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }, signal, listVariantsContract);
-      return {
-        items: envelope.items.map(mapCostingRow),
-        total: envelope.total,
-        page: envelope.page,
-        totalPages: envelope.totalPages,
-      };
-    },
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+      }, signal),
+    staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
+    enabled: canView,
+  });
+}
+
+/**
+ * The costing table reads the variant list, so the gate is that endpoint's own key.
+ * Gating it on `inventory:valuation:read` sent a 403 for anyone holding valuation
+ * without products; the page-level finance gate lives in `CostingClient`.
+ */
+export function useCostingProducts(params?: CostingParams) {
+  const canView = useCan("inventory:products:read");
+  return useQuery<CostingVariants, Error>({
+    queryKey: queryKeys.inventory.costingProducts(params),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/inventory/products/variants",
+        {
+          activeOnly: params?.activeOnly === undefined ? undefined : String(params.activeOnly),
+          page: params?.page,
+          limit: params?.limit,
+        },
+        signal,
+        costingVariantsContract,
+      ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

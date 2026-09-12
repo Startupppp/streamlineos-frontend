@@ -18,7 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -148,6 +149,7 @@ function buildColumns(
 }
 
 export function ReplenishmentRulesClient() {
+  const canView = useCan("inventory:replenishment:read");
   const [page, setPage] = useState(1);
   const { data, isLoading, error, refetch } = useReplenishmentRules({ page });
   const deactivate = useDeactivateReplenishmentRule();
@@ -201,6 +203,18 @@ export function ReplenishmentRulesClient() {
   }
 
   const columns = buildColumns(handleEditRule, handleDeactivatePrompt);
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Replenishment Rules">
+        <NoPermissionState permission="inventory:replenishment:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

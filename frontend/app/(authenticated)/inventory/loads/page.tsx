@@ -9,8 +9,9 @@ import { EmptyTransferIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState, AppSheet } from "@/components/shared";
+import { ErrorState, AppSheet, NoPermissionState } from "@/components/shared";
 import { LoadCreateSheet } from "@/features/inventory/components/shipping/load-create-sheet";
 import { LoadDetailPanel } from "@/features/inventory/components/shipping/load-detail-panel";
 import {
@@ -22,11 +23,13 @@ import {
   type Load,
 } from "@/hooks/api/inventory/shipping";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import { formatShortDate } from "@/lib/date-utils";
 
 const PAGE_LIMIT = 20;
 
 function LoadsPageInner() {
+  const canView = useCan("inventory:loads:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -73,9 +76,9 @@ function LoadsPageInner() {
 
   const columns: DataTableColumn<Load>[] = [
     {
-      key: "id",
+      key: "loadNumber",
       header: "Load",
-      cell: (l) => l.loadNumber ?? (formatShortDate(l.createdAt) || "—"),
+      cell: (l) => <span className="font-mono font-semibold text-foreground">{l.loadNumber}</span>,
     },
     {
       key: "status",
@@ -90,11 +93,18 @@ function LoadsPageInner() {
       ),
     },
     {
-      key: "packages",
-      header: "Packages",
+      key: "destination",
+      header: "Destination",
       cell: (l) => (
-        <span className="tabular-nums">{l.packages?.length ?? 0}</span>
+        <TruncatedText text={l.destination ?? "—"} className="text-muted-foreground" />
       ),
+    },
+    {
+      key: "vehicleRef",
+      header: "Vehicle",
+      headerClassName: "hidden md:table-cell",
+      className: "text-muted-foreground hidden md:table-cell",
+      cell: (l) => <>{l.vehicleRef ?? "—"}</>,
     },
     {
       key: "createdAt",
@@ -106,6 +116,16 @@ function LoadsPageInner() {
   ];
 
   const selectedLoad = selectedId !== null ? items.find((l) => l.id === selectedId) : undefined;
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Loads"
+        subtitle="Group shipments into transport loads"
+      >
+        <NoPermissionState permission="inventory:loads:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>
@@ -158,7 +178,7 @@ function LoadsPageInner() {
       <AppSheet
         open={detailOpen}
         onOpenChange={handleDetailClose}
-        title={selectedLoad?.loadNumber ?? (selectedId ? `Load #${selectedId}` : "Load Details")}
+        title={selectedLoad ? `Load ${selectedLoad.loadNumber}` : "Load Details"}
         description={selectedLoad ? `Status: ${LOAD_STATUS_LABEL[selectedLoad.status]}` : undefined}
       >
         {selectedId !== null && (

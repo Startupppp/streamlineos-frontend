@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BACKEND_ROOT, backendAvailable, backendUnreachableReason } from "./check-repo-paths.mjs";
+import { BACKEND_ROOT, backendRootWasOverridden, backendUnreachableReason } from "./check-repo-paths.mjs";
+import { resolveBackendRoot } from "./lib/backend-root.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const REPO_ROOT = resolve(FRONTEND_ROOT, "..");
@@ -20,16 +21,30 @@ const FRONTEND_CONTRACT = join(FRONTEND_ROOT, "contracts", "openapi.json");
  * pointed at a nonexistent directory this gate still exited 0, comparing against
  * a checkout the operator had explicitly overridden away from.
  *
- * The shared resolver in check-repo-paths.mjs is now the first and authoritative
- * source, so a wrong override fails loudly rather than resolving elsewhere. The
- * legacy env var and the monorepo layout stay as fallbacks so an existing
- * invocation keeps working, and the resolved path is printed either way.
+ * An explicit STREAMLINE_BACKEND_ROOT, read by the shared resolver in
+ * check-repo-paths.mjs, is the first and authoritative source, so a wrong override
+ * fails loudly rather than resolving elsewhere. The legacy env var and the monorepo
+ * layout stay as fallbacks so an existing invocation keeps working, and the
+ * resolved path is printed either way.
+ *
+ * Without an override, the worktree's OWN pair comes before the shared resolver's
+ * upward search. `resolveBackendRoot` (scripts/lib/backend-root.mjs) maps
+ * `ts-wt-frontend` → `ts-wt-backend`; the upward search looks for a sibling named
+ * `backend` or `streamlineos-backend`, and from a worktree it finds
+ * `streamlineos-backend`, which holds somebody else's branch — comparing against
+ * that would report the difference between two branches as a stale vendor. On the
+ * main checkout both rules name the same directory, so nothing changes there.
  */
+function backendRootsInOrder() {
+  if (backendRootWasOverridden) return [BACKEND_ROOT];
+  return [resolveBackendRoot(FRONTEND_ROOT), BACKEND_ROOT];
+}
+
 const BACKEND_CANDIDATES = [
-  backendAvailable ? join(BACKEND_ROOT, "openapi.json") : null,
+  ...backendRootsInOrder().map((root) => (root === null ? null : join(root, "openapi.json"))),
   process.env.STREAMLINEOS_BACKEND_ROOT ? join(process.env.STREAMLINEOS_BACKEND_ROOT, "openapi.json") : null,
   join(REPO_ROOT, "backend", "openapi.json"),
-].filter((p) => p !== null);
+].filter((p, i, all) => p !== null && all.indexOf(p) === i);
 
 export function resolveBackendArtifact(candidates, exists) {
   return candidates.find((p) => exists(p)) ?? null;
@@ -136,7 +151,13 @@ if (BACKEND_ARTIFACT === null) {
   console.error("INCONCLUSIVE — check-contract-vendor: the backend's openapi.json could not be located,");
   console.error("   so the vendored copy was NOT compared against anything. Looked in:");
   for (const c of BACKEND_CANDIDATES) console.error(`     ${c}`);
-  console.error(`   ${backendUnreachableReason()}`);
+  const foundRoot = backendRootsInOrder().find((root) => root !== null) ?? null;
+  if (foundRoot === null) {
+    console.error(`   ${backendUnreachableReason()}`);
+  } else {
+    console.error(`   A backend checkout was found at ${foundRoot}, but it has no generated openapi.json.`);
+    console.error("   Generate the artifact there first:  pnpm openapi:generate");
+  }
   console.error("   Set STREAMLINE_BACKEND_ROOT to point at the backend checkout, or");
   console.error("   in a frontend-only CI checkout rely on check:contract-drift, which is blocking");
   console.error("   and reads the vendored copy directly.");

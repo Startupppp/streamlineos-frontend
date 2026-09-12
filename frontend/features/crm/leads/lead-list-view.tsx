@@ -27,7 +27,7 @@ const LeadRecordTable = dynamic(
 );
 
 const BulkActionsBar = dynamic(
-  () => import("./lead-actions").then((m) => ({ default: m.BulkActionsBar })),
+  () => import("./lead-bulk-actions-bar").then((m) => ({ default: m.BulkActionsBar })),
   { ssr: false },
 );
 

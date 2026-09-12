@@ -22,6 +22,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import { ShipmentCreateDialog } from "@/features/inventory/components/shipping/shipment-create-dialog";
 import {
@@ -30,10 +31,12 @@ import {
   type ShipmentStatus,
 } from "@/features/inventory/lib";
 import { useShipments, type Shipment } from "@/hooks/api/inventory/shipping";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
 function ShipmentsPageInner() {
+  const canView = useCan("inventory:shipments:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -127,8 +130,8 @@ function ShipmentsPageInner() {
       key: "carrier",
       header: "Carrier",
       cell: (s) =>
-        s.carrier?.name ? (
-          <span className="text-sm">{s.carrier.name}</span>
+        s.carrierName ? (
+          <span className="text-sm">{s.carrierName}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
@@ -170,6 +173,16 @@ function ShipmentsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Shipments"
+        subtitle="Track and manage outbound shipments"
+      >
+        <NoPermissionState permission="inventory:shipments:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

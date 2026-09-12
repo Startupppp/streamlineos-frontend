@@ -1,49 +1,108 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  GrnDiscrepancyReason,
+  GrnQuality,
+  GrnStatus,
+} from "@/features/inventory/lib/inventory-status";
 
-interface GrnLine {
+export interface GrnLine {
   id: number;
-  grnId: number;
   poLineId: number;
+  /** Base UOM, which is the only unit the stock ledger holds. */
   quantityReceived: string;
-  uomId: number | null;
+  /** What the counter typed, in `uomId`, and the factor that was applied. */
   quantityEntered: string | null;
-  status: string;
+  uomId: number | null;
+  uomFactor: string | null;
+  /** What the purchase-order line still owed when the receipt posted. */
+  quantityExpected: string | null;
+  discrepancyReason: GrnDiscrepancyReason | null;
+  qualityStatus: GrnQuality;
   rejectionReason: string | null;
+  lotNumber: string | null;
+  expiryDate: string | null;
+  manufactureDate: string | null;
+  serials: Array<{ id: number; serialNumber: string }>;
+}
+
+/**
+ * The vendor and the order arrive nested, because that is what the endpoint
+ * returns. The flat `poNumber` / `vendorName` this used to declare existed on
+ * no response the API has ever sent, so the receipts table rendered a dash in
+ * both columns for every row.
+ */
+export interface GrnPurchaseOrderRef {
+  id: number;
+  poNumber: string;
+  vendorId: number;
+  status?: string;
+  vendor: { id: number; name: string } | null;
 }
 
 export interface GrnSummary {
   id: number;
-  orgId: string;
   grnNumber: string;
   poId: number;
+  status: GrnStatus;
   receivedDate: string;
   locationId: number | null;
-  status: string;
   notes: string | null;
+  postedAt: string | null;
   createdBy: string;
   createdAt: string;
-  po?: { id: number; poNumber: string };
+  purchaseOrder: GrnPurchaseOrderRef | null;
+  creator: { id: string; name: string | null } | null;
 }
 
-interface GrnDetail extends GrnSummary {
+export interface GrnDetail extends GrnSummary {
   lines: GrnLine[];
+  poster: { id: string; name: string | null } | null;
 }
 
+/**
+ * `limit`, not `pageSize`.
+ *
+ * The backend's `listGrnSchema` is `.strict()` and names the field `limit`, so
+ * `pageSize` was not ignored — it was refused, and every consumer of this hook
+ * rendered "Something went wrong · Unrecognized key: \"pageSize\"" instead of a
+ * list. The Receipts workbench could never show a receipt, the putaway
+ * workbench's "Raise a putaway" dialog could never offer a posted delivery to
+ * put away, and the landed-cost sheet could never offer a receipt to cost.
+ *
+ * Caught by `e2e/inventory-receive.spec.ts`, which posts a receipt through the
+ * UI and then looks for it on the screen that lists receipts. Nothing else
+ * could have caught it: the paginated shape typechecks either way, and no unit
+ * test asks the real endpoint what it accepts.
+ */
 type GrnFilters = {
   poId?: number;
   vendorId?: number;
+  status?: GrnStatus;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
-  pageSize?: number;
+  /** Capped at 100 by the server, which refuses anything larger. */
+  limit?: number;
 };
+
+/**
+ * B1. `goodsReceipts()` yields `[..., "goodsReceipts", undefined]`, and
+ * TanStack's partial match walks the given key's own indexes — so index 3
+ * compares `undefined` against a stored filter object and never matches. Every
+ * no-argument invalidation of this list has therefore been a silent no-op.
+ *
+ * Derived from the factory rather than hand-typed, because the fix belongs in
+ * `lib/query-keys/inventory.ts` as a `goodsReceiptsList` prefix beside
+ * `productsList`, and that file is owned elsewhere this cycle.
+ */
+const goodsReceiptsPrefix = queryKeys.inventory.goodsReceiptsList;
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -51,28 +110,6 @@ interface PaginatedResponse<T> {
   page: number;
   totalPages: number;
 }
-
-const listGrnsOperationsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.listGrnsOperationsContract),
-);
-const getGrnOperationsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.getGrnOperationsContract),
-);
-const listVendorReturnsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.listVendorReturnsContract),
-);
-const getVendorReturnContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.getVendorReturnContract),
-);
-const listCustomerReturnsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.listCustomerReturnsContract),
-);
-const getCustomerReturnContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.getCustomerReturnContract),
-);
-const reverseGrnResponseContract = lazyContract(() =>
-  import("@/hooks/api/inventory/operations-schema").then((m) => m.reverseGrnResponseContract),
-);
 
 export function useGoodsReceipts(filters?: GrnFilters) {
   const canView = useCan("inventory:purchase-orders:read");
@@ -82,11 +119,12 @@ export function useGoodsReceipts(filters?: GrnFilters) {
       apiClient.get<PaginatedResponse<GrnSummary>>("/inventory/goods-receipts", {
         ...(filters?.poId !== undefined ? { poId: String(filters.poId) } : {}),
         ...(filters?.vendorId !== undefined ? { vendorId: String(filters.vendorId) } : {}),
+        ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.dateFrom !== undefined ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo !== undefined ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
-        ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal, listGrnsOperationsContract),
+        ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -96,9 +134,122 @@ export function useGoodsReceipt(grnId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<GrnDetail, Error>({
     queryKey: queryKeys.inventory.goodsReceipt(grnId),
-    queryFn: ({ signal }) => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`, undefined, signal, getGrnOperationsContract),
+    queryFn: ({ signal }) => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && grnId > 0,
+  });
+}
+
+export interface GrnDraftLineInput {
+  poLineId: number;
+  /** In `uomId` when one is given, otherwise the product's base unit. */
+  quantityReceived: string;
+  uomId?: number;
+  discrepancyReason?: GrnDiscrepancyReason;
+  qualityStatus: GrnQuality;
+  rejectionReason?: string;
+  lotNumber?: string;
+  expiryDate?: string;
+  manufactureDate?: string;
+  serialNumbers?: string[];
+}
+
+export interface CreateGrnDraftInput {
+  poId: number;
+  receivedDate: string;
+  locationId?: number;
+  notes?: string;
+  lines: GrnDraftLineInput[];
+}
+
+export interface UpdateGrnDraftInput {
+  grnId: number;
+  receivedDate?: string;
+  locationId?: number;
+  notes?: string;
+  lines?: GrnDraftLineInput[];
+}
+
+/**
+ * Every receipt mutation moves the same two surfaces — the list and the one
+ * document — and posting moves stock as well. Written once so a new lifecycle
+ * action cannot forget one of them.
+ */
+function useReceiptInvalidation() {
+  const qc = useQueryClient();
+  return (grnId: number, movedStock: boolean) => {
+    void qc.invalidateQueries({ queryKey: goodsReceiptsPrefix });
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipt(grnId) });
+    if (!movedStock) return;
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+  };
+}
+
+export function useCreateGrnDraft() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<GrnDetail, Error, CreateGrnDraftInput>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "createDraft"],
+    mutationFn: (body, idempotencyKey) =>
+      apiClient.post<GrnDetail>("/inventory/goods-receipts", body, { headers: { "Idempotency-Key": idempotencyKey } }),
+    onSuccess: (data) => invalidate(data.id, false),
+  });
+}
+
+export function useUpdateGrnDraft() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedMutation<GrnDetail, Error, UpdateGrnDraftInput>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "updateDraft"],
+    mutationFn: ({ grnId, ...body }) =>
+      apiClient.patch<GrnDetail>(`/inventory/goods-receipts/${grnId}`, body),
+    onSuccess: (data) => invalidate(data.id, false),
+  });
+}
+
+/** DRAFT -> COUNTING, and back from quality review when a count is disputed. */
+export function useStartGrnCount() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number }>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "count"],
+    mutationFn: ({ grnId }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/count`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+    onSuccess: (data) => invalidate(data.id, false),
+  });
+}
+
+export function useSubmitGrnForQuality() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number }>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "qualityReview"],
+    mutationFn: ({ grnId }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/quality-review`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+    onSuccess: (data) => invalidate(data.id, false),
+  });
+}
+
+/** The only action here that writes to the stock ledger. */
+export function usePostGrn() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number }>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "post"],
+    mutationFn: ({ grnId }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(
+        `/inventory/goods-receipts/${grnId}/post`,
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
+    onSuccess: (data) => invalidate(data.id, true),
+  });
+}
+
+export function useCancelGrn() {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number; reason?: string }>("inventory:purchase-orders:receive", {
+    mutationKey: ["inventory", "goodsReceipts", "cancel"],
+    mutationFn: ({ grnId, reason }, idempotencyKey) =>
+      apiClient.post<GrnDetail>(`/inventory/goods-receipts/${grnId}/cancel`, {
+        ...(reason ? { reason } : {}),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
+    onSuccess: (data) => invalidate(data.id, false),
   });
 }
 
@@ -108,230 +259,14 @@ interface ReverseGrnInput {
 }
 
 export function useReverseGrn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<{ reversed: true; grnId: number; transactionCount: number }, Error, ReverseGrnInput>("inventory:purchase-orders:receive", {
+  const invalidate = useReceiptInvalidation();
+  return useAuthorizedIdempotentMutation<void, Error, ReverseGrnInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "goodsReceipts", "reverse"],
-    mutationFn: ({ grnId, reason }) =>
-      apiClient.post<{ reversed: true; grnId: number; transactionCount: number }>(
+    mutationFn: ({ grnId, reason }, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/goods-receipts/${grnId}/reverse`,
-        { reason },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        reverseGrnResponseContract,
+        { reason }, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipts() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipt(variables.grnId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-    },
-  });
-}
-
-type VendorReturnReason = "DAMAGED" | "WRONG_ITEM" | "EXCESS" | "EXPIRED" | "QUALITY_REJECTED";
-export type VendorReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
-
-interface VendorReturnLine {
-  productVariantId: number;
-  locationId: number;
-  quantity: number;
-  reason: VendorReturnReason;
-  lotId?: number;
-  serialId?: number;
-  unitCost?: string;
-}
-
-export interface VendorReturnSummary {
-  id: number;
-  returnNumber: string;
-  vendorId: number;
-  poId: number | null;
-  status: VendorReturnStatus;
-  createdAt: string;
-  notes: string | null;
-}
-
-interface CreateVendorReturnInput {
-  vendorId: number;
-  poId?: number;
-  grnId?: number;
-  notes?: string;
-  lines: VendorReturnLine[];
-}
-
-type VendorReturnFilters = {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-};
-
-export function useVendorReturns(filters?: VendorReturnFilters) {
-  const canView = useCan("inventory:vendor-returns:manage");
-  return useQuery<PaginatedResponse<VendorReturnSummary>, Error>({
-    queryKey: queryKeys.inventory.vendorReturns(filters),
-    queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResponse<VendorReturnSummary>>("/inventory/vendor-returns", {
-        ...(filters?.status !== undefined ? { status: filters.status } : {}),
-        ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
-        ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal, listVendorReturnsContract),
-    staleTime: 2 * 60_000,
-    enabled: canView,
-  });
-}
-
-export function useCreateVendorReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<VendorReturnSummary, Error, CreateVendorReturnInput>("inventory:vendor-returns:manage", {
-    mutationKey: ["inventory", "vendorReturns", "create"],
-    mutationFn: (data) =>
-      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, undefined, getVendorReturnContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
-    },
-  });
-}
-
-interface PostVendorReturnInput {
-  returnId: number;
-  reason?: string;
-}
-
-export function usePostVendorReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<VendorReturnSummary, Error, PostVendorReturnInput>("inventory:vendor-returns:manage", {
-    mutationKey: ["inventory", "vendorReturns", "post"],
-    mutationFn: ({ returnId, reason }) =>
-      apiClient.post<VendorReturnSummary>(
-        `/inventory/vendor-returns/${returnId}/post`,
-        { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        getVendorReturnContract,
-      ),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-    },
-  });
-}
-
-interface CancelVendorReturnInput {
-  returnId: number;
-}
-
-export function useCancelVendorReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<VendorReturnSummary, Error, CancelVendorReturnInput>("inventory:vendor-returns:manage", {
-    mutationKey: ["inventory", "vendorReturns", "cancel"],
-    mutationFn: ({ returnId }) =>
-      apiClient.post<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}/cancel`, {}, undefined, getVendorReturnContract),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
-    },
-  });
-}
-
-type CustomerReturnDisposition = "RESTOCK" | "QUARANTINE" | "SCRAP";
-export type CustomerReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
-
-interface CustomerReturnLine {
-  productVariantId: number;
-  quantity: number;
-  reason: string;
-  disposition: CustomerReturnDisposition;
-  targetLocationId?: number;
-  lotId?: number;
-  serialId?: number;
-}
-
-export interface CustomerReturnSummary {
-  id: number;
-  returnNumber: string;
-  soId: number | null;
-  clientId: number | null;
-  status: CustomerReturnStatus;
-  createdAt: string;
-  notes: string | null;
-}
-
-interface CreateCustomerReturnInput {
-  soId?: number;
-  shipmentId?: number;
-  clientId?: number;
-  notes?: string;
-  lines: CustomerReturnLine[];
-}
-
-type CustomerReturnFilters = {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-};
-
-export function useCustomerReturns(filters?: CustomerReturnFilters) {
-  const canView = useCan("inventory:customer-returns:manage");
-  return useQuery<PaginatedResponse<CustomerReturnSummary>, Error>({
-    queryKey: queryKeys.inventory.customerReturns(filters),
-    queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResponse<CustomerReturnSummary>>("/inventory/customer-returns", {
-        ...(filters?.status !== undefined ? { status: filters.status } : {}),
-        ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
-        ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }, signal, listCustomerReturnsContract),
-    staleTime: 2 * 60_000,
-    enabled: canView,
-  });
-}
-
-export function useCreateCustomerReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>("inventory:customer-returns:manage", {
-    mutationKey: ["inventory", "customerReturns", "create"],
-    mutationFn: (data) =>
-      apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data, undefined, getCustomerReturnContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
-    },
-  });
-}
-
-interface PostCustomerReturnInput {
-  returnId: number;
-  reason?: string;
-}
-
-export function usePostCustomerReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<CustomerReturnSummary, Error, PostCustomerReturnInput>("inventory:customer-returns:manage", {
-    mutationKey: ["inventory", "customerReturns", "post"],
-    mutationFn: ({ returnId, reason }) =>
-      apiClient.post<CustomerReturnSummary>(
-        `/inventory/customer-returns/${returnId}/post`,
-        { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        getCustomerReturnContract,
-      ),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-    },
-  });
-}
-
-interface CancelCustomerReturnInput {
-  returnId: number;
-}
-
-export function useCancelCustomerReturn() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<CustomerReturnSummary, Error, CancelCustomerReturnInput>("inventory:customer-returns:manage", {
-    mutationKey: ["inventory", "customerReturns", "cancel"],
-    mutationFn: ({ returnId }) =>
-      apiClient.post<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}/cancel`, {}, undefined, getCustomerReturnContract),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
-    },
+    onSuccess: (_, variables) => invalidate(variables.grnId, true),
   });
 }

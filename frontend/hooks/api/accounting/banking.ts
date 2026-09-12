@@ -1,313 +1,295 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import {
-  bankAccountContract,
-  bankAccountsPageContract,
-  bankTransactionListContract,
-  bankImportCreateContract,
-  reconWorkspaceContract,
-  reconRuleListContract,
-  reconRuleContract,
-  bankTransferListContract,
-  bankTransferContract,
-  type BankAccountRecord,
-  type BankAccountsPage,
-} from "@/hooks/api/accounting/banking-schema";
-import { reconSuccessContract } from "@/hooks/api/accounting/banking-reconciliation-schema";
-import { bankingKeys } from "@/hooks/api/accounting/banking-keys";
-import type {
-  BankImportResult,
-  BankTransaction,
-  BankTransfer,
-  BankTxnStatus,
-  ConfirmMatchInput,
-  CreateBankAccountInput,
-  CreateBankImportInput,
-  CreateRuleInput,
-  CreateTransferInput,
-  IgnoreInput,
-  ListBankAccountsParams,
-  ListRulesParams,
-  ListTransfersParams,
-  ListTxnParams,
-  OptimisticContext,
-  ReconciliationRule,
-  ReconciliationTxn,
-  ReconciliationWorkspace,
-  UnmatchInput,
-} from "@/hooks/api/accounting/banking-types";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { accountingBankingQueryKeys } from "@/lib/query-keys/accounting-banking";
 import { useCan } from "@/hooks/api/access";
-import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  BankAccountBalance,
+  BankAccountPage,
+  BankAccountSummary,
+  CreateBankAccountInput,
+  ImportStatementInput,
+  ListBankAccountsParams,
+  MatchKind,
+  MatchSuggestionsResponse,
+  ReconciliationProof,
+  RecordedMatch,
+  SaveCsvMappingInput,
+  StatementDetail,
+  StatementImportResult,
+  StatementMappingPreset,
+  StatementPage,
+  UnreconciledParams,
+  UnreconciledView,
+  UpdateBankAccountInput,
+} from "@/types/accounting-banking";
 
-export * from "@/hooks/api/accounting/banking-types";
-export { bankingKeys } from "@/hooks/api/accounting/banking-keys";
+type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
-export function useBankAccounts(params: ListBankAccountsParams = {}) {
-  const can = useCan("accounting:banking:read");
-  return useQuery<BankAccountsPage, Error>({
-    queryKey: bankingKeys.accounts(params),
+const ENTITY_STALE = 60 * 1000;
+const VOLATILE_STALE = 15 * 1000;
+const STANDARD_LIST_STALE = 30 * 1000;
+const SLOW_LIST_STALE = 2 * 60 * 1000;
+const CATALOG_STALE = 30 * 60 * 1000;
+
+function queryParams(params: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== ""),
+  );
+}
+
+export function useBankAccounts(
+  params: ListBankAccountsParams = {},
+  options?: QueryOpts<BankAccountPage>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  const request = queryParams({ ...params });
+  return useQuery<BankAccountPage, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.accounts(request),
     queryFn: ({ signal }) =>
-      apiClient.get("/finance/bank-accounts", toQuery(params), signal, bankAccountsPageContract),
-    staleTime: 60_000,
-    enabled: can,
+      apiClient.get<BankAccountPage>("/accounting/banking/accounts", request, signal),
+    staleTime: STANDARD_LIST_STALE,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useBankAccount(id: number) {
-  const can = useCan("accounting:banking:read");
-  return useQuery<BankAccountRecord, Error>({
-    queryKey: bankingKeys.account(id),
+export function useBankAccount(bankAccountId: string, options?: QueryOpts<BankAccountSummary>) {
+  const canRead = useCan("accounting:banking:read");
+  return useQuery<BankAccountSummary, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.account(bankAccountId),
     queryFn: ({ signal }) =>
-      apiClient.get(`/finance/bank-accounts/${id}`, undefined, signal, bankAccountContract),
-    staleTime: 60_000,
-    enabled: can,
+      apiClient.get<BankAccountSummary>(`/accounting/banking/accounts/${bankAccountId}`, undefined, signal),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!bankAccountId && (options?.enabled ?? true),
   });
 }
 
-export function useBankTransactions(bankAccountId: number, params: ListTxnParams = {}) {
-  const can = useCan("accounting:banking:read");
-  return useQuery<CursorPage<BankTransaction>, Error>({
-    queryKey: bankingKeys.transactions(bankAccountId, params),
+export function useBankAccountBalance(
+  bankAccountId: string,
+  asOf: string,
+  options?: QueryOpts<BankAccountBalance>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  return useQuery<BankAccountBalance, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.accountBalance(bankAccountId, asOf),
     queryFn: ({ signal }) =>
-      apiClient.get(
-        `/finance/bank-accounts/${bankAccountId}/transactions`,
-        toQuery(params), signal, bankTransactionListContract,
-      ),
-    staleTime: 30_000,
-    enabled: can,
+      apiClient.get<BankAccountBalance>(`/accounting/banking/accounts/${bankAccountId}/balance`, { asOf }, signal),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!bankAccountId && !!asOf && (options?.enabled ?? true),
   });
 }
 
 export function useCreateBankAccount() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BankAccountRecord, Error, CreateBankAccountInput>("accounting:banking:manage", {
-    mutationKey: ["banking", "createAccount"],
-    mutationFn: (data) => apiClient.post("/finance/bank-accounts", data, undefined, bankAccountContract),
+  return useAuthorizedMutation<BankAccountSummary, Error, CreateBankAccountInput>("accounting:banking:manage", {
+    mutationKey: ["accounting", "banking", "accounts", "create"],
+    mutationFn: (input) => apiClient.post<BankAccountSummary>("/accounting/banking/accounts", input),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.all });
-      toast.success("Bank account created");
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
     },
   });
 }
 
-export function useCreateBankImport() {
+export function useUpdateBankAccount() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BankImportResult, Error, CreateBankImportInput>("accounting:banking:import", {
-    mutationKey: ["banking", "createImport"],
-    mutationFn: (data) => apiClient.post("/finance/bank-imports", data, undefined, bankImportCreateContract),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.all });
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+  return useAuthorizedMutation<
+    BankAccountSummary,
+    Error,
+    { bankAccountId: string; input: UpdateBankAccountInput }
+  >("accounting:banking:manage", {
+    mutationKey: ["accounting", "banking", "accounts", "update"],
+    mutationFn: ({ bankAccountId, input }) =>
+      apiClient.patch<BankAccountSummary>(`/accounting/banking/accounts/${bankAccountId}`, input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
+      queryClient.invalidateQueries({
+        queryKey: accountingBankingQueryKeys.accountingBanking.account(variables.bankAccountId),
+      });
     },
   });
 }
 
-export function useReconciliationWorkspace(bankAccountId: number) {
-  const can = useCan("accounting:banking:reconcile");
-  return useQuery<ReconciliationWorkspace, Error>({
-    queryKey: bankingKeys.reconciliation(bankAccountId),
+export function useSaveCsvMapping() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<
+    BankAccountSummary,
+    Error,
+    { bankAccountId: string; input: SaveCsvMappingInput }
+  >("accounting:banking:manage", {
+    mutationKey: ["accounting", "banking", "accounts", "csvMapping"],
+    mutationFn: ({ bankAccountId, input }) =>
+      apiClient.put<BankAccountSummary>(`/accounting/banking/accounts/${bankAccountId}/csv-mapping`, input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.accountsAll });
+      queryClient.invalidateQueries({
+        queryKey: accountingBankingQueryKeys.accountingBanking.account(variables.bankAccountId),
+      });
+    },
+  });
+}
+
+export function useStatementMappingPresets(
+  options?: QueryOpts<{ presets: StatementMappingPreset[] }>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  return useQuery<{ presets: StatementMappingPreset[] }, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.mappingPresets(),
     queryFn: ({ signal }) =>
-      apiClient.get(
-        `/finance/reconciliation/${bankAccountId}`, undefined, signal, reconWorkspaceContract,
+      apiClient.get<{ presets: StatementMappingPreset[] }>(
+        "/accounting/banking/statements/mapping-presets",
+        undefined,
+        signal,
       ),
-    staleTime: 0,
-    enabled: can,
+    staleTime: CATALOG_STALE,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useConfirmMatch(bankAccountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, ConfirmMatchInput, OptimisticContext>("accounting:banking:reconcile", {
-    mutationKey: ["banking", "confirmMatch", bankAccountId],
-    mutationFn: (data) =>
-      apiClient.post(`/finance/reconciliation/${bankAccountId}/match`, data, undefined, reconSuccessContract),
-    onMutate: async (vars) => {
-      await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-      const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
-        bankingKeys.reconciliation(bankAccountId),
-      );
-      if (snapshot) {
-        const patchedWorkspace: ReconciliationWorkspace = {
-          ...snapshot,
-          reconciledCount: snapshot.reconciledCount + 1,
-          unmatched: snapshot.unmatched.filter((t) => t.id !== vars.transactionId),
-          suggested: snapshot.suggested.filter((t) => t.id !== vars.transactionId),
-        };
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), patchedWorkspace);
-      }
-      return { snapshot };
-    },
-    onError: (error, _vars, context) => {
-      if (context?.snapshot) {
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
-      }
-      toast.error(getErrorMessage(error));
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-    },
-  });
-}
-
-export function useUnmatch(bankAccountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, UnmatchInput, OptimisticContext>("accounting:banking:reconcile", {
-    mutationKey: ["banking", "unmatch", bankAccountId],
-    mutationFn: (data) =>
-      apiClient.post(`/finance/reconciliation/${bankAccountId}/unmatch`, data, undefined, reconSuccessContract),
-    onMutate: async (vars) => {
-      await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-      const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
-        bankingKeys.reconciliation(bankAccountId),
-      );
-      if (snapshot) {
-        const txn = snapshot.unmatched.find((t) => t.id === vars.transactionId)
-          ?? snapshot.suggested.find((t) => t.id === vars.transactionId);
-        const unmatchedTxn: ReconciliationTxn | undefined = txn
-          ? { ...txn, status: "UNMATCHED" satisfies BankTxnStatus }
-          : undefined;
-        const patchedWorkspace: ReconciliationWorkspace = {
-          ...snapshot,
-          reconciledCount: Math.max(0, snapshot.reconciledCount - 1),
-          suggested: snapshot.suggested.filter((t) => t.id !== vars.transactionId),
-          unmatched: unmatchedTxn
-            ? [...snapshot.unmatched.filter((t) => t.id !== vars.transactionId), unmatchedTxn]
-            : snapshot.unmatched,
-        };
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), patchedWorkspace);
-      }
-      return { snapshot };
-    },
-    onError: (error, _vars, context) => {
-      if (context?.snapshot) {
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
-      }
-      toast.error(getErrorMessage(error));
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-    },
-  });
-}
-
-export function useIgnoreTransaction(bankAccountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, IgnoreInput, OptimisticContext>("accounting:banking:reconcile", {
-    mutationKey: ["banking", "ignore", bankAccountId],
-    mutationFn: (data) =>
-      apiClient.post(`/finance/reconciliation/${bankAccountId}/ignore`, data, undefined, reconSuccessContract),
-    onMutate: async (vars) => {
-      await queryClient.cancelQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-      const snapshot = queryClient.getQueryData<ReconciliationWorkspace>(
-        bankingKeys.reconciliation(bankAccountId),
-      );
-      if (snapshot) {
-        const patchedWorkspace: ReconciliationWorkspace = {
-          ...snapshot,
-          unmatched: snapshot.unmatched.filter((t) => t.id !== vars.transactionId),
-          suggested: snapshot.suggested.filter((t) => t.id !== vars.transactionId),
-        };
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), patchedWorkspace);
-      }
-      return { snapshot };
-    },
-    onError: (error, _vars, context) => {
-      if (context?.snapshot) {
-        queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
-      }
-      toast.error(getErrorMessage(error));
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
-    },
-  });
-}
-
-export function useReconciliationRules(bankAccountId: number, params: ListRulesParams = {}) {
-  const can = useCan("accounting:banking:reconcile");
-  return useQuery<CursorPage<ReconciliationRule>, Error>({
-    queryKey: bankingKeys.rules(bankAccountId),
+export function useBankStatements(
+  params: { bankProfileId?: string; page?: number; pageSize?: number } = {},
+  options?: QueryOpts<StatementPage>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  const request = queryParams({ ...params });
+  return useQuery<StatementPage, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.statements(request),
     queryFn: ({ signal }) =>
-      apiClient.get(
-        `/finance/reconciliation/${bankAccountId}/rules`,
-        toQuery(params), signal, reconRuleListContract,
-      ),
-    staleTime: 60_000,
-    enabled: can,
+      apiClient.get<StatementPage>("/accounting/banking/statements", request, signal),
+    staleTime: STANDARD_LIST_STALE,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useCreateReconciliationRule(bankAccountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<ReconciliationRule, Error, CreateRuleInput>("accounting:banking:reconcile", {
-    mutationKey: ["banking", "createRule", bankAccountId],
-    mutationFn: (data) =>
-      apiClient.post(
-        `/finance/reconciliation/${bankAccountId}/rules`,
-        data, undefined, reconRuleContract,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.rules(bankAccountId) });
-      toast.success("Rule created");
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
-}
-
-export function useDeleteReconciliationRule(bankAccountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, number>("accounting:banking:reconcile", {
-    mutationKey: ["banking", "deleteRule", bankAccountId],
-    mutationFn: (ruleId) =>
-      apiClient.delete(
-        `/finance/reconciliation/${bankAccountId}/rules/${ruleId}`,
-        undefined, undefined, reconSuccessContract,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.rules(bankAccountId) });
-      toast.success("Rule deleted");
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
-}
-
-export function useTransfers(params: ListTransfersParams = {}) {
-  const can = useCan("accounting:banking:read");
-  return useQuery<CursorPage<BankTransfer>, Error>({
-    queryKey: bankingKeys.transfers(params),
+export function useBankStatement(
+  statementId: string,
+  params: { page?: number; pageSize?: number } = {},
+  options?: QueryOpts<StatementDetail>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  const request = queryParams({ ...params });
+  return useQuery<StatementDetail, Error>({
+    queryKey: [...accountingBankingQueryKeys.accountingBanking.statement(statementId), request],
     queryFn: ({ signal }) =>
-      apiClient.get("/finance/transfers", toQuery(params), signal, bankTransferListContract),
-    staleTime: 30_000,
-    enabled: can,
+      apiClient.get<StatementDetail>(`/accounting/banking/statements/${statementId}`, request, signal),
+    staleTime: VOLATILE_STALE,
+    ...options,
+    enabled: canRead && !!statementId && (options?.enabled ?? true),
   });
 }
 
-export function useCreateTransfer() {
+export function useImportBankStatement() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BankTransfer, Error, CreateTransferInput>("accounting:banking:manage", {
-    mutationKey: ["banking", "createTransfer"],
-    mutationFn: (data) => apiClient.post("/finance/transfers", data, undefined, bankTransferContract),
+  return useAuthorizedMutation<StatementImportResult, Error, ImportStatementInput>("accounting:banking:import", {
+    mutationKey: ["accounting", "banking", "statements", "import"],
+    mutationFn: (input) =>
+      apiClient.post<StatementImportResult>("/accounting/banking/statements/imports", input),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.transfers() });
-      void queryClient.invalidateQueries({ queryKey: bankingKeys.accounts() });
-      toast.success("Transfer created");
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+  });
+}
+
+export function useReconciliationProof(
+  statementId: string,
+  options?: QueryOpts<ReconciliationProof>,
+) {
+  const canRead = useCan("accounting:banking:read");
+  return useQuery<ReconciliationProof, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.reconciliation(statementId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReconciliationProof>(
+        `/accounting/banking/statements/${statementId}/reconciliation`,
+        undefined,
+        signal,
+      ),
+    staleTime: VOLATILE_STALE,
+    ...options,
+    enabled: canRead && !!statementId && (options?.enabled ?? true),
+  });
+}
+
+export function useMarkStatementReconciled() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<ReconciliationProof, Error, string>("accounting:banking:reconcile", {
+    mutationKey: ["accounting", "banking", "statements", "reconcile"],
+    mutationFn: (statementId) =>
+      apiClient.post<ReconciliationProof>(`/accounting/banking/statements/${statementId}/reconcile`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
     },
+  });
+}
+
+export function useMatchSuggestions(
+  statementLineId: string,
+  params: { limit?: number } = {},
+  options?: QueryOpts<MatchSuggestionsResponse>,
+) {
+  const canReconcile = useCan("accounting:banking:reconcile");
+  const request = queryParams({ ...params });
+  return useQuery<MatchSuggestionsResponse, Error>({
+    queryKey: [...accountingBankingQueryKeys.accountingBanking.suggestions(statementLineId), request],
+    queryFn: ({ signal }) =>
+      apiClient.get<MatchSuggestionsResponse>(
+        `/accounting/banking/statement-lines/${statementLineId}/suggestions`,
+        request,
+        signal,
+      ),
+    staleTime: VOLATILE_STALE,
+    ...options,
+    enabled: canReconcile && !!statementLineId && (options?.enabled ?? true),
+  });
+}
+
+export function useMatchStatementLine() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<
+    RecordedMatch,
+    Error,
+    { statementLineId: string; kind: MatchKind; id: string }
+  >("accounting:banking:reconcile", {
+    mutationKey: ["accounting", "banking", "statementLines", "match"],
+    mutationFn: ({ statementLineId, kind, id }) =>
+      apiClient.post<RecordedMatch>(`/accounting/banking/statement-lines/${statementLineId}/match`, { kind, id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
+    },
+  });
+}
+
+export function useUnmatchStatementLine() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<{ statementLineId: string; removed: true }, Error, string>(
+    "accounting:banking:reconcile",
+    {
+      mutationKey: ["accounting", "banking", "statementLines", "unmatch"],
+      mutationFn: (statementLineId) =>
+        apiClient.delete<{ statementLineId: string; removed: true }>(
+          `/accounting/banking/statement-lines/${statementLineId}/match`,
+        ),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
+      },
+    },
+  );
+}
+
+export function useUnreconciled(params: UnreconciledParams, options?: QueryOpts<UnreconciledView>) {
+  const canRead = useCan("accounting:banking:read");
+  const request = queryParams({ ...params });
+  return useQuery<UnreconciledView, Error>({
+    queryKey: accountingBankingQueryKeys.accountingBanking.unreconciled(request),
+    queryFn: ({ signal }) =>
+      apiClient.get<UnreconciledView>("/accounting/banking/unreconciled", request, signal),
+    staleTime: SLOW_LIST_STALE,
+    ...options,
+    enabled: canRead && !!params.accountId && !!params.asOf && (options?.enabled ?? true),
   });
 }

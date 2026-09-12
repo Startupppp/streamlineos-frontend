@@ -60,7 +60,7 @@ interface MutateCalendarEventResponse {
   syncQueued?: boolean;
 }
 
-interface CreateCalendarEventPayload {
+export interface CreateCalendarEventPayload {
   title: string;
   description?: string;
   location?: string;

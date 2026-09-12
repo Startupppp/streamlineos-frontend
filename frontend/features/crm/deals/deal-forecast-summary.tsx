@@ -1,32 +1,47 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import { TrendingUp, Target, Handshake, Pencil } from "lucide-react";
+import { useCallback, useState } from "react";
+import { TrendingUp, Target, Layers } from "lucide-react";
 import { XIcon, CheckIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useForecastSnapshots, useOverrideForecast } from "@/hooks/api/crm/deals";
-import type { Deal } from "@/types/crm";
+import { useDealForecast } from "@/hooks/api/crm/deal-forecast";
+import { ForecastBasisCard } from "./forecast-basis-card";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 
-const STAGE_PROBABILITY: Record<string, number> = {
-  LEAD: 10,
-  CONTACTED: 25,
-  PROPOSAL: 50,
-  NEGOTIATION: 75,
-  WON: 100,
-  LOST: 0,
-};
-
-interface DealForecastSummaryProps {
-  deals: Deal[];
-}
+/**
+ * CRM-P2-04. The forecast, read from the server that computes it.
+ *
+ * What this replaced: a `useMemo` over the first hundred deals on the page,
+ * weighting each one by a six-entry `STAGE_PROBABILITY` table hardcoded in this
+ * file. Three things were wrong with that beyond the obvious. It was not the
+ * tenant's table, so an organisation whose pipeline runs LEAD → QUALIFYING →
+ * PILOT weighted every deal at zero. It was capped at one page, so the "total"
+ * pipeline of a workspace with three hundred open deals was the total of a
+ * hundred of them. And it could never reflect anything learned, because the
+ * arithmetic lived in the browser and the model lives in the database.
+ *
+ * `GET /deals/forecast` has computed all of this — over every open deal, using
+ * the tenant's own stage configuration, and now weighted by the learned model
+ * where one has earned acceptance — and had no caller. `queryKeys.deals.forecast`
+ * existed and five mutations invalidated it; nothing read it.
+ *
+ * The "Commit Forecast" tile is gone rather than ported. It summed deals in
+ * `NEGOTIATION` or `WON` — a stage vocabulary this product does not require any
+ * tenant to use, and a bucket that counted already-won deals into a forecast of
+ * what is still to come. There is no server-side commit category to replace it
+ * with, and inventing one here is what got us the last one.
+ */
 
 interface SnapshotOverrideRowProps {
   snapshotId: string;
@@ -108,57 +123,62 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
   );
 }
 
-export function DealForecastSummary({ deals }: DealForecastSummaryProps) {
+export function DealForecastSummary() {
   const money = useOrgDisplay();
   const canManage = useCan("crm:deals:manage");
+  const forecast = useDealForecast();
   const { data: snapshots = [] } = useForecastSnapshots({ limit: 5 });
 
-  const { totalPipeline, weightedForecast, commitForecast } = useMemo(() => {
-    const open = deals.filter((d) => d.stage !== "LOST");
-    let pipeline = 0;
-    let weighted = 0;
-    let commit = 0;
+  const handleRetry = useCallback(() => { void forecast.refetch(); }, [forecast]);
 
-    for (const d of open) {
-      const value = Number(d.value ?? 0);
-      const prob =
-        d.probability != null && d.probability > 0
-          ? d.probability
-          : (STAGE_PROBABILITY[d.stage] ?? 0);
+  if (forecast.isLoading)
+    return (
+      <div className="space-y-4">
+        <StatCardGridSkeleton cols={3} count={3} />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
 
-      pipeline += value;
-      weighted += value * (prob / 100);
+  if (forecast.isError)
+    return (
+      <ErrorState
+        title="Could not load the forecast"
+        description={getErrorMessage(forecast.error)}
+        onRetry={handleRetry}
+      />
+    );
 
-      if (d.stage === "NEGOTIATION" || d.stage === "WON") {
-        commit += value;
-      }
-    }
-
-    return { totalPipeline: pipeline, weightedForecast: weighted, commitForecast: commit };
-  }, [deals]);
+  if (!forecast.data) return null;
 
   return (
     <div className="space-y-4">
       <StatCardGrid cols={3}>
         <StatCard
           label="Total Pipeline"
-          value={formatMoneyCompact(totalPipeline, money)}
+          value={formatMoneyCompact(forecast.data.totalBestCase, money)}
           icon={TrendingUp}
           tone="blue"
         />
         <StatCard
           label="Weighted Forecast"
-          value={formatMoneyCompact(weightedForecast, money)}
+          value={formatMoneyCompact(forecast.data.totalWeighted, money)}
           icon={Target}
           tone="blue"
         />
         <StatCard
-          label="Commit Forecast"
-          value={formatMoneyCompact(commitForecast, money)}
-          icon={Handshake}
+          label="Open Deals"
+          value={forecast.data.totalDeals}
+          icon={Layers}
           tone="emerald"
         />
       </StatCardGrid>
+
+      {/*
+        Directly under the totals, not in a footnote. Whether the weighted figure
+        is a learned probability or the tenant's own stage percentage changes
+        what it is reasonable to do with it.
+      */}
+      <ForecastBasisCard basis={forecast.data.basis} />
 
       {canManage && snapshots.length > 0 && (
         <div className="rounded-md border p-3">

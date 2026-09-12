@@ -8,31 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
 import { useContacts, useDeleteContact, useExportContacts } from "@/hooks/api/crm";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PAGE_SIZE } from "./contacts-constants";
+import { ConsentGapNotice } from "./consent-gap-notice";
 import { ContactSheet } from "./contact-sheet";
 import { ContactDeleteDialog } from "./contact-delete-dialog";
 import {
   ContactSelectionBar,
   useContactMergeSelection,
 } from "./contact-merge-selection";
-import { ContactMergeDialog } from "./detail/contact-merge-dialog";
+import { PartyMergeDialog } from "@/components/party-merge/party-merge-dialog";
 import {
   ContactActionsMenu,
   useEnrichContact,
@@ -46,7 +48,13 @@ function stopRowClick(event: React.MouseEvent) {
 
 export function ContactListPage() {
   const canManageContacts = useCan("crm:contacts:manage");
-  const canMergeContacts = useCan("crm:contacts:merge");
+  /*
+   * The party key, because merging is `POST /party/merges` — a contact is an
+   * alias for a party, and the contact-grain endpoint that took the numbers is
+   * gone. CRM administers the `party` namespace, so anyone who could merge a
+   * contact already holds this.
+   */
+  const canMergeContacts = useCan("party:merges:manage");
   const canViewContacts = useCan("crm:contacts:view");
 
   const router = useRouter();
@@ -204,6 +212,19 @@ export function ContactListPage() {
     [contactsById, canMergeContacts, merge, enrichContact.isPending, handleEnrich],
   );
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:contacts:view") === "denied")
+    return <NoPermissionState permission="crm:contacts:view" />;
+
   return (
     <PageWrapper
       title="Contacts"
@@ -245,6 +266,7 @@ export function ContactListPage() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-toolbar">
+        <ConsentGapNotice />
         {canMergeContacts ? <ContactSelectionBar selection={merge} /> : null}
 
         {isLoading ? (
@@ -258,7 +280,6 @@ export function ContactListPage() {
           />
         ) : contacts.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyPersonIllustration />}
             title="No contacts yet"
             description={
@@ -310,12 +331,11 @@ export function ContactListPage() {
       ) : null}
 
       {canMergeContacts && merge.pair ? (
-        <ContactMergeDialog
+        <PartyMergeDialog
           pair={merge.pair}
-          currentContactId={merge.pair.contact1.id}
           open={merge.isOpen}
           onOpenChange={merge.onOpenChange}
-          onMergeComplete={merge.clear}
+          onMerged={merge.clear}
         />
       ) : null}
     </PageWrapper>

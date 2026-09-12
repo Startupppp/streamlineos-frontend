@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
+import { useQueryClient, queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -19,24 +19,15 @@ import type {
 } from "@/types/crm/metadata";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { CRM_METADATA_STALE_TIME } from "./metadata-stale-time";
 
 const crmAggregateLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.crmAggregateContract));
 const pipelineLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.pipelineContract));
 const pipelineStageLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.pipelineStageContract));
 const crmOptionLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.crmOptionContract));
-const validationRulesListLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.validationRulesListContract));
-const validationRuleLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.validationRuleContract));
-const testValidationLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.testValidationContract));
-const blueprintsListLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.blueprintsListContract));
-const blueprintLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.blueprintContract));
-const blueprintTransitionsListLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.blueprintTransitionsListContract));
-const blueprintTransitionLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.blueprintTransitionContract));
 const deleteSuccessLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.deleteSuccessContract));
 const reorderSuccessLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.reorderSuccessContract));
-const testTransitionLazy = lazyContract(() => import("@/hooks/api/crm/metadata-schema").then((m) => m.testTransitionContract));
 
-
-const CRM_METADATA_STALE_TIME = 5 * 60_000;
 
 type CrmColorFallback = { key: string; label: string; color: string };
 
@@ -259,175 +250,24 @@ export function useDeleteOption() {
   });
 }
 
-export function useValidationRules(params?: Record<string, unknown>) {
-  return useGatedQuery("crm:settings:view", {
-    queryKey: growthAndSignQueryKeys.crmMetadata.validationRules(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CrmValidationRule[]>("/crm/validation-rules", params, signal, validationRulesListLazy),
-    staleTime: CRM_METADATA_STALE_TIME,
-  });
-}
-
-export function useCreateValidationRule() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "validationRules", "create"] as const,
-    mutationFn: (input: Omit<CrmValidationRule, "id">) =>
-      apiClient.post<CrmValidationRule>("/crm/validation-rules", input, undefined, validationRuleLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
-    },
-  });
-}
-
-export function useUpdateValidationRule() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "validationRules", "update"] as const,
-    mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmValidationRule, "id">>) =>
-      apiClient.patch<CrmValidationRule>(`/crm/validation-rules/${id}`, data, undefined, validationRuleLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
-    },
-  });
-}
-
-export function useDeleteValidationRule() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "validationRules", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/validation-rules/${id}`, undefined, undefined, deleteSuccessLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.validationRules() });
-    },
-  });
-}
-
-export function useTestValidationRules() {
-  return useAuthorizedMutation("crm:settings:view", {
-    mutationKey: ["crmMetadata", "validationRules", "test"] as const,
-    mutationFn: (input: {
-      entityType: CrmValidationRule["entityType"];
-      record: Record<string, unknown>;
-      pipelineId?: string;
-      stageKey?: string;
-      sourceKey?: string;
-    }) => apiClient.post<{ valid: boolean; errors: { field: string; ruleType: string; message: string }[] }>("/crm/validation-rules/test", input, undefined, testValidationLazy),
-  });
-}
-
-export function useBlueprints(params?: Record<string, unknown>) {
-  return useGatedQuery("crm:settings:view", {
-    queryKey: growthAndSignQueryKeys.crmMetadata.blueprints(params),
-    queryFn: ({ signal }) => apiClient.get<CrmBlueprint[]>("/crm/blueprints", params, signal, blueprintsListLazy),
-    staleTime: CRM_METADATA_STALE_TIME,
-  });
-}
-
-export function useCreateBlueprint() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "blueprints", "create"] as const,
-    mutationFn: (input: Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">) =>
-      apiClient.post<CrmBlueprint>("/crm/blueprints", input, undefined, blueprintLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprints() });
-    },
-  });
-}
-
-export function useUpdateBlueprint() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "blueprints", "update"] as const,
-    mutationFn: ({
-      id,
-      ...data
-    }: { id: string } & Partial<Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">>) =>
-      apiClient.patch<CrmBlueprint>(`/crm/blueprints/${id}`, data, undefined, blueprintLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprints() });
-    },
-  });
-}
-
-export type CreateTransitionInput = {
-  fromStageKey: string;
-  toStageKey: string;
-  requiredFields: string[];
-  requiredActivityTypeKeys: string[];
-  requiresApproval: boolean;
-  requiresQuote: boolean;
-};
-export type UpdateTransitionInput = Partial<CreateTransitionInput>;
-
-export function useBlueprintTransitions(blueprintId: string | null) {
-  return useGatedQuery("crm:settings:view", {
-    queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId),
-    queryFn: ({ signal }) =>
-      apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`, undefined, signal, blueprintTransitionsListLazy),
-    enabled: blueprintId !== null,
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateBlueprintTransition(blueprintId: string) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "create"] as const,
-    mutationFn: (input: CreateTransitionInput) =>
-      apiClient.post<CrmBlueprintTransition>(`/crm/blueprints/${blueprintId}/transitions`, input, undefined, blueprintTransitionLazy),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
-    },
-  });
-}
-
-export function useUpdateBlueprintTransition(blueprintId: string) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "update"] as const,
-    mutationFn: ({ id, ...data }: { id: string } & UpdateTransitionInput) =>
-      apiClient.patch<CrmBlueprintTransition>(
-        `/crm/blueprints/${blueprintId}/transitions/${id}`,
-        data,
-        undefined,
-        blueprintTransitionLazy,
-      ),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
-    },
-  });
-}
-
-export function useDeleteBlueprintTransition(blueprintId: string) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:settings:manage", {
-    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(
-        `/crm/blueprints/${blueprintId}/transitions/${id}`,
-        undefined,
-        undefined,
-        deleteSuccessLazy,
-      ),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.crmMetadata.blueprintTransitions(blueprintId) });
-    },
-  });
-}
-
-export function useTestTransition(blueprintId: string) {
-  return useAuthorizedMutation("crm:settings:view", {
-    mutationKey: ["crmMetadata", "blueprints", blueprintId, "test"] as const,
-    mutationFn: (input: {
-      fromStageKey: string;
-      toStageKey: string;
-      sampleFields: Record<string, string>;
-    }) => apiClient.post<{ allowed: boolean; requiresApproval: boolean; missingFields: string[] }>(`/crm/blueprints/${blueprintId}/test`, input, undefined, testTransitionLazy),
-  });
-}
+export {
+  useValidationRules,
+  useCreateValidationRule,
+  useUpdateValidationRule,
+  useDeleteValidationRule,
+  useTestValidationRules,
+} from "./validation-rules";
+export {
+  useBlueprints,
+  useCreateBlueprint,
+  useUpdateBlueprint,
+  useBlueprintTransitions,
+  useCreateBlueprintTransition,
+  useUpdateBlueprintTransition,
+  useDeleteBlueprintTransition,
+  useTestTransition,
+} from "./blueprints";
+export type { CreateTransitionInput, UpdateTransitionInput } from "./blueprints";
 
 export type {
   CrmMetadataResponse,

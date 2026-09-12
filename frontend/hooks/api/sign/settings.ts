@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
-import type { SignOrgSettings, SignWatermarkPolicy } from "@/types/sign";
+import type { SignOrgSettings, SignSweepRunSummary, SignWatermarkPolicy } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -38,6 +38,17 @@ export function useUpdateSignSettings() {
     mutationKey: ["signAdmin", "settings", "update"],
     mutationFn: (input: Partial<SignOrgSettings>) => apiClient.patch<SignOrgSettings>("/sign/admin/settings", input, undefined, signSettingsSingleContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signAdmin.settings() }),
+  });
+}
+
+// Both sweeps come back whether or not they have ever run: an absent run is reported as
+// neverRun, which is the state SignOS actually shipped in and the one a screen must not hide.
+export function useSignSweepStatus() {
+  return useGatedQuery("sign:admin:manage", {
+    queryKey: growthAndSignQueryKeys.signAdmin.sweepStatus(),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ sweeps: SignSweepRunSummary[] }>("/sign/admin/sweep-status", undefined, signal),
+    staleTime: 60_000,
   });
 }
 

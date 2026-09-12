@@ -1,20 +1,28 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { usePermissionGate } from "@/hooks/api/access";
 import { gated, useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   AutonomySettings,
+  ComposeOutboundInput,
+  ComposeOutboundOutcome,
   DecisionFilters,
   DecisionPage,
+  AutonomyRepairPage,
+  LiveClassStop,
   LiveHold,
+  RepairMeasure,
+  RepairClass,
+  RepairPoliciesResponse,
   ReviewQueueItem,
   Scoreboard,
   SwitchesResponse,
 } from "@/types/crm/autonomy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 
 import { lazyContract } from "@/lib/api-envelope";
@@ -146,6 +154,109 @@ export function useSetAutonomySwitch() {
   });
 }
 
+/**
+ * Which deterministic repairs this tenant allows the system to make unattended.
+ *
+ * Read under the view key and written under `crm:autonomy:repair`, matching the
+ * two permissions the endpoints themselves carry.
+ */
+export function useRepairPolicies() {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairPolicies(),
+    queryFn: ({ signal }) =>
+      apiClient.get<RepairPoliciesResponse>("/crm/autonomy/repair-policies", undefined, signal),
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Grant one repair class, or take it back.
+ *
+ * Not optimistic, for the same reason the kill switch is not: this decides
+ * whether the product edits a customer's data without being asked, and showing
+ * it as off a moment before it is would be a lie in the one place it matters.
+ */
+export function useSetRepairPolicy() {
+  const queryClient = useQueryClient();
+
+  return useAuthorizedIdempotentMutation<
+    RepairPoliciesResponse,
+    Error,
+    { repairClass: RepairClass; enabled: boolean; reason?: string }
+  >("crm:autonomy:repair", {
+    mutationKey: ["crm", "autonomy", "repair-policies", "set"],
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.patch<RepairPoliciesResponse>("/crm/autonomy/repair-policies", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.crm.autonomyRepairPolicies(), data);
+    },
+  });
+}
+
+/**
+ * CRM-P1-05. What the repair loop actually changed, most recent first.
+ *
+ * Read under the review key, matching the endpoint: seeing what the system did
+ * to a customer's record is a different authority from letting it, and from
+ * taking it back.
+ */
+export function useRepairs(filters: { limit?: number; revertedOnly?: boolean } = {}) {
+  const params = new URLSearchParams();
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.revertedOnly) params.set("revertedOnly", "true");
+  const query = params.toString();
+
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairs(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<AutonomyRepairPage>(
+        `/crm/autonomy/repairs${query ? `?${query}` : ""}`,
+        undefined,
+        signal,
+      ),
+    staleTime: 30_000,
+  });
+}
+
+/** The loop's own measure, over a window. */
+export function useRepairMeasure(days = 30) {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyRepairMeasure(days),
+    queryFn: ({ signal }) =>
+      apiClient.get<RepairMeasure>(`/crm/autonomy/repair-measure?days=${days}`, undefined, signal),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Put one field back the way it was.
+ *
+ * `crm:autonomy:reverse` on the server, which is not the key that granted the
+ * repair — undoing what the system did is deliberately its own authority.
+ */
+export function useRevertRepair() {
+  const queryClient = useQueryClient();
+
+  return useAuthorizedIdempotentMutation<
+    { reverted: boolean },
+    Error,
+    { repairId: string; reason?: string }
+  >("crm:autonomy:reverse", {
+    mutationKey: ["crm", "autonomy", "repairs", "revert"],
+    mutationFn: ({ repairId, reason }, idempotencyKey) =>
+      apiClient.post<{ reverted: boolean }>(
+        `/crm/autonomy/repairs/${repairId}/revert`,
+        { ...(reason ? { reason } : {}) },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
+    },
+  });
+}
+
 /** How often the system was right, per action type, over a window. */
 export function useAutonomyScoreboard(days = 30) {
   return useGatedQuery("crm:autonomy:view", {
@@ -219,6 +330,44 @@ export function useLiveHolds() {
   });
 }
 
+/**
+ * The classes currently stopped for somebody, and who stopped them.
+ *
+ * Not polled like the holds are. A hold is a countdown measured in seconds; a
+ * class stop is open-ended and changes only when a person acts on it, so a
+ * ten-second refetch would be asking a question whose answer moves once a week.
+ */
+export function useLiveClassStops() {
+  return useGatedQuery("crm:autonomy:view", {
+    queryKey: queryKeys.crm.autonomyClassStops(),
+    queryFn: ({ signal }) =>
+      apiClient.get<LiveClassStop[]>("/crm/autonomy/class-stops", undefined, signal),
+    staleTime: 30_000,
+  });
+}
+
+/** The stop's only exit. */
+export function useReleaseClassStop() {
+  const queryClient = useQueryClient();
+
+  return useAuthorizedIdempotentMutation<
+    { released: boolean },
+    Error,
+    { outboundClassStopId: string }
+  >("crm:autonomy:manage", {
+    mutationKey: ["crm", "autonomy", "class-stops", "release"],
+    mutationFn: ({ outboundClassStopId }, idempotencyKey) =>
+      apiClient.post<{ released: boolean }>(
+        `/crm/autonomy/class-stops/${outboundClassStopId}/release`,
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyClassStops() });
+    },
+  });
+}
+
 export function useCancelHold() {
   const queryClient = useQueryClient();
 
@@ -230,6 +379,46 @@ export function useCancelHold() {
       }, undefined, cancelHoldLazy),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
+    },
+  });
+}
+
+/**
+ * `POST /crm/autonomy/outbound` — consider writing to a customer.
+ *
+ * A mutation rather than a query, and not because it writes a draft. It spends
+ * the tenant's AI credits and, when the judge agrees, holds a message that will
+ * go out on its own unless somebody stops it. Nothing about that may happen
+ * because a component re-rendered.
+ *
+ * The idempotency key is minted by the caller and travels in the variables, not
+ * built here. `@Idempotent` makes the header required, and the API client mints
+ * one per *fetch* — so a retried request would carry a new key, replay nothing,
+ * pay for a second draft and hold a second, differently worded message to the
+ * same person. One press of the button is one key; a deliberate second look an
+ * hour later is a new intent and gets a new one.
+ */
+export function useComposeOutbound() {
+  const queryClient = useQueryClient();
+
+  return useAuthorizedMutation("crm:autonomy:manage", {
+    mutationKey: ["crm", "autonomy", "outbound", "compose"],
+    mutationFn: ({
+      intentKey,
+      ...input
+    }: ComposeOutboundInput & { intentKey: string }) =>
+      apiClient.post<ComposeOutboundOutcome>("/crm/autonomy/outbound", input, {
+        headers: { "Idempotency-Key": `outbound-compose:${intentKey}` },
+      }),
+    onSuccess: (outcome) => {
+      /*
+        A refusal changes the decision ledger and nothing else; a hold also puts
+        a countdown on the screen above this one. Invalidating the holds on a
+        refusal would refetch a list that cannot have changed.
+      */
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyDecisionsAll() });
+      if (outcome.held)
+        void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyHolds() });
     },
   });
 }

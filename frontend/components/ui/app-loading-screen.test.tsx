@@ -22,6 +22,9 @@ jest.mock("next/image", () => ({
 }));
 
 jest.mock("framer-motion", () => {
+  // `jest.requireActual`, not `require`: the factory is hoisted above the
+  // imports, so a top-level one cannot be referenced here, and a bare
+  // `require` is what `no-require-imports` forbids.
   const React = jest.requireActual<typeof import("react")>("react");
 
   function MotionDiv({

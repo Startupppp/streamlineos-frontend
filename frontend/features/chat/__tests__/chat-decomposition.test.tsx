@@ -33,7 +33,7 @@ function makeMember(id: string, name: string): ChannelMember {
     archivedAt: null,
     mutedUntil: null,
     isFavorite: false,
-    notificationPreference: "ALL",
+    notificationPreference: "DEFAULT",
     user: { id, name, image: null },
   };
 }

@@ -1,5 +1,5 @@
-import { BalanceSheetPage } from "@/features/accounting/reports/balance-sheet-page";
+import { BalanceSheetReport } from "@/features/accounting/reports";
 
-export default function Page() {
-  return <BalanceSheetPage />;
+export default function BalanceSheetPage() {
+  return <BalanceSheetReport />;
 }

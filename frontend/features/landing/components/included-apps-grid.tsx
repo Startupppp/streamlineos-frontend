@@ -64,7 +64,7 @@ function AppChip({
     <motion.div
       whileHover={{ y: -2, scale: 1.02 }}
       transition={staggerItemDelay(index, 0)}
-      className={`group flex items-center gap-2 rounded-lg border border-border bg-muted/50 transition-colors hover:border-slate-300 hover:bg-white ${
+      className={`group flex items-center gap-2 rounded-lg border border-border bg-muted/50 transition-colors hover:border-muted-foreground/40 hover:bg-card ${
         compact ? "px-2 py-1.5" : "px-3 py-2.5"
       }`}
     >

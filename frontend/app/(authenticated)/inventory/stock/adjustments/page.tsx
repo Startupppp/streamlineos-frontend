@@ -28,22 +28,26 @@ import {
 import { AdjustmentDetailSheet } from "@/features/inventory/components/stock/adjustment-detail-sheet";
 import { CreateAdjustmentSheet } from "@/features/inventory/components/stock/create-adjustment-sheet";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 
 const REASON_LABELS: Record<AdjustmentReason, string> = {
   PURCHASE: "Purchase", SALE: "Sale", RETURN: "Return", DAMAGE: "Damage",
   EXPIRY: "Expiry", THEFT: "Theft / Loss", RECOUNT: "Recount", OTHER: "Other",
+  SCRAP: "Scrap / Write-off",
 };
 const REASON_BADGE: Record<AdjustmentReason, string> = {
   DAMAGE: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   EXPIRY: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   THEFT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   RETURN: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  SCRAP: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   RECOUNT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   PURCHASE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   SALE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   OTHER: "bg-muted text-muted-foreground border-border",
 };
-const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER"];
+const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER", "SCRAP"];
 const ADJ_STATUSES: AdjustmentStatus[] = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "POSTED", "CANCELLED"];
 
 const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
@@ -96,6 +100,7 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
 ];
 
 export default function AdjustmentsPage() {
+  const canView = useCan("inventory:stock:read");
   const { fadeUp, staggerContainer } = useMotionVariants();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -113,23 +118,23 @@ export default function AdjustmentsPage() {
     page,
     limit: 20,
     status: statusFilter !== "all" ? statusFilter : undefined,
+    // Server-side: filtering one page of rows in the browser hid every match
+    // that happened to fall on page two, and the count under the filter was the
+    // unfiltered total.
+    reason: reasonFilter !== "all" && reasonFilter !== "write-offs" ? reasonFilter : undefined,
+    writeOffsOnly: reasonFilter === "write-offs" ? true : undefined,
   });
 
   const adjustments = useMemo(() => {
-    let result: AdjustmentListItem[] = adjData?.items ?? [];
-    if (searchQ) {
-      const q = searchQ.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.referenceNumber.toLowerCase().includes(q) ||
-          (a.createdByName?.toLowerCase().includes(q) ?? false),
-      );
-    }
-    if (reasonFilter !== "all") {
-      result = result.filter((a) => a.reason === reasonFilter);
-    }
-    return result;
-  }, [adjData?.items, searchQ, reasonFilter]);
+    const result: AdjustmentListItem[] = adjData?.items ?? [];
+    if (!searchQ) return result;
+    const q = searchQ.toLowerCase();
+    return result.filter(
+      (a) =>
+        a.referenceNumber.toLowerCase().includes(q) ||
+        (a.createdByName?.toLowerCase().includes(q) ?? false),
+    );
+  }, [adjData?.items, searchQ]);
 
   const handleReasonChange = useCallback(
     (val: string) => {
@@ -176,6 +181,16 @@ export default function AdjustmentsPage() {
 
   const hasActiveFilters = searchQ || reasonFilter !== "all" || statusFilter !== "all";
 
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Adjustments"
+        subtitle="Create and review inventory quantity corrections."
+      >
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Stock Adjustments"
@@ -193,6 +208,7 @@ export default function AdjustmentsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All reasons</SelectItem>
+              <SelectItem value="write-offs">Write-offs only</SelectItem>
               {REASONS.map((r) => (
                 <SelectItem key={r} value={r}>{REASON_LABELS[r]}</SelectItem>
               ))}

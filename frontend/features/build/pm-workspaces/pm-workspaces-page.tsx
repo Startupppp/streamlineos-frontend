@@ -13,11 +13,11 @@ import {
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
@@ -261,8 +261,6 @@ export function PmWorkspacesPage() {
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span className="flex min-w-0 items-center gap-2">

@@ -47,11 +47,23 @@ const TIER_SUMMARY: Record<PricingTier["id"], string[]> = {
 type PricingTierGridProps = {
   showAppsGrid?: boolean;
   defaultPeriod?: BillingPeriod;
+  /**
+   * The tiers to show, defaulting to the compiled-in table.
+   *
+   * Ticket 12: the pricing page now reads live amounts from `/public/pricing`
+   * so it quotes the number that will actually be charged, in the visitor's
+   * currency. Every other caller of this grid renders the static table, which
+   * is why this is a default rather than a required prop -- and why the static
+   * table stays: a marketing page that renders nothing because an API is down
+   * is worse than one quoting a fortnight-old price.
+   */
+  tiers?: readonly PricingTier[];
 };
 
 export function PricingTierGrid({
   showAppsGrid = true,
   defaultPeriod = "annual",
+  tiers = PRICING_TIERS,
 }: PricingTierGridProps) {
   const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod);
 
@@ -59,7 +71,7 @@ export function PricingTierGrid({
     <>
       <PricingBillingToggle period={period} onChange={setPeriod} className="mb-8" />
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {PRICING_TIERS.map((tier, i) => (
+        {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} period={period} index={i} />
         ))}
       </div>

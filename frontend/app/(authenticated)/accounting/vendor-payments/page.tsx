@@ -1,5 +1,5 @@
-import { VendorPaymentsPage } from "@/features/accounting/purchases/vendor-payments-page";
+import { VendorPaymentsPage } from "@/features/accounting/purchases/payments/vendor-payments-page";
 
-export default function Page() {
+export default function AccountingVendorPaymentsPage() {
   return <VendorPaymentsPage />;
 }

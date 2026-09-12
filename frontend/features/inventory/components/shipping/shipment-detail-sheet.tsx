@@ -27,6 +27,8 @@ import {
 import {
   SHIPMENT_STATUS_BADGE,
   SHIPMENT_STATUS_LABEL,
+  PACKAGE_STATUS_BADGE,
+  PACKAGE_STATUS_LABEL,
 } from "@/features/inventory/lib";
 import {
   useShipment,
@@ -35,6 +37,7 @@ import {
   useCancelShipment,
   useCarriers,
 } from "@/hooks/api/inventory/shipping";
+import { ShipmentTrackingTimeline } from "./shipment-tracking-timeline";
 
 interface ShipmentDetailSheetProps {
   open: boolean;
@@ -63,7 +66,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
   const carrierOptions: ComboboxOption[] = (carriersQuery.data ?? []).map((c) => ({
     value: String(c.id),
     label: c.name,
-    sublabel: c.code ?? undefined,
+    sublabel: c.code,
   }));
 
   function handleRefetchShipment(): void {
@@ -226,8 +229,14 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                   />
                 </div>
               </div>
+              {/* B7. Not "coming soon": the carrier contract is live and this
+                  organisation's carrier is tracked manually, which is a way of
+                  running a warehouse rather than a missing feature. Saying so
+                  tells the operator what to do; the old copy told them to wait
+                  for something nobody was building. */}
               <p className="text-micro text-muted-foreground">
-                Carrier integrations coming soon — enter tracking manually
+                Tracked manually — record carrier updates below as the courier
+                reports them.
               </p>
               <LoadingButton
                 type="button"
@@ -242,6 +251,13 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
               </LoadingButton>
             </div>
 
+            {shipmentId ? (
+              <ShipmentTrackingTimeline
+                shipmentId={shipmentId}
+                trackingNumber={shipment.trackingNumber}
+              />
+            ) : null}
+
             {shipment.lines && shipment.lines.length > 0 && (
               <div>
                 <p className="text-xs font-medium mb-2">Lines</p>
@@ -249,7 +265,29 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                   {shipment.lines.map((line) => (
                     <div key={line.id} className="flex items-center justify-between px-3 py-2">
                       <span className="text-sm">{line.productVariant?.name ?? `Variant #${line.productVariantId}`}</span>
-                      <span className="text-sm tabular-nums">{line.quantity}</span>
+                      <span className="text-sm tabular-nums">{Number(line.quantity)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {shipment.packages && shipment.packages.length > 0 && (
+              <div>
+                <p className="text-xs font-medium mb-2">Packages ({shipment.packages.length})</p>
+                <div className="divide-y divide-border rounded-lg border">
+                  {shipment.packages.map((pkg) => (
+                    <div key={pkg.id} className="flex items-center justify-between px-3 py-2">
+                      <span className="text-sm font-mono">#{pkg.id}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-4 text-micro px-1.5 py-0 border",
+                          PACKAGE_STATUS_BADGE[pkg.status],
+                        )}
+                      >
+                        {PACKAGE_STATUS_LABEL[pkg.status]}
+                      </Badge>
                     </div>
                   ))}
                 </div>

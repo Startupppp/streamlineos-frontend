@@ -30,9 +30,9 @@ export const TEAM_LEADERBOARD_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search the leaderboard…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "rank", width: "w-16 shrink-0" },
-      { field: "count", sortable: true, width: "w-20 shrink-0" },
+      { field: "count", width: "w-20 shrink-0" },
     ],
   },
   detail: {

@@ -1,3 +1,5 @@
+import { format, parseISO } from "date-fns";
+
 
 
 const CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -24,6 +26,36 @@ export function formatDateOnly(date: Date | string | null | undefined): string {
 }
 export function getTodayString(): string {
   return formatDateOnly(new Date());
+}
+
+/**
+ * Date and time, for a log where "when exactly" is the question being asked.
+ *
+ * `formatShortDate` deliberately drops the time, which is right for a due date
+ * and wrong for an audit trail: two events a minute apart would render
+ * identically and the order would look arbitrary.
+ */
+export function formatDateTime(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return format(d, "d MMM yyyy, HH:mm:ss");
+}
+
+/**
+ * A calendar date the backend sent as a bare `YYYY-MM-DD` — a posting date, a
+ * period boundary, an expiry.
+ *
+ * `new Date("2026-09-01")` is UTC midnight, which is 31 August for every reader
+ * west of UTC; `parseISO` reads a date-only string as local midnight, so the day
+ * that renders is the day that was stored. Use `formatShortDate` for a value
+ * that carries a time (an `ISO` timestamp), and this for one that does not.
+ */
+export function formatCalendarDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const parsed = parseISO(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return format(parsed, "d MMM yyyy");
 }
 
 /**

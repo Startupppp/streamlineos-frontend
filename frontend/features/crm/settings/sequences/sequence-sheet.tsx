@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,7 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/components/renderer";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
@@ -110,6 +111,19 @@ export function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetPro
       },
     );
   }
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:sequences:manage") === "denied")
+    return <NoPermissionState permission="crm:sequences:manage" />;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -316,7 +330,7 @@ function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
   if (enrolments.length === 0)
     return (
       <EmptyState
-          access={access}
+        access={access}
         compact
         illustrationPreset="team"
         title="Nobody is enrolled"

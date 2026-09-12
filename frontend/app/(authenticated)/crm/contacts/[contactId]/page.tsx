@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useCallback, useState } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { RecordDetail, asRecordValue } from "@/components/renderer";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
@@ -23,7 +25,8 @@ import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline
 import { ContactRelatedDeals } from "@/features/crm/contacts/detail/contact-related-deals";
 import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
-import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
+import { ContactConsentCard } from "@/features/crm/contacts/detail/contact-consent-card";
+import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-duplicate-banner";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -64,7 +67,7 @@ export default function ContactDetailPage({
   const [emailOpen, setEmailOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
 
-  const { data: contact, isLoading, isError, error, refetch, access} = useContactDetail(id);
+  const { data: contact, isLoading, isError, error, refetch } = useContactDetail(id);
   const deleteMutation = useDeleteContact();
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
@@ -86,6 +89,19 @@ export default function ContactDetailPage({
     });
   }, [id, deleteMutation, router]);
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:contacts:view") === "denied")
+    return <NoPermissionState permission="crm:contacts:view" />;
+
   if (isLoading) return <ContactDetailSkeleton />;
 
   if (isError)
@@ -104,7 +120,6 @@ export default function ContactDetailPage({
     return (
       <PageWrapper title="Not found" backHref="/crm/contacts">
         <EmptyState
-            access={access}
           title="Contact not found"
           description="This contact may have been deleted, or you don't have access to it."
           action={{ label: "Back to contacts", href: "/crm/contacts" }}
@@ -152,7 +167,7 @@ export default function ContactDetailPage({
       }
     >
       <div className="flex min-w-0 flex-col gap-gap-section">
-        <ContactDuplicateBanner contactId={id} />
+        <ContactDuplicateBanner partyId={contact.partyId} />
 
         <RecordDetail layout={layout} record={record} showTitle={false} />
 
@@ -165,6 +180,7 @@ export default function ContactDetailPage({
             />
             <ContactStatsBar contactId={id} openDealsCount={contact.dealId != null ? 1 : 0} />
             <ContactRolesCard contactId={id} />
+            <ContactConsentCard contactId={id} />
           </div>
 
           <div className="flex min-w-0 flex-col gap-gap-toolbar lg:col-span-2">

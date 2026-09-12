@@ -1,5 +1,5 @@
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
-import { validateLayout } from "@/lib/renderer/layout";
+import { validateLayout } from "@/lib/renderer/layout-validation";
 import { applyAdjustment, validateAdjustment } from "@/lib/renderer/layout-adjustment";
 import {
   adjustmentFrom,

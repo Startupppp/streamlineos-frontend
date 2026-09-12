@@ -33,12 +33,17 @@ const BASELINE = {
  * a NEW surface from 1ae37cedf, which turned the page into a real form. It reads
  * one settings object through `useChatOrgSettings` and already renders loading
  * and read-error states; there is no collection behind it to come back empty.
+ *
+ * `/inventory/operations` left on 2026-09-12: it renders an `EmptyState` of its
+ * own now, so pinning it would excuse the next surface added at that route.
+ * `/inventory/reports` did not take its place — the reports hub can render zero
+ * cards when the nav model carries none that the caller may open, so it was
+ * given a real empty state rather than an entry here.
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
   "/chat/settings",
   "/crm/import",
   "/hr/recruitment/sla",
-  "/inventory/operations",
   "/inventory/products/new",
   "/notifications/policy",
   "/settings/organization/structure",

@@ -23,14 +23,14 @@ import { cn } from "@/lib/utils";
 
 const PUBLICATION_TABS = ["all", "failed"] as const;
 
-const PUBLICATION_STATUS_BADGE: Record<string, string | undefined> = {
+const PUBLICATION_STATUS_BADGE: Record<PublicationStatus, string> = {
   PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   PUBLISHED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   FAILED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   SKIPPED: "bg-muted text-muted-foreground border-border",
 };
 
-const PUBLICATION_STATUS_LABEL: Record<string, string | undefined> = {
+const PUBLICATION_STATUS_LABEL: Record<PublicationStatus, string> = {
   PENDING: "Pending",
   PUBLISHED: "Published",
   FAILED: "Failed",
@@ -50,12 +50,8 @@ function formatDate(iso: string | null): string {
 const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
   {
     key: "variant",
-    header: "Variant ID",
-    cell: (row) => (
-      <span className="text-sm font-medium font-mono tabular-nums">{row.productVariantId}</span>
-    ),
-    sortable: true,
-    sortValue: (row) => row.productVariantId,
+    header: "Variant",
+    cell: (row) => <TruncatedText text={row.variantName} className="text-sm font-medium" />,
   },
   {
     key: "status",
@@ -63,25 +59,25 @@ const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={cn("text-dense", PUBLICATION_STATUS_BADGE[row.status] ?? "")}
+        className={cn("text-dense", PUBLICATION_STATUS_BADGE[row.status])}
       >
-        {PUBLICATION_STATUS_LABEL[row.status] ?? row.status}
+        {PUBLICATION_STATUS_LABEL[row.status]}
       </Badge>
     ),
   },
   {
-    key: "publishedAt",
-    header: "Published at",
+    key: "synced",
+    header: "Synced at",
     cell: (row) => (
-      <span className="text-xs text-muted-foreground">{formatDate(row.publishedAt)}</span>
+      <span className="text-xs text-muted-foreground">{formatDate(row.syncedAt)}</span>
     ),
   },
   {
     key: "error",
     header: "Error",
     cell: (row) =>
-      row.error ? (
-        <TruncatedText text={row.error} className="text-xs text-muted-foreground max-w-[200px]" />
+      row.errorMessage ? (
+        <TruncatedText text={row.errorMessage} className="text-xs text-muted-foreground max-w-[200px]" />
       ) : (
         <span className="text-xs text-muted-foreground">—</span>
       ),
@@ -97,7 +93,7 @@ interface PublicationsTableProps {
 function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsTableProps) {
   const retryMutation = useRetryChannelPublications();
   const { data, isLoading } = useChannelPublications(channelId, statusFilter);
-  const publications = data?.items ?? [];
+  const publications = data ?? [];
 
   function handleRetryAll(): void {
     retryMutation.mutate(channelId, {
@@ -170,8 +166,7 @@ export function ChannelPublicationsPanel({
 }: ChannelPublicationsPanelProps) {
   const [activeTab, setActiveTab] = useState<"all" | "failed">("all");
 
-  const channelType = channel?.channelType;
-  const isExternal = channelType !== undefined && EXTERNAL_CHANNEL_TYPES.has(channelType);
+  const isExternal = channel !== null && EXTERNAL_CHANNEL_TYPES.has(channel.channelType);
 
   function handleTabChange(value: string): void {
     const tab = PUBLICATION_TABS.find((candidate) => candidate === value);

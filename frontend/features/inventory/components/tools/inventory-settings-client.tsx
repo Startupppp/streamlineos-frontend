@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -19,6 +19,8 @@ import { InventorySettingsForm } from "./inventory-settings-form";
 import { NumberSequencesCard } from "./number-sequences-card";
 import { SettingsHealthCard } from "./settings-health-card";
 import { WebhooksSettingsCard } from "./webhooks-settings-card";
+import { InventoryMetricsCard } from "./inventory-metrics-card";
+import { ShelfLifeRulesCard } from "./shelf-life-rules-card";
 
 const settingsSchema = z.object({
   allowNegativeStock: z.boolean(),
@@ -28,25 +30,45 @@ const settingsSchema = z.object({
   expiryReservationPolicy: z.enum(["BLOCK", "WARN", "ALLOW"]),
   inspectionOnReceipt: z.boolean(),
   inspectionOnReturn: z.boolean(),
-  overReceiptTolerancePct: z.string(),
+  // Decimal strings, as the endpoint stores and accepts them. The bounds are the
+  // ones the numeric schema enforced, checked on the parsed value.
+  overReceiptTolerancePct: z.string().refine(function isPercent(value) {
+    const n = Number(value);
+    return value.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 100;
+  }, "Enter a percentage between 0 and 100."),
   requirePoApproval: z.boolean(),
-  adjustmentApprovalThreshold: z.string().nullable(),
+  adjustmentApprovalThreshold: z.string().nullable().refine(function isThreshold(value) {
+    if (value === null) return true;
+    const n = Number(value);
+    return value.trim() !== "" && Number.isFinite(n) && n >= 0;
+  }, "Enter a threshold of zero or more."),
   autoReserveOnConfirm: z.boolean(),
   allowPartialShipment: z.boolean(),
   packageRequiredForShipping: z.boolean(),
-});
+  packWarehouse: z.boolean(),
+  packKirana: z.boolean(),
+  packPharmacy: z.boolean(),
+  packGst: z.boolean(),
+}).refine(
+  function atLeastOnePack(values) {
+    return values.packWarehouse || values.packKirana || values.packPharmacy || values.packGst;
+  },
+  {
+    message: "Keep at least one pack enabled — warehouse, kirana, pharmacy or gst.",
+    path: ["packWarehouse"],
+  },
+);
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
+/** The loaded settings as form values, field by field rather than by cast. */
 function toFormValues(settings: InventorySettings): SettingsFormValues {
-  const parsed = settingsSchema.safeParse(settings);
-  if (parsed.success) return parsed.data;
   return {
     allowNegativeStock: settings.allowNegativeStock,
     allowBackorders: settings.allowBackorders,
-    reservationStrategy: "MANUAL",
-    defaultCostingMethod: "FIFO",
-    expiryReservationPolicy: "WARN",
+    reservationStrategy: settings.reservationStrategy,
+    defaultCostingMethod: settings.defaultCostingMethod,
+    expiryReservationPolicy: settings.expiryReservationPolicy,
     inspectionOnReceipt: settings.inspectionOnReceipt,
     inspectionOnReturn: settings.inspectionOnReturn,
     overReceiptTolerancePct: settings.overReceiptTolerancePct,
@@ -55,6 +77,10 @@ function toFormValues(settings: InventorySettings): SettingsFormValues {
     autoReserveOnConfirm: settings.autoReserveOnConfirm,
     allowPartialShipment: settings.allowPartialShipment,
     packageRequiredForShipping: settings.packageRequiredForShipping,
+    packWarehouse: settings.packWarehouse,
+    packKirana: settings.packKirana,
+    packPharmacy: settings.packPharmacy,
+    packGst: settings.packGst,
   };
 }
 
@@ -89,14 +115,14 @@ export function InventorySettingsClient() {
   );
 
   if (!canManage) {
+    // G8. This used to render "Access Denied" through the *empty* component —
+    // the same illustration and layout the screen shows when a list has no rows.
+    // Denied and empty are different answers and must not look alike, which is
+    // what `NoPermissionState` exists to say; it also names the key, so the
+    // reader can ask for the right thing.
     return (
       <PageWrapper title="Settings" subtitle="">
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <InventoryEmptyState
-            title="Access Denied"
-            description="You don't have permission to manage inventory settings."
-          />
-        </div>
+        <NoPermissionState permission="inventory:settings:manage" className="flex-1" />
       </PageWrapper>
     );
   }
@@ -159,7 +185,9 @@ export function InventorySettingsClient() {
 
       <div className="space-y-4">
         <NumberSequencesCard />
+        <ShelfLifeRulesCard />
         <SettingsHealthCard />
+        <InventoryMetricsCard />
         <WebhooksSettingsCard />
       </div>
       </div>

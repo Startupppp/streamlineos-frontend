@@ -1,5 +1,5 @@
-import { ProfitLossPage } from "@/features/accounting/reports/profit-loss-page";
+import { ProfitLossReport } from "@/features/accounting/reports";
 
-export default function Page() {
-  return <ProfitLossPage />;
+export default function ProfitLossPage() {
+  return <ProfitLossReport />;
 }

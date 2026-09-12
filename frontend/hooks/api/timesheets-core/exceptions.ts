@@ -43,6 +43,15 @@ function invalidateExceptionQueries(qc: QueryClient) {
   });
 }
 
+/**
+ * The most rows one page can return.
+ *
+ * `exceptionsQuerySchema` caps `limit` at 100. The list is a keyset walk
+ * (`{ data, pagination: { nextCursor } }`), so this is the size of one page,
+ * not a ceiling on the queue: "Load more" follows the cursor to the rest.
+ */
+export const EXCEPTIONS_PAGE_LIMIT = 100;
+
 export function useTimesheetExceptions(
   query: ExceptionsQueryInput = {},
   enabled = true,
@@ -53,7 +62,7 @@ export function useTimesheetExceptions(
     severity: query.severity,
     rule: query.rule,
     userId: query.userId,
-    limit: query.limit ?? 50,
+    limit: query.limit ?? EXCEPTIONS_PAGE_LIMIT,
   };
   return useInfiniteQuery<CursorPage<TimesheetException>>({
     queryKey: usersAndCommerceQueryKeys.timesheets.exceptions(filters),

@@ -18,20 +18,9 @@ export interface ContactRoleCreateInput {
   isPrimary?: boolean;
 }
 
-export interface MergeContactsInput {
-  primaryId: number;
-  duplicateId: number;
-}
-
 export interface MergeOrgsInput {
   primaryId: number;
   duplicateId: number;
-}
-
-export interface DuplicateContactPair {
-  contact1: { id: number; name: string; email: string | null; phone: string | null };
-  contact2: { id: number; name: string; email: string | null; phone: string | null };
-  matchReason: "email" | "phone" | "name";
 }
 
 export interface DuplicateOrgPair {

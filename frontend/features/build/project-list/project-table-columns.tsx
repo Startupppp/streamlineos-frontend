@@ -56,8 +56,6 @@ export function useProjectTableColumns({
       {
         key: "name",
         header: "Name",
-        sortable: true,
-        sortValue: (p) => p.name,
         className: "min-w-[200px] w-[240px] max-w-[320px]",
         cell: (p) => (
           <div
@@ -105,8 +103,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "status",
         header: "Status",
-        sortable: true,
-        sortValue: (p) => p.status ?? "",
         className: "w-[100px]",
         cell: (p) => {
           const status = p.status ?? "ACTIVE";
@@ -132,16 +128,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "priority",
         header: "Priority",
-        sortable: true,
-        sortValue: (p) => {
-          const order: Record<string, number> = {
-            URGENT: 0,
-            HIGH: 1,
-            MEDIUM: 2,
-            LOW: 3,
-          };
-          return order[p.priority ?? ""] ?? 4;
-        },
         className: "w-[96px]",
         cell: (p) => (
           <InlineProjectPriority
@@ -156,15 +142,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "health",
         header: "Health",
-        sortable: true,
-        sortValue: (p) => {
-          const order: Record<ProjectHealth, number> = {
-            off_track: 0,
-            at_risk: 1,
-            on_track: 2,
-          };
-          return order[p.health];
-        },
         className: "w-[96px]",
         cell: (p) => {
           const healthLabels: Record<ProjectHealth, string> = {
@@ -200,8 +177,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "lead",
         header: "Lead",
-        sortable: true,
-        sortValue: (p) => getUserDisplayName(p.manager),
         className: "w-[130px]",
         cell: (p) =>
           canEdit ? (
@@ -291,9 +266,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "endDate",
         header: "Target",
-        sortable: true,
-        sortValue: (p) =>
-          p.endDate ? new Date(p.endDate).getTime() : Infinity,
         className: "w-[84px]",
         cell: (p) => {
           const status = p.status ?? "ACTIVE";
@@ -319,9 +291,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "startDate",
         header: "Start",
-        sortable: true,
-        sortValue: (p) =>
-          p.startDate ? new Date(p.startDate).getTime() : Infinity,
         className: "w-[80px]",
         cell: (p) =>
           p.startDate ? (
@@ -338,8 +307,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "issues",
         header: "Issues",
-        sortable: true,
-        sortValue: (p) => p.progress.total,
         className: "w-[72px]",
         cell: (p) => (
           <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
@@ -354,8 +321,6 @@ export function useProjectTableColumns({
       cols.push({
         key: "progress",
         header: "Progress",
-        sortable: true,
-        sortValue: (p) => p.progress.percentage,
         className: "w-[110px]",
         cell: (p) => {
           const progressValue =

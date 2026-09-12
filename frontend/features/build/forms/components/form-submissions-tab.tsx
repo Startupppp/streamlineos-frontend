@@ -95,8 +95,6 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       cell: (row) => (
         <span className="text-xs text-muted-foreground tabular-nums">{row.createdAt.slice(0, 10)}</span>
       ),
-      sortable: true,
-      sortValue: (row) => row.createdAt,
     },
     {
       key: "actions",

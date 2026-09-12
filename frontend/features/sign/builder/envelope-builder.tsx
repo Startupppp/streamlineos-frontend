@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignEnvelope } from "@/hooks/api/sign/envelopes";
 import { useSignDocumentPreview } from "@/hooks/api/sign/documents";
 import { BuilderProvider, useBuilder } from "./builder-context";
@@ -35,7 +36,11 @@ function BuilderRightPanel({ envelopeId }: { envelopeId: number }) {
 }
 
 function BuilderContent({ envelopeId }: { envelopeId: number }) {
-  const { data, isLoading, isError, refetch } = useSignEnvelope(envelopeId);
+  const { data, isLoading, isError, error, refetch } = useSignEnvelope(envelopeId);
+
+  function handleRetry() {
+    void refetch();
+  }
   const [auditOpen, setAuditOpen] = useState(false);
   const { selectedDocumentId, setSelectedDocumentId } = useBuilder();
 
@@ -49,6 +54,18 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
   const previewDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
   const { data: preview } = useSignDocumentPreview(previewDocumentId ?? undefined);
 
+  if (isError) {
+    return (
+      <PageWrapper title="Envelope" noInternalScroll>
+        <ErrorState
+          title="Failed to load this envelope"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
   if (isLoading || !data) {
     return (
       <PageWrapper title="Loading envelope…" noInternalScroll>
@@ -60,20 +77,12 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
     );
   }
 
-  if (isError) {
-    return (
-      <PageWrapper title="Envelope" noInternalScroll>
-        <ErrorState title="Failed to load this envelope" onRetry={() => void refetch()} />
-      </PageWrapper>
-    );
-  }
-
   const editable = EDITABLE_STATUSES.has(data.envelope.status);
   const selectedDocument = data.documents.find((d) => d.id === selectedDocumentId);
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <BuilderTopBar envelope={data.envelope} onShowAudit={() => setAuditOpen(true)} />
+      <BuilderTopBar envelope={data.envelope} recipients={data.recipients} onShowAudit={() => setAuditOpen(true)} />
       <div className="flex flex-1 min-h-0">
         <BuilderLeftPanel envelopeId={envelopeId} documents={data.documents} recipients={data.recipients} editable={editable} />
         <BuilderCanvasArea

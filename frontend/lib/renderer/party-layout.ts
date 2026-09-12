@@ -53,11 +53,11 @@ export const PARTY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search parties…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "legalName" },
+      { field: "name", primary: true, subtitle: "legalName" },
       { field: "partyType", width: "w-36 shrink-0" },
       { field: "email", width: "min-w-[160px]" },
       { field: "phone", width: "min-w-[120px]" },
-      { field: "createdAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

@@ -59,13 +59,13 @@ export const DEAL_APPROVAL_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search approvals…",
     columns: [
-      { field: "dealName", primary: true, sortable: true },
-      { field: "dealValue", sortable: true, width: "w-32 shrink-0" },
+      { field: "dealName", primary: true },
+      { field: "dealValue", width: "w-32 shrink-0" },
       { field: "requesterName", width: "min-w-[140px]" },
       { field: "stage", width: "w-32 shrink-0" },
       { field: "status", width: "w-24 shrink-0" },
       { field: "rejectionReason", width: "min-w-[160px]" },
-      { field: "createdAt", sortable: true, width: "w-28 shrink-0" },
+      { field: "createdAt", width: "w-28 shrink-0" },
     ],
   },
   detail: {

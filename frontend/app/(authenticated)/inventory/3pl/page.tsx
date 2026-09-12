@@ -11,11 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL, type SyncStatus } from "@/features/inventory/lib";
+import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
 import {
   useThreePlConnections,
   useSyncThreePlConnection,
@@ -24,13 +25,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ThreePlConnectionSheet } from "@/features/inventory/components/channels/three-pl-connection-sheet";
-
-const SYNC_STATUS_VALUES: ReadonlyArray<SyncStatus> = ["IDLE", "SYNCING", "SUCCESS", "ERROR", "PAUSED"];
-
-function resolveSyncStatus(raw: string | null): SyncStatus | undefined {
-  if (!raw) return undefined;
-  return SYNC_STATUS_VALUES.find((s) => s === raw);
-}
+import { useCan } from "@/hooks/api/access";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -78,6 +73,7 @@ function SyncButtonCell({ connectionId }: SyncButtonCellProps) {
 }
 
 function ThreePlContent() {
+  const canView = useCan("inventory:3pl:manage");
   const { data, isLoading, isError, refetch } = useThreePlConnections();
   const connections = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
@@ -110,32 +106,28 @@ function ThreePlContent() {
         key: "name",
         header: "Name",
         cell: (row) => <span className="font-medium text-sm">{row.name}</span>,
-        sortable: true,
-        sortValue: (row) => row.name,
       },
       {
-        key: "provider",
+        key: "providerKey",
         header: "Provider",
         cell: (row) => (
-          <span className="font-mono text-dense text-muted-foreground">{row.provider}</span>
+          <span className="font-mono text-dense text-muted-foreground">{row.providerKey}</span>
         ),
       },
       {
-        key: "status",
-        header: "Status",
+        key: "isActive",
+        header: "Active",
         cell: (row) => (
           <Badge
             variant="outline"
             className={cn(
               "text-dense",
-              row.status === "CONNECTED"
+              row.isActive
                 ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
-                : row.status === "ERROR"
-                  ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
-                  : "bg-muted text-muted-foreground border-border",
+                : "bg-muted text-muted-foreground border-border",
             )}
           >
-            {row.status === "CONNECTED" ? "Connected" : row.status === "ERROR" ? "Error" : "Disconnected"}
+            {row.isActive ? "Active" : "Inactive"}
           </Badge>
         ),
       },
@@ -144,8 +136,8 @@ function ThreePlContent() {
         header: "Sync Status",
         cell: (row) => {
           const isNotConnected =
-            row.lastSyncStatus !== null &&
-            row.lastSyncStatus.toLowerCase().includes("not connected");
+            row.lastSyncError !== null &&
+            row.lastSyncError.toLowerCase().includes("not connected");
 
           if (isNotConnected) {
             return (
@@ -156,15 +148,16 @@ function ThreePlContent() {
             );
           }
 
-          const syncStatus = resolveSyncStatus(row.lastSyncStatus);
-          if (!syncStatus) return <span className="text-xs text-muted-foreground">—</span>;
+          if (!row.lastSyncStatus) {
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
 
           return (
             <Badge
               variant="outline"
-              className={cn("text-dense", SYNC_STATUS_BADGE[syncStatus])}
+              className={cn("text-dense", SYNC_STATUS_BADGE[row.lastSyncStatus])}
             >
-              {SYNC_STATUS_LABEL[syncStatus]}
+              {SYNC_STATUS_LABEL[row.lastSyncStatus]}
             </Badge>
           );
         },
@@ -181,22 +174,19 @@ function ThreePlContent() {
         header: "Error",
         cell: (row) => {
           const isNotConnected =
-            row.lastSyncStatus !== null &&
-            row.lastSyncStatus.toLowerCase().includes("not connected");
+            row.lastSyncError !== null &&
+            row.lastSyncError.toLowerCase().includes("not connected");
 
           if (isNotConnected) {
             return <span className="text-xs text-muted-foreground">—</span>;
           }
 
-          const syncStatus = resolveSyncStatus(row.lastSyncStatus);
-          const rawError = !syncStatus ? row.lastSyncStatus : null;
-
-          return rawError ? (
+          return row.lastSyncError ? (
             <span
               className="text-xs text-status-danger-ink truncate max-w-[180px] block"
-              title={rawError}
+              title={row.lastSyncError}
             >
-              {rawError}
+              {row.lastSyncError}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
@@ -218,6 +208,16 @@ function ThreePlContent() {
       Add Connection
     </Button>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="3PL Connections"
+        subtitle="Manage third-party logistics provider connections"
+      >
+        <NoPermissionState permission="inventory:3pl:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (

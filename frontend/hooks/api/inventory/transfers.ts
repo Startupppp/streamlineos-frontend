@@ -1,12 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { TransferStatus } from "@/features/inventory/lib";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type { TransferStatus };
 
@@ -93,10 +92,10 @@ interface RawTransferListItem {
   notes: string | null;
   completedAt: string | null;
   createdAt: string;
-  fromLocation?: { id: number; name: string; code: string } | null;
-  toLocation?: { id: number; name: string; code: string } | null;
-  creator?: { id: string; name: string | null } | null;
-  lines?: Array<{ id: number }>;
+  fromLocation: { id: number; name: string; code: string } | null;
+  toLocation: { id: number; name: string; code: string } | null;
+  creator: { id: string; name: string | null } | null;
+  lines: Array<{ id: number }>;
 }
 
 interface RawTransferDetailLine {
@@ -106,13 +105,13 @@ interface RawTransferDetailLine {
   notes: string | null;
   lotId: number | null;
   serialId: number | null;
-  lot?: { id: number; lotNumber: string } | null;
-  serial?: { id: number; serialNumber: string } | null;
-  productVariant?: {
+  lot: { id: number; lotNumber: string } | null;
+  serial: { id: number; serialNumber: string } | null;
+  productVariant: {
     id: number;
     name: string | null;
     sku: string | null;
-    product?: { id: number; name: string; sku: string } | null;
+    product: { id: number; name: string; sku: string } | null;
   } | null;
 }
 
@@ -130,10 +129,10 @@ interface RawTransferDetail {
   notes: string | null;
   createdAt: string;
   completedAt: string | null;
-  creator?: { id: string; name: string | null } | null;
-  fromLocation?: RawTransferLocation | null;
-  toLocation?: RawTransferLocation | null;
-  lines?: RawTransferDetailLine[];
+  creator: { id: string; name: string | null } | null;
+  fromLocation: RawTransferLocation | null;
+  toLocation: RawTransferLocation | null;
+  lines: RawTransferDetailLine[];
 }
 
 function toTransferListItem(r: RawTransferListItem): TransferListItem {
@@ -165,9 +164,9 @@ function toTransferDetail(r: RawTransferDetail): TransferDetail {
     createdAt: r.createdAt,
     completedAt: r.completedAt,
     createdByName: r.creator?.name ?? null,
-    fromLocation: toTransferLocationRef(r.fromLocation ?? null),
-    toLocation: toTransferLocationRef(r.toLocation ?? null),
-    lines: (r.lines ?? []).map((l) => ({
+    fromLocation: toTransferLocationRef(r.fromLocation),
+    toLocation: toTransferLocationRef(r.toLocation),
+    lines: r.lines.map((l) => ({
       id: l.id,
       productName: l.productVariant?.product?.name ?? l.productVariant?.name ?? "—",
       sku: l.productVariant?.product?.sku ?? l.productVariant?.sku ?? "—",
@@ -193,21 +192,11 @@ export interface TransferFilters {
   limit?: number;
 }
 
-const listTransfersContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.listTransfersContract),
-);
-const transferItemContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.transferItemContract),
-);
-const successContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.successContract),
-);
-
 export function useTransfers(filters?: TransferFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<{ items: TransferListItem[]; total: number; page: number; totalPages: number }, Error>({
     queryKey: queryKeys.inventory.transfers(filters as Record<string, unknown>),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const params: Record<string, string | undefined> = {};
       if (filters?.status) params.status = filters.status;
       if (filters?.fromWarehouseId) params.fromWarehouseId = String(filters.fromWarehouseId);
@@ -219,9 +208,7 @@ export function useTransfers(filters?: TransferFilters) {
       if (filters?.limit) params.limit = String(filters.limit);
       const res = await apiClient.get<{ items: RawTransferListItem[]; total: number; page: number; totalPages: number }>(
         "/inventory/stock/transfers",
-        params,
-        undefined,
-        listTransfersContract,
+        params, signal,
       );
       return {
         items: res.items.map(toTransferListItem),
@@ -241,7 +228,7 @@ export function useTransfer(transferId: number) {
     queryKey: queryKeys.inventory.transfer(transferId),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawTransferDetail | null>(
-        `/inventory/stock/transfers/${transferId}`, undefined, signal, transferItemContract,
+        `/inventory/stock/transfers/${transferId}`, undefined, signal,
       );
       return res ? toTransferDetail(res) : null;
     },
@@ -252,9 +239,9 @@ export function useTransfer(transferId: number) {
 
 export function useCreateTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<CreatedTransfer, Error, CreateTransferInput>("inventory:stock:transfer", {
+  return useAuthorizedIdempotentMutation<CreatedTransfer, Error, CreateTransferInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "create"],
-    mutationFn: (data) =>
+    mutationFn: (data, idempotencyKey) =>
       apiClient.post<CreatedTransfer>("/inventory/stock/transfers", {
         fromLocationId: data.fromLocationId,
         toLocationId: data.toLocationId,
@@ -265,7 +252,7 @@ export function useCreateTransfer() {
           lotId: l.lotId,
           serialId: l.serialId,
         })),
-      }, undefined, transferItemContract),
+      }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -275,10 +262,10 @@ export function useCreateTransfer() {
 
 export function useCompleteTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, CompleteTransferInput>("inventory:stock:transfer", {
+  return useAuthorizedIdempotentMutation<void, Error, CompleteTransferInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "complete"],
-    mutationFn: ({ transferId, lines }) =>
-      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/complete`, { lines }, undefined, successContract),
+    mutationFn: ({ transferId, lines }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -290,10 +277,10 @@ export function useCompleteTransfer() {
 
 export function useDispatchTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, { transferId: number }>("inventory:stock:transfer", {
+  return useAuthorizedIdempotentMutation<void, Error, { transferId: number }>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "dispatch"],
-    mutationFn: ({ transferId }) =>
-      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/dispatch`, {}, undefined, successContract),
+    mutationFn: ({ transferId }, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
@@ -304,14 +291,12 @@ export function useDispatchTransfer() {
 
 export function useReserveTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, number>("inventory:stock:transfer", {
+  return useAuthorizedIdempotentMutation<void, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "reserve"],
-    mutationFn: (transferId) =>
-      apiClient.post<unknown>(
+    mutationFn: (transferId, idempotencyKey) =>
+      apiClient.post<void>(
         `/inventory/stock/transfers/${transferId}/reserve`,
-        {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-        transferItemContract,
+        {}, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
@@ -322,10 +307,10 @@ export function useReserveTransfer() {
 
 export function useCancelTransfer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, number>("inventory:stock:transfer", {
+  return useAuthorizedIdempotentMutation<void, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "cancel"],
-    mutationFn: (transferId) =>
-      apiClient.post<{ success: true }>(`/inventory/stock/transfers/${transferId}/cancel`, {}, undefined, successContract),
+    mutationFn: (transferId, idempotencyKey) =>
+      apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });

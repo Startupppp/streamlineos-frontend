@@ -14,17 +14,26 @@ import { DEAL_AGING_LAYOUT } from "./crm/deal-aging-layout";
 import { DEAL_APPROVAL_LAYOUT } from "./crm/deal-approval-layout";
 import { LEAD_LAYOUT } from "./crm/lead-layout";
 import { LEAD_ACTIVITY_LAYOUT } from "./crm/lead-activity-layout";
+import {
+  NURTURE_ENROLLMENT_LAYOUT,
+  NURTURE_SEQUENCE_LAYOUT,
+} from "./crm/nurture-layout";
 import { QUOTE_LAYOUT } from "./crm/quote-layout";
 import { QUOTE_LINE_ITEM_LAYOUT } from "./crm/quote-line-item-layout";
+import { REP_CALL_METRICS_LAYOUT } from "./crm/rep-call-metrics-layout";
+import { SEGMENT_LAYOUT } from "./crm/segment-layout";
 import { TASK_LAYOUT } from "./crm/task-layout";
+import { REPORT_RUN_LAYOUT } from "./crm/reports/report-run-layout";
 import { REP_PERFORMANCE_LAYOUT } from "./crm/reports/rep-performance-layout";
 import { SOURCE_ATTRIBUTION_LAYOUT } from "./crm/reports/source-attribution-layout";
 import { TEAM_LEADERBOARD_LAYOUT } from "./crm/reports/team-leaderboard-layout";
+import { ASSIGNMENT_RULE_LAYOUT } from "./crm/settings/assignment-rule-layout";
 import { AUDIT_ENTRY_LAYOUT } from "./crm/settings/audit-entry-layout";
 import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
 import { BLUEPRINT_LAYOUT } from "./crm/settings/blueprint-layout";
 import { CUSTOM_FIELD_LAYOUT } from "./crm/settings/custom-field-layout";
 import { EMAIL_TEMPLATE_LAYOUT } from "./crm/settings/email-template-layout";
+import { MCP_TOKEN_LAYOUT } from "./crm/settings/mcp-token-layout";
 import {
   QUOTE_SETTINGS_LAYOUT,
   QUOTE_TEMPLATE_LAYOUT,
@@ -99,6 +108,9 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   { layout: CAMPAIGN_LAYOUT, section: "CRM", viewPermission: "crm:campaigns:view" },
   { layout: TASK_LAYOUT, section: "CRM", viewPermission: "crm:tasks:view" },
   { layout: ACTIVITY_LAYOUT, section: "CRM", viewPermission: "crm:activities:view" },
+  { layout: SEGMENT_LAYOUT, section: "CRM", viewPermission: "crm:segments:view" },
+  { layout: NURTURE_SEQUENCE_LAYOUT, section: "CRM", viewPermission: "crm:autonomy:view" },
+  { layout: NURTURE_ENROLLMENT_LAYOUT, section: "CRM", viewPermission: "crm:autonomy:view" },
 
   /*
     Records that only ever appear inside another record's page. Registered
@@ -142,6 +154,23 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     derived: true,
   },
   {
+    layout: REPORT_RUN_LAYOUT,
+    section: "Reports",
+    viewPermission: "crm:reporting:view",
+    derived: true,
+  },
+  {
+    layout: REP_CALL_METRICS_LAYOUT,
+    /*
+      The key the coaching page itself is gated on -- every CRM member holds it
+      and sees their own numbers -- rather than `:view-team`. Arranging the
+      columns is not the same act as reading somebody else's row.
+    */
+    viewPermission: "crm:call-analysis:view",
+    section: "Reports",
+    derived: true,
+  },
+  {
     layout: SLA_BREACH_LAYOUT,
     section: "Reports",
     viewPermission: "crm:sla:manage",
@@ -154,6 +183,11 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     derived: true,
   },
 
+  {
+    layout: ASSIGNMENT_RULE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:assignment-rules:manage",
+  },
   { layout: PRODUCT_LAYOUT, section: "CRM settings", viewPermission: "crm:products:manage" },
   { layout: PRICEBOOK_LAYOUT, section: "CRM settings", viewPermission: "crm:pricebooks:manage" },
   {
@@ -201,6 +235,16 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     layout: QUOTE_SETTINGS_LAYOUT,
     section: "CRM settings",
     viewPermission: "crm:settings:manage",
+  },
+  /*
+    A record you only ever fill in: a token is created here, revealed once and
+    never listed as a record surface. Registered anyway -- a description that
+    renders a form is a description worth holding to the engine's rules.
+  */
+  {
+    layout: MCP_TOKEN_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "settings:api-tokens:read",
   },
   {
     layout: CUSTOM_FIELD_LAYOUT,

@@ -2,6 +2,7 @@ import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
 import { isRecord } from "@/lib/is-record";
 import {
   ApiError,
+  apiErrorFromResponse,
   parseApiResponse,
   resolveContract,
   type ContractSource,
@@ -165,6 +166,16 @@ function requestHost(url: string): string {
 }
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/**
+ * Re-exported because a caller that needs a key stable across *retries* has to
+ * mint it once, outside the request. The per-fetch key below is minted inside
+ * `authedFetch`, so a retried mutation would carry a new one and replay
+ * nothing — which is fine for a request that is cheap to repeat and wrong for
+ * one that spends money or holds a message. The key itself lives in
+ * `lib/idempotency-key`; `hooks/common/use-idempotent-operation.ts` is the hook form.
+ */
+export { newIdempotencyKey };
 
 export async function authedFetch(
   url: string,
@@ -417,19 +428,43 @@ async function upload<T>(
   return parseApiResponse<T>(res, await pendingContract, url);
 }
 
+export interface DownloadConfig {
+  /**
+   * A file can be the answer to a request too complex for a query string. The
+   * inventory report builder hands back the exact spec its preview ran, and a
+   * discriminated union of filters is a body, not a `?filters=` — so the one
+   * client learns POST rather than a hook growing its own `fetch` beside it.
+   */
+  method?: "GET" | "POST";
+  body?: unknown;
+  signal?: AbortSignal;
+}
+
 async function download(
   url: string,
   params?: QueryParams,
+  config?: DownloadConfig,
 ): Promise<Blob> {
-  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`;
-    try {
-      const body = await res.json();
-      if (typeof body?.error === "string") message = body.error;
-    } catch {}
-    throw new Error(message);
-  }
+  const method = config?.method ?? "GET";
+  const res = await authedFetch(
+    buildUrl(url, params),
+    {
+      method,
+      ...(config?.body !== undefined
+        ? {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(config.body),
+          }
+        : {}),
+    },
+    url,
+    config?.signal,
+  );
+  // The same ApiError every other call site gets. This used to be a bare
+  // `Error` carrying only `body.error`, so a failed download reached
+  // `getErrorMessage` with no status, no code and no `details` — and NestJS
+  // puts the sentence in `message`, which was never read at all.
+  if (!res.ok) throw await apiErrorFromResponse(res);
   return res.blob();
 }
 

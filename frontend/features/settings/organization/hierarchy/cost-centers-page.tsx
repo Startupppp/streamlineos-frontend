@@ -288,7 +288,7 @@ export function OrgCostCentersPage() {
 
   const columns: DataTableColumn<OrgCostCenter>[] = [
     { key: "code", header: "Code", cell: renderCode },
-    { key: "name", header: "Name", cell: renderName, sortable: true, sortValue: (c) => c.name },
+    { key: "name", header: "Name", cell: renderName },
     { key: "status", header: "Status", cell: renderStatus },
     {
       key: "description",

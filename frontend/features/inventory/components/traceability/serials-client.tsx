@@ -17,12 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
-import {
-  EmptyProductsIllustration,
-  EmptySearchIllustration,
-} from "@/components/illustrations";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
+import { EmptyProductsIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatShortDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerials } from "@/hooks/api/inventory/traceability";
 import {
@@ -74,8 +73,8 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <TruncatedText text={row.productVariant?.name ?? "—"} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-micro">{row.productVariant?.sku ?? "—"}</span>
+        <TruncatedText text={row.productName} className="font-medium text-foreground" />
+        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
       </>
     ),
   },
@@ -92,18 +91,30 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     ),
   },
   {
-    key: "location",
+    key: "currentLocationName",
     header: "Location",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <TruncatedText text={row.location?.name ?? "—"} className="text-muted-foreground" />,
+    cell: (row) => (
+      <TruncatedText
+        text={row.currentLocationName ?? "—"}
+        className="text-muted-foreground"
+      />
+    ),
+  },
+  {
+    key: "currentLocationCode",
+    header: "Bin",
+    headerClassName: "hidden lg:table-cell",
+    className: "font-mono text-muted-foreground hidden lg:table-cell",
+    cell: (row) => <>{row.currentLocationCode ?? "—"}</>,
   },
   {
     key: "createdAt",
     header: "Created",
     headerClassName: "hidden lg:table-cell",
     className: "text-muted-foreground tabular-nums hidden lg:table-cell",
-    cell: (row) => <>{new Date(row.createdAt).toLocaleDateString()}</>,
+    cell: (row) => <>{formatShortDate(row.createdAt)}</>,
   },
   {
     key: "actions",
@@ -113,6 +124,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
 ];
 
 export function SerialsClient() {
+  const canView = useCan("inventory:stock:read");
   const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
@@ -162,6 +174,18 @@ export function SerialsClient() {
       />
     </motion.div>
   );
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Serial Numbers">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

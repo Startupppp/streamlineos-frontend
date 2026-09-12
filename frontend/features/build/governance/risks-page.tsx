@@ -11,11 +11,11 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -194,7 +194,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       cell: (row) => <span className="font-mono text-xs text-muted-foreground">RISK-{row.riskNumber}</span>,
     },
     {
-      key: "title", header: "Title", sortable: true, sortValue: (r) => r.title,
+      key: "title", header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <TruncatedText text={row.title} className="font-medium text-foreground" />

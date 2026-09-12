@@ -156,8 +156,10 @@ describe("Notifications page offline indicator", () => {
 
     render(<NotificationsPage />);
 
-    const region = screen.getByRole("status");
-    expect(region).toBeInTheDocument();
+    const region = screen
+      .getAllByRole("status")
+      .find((element) => /offline/i.test(element.textContent ?? ""));
+    expect(region).toHaveAttribute("aria-live", "polite");
     expect(region).toHaveTextContent(/offline/i);
   });
 

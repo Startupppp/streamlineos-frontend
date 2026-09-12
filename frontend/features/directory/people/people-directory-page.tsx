@@ -13,9 +13,9 @@ import {
 } from "@/hooks/api/directory/people";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -195,8 +195,6 @@ export function PeopleDirectoryPage({
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => displayName(r),
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
