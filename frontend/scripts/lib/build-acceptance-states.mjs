@@ -178,10 +178,17 @@ export function notFoundVerdict(probe) {
   return { ok: true, reason: null };
 }
 
+export function keyboardVerdictGeneric({ reachedName, elementPattern }) {
+  if (!reachedName)
+    return { ok: false, reason: `Tab never reached a named element within ${TAB_LIMIT} presses` };
+  if (!elementPattern.test(reachedName))
+    return { ok: false, reason: `focused element does not match the expected pattern: "${reachedName}"` };
+  return { ok: true, reason: null };
+}
+
 export function keyboardVerdict({ reachedName, pressedNames }) {
-  if (!reachedName) return { ok: false, reason: `Tab never reached a risk cell within ${TAB_LIMIT} presses` };
-  if (!RISK_CELL_PATTERN.test(reachedName))
-    return { ok: false, reason: `focused element is not a named risk cell: "${reachedName}"` };
+  const base = keyboardVerdictGeneric({ reachedName, elementPattern: RISK_CELL_PATTERN });
+  if (!base.ok) return base;
   if (!pressedNames || pressedNames.length === 0)
     return { ok: false, reason: "Enter did not set aria-pressed on any cell" };
   return { ok: true, reason: null };

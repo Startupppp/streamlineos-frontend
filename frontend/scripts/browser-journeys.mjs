@@ -52,6 +52,8 @@ import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { findBrowser } from "./lib/chrome-launcher.mjs";
 import { makeScreenshotter } from "./lib/screenshot.mjs";
+import { sleep, waitForDevTools, cdpSession } from "./lib/cdp.mjs";
+import { keyboardVerdictGeneric, keyboardVerdict } from "./lib/build-acceptance-states.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -531,6 +533,11 @@ const DISCOVERY_ATTEMPTS = 4;
 
 const TOKEN_PATTERN = /\{(\w+)\}/g;
 
+const DOC_KEYBOARD_ELEMENT_PATTERN = /new page|search|wiki|spaces|recent|favorites|create|ask/i;
+const DOC_CITATION_SELECTOR = 'button[data-page-id]';
+const DOC_SR_LIVE_REGION_SELECTOR = '[aria-live], [role="status"], [role="log"], [role="alert"]';
+const DOC_KB_API_PATTERN = /\/knowledge\//i;
+
 export function templateTokens(path) {
   TOKEN_PATTERN.lastIndex = 0;
   const out = [];
@@ -765,53 +772,6 @@ const PAGE_PROBE = `(() => {
   };
 })()`;
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-async function waitForDevTools(port, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/json/version`);
-      if (res.ok) return (await res.json()).webSocketDebuggerUrl;
-    } catch {
-      /* not up yet */
-    }
-    await sleep(200);
-  }
-  throw new Error(`DevTools did not answer on port ${port} within ${timeoutMs}ms`);
-}
-
-async function cdpSession(wsUrl) {
-  const ws = new WebSocket(wsUrl);
-  let msgId = 0;
-  const pending = new Map();
-  await new Promise((res, rej) => {
-    ws.onopen = res;
-    ws.onerror = rej;
-  });
-  ws.onmessage = ({ data }) => {
-    const msg = JSON.parse(data);
-    if (msg.id === undefined) return;
-    const cb = pending.get(msg.id);
-    if (cb) {
-      pending.delete(msg.id);
-      cb(msg);
-    }
-  };
-  const send = (method, params = {}) => {
-    const id = ++msgId;
-    return new Promise((res, rej) => {
-      pending.set(id, (m) =>
-        m.error ? rej(new Error(`${method}: ${m.error.message}`)) : res(m.result),
-      );
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  };
-  return { send, close: () => ws.close() };
-}
-
 function runSelfTest() {
   const failures = [];
   let passed = 0;
@@ -1040,6 +1000,63 @@ function runSelfTest() {
   assert(
     "BITE — makeScreenshotter must be a function; if the shared lib removes it, screenshot evidence gaps",
     typeof makeScreenshotter === "function",
+  );
+
+  assert(
+    "stateVerdict classifies error state as error, not content",
+    stateVerdict({ error: true }) === "error",
+  );
+  assert(
+    "BITE — error state is not silently collapsed into content",
+    stateVerdict({ error: true }) !== "content",
+  );
+  assert(
+    "keyboardVerdictGeneric fails when Tab never reached any named element",
+    keyboardVerdictGeneric({ reachedName: null, elementPattern: /search/i }).ok === false,
+  );
+  assert(
+    "keyboardVerdictGeneric fails when the focused element does not match the required pattern",
+    keyboardVerdictGeneric({ reachedName: "Close", elementPattern: /search|new page/i }).ok === false,
+  );
+  assert(
+    "keyboardVerdictGeneric passes when Tab reaches a correctly named matching element",
+    keyboardVerdictGeneric({ reachedName: "Search wiki", elementPattern: /search|new page/i }).ok === true,
+  );
+  assert(
+    "BITE — keyboardVerdictGeneric with a non-matching pattern fails even when Tab reached an element",
+    keyboardVerdictGeneric({ reachedName: "New page", elementPattern: /probability.*impact/i }).ok === false,
+  );
+  assert(
+    "keyboardVerdict still gates on the risk-cell pattern for the Build module",
+    keyboardVerdict({ reachedName: "low probability, medium impact: 1 open risks", pressedNames: ["low probability, medium impact: 1 open risks"] }).ok === true,
+  );
+  assert(
+    "BITE — keyboardVerdict requires aria-pressed to be set; Tab focus alone does not satisfy the Build check",
+    keyboardVerdict({ reachedName: "low probability, medium impact: 1 open risks", pressedNames: [] }).ok === false,
+  );
+  assert(
+    "DOC_CITATION_SELECTOR targets the data-page-id attribute so the navigation target is verifiable",
+    DOC_CITATION_SELECTOR.includes("data-page-id"),
+  );
+  assert(
+    "BITE — DOC_CITATION_SELECTOR without data-page-id cannot verify which wiki page was navigated to",
+    /data-page-id/.test(DOC_CITATION_SELECTOR),
+  );
+  assert(
+    "DOC_SR_LIVE_REGION_SELECTOR covers aria-live regions for dynamic content announcements",
+    DOC_SR_LIVE_REGION_SELECTOR.includes("aria-live"),
+  );
+  assert(
+    "BITE — a screen-reader selector without aria-live misses elements that announce via aria-live= without a role",
+    /\[aria-live\]/.test(DOC_SR_LIVE_REGION_SELECTOR),
+  );
+  assert(
+    "DOC_KB_API_PATTERN matches knowledge wiki and chat endpoints for offline interception",
+    DOC_KB_API_PATTERN.test("/api/knowledge/pages/42") && DOC_KB_API_PATTERN.test("/knowledge/chat/stream"),
+  );
+  assert(
+    "BITE — DOC_KB_API_PATTERN does not match unrelated routes so it cannot silently intercept the whole app",
+    !DOC_KB_API_PATTERN.test("/api/build/tickets/42") && !DOC_KB_API_PATTERN.test("/api/accounting/coa"),
   );
 
   const axeSample = {
@@ -1442,6 +1459,150 @@ async function main() {
         findings.push({ journey: write.name, route: expanded.path, kind: "write-not-persisted", subject });
       log(`write ${write.name} · ${persisted ? "PERSISTED" : "NOT PERSISTED"} · ${subject}`);
     }
+
+    try {
+      await cdp.send("Page.navigate", { url: `${baseUrl}/knowledge/chat` });
+      await sleep(settleMs);
+      const liveCount = Number(await evaluate(
+        `document.querySelectorAll(${JSON.stringify(DOC_SR_LIVE_REGION_SELECTOR)}).length`,
+      ) ?? 0);
+      if (liveCount === 0)
+        findings.push({
+          journey: "documents",
+          route: "/knowledge/chat",
+          kind: "docs-sr-no-live-region",
+          detail: "no aria-live, role=status, role=log or role=alert region found; chat responses may not be announced to screen readers",
+        });
+    } catch (e) {
+      findings.push({ journey: "documents", route: "/knowledge/chat", kind: "docs-sr-probe-error", reason: String(e.message ?? e) });
+    }
+
+    try {
+      await cdp.send("Page.navigate", { url: `${baseUrl}/knowledge/chat` });
+      await sleep(settleMs);
+      const citationPageId = await evaluate(`(() => {
+        const btn = document.querySelector(${JSON.stringify(DOC_CITATION_SELECTOR)});
+        return btn ? String(btn.dataset.pageId || "") : null;
+      })()`);
+      if (citationPageId !== null) {
+        await evaluate(clickSelector(DOC_CITATION_SELECTOR));
+        await sleep(settleMs);
+        const landed = String(await evaluate("location.pathname") ?? "");
+        if (!landed.startsWith("/knowledge/wiki/pages/"))
+          findings.push({
+            journey: "documents",
+            route: "/knowledge/chat",
+            kind: "docs-citation-nav-failed",
+            landed,
+            expected: "/knowledge/wiki/pages/*",
+          });
+      }
+    } catch (e) {
+      findings.push({ journey: "documents", route: "/knowledge/chat", kind: "docs-citation-probe-error", reason: String(e.message ?? e) });
+    }
+
+    try {
+      await cdp.send("Page.navigate", { url: `${baseUrl}/knowledge/wiki` });
+      await sleep(settleMs);
+      await evaluate("document.body.focus()");
+      let kbReachedName = null;
+      for (let i = 0; i < 30 && !kbReachedName; i++) {
+        await cdp.send("Input.dispatchKeyEvent", { type: "rawKeyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+        await cdp.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+        await sleep(60);
+        const name = String(await evaluate(
+          `(document.activeElement ? (document.activeElement.getAttribute("aria-label") || document.activeElement.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 200) : "")`,
+        ) ?? "");
+        if (name.length > 0 && DOC_KEYBOARD_ELEMENT_PATTERN.test(name)) kbReachedName = name;
+      }
+      const kbV = keyboardVerdictGeneric({ reachedName: kbReachedName, elementPattern: DOC_KEYBOARD_ELEMENT_PATTERN });
+      if (!kbV.ok)
+        findings.push({ journey: "documents", route: "/knowledge/wiki", kind: "docs-keyboard-unreachable", reason: kbV.reason });
+    } catch (e) {
+      findings.push({ journey: "documents", route: "/knowledge/wiki", kind: "docs-keyboard-probe-error", reason: String(e.message ?? e) });
+    }
+
+    const docPagePath = expandStep("/knowledge/wiki/pages/{pageId}", tokens).path;
+    if (docPagePath !== null) {
+      let docUnsubscribe = null;
+      let docIntercepted = 0;
+      try {
+        docUnsubscribe = cdp.on("Fetch.requestPaused", async (params) => {
+          const url = String(params.request?.url ?? "");
+          if (DOC_KB_API_PATTERN.test(url)) {
+            docIntercepted += 1;
+            await cdp
+              .send("Fetch.fulfillRequest", {
+                requestId: params.requestId,
+                responseCode: 500,
+                responseHeaders: [{ name: "content-type", value: "application/json" }],
+                body: Buffer.from(JSON.stringify({ message: "Internal Server Error" })).toString("base64"),
+              })
+              .catch(() => {});
+            return;
+          }
+          await cdp.send("Fetch.continueRequest", { requestId: params.requestId }).catch(() => {});
+        });
+        await cdp.send("Fetch.enable", {
+          patterns: [
+            { urlPattern: "*", resourceType: "XHR" },
+            { urlPattern: "*", resourceType: "Fetch" },
+          ],
+        });
+        await cdp.send("Page.navigate", { url: `${baseUrl}${docPagePath}` });
+        await sleep(settleMs);
+        const docProbeRaw = await cdp.send("Runtime.evaluate", {
+          expression: PAGE_PROBE,
+          returnByValue: true,
+          awaitPromise: false,
+        });
+        const docState = stateVerdict(docProbeRaw.result?.value ?? {});
+        if (docState !== "error" && docState !== "denied")
+          findings.push({
+            journey: "documents",
+            route: docPagePath,
+            kind: "docs-offline-no-error-state",
+            state: docState,
+            detail: "a 500 on the KB API did not produce an error or denied state",
+          });
+        const hasRetry = await evaluate(`(() => {
+          const buttons = Array.from(document.querySelectorAll("button, [role='button']"));
+          const named = (el) => (el.getAttribute("aria-label") || el.textContent || "").trim();
+          return Boolean(buttons.find((el) => /try again|retry|reload/i.test(named(el)) && el.offsetParent !== null));
+        })()`);
+        if (hasRetry) {
+          const before = docIntercepted;
+          await evaluate(`(() => {
+            const buttons = Array.from(document.querySelectorAll("button, [role='button']"));
+            const named = (el) => (el.getAttribute("aria-label") || el.textContent || "").trim();
+            const btn = buttons.find((el) => /try again|retry|reload/i.test(named(el)) && el.offsetParent !== null);
+            if (btn) btn.click();
+          })()`);
+          await sleep(2000);
+          if (docIntercepted <= before)
+            findings.push({
+              journey: "documents",
+              route: docPagePath,
+              kind: "docs-retry-did-not-reissue",
+              detail: "clicking retry did not re-issue the KB API request",
+            });
+        } else {
+          findings.push({
+            journey: "documents",
+            route: docPagePath,
+            kind: "docs-offline-no-retry",
+            detail: "a 500 on the KB API rendered a terminal state but offered no retry control",
+          });
+        }
+      } catch (e) {
+        findings.push({ journey: "documents", route: docPagePath, kind: "docs-offline-probe-error", reason: String(e.message ?? e) });
+      } finally {
+        if (docUnsubscribe) docUnsubscribe();
+        await cdp.send("Fetch.disable").catch(() => {});
+      }
+    }
+    log("documents post-sweep: screen-reader, citation, keyboard, offline/retry checks complete");
+
     cdp.close();
   } finally {
     proc.kill();
