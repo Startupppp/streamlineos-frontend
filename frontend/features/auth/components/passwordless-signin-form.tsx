@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { useRequestOtp, useVerifyOtp, useSendMagicLink } from "@/hooks/api/auth";
 import { cn } from "@/lib/utils";
@@ -99,7 +100,13 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     onError: (error) => {
       setVerifyError(getErrorMessage(error));
       toast.error(getErrorMessage(error));
-      setOtpValue("");
+      // A server verdict (the code was wrong, expired or rate-limited) means this
+      // code is spent, so the field is cleared and a new one must be requested.
+      // A request that never reached a verdict leaves the code still valid, so the
+      // digits stay and the Verify control becomes the retry — which is the only
+      // state in which that control is reachable, since reaching six digits
+      // otherwise auto-submits in the same render.
+      if (isApiError(error) && typeof error.status === "number") setOtpValue("");
     },
   });
 
@@ -163,13 +170,21 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     return (
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-label font-medium">Verification code</Label>
-          <p className="text-xs text-muted-foreground">
+          <Label htmlFor="otp-code" className="text-label font-medium">
+            Verification code
+          </Label>
+          <p id="otp-code-hint" className="text-xs text-muted-foreground">
             Sent to{" "}
             <span className="font-medium text-foreground">{submittedEmail}</span>
           </p>
           <div className="flex justify-center py-2">
             <InputOTP
+              id="otp-code"
+              aria-label="Verification code"
+              aria-describedby={
+                verifyError ? "otp-code-error otp-code-hint" : "otp-code-hint"
+              }
+              aria-invalid={!!verifyError}
               maxLength={6}
               value={otpValue}
               onChange={handleOtpChange}
@@ -192,7 +207,12 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
         </div>
 
         {verifyError && (
-          <p role="alert" aria-live="assertive" className="text-xs text-destructive text-center">
+          <p
+            id="otp-code-error"
+            role="alert"
+            aria-live="assertive"
+            className="text-xs text-destructive text-center"
+          >
             {verifyError}
           </p>
         )}

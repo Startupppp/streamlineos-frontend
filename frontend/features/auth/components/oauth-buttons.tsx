@@ -57,7 +57,7 @@ export function OAuthButtons({
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card px-2 text-dense text-muted-foreground/60">
+          <span className="bg-card px-2 text-dense text-muted-foreground">
             or continue with email
           </span>
         </div>
