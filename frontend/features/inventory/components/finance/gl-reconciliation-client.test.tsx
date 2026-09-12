@@ -32,7 +32,7 @@ jest.mock("@/hooks/api/inventory/gl-reconciliation", () => ({
   useGlReconPeriods: () => ({ data: { installed: true, items: [] } }),
 }));
 
-jest.mock("@/hooks/api/inventory/warehouses", () => ({ useWarehouses: () => ({ data: [] }) }));
+jest.mock("@/hooks/api/inventory/warehouses", () => ({ useWarehouses: () => ({ data: { items: [], total: 0, page: 1, totalPages: 0 } }) }));
 jest.mock("@/hooks/api/org-display", () => ({
   useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }),
 }));

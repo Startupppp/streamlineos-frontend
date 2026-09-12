@@ -15,7 +15,7 @@ import { ChannelSheet } from "./channel-sheet";
  */
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [] }),
+  useWarehouses: () => ({ data: { items: [], total: 0, page: 1, totalPages: 0 } }),
 }));
 
 const createMutateAsync = jest.fn(() => Promise.resolve());
