@@ -93,7 +93,7 @@ export function useUpdateTimesheetPayrollSettings() {
   const qc = useQueryClient();
   return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "updateSettings"],
-    mutationFn: (data: Partial<PayrollSettings>) =>
+    mutationFn: (data: Partial<PayrollSettings> & { changeReason?: string }) =>
       apiClient.patch<PayrollSettings>("/timesheets/payroll/settings", data, undefined, payrollSettingsC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.settings() });

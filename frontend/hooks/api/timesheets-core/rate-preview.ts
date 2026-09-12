@@ -9,6 +9,9 @@ import type { ResolvedRatePreview } from "@/features/timesheets/types";
 export interface RatePreviewInput {
   projectId?: number;
   userId?: string;
+  ticketId?: number;
+  clientId?: number;
+  date?: string;
 }
 
 /**
@@ -26,7 +29,13 @@ export interface RatePreviewInput {
  */
 export function useRatePreview(input: RatePreviewInput, enabled = true) {
   const canView = useCan("timesheets:billing:view");
-  const params = { projectId: input.projectId, userId: input.userId };
+  const params = {
+    projectId: input.projectId,
+    userId: input.userId,
+    ticketId: input.ticketId,
+    clientId: input.clientId,
+    date: input.date,
+  };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview(params),
     queryFn: () =>

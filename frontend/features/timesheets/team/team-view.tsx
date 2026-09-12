@@ -19,12 +19,10 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
-import { useTeamWeekSummary, type TeamMemberWeekSummary } from "@/hooks/api/timesheets-core/team";
+import { useTeamWeekSummary } from "@/hooks/api/timesheets-core/team";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus } from "@/features/timesheets/types";
-import type { EmployeeListItem } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";
 import { MemberDetailSheet } from "./member-detail-sheet";
@@ -66,49 +64,34 @@ export function TeamView() {
     [weekOffset],
   );
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo<EmployeeListItem[]>(
-    () => unwrapEmployees(employeesRaw),
-    [employeesRaw],
-  );
-
-  const employeeIds = useMemo(() => employees.map((e) => e.id), [employees]);
-
   const {
     data: summaryData,
     isLoading: summaryLoading,
     isError: summaryError,
     refetch: refetchSummary,
-  } = useTeamWeekSummary(employeeIds, startStr, endStr, canView);
+  } = useTeamWeekSummary([], startStr, endStr, canView);
 
   const { data: overview, isLoading: overviewLoading } = useReportsOverview(
     { startDate: startStr, endDate: endStr },
     canView,
   );
 
-  const summaryByUser = useMemo<Map<string, TeamMemberWeekSummary>>(() => {
-    const map = new Map<string, TeamMemberWeekSummary>();
-    for (const summary of summaryData?.summaries ?? []) map.set(summary.userId, summary);
-    return map;
-  }, [summaryData]);
-
   const allRows = useMemo<TeamMemberRow[]>(
     () =>
-      employees.map((emp) => {
-        const summary = summaryByUser.get(emp.id);
-        const period = summary?.period ?? null;
+      (summaryData?.summaries ?? []).map((summary) => {
+        const period = summary.period ?? null;
         const status: TeamMemberRow["status"] = period?.status ?? "MISSING";
         return {
-          userId: emp.id,
-          name: emp.name ?? "",
-          email: emp.email,
+          userId: summary.userId,
+          name: summary.name ?? "",
+          email: summary.email ?? "",
           period,
-          totalHours: summary?.totalHours ?? 0,
-          dailyHours: summary?.dailyHours ?? {},
+          totalHours: summary.totalHours,
+          dailyHours: summary.dailyHours,
           status,
         };
       }),
-    [employees, summaryByUser],
+    [summaryData],
   );
 
   const filteredRows = useMemo<TeamMemberRow[]>(() => {
@@ -148,7 +131,7 @@ export function TeamView() {
   const handleThisWeek = useCallback(() => setWeekOffset(0), []);
   const handleRetry = useCallback(() => { void refetchSummary(); }, [refetchSummary]);
 
-  const subtitle = `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")} · ${employees.length} member${employees.length === 1 ? "" : "s"}`;
+  const subtitle = `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")} · ${allRows.length} member${allRows.length === 1 ? "" : "s"}`;
 
   const motionProps = shouldReduceMotion
     ? {}
@@ -208,9 +191,9 @@ export function TeamView() {
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All members</SelectItem>
-          {employees.map((emp) => (
-            <SelectItem key={emp.id} value={emp.id}>
-              {emp.name ?? emp.email}
+          {allRows.map((emp) => (
+            <SelectItem key={emp.userId} value={emp.userId}>
+              {emp.name || emp.email}
             </SelectItem>
           ))}
         </SelectContent>

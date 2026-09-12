@@ -49,7 +49,7 @@ export function MyTimeView() {
     null,
   );
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
-    { startDate: weekStart, endDate: weekEnd },
+    { startDate: weekStart, endDate: weekEnd, limit: 100 },
     true,
   );
 
@@ -222,6 +222,12 @@ export function MyTimeView() {
         )}
 
         {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
+
+        {entriesData?.pagination.hasMore && (
+          <p className="text-xs text-muted-foreground">
+            Showing the first {entries.length} entries this week. Older rows exist beyond this page.
+          </p>
+        )}
 
         <FillFromClockNotice
           result={draftResult?.week === weekStart ? draftResult.result : null}

@@ -24,6 +24,7 @@ import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import type { EmployeeListItem } from "@/types/hr";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
 import { summarizeBorrowedAuthority } from "./approval-standing";
@@ -71,6 +72,7 @@ export function ApprovalsView() {
   const [detailPeriod, setDetailPeriod] = useState<TimesheetPeriod | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+  const [bulkApproveOpen, setBulkApproveOpen] = useState(false);
 
   const canAccess = access.allowed;
 
@@ -134,10 +136,15 @@ export function ApprovalsView() {
     if (!open) setDetailPeriod(null);
   }, []);
 
-  const handleBulkApprove = useCallback(() => {
+  const handleBulkApproveOpen = useCallback(() => setBulkApproveOpen(true), []);
+
+  const handleBulkApproveConfirm = useCallback(() => {
     const ids = [...selection].map(Number);
     bulkApproveMutation.mutate(ids, {
-      onSuccess: () => setSelection(new Set()),
+      onSuccess: () => {
+        setSelection(new Set());
+        setBulkApproveOpen(false);
+      },
     });
   }, [selection, bulkApproveMutation]);
 
@@ -243,7 +250,7 @@ export function ApprovalsView() {
     selection,
     onSelectionChange: setSelection,
     onRowClick: handleRowClick,
-    onBulkApprove: handleBulkApprove,
+    onBulkApprove: handleBulkApproveOpen,
     onBulkReject: handleBulkRejectOpen,
     isBulkPending,
     onClearFilters: handleClearFilters,
@@ -275,6 +282,16 @@ export function ApprovalsView() {
         period={detailPeriod}
         open={detailOpen}
         onOpenChange={handleDetailOpenChange}
+      />
+
+      <ConfirmDialog
+        open={bulkApproveOpen}
+        onOpenChange={setBulkApproveOpen}
+        title="Approve selected timesheets?"
+        description={`${selection.size} timesheet${selection.size === 1 ? "" : "s"} will be approved. This cannot be undone from this screen.`}
+        confirmLabel="Approve"
+        onConfirm={handleBulkApproveConfirm}
+        isPending={bulkApproveMutation.isPending}
       />
 
       <BulkRejectDialog

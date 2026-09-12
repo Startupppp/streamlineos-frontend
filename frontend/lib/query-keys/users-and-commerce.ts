@@ -134,8 +134,10 @@ export const usersAndCommerceQueryKeys = {
       params === undefined
         ? ([...base, "timesheets", "billing", "uninvoiced"] as const)
         : ([...base, "timesheets", "billing", "uninvoiced", params] as const),
-    ratePreview: (params: QueryKeyParams) =>
-      [...base, "timesheets", "billing", "rate-preview", params] as const,
+    ratePreview: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "timesheets", "billing", "rate-preview"] as const)
+        : ([...base, "timesheets", "billing", "rate-preview", params] as const),
     reportsOverview: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "reports", "overview"] as const)
