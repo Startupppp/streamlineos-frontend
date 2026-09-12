@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/api-client";
 import { isRecord } from "@/lib/is-record";
 import {
+  ApiError,
   lazyContract,
   parseApiResponse,
   resolveContract,
@@ -28,6 +29,7 @@ function unwrap<T>(body: unknown): T {
 async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
   if (!res.ok) {
     let message = fallback;
+    let code: string | undefined;
     try {
       const data: unknown = await res.json();
       if (isRecord(data)) {
@@ -36,10 +38,11 @@ async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
           const parts: unknown[] = data.message;
           message = parts.filter((m): m is string => typeof m === "string").join(", ");
         }
+        if (typeof data.code === "string") code = data.code;
       }
     } catch {
     }
-    throw new Error(message);
+    throw new ApiError(message, res.status, code);
   }
   const body: unknown = await res.json();
   return unwrap<T>(body);
@@ -80,6 +83,7 @@ export function useSignPublicSession(token: string) {
         signPublicSessionContract,
       ),
     staleTime: 5_000,
+    retry: false,
   });
 }
 
