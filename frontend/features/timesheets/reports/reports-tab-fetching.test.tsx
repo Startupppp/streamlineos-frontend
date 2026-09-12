@@ -40,6 +40,10 @@ jest.mock("@/hooks/api/access", () => {
      * the same mock so `can.mockReturnValue(false)` means denied here too.
      */
     useCanState: jest.fn(() => (useCan() ? "granted" : "denied")),
+    useAccess: jest.fn(() => ({
+      data: { scopes: {}, modules: {}, isOrgOwner: false },
+      refetch: jest.fn(),
+    })),
   };
 });
 

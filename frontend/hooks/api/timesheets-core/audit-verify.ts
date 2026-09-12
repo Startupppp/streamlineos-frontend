@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { AuditChainVerification } from "@/features/timesheets/types";
 
@@ -22,7 +22,7 @@ import type { AuditChainVerification } from "@/features/timesheets/types";
 export function useVerifyAuditChain() {
   const canView = useCan("timesheets:audit:view");
   const query = useQuery({
-    queryKey: queryKeys.timesheets.auditVerify(),
+    queryKey: usersAndCommerceQueryKeys.timesheets.auditVerify(),
     queryFn: () =>
       apiClient.get<AuditChainVerification>("/timesheets/audit/verify"),
     enabled: false,

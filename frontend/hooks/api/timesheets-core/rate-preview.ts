@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { ResolvedRatePreview } from "@/features/timesheets/types";
 
@@ -28,7 +28,7 @@ export function useRatePreview(input: RatePreviewInput, enabled = true) {
   const canView = useCan("timesheets:billing:view");
   const params = { projectId: input.projectId, userId: input.userId };
   return useQuery({
-    queryKey: queryKeys.timesheets.ratePreview(params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview(params),
     queryFn: () =>
       apiClient.get<ResolvedRatePreview>("/timesheets/billing/rate-preview", params),
     /*

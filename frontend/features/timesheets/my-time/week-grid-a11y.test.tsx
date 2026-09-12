@@ -12,6 +12,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
   useScope: jest.fn(() => "all"),
   useModuleEnabled: jest.fn(() => true),
+  useAccess: jest.fn(() => ({
+    data: { scopes: {}, modules: {}, isOrgOwner: false },
+    refetch: jest.fn(),
+  })),
 }));
 
 jest.mock("@/lib/api-client", () => ({

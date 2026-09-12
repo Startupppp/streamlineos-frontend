@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 
 export interface TimesheetHoliday {
@@ -26,7 +26,7 @@ interface HolidaysResponse {
 export function useTimesheetHolidays(startDate: string, endDate: string, enabled = true) {
   const canView = useCan("timesheets:entries:view");
   return useQuery({
-    queryKey: queryKeys.timesheets.holidays(startDate, endDate),
+    queryKey: usersAndCommerceQueryKeys.timesheets.holidays(startDate, endDate),
     queryFn: () =>
       apiClient.get<HolidaysResponse>("/timesheets/calendar/holidays", { startDate, endDate }),
     /** Holidays for a past week never change; a long stale time is free. */

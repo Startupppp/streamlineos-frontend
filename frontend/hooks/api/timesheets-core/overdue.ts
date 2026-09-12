@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type {
   OverdueQueryInput,
@@ -33,7 +33,7 @@ export function useOverduePeriods(query: OverdueQueryInput = {}) {
     limit: query.limit ?? OVERDUE_PAGE_SIZE,
   };
   return useQuery({
-    queryKey: queryKeys.timesheets.periodsOverdue(params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.periodsOverdue(params),
     queryFn: () =>
       apiClient.get<OverdueQueueResult>("/timesheets/periods/overdue", params),
     /**
