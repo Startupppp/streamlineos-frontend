@@ -130,13 +130,10 @@ export interface SignRecipient {
   routingOrder: number;
   status: SignRecipientStatus;
   authMethod: SignAuthMethod;
-  accessCodeHash: string | null;
-  otpCodeHash: string | null;
   otpExpiresAt: string | null;
   otpAttempts: number;
   failedAuthAttempts: number;
   authLockedUntil: string | null;
-  signingTokenHash: string | null;
   tokenExpiresAt: string | null;
   tokenRevokedAt: string | null;
   consentAcceptedAt: string | null;
@@ -331,7 +328,6 @@ export interface SignOrgSettings {
   allowedAuthMethods: string[];
   certificateFormat: string;
   retentionPolicyJson: Record<string, unknown>;
-  publicFormsEnabled: boolean;
   bulkSendMaxRowsPerJob: number;
   bulkSendMaxActiveJobs: number;
   bulkSendMaxRecipientsPerEnvelope: number;

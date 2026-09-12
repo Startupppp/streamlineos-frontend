@@ -7,7 +7,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -21,7 +20,6 @@ const generalSettingsSchema = z.object({
   defaultReminderRepeatDays: z.number().int().min(1).max(30).optional(),
   defaultReminderMaxCount: z.number().int().min(0).max(100).optional(),
   maxFileSizeMb: z.number().int().min(1).max(100).optional(),
-  publicFormsEnabled: z.boolean(),
   bulkSendMaxRowsPerJob: z.number().int().min(1).max(100000).optional(),
   bulkSendMaxActiveJobs: z.number().int().min(1).max(100).optional(),
 });
@@ -41,7 +39,6 @@ export function GeneralSettingsForm() {
       defaultReminderRepeatDays: undefined,
       defaultReminderMaxCount: undefined,
       maxFileSizeMb: undefined,
-      publicFormsEnabled: false,
       bulkSendMaxRowsPerJob: undefined,
       bulkSendMaxActiveJobs: undefined,
     },
@@ -56,7 +53,6 @@ export function GeneralSettingsForm() {
         defaultReminderRepeatDays: settings.defaultReminderRepeatDays ?? undefined,
         defaultReminderMaxCount: settings.defaultReminderMaxCount ?? undefined,
         maxFileSizeMb: settings.maxFileSizeMb ?? undefined,
-        publicFormsEnabled: settings.publicFormsEnabled ?? false,
         bulkSendMaxRowsPerJob: settings.bulkSendMaxRowsPerJob ?? undefined,
         bulkSendMaxActiveJobs: settings.bulkSendMaxActiveJobs ?? undefined,
       });
@@ -244,23 +240,6 @@ export function GeneralSettingsForm() {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="publicFormsEnabled"
-              render={({ field }) => (
-                <FormItem>
-                  <label className="flex items-center gap-2.5 text-sm cursor-pointer">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      ref={field.ref}
-                    />
-                    Allow public signing forms
-                  </label>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <LoadingButton type="submit" isPending={update.isPending} loadingText="Saving…">
               Save
             </LoadingButton>
