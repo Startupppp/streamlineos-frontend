@@ -168,7 +168,25 @@ Evidence files: `evidence/frontend-data/fd1-onboarding-people.md`,
   pass, so the gate failed instead of lying — but **no test file had any type
   coverage**. Recreated the project (`extends` + the four test globs dropped from
   `exclude` + `files: ["jest.setup.js"]` for the jest-dom global augmentation).
-  `--self-test` now proves all 5 bites; the real run is **0 errors over 338 files**.
+  `--self-test` now proves all 5 bites. The run measured **0 errors over 338 files**
+  at that revision, so `BASELINE` stays 0 as a hard gate.
+
+  **It has since gone red on one tracked file that is not this lane's, and the
+  baseline was deliberately NOT raised to absorb it:**
+  `features/billing/billing-mutation-gates.test.tsx:202` — commit `cb55134fd`
+  added a required `annualTotalPaise` to `PlanConfig` (`plan-card.tsx:11`) without
+  updating this fixture. The correct value is a pricing-semantics call, and that
+  same commit was fixing a 12× pricing bug, so guessing a multiplier here would be
+  worse than leaving it red. **Billing lane owns it.**
+  `hooks/api/calendar-external-contract.test.ts` also reports 3 errors but is
+  **untracked** working-tree WIP from a concurrent session, so CI never sees it.
+
+  Fixing the gate immediately paid for itself twice: it caught
+  `lib/__tests__/auth-claims.test.ts` **actually failing** in HEAD (1 failed / 38
+  passed — `resolveSessionClaims` defaults `isPlatformAdmin` to `false` and the
+  fixture omitted it, so `toEqual` compared `false` against absent), and it caught
+  a spec left behind asserting a `maxPages` argument from the reverted chat
+  rewrite. Both repaired in `8db75c917`.
 - **`pnpm type-check` false-passes from a stale incremental cache — measured.**
   `tsconfig.json` sets `incremental: true`. With the committed `tsconfig.tsbuildinfo`
   in place the app check reported **0 errors, exit 0**. With it deleted and
