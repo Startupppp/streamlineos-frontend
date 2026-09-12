@@ -37,6 +37,7 @@ const connectionSchema = z.object({
   name: z.string().min(1, "Name is required"),
   providerKey: z.string().min(1, "Provider key is required"),
   isActive: z.boolean(),
+  apiCredential: z.string().optional(),
   configPairs: z.array(configPairSchema),
 });
 
@@ -56,6 +57,7 @@ function buildDefaultValues(connection?: ThreePlConnection): ConnectionFormValue
     name: connection?.name ?? "",
     providerKey: connection?.providerKey ?? "",
     isActive: connection?.isActive ?? true,
+    apiCredential: "",
     configPairs: pairs,
   };
 }
@@ -111,12 +113,14 @@ export function ThreePlConnectionSheet({
 
   async function onSubmit(values: ConnectionFormValues): Promise<void> {
     const config = configToRecord(values.configPairs);
+    const apiCredential = values.apiCredential?.trim() || undefined;
     try {
       if (isEdit) {
         await updateMutation.mutateAsync({
           connectionId: connection.id,
           name: values.name.trim(),
           isActive: values.isActive,
+          apiCredential,
           config: Object.keys(config).length > 0 ? config : undefined,
         });
         toast.success("Connection updated");
@@ -124,6 +128,7 @@ export function ThreePlConnectionSheet({
         await createMutation.mutateAsync({
           name: values.name.trim(),
           providerKey: values.providerKey.trim(),
+          apiCredential,
           config: Object.keys(config).length > 0 ? config : undefined,
         });
         toast.success("Connection created");
@@ -206,6 +211,34 @@ export function ThreePlConnectionSheet({
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="apiCredential"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>API Credential / Access Token</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    autoComplete="off"
+                    placeholder={
+                      connection?.apiCredentialHint
+                        ? `Configured (${connection.apiCredentialHint})`
+                        : "Enter secret token"
+                    }
+                    {...field}
+                  />
+                </FormControl>
+                {connection?.apiCredentialHint && (
+                  <p className="text-xs text-muted-foreground">
+                    Current token hint: <code className="text-xs">{connection.apiCredentialHint}</code>
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}

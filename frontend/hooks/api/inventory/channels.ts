@@ -49,6 +49,7 @@ export interface ThreePlConnection {
   lastSyncAt: string | null;
   lastSyncError: string | null;
   config?: Record<string, string> | null;
+  apiCredentialHint?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,6 +74,7 @@ interface UpdateChannelInput {
 interface CreateThreePlInput {
   name: string;
   providerKey: string;
+  apiCredential?: string;
   config?: Record<string, string>;
 }
 
@@ -80,6 +82,7 @@ interface UpdateThreePlInput {
   connectionId: number;
   name?: string;
   isActive?: boolean;
+  apiCredential?: string;
   config?: Record<string, string>;
 }
 
