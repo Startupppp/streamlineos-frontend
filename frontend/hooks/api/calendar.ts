@@ -63,6 +63,9 @@ export {
 
 // ---- Member lookup hook ----
 
+export const MEMBER_PICKER_SEARCH_LIMIT = 25;
+export const MEMBER_PICKER_ROSTER_LIMIT = 100;
+
 export function useCalendarMemberLookup({
   search = "",
   limit,
@@ -75,14 +78,18 @@ export function useCalendarMemberLookup({
   const canView = useCan("directory:people:view");
   const term = search.trim();
   const isSearch = term.length > 0;
+  const requestedLimit =
+    limit ?? (isSearch ? MEMBER_PICKER_SEARCH_LIMIT : MEMBER_PICKER_ROSTER_LIMIT);
   return useQuery({
     queryKey: isSearch
-      ? platformHierarchyQueryKeys.calendar.memberSearch(term)
-      : platformHierarchyQueryKeys.calendar.orgMembers(),
+      ? platformHierarchyQueryKeys.calendar.memberSearch(term, requestedLimit)
+      : platformHierarchyQueryKeys.calendar.orgMembers(requestedLimit),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarOrgMember[]>(
         "/org/members",
-        isSearch ? { search: term, limit: limit ?? 25 } : undefined,
+        isSearch
+          ? { search: term, limit: requestedLimit }
+          : { limit: requestedLimit },
         signal,
         calendarOrgMembersContract,
       ),
@@ -134,7 +141,7 @@ export function useSetCalendarSourcePreference() {
         calendarSourcePreferenceContract,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sources() });
     },
   });
 }

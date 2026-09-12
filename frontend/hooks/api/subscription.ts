@@ -115,10 +115,13 @@ export function useVerifySubscription() {
 }
 
 export function useBillingPlans() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useQuery<BillingPlansResponse, Error>({
     queryKey: growthAndSignQueryKeys.billing.plans(),
     queryFn: ({ signal }) => apiClient.get("/billing/plans", undefined, signal, plansContract),
     staleTime: 60 * 60_000,
+    enabled: !!orgId,
   });
 }
 

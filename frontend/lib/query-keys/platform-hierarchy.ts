@@ -9,9 +9,11 @@ export const platformHierarchyQueryKeys = {
         : ([...base, "calendar", "events", start, end, sources] as const),
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
-    orgMembers: () => [...base, "calendar", "orgMembers"] as const,
-    memberSearch: (search: string) =>
-      [...base, "calendar", "memberSearch", search] as const,
+    orgMembers: (limit: number) => [...base, "calendar", "orgMembers", limit] as const,
+    orgMembersAll: [...base, "calendar", "orgMembers"] as const,
+    memberSearch: (search: string, limit: number) =>
+      [...base, "calendar", "memberSearch", search, limit] as const,
+    memberSearchAll: [...base, "calendar", "memberSearch"] as const,
     externalEvents: (start: string, end: string) =>
       [...base, "calendar", "externalEvents", start, end] as const,
     hrSupplemental: (from: string, to: string) =>

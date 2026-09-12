@@ -25,21 +25,25 @@ export function useUnifiedInbox(
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const limit = params?.limit ?? 25;
+  const kinds =
+    params?.kinds && params.kinds.length > 0
+      ? [...params.kinds].sort()
+      : undefined;
+  const unreadOnly = params?.unreadOnly ?? false;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
     queryKey: platformCoreQueryKeys.inbox.unified({
-      limit: params?.limit,
-      kinds: params?.kinds,
-      unreadOnly: params?.unreadOnly,
+      limit,
+      kinds,
+      unreadOnly,
       infinite: true,
     }),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ pageParam , signal }) => {
       const query: Record<string, string> = { limit: String(limit) };
       if (pageParam !== undefined) query["cursor"] = String(pageParam);
-      if (params?.kinds && params.kinds.length > 0)
-        query["kinds"] = params.kinds.join(",");
-      if (params?.unreadOnly) query["unreadOnly"] = "true";
+      if (kinds) query["kinds"] = kinds.join(",");
+      if (unreadOnly) query["unreadOnly"] = "true";
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,

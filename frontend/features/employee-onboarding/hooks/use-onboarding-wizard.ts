@@ -108,6 +108,24 @@ export function useOnboardingWizard(): OnboardingWizardState {
     refetch: refetchSession,
   } = useOnboardingSessionQuery();
   const { mutateAsync: patchSession } = usePatchOnboardingSessionMutation();
+
+  const sessionCompleted = useMemo(() => new Set(session?.completedSteps ?? []), [session]);
+
+  const sessionStep = useMemo(
+    () => resolveStepFromSession(session?.currentStep),
+    [session],
+  );
+
+  const completedSteps = localCompleted ?? sessionCompleted;
+  const activeTab = localStep ?? sessionStep;
+
+  const hasReachedBankStep =
+    !sessionLoading &&
+    Boolean(session) &&
+    (activeTab === STEP_IDS.BANK ||
+      activeTab === STEP_IDS.REVIEW ||
+      completedSteps.has(STEP_IDS.BANK));
+
   const {
     data: personalDetails,
     error: personalDetailsError,
@@ -119,17 +137,10 @@ export function useOnboardingWizard(): OnboardingWizardState {
     error: bankDetailsError,
     isLoading: bankDetailsLoading,
     refetch: refetchBankDetails,
-  } = useBankDetailsQuery();
+  } = useBankDetailsQuery({ enabled: hasReachedBankStep });
 
   const sessionDraft = useMemo(
     () => (session ? parseWizardDraft(session.data) : EMPTY_WIZARD_DRAFT),
-    [session],
-  );
-
-  const sessionCompleted = useMemo(() => new Set(session?.completedSteps ?? []), [session]);
-
-  const sessionStep = useMemo(
-    () => resolveStepFromSession(session?.currentStep),
     [session],
   );
 
@@ -176,9 +187,6 @@ export function useOnboardingWizard(): OnboardingWizardState {
 
   const hasPersonalPrefill = personalDraftHasPrefill(personalPrefill);
   const hasBankPrefill = bankDraftHasPrefill(bankPrefill);
-
-  const completedSteps = localCompleted ?? sessionCompleted;
-  const activeTab = localStep ?? sessionStep;
 
   const draftRef = useRef(wizardDraft);
   useEffect(() => {
