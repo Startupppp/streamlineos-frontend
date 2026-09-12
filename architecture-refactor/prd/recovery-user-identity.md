@@ -2,10 +2,13 @@
 
 Required acceptance and independent implementation review: [full-stack completion contract](README.md#mandatory-full-stack-completion-contract).
 
-Status: **IMPLEMENTED — VERIFICATION-PENDING**, 2026-09-12. I1–I6 and every local gap check
-are repaired with red-then-green regressions; no live browser, database, email-provider or
-deployed evidence was obtained, so gates 1, 4, 7, 8 and 10 of the completion contract remain
-BLOCKED. See "Verification record and handoff" at the end for the full result. This file is a
+Status: **IMPLEMENTED — ONE EXTERNAL GATE OPEN**, 2026-09-12. I1–I6 and every gap check are
+repaired with red-then-green regressions, and the evidence is no longer only mocked: the claim
+races are proved on real PostgreSQL 18.6, the two-device journey runs through the live API, and
+the sign-in surface is captured in a real browser at 320px and 1280px. **Real email delivery is
+the single remaining gate** and needs an owner's decision, because the send is outbound from the
+organization's domain through a live provider token. Deployed/production evidence (gate 10)
+remains out of scope for this lane. See "Verification record and handoff" at the end for the full result. This file is a
 standalone implementation assignment. Read root `CLAUDE.md`, both repository `CLAUDE.md` files
 and applicable `.claude/` instructions before editing. Paths below are relative to
 `D:/projects/personal/Streamlineos`.
@@ -222,10 +225,33 @@ Build: `tsc -p tsconfig.build.json` is clean and a full emit to a scratch `outDi
 **4174 .js files**. `nest build` itself fails only with `ENOTEMPTY` on `dist/modules/build/qa`,
 because the running backend holds `dist` open — an environment artifact, not a compile error.
 
-### BLOCKED — do not read the above as a passing release
+### Combined two-device journey — CLOSED
 
-- **Real email delivery.** `pnpm verify:otp-delivery` exists for it (`--send` then `--confirm=<code>`, comparing sha256 of the delivered code against the stored hash), but it deliberately refuses to default a recipient, and the send goes through the **live ZeptoMail token** in `backend/.env`: `buildEmailClients` only returns null clients at `NODE_ENV=test` without `EMAIL_ALLOW_LIVE_SEND=1` (`email-no-live-send-under-test.spec.ts` pins that guard, including a NEUTER case proving it is scoped and not a kill switch). Running it is an outbound send from the org's domain and needs a named recipient. **Provider retry and true delivery inversion remain untested.**
-- **Combined journey** at one root/backend revision pair: signup → correct gate → two devices → org switch → revocation. Individually covered; not exercised as one sequence against real delivery.
+`pnpm verify:identity-journey` runs the sequence through the **live API** and a real
+database with no email at all: the OTP row is seeded so the code is known, then
+otp verify → auto-login token → magic-link redeem → device session → session
+exchange, exactly as the product does. **10/10 against the running backend on
+PostgreSQL 18.6.**
+
+| Invariant | Result |
+| --- | --- |
+| two sign-ins yield two distinct sessions, both registered in `user_sessions` | PASS |
+| **I1 end to end** — each session's JWT carries **its own** `sessionId` claim, decoded from the real token | PASS |
+| the two minted tokens are different strings | PASS |
+| a session revoked in the DB with **no Redis tombstone** is refused at the mint boundary | PASS |
+| revoking device A leaves device B minting | PASS |
+| an unregistered session id is refused | PASS |
+| a row-level `is_active` flip is not seen within the 15s membership cache window | PASS (by design) |
+| after that cache expires, a deactivated account can no longer mint | PASS |
+
+The second-to-last row is deliberate: `isAccountActive` is Redis-cached for
+`MEMBERSHIP_STATUS_TTL_SECONDS`, and a direct row write bypasses the writer that
+busts it. The product's deactivation path invalidates immediately, so both halves
+are recorded rather than mistaking correct behaviour for a leak.
+
+### BLOCKED — the one gate that remains
+
+- **Real email delivery.** `pnpm verify:otp-delivery` is written for it (`--send`, then `--confirm=<code>` comparing sha256 of the delivered code against the stored hash, since the code is never stored in the clear). It deliberately refuses to default a recipient. The send uses the **live ZeptoMail token** in `backend/.env` — `buildEmailClients` returns null clients only at `NODE_ENV=test` without `EMAIL_ALLOW_LIVE_SEND=1`, and `email-no-live-send-under-test.spec.ts` pins that guard including a NEUTER case proving it is scoped rather than a kill switch. So running it is a genuine outbound send from the organization's domain and needs a named recipient plus an owner's decision. **Provider retry and true delivery inversion remain untested.** Everything up to the provider hop — request accepted, user resolved or created, OTP row stored, code consumed atomically — is covered above.
 
 ### Cross-lane contract changes the coordinator must integrate
 
