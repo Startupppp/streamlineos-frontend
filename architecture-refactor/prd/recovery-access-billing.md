@@ -143,6 +143,11 @@ Second verification pass, 2026-09-12 (commits `e21d45de0`, `7cf3c79a6`):
   **200 suites, 2419 tests, exit 0**.
 - frontend billing + rbac catalog + pricing: **9 suites, 115 tests, exit 0**.
 - `pnpm check:route-classification`: exit 0.
+- backend `pnpm build` (nest): **exit 0**.
+- frontend `pnpm build` (next 16, webpack): **exit 0**, compiled in 4.4min, 0 errors,
+  `/settings/billing` and `/settings/billing/ai-credits` both emitted. Required
+  because the checkout script loader changed how the page loads a third-party script.
+- ownership/last-owner/standing suites for RBAC-006 bullet 3: **6 suites, 90 tests, exit 0**.
 
 The typecheck earned its place: it caught an arity break jest could not see. The
 webhook's subscription-activation branch took an **optional** `activation`
@@ -188,8 +193,8 @@ screen where a customer decides to pay. Fixed in `cb55134fd`.
 
 Existing isolated unit verification run during this audit: `pnpm exec jest --runInBand --runTestsByPath src/modules/billing/payments/payment-provider-resolver.spec.ts src/modules/access/access-membership-authority.spec.ts src/modules/access/__tests__/org-only-keys-never-resolve.spec.ts` from `backend/`: **3 suites, 15 tests passed**. Jest config/setup inspected; mocked stores/adapters, no provider or database calls. These tests prove existing provider/standing behavior, not repaired checkout.
 
-- [ ] Run the original owner-readiness reproduction after repair, then relevant existing suites in the matrix and newly added behavior regressions. Inspect each command/config before executing; `.db.spec.ts` and e2e suites are separate from the default unit runner.
-- [ ] Complete focused backend/frontend typechecking and repository boundary/contract checks appropriate to changed files. Production build is required for script-loading/bundling changes; compile success is not payment success.
+- [x] Run the original owner-readiness reproduction after repair, then relevant existing suites in the matrix and newly added behavior regressions. Inspect each command/config before executing; `.db.spec.ts` and e2e suites are separate from the default unit runner.
+- [x] Complete focused backend/frontend typechecking and repository boundary/contract checks appropriate to changed files. Production build is required for script-loading/bundling changes; compile success is not payment success.
 - [ ] On a named disposable environment, verify fresh-owner monthly and annual sandbox purchases; member/module admin denials; correct amount/currency/term; retry after browser close; duplicate/reordered callback and webhook; provider outage; two-tenant receipt substitution; concurrent confirmation and last-seat admission. Never run a live charge for verification.
 - [ ] Verify keyboard, focus restoration after checkout modal, 375/768/1280 layouts, readable pricing/currency, loading/error/denied states, and no duplicate upgrade requests. Attach redacted request waterfall and screenshots to this assignment's evidence, not new unindexed status documents.
 
