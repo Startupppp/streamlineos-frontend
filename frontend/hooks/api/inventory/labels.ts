@@ -5,6 +5,10 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import { variantLabelContract } from "./restored-surfaces-schema";
+
+const variantLabelResponse = lazyContract<VariantLabel>(() => Promise.resolve(variantLabelContract as unknown as import("zod").ZodType<VariantLabel>));
 
 /** The exact key both label routes and both document routes declare. */
 export const LABELS_PRINT_KEY = "inventory:labels:print" as const;
@@ -59,6 +63,7 @@ export function useVariantLabel(
         `/inventory/labels/variants/${productVariantId ?? 0}`,
         lotId ? { lotId: String(lotId) } : undefined,
         signal,
+        variantLabelResponse,
       ),
     // A label is a snapshot of catalogue data that barely moves, and a stale one
     // is worse than a slow one — it goes on a box.

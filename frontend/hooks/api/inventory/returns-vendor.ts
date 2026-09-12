@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { lazyContract } from "@/lib/api-envelope";
 import {
   returnListParams,
   type ApproveReturnInput,
@@ -16,6 +17,13 @@ import {
   type VendorReturnReason,
   type VendorReturnStatus,
 } from "./returns-common";
+import {
+  vendorReturnContract,
+  vendorReturnPageContract,
+} from "./restored-surfaces-schema";
+
+const vendorReturnPageResponse = lazyContract<PaginatedResponse<VendorReturnSummary>>(() => Promise.resolve(vendorReturnPageContract as unknown as import("zod").ZodType<PaginatedResponse<VendorReturnSummary>>));
+const vendorReturnResponse = lazyContract<VendorReturnSummary>(() => Promise.resolve(vendorReturnContract as unknown as import("zod").ZodType<VendorReturnSummary>));
 
 export interface VendorReturnLine {
   id: number;
@@ -84,6 +92,7 @@ export function useVendorReturns(
         "/inventory/vendor-returns",
         returnListParams(filters),
         signal,
+        vendorReturnPageResponse,
       ),
     staleTime: 30_000,
     ...options,
@@ -112,6 +121,7 @@ export function useVendorReturn(returnId: number | null) {
         `/inventory/vendor-returns/${returnId}`,
         undefined,
         signal,
+        vendorReturnResponse,
       ),
     staleTime: 30_000,
     enabled: canView && returnId !== null,
@@ -123,7 +133,7 @@ export function useCreateVendorReturn() {
   return useIdempotentMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "create"],
     mutationFn: (data, idempotencyKey) =>
-      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, { headers: { "Idempotency-Key": idempotencyKey } }, vendorReturnResponse),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.returns.vendorList });
     },
@@ -137,7 +147,9 @@ export function useApproveVendorReturn() {
     mutationFn: ({ returnId, creditReference }, idempotencyKey) =>
       apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/approve`,
-        { ...(creditReference !== undefined ? { creditReference } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
+        { ...(creditReference !== undefined ? { creditReference } : {}) },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        vendorReturnResponse,
       ),
     onSuccess: (_, variables) => invalidateVendorReturn(qc, variables.returnId),
   });
@@ -150,7 +162,9 @@ export function usePostVendorReturn() {
     mutationFn: ({ returnId, reason }, idempotencyKey) =>
       apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/post`,
-        { ...(reason !== undefined ? { reason } : {}) }, { headers: { "Idempotency-Key": idempotencyKey } },
+        { ...(reason !== undefined ? { reason } : {}) },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        vendorReturnResponse,
       ),
     onSuccess: (_, variables) => {
       invalidateVendorReturn(qc, variables.returnId);
@@ -164,7 +178,12 @@ export function useCancelVendorReturn() {
   return useIdempotentMutation<VendorReturnSummary, Error, CancelReturnInput>({
     mutationKey: ["inventory", "vendorReturns", "cancel"],
     mutationFn: ({ returnId }, idempotencyKey) =>
-      apiClient.post<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
+      apiClient.post<VendorReturnSummary>(
+        `/inventory/vendor-returns/${returnId}/cancel`,
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        vendorReturnResponse,
+      ),
     onSuccess: (_, variables) => invalidateVendorReturn(qc, variables.returnId),
   });
 }

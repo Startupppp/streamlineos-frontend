@@ -6,6 +6,20 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { lazyContract } from "@/lib/api-envelope";
+import {
+  anomalyContract,
+  anomalyPageContract,
+  demandRiskContract,
+  feedbackContract,
+  feedbackSummaryContract,
+} from "./restored-surfaces-schema";
+
+const anomalyPageResponse = lazyContract<InvAnomalyPage>(() => Promise.resolve(anomalyPageContract as unknown as import("zod").ZodType<InvAnomalyPage>));
+const anomalyResponse = lazyContract<InvAnomalyRow>(() => Promise.resolve(anomalyContract as unknown as import("zod").ZodType<InvAnomalyRow>));
+const demandRiskResponse = lazyContract<InvDemandRiskResult>(() => Promise.resolve(demandRiskContract as unknown as import("zod").ZodType<InvDemandRiskResult>));
+const feedbackResponse = lazyContract<{ id: number; verdict: InvAiVerdict; surface: string; createdAt: string }>(() => Promise.resolve(feedbackContract as unknown as import("zod").ZodType<{ id: number; verdict: InvAiVerdict; surface: string; createdAt: string }>));
+const feedbackSummaryResponse = lazyContract<InvAiFeedbackSummary>(() => Promise.resolve(feedbackSummaryContract as unknown as import("zod").ZodType<InvAiFeedbackSummary>));
 
 /* ------------------------------------------------------------------ *
  * F3 — the anomaly queue
@@ -100,7 +114,7 @@ export function useInventoryAnomalies(filters?: InvAnomalyFilters) {
           : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.limit !== undefined ? { limit: String(filters.limit) } : {}),
-      }, signal),
+      }, signal, anomalyPageResponse),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -120,7 +134,7 @@ export function useReviewInventoryAnomaly() {
       apiClient.patch<InvAnomalyRow>(`/inventory/ai/anomalies/${insightId}/review`, {
         action,
         ...(note ? { note } : {}),
-      }),
+      }, undefined, anomalyResponse),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventoryAiReview.anomalies() });
     },
@@ -219,7 +233,7 @@ export function useInventoryDemandRisk() {
   >("inventory:ai:read", {
     mutationKey: queryKeys.inventoryAiReview.demandRisk,
     mutationFn: (body) =>
-      apiClient.post<InvDemandRiskResult>("/inventory/ai/demand-risk", body),
+      apiClient.post<InvDemandRiskResult>("/inventory/ai/demand-risk", body, undefined, demandRiskResponse),
   });
 }
 
@@ -273,7 +287,7 @@ export function useSubmitInventoryAiFeedback() {
     mutationFn: (body, idempotencyKey) =>
       apiClient.post("/inventory/ai/feedback", body, {
         headers: { "Idempotency-Key": idempotencyKey },
-      }),
+      }, feedbackResponse),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.inventoryAiReview.feedbackSummary(),
@@ -312,7 +326,7 @@ export function useInventoryAiFeedbackSummary(days = 30) {
     queryFn: ({ signal }) =>
       apiClient.get<InvAiFeedbackSummary>("/inventory/ai/feedback/summary", {
         days: String(days),
-      }, signal),
+      }, signal, feedbackSummaryResponse),
     enabled: canManage,
     staleTime: 5 * 60_000,
   });

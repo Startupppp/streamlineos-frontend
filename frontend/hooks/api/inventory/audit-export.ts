@@ -5,6 +5,16 @@ import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { lazyContract } from "@/lib/api-envelope";
+import {
+  auditExportJobContract,
+  auditExportPageContract,
+  auditExportVerificationContract,
+} from "./restored-surfaces-schema";
+
+const auditExportPageResponse = lazyContract<{ items: AuditExportJob[]; total: number; page: number; totalPages: number }>(() => Promise.resolve(auditExportPageContract as unknown as import("zod").ZodType<{ items: AuditExportJob[]; total: number; page: number; totalPages: number }>));
+const auditExportJobResponse = lazyContract<AuditExportJob>(() => Promise.resolve(auditExportJobContract as unknown as import("zod").ZodType<AuditExportJob>));
+const auditExportVerificationResponse = lazyContract<AuditExportVerification>(() => Promise.resolve(auditExportVerificationContract as unknown as import("zod").ZodType<AuditExportVerification>));
 
 /**
  * A checksummed evidence bundle of the inventory ledger.
@@ -71,7 +81,7 @@ export function useAuditExportJobs(params?: { page?: number; limit?: number }) {
       }>("/inventory/audit-export/jobs", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal),
+      }, signal, auditExportPageResponse),
     // A job settles asynchronously, so the list is the progress indicator.
     staleTime: 0,
     refetchInterval: 10_000,
@@ -96,6 +106,7 @@ export function useAuditExportJob(jobId: number | null) {
         `/inventory/audit-export/jobs/${jobId ?? 0}`,
         undefined,
         signal,
+        auditExportJobResponse,
       ),
     staleTime: 0,
     enabled: canExport && jobId !== null,
@@ -109,7 +120,7 @@ export function useCreateAuditExportJob() {
     mutationFn: (input, idempotencyKey) =>
       apiClient.post<AuditExportJob>("/inventory/audit-export/jobs", input, {
         headers: { "Idempotency-Key": idempotencyKey },
-      }),
+      }, auditExportJobResponse),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventoryAuditExport.jobsAll });
     },
@@ -130,6 +141,7 @@ export function useVerifyAuditExport(jobId: number | null, enabled: boolean) {
         `/inventory/audit-export/jobs/${jobId ?? 0}/verify`,
         undefined,
         signal,
+        auditExportVerificationResponse,
       ),
     staleTime: 0,
     gcTime: 0,
