@@ -5,10 +5,16 @@ import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -30,13 +36,10 @@ import {
   DeclineInvitationDialog,
   CardContent,
 } from "@/components/auth/invitation-card";
-
-const newUserSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-});
-
-type NewUserFormValues = z.infer<typeof newUserSchema>;
+import {
+  invitationAcceptSchema,
+  type InvitationAcceptFormValues,
+} from "./invitation-accept-schema";
 
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
   "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
@@ -51,8 +54,8 @@ export default function InvitationPage() {
   const { data: session } = useSession();
   const refreshSessionClaims = useSessionClaimsRefresh();
 
-  const form = useForm<NewUserFormValues>({
-    resolver: zodResolver(newUserSchema),
+  const form = useForm<InvitationAcceptFormValues>({
+    resolver: zodResolver(invitationAcceptSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -110,7 +113,7 @@ export default function InvitationPage() {
   );
 
   const onSubmit = useCallback(
-    (values: NewUserFormValues) => {
+    (values: InvitationAcceptFormValues) => {
       if (!token || !invitation) {
         toast.error("Invalid invitation");
         return;
@@ -303,72 +306,86 @@ export default function InvitationPage() {
               invitedEmail={invitation.email}
             />
 
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-4 space-y-3.5"
-              aria-busy={acceptInvitation.isPending}
-            >
-              <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="firstName"
-                    className="text-foreground text-xs font-medium"
-                  >
-                    First name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="Your first name"
-                    autoComplete="given-name"
-                    {...form.register("firstName")}
-                    disabled={acceptInvitation.isPending}
-                    className="text-sm"
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="mt-4 space-y-3.5"
+                aria-busy={acceptInvitation.isPending}
+              >
+                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground text-xs font-medium">
+                          First name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            type="text"
+                            placeholder="Your first name"
+                            autoComplete="given-name"
+                            disabled={acceptInvitation.isPending}
+                            className="text-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground text-xs font-medium">
+                          Last name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            type="text"
+                            placeholder="Your last name"
+                            autoComplete="family-name"
+                            disabled={acceptInvitation.isPending}
+                            className="text-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="lastName"
-                    className="text-foreground text-xs font-medium"
+
+                <div className="space-y-1.5 pt-0.5">
+                  <LoadingButton
+                    type="submit"
+                    className="h-11 w-full gap-2 font-medium"
+                    isPending={acceptInvitation.isPending}
+                    loadingText="Accepting invitation..."
                   >
-                    Last name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Your last name"
-                    autoComplete="family-name"
-                    {...form.register("lastName")}
-                    disabled={acceptInvitation.isPending}
-                    className="text-sm"
-                  />
+                    Accept invitation
+                    <ArrowRight className="h-4 w-4" />
+                  </LoadingButton>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-10 w-full text-muted-foreground hover:text-foreground"
+                    onClick={openDecline}
+                    disabled={
+                      acceptInvitation.isPending || declineInvitation.isPending
+                    }
+                  >
+                    Decline invitation
+                  </Button>
                 </div>
-              </div>
-
-              <div className="space-y-1.5 pt-0.5">
-                <LoadingButton
-                  type="submit"
-                  className="h-11 w-full gap-2 font-medium"
-                  isPending={acceptInvitation.isPending}
-                  loadingText="Accepting invitation..."
-                >
-                  Accept invitation
-                  <ArrowRight className="h-4 w-4" />
-                </LoadingButton>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 w-full text-muted-foreground hover:text-foreground"
-                  onClick={openDecline}
-                  disabled={
-                    acceptInvitation.isPending || declineInvitation.isPending
-                  }
-                >
-                  Decline invitation
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
           </CardContent>
         </InvitationCard>
       </motion.div>
