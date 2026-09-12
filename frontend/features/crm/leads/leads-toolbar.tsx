@@ -68,18 +68,24 @@ export function LeadsToolbar({
       <div className="flex h-9 items-center rounded-md border border-input bg-card">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"
           className={cn("rounded-r-none h-9 px-2.5")}
-          onClick={handleViewTable}>
-          <TableIcon className="h-3.5 w-3.5" />
+          onClick={handleViewTable}
+          aria-label="Table view"
+          aria-pressed={view === "table"}>
+          <TableIcon className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
         <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
           className={cn("rounded-none h-9 px-2.5 border-x border-input")}
-          onClick={handleViewKanban}>
-          <LayoutGrid className="h-3.5 w-3.5" />
+          onClick={handleViewKanban}
+          aria-label="Kanban view"
+          aria-pressed={view === "kanban"}>
+          <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
         <Button variant={view === "funnel" ? "default" : "ghost"} size="sm"
           className={cn("rounded-l-none h-9 px-2.5")}
-          onClick={handleViewFunnel}>
-          <GitBranch className="h-3.5 w-3.5" />
+          onClick={handleViewFunnel}
+          aria-label="Funnel view"
+          aria-pressed={view === "funnel"}>
+          <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>
 

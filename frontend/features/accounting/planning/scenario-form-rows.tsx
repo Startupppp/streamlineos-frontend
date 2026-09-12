@@ -81,8 +81,9 @@ export function SpendItemRow({ idx, itemId, form, onRemove }: SpendItemRowProps)
           size="sm"
           className="h-6 w-6 p-0 text-destructive hover:text-destructive"
           onClick={handleRemove}
+          aria-label={`Remove item ${idx + 1}`}
         >
-          <Trash2 className="size-3" />
+          <Trash2 className="size-3" aria-hidden="true" />
         </Button>
       </div>
 

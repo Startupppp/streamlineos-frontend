@@ -283,8 +283,14 @@ export function AiCreditsSettingsPage() {
                       <SelectItem value="90">90 days</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="ghost" size="sm" onClick={handleRefresh} className="h-8 w-8 p-0">
-                    <RefreshCw className="h-3.5 w-3.5" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    aria-label="Refresh usage"
+                    className="h-8 w-8 p-0"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -374,8 +380,13 @@ export function AiCreditsSettingsPage() {
             <div className="overflow-hidden rounded-lg border border-border bg-card">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <p className="text-sm font-semibold">Usage History</p>
-                <Button variant="ghost" size="sm" onClick={handleRefresh}>
-                  <RefreshCw className="h-3.5 w-3.5" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefresh}
+                  aria-label="Refresh usage history"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 </Button>
               </div>
               {txnLoading ? (

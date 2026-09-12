@@ -385,8 +385,14 @@ export function BulkActionsBar({
           </Button>
         )}
 
-        <Button variant="ghost" size="sm" className="text-xs" onClick={onClearSelection}>
-          <X className="h-3 w-3" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs"
+          onClick={onClearSelection}
+          aria-label="Clear selection"
+        >
+          <X className="h-3 w-3" aria-hidden="true" />
         </Button>
       </div>
 
