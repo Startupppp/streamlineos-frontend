@@ -53,10 +53,8 @@ export function PlanCard({
   const isUpgrading = upgradingPlan === plan && isBusy;
   const isSelected = selectedPlan === plan;
   const displayPrice =
-    billingCycle === "annual"
-      ? Math.round(config.annualPrice / 12)
-      : config.monthlyPrice;
-  const annualTotal = config.annualPrice;
+    billingCycle === "annual" ? config.annualPrice : config.monthlyPrice;
+  const annualTotal = config.annualPrice * 12;
 
   function handleCardClick() {
     if (!isCurrentPlan) onSelect(plan);

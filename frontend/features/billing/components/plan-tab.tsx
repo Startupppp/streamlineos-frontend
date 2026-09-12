@@ -25,7 +25,6 @@ import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
 import { PlanTabSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { EntitlementGate } from "@/components/entitlement-gate";
-import { PRICING } from "@/lib/pricing";
 import {
   loadCheckoutScript,
   useCheckoutScript,
@@ -47,6 +46,14 @@ function readinessUnavailableMessage(reason: NonNullable<BillingReadiness["unava
     default:
       return assertNever(reason);
   }
+}
+
+function resolveAnnualSavingsPct(plans: PlanDefinition[]): number | null {
+  const discounted = plans.find(
+    (plan) => plan.monthlyPrice > 0 && plan.annualPrice > 0 && plan.annualPrice < plan.monthlyPrice,
+  );
+  if (!discounted) return null;
+  return Math.round((1 - discounted.annualPrice / discounted.monthlyPrice) * 100);
 }
 
 function planConfigFromDefinition(
@@ -71,12 +78,6 @@ const STATUS_BADGE: Record<
   EXPIRED: { label: "Expired", variant: "outline" },
 };
 
-const READINESS_MESSAGES: Record<string, string> = {
-  NOT_CONFIGURED: "Online payments are not enabled yet — contact support to activate.",
-  INCOMPLETE_CREDENTIALS: "Payment configuration is incomplete — contact support.",
-  PROVIDER_UNSUPPORTED: "Payment provider is not supported for this region — contact support.",
-};
-
 export function PlanTab() {
   const { data: session } = useSession();
   const { data, isLoading, isError, error, refetch } = useSubscription();
@@ -94,6 +95,7 @@ export function PlanTab() {
   const { state: scriptState, retry: retryScript } = useCheckoutScript();
 
   const planCatalog = plansResponse?.plans ?? [];
+  const annualSavingsPct = resolveAnnualSavingsPct(planCatalog);
   const planConfigById = Object.fromEntries(
     planCatalog.map((p) => [p.id, planConfigFromDefinition(p)]),
   ) as Partial<
@@ -350,7 +352,6 @@ export function PlanTab() {
             type="button"
             size="sm"
             variant="outline"
-            isPending={scriptState === "loading"}
             onClick={handleRetryScript}
             className="shrink-0"
           >
@@ -382,9 +383,11 @@ export function PlanTab() {
           }`}
         >
           Annual
-          <span className="inline-flex items-center rounded-full bg-status-success-surface px-1.5 py-0.5 text-micro font-semibold text-status-success-ink">
-            Save {PRICING.annualDiscountPct}%
-          </span>
+          {annualSavingsPct !== null && (
+            <span className="inline-flex items-center rounded-full bg-status-success-surface px-1.5 py-0.5 text-micro font-semibold text-status-success-ink">
+              Save {annualSavingsPct}%
+            </span>
+          )}
         </button>
       </div>
 
