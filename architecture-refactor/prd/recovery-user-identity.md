@@ -171,9 +171,33 @@ organization / access; frontend `tsc` has 3 (billing, chat, invitations `status:
 enum union); `check-named-handlers` flags `plan-card.tsx:87`; `check-file-sizes` lists 5
 pre-existing unregistered files.
 
+### Real-database proof — CLOSED
+
+`pnpm verify:auth-races` (`backend/src/scripts/verify-auth-claim-races.mjs`) races the
+claims on a real server. Measured on **PostgreSQL 18.6, read committed**, against the local
+disposable `scratch_local`: **10/10 invariants held**, and the run reproduces each OLD defect
+on the same server rather than only asserting the repair.
+
+| Race | Old shape | Repaired shape |
+| --- | --- | --- |
+| verification token, two concurrent callers | read-then-act lets **both** proceed (2 rows) | atomic `DELETE … WHERE expires > now()` — exactly one wins |
+| verification rollback after the claim | — | token still claimable on retry |
+| OTP expired at claim time | `used_at IS NULL` alone **consumes it** | refused |
+| OTP attempts exhausted at claim time | `used_at IS NULL` alone **consumes it** | refused |
+| two concurrent OTP consumes | — | exactly one wins |
+| a second writer against an uncommitted claim | — | genuinely **blocks** on the row lock, then re-evaluates after the commit and matches 0 rows |
+
+That last row is the part no mock can express: the loser does not error, it waits and then
+finds the predicate no longer true. The probe takes its own `AUTH_RACE_PROBE_DATABASE_URL`,
+never falls back to `DATABASE_URL`, refuses a non-loopback target without `--allow-remote`,
+and removes every row it created.
+
+Deletion evidence for I3: `pnpm exec knip --no-progress` reports 4 unused exports, **none in
+`modules/auth`** — the register removal left no orphan. `insertTrialSubscription` is retained
+and still used by the live org-creation path (`bootstrap-cell-organization.ts:81`).
+
 ### BLOCKED — do not read the above as a passing release
 
-- **Real PostgreSQL concurrency.** Every race above is a modelled predicate, not two backends racing a row lock. The claims are argued from READ COMMITTED semantics and the existing `verifyMagicLink` precedent.
 - **Real email delivery**, provider retry and true delivery inversion — the transport is a stub throughout.
 - **Browser evidence.** No screenshots, no keyboard/mobile/zoom pass, no 320px check in a real browser. `verify-email`, `magic-link` and `invitation/[token]` page branches are typecheck-and-source verified only; no component test covers them.
 - **Combined journey** at one root/backend revision pair: signup → correct gate → two devices → org switch → revocation. Not exercised.
