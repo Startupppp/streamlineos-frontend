@@ -41,19 +41,21 @@ export const inventoryPlanningQueryKeys = {
      */
     poBatchPreview: (
       proposalIds: readonly number[],
-      overrides: readonly { proposalId: number; quantity: string }[] = [],
+      overrides?: readonly { proposalId: number; quantity: string }[],
     ) =>
-      [
+      k(
         ...base,
         "inventory",
         "planning",
         "poBatchPreview",
         [...proposalIds].sort((a, b) => a - b).join(","),
-        [...overrides]
-          .sort((a, b) => a.proposalId - b.proposalId)
-          .map((o) => `${o.proposalId}:${o.quantity}`)
-          .join(","),
-      ] as const,
+        overrides && overrides.length > 0
+          ? [...overrides]
+              .sort((a, b) => a.proposalId - b.proposalId)
+              .map((o) => `${o.proposalId}:${o.quantity}`)
+              .join(",")
+          : undefined,
+      ),
 
     driftWatchlistList: [...base, "inventory", "planning", "drift"] as const,
     driftWatchlist: (params?: Record<string, unknown>) =>

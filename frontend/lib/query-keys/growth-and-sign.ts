@@ -78,8 +78,6 @@ export const growthAndSignQueryKeys = {
     all: [...base, "crmCommission"] as const,
     plans: () => [...base, "crmCommission", "plans"] as const,
     plan: (planId: string) => [...base, "crmCommission", "plan", planId] as const,
-    versionInForce: (planId: string, on: string) =>
-      [...base, "crmCommission", "plan", planId, "version-in-force", on] as const,
     earnings: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "crmCommission", "earnings"] as const)
@@ -89,10 +87,6 @@ export const growthAndSignQueryKeys = {
       params === undefined
         ? ([...base, "crmCommission", "accrual"] as const)
         : ([...base, "crmCommission", "accrual", params] as const),
-    accrualCurve: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "crmCommission", "accrual", "curve"] as const)
-        : ([...base, "crmCommission", "accrual", "curve", params] as const),
     accrualByDeal: (dealId: string) =>
       [...base, "crmCommission", "accrual", "by-deal", dealId] as const,
     earningBreakdown: (earningId: string) =>
