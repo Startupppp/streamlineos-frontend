@@ -160,7 +160,7 @@ export function getOrgUnitDependencyPreview(
 ) {
   return apiClient.get<OrgUnitDependencyPreview>(
     `/org-hierarchy/dependencies/${unitKind}/${unitId}`,
-    { mode: "archive" },
+    undefined,
     undefined,
     dependencyPreviewContract,
   );
