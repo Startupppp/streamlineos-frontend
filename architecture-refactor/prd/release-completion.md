@@ -53,6 +53,45 @@ Two of ARCH-003's four gates are closed. The other two are open for stated reaso
 and reverted, because absorbing a failure into a ceiling is the exact failure mode these
 gates exist to catch.
 
+### `scratch_local` migrated to the merged journal — 2026-09-12
+
+Relevant because DOC-004's prerequisites name "a fully migrated disposable database", and
+because the pending count after the merge looked alarming and mostly was not.
+
+**32 reported pending; 22 applied; 10 remain and all 10 are no-ops.** Applied one at a time
+through `src/scripts/apply-journalled-migration.mjs` with `APPLY_ONE_DATABASE_URL` pinned to
+`127.0.0.1/scratch_local` — never `db:migrate`, whose `drizzle.config.ts` loads `.env` and
+resolves to **production Aurora**. That script runs each migration statement-by-statement in
+one transaction and rolls back on the first failure, so a failure applies nothing.
+
+Most of the 32 were **hash drift, not unrun work**: the merge edited the files of migrations
+that had already been applied, so their recorded hash no longer matched. The ten that failed
+prove it, and each failed for a reason that means "already done":
+
+| Reason | Tags |
+| --- | --- |
+| column already dropped (`42703`) | `0478`, `0482`, `0611` |
+| object already exists (`42710` / `42P07`) | `0678`, `0701`, `0724`, `0741`, `0271a` |
+| references tables this lineage never had (`42P01`) | `0591` (`acc_asset_categories`), `0620` (`credit_note_items`) |
+
+**No contraction dropped anything.** The three column-drop migrations failed precisely
+because their columns were already gone — the risk of re-running a contraction did not
+materialise, and that is worth knowing before anyone hesitates over the same list again.
+
+Tenant integrity confirmed after the run: 2 organisations, 525 members, 5 live sessions,
+backend `/health` 200. Nothing was purged, unlike the earlier BUILD-003 attempt.
+
+One trap repeated here and is worth stating once more: **a migration's filename is not its
+table name.** `0267a_subprocessor_register` creates `subprocessors` and
+`subprocessor_subscribers`; probing for `subprocessor_register` reports the migration
+failed when it succeeded.
+
+Still open and unaffected by this run: the cold-build chain blocker where
+`0619_chain_creates_what_production_has` creates `gl_currencies` as a keyless repair copy
+while the incoming authoritative `0464a_gl_kernel` does an unguarded `CREATE TABLE`, so a
+fresh database fails at `0464a`. Applying to an existing database does not exercise that
+ordering — REL-001 still owns it.
+
 ### Backend: production code typechecks, specs do not — 78 errors, no gate watching
 
 Measured 2026-09-12. `tsc -p tsconfig.build.json` is **exit 0**. `tsc -p tsconfig.json`,
