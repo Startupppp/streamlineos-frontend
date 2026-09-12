@@ -10,7 +10,12 @@ import {
   useSessionClaimsRefresh,
 } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { clearAll } from "@/features/org-setup/lib/draft";
+import {
+  clearAll,
+  setCompletionMarker,
+  hasCompletionMarker,
+  clearCompletionMarker,
+} from "@/features/org-setup/lib/draft";
 import { useCompleteOrgSetupMutation } from "@/lib/api/hooks/org";
 import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 import { toast } from "sonner";
@@ -21,8 +26,6 @@ import { useSetupProvisioning } from "../hooks/use-setup-provisioning";
 import type { SetupError } from "./generation-failure-stage";
 import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
-
-const SETUP_DONE_KEY = "org-setup-complete";
 
 type OrgCreatedResult = {
   autoLoginToken: string | null;
@@ -42,6 +45,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
   const dataRef = useRef(data);
+  const sessionRef = useRef(session);
 
   const wantsInvites = data.invitees.length > 0;
   const generationSteps = GENERATION_STEPS.filter((label) => {
@@ -62,6 +66,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   useLayoutEffect(() => {
     dataRef.current = data;
+    sessionRef.current = session;
     completeOrgSetupRef.current = completeOrgSetup;
   });
 
@@ -81,7 +86,10 @@ export function StepGeneration({ data }: StepGenerationProps) {
   function handleSetupError(err: SetupError) {
     stopAnimation();
     hasRunRef.current = false;
-    sessionStorage.removeItem(SETUP_DONE_KEY);
+    clearCompletionMarker(
+      session?.user?.id ?? "",
+      orgCreatedResult?.orgId ?? session?.orgId ?? "",
+    );
     setSetupError(err);
   }
 
@@ -91,23 +99,38 @@ export function StepGeneration({ data }: StepGenerationProps) {
     stopAnimation();
     setCompletedSteps(total);
     clearBackendTokenCache();
-    clearAll(session?.user?.id ?? "");
-    sessionStorage.setItem(SETUP_DONE_KEY, "1");
+
+    try {
+      if (autoLoginToken) {
+        const outcome = await signInWithMagicToken(autoLoginToken);
+        if (outcome.status === "indeterminate")
+          throw new Error(
+            "We could not confirm your sign-in. Please sign in again.",
+          );
+        if (outcome.status !== "signed-in")
+          throw new Error("Sign-in failed. Please retry.");
+      }
+      const sessionResult = await completeOnboardingGate(
+        "org-setup-done",
+        orgId,
+        refreshSessionClaims,
+      );
+      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
+    } catch (err) {
+      apiDoneRef.current = false;
+      handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+      return;
+    }
+
+    const userId = sessionRef.current?.user?.id ?? "";
+    clearAll(userId);
+    setCompletionMarker(userId, orgId);
     try {
       sessionStorage.setItem(WELCOME_POP_KEY, "1");
       const name = dataRef.current.companyName?.trim();
       if (name) sessionStorage.setItem(WELCOME_POP_NAME_KEY, name);
     } catch {
       void 0;
-    }
-
-    try {
-      if (autoLoginToken) await signInWithMagicToken(autoLoginToken);
-      await completeOnboardingGate("org-setup-done", orgId, refreshSessionClaims);
-    } catch (err) {
-      apiDoneRef.current = false;
-      handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
-      return;
     }
 
     setShowWelcome(true);
@@ -131,18 +154,26 @@ export function StepGeneration({ data }: StepGenerationProps) {
     apiDoneRef.current = true;
     stopAnimation();
     const orgResult = orgCreatedResult;
+    const userId = session?.user?.id ?? "";
     try {
       clearBackendTokenCache();
-      clearAll(session?.user?.id ?? "");
       if (orgResult.autoLoginToken) {
-        await signInWithMagicToken(orgResult.autoLoginToken);
+        const outcome = await signInWithMagicToken(orgResult.autoLoginToken);
+        if (outcome.status === "indeterminate")
+          throw new Error(
+            "We could not confirm your sign-in. Please sign in again.",
+          );
+        if (outcome.status !== "signed-in")
+          throw new Error("Sign-in failed. Please retry.");
       }
-      await completeOnboardingGate(
+      const sessionResult = await completeOnboardingGate(
         "org-setup-done",
         orgResult.orgId,
         refreshSessionClaims,
       );
-      sessionStorage.setItem(SETUP_DONE_KEY, "1");
+      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
+      clearAll(userId);
+      setCompletionMarker(userId, orgResult.orgId);
       window.location.replace(destination);
     } catch (err) {
       apiDoneRef.current = false;
@@ -197,7 +228,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
   });
 
   useEffect(() => {
-    if (sessionStorage.getItem(SETUP_DONE_KEY) === "1") {
+    const s = sessionRef.current;
+    if (hasCompletionMarker(s?.user?.id ?? "", s?.orgId ?? "")) {
       window.location.replace("/dashboard");
       return;
     }
@@ -208,9 +240,9 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }, []);
 
   useEffect(() => {
-    if (provisioning.phase !== "completed" || !orgCreatedResult) return;
+    if (!provisioning.isReady || !orgCreatedResult) return;
     finishSetupRef.current(orgCreatedResult.autoLoginToken, orgCreatedResult.orgId);
-  }, [provisioning.phase, orgCreatedResult]);
+  }, [provisioning.isReady, orgCreatedResult]);
 
   const progress = Math.round((completedSteps / total) * 100);
   const companyName = data.companyName?.trim();

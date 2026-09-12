@@ -38,6 +38,11 @@ const newUserSchema = z.object({
 
 type NewUserFormValues = z.infer<typeof newUserSchema>;
 
+const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
+  "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
+const INVITATION_SIGN_IN_FAILED_MESSAGE =
+  "That sign-in link is no longer valid. Please sign in with the invited email address.";
+
 export default function InvitationPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
@@ -88,12 +93,18 @@ export default function InvitationPage() {
 
   const autoLoginWithToken = useCallback(
     async (autoLoginToken: string): Promise<void> => {
-      const signedIn = await signInWithMagicToken(autoLoginToken);
-      if (signedIn) {
+      const outcome = await signInWithMagicToken(autoLoginToken);
+      if (outcome.status === "signed-in") {
         window.location.href = "/dashboard";
-      } else {
-        router.push("/signin");
+        return;
       }
+      if (outcome.status === "indeterminate") {
+        toast.error(INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE);
+        router.push("/signin");
+        return;
+      }
+      toast.error(INVITATION_SIGN_IN_FAILED_MESSAGE);
+      router.push("/signin");
     },
     [router],
   );
@@ -206,6 +217,10 @@ export default function InvitationPage() {
   }
 
   if (invitation.userExists) {
+    const signedInAsOtherAccount =
+      session?.user?.email !== undefined &&
+      session.user.email !== invitation.email;
+
     return (
       <motion.div
         className="w-full max-w-[480px]"
@@ -226,6 +241,13 @@ export default function InvitationPage() {
                 invitedEmail={invitation.email}
                 accountEmail={session?.user?.email}
               />
+              {signedInAsOtherAccount && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                  You are currently signed in as{" "}
+                  <span className="font-medium">{session.user.email}</span>.
+                  Accepting will sign you in as the invited account instead.
+                </p>
+              )}
               <div className="space-y-2">
                 <LoadingButton
                   className="h-11 w-full gap-2 font-medium"

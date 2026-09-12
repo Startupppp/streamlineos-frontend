@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,45 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 
-const attemptedTokens = new Set<string>();
+interface VerificationFailure {
+  title: string;
+  message: string;
+}
+
+type TokenAttempt =
+  | { status: "in-flight" }
+  | { status: "failed"; failure: VerificationFailure };
+
+const attemptedTokens = new Map<string, TokenAttempt>();
+
+const SIGN_IN_UNCONFIRMED_FAILURE: VerificationFailure = {
+  title: "Sign-in not confirmed",
+  message:
+    "Your email is verified, but we could not confirm the sign-in on this device. Please sign in to continue.",
+};
+const SIGN_IN_FAILED_FAILURE: VerificationFailure = {
+  title: "Sign-in incomplete",
+  message:
+    "Your email is verified, but the automatic sign-in link is no longer valid. Please sign in to continue.",
+};
+const MISSING_LOGIN_TOKEN_FAILURE: VerificationFailure = {
+  title: "Sign-in incomplete",
+  message:
+    "Your email is verified, but no sign-in token was issued. Please sign in to continue.",
+};
+const INTERRUPTED_ATTEMPT_FAILURE: VerificationFailure = {
+  title: "Verification result unavailable",
+  message:
+    "This verification link was already used on this device and its result is no longer available here. Please sign in, or request a new link.",
+};
+
+function restoreFailure(token: string | null): VerificationFailure | null {
+  if (!token) return null;
+  const attempt = attemptedTokens.get(token);
+  if (attempt === undefined) return null;
+  if (attempt.status === "failed") return attempt.failure;
+  return INTERRUPTED_ATTEMPT_FAILURE;
+}
 
 function AuthStatusShell({
   children,
@@ -120,12 +158,13 @@ function SetupProgress() {
 }
 
 function VerifyEmailForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const [isVerified, setIsVerified] = useState(false);
-  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [verifyFailure, setVerifyFailure] = useState<VerificationFailure | null>(
+    () => restoreFailure(token),
+  );
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -154,42 +193,75 @@ function VerifyEmailForm() {
   const { mutate: verifyMutate } = verifyEmail;
 
   const completeAutoSignIn = useCallback(
-    async (autoLoginToken: string | undefined) => {
+    async (verificationToken: string, autoLoginToken: string | undefined) => {
       if (!autoLoginToken) {
-        setTimeout(() => router.push("/signin"), 1500);
+        attemptedTokens.set(verificationToken, {
+          status: "failed",
+          failure: MISSING_LOGIN_TOKEN_FAILURE,
+        });
+        setIsVerified(false);
+        setVerifyFailure(MISSING_LOGIN_TOKEN_FAILURE);
+        toast.error(MISSING_LOGIN_TOKEN_FAILURE.message);
         return;
       }
-      const signedIn = await signInWithMagicToken(autoLoginToken);
-      if (signedIn) {
+      const outcome = await signInWithMagicToken(autoLoginToken);
+      if (outcome.status === "signed-in") {
+        attemptedTokens.delete(verificationToken);
         window.location.href = "/org-setup";
-      } else {
-        setTimeout(() => router.push("/signin"), 1500);
+        return;
       }
+      const failure =
+        outcome.status === "indeterminate"
+          ? SIGN_IN_UNCONFIRMED_FAILURE
+          : SIGN_IN_FAILED_FAILURE;
+      attemptedTokens.set(verificationToken, { status: "failed", failure });
+      setIsVerified(false);
+      setVerifyFailure(failure);
+      toast.error(failure.message);
     },
-    [router],
+    [],
+  );
+
+  const runVerification = useCallback(
+    (verificationToken: string) => {
+      attemptedTokens.set(verificationToken, { status: "in-flight" });
+      setIsVerified(false);
+      setVerifyFailure(null);
+      verifyMutate(
+        { token: verificationToken },
+        {
+          onSuccess: async (data) => {
+            setIsVerified(true);
+            toast.success("Email verified! Signing you in…");
+            await completeAutoSignIn(verificationToken, data.autoLoginToken);
+          },
+          onError: (error) => {
+            const failure = {
+              title: "Verification failed",
+              message: getErrorMessage(error),
+            };
+            attemptedTokens.set(verificationToken, {
+              status: "failed",
+              failure,
+            });
+            setVerifyFailure(failure);
+            toast.error(failure.message);
+          },
+        },
+      );
+    },
+    [verifyMutate, completeAutoSignIn],
   );
 
   useEffect(() => {
     if (!token) return;
-    if (attemptedTokens.has(token)) return;
-    attemptedTokens.add(token);
-
-    verifyMutate(
-      { token },
-      {
-        onSuccess: async (data) => {
-          setIsVerified(true);
-          toast.success("Email verified! Signing you in…");
-          await completeAutoSignIn(data.autoLoginToken);
-        },
-        onError: (error) => {
-          const msg = getErrorMessage(error);
-          setVerifyError(msg);
-          toast.error(msg);
-        },
-      },
-    );
-  }, [token, verifyMutate, completeAutoSignIn]);
+    if (attemptedTokens.has(token)) {
+      setIsVerified(false);
+      setVerifyFailure(restoreFailure(token));
+      return;
+    }
+    runVerification(token);
+  }, [token, runVerification]);
 
   const handleResend = useCallback(() => {
     if (!email || cooldown > 0) return;
@@ -210,23 +282,8 @@ function VerifyEmailForm() {
   const handleRetry = useCallback(() => {
     if (!token) return;
     attemptedTokens.delete(token);
-    setVerifyError(null);
-    verifyMutate(
-      { token },
-      {
-        onSuccess: async (data) => {
-          setIsVerified(true);
-          toast.success("Email verified! Signing you in…");
-          await completeAutoSignIn(data.autoLoginToken);
-        },
-        onError: (error) => {
-          const msg = getErrorMessage(error);
-          setVerifyError(msg);
-          toast.error(msg);
-        },
-      },
-    );
-  }, [token, verifyMutate, completeAutoSignIn]);
+    runVerification(token);
+  }, [token, runVerification]);
 
   if (isVerified) {
     return (
@@ -282,7 +339,7 @@ function VerifyEmailForm() {
     );
   }
 
-  if (verifyError) {
+  if (verifyFailure) {
     return (
       <AuthStatusShell>
         <AuthStatusSection className="text-center">
@@ -290,10 +347,10 @@ function VerifyEmailForm() {
             <XCircle className="w-7 text-destructive" aria-hidden="true" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-            Verification failed
+            {verifyFailure.title}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            The link may have expired or already been used.
+            {verifyFailure.message}
           </p>
         </AuthStatusSection>
 

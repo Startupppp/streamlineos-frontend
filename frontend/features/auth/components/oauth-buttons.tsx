@@ -4,22 +4,16 @@ import { LoadingButton } from "@/components/ui/loading-button";
 
 interface OAuthButtonsProps {
   hasGoogleProvider: boolean;
-  hasMicrosoftProvider: boolean;
   isGooglePending: boolean;
-  isMicrosoftPending: boolean;
   isSignInPending: boolean;
   onGoogleSignIn: () => void;
-  onMicrosoftSignIn: () => void;
 }
 
 export function OAuthButtons({
   hasGoogleProvider,
-  hasMicrosoftProvider,
   isGooglePending,
-  isMicrosoftPending,
   isSignInPending,
   onGoogleSignIn,
-  onMicrosoftSignIn,
 }: OAuthButtonsProps) {
   return (
     <>
@@ -54,26 +48,6 @@ export function OAuthButtons({
               </svg>
             )}
             Continue with Google
-          </LoadingButton>
-        )}
-        {hasMicrosoftProvider && (
-          <LoadingButton
-            type="button"
-            variant="outline"
-            className="w-full h-9 text-sm font-medium gap-2"
-            onClick={onMicrosoftSignIn}
-            disabled={isSignInPending}
-            isPending={isMicrosoftPending}
-          >
-            {!isMicrosoftPending && (
-              <svg className="h-4 w-4" viewBox="0 0 21 21" aria-hidden="true">
-                <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-              </svg>
-            )}
-            Continue with Microsoft
           </LoadingButton>
         )}
       </div>

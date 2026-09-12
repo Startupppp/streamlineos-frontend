@@ -127,13 +127,20 @@ export default function OrgSetupPage() {
       const res = await skipOrgSetup({});
       clearBackendTokenCache();
       if (res?.autoLoginToken) {
-        await signInWithMagicToken(res.autoLoginToken);
+        const outcome = await signInWithMagicToken(res.autoLoginToken);
+        if (outcome.status === "indeterminate")
+          throw new Error(
+            "We could not confirm your sign-in. Please sign in again.",
+          );
+        if (outcome.status !== "signed-in")
+          throw new Error("Sign-in failed. Please retry.");
       }
-      await completeOnboardingGate(
+      const sessionResult = await completeOnboardingGate(
         "org-setup-done",
         res.orgId,
         refreshSessionClaims,
       );
+      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
       clearAll(userId);
       window.location.replace("/dashboard");
     } catch (err) {

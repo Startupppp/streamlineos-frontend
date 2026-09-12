@@ -32,7 +32,9 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const [otpValue, setOtpValue] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+  const codeStageActiveRef = useRef(false);
 
   const emailForm = useForm<EmailValues>({
     resolver: zodResolver(emailSchema),
@@ -42,6 +44,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   useEffect(() => {
     return () => {
       if (cooldownRef.current) clearInterval(cooldownRef.current);
+      codeStageActiveRef.current = false;
     };
   }, []);
 
@@ -62,9 +65,11 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const requestOtpMutation = useRequestOtp({
     onSuccess: (data, email) => {
       setSubmittedEmail(email);
+      codeStageActiveRef.current = true;
       setStage("code");
       setOtpValue("");
       setMagicLinkSent(false);
+      setVerifyError(null);
       startCooldown();
       toast.success(getErrorMessage(data));
     },
@@ -75,15 +80,24 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
   const verifyOtpMutation = useVerifyOtp({
     onSuccess: async (data) => {
-      const signedIn = await signInWithMagicToken(data.autoLoginToken);
-      if (signedIn) {
+      if (!codeStageActiveRef.current) return;
+      const outcome = await signInWithMagicToken(data.autoLoginToken);
+      if (!codeStageActiveRef.current) return;
+      if (outcome.status === "signed-in") {
         window.location.assign(getCallbackUrl());
         return;
       }
+      if (outcome.status === "indeterminate") {
+        setVerifyError("Sign-in status is uncertain. Please try signing in again.");
+        setOtpValue("");
+        return;
+      }
+      setVerifyError("Could not complete sign-in. Request a new code and try again.");
       toast.error("Could not complete sign-in. Request a new code and try again.");
       setOtpValue("");
     },
     onError: (error) => {
+      setVerifyError(getErrorMessage(error));
       toast.error(getErrorMessage(error));
       setOtpValue("");
     },
@@ -110,6 +124,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     (value: string) => {
       const digits = value.replace(/\D/g, "").slice(0, 6);
       setOtpValue(digits);
+      setVerifyError(null);
       if (digits.length === 6 && !verifyOtpMutation.isPending) {
         verifyOtpMutation.mutate({ email: submittedEmail, code: digits });
       }
@@ -118,21 +133,23 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   );
 
   const handleVerify = useCallback(() => {
-    if (otpValue.length === 6) {
+    if (otpValue.length === 6 && !verifyOtpMutation.isPending) {
       verifyOtpMutation.mutate({ email: submittedEmail, code: otpValue });
     }
   }, [otpValue, submittedEmail, verifyOtpMutation]);
 
   const handleResend = useCallback(() => {
-    if (resendCooldown > 0) return;
+    if (resendCooldown > 0 || verifyOtpMutation.isPending) return;
     requestOtpMutation.mutate(submittedEmail);
-  }, [resendCooldown, requestOtpMutation, submittedEmail]);
+  }, [resendCooldown, requestOtpMutation, submittedEmail, verifyOtpMutation.isPending]);
 
   const handleBack = useCallback(() => {
+    codeStageActiveRef.current = false;
     setStage("email");
     setSubmittedEmail("");
     setOtpValue("");
     setMagicLinkSent(false);
+    setVerifyError(null);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     setResendCooldown(0);
   }, []);
@@ -174,11 +191,16 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           </div>
         </div>
 
-        {otpValue.length > 0 && otpValue.length < 6 && (
+        {verifyError && (
+          <p role="alert" aria-live="assertive" className="text-xs text-destructive text-center">
+            {verifyError}
+          </p>
+        )}
+
+        {otpValue.length === 6 && (
           <LoadingButton
             className="w-full h-9 text-sm font-medium"
             onClick={handleVerify}
-            disabled={otpValue.length !== 6}
             isPending={verifyOtpMutation.isPending}
             loadingText="Verifying..."
           >
@@ -197,7 +219,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           <button
             type="button"
             onClick={handleResend}
-            disabled={resendCooldown > 0 || requestOtpMutation.isPending}
+            disabled={resendCooldown > 0 || requestOtpMutation.isPending || verifyOtpMutation.isPending}
             className="hover:text-foreground transition-colors underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { parseAuthErrorCode } from "@/lib/parse-auth-error";
 import { PasswordlessSigninForm, OAuthButtons, SignInAlerts } from "@/features/auth";
-import { useGoogleSignIn, useMicrosoftSignIn } from "@/hooks/common/auth-hooks";
+import { useGoogleSignIn } from "@/hooks/common/auth-hooks";
+import { hasGoogleProvider } from "@/lib/auth-providers";
 
 export const dynamic = "force-dynamic";
 
@@ -51,20 +52,13 @@ export default function SignInPage() {
   }, []);
 
   const googleSignInMutation = useGoogleSignIn(getCallbackUrl);
-  const microsoftSignInMutation = useMicrosoftSignIn(getCallbackUrl);
 
   const handleGoogleSignIn = useCallback(
     () => googleSignInMutation.mutate(),
     [googleSignInMutation],
   );
-  const handleMicrosoftSignIn = useCallback(
-    () => microsoftSignInMutation.mutate(),
-    [microsoftSignInMutation],
-  );
 
-  const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
-  const hasMicrosoftProvider = !!process.env.NEXT_PUBLIC_MICROSOFT_ENABLED;
-  const hasOAuthProviders = hasGoogleProvider || hasMicrosoftProvider;
+  const handleResendVerification = useCallback(() => undefined, []);
 
   return (
     <div className="w-full max-w-sm animate-fade-up overflow-auto">
@@ -83,20 +77,17 @@ export default function SignInPage() {
           showVerificationHint={false}
           isResendingVerification={false}
           resendCooldown={0}
-          onResendVerification={() => undefined}
+          onResendVerification={handleResendVerification}
         />
       )}
 
       <div className="rounded-xl p-4 space-y-3">
-        {hasOAuthProviders && (
+        {hasGoogleProvider && (
           <OAuthButtons
             hasGoogleProvider={hasGoogleProvider}
-            hasMicrosoftProvider={hasMicrosoftProvider}
             isGooglePending={googleSignInMutation.isPending}
-            isMicrosoftPending={microsoftSignInMutation.isPending}
             isSignInPending={false}
             onGoogleSignIn={handleGoogleSignIn}
-            onMicrosoftSignIn={handleMicrosoftSignIn}
           />
         )}
 

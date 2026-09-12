@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -58,26 +58,64 @@ const logoutContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.logoutContract),
 );
 
-async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
+export type MagicLinkSignInOutcome =
+  | { status: "signed-in" }
+  | { status: "failed" }
+  | { status: "indeterminate" };
+
+type SessionProbe =
+  | { status: "read"; signedIn: boolean; sessionId: string | undefined }
+  | { status: "unreadable" };
+
+async function probeSession(): Promise<SessionProbe> {
+  try {
+    const session = await getSession();
+    if (!session?.user)
+      return { status: "read", signedIn: false, sessionId: undefined };
+    return { status: "read", signedIn: true, sessionId: session.sessionId };
+  } catch {
+    return { status: "unreadable" };
+  }
+}
+
+async function attemptCredentialsSignIn(
+  magicToken: string,
+): Promise<MagicLinkSignInOutcome> {
+  const priorSession = await probeSession();
+
+  let rejected = false;
   try {
     const result = await signIn("credentials", {
       magicToken,
       redirect: false,
     });
-    if (result?.ok && !result.error) return true;
-  } catch {}
-  try {
-    const session = await getSession();
-    return Boolean(session?.user);
+    rejected = !result.ok || Boolean(result.error);
   } catch {
-    return false;
+    rejected = false;
   }
+  if (rejected) return { status: "failed" };
+
+  const establishedSession = await probeSession();
+  if (
+    priorSession.status === "unreadable" ||
+    establishedSession.status === "unreadable"
+  )
+    return { status: "indeterminate" };
+  if (!establishedSession.signedIn) return { status: "indeterminate" };
+  if (typeof establishedSession.sessionId !== "string")
+    return { status: "indeterminate" };
+  if (
+    priorSession.signedIn &&
+    priorSession.sessionId === establishedSession.sessionId
+  )
+    return { status: "indeterminate" };
+  return { status: "signed-in" };
 }
 
 export async function signInWithMagicToken(
   magicToken: string,
-): Promise<boolean> {
-  if (!magicToken) return false;
+): Promise<MagicLinkSignInOutcome> {
+  if (!magicToken) return { status: "failed" };
   clearBackendTokenCache();
   // Do not retry credentials sign-in with the same token: magic-link verify
   // consumes it on first success, so a second attempt always fails.
@@ -158,21 +196,36 @@ export function useResendVerificationEmail() {
   });
 }
 
+export interface SignOutOutcome {
+  localSignOutCompleted: boolean;
+  serverRevocationCompleted: boolean;
+}
+
+const SERVER_REVOCATION_FAILED_MESSAGE =
+  "Signed out on this device. Server session could not be revoked, so other devices may still be signed in — sign out from them directly.";
+
 export function useSignOut() {
   const router = useRouter();
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["auth", "sign-out"],
-    mutationFn: async () => {
+    mutationFn: async (): Promise<SignOutOutcome> => {
+      let serverRevocationCompleted = false;
       try {
         await apiClient.post("/auth/logout", undefined, undefined, logoutContract);
-      } catch {}
+        serverRevocationCompleted = true;
+      } catch {
+        serverRevocationCompleted = false;
+      }
       clearBackendTokenCache();
       queryClient.clear();
-      return signOut({ redirect: false });
+      await signOut({ redirect: false });
+      return { localSignOutCompleted: true, serverRevocationCompleted };
     },
-    onSuccess: () => {
+    onSuccess: (outcome) => {
       clearGateCookies();
+      if (!outcome.serverRevocationCompleted)
+        toast.error(SERVER_REVOCATION_FAILED_MESSAGE);
       router.push("/signin");
       router.refresh();
     },
@@ -201,18 +254,6 @@ export function useGoogleSignIn(getCallbackUrl: () => string) {
     },
     onError: () => {
       toast.error("Google sign-in failed. Please try again.");
-    },
-  });
-}
-
-export function useMicrosoftSignIn(getCallbackUrl: () => string) {
-  return useMutation({
-    mutationKey: ["auth", "sign-in", "microsoft"],
-    mutationFn: async () => {
-      await signIn("microsoft-entra-id", { callbackUrl: getCallbackUrl() });
-    },
-    onError: () => {
-      toast.error("Microsoft sign-in failed. Please try again.");
     },
   });
 }
@@ -247,10 +288,16 @@ export function useSessionClaimsRefresh(): SessionClaimsRefresh {
   );
 }
 
+const SWITCH_UNCONFIRMED_MESSAGE =
+  "Workspace switch could not be confirmed. You are still in your previous workspace — please try again.";
+
+const AUTO_SIGN_OUT_SUPPRESSION_MS = 4000;
+
 export function useSwitchOrg() {
   const refreshSessionClaims = useSessionClaimsRefresh();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const switchGenerationRef = useRef(0);
   return useMutation({
     mutationKey: ["organization", "switch"],
     mutationFn: (orgId: string) =>
@@ -260,12 +307,21 @@ export function useSwitchOrg() {
         undefined,
         switchOrgContract,
       ),
-    onMutate: () => {
+    onMutate: async () => {
+      switchGenerationRef.current += 1;
+      const generation = switchGenerationRef.current;
       setAutoSignOutSuppressed(true);
       clearGateCookies();
+      await queryClient.cancelQueries();
+      return { generation };
     },
-    onSuccess: async (data) => {
-      await refreshSessionClaims({ orgId: data.orgId });
+    onSuccess: async (data, _orgId, onMutateResult) => {
+      const refreshed = await refreshSessionClaims({ orgId: data.orgId });
+      if (onMutateResult.generation !== switchGenerationRef.current) return;
+      if (!refreshed || refreshed.orgId !== data.orgId) {
+        toast.error(SWITCH_UNCONFIRMED_MESSAGE);
+        return;
+      }
       queryClient.clear();
       router.replace("/dashboard");
       router.refresh();
@@ -273,8 +329,12 @@ export function useSwitchOrg() {
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
-    onSettled: () => {
-      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
+    onSettled: (_data, _error, _orgId, onMutateResult) => {
+      const generation = onMutateResult?.generation;
+      window.setTimeout(() => {
+        if (generation !== switchGenerationRef.current) return;
+        setAutoSignOutSuppressed(false);
+      }, AUTO_SIGN_OUT_SUPPRESSION_MS);
     },
   });
 }
