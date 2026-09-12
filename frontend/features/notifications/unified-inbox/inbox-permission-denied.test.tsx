@@ -98,7 +98,11 @@ const APPROVALS_DENIED: InboxSourceStatus = {
 };
 
 async function selectView(label: string) {
-  await userEvent.click(screen.getByRole("tab", { name: label }));
+  const control = screen.getByRole("button", { name: label });
+  expect(control).toHaveAttribute("aria-pressed");
+  expect(control).not.toHaveAttribute("aria-controls");
+  await userEvent.click(control);
+  expect(control).toHaveAttribute("aria-pressed", "true");
 }
 
 beforeEach(() => {

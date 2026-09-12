@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import type { Session } from "next-auth";
 import {
   isAccessNamespaceKey,
   useAccessVersionSync,
@@ -13,6 +14,12 @@ import { backendPath } from "@/test-utils/backend-repo";
 
 const mockUseAccess = jest.fn();
 const mockRefreshSessionClaims = jest.fn();
+
+const refreshedSession: Session = {
+  user: { id: "user-1", role: "MEMBER", name: "Ada" },
+  orgId: "org-1",
+  expires: "2099-01-01T00:00:00.000Z",
+};
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockUseAccess(),
@@ -43,7 +50,7 @@ describe("the app cache and the session claims follow the backend permission ver
     remove = jest.spyOn(client, "removeQueries").mockReturnValue(undefined);
     mockUseAccess.mockReset();
     mockRefreshSessionClaims.mockReset();
-    mockRefreshSessionClaims.mockResolvedValue(null);
+    mockRefreshSessionClaims.mockResolvedValue(refreshedSession);
   });
 
   it("does not act on the first resolved snapshot", () => {
@@ -95,15 +102,15 @@ describe("the app cache and the session claims follow the backend permission ver
   });
 
   it("queues a newer version that arrives while claims are refreshing", async () => {
-    let finishFirstRefresh: ((value: null) => void) | undefined;
+    let finishFirstRefresh: ((value: Session) => void) | undefined;
     mockRefreshSessionClaims
       .mockImplementationOnce(
         () =>
-          new Promise<null>((resolve) => {
+          new Promise<Session>((resolve) => {
             finishFirstRefresh = resolve;
           }),
       )
-      .mockResolvedValue(null);
+      .mockResolvedValue(refreshedSession);
     mockUseAccess.mockReturnValue({ data: { version: 7 } });
     const { rerender } = renderHook(() => useAccessVersionSync(), {
       wrapper: wrapperFor(client),
@@ -116,13 +123,108 @@ describe("the app cache and the session claims follow the backend permission ver
 
     expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
     await act(async () => {
-      finishFirstRefresh?.(null);
+      finishFirstRefresh?.(refreshedSession);
       await Promise.resolve();
     });
 
     expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2);
     expect(remove).toHaveBeenCalledTimes(2);
     expect(invalidate).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("a version is only marked seen once its claims actually came back", () => {
+  let client: QueryClient;
+  let invalidate: jest.SpyInstance;
+  let remove: jest.SpyInstance;
+
+  beforeEach(() => {
+    client = new QueryClient();
+    invalidate = jest
+      .spyOn(client, "invalidateQueries")
+      .mockResolvedValue(undefined);
+    remove = jest.spyOn(client, "removeQueries").mockReturnValue(undefined);
+    mockUseAccess.mockReset();
+    mockRefreshSessionClaims.mockReset();
+  });
+
+  it("retries the claims refresh when the refresh times out, and sweeps once", async () => {
+    mockRefreshSessionClaims.mockResolvedValue(null);
+    mockUseAccess.mockReturnValue({ data: { version: 7 } });
+    const { rerender } = renderHook(() => useAccessVersionSync(), {
+      wrapper: wrapperFor(client),
+    });
+    mockUseAccess.mockReturnValue({ data: { version: 8 } });
+    rerender();
+
+    await waitFor(() =>
+      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2),
+    );
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+  });
+
+  it("spends a bounded attempt budget instead of looping on a version that never confirms", async () => {
+    mockRefreshSessionClaims.mockResolvedValue(null);
+    mockUseAccess.mockReturnValue({ data: { version: 7 } });
+    const { rerender } = renderHook(() => useAccessVersionSync(), {
+      wrapper: wrapperFor(client),
+    });
+    mockUseAccess.mockReturnValue({ data: { version: 8 } });
+    rerender();
+
+    await waitFor(() =>
+      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2),
+    );
+    await act(async () => {
+      rerender();
+      rerender();
+      await Promise.resolve();
+    });
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops asking once a retry confirms, so the version is not swept forever", async () => {
+    mockRefreshSessionClaims
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue(refreshedSession);
+    mockUseAccess.mockReturnValue({ data: { version: 7 } });
+    const { rerender } = renderHook(() => useAccessVersionSync(), {
+      wrapper: wrapperFor(client),
+    });
+    mockUseAccess.mockReturnValue({ data: { version: 8 } });
+    rerender();
+
+    await waitFor(() =>
+      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2),
+    );
+    await act(async () => {
+      rerender();
+      rerender();
+      await Promise.resolve();
+    });
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2);
+    expect(remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("a version whose refresh never confirmed does not suppress the next version's sweep", async () => {
+    mockRefreshSessionClaims.mockResolvedValue(null);
+    mockUseAccess.mockReturnValue({ data: { version: 7 } });
+    const { rerender } = renderHook(() => useAccessVersionSync(), {
+      wrapper: wrapperFor(client),
+    });
+    mockUseAccess.mockReturnValue({ data: { version: 8 } });
+    rerender();
+    await waitFor(() =>
+      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(2),
+    );
+
+    mockUseAccess.mockReturnValue({ data: { version: 9 } });
+    rerender();
+    await waitFor(() =>
+      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(4),
+    );
+    expect(remove).toHaveBeenCalledTimes(2);
   });
 });
 

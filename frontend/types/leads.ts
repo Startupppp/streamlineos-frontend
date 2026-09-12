@@ -11,10 +11,12 @@ import type {
   leadTimelineContract,
   leadsSlaAlertsContract,
   leadsAnalyticsContract,
-  leadsSalesLeaderboardContract,
-  leadsSalesTeamCapacityContract,
   leadsDistributeContract,
 } from "@/hooks/api/leads-schema";
+import type {
+  leadsSalesLeaderboardContract,
+  leadsSalesTeamCapacityContract,
+} from "@/hooks/api/leads-analytics-schema";
 
 export type PipelineStatus =
   | "NEW"

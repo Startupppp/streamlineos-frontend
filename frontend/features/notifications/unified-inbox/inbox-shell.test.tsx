@@ -267,42 +267,54 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
   });
 });
 
-describe("inbox view switcher — tab semantics and view switching", () => {
-  it("renders all four tabs with role=tab", async () => {
+describe("inbox view switcher — filter semantics and view switching", () => {
+  const VIEW_LABELS = ["All", "Notifications", "Mail", "Approvals"];
+
+  function viewControl(label: string): HTMLElement {
+    return screen.getByRole("button", { name: label });
+  }
+
+  it("renders all four views as pressed-state filter controls", async () => {
     await act(async () => { render(<InboxShell />); });
 
-    const tabs = screen.getAllByRole("tab");
-    const labels = tabs.map((t) => t.textContent);
-    expect(labels).toEqual(["All", "Notifications", "Mail", "Approvals"]);
+    const controls = VIEW_LABELS.map(viewControl);
+    expect(controls.map((control) => control.textContent)).toEqual(VIEW_LABELS);
+    for (const control of controls) expect(control).toHaveAttribute("aria-pressed");
   });
 
-  it("All tab is active by default", async () => {
+  it("BITE PROOF — no control claims a tab panel it never renders", async () => {
     await act(async () => { render(<InboxShell />); });
 
-    const allTab = screen.getByRole("tab", { name: "All" });
-    expect(allTab).toHaveAttribute("data-state", "active");
+    expect(screen.queryAllByRole("tab")).toHaveLength(0);
+    expect(screen.queryAllByRole("tablist")).toHaveLength(0);
+    expect(screen.queryAllByRole("tabpanel")).toHaveLength(0);
+    for (const label of VIEW_LABELS)
+      expect(viewControl(label)).not.toHaveAttribute("aria-controls");
   });
 
-  it("clicking Notifications tab makes it active and deactivates All", async () => {
+  it("All is pressed by default", async () => {
+    await act(async () => { render(<InboxShell />); });
+
+    expect(viewControl("All")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("clicking Notifications presses it and releases All", async () => {
     const user = userEvent.setup();
     await act(async () => { render(<InboxShell />); });
 
-    const notifTab = screen.getByRole("tab", { name: "Notifications" });
-    await user.click(notifTab);
+    await user.click(viewControl("Notifications"));
 
-    expect(notifTab).toHaveAttribute("data-state", "active");
-    const allTab = screen.getByRole("tab", { name: "All" });
-    expect(allTab).toHaveAttribute("data-state", "inactive");
+    expect(viewControl("Notifications")).toHaveAttribute("aria-pressed", "true");
+    expect(viewControl("All")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("arrow keys move focus between tabs", async () => {
+  it("Tab moves focus from one view control to the next", async () => {
     const user = userEvent.setup();
     await act(async () => { render(<InboxShell />); });
 
-    const allTab = screen.getByRole("tab", { name: "All" });
-    await act(async () => { allTab.focus(); });
-    await user.keyboard("{ArrowRight}");
+    await act(async () => { viewControl("All").focus(); });
+    await user.tab();
 
-    expect(screen.getByRole("tab", { name: "Notifications" })).toHaveFocus();
+    expect(viewControl("Notifications")).toHaveFocus();
   });
 });

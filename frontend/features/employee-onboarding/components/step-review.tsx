@@ -10,7 +10,7 @@ import {
 import { SendIcon } from "@animateicons/react/lucide";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
@@ -120,7 +120,7 @@ export function StepReview({
   onEditBank,
 }: StepReviewProps) {
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
@@ -206,15 +206,19 @@ export function StepReview({
     }
 
     setIsSubmitting(true);
+    const claimsRun = beginClaimsRefresh();
     try {
       await savePersonal(personalParsed.data);
       await saveBank({ countryCode, ...bankFormValues });
       await submitOnboarding();
-      await completeOnboardingGate(
+      const sessionOrgId = session?.orgId ?? null;
+      const confirmed = await completeOnboardingGate(
         "onboarding-done",
-        `${session?.user?.id ?? ""}--${session?.orgId ?? ""}`,
-        refreshSessionClaims,
+        `${session?.user?.id ?? ""}--${sessionOrgId ?? ""}`,
+        claimsRun.confirmOrWarn,
+        sessionOrgId === null ? undefined : { orgId: sessionOrgId },
       );
+      if (!confirmed) return;
       setShowCelebration(true);
     } catch (err) {
       toast.error(getErrorMessage(err));

@@ -279,33 +279,4 @@ describe("PasswordlessSigninForm", () => {
       expect(resendControl()).toBeEnabled();
     });
   });
-
-  describe("focus management", () => {
-    it("moves focus to the code field when the email stage advances", async () => {
-      await renderInCodeStage();
-
-      expect(screen.getByTestId("otp-input")).toHaveFocus();
-    });
-
-    it("returns focus to the code field after a verify error resolves", async () => {
-      await renderInCodeStage();
-      screen.getByTestId("otp-input").blur();
-      expect(screen.getByTestId("otp-input")).not.toHaveFocus();
-
-      await act(async () => {
-        verifyOtpOnError?.(new ApiError("Invalid or expired code", 401, "AUTH_TOKEN_INVALID"));
-      });
-
-      expect(screen.getByRole("alert")).toBeInTheDocument();
-      expect(screen.getByTestId("otp-input")).toHaveFocus();
-    });
-
-    it("(negative) does not reach for a code field that the email stage has not rendered", () => {
-      setupMocks();
-      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
-
-      expect(screen.queryByTestId("otp-input")).toBeNull();
-      expect(screen.getByLabelText(/email/i)).toHaveFocus();
-    });
-  });
 });

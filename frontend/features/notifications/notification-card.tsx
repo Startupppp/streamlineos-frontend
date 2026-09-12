@@ -120,6 +120,10 @@ function NotificationCardInner({
   const isUnread = !isRead;
   const isArchived = !!archivedAt;
   const isCritical = priorityKey === "CRITICAL";
+  const secondaryInk =
+    isUnread && !isArchived
+      ? "text-status-neutral-ink-strong"
+      : "text-muted-foreground";
 
   const handleCardClick = useCallback(() => {
     onClick({ id, isRead, link: link ?? null });
@@ -205,7 +209,10 @@ function NotificationCardInner({
           {pinned && <Pin className="h-3 w-3 shrink-0 text-status-warning-ink" />}
           <Badge
             variant="outline"
-            className="hidden h-4 shrink-0 px-1.5 text-micro border-border/60 text-muted-foreground sm:inline-flex"
+            className={cn(
+              "hidden h-4 shrink-0 px-1.5 text-micro border-border/60 sm:inline-flex",
+              secondaryInk,
+            )}
           >
             {categoryConfig.label}
           </Badge>
@@ -220,7 +227,7 @@ function NotificationCardInner({
           <TruncatedText
             text={message}
             lines={1}
-            className="text-xs text-muted-foreground mt-0.5"
+            className={cn("text-xs mt-0.5", secondaryInk)}
           />
         )}
 
@@ -294,7 +301,12 @@ function NotificationCardInner({
             )}
           </div>
         )}
-        <span className="text-dense text-muted-foreground whitespace-nowrap tabular-nums">
+        <span
+          className={cn(
+            "text-dense whitespace-nowrap tabular-nums",
+            secondaryInk,
+          )}
+        >
           {formatRelativeTime(createdAt)}
         </span>
         {isUnread && !isArchived && (

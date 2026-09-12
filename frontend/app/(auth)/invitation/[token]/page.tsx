@@ -22,9 +22,9 @@ import {
   signInWithMagicToken,
   useAcceptInvitation,
   useDeclineInvitation,
-  useSessionClaimsRefresh,
   useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight } from "lucide-react";
@@ -53,7 +53,7 @@ export default function InvitationPage() {
   const params = useParams();
   const token = typeof params.token === "string" ? params.token : "";
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
 
   const form = useForm<InvitationAcceptFormValues>({
     resolver: zodResolver(invitationAcceptSchema),
@@ -149,6 +149,7 @@ export default function InvitationPage() {
       router.push(`/signin?callbackUrl=/invitation/${token}`);
       return;
     }
+    const claimsRun = beginClaimsRefresh();
     acceptInvitation.mutate(
       { token },
       {
@@ -158,10 +159,11 @@ export default function InvitationPage() {
           );
           if (data?.autoLoginToken) {
             await autoLoginWithToken(data.autoLoginToken);
-          } else {
-            await refreshSessionClaims();
-            router.push("/dashboard");
+            return;
           }
+          const confirmed = await claimsRun.confirmOrWarn();
+          if (!confirmed) return;
+          router.push("/dashboard");
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
@@ -174,7 +176,7 @@ export default function InvitationPage() {
     router,
     acceptInvitation,
     invitation,
-    refreshSessionClaims,
+    beginClaimsRefresh,
     autoLoginWithToken,
   ]);
 

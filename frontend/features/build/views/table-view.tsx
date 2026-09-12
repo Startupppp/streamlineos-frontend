@@ -11,47 +11,7 @@ import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { DisplayOptions } from "../shared/types";
-
-interface Ticket {
-  id: number;
-  title: string;
-  status: string;
-  type: string;
-  priority?: string | null;
-  points?: number | null;
-  ticketNumber?: number;
-  sequenceId?: string | null;
-  startDate?: string | null;
-  dueDate?: string | null;
-  assigneeId?: string | null;
-  cycleId?: number | null;
-  sprintId?: number | null;
-  assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
-  labels?: { label?: { id: number; name: string; color?: string | null } }[];
-}
-
-interface TableViewProps {
-  tickets: Ticket[];
-  onTicketClick: (ticketId: number) => void;
-  projectKey?: string | null;
-  projectId?: number;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
-  displayOptions?: DisplayOptions;
-  selection?: {
-    selected: Set<string | number>;
-    onChange: (sel: Set<string | number>) => void;
-  };
-}
-
-function isOverdue(ticket: Ticket): boolean {
-  if (!ticket.dueDate || ticket.status === "DONE") return false;
-  const due = new Date(ticket.dueDate);
-  if (Number.isNaN(due.getTime())) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return due < today;
-}
+import { type Ticket, type TableViewProps, isOverdue } from "./table-view-types";
 
 export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, displayOptions, selection }: TableViewProps) {
   const hasProjectId = projectId != null;

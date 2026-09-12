@@ -38,8 +38,16 @@ import {
   renderMarkdownTable,
 } from "./lib/acceptance-matrix.mjs";
 import {
+  ACCEPTANCE_VIEWPORTS,
+  selectViewports,
+  viewportLabel,
+  corsHeaders,
+  envelope,
+  proxyBakedApiRequest,
+  zoomVerdict,
+} from "./lib/acceptance-browser.mjs";
+import {
   CALENDAR_STATES,
-  CALENDAR_VIEWPORTS,
   DEEP_LINK_SOURCE_KEY,
   FOREIGN_EVENT_NUMERIC_ID,
   FOREIGN_ZONE,
@@ -48,10 +56,8 @@ import {
   announcementVerdict,
   calendarAxeContextExpression,
   classifyCalendarRequest,
-  corsHeaders,
   createDeepLinkVerdict,
   deepLinkVerdict,
-  envelope,
   foreignEventDetail,
   foreignZoneStringVerdict,
   foreignZoneVerdict,
@@ -61,7 +67,6 @@ import {
   surfaceExpression,
   syntheticCalendarEvents,
   unsupportedActionVerdict,
-  zoomVerdict,
 } from "./lib/calendar-acceptance-probes.mjs";
 import { CALENDAR_RUNNERS, FAILED_SOURCE, UNSUPPORTED_EVENT_ACTIONS } from "./lib/calendar-acceptance-states.mjs";
 
@@ -81,11 +86,11 @@ function runSelfTest() {
   };
 
   assert("the matrix plans 8 states", CALENDAR_STATES.length === 8);
-  assert("the matrix plans 4 viewports", CALENDAR_VIEWPORTS.length === 4);
-  assert("planned count multiplies", plannedCellCount(CALENDAR_STATES, CALENDAR_VIEWPORTS) === 32);
+  assert("the matrix plans 4 viewports", ACCEPTANCE_VIEWPORTS.length === 4);
+  assert("planned count multiplies", plannedCellCount(CALENDAR_STATES, ACCEPTANCE_VIEWPORTS) === 32);
   assert(
     "the zoom column halves the CSS width and doubles the pixel ratio",
-    CALENDAR_VIEWPORTS[3].cssWidth === 640 && CALENDAR_VIEWPORTS[3].deviceScaleFactor === 2,
+    ACCEPTANCE_VIEWPORTS[3].cssWidth === 640 && ACCEPTANCE_VIEWPORTS[3].deviceScaleFactor === 2,
   );
 
   assert("a range read is classified", classifyCalendarRequest("http://h/calendar/events?start=a") === "events-range");
@@ -108,13 +113,13 @@ function runSelfTest() {
 
   assert(
     "a viewport that did not reflow fails the zoom check",
-    zoomVerdict({ innerWidth: 1280, devicePixelRatio: 2 }, CALENDAR_VIEWPORTS[3]).ok === false,
+    zoomVerdict({ innerWidth: 1280, devicePixelRatio: 2 }, ACCEPTANCE_VIEWPORTS[3]).ok === false,
   );
   assert(
     "a reflowed 200% viewport passes",
-    zoomVerdict({ innerWidth: 640, devicePixelRatio: 2 }, CALENDAR_VIEWPORTS[3]).ok === true,
+    zoomVerdict({ innerWidth: 640, devicePixelRatio: 2 }, ACCEPTANCE_VIEWPORTS[3]).ok === true,
   );
-  assert("an unmeasured viewport is not a pass", zoomVerdict(null, CALENDAR_VIEWPORTS[0]).ok === false);
+  assert("an unmeasured viewport is not a pass", zoomVerdict(null, ACCEPTANCE_VIEWPORTS[0]).ok === false);
 
   const fits = { found: true, slotHeight: 92, slotPaddingBottom: 8, buttonHeight: 78, textClientHeight: 32, textScrollHeight: 32 };
   assert("a card inside its slot passes", foreignZoneVerdict(fits).ok === true);
@@ -246,9 +251,9 @@ function runSelfTest() {
 
   const table = renderMarkdownTable(
     [{ state: "empty-period", width: "360", verdict: PASS, screenshots: ["a.png"] }],
-    CALENDAR_VIEWPORTS.map((v) => v.key),
+    ACCEPTANCE_VIEWPORTS.map((v) => v.key),
     CALENDAR_STATES,
-    (key) => CALENDAR_VIEWPORTS.find((v) => v.key === key).label,
+    viewportLabel,
   );
   assert("the table has a row per state", table.split("\n").length === 2 + CALENDAR_STATES.length);
   assert("the zoom column is labelled as zoom, not as a width", table.includes("1280 px @ 200% zoom"));
@@ -285,70 +290,6 @@ function buildScenario() {
     proxied: 0,
     proxyFailures: [],
   };
-}
-
-const PROXY_SKIP_HEADERS = new Set([
-  "host",
-  "origin",
-  "referer",
-  "connection",
-  "content-length",
-  "accept-encoding",
-  "sec-fetch-mode",
-  "sec-fetch-site",
-  "sec-fetch-dest",
-]);
-
-/**
- * `next build` runs with NODE_ENV=production, so Next loads
- * `frontend/.env.production.local` at highest precedence and bakes
- * `NEXT_PUBLIC_API_URL=https://api.streamlineos.in` into the client bundle
- * (`lib/api-client.ts` reads it at module scope). Every client read from a
- * production build therefore leaves the machine.
- *
- * Rather than measure a calendar whose API calls all fail — or, worse, send a
- * matrix run at the real production API — every request to that baked origin is
- * paused and answered from the local backend by this proxy. The CORS headers are
- * ours because the response is fulfilled, so the page origin never matters.
- */
-async function proxyBakedApiRequest(cdp, params, origin, apiOrigin, scenario) {
-  const { requestId, request } = params;
-  const source = new URL(request.url);
-  // A streamed response cannot be replayed through fulfillRequest — buffering it
-  // would hang the page instead of answering it. Nothing in this matrix opens a
-  // streaming surface, so failing them is honest and keeps the queue moving.
-  if (/\/(stream|sse)(\/|$)/.test(source.pathname)) {
-    scenario.proxyFailures.push(`skipped stream ${source.pathname}`);
-    return cdp.send("Fetch.failRequest", { requestId, errorReason: "Aborted" }).catch(() => {});
-  }
-  const target = `${apiOrigin}${source.pathname}${source.search}`;
-  const headers = {};
-  for (const [name, value] of Object.entries(request.headers ?? {}))
-    if (!PROXY_SKIP_HEADERS.has(name.toLowerCase())) headers[name] = value;
-  try {
-    const res = await fetch(target, {
-      method: request.method,
-      headers,
-      body: request.postData ?? undefined,
-      redirect: "manual",
-    });
-    const body = Buffer.from(await res.arrayBuffer());
-    scenario.proxied += 1;
-    await cdp.send("Fetch.fulfillRequest", {
-      requestId,
-      responseCode: res.status,
-      responseHeaders: [
-        { name: "content-type", value: res.headers.get("content-type") ?? "application/json" },
-        { name: "access-control-allow-origin", value: origin },
-        { name: "access-control-allow-credentials", value: "true" },
-        { name: "cache-control", value: "no-store" },
-      ],
-      body: body.toString("base64"),
-    });
-  } catch (err) {
-    scenario.proxyFailures.push(`${request.method} ${source.pathname}: ${String(err.message ?? err)}`);
-    await cdp.send("Fetch.failRequest", { requestId, errorReason: "Failed" }).catch(() => {});
-  }
 }
 
 async function handlePausedRequest(cdp, params, scenario, origin, now, apiOrigin, bakedOrigin) {
@@ -469,12 +410,10 @@ async function main() {
   const apiOrigin = flag("api-origin", "http://127.0.0.1:1500").replace(/\/$/, "");
   const bakedOrigin = flag("baked-api-origin", "https://api.streamlineos.in").replace(/\/$/, "");
   const onlyViewports = flag("viewports", "");
-  const viewports = onlyViewports
-    ? CALENDAR_VIEWPORTS.filter((v) => onlyViewports.split(",").includes(v.key))
-    : CALENDAR_VIEWPORTS;
+  const viewports = selectViewports(onlyViewports);
 
   if (!browserPath) throw new Error("no Chrome/Chromium found — pass --browser=<path>");
-  if (viewports.length === 0) throw new Error(`--viewports matched none of ${CALENDAR_VIEWPORTS.map((v) => v.key).join(",")}`);
+  if (viewports.length === 0) throw new Error(`--viewports matched none of ${ACCEPTANCE_VIEWPORTS.map((v) => v.key).join(",")}`);
   if (!cookieFile || !existsSync(cookieFile))
     throw new Error("--cookie-file is required: /calendar is an authenticated surface");
   const cookieValue = readFileSync(cookieFile, "utf8").trim();
@@ -560,7 +499,7 @@ async function main() {
       );
     const runShellAxe = async (session) => axeVerdict(await evaluate(session, axeExpression(), true));
 
-    await setViewport(cdp, CALENDAR_VIEWPORTS[2]);
+    await setViewport(cdp, ACCEPTANCE_VIEWPORTS[2]);
     await navigate(cdp, "/calendar");
     // A dead server, a stale build with a missing webpack runtime and a signed-out
     // session all render *something*. Refusing to start unless the calendar's own
@@ -640,8 +579,7 @@ async function main() {
       shellAxe.push({ viewport: viewport.key, result: await runShellAxe(cdp) });
     }
 
-    const columnLabel = (key) => CALENDAR_VIEWPORTS.find((v) => v.key === key)?.label ?? key;
-    const table = renderMarkdownTable(cells, viewports.map((v) => v.key), CALENDAR_STATES, columnLabel);
+    const table = renderMarkdownTable(cells, viewports.map((v) => v.key), CALENDAR_STATES, viewportLabel);
     const counts = summarise(cells);
     const results = {
       capturedAt: new Date().toISOString(),

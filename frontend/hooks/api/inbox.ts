@@ -2,13 +2,14 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
 const unifiedInboxContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxContract),
 );
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { InboxKind, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -16,6 +17,25 @@ export interface UnifiedInboxParams {
   limit?: number;
   kinds?: InboxKind[];
   unreadOnly?: boolean;
+}
+
+export const INBOX_ERROR_RECOVERY_MS = 3_000;
+
+export function inboxErrorRecoveryInterval(query: {
+  state: { status: string; error: Error | null };
+}): number | false {
+  if (query.state.status !== "error") return false;
+  const error = query.state.error;
+  if (
+    isApiError(error) &&
+    error.status !== undefined &&
+    error.status >= 400 &&
+    error.status < 500
+  )
+    return error.status === 408 || error.status === 429
+      ? INBOX_ERROR_RECOVERY_MS
+      : false;
+  return INBOX_ERROR_RECOVERY_MS;
 }
 
 export function useUnifiedInbox(
@@ -32,6 +52,7 @@ export function useUnifiedInbox(
   const unreadOnly = params?.unreadOnly ?? false;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
+    ...INLINE_READ_ERROR,
     queryKey: platformCoreQueryKeys.inbox.unified({
       limit,
       kinds,
@@ -48,6 +69,8 @@ export function useUnifiedInbox(
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,
+    refetchInterval: inboxErrorRecoveryInterval,
+    refetchIntervalInBackground: false,
     enabled: !!orgId && (options?.enabled ?? true),
   });
 }

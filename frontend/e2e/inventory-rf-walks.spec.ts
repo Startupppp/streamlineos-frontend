@@ -1,23 +1,19 @@
 import { expect, test as base, type Page, type TestDetails } from "@playwright/test";
-import {
-  apiOracle,
-  describeLedger,
-  movementFor,
-  onHandFor,
-  recentLedger,
-  reservationFor,
-  type ApiOracle,
-} from "./fixtures/api";
+import { apiOracle, type ApiOracle } from "./fixtures/api-oracle";
+import { reservationFor } from "./fixtures/api-reservations";
+import { describeLedger, movementFor, onHandFor, recentLedger } from "./fixtures/api-stock";
 import {
   claimedPickWave,
   claimedPutawayTask,
+  type ClaimedPickWave,
+  type ClaimedPutawayTask,
+} from "./fixtures/documents-operations";
+import {
   postedReceipt,
   seedTarget,
   sentPurchaseOrder,
-  type ClaimedPickWave,
-  type ClaimedPutawayTask,
   type SeedTarget,
-} from "./fixtures/documents";
+} from "./fixtures/documents-receiving";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 

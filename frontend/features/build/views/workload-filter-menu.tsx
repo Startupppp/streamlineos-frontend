@@ -20,6 +20,7 @@ import {
 import {
   type WorkloadFilterMenuProps,
   type WorkloadFilterCategory,
+  type StringFilterKey,
 } from "./workload-filter-types";
 import { CategoryRow } from "./workload-filter-rows";
 import { WorkloadSubmenu } from "./workload-filter-submenu";
@@ -141,14 +142,6 @@ export function WorkloadFilterMenu({
     },
     [],
   );
-
-  type StringFilterKey =
-    | "sprintId"
-    | "cycleId"
-    | "priority"
-    | "type"
-    | "status"
-    | "assigneeId";
 
   const selectSingle = useCallback(
     (key: StringFilterKey, current: string, value: string) => {

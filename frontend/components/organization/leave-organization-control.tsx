@@ -9,7 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useAccess } from "@/hooks/api/access";
 import { useLeaveOrg } from "@/hooks/api/organization";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -71,30 +71,27 @@ export function LeaveOrganizationDialog({
   onOpenChange,
 }: LeaveOrganizationDialogProps) {
   const { data: access } = useAccess();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
   const leaveMutation = useLeaveOrg();
 
   const handleConfirmLeave = useCallback(() => {
+    const claimsRun = beginClaimsRefresh();
     leaveMutation.mutate(undefined, {
       onSuccess: async (data) => {
         toast.success("You have left the organization");
         onOpenChange(false);
-        await refreshSessionClaims(
-          data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
-        );
+        const nextOrgId = data.nextOrgId ?? null;
+        const confirmed = await claimsRun.confirmOrWarn({ orgId: nextOrgId });
+        if (!confirmed) return;
         queryClient.clear();
-        if (data.nextOrgId) {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/org-setup");
-        }
+        router.replace(nextOrgId ? "/dashboard" : "/org-setup");
         router.refresh();
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }, [leaveMutation, onOpenChange, refreshSessionClaims, queryClient, router]);
+  }, [leaveMutation, onOpenChange, beginClaimsRefresh, queryClient, router]);
 
   if (access?.isOrgOwner !== false) return null;
 

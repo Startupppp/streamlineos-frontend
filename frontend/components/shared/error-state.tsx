@@ -53,7 +53,7 @@ export function ErrorState({
 
       <p
         className={cn(
-          "text-muted-foreground mt-1 max-w-xs leading-relaxed",
+          "text-status-neutral-ink-strong mt-1 max-w-xs leading-relaxed",
           compact ? "text-xs" : "text-sm"
         )}
       >

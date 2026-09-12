@@ -356,6 +356,7 @@ export function AiCreditsSettingsPage() {
                   </Label>
                   <Switch
                     id="auto-topup"
+                    aria-label="Auto Top-Up"
                     checked={autoTopUp}
                     onCheckedChange={handleAutoTopUpToggle}
                     disabled={!canPurchase || configureTopUp.isPending || packs.length === 0}

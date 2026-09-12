@@ -45,8 +45,8 @@ const leadsBulkDeleteLazy = lazyContract(() => import("@/hooks/api/leads-schema"
 const leadsDistributeLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsDistributeContract));
 const leadScoreExplanationLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadScoreExplanationContract));
 const leadsCheckDuplicatesLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsCheckDuplicatesContract));
-const leadsSalesLeaderboardLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsSalesLeaderboardContract));
-const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsSalesTeamCapacityContract));
+const leadsSalesLeaderboardLazy = lazyContract(() => import("@/hooks/api/leads-analytics-schema").then((m) => m.leadsSalesLeaderboardContract));
+const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-analytics-schema").then((m) => m.leadsSalesTeamCapacityContract));
 
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {

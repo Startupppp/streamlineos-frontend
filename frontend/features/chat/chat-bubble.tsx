@@ -223,7 +223,7 @@ export function ChatBubble({
           {showSender ? (
             <Avatar className="w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
+              <AvatarFallback className="text-micro font-bold bg-muted text-foreground">
                 {getInitials(senderName)}
               </AvatarFallback>
             </Avatar>

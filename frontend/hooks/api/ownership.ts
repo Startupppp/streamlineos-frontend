@@ -6,7 +6,10 @@ import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-o
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import {
+  useConfirmedSessionClaimsRefresh,
+  type SessionClaimsRefreshRun,
+} from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { lazyContract } from "@/lib/api-envelope";
 
 const initiateTransferContract = lazyContract(() =>
@@ -128,9 +131,14 @@ export function useCancelOrgTransfer() {
 
 export function useAcceptTransfer() {
   const queryClient = useQueryClient();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
 
-  return useAuthorizedMutation<{ success: true }, Error, string>("ownership:transfer:respond", {
+  return useAuthorizedMutation<
+    { success: true },
+    Error,
+    string,
+    { claimsRun: SessionClaimsRefreshRun }
+  >("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "accept"],
     mutationFn: (transferId) =>
       apiClient.post(
@@ -139,14 +147,15 @@ export function useAcceptTransfer() {
         undefined,
         ownershipMutationContract,
       ),
+    onMutate: () => ({ claimsRun: beginClaimsRefresh() }),
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.ownership.all,
       });
     },
-    onSuccess: () => {
+    onSuccess: async (_data, _transferId, onMutateResult) => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
-      void refreshSessionClaims();
+      await onMutateResult.claimsRun.confirmOrWarn();
     },
   });
 }

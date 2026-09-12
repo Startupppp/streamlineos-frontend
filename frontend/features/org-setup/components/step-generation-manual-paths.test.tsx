@@ -1,10 +1,12 @@
 import React from "react";
 import { act, render, waitFor } from "@testing-library/react";
+import { gateCookieName } from "@/lib/onboarding-gate";
+import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import type { SetupProvisioning } from "../hooks/use-setup-provisioning";
 
 const mockMutateAsync = jest.fn();
 const mockSignIn = jest.fn();
-const mockCompleteOnboardingGate = jest.fn();
+const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
@@ -49,13 +51,7 @@ jest.mock("@/lib/api/hooks/org", () => ({
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
   signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
-  useSessionClaimsRefresh: jest.fn(() => jest.fn()),
-}));
-
-jest.mock("@/lib/onboarding-gate", () => ({
-  completeOnboardingGate: jest.fn((...args: unknown[]) =>
-    mockCompleteOnboardingGate(...args),
-  ),
+  useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
@@ -111,12 +107,16 @@ const SETUP_RESPONSE = {
   autoLoginToken: "magic-token-abc",
 };
 
-const FAKE_SESSION = { user: { id: "user-1" }, expires: "2099-01-01" };
+const FAKE_SESSION = {
+  user: { id: "user-1" },
+  orgId: "org-new",
+  expires: "2099-01-01",
+};
 
 function resetMocks() {
   mockMutateAsync.mockReset();
   mockSignIn.mockReset();
-  mockCompleteOnboardingGate.mockReset();
+  mockRefreshSessionClaims.mockReset();
   mockClearAll.mockReset();
   mockSetCompletionMarker.mockReset();
   mockHasCompletionMarker.mockReset().mockReturnValue(false);
@@ -206,7 +206,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     async (prop) => {
       await renderWithCreatedOrg();
       mockSignIn.mockResolvedValue({ status: "signed-in" });
-      mockCompleteOnboardingGate.mockResolvedValue(null);
+      mockRefreshSessionClaims.mockResolvedValue(null);
 
       await invokeCaptured(prop);
 
@@ -221,7 +221,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
   it("onOpenOrganization: both auth steps succeed → marker written and /dashboard", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onOpenOrganization");
 
@@ -234,7 +234,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
   it("onGoToInvitations: both auth steps succeed → invitations view", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onGoToInvitations");
 
@@ -247,29 +247,78 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
 
   it("a withheld auto-login token skips the magic sign-in and still refreshes the session", async () => {
     await renderWithCreatedOrg({ autoLoginToken: undefined });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onOpenOrganization");
 
     await waitFor(() => {
-      expect(mockCompleteOnboardingGate).toHaveBeenCalledWith(
-        "org-setup-done",
-        "org-new",
-        expect.any(Function),
-      );
+      expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
     });
     expect(mockSignIn).not.toHaveBeenCalled();
+    expect(document.cookie).toContain(
+      gateCookieName("org-setup-done", "org-new"),
+    );
+  });
+
+  it("a session that still names the previous org does not navigate or mark completion", async () => {
+    await renderWithCreatedOrg();
+    mockSignIn.mockResolvedValue({ status: "signed-in" });
+    mockRefreshSessionClaims.mockResolvedValue({
+      ...FAKE_SESSION,
+      orgId: "org-prev",
+    });
+
+    await invokeCaptured("onOpenOrganization");
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+      );
+    });
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
+    expect(mockClearAll).not.toHaveBeenCalled();
+  });
+
+  it("re-entering while a refresh is still in flight starts no second run, so the first can still land", async () => {
+    await renderWithCreatedOrg();
+    mockSignIn.mockResolvedValue({ status: "signed-in" });
+
+    let settleFirst: ((session: unknown) => void) | undefined;
+    mockRefreshSessionClaims.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settleFirst = resolve;
+        }),
+    );
+
+    await invokeCaptured("onOpenOrganization");
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+
+    await invokeCaptured("onGoToInvitations");
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      settleFirst?.(FAKE_SESSION);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    });
+    expect(mockLocationReplace).toHaveBeenCalledTimes(1);
+    expect(mockToastError).not.toHaveBeenCalled();
   });
 
   it("a second manual continue while one is in flight does not run the flow twice", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onOpenOrganization");
     await invokeCaptured("onGoToInvitations");
 
-    expect(mockCompleteOnboardingGate).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
     expect(mockLocationReplace).toHaveBeenCalledTimes(1);
     expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
   });

@@ -9,10 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
-import {
-  signInWithMagicToken,
-  useSessionClaimsRefresh,
-} from "@/hooks/common/auth-hooks";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import {
   useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
@@ -53,7 +51,7 @@ function syncAppsFromGoals(data: WizardData): WizardData {
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const { data: serverSession } = useOrgSetupSessionQuery();
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
@@ -124,6 +122,7 @@ export default function OrgSetupPage() {
 
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
+    const claimsRun = beginClaimsRefresh();
     try {
       const res = await skipOrgSetup({});
       clearBackendTokenCache();
@@ -136,19 +135,23 @@ export default function OrgSetupPage() {
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
       }
-      const sessionResult = await completeOnboardingGate(
+      const confirmed = await completeOnboardingGate(
         "org-setup-done",
         res.orgId,
-        refreshSessionClaims,
+        claimsRun.confirmOrWarn,
+        { orgId: res.orgId },
       );
-      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
+      if (!confirmed) {
+        setIsSkipping(false);
+        return;
+      }
       clearAll(userId);
       window.location.replace("/dashboard");
     } catch (err) {
       setIsSkipping(false);
       toast.error(getErrorMessage(err));
     }
-  }, [skipOrgSetup, refreshSessionClaims, userId]);
+  }, [skipOrgSetup, beginClaimsRefresh, userId]);
 
   useEffect(() => {
     if (!userId) return;

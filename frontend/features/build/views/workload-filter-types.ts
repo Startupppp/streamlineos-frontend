@@ -42,6 +42,14 @@ export type WorkloadFilterCategory =
   | "status"
   | "assignee";
 
+export type StringFilterKey =
+  | "sprintId"
+  | "cycleId"
+  | "priority"
+  | "type"
+  | "status"
+  | "assigneeId";
+
 export const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
 export const PRIORITIES = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
 

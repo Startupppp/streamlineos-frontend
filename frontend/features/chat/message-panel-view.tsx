@@ -14,8 +14,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AiAction } from "@/components/ai";
+import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 import { MessagePanelWorkspace } from "./message-panel-workspace";
@@ -121,6 +123,13 @@ export function MessagePanelView({
     isSidebarCollapsed,
     onToggleSidebar,
   } = header;
+
+  const isPanelNarrow = useIsChatPanelNarrow();
+  const isThreadOpen = thread.messageId !== null;
+
+  function handleThreadOpenChange(open: boolean) {
+    if (!open) thread.onClose();
+  }
 
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
@@ -352,7 +361,7 @@ export function MessagePanelView({
       </div>
 
       <AnimatePresence>
-        {thread.messageId !== null && (
+        {thread.messageId !== null && !isPanelNarrow && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 320, opacity: 1 }}
@@ -369,6 +378,22 @@ export function MessagePanelView({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isPanelNarrow && (
+        <Sheet open={isThreadOpen} onOpenChange={handleThreadOpenChange}>
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md lg:hidden">
+            <SheetTitle className="sr-only">Thread</SheetTitle>
+            {thread.messageId !== null && (
+              <ThreadPanel
+                channelId={thread.channelId}
+                parentMessageId={thread.messageId}
+                currentUserId={thread.currentUserId}
+                onClose={thread.onClose}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
+      )}
 
       <MessagePanelSidePanels {...sidePanels} />
     </div>

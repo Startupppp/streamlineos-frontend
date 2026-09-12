@@ -1,21 +1,20 @@
 import { expect, test as base, type Locator, type Page, type TestDetails } from "@playwright/test";
+import { apiOracle, type ApiOracle } from "./fixtures/api-oracle";
 import {
-  apiOracle,
   describeLedger,
   movementFor,
   onHandFor,
   recentLedger,
-  type ApiOracle,
   type LedgerEntry,
   type WarehouseLocation,
-} from "./fixtures/api";
+} from "./fixtures/api-stock";
 import {
   binsWithHeadroom,
   postedReceipt,
   seedTarget,
   sentPurchaseOrder,
   type SeedTarget,
-} from "./fixtures/documents";
+} from "./fixtures/documents-receiving";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 

@@ -29,7 +29,7 @@ export function InboxDegradedBanner({
           className="h-4 w-4 shrink-0 text-status-warning-ink"
           aria-hidden
         />
-        <p className="text-xs font-semibold text-status-warning-ink">
+        <p className="text-xs font-semibold text-status-warning-ink-strong">
           Some sources could not be read. Everything listed below is still
           current.
         </p>
@@ -37,7 +37,7 @@ export function InboxDegradedBanner({
       <ul className="mt-2 flex flex-col gap-1.5">
         {sources.map((source) => (
           <li key={source.kind} className="flex items-center gap-2">
-            <p className="min-w-0 flex-1 text-xs text-status-warning-ink">
+            <p className="min-w-0 flex-1 text-xs text-status-warning-ink-strong">
               <span className="font-semibold">
                 {INBOX_SOURCE_LABELS[source.kind]}
               </span>
@@ -46,7 +46,7 @@ export function InboxDegradedBanner({
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0 border-status-warning-rule text-status-warning-ink hover:bg-status-warning-surface"
+              className="shrink-0 border-status-warning-rule text-status-warning-ink-strong hover:bg-status-warning-surface"
               aria-label={`Retry ${INBOX_SOURCE_LABELS[source.kind]}`}
               onClick={onRetry}
             >

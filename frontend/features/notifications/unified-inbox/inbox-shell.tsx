@@ -21,7 +21,7 @@ import type {
   MailInboxItem,
   BuildApprovalInboxItem,
 } from "@/types/inbox";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { toDrawerNotification } from "./inbox-schema";
 import {
@@ -141,24 +141,21 @@ export function InboxShell() {
     () => void fetchNextPage(),
     [fetchNextPage],
   );
-  const handleViewChange = useCallback(
-    (v: string) => setView(v as InboxView),
-    [],
-  );
+  const handleViewChange = useCallback((next: InboxView) => setView(next), []);
 
   return (
-    <Tabs value={view} onValueChange={handleViewChange}>
     <PageWrapper
       title="Inbox"
       subtitle="Notifications, mail and approvals waiting for your attention"
       filters={
         <PageTabsToolbar
           tabs={
-            <TabsList>
-              {VIEWS.map((v) => (
-                <TabsTrigger key={v.key} value={v.key}>{v.label}</TabsTrigger>
-              ))}
-            </TabsList>
+            <ViewToggle<InboxView>
+              value={view}
+              options={VIEWS}
+              onChange={handleViewChange}
+              showLabel
+            />
           }
         />
       }
@@ -171,7 +168,7 @@ export function InboxShell() {
         ) : isError ? (
           <ErrorState
             className="flex-1"
-            title="Couldn't load inbox"
+            title="Couldn’t load inbox"
             description={getErrorMessage(error)}
             onRetry={handleRetry}
           />
@@ -238,6 +235,5 @@ export function InboxShell() {
         />
       )}
     </PageWrapper>
-    </Tabs>
   );
 }

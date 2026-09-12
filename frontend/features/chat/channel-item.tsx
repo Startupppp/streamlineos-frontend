@@ -160,7 +160,10 @@ export function ChannelItem({
             {lastMessageTime && (
               <span
                 className={cn(
-                  "text-dense text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
+                  "text-dense tabular-nums shrink-0 transition-opacity duration-150",
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground group-hover/item:text-foreground",
                   !hasUnread && "group-hover/item:opacity-0",
                 )}
               >
@@ -170,7 +173,14 @@ export function ChannelItem({
           </div>
 
           <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
-            <p className="min-w-0 flex-1 text-dense text-muted-foreground line-clamp-1 break-all break-words leading-tight">
+            <p
+              className={cn(
+                "min-w-0 flex-1 text-dense line-clamp-1 break-all break-words leading-tight",
+                isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground group-hover/item:text-foreground",
+              )}
+            >
               {channel.lastMessage?.content
                 ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}

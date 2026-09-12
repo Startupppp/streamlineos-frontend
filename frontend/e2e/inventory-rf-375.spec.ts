@@ -1,12 +1,14 @@
 import { expect, test as base, type Page, type TestDetails } from "@playwright/test";
-import { apiOracle, type ApiOracle } from "./fixtures/api";
+import { apiOracle, type ApiOracle } from "./fixtures/api-oracle";
 import {
   claimedPutawayTask,
+  type ClaimedPutawayTask,
+} from "./fixtures/documents-operations";
+import {
   postedReceipt,
   seedTarget,
   sentPurchaseOrder,
-  type ClaimedPutawayTask,
-} from "./fixtures/documents";
+} from "./fixtures/documents-receiving";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 

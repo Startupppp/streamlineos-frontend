@@ -5,10 +5,12 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
-  signInWithMagicToken,
-  useSessionClaimsRefresh,
-} from "@/hooks/common/auth-hooks";
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+  useConfirmedSessionClaimsRefresh,
+  type SessionClaimsOutcome,
+} from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   clearAll,
@@ -38,7 +40,7 @@ type StepGenerationProps = {
 
 export function StepGeneration({ data }: StepGenerationProps) {
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupError, setSetupError] = useState<SetupError | null>(null);
   const [orgCreatedResult, setOrgCreatedResult] = useState<OrgCreatedResult | null>(null);
@@ -100,6 +102,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
     setCompletedSteps(total);
     clearBackendTokenCache();
 
+    const claimsRun = beginClaimsRefresh();
+    let claimsOutcome: SessionClaimsOutcome;
     try {
       if (autoLoginToken) {
         const outcome = await signInWithMagicToken(autoLoginToken);
@@ -110,15 +114,25 @@ export function StepGeneration({ data }: StepGenerationProps) {
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
       }
-      const sessionResult = await completeOnboardingGate(
+      claimsOutcome = await completeOnboardingGate(
         "org-setup-done",
         orgId,
-        refreshSessionClaims,
+        claimsRun.confirm,
+        { orgId },
       );
-      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
     } catch (err) {
       apiDoneRef.current = false;
       handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+      return;
+    }
+
+    if (claimsOutcome.status === "superseded") return;
+    if (claimsOutcome.status === "unconfirmed") {
+      apiDoneRef.current = false;
+      handleSetupError({
+        kind: "setup-failed",
+        message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+      });
       return;
     }
 
@@ -155,6 +169,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     stopAnimation();
     const orgResult = orgCreatedResult;
     const userId = session?.user?.id ?? "";
+    const claimsRun = beginClaimsRefresh();
     try {
       clearBackendTokenCache();
       if (orgResult.autoLoginToken) {
@@ -166,12 +181,17 @@ export function StepGeneration({ data }: StepGenerationProps) {
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
       }
-      const sessionResult = await completeOnboardingGate(
+      const confirmed = await completeOnboardingGate(
         "org-setup-done",
         orgResult.orgId,
-        refreshSessionClaims,
+        claimsRun.confirmOrWarn,
+        { orgId: orgResult.orgId },
       );
-      if (!sessionResult) throw new Error("Session refresh failed. Please retry.");
+      if (!confirmed) {
+        apiDoneRef.current = false;
+        setIsContinuing(false);
+        return;
+      }
       clearAll(userId);
       setCompletionMarker(userId, orgResult.orgId);
       window.location.replace(destination);

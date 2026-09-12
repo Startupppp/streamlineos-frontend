@@ -1,3 +1,5 @@
+import { Bell, CircleCheck, Inbox, Mail } from "lucide-react";
+import type { ViewOption } from "@/components/ui/view-toggle";
 import type {
   InboxKind,
   InboxSourceStatus,
@@ -13,11 +15,11 @@ export const VIEW_KINDS: Record<InboxView, InboxKind[] | undefined> = {
   APPROVALS: ["build_approval"],
 };
 
-export const VIEWS: Array<{ key: InboxView; label: string }> = [
-  { key: "ALL", label: "All" },
-  { key: "NOTIFICATIONS", label: "Notifications" },
-  { key: "MAIL", label: "Mail" },
-  { key: "APPROVALS", label: "Approvals" },
+export const VIEWS: ViewOption<InboxView>[] = [
+  { value: "ALL", label: "All", icon: Inbox },
+  { value: "NOTIFICATIONS", label: "Notifications", icon: Bell },
+  { value: "MAIL", label: "Mail", icon: Mail },
+  { value: "APPROVALS", label: "Approvals", icon: CircleCheck },
 ];
 
 export const INBOX_SOURCE_LABELS: Record<InboxKind, string> = {

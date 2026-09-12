@@ -80,6 +80,28 @@ describe("clearGateCookies", () => {
     expect(result).toBe(fakeSession);
   });
 
+  it("hands the caller's expected claims to refreshSessionClaims", async () => {
+    const refresh = jest.fn(async () => null);
+
+    await completeOnboardingGate("org-setup-done", ORG_ID, refresh, {
+      orgId: ORG_ID,
+    });
+
+    expect(refresh).toHaveBeenCalledWith({ orgId: ORG_ID });
+  });
+
+  it("asserts nothing when the scope is not an organization", async () => {
+    const refresh = jest.fn(async () => null);
+
+    await completeOnboardingGate(
+      "onboarding-done",
+      `${USER_ID}--${ORG_ID}`,
+      refresh,
+    );
+
+    expect(refresh).toHaveBeenCalledWith(undefined);
+  });
+
   it("returns null when refreshSessionClaims resolves null (timeout shape)", async () => {
     const result = await completeOnboardingGate(
       "org-setup-done",

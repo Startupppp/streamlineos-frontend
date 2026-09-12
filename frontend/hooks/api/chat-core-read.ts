@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { reportError } from "@/lib/observability/error-reporter";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Channel,
@@ -125,6 +126,7 @@ function useChannelPages<TChannel>({
   refetchOnWindowFocus = false,
 }: ChannelPagesOptions<TChannel>): ChannelListResult<TChannel> {
   const query = useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey,
     queryFn: ({ pageParam, signal }) =>
       fetchPage(signal, pageParam === null ? undefined : pageParam),
@@ -221,6 +223,7 @@ export function useChatChannel(channelId: number) {
 export function useChatMessages(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.messages(channelId),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<MessagesPage>(
@@ -287,6 +290,7 @@ export function useChatUnreadTotal(enabled = true) {
   const canRead = useCan("chat:messages:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.unreadTotal(),
     queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal, chatUnreadContract),
     staleTime: 300_000,

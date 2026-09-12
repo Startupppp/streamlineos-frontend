@@ -1,19 +1,13 @@
 import { expect, test as base, type TestDetails } from "@playwright/test";
-import {
-  apiOracle,
-  describeLedger,
-  movementFor,
-  onHandFor,
-  recentLedger,
-  type ApiOracle,
-} from "./fixtures/api";
+import { apiOracle, type ApiOracle } from "./fixtures/api-oracle";
+import { describeLedger, movementFor, onHandFor, recentLedger } from "./fixtures/api-stock";
 import { chooseFromComboboxBy } from "./fixtures/combobox";
 import {
   seedTarget,
   sentPurchaseOrder,
   type PurchaseOrderRow,
   type SeedTarget,
-} from "./fixtures/documents";
+} from "./fixtures/documents-receiving";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 

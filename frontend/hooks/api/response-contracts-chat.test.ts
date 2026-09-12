@@ -324,11 +324,36 @@ describe("the message contract accepts what the timeline actually builds", () =>
     ).toBe(true);
   });
 
-  it("accepts the poll page, which adds hasMore", () => {
+  it("accepts the poll page, which adds hasMore and latestPosition", () => {
+    expect(
+      chatPollPageContract.safeParse({
+        messages: [MESSAGE],
+        nextCursor: null,
+        hasMore: false,
+        latestPosition: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      chatPollPageContract.safeParse({
+        messages: [MESSAGE],
+        nextCursor: 12,
+        hasMore: true,
+        latestPosition: 12,
+      }).success,
+    ).toBe(true);
+  });
+
+  /**
+   * `latestPosition` is the server-authored resume point the poller advances on,
+   * and `chat-message-timeline.service.ts` emits it on every page. A missing key
+   * is drift, not a compatible older deploy: a client that resumed from its own
+   * cursor instead would skip or replay the backlog.
+   */
+  it("rejects a poll page with no latestPosition", () => {
     expect(
       chatPollPageContract.safeParse({ messages: [MESSAGE], nextCursor: null, hasMore: false })
         .success,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   /**

@@ -286,6 +286,8 @@ export function classifyInboxRequest(url, method) {
   const verb = String(method ?? "GET").toUpperCase();
   if (/\/me\/inbox\/unified\/count$/.test(path)) return "unified-count";
   if (/\/me\/inbox\/unified$/.test(path)) return "unified";
+  if (verb !== "GET" && /\/notifications\/events\/token$/.test(path))
+    return "stream-token";
   if (verb !== "GET" && /\/notifications\//.test(path)) return "notification-write";
   if (verb !== "GET" && /\/broadcasts\//.test(path)) return "broadcast-write";
   return null;
@@ -320,6 +322,7 @@ export function buildInboxScenario() {
     nextCursor: null,
     stallWriteMs: 0,
     writes: [],
+    streamTokens: [],
     unifiedRequests: [],
     stats: createInterceptionStats(),
   };
@@ -343,6 +346,11 @@ async function handleInboxPaused(cdp, params, scenario, origin, apiOrigin, baked
 
   const kind = classifyInboxRequest(url, method);
   if (kind === null) return passThrough();
+
+  if (kind === "stream-token") {
+    scenario.streamTokens.push({ method, url });
+    return fulfilJson(cdp, requestId, origin, envelope({ success: true }), stats);
+  }
 
   if (kind === "notification-write" || kind === "broadcast-write") {
     const write = parseInboxWrite(url, method);
@@ -749,6 +757,14 @@ function runSelfTest() {
   assert(
     "a notification READ is not claimed — the list still comes from the real API",
     classifyInboxRequest("http://h/notifications?limit=20", "GET") === null,
+  );
+  assert(
+    "the realtime stream's token mint is named, not counted as an inbox write",
+    classifyInboxRequest("http://h/notifications/events/token", "POST") === "stream-token",
+  );
+  assert(
+    "naming the token mint did not stop the fence claiming a real notification write",
+    classifyInboxRequest("http://h/notifications/900001/archive", "PATCH") === "notification-write",
   );
   assert("an unrelated read is not claimed", classifyInboxRequest("http://h/build/all", "GET") === null);
 
@@ -1847,6 +1863,7 @@ async function main() {
       degradedMailError: DEGRADED_MAIL_ERROR,
       livePreflight,
       interceptedWrites: scenario.writes,
+      interceptedStreamTokens: scenario.streamTokens,
       unifiedRequests: scenario.unifiedRequests.slice(-60),
       pageErrors: pageErrors.slice(0, 30),
       interception: {

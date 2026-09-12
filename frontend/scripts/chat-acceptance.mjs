@@ -131,6 +131,9 @@ export const UNREAD_COUNT = 7;
 export const MANY_UNREAD_COUNT = 120;
 export const MANY_UNREAD_BADGE = "99+";
 
+export const UNREAD_TOTAL_CEILING = 100;
+export const UNREAD_TOTAL = Math.min(UNREAD_TOTAL_CEILING, UNREAD_COUNT + MANY_UNREAD_COUNT);
+
 export const COMPOSER_PLACEHOLDER = `Message #${CHANNEL_NAME}...`;
 export const SEND_LABEL = "Send";
 export const ATTACH_LABEL = "Attach file";
@@ -145,8 +148,8 @@ export const RETRY_LABEL = "Try again";
 
 export const EMPTY_CHANNEL_TITLE = `Welcome to #${CHANNEL_NAME}`;
 export const EMPTY_CHANNEL_BODY = "Send a message to get things started.";
-export const TIMELINE_ERROR_TITLE = "Couldn’t load this conversation";
-export const SIDEBAR_ERROR_TITLE = "Couldn’t load your conversations";
+export const TIMELINE_ERROR_TITLE = "Couldn't load this conversation";
+export const SIDEBAR_ERROR_TITLE = "Couldn't load your conversations";
 export const SIDEBAR_EMPTY_TITLE = "No conversations yet";
 export const DENIED_TITLE = "Access Restricted";
 export const UPLOAD_FAILURE_PREFIX = "Failed:";
@@ -318,6 +321,9 @@ export function classifyChatRequest(url, method) {
   if (/\/chat\/channels\/\d+\/messages$/.test(path)) return "messages";
   if (/\/chat\/channels\/public$/.test(path)) return "channels-public";
   if (/\/chat\/channels\/archived$/.test(path)) return "channels-archived";
+  if (/\/chat\/channels\/\d+\/pins$/.test(path)) return "pins";
+  if (/\/chat\/channels\/\d+\/huddle$/.test(path)) return "huddle";
+  if (/\/chat\/channels\/\d+\/files$/.test(path)) return "files";
   if (/\/chat\/channels\/\d+$/.test(path)) return "channel-detail";
   if (/\/chat\/channels$/.test(path)) return "channels";
   if (/\/chat\/unread$/.test(path)) return "unread";
@@ -359,6 +365,18 @@ export function strippedScopes(scopes, prefixes) {
   return { kept, removed };
 }
 
+export const OWNER_BYPASS_KEY = "isOrgOwner";
+
+export function deniedAccessPayload(data, prefixes) {
+  const { kept, removed } = strippedScopes(data?.scopes, prefixes);
+  const authorities = [...removed];
+  if (data?.isOrgOwner === true) authorities.push(OWNER_BYPASS_KEY);
+  return {
+    payload: { ...data, scopes: kept, isOrgOwner: false, canManageOrganizationMembership: false },
+    removed: authorities,
+  };
+}
+
 export function buildChatScenario() {
   return {
     mode: "passthrough",
@@ -395,9 +413,9 @@ async function fulfilStrippedAccess(cdp, params, scenario, origin, apiOrigin, ba
     const res = await fetch(target, { method: "GET", headers, redirect: "manual" });
     const json = await res.json();
     const data = json && typeof json === "object" && "data" in json ? json.data : json;
-    const { kept, removed } = strippedScopes(data?.scopes, scenario.stripPermissions);
+    const { payload, removed } = deniedAccessPayload(data, scenario.stripPermissions);
     scenario.strippedKeys = removed;
-    return fulfilJson(cdp, requestId, origin, envelope({ ...data, scopes: kept }), scenario.stats, res.status);
+    return fulfilJson(cdp, requestId, origin, envelope(payload), scenario.stats, res.status);
   } catch (err) {
     scenario.stats.proxyFailures.push(`GET ${source.pathname}: ${String(err.message ?? err)}`);
     await cdp.send("Fetch.failRequest", { requestId, errorReason: "Failed" }).catch(() => {});
@@ -487,9 +505,12 @@ async function handleChatPaused(cdp, params, scenario, origin, apiOrigin, bakedO
   }
   if (kind === "channels-public" || kind === "channels-archived")
     return fulfilJson(cdp, requestId, origin, envelope({ channels: [], nextCursor: null }), stats);
+  if (kind === "pins") return fulfilJson(cdp, requestId, origin, envelope([]), stats);
+  if (kind === "huddle") return fulfilJson(cdp, requestId, origin, envelope(null), stats);
+  if (kind === "files") return fulfilJson(cdp, requestId, origin, envelope({ files: [] }), stats);
   if (kind === "channel-detail")
     return fulfilJson(cdp, requestId, origin, envelope(scenario.channelDetail ?? channelDetailFixture(now)), stats);
-  if (kind === "unread") return fulfilJson(cdp, requestId, origin, envelope({ total: UNREAD_COUNT + MANY_UNREAD_COUNT }), stats);
+  if (kind === "unread") return fulfilJson(cdp, requestId, origin, envelope({ total: UNREAD_TOTAL }), stats);
   if (kind === "thread")
     return fulfilJson(
       cdp,
@@ -667,24 +688,30 @@ export function sidebarPresenceVerdict(sidebar) {
   return { ok: true, reason: null };
 }
 
+export function rowsForChannel(rows, name) {
+  return (rows ?? []).filter(
+    (r) => String(r.name ?? "").startsWith(name) || String(r.text ?? "").includes(name),
+  );
+}
+
 export function unreadBadgeVerdict(rows) {
-  const byName = (name) => (rows ?? []).find((r) => String(r.name ?? "").startsWith(name) || String(r.text ?? "").includes(name));
-  const unread = byName(UNREAD_CHANNEL_NAME);
-  const many = byName(MANY_UNREAD_CHANNEL_NAME);
-  if (!unread || !many)
+  const unread = rowsForChannel(rows, UNREAD_CHANNEL_NAME);
+  const many = rowsForChannel(rows, MANY_UNREAD_CHANNEL_NAME);
+  if (unread.length === 0 || many.length === 0)
     return { ok: false, measured: false, reason: "the seeded unread channels are not in the sidebar" };
-  const unreadShown = new RegExp(`(^|\\s)${UNREAD_COUNT}(\\s|$)`).test(String(unread.text));
-  if (!unreadShown)
+  const reads = (list) => list.map((r) => `"${String(r.text ?? "")}"`).join(" | ");
+  const countPattern = new RegExp(`(^|\\s)${UNREAD_COUNT}(\\s|$)`);
+  if (!unread.some((r) => countPattern.test(String(r.text))))
     return {
       ok: false,
       measured: true,
-      reason: `a channel with unreadCount ${UNREAD_COUNT} shows no count — row reads "${unread.text}"`,
+      reason: `a channel with unreadCount ${UNREAD_COUNT} shows no count on any of its ${unread.length} sidebar row(s) — rows read ${reads(unread)}`,
     };
-  if (!String(many.text).includes(MANY_UNREAD_BADGE))
+  if (!many.some((r) => String(r.text).includes(MANY_UNREAD_BADGE)))
     return {
       ok: false,
       measured: true,
-      reason: `a channel with unreadCount ${MANY_UNREAD_COUNT} does not clamp to "${MANY_UNREAD_BADGE}" — row reads "${many.text}"`,
+      reason: `a channel with unreadCount ${MANY_UNREAD_COUNT} does not clamp to "${MANY_UNREAD_BADGE}" on any of its ${many.length} sidebar row(s) — rows read ${reads(many)}`,
     };
   return { ok: true, measured: true, reason: null };
 }
@@ -854,6 +881,9 @@ function runSelfTest() {
   assert("the poll route is classified", classifyChatRequest("http://h/chat/channels/12/messages/poll", "GET") === "messages-poll");
   assert("a thread read is classified", classifyChatRequest("http://h/chat/channels/12/messages/34/thread", "GET") === "thread");
   assert("the public list is classified", classifyChatRequest("http://h/chat/channels/public", "GET") === "channels-public");
+  assert("the pins read is classified", classifyChatRequest("http://h/chat/channels/12/pins", "GET") === "pins");
+  assert("the active-huddle read is classified", classifyChatRequest("http://h/chat/channels/12/huddle", "GET") === "huddle");
+  assert("the channel files read is classified", classifyChatRequest("http://h/chat/channels/12/files", "GET") === "files");
   assert("the unread total is classified", classifyChatRequest("http://h/chat/unread", "GET") === "unread");
   assert("a send is claimed by the write fence", classifyChatRequest("http://h/chat/channels/12/messages", "POST") === "chat-write");
   assert("a mark-read is claimed by the write fence", classifyChatRequest("http://h/chat/channels/12/read", "POST") === "chat-write");
@@ -876,6 +906,23 @@ function runSelfTest() {
   assert("stripping removes every chat scope", stripped.removed.includes("chat:channels:read"));
   assert("stripping keeps unrelated scopes", stripped.kept["build:tickets:view"] === "own");
   assert("stripping does not over-match a different namespace", stripped.kept["chatter:x"] === "all");
+
+  const ownerDenied = deniedAccessPayload(
+    { scopes: { "chat:channels:read": "all" }, isOrgOwner: true, canManageOrganizationMembership: true, modules: { chat: true } },
+    CHAT_DENY_PREFIXES,
+  );
+  assert(
+    "denying an owner also removes the owner bypass — useCan returns true for every key while isOrgOwner holds",
+    ownerDenied.payload.isOrgOwner === false && ownerDenied.removed.includes(OWNER_BYPASS_KEY),
+  );
+  assert("denying still removes the chat scopes", ownerDenied.removed.includes("chat:channels:read"));
+  assert("denying leaves the module enablement alone — this is a permission denial, not a disabled module", ownerDenied.payload.modules.chat === true);
+  const memberDenied = deniedAccessPayload(
+    { scopes: { "chat:channels:read": "all", "build:tickets:view": "own" }, isOrgOwner: false },
+    CHAT_DENY_PREFIXES,
+  );
+  assert("a non-owner reader records only the scopes that were removed", memberDenied.removed.join(",") === "chat:channels:read");
+  assert("a non-owner reader keeps every unrelated scope", memberDenied.payload.scopes["build:tickets:view"] === "own");
 
   const channel = channelFixture(now, { id: ACTIVE_CHANNEL_ID, name: CHANNEL_NAME });
   assert(
@@ -904,6 +951,14 @@ function runSelfTest() {
   assert(
     "the last-message preview carries exactly its three strict keys",
     Object.keys(channel.lastMessage).sort().join(",") === "content,createdAt,senderName",
+  );
+  assert(
+    "the unread total the harness serves is inside the ceiling both chatUnreadResponseSchema and chatUnreadContract enforce",
+    UNREAD_TOTAL <= UNREAD_TOTAL_CEILING,
+  );
+  assert(
+    "the seeded per-channel unread counts still sum past that ceiling, which is why the total is clamped and not summed",
+    UNREAD_COUNT + MANY_UNREAD_COUNT > UNREAD_TOTAL_CEILING,
   );
   assert("the channel list page envelope is channels + nextCursor", Object.keys(channelListFixture(now)).sort().join(",") === "channels,nextCursor");
   assert("the channel list seeds one read and two unread channels", channelListFixture(now).channels.length === 3);
@@ -935,7 +990,14 @@ function runSelfTest() {
     COMPOSER_PLACEHOLDER === `Message #${CHANNEL_NAME}...`,
   );
   assert("the empty-channel title follows the component's template", EMPTY_CHANNEL_TITLE === `Welcome to #${CHANNEL_NAME}`);
-  assert("the timeline error title uses the component's typographic apostrophe", TIMELINE_ERROR_TITLE === "Couldn’t load this conversation");
+  assert(
+    "the timeline error title is the literal message-list.tsx renders, apostrophe included",
+    TIMELINE_ERROR_TITLE === "Couldn't load this conversation" && !TIMELINE_ERROR_TITLE.includes("’"),
+  );
+  assert(
+    "the sidebar error title is the literal channel-sidebar.tsx renders",
+    SIDEBAR_ERROR_TITLE === "Couldn't load your conversations" && !SIDEBAR_ERROR_TITLE.includes("’"),
+  );
 
   assert(
     "a surface owning nav, composer and no settings control passes ownership",
@@ -984,6 +1046,32 @@ function runSelfTest() {
     unreadBadgeVerdict([unreadRows[0], { name: MANY_UNREAD_CHANNEL_NAME, text: `${MANY_UNREAD_CHANNEL_NAME} 120` }]).reason.includes("clamp"),
   );
   assert("absent seeded channels are unmeasured, not clean", unreadBadgeVerdict([]).measured === false);
+
+  const railAndSectionRows = [
+    { name: UNREAD_CHANNEL_NAME, text: "" },
+    { name: MANY_UNREAD_CHANNEL_NAME, text: "" },
+    ...unreadRows,
+  ];
+  assert(
+    "the icon-only compact rail row does not mask the section row that carries the count",
+    unreadBadgeVerdict(railAndSectionRows).ok === true,
+  );
+  assert(
+    "a channel whose EVERY sidebar row lacks the count still fails, and the reason quotes all of them",
+    unreadBadgeVerdict([
+      { name: UNREAD_CHANNEL_NAME, text: "" },
+      { name: UNREAD_CHANNEL_NAME, text: UNREAD_CHANNEL_NAME },
+      unreadRows[1],
+    ]).reason.includes("2 sidebar row(s)"),
+  );
+  assert(
+    "an unclamped 120 on every row still fails",
+    unreadBadgeVerdict([
+      unreadRows[0],
+      { name: MANY_UNREAD_CHANNEL_NAME, text: "" },
+      { name: MANY_UNREAD_CHANNEL_NAME, text: `${MANY_UNREAD_CHANNEL_NAME} 120` },
+    ]).reason.includes("clamp"),
+  );
 
   assert(
     "a dialog that mounts only on its trigger passes",
@@ -1234,11 +1322,15 @@ async function openChatHome(ctx) {
 async function openChannel(ctx) {
   const { cdp, navigate, evaluate, settleMs } = ctx;
   await navigate(cdp, `/chat?channel=${ACTIVE_CHANNEL_ID}`, settleMs);
+  let last = null;
   for (let i = 0; i < 18; i += 1) {
     const surface = await evaluate(cdp, chatSurfaceExpression());
-    if (surface?.hasComposer || (surface?.alertTexts ?? []).length > 0) return surface;
+    last = surface ?? last;
+    if ((surface?.alertTexts ?? []).length > 0) return surface;
+    if (surface?.hasComposer && surface.composerPlaceholder === COMPOSER_PLACEHOLDER) return surface;
     await sleep(400);
   }
+  if (last?.hasComposer) return last;
   const clicked = await evaluate(cdp, clickByAccessibleNameExpression(CHANNEL_NAME));
   if (clicked === true) {
     await sleep(settleMs);
@@ -1568,6 +1660,11 @@ async function runKeyboardComposer(ctx) {
     else checks.push(failed("composer keyboard", verdict.reason));
 
     await evaluate(cdp, composerExpression());
+    await typeText(cdp, COMPOSER_DRAFT);
+    await sleep(300);
+    const sendEnabled = (await evaluate(cdp, chatSurfaceExpression()))?.sendDisabled === false;
+    if (sendEnabled) checks.push(passed(`a draft in the composer enables the "${SEND_LABEL}" control`));
+    else checks.push(failed("composer keyboard", `the "${SEND_LABEL}" control stays disabled with a draft in the composer`));
     let reachedSend = false;
     for (let i = 0; i < 12 && !reachedSend; i += 1) {
       await pressKey(cdp, TAB);
@@ -1575,8 +1672,14 @@ async function runKeyboardComposer(ctx) {
       const active = await evaluate(cdp, activeElementExpression());
       if (String(active?.ariaLabel ?? "") === SEND_LABEL) reachedSend = true;
     }
-    if (reachedSend) checks.push(passed(`Tab from the composer reaches the "${SEND_LABEL}" control`));
-    else checks.push(failed("composer keyboard", `Tab from the composer never reached "${SEND_LABEL}" within 12 presses`));
+    if (reachedSend) checks.push(passed(`Tab from a composer holding a draft reaches the "${SEND_LABEL}" control`));
+    else
+      checks.push(
+        failed(
+          "composer keyboard",
+          `Tab from a composer holding a draft never reached "${SEND_LABEL}" within 12 presses`,
+        ),
+      );
 
     const fence = writeFenceVerdict(scenario.writes, ["send", "read", "other"]);
     if (fence.ok) checks.push(passed("every write the composer attempted was intercepted, not delivered"));

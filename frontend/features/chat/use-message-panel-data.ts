@@ -376,10 +376,8 @@ export function useMessagePanelData({
   const hasOlderHeld = windowStart > 0;
 
   const handleLoadOlder = useCallback(() => {
-    if (hasOlderHeld) {
-      setRenderPages((p) => p + 1);
-      return;
-    }
+    setRenderPages((p) => p + 1);
+    if (hasOlderHeld) return;
     void fetchNextPage();
   }, [hasOlderHeld, fetchNextPage]);
 

@@ -6,9 +6,6 @@ export function gateCookieName(base: GateCookieBase, scopeId: string): string {
   return `${base}--${scopeId}`;
 }
 
-// Structural mirror of `SessionClaimsRefresh`; importing the type would close a cycle with auth-hooks.
-type SessionClaimsRefreshFn = (data?: unknown) => Promise<unknown>;
-
 function secureFlag(): string {
   return typeof window !== "undefined" && window.location.protocol === "https:"
     ? "; Secure"
@@ -43,13 +40,14 @@ export function clearGateCookies(): void {
     document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secure}`;
 }
 
-export async function completeOnboardingGate(
+export async function completeOnboardingGate<TExpected, TResult>(
   cookieName: GateCookieBase,
   scopeId: string,
-  refreshSessionClaims: SessionClaimsRefreshFn,
-): Promise<unknown> {
+  refreshSessionClaims: (expected?: TExpected) => Promise<TResult>,
+  expected?: TExpected,
+): Promise<TResult> {
   const name = gateCookieName(cookieName, scopeId);
   const secure = secureFlag();
   document.cookie = `${name}=1; path=/; max-age=${GATE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
-  return refreshSessionClaims();
+  return refreshSessionClaims(expected);
 }

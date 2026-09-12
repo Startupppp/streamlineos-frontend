@@ -31,6 +31,7 @@ const chatChannelFilesContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatChannelFilesContract),
 );
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Channel, ChatNotificationPreference } from "@/types/chat";
@@ -290,6 +291,7 @@ export interface ChannelFile {
 export function useChannelFiles(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...collaborationQueryKeys.chat.all, "channelFiles", channelId] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(

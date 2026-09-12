@@ -37,7 +37,14 @@ export function useAttendanceCalendarEvents(
     [rangeEnd, rangeStart],
   );
 
-  const queries = useQueries({
+  const combineAttendance = useCallback(
+    (results: UseQueryResult<AttendanceLog[]>[]): (AttendanceLog[] | undefined)[] =>
+      results.map((result) => result.data),
+    [],
+  );
+
+  const attendancePages = useQueries({
+    combine: combineAttendance,
     queries: months.map((month) => {
       const params = { year: month.getFullYear(), month: month.getMonth() };
       return {
@@ -67,8 +74,8 @@ export function useAttendanceCalendarEvents(
         })
         .filter(([date]) => date >= from && date <= to),
     );
-    for (const query of queries) {
-      for (const log of query.data ?? []) {
+    for (const page of attendancePages) {
+      for (const log of page ?? []) {
         const logs = logsByDate.get(log.date) ?? [];
         logs.push(log);
         logsByDate.set(log.date, logs);
@@ -180,5 +187,5 @@ export function useAttendanceCalendarEvents(
             };
           }),
       );
-  }, [queries, rangeEnd, rangeStart, wfhRequests]);
+  }, [attendancePages, rangeEnd, rangeStart, wfhRequests]);
 }

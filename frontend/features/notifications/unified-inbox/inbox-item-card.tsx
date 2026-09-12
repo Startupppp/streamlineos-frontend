@@ -108,6 +108,9 @@ interface MailItemCardProps {
 function MailItemCard({ item, onClick }: MailItemCardProps) {
   const handleClick = useCallback(() => onClick(item), [item, onClick]);
   const senderLabel = item.actor?.name ?? item.actor?.id ?? "Unknown";
+  const secondaryInk = item.isRead
+    ? "text-muted-foreground"
+    : "text-status-neutral-ink-strong";
   return (
     <button
       type="button"
@@ -129,7 +132,9 @@ function MailItemCard({ item, onClick }: MailItemCardProps) {
                 item.isRead ? "font-medium text-foreground/80" : "font-semibold text-foreground",
               )}
             />
-            <span className="text-dense tabular-nums text-muted-foreground shrink-0">
+            <span
+              className={cn("text-dense tabular-nums shrink-0", secondaryInk)}
+            >
               {formatRelativeTime(item.timestamp)}
             </span>
           </div>
@@ -148,7 +153,7 @@ function MailItemCard({ item, onClick }: MailItemCardProps) {
           {item.snippet && (
             <TruncatedText
               text={item.snippet}
-              className="text-dense text-muted-foreground mt-0.5 min-w-0"
+              className={cn("text-dense mt-0.5 min-w-0", secondaryInk)}
             />
           )}
         </div>

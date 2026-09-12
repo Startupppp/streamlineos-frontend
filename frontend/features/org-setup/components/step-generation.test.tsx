@@ -1,10 +1,12 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
+import { gateCookieName } from "@/lib/onboarding-gate";
+import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import type { SetupProvisioning } from "../hooks/use-setup-provisioning";
 
 const mockMutateAsync = jest.fn();
 const mockSignIn = jest.fn();
-const mockCompleteOnboardingGate = jest.fn();
+const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
@@ -47,11 +49,7 @@ jest.mock("@/lib/api/hooks/org", () => ({
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
   signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
-  useSessionClaimsRefresh: jest.fn(() => jest.fn()),
-}));
-
-jest.mock("@/lib/onboarding-gate", () => ({
-  completeOnboardingGate: jest.fn((...args: unknown[]) => mockCompleteOnboardingGate(...args)),
+  useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
@@ -103,12 +101,16 @@ const SETUP_RESPONSE = {
 const SIGN_IN_SUCCESS = { status: "signed-in" as const };
 const SIGN_IN_FAILED = { status: "failed" as const };
 
-const FAKE_SESSION = { user: { id: "user-1" }, expires: "2099-01-01" };
+const FAKE_SESSION = {
+  user: { id: "user-1" },
+  orgId: "org-new",
+  expires: "2099-01-01",
+};
 
 function resetMocks() {
   mockMutateAsync.mockReset();
   mockSignIn.mockReset();
-  mockCompleteOnboardingGate.mockReset();
+  mockRefreshSessionClaims.mockReset();
   mockClearAll.mockReset();
   mockSetCompletionMarker.mockReset();
   mockHasCompletionMarker.mockReset().mockReturnValue(false);
@@ -143,7 +145,7 @@ describe("StepGeneration — signInWithMagicToken returns false", () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -170,12 +172,12 @@ describe("StepGeneration — signInWithMagicToken returns false", () => {
   });
 });
 
-describe("StepGeneration — completeOnboardingGate returns null", () => {
-  it("error surfaced, draft NOT cleared, marker NOT written, no navigation", async () => {
+describe("StepGeneration — the claims refresh never confirms the new org", () => {
+  it("a timed-out refresh surfaces the error, clears nothing and navigates nowhere", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
-    mockCompleteOnboardingGate.mockResolvedValue(null);
+    mockRefreshSessionClaims.mockResolvedValue(null);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -186,7 +188,51 @@ describe("StepGeneration — completeOnboardingGate returns null", () => {
     expect(mockClearAll).not.toHaveBeenCalled();
     expect(mockSetCompletionMarker).not.toHaveBeenCalled();
     expect(mockLocationReplace).not.toHaveBeenCalled();
-    expect(capturedProgressProps.setupError).toMatchObject({ kind: "setup-failed" });
+    expect(capturedProgressProps.setupError).toMatchObject({
+      kind: "setup-failed",
+      message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+    });
+  });
+
+  it("a session still naming the previous org is refused, not celebrated", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
+    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue({
+      ...FAKE_SESSION,
+      orgId: "org-prev",
+    });
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).not.toBeNull();
+    });
+
+    expect(capturedProgressProps.showWelcome).toBe(false);
+    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+    expect(capturedProgressProps.setupError).toMatchObject({
+      kind: "setup-failed",
+      message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+    });
+  });
+
+  it("asks the refresh for the org the setup mutation just returned", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
+    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
+    });
+    expect(document.cookie).toContain(
+      gateCookieName("org-setup-done", "org-new"),
+    );
   });
 });
 
@@ -195,7 +241,7 @@ describe("StepGeneration — both auth steps succeed", () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -213,12 +259,12 @@ describe("StepGeneration — isReady true + background pending → wizard comple
   it("auto-completes via isReady, does not hang waiting for background", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
     await waitFor(() => {
-      expect(mockCompleteOnboardingGate).toHaveBeenCalled();
+      expect(mockRefreshSessionClaims).toHaveBeenCalled();
     });
 
     expect(capturedProgressProps.setupError).toBeNull();
@@ -242,7 +288,7 @@ describe("StepGeneration — background failed + isReady true → user can conti
       recheck: jest.fn(),
     };
     mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
-    mockCompleteOnboardingGate.mockResolvedValue(FAKE_SESSION);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 

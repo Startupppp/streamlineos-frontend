@@ -33,7 +33,7 @@ import {
   useOrgHolidays,
   useCreateOrgHoliday,
   useDeleteOrgHoliday,
-} from "@/hooks/api/org-hierarchy";
+} from "@/hooks/api/org-holidays";
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { OrgSettingsCard } from "./org-settings-chrome";

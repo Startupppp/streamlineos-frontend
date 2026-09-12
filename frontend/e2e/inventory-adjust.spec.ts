@@ -1,11 +1,6 @@
 import { expect, test as base, type TestDetails } from "@playwright/test";
-import {
-  apiOracle,
-  findLocationWithHeadroom,
-  onHandFor,
-  recentLedger,
-  type ApiOracle,
-} from "./fixtures/api";
+import { apiOracle, type ApiOracle } from "./fixtures/api-oracle";
+import { findLocationWithHeadroom, onHandFor, recentLedger } from "./fixtures/api-stock";
 import { chooseFirstOption, chooseFromCombobox } from "./fixtures/combobox";
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { useWatch, type Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -23,30 +23,11 @@ import {
   GRN_DISCREPANCY_LABEL,
   type GrnDiscrepancyReason,
 } from "@/features/inventory/lib/inventory-status";
-import type { TrackingMethod } from "@/types/inventory";
-import type { GrnFormValues } from "./receive-goods-schema";
+import { type DraftLineMeta, type GrnLineRowProps } from "./receive-goods-types";
 
 const DISCREPANCY_OPTIONS: GrnDiscrepancyReason[] = ["SHORT", "OVER", "DAMAGED", "WRONG_ITEM"];
 
-export interface DraftLineMeta {
-  poLineId: number;
-  productVariantId: number;
-  productName: string;
-  sku: string | null;
-  ordered: number;
-  alreadyReceived: number;
-  trackingMethod: TrackingMethod;
-}
-
-interface GrnLineRowProps {
-  meta: DraftLineMeta;
-  index: number;
-  control: Control<GrnFormValues>;
-  /** Units scanned onto this line so far. Zero means nobody has scanned it. */
-  scannedCount: number;
-  isActive: boolean;
-  onActivate: (poLineId: number) => void;
-}
+export type { DraftLineMeta } from "./receive-goods-types";
 
 /**
  * One line of a delivery, as the receiver sees it on the dock.

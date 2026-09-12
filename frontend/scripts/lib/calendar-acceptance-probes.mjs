@@ -8,6 +8,17 @@
  * `build-acceptance.mjs` and are not forked here.
  */
 
+export {
+  activeElementExpression,
+  clickByAccessibleNameExpression,
+  dialogExpression,
+  liveRegionExpression,
+  overflowExpression,
+  skeletonCountExpression,
+  viewportExpression,
+  zoomVerdict,
+} from "./acceptance-browser.mjs";
+
 export const CALENDAR_STATES = [
   { key: "loading-and-populated", label: "Loading and populated" },
   { key: "empty-period", label: "Empty period" },
@@ -17,30 +28,6 @@ export const CALENDAR_STATES = [
   { key: "keyboard-and-detail-sheet", label: "Keyboard and event detail Sheet" },
   { key: "deep-link", label: "Deep links" },
   { key: "responsive-and-foreign-zone", label: "Responsive layout and foreign-zone row" },
-];
-
-/**
- * Browser zoom reflows: at 200% the CSS layout viewport halves and the device
- * pixel ratio doubles. `setPageScaleFactor` is pinch-zoom — it magnifies the
- * composited frame and leaves `innerWidth` alone — so it cannot prove a 200%
- * zoom layout. The zoom row therefore overrides the metrics to half the CSS
- * width at `deviceScaleFactor: 2`, and the runner records the measured
- * `innerWidth` / `devicePixelRatio` so the claim is checkable.
- */
-export const CALENDAR_VIEWPORTS = [
-  { key: "360", label: "360 px", width: 360, height: 780, deviceScaleFactor: 1, mobile: true, cssWidth: 360, zoom: 1 },
-  { key: "768", label: "768 px", width: 768, height: 900, deviceScaleFactor: 1, mobile: false, cssWidth: 768, zoom: 1 },
-  { key: "1280", label: "1280 px", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false, cssWidth: 1280, zoom: 1 },
-  {
-    key: "1280-zoom200",
-    label: "1280 px @ 200% zoom",
-    width: 640,
-    height: 450,
-    deviceScaleFactor: 2,
-    mobile: false,
-    cssWidth: 640,
-    zoom: 2,
-  },
 ];
 
 export const READER_ZONE_FALLBACK = "Asia/Calcutta";
@@ -201,47 +188,10 @@ export function calendarAxeContextExpression() {
     : { include: [["main"]] })`;
 }
 
-export function corsHeaders(origin) {
-  return [
-    { name: "content-type", value: "application/json" },
-    { name: "access-control-allow-origin", value: origin },
-    { name: "access-control-allow-credentials", value: "true" },
-    { name: "cache-control", value: "no-store" },
-  ];
-}
-
-export function envelope(data) {
-  return JSON.stringify({ success: true, data });
-}
-
 // ---------------------------------------------------------------- expressions
 
 export function readerZoneExpression() {
   return `Intl.DateTimeFormat().resolvedOptions().timeZone`;
-}
-
-export function viewportExpression() {
-  return `({
-    innerWidth: window.innerWidth,
-    outerWidth: window.outerWidth,
-    devicePixelRatio: window.devicePixelRatio,
-    visualViewportScale: window.visualViewport ? window.visualViewport.scale : null,
-    documentScrollWidth: document.documentElement.scrollWidth,
-  })`;
-}
-
-export function skeletonCountExpression() {
-  return `document.querySelectorAll('[data-slot="skeleton"], .animate-pulse').length`;
-}
-
-export function liveRegionExpression() {
-  return `(() => {
-    const nodes = Array.from(document.querySelectorAll('[aria-live="polite"], [aria-live="assertive"]'));
-    return nodes
-      .map((n) => (n.textContent || "").replace(/\\s+/g, " ").trim())
-      .filter((t) => t.length > 0)
-      .join(" | ");
-  })()`;
 }
 
 export function surfaceExpression() {
@@ -280,51 +230,6 @@ export function surfaceExpression() {
         .map((b) => b.getAttribute("aria-label"))
         .filter((l) => l && l.indexOf("Acceptance ") === 0),
       bodyText: document.body ? document.body.innerText.replace(/\\s+/g, " ").slice(0, 6000) : "",
-    };
-  })()`;
-}
-
-export function clickByAccessibleNameExpression(name) {
-  return `(() => {
-    const named = (el) => (el.getAttribute("aria-label") || el.textContent || "").replace(/\\s+/g, " ").trim();
-    const visible = (el) => el.offsetParent !== null || el.getClientRects().length > 0;
-    const target = Array.from(document.querySelectorAll('button, [role="button"], [role="option"], a'))
-      .filter(visible)
-      .find((el) => named(el) === ${JSON.stringify(name)});
-    if (!target) return false;
-    target.click();
-    return true;
-  })()`;
-}
-
-export function activeElementExpression() {
-  return `(() => {
-    const el = document.activeElement;
-    if (!el) return null;
-    const sheet = el.closest('[role="dialog"]');
-    return {
-      tag: el.tagName.toLowerCase(),
-      role: el.getAttribute("role"),
-      name: (el.getAttribute("aria-label") || el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 160),
-      insideDialog: Boolean(sheet),
-    };
-  })()`;
-}
-
-export function dialogExpression() {
-  return `(() => {
-    const dialog = Array.from(document.querySelectorAll('[role="dialog"]')).find(
-      (d) => d.getClientRects().length > 0 && d.getAttribute("aria-hidden") !== "true",
-    );
-    if (!dialog) return { open: false };
-    const named = (el) => (el.getAttribute("aria-label") || el.textContent || "").replace(/\\s+/g, " ").trim();
-    const controls = Array.from(dialog.querySelectorAll("button, a, [role='button'], input, select, textarea"))
-      .filter((el) => el.offsetParent !== null || el.getClientRects().length > 0)
-      .map(named);
-    return {
-      open: true,
-      controls,
-      text: dialog.innerText.replace(/\\s+/g, " ").slice(0, 2000),
     };
   })()`;
 }
@@ -368,49 +273,7 @@ export function rowGeometryExpression(title) {
   })()`;
 }
 
-export function overflowExpression() {
-  return `(() => {
-    const de = document.documentElement;
-    let widest = null;
-    let widestRight = 0;
-    for (const el of Array.from(document.querySelectorAll("body *"))) {
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) continue;
-      if (r.right > widestRight) {
-        widestRight = r.right;
-        widest =
-          el.tagName.toLowerCase() +
-          (el.className && typeof el.className === "string"
-            ? "." + el.className.trim().split(/\\s+/).slice(0, 3).join(".")
-            : "");
-      }
-    }
-    return {
-      scrollWidth: de.scrollWidth,
-      innerWidth: window.innerWidth,
-      widest,
-      widestRight: Math.round(widestRight),
-    };
-  })()`;
-}
-
 // ------------------------------------------------------------------- verdicts
-
-export function zoomVerdict(measured, viewport) {
-  if (!measured || !Number.isFinite(measured.innerWidth))
-    return { ok: false, reason: "the viewport could not be measured" };
-  if (measured.innerWidth !== viewport.cssWidth)
-    return {
-      ok: false,
-      reason: `CSS viewport is ${measured.innerWidth}px, expected ${viewport.cssWidth}px`,
-    };
-  if (measured.devicePixelRatio !== viewport.deviceScaleFactor)
-    return {
-      ok: false,
-      reason: `devicePixelRatio is ${measured.devicePixelRatio}, expected ${viewport.deviceScaleFactor}`,
-    };
-  return { ok: true, reason: null };
-}
 
 export function foreignZoneVerdict(geometry) {
   if (!geometry || geometry.found !== true)

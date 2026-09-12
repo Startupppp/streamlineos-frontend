@@ -10,7 +10,7 @@ import {
   useArchivedOrganizations,
   useRestoreOrg,
 } from "@/hooks/api/organization";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export function ArchivedOrgsRestore({
   className,
   variant = "card",
 }: ArchivedOrgsRestoreProps) {
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
   const archivedQuery = useArchivedOrganizations();
@@ -31,10 +31,12 @@ export function ArchivedOrgsRestore({
 
   const handleRestore = useCallback(
     (orgId: string) => {
+      const claimsRun = beginClaimsRefresh();
       restoreMutation.mutate(orgId, {
         onSuccess: async (data) => {
           toast.success("Organization restored");
-          await refreshSessionClaims({ orgId: data.orgId });
+          const confirmed = await claimsRun.confirmOrWarn({ orgId: data.orgId });
+          if (!confirmed) return;
           queryClient.clear();
           router.replace("/dashboard");
           router.refresh();
@@ -42,7 +44,7 @@ export function ArchivedOrgsRestore({
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
-    [restoreMutation, refreshSessionClaims, queryClient, router],
+    [restoreMutation, beginClaimsRefresh, queryClient, router],
   );
 
   const orgs = archivedQuery.data ?? [];

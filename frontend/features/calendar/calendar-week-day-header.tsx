@@ -7,11 +7,7 @@ export function CalendarWeekDayHeader({ date, localizer }: HeaderProps) {
   const weekday = localizer.format(date, "weekdayFormat");
 
   return (
-    <span
-      role="columnheader"
-      aria-sort="none"
-      className="calendar-week-day-header flex flex-col items-center justify-center gap-0.5 leading-none"
-    >
+    <span className="calendar-week-day-header flex flex-col items-center justify-center gap-0.5 leading-none">
       <span className="calendar-week-day-header-date text-label font-semibold">
         {dayNumber}
       </span>
