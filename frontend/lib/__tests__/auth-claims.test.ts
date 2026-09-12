@@ -278,6 +278,7 @@ describe("resolveSessionClaims — complete defaults with empty inputs", () => {
       userOnboardingCompletedAt: null,
       organizationAccess: "none",
       suspendedOrganizationName: null,
+      isPlatformAdmin: false,
     };
     expect(result).toEqual(expected);
   });

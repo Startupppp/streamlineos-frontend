@@ -311,7 +311,12 @@ describe("useVerifySubscription — mutation body and invalidation", () => {
     expect(invalidatedKeyStrings.some((k) => k.includes('"summary"'))).toBe(true);
     expect(invalidatedKeyStrings.some((k) => k.includes('"entitlements"'))).toBe(true);
     expect(invalidatedKeyStrings.some((k) => k.includes('"seats"'))).toBe(true);
-    expect(invalidatedKeyStrings.some((k) => k.includes('"access"'))).toBe(true);
+    expect(invalidatedKeyStrings).toContain(
+      JSON.stringify(platformCoreQueryKeys.access.me()),
+    );
+    expect(invalidatedKeyStrings).toContain(
+      JSON.stringify(platformCoreQueryKeys.access.orgModules()),
+    );
   });
 
   it("useValidateCoupon — passes billingCycle to the query URL when provided", async () => {
