@@ -44,7 +44,9 @@ describe("the completion certificate is reachable from the product", () => {
     */
     const source = readFileSync(HOOKS, "utf8");
     const hook = source.slice(source.indexOf("export function useDownloadSignEnvelopeCertificate"));
-    expect(hook.slice(0, hook.indexOf("}\n"))).toContain("useMutation");
+    const body = hook.slice(0, hook.indexOf("}\n"));
+    expect(body).toMatch(/\buse[A-Za-z]*Mutation\(/);
+    expect(body).not.toMatch(/\buse[A-Za-z]*Query\(/);
   });
 
   it("names a route the backend actually serves", () => {

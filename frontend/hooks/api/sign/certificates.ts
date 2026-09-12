@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignCertificate, SignCertificateResponse } from "@/types/sign";
 
 export function useSignEnvelopeCertificate(
@@ -10,7 +10,7 @@ export function useSignEnvelopeCertificate(
   options?: Omit<UseQueryOptions<SignCertificateResponse, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
-    queryKey: queryKeys.signEnvelopes.certificate(envelopeId ?? 0),
+    queryKey: growthAndSignQueryKeys.signEnvelopes.certificate(envelopeId ?? 0),
     queryFn: () => apiClient.get<SignCertificateResponse>(`/sign/envelopes/${envelopeId}/certificate`),
     staleTime: 60_000,
     ...options,
@@ -24,8 +24,8 @@ export function useRegenerateSignCertificate(envelopeId: number) {
     mutationKey: ["signCertificates", "regenerate", envelopeId],
     mutationFn: () => apiClient.post<SignCertificate>(`/sign/envelopes/${envelopeId}/regenerate-certificate`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.certificate(envelopeId) });
-      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.audit(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.certificate(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.audit(envelopeId) });
     },
   });
 }
