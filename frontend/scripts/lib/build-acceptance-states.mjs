@@ -1,7 +1,14 @@
 import { randomBytes } from "node:crypto";
 import { sleep, cdpSession, newPageTarget } from "./cdp.mjs";
 import { axeVerdict, seriousViolations } from "./axe.mjs";
-import { cellFromChecks, notRunCell, passed, failed, unreached } from "./acceptance-matrix.mjs";
+import {
+  cellFromChecks,
+  notRunCell,
+  overflowVerdict,
+  passed,
+  failed,
+  unreached,
+} from "./acceptance-matrix.mjs";
 
 const EMPTY_QUERY = "xyzzy-nomatch-string";
 const MISSING_TICKET_KEY = "INVALID-99999";
@@ -83,7 +90,7 @@ function pressedCellsExpression() {
 }
 
 function riskCellsExpression() {
-  return `Array.from(document.querySelectorAll('[role="button"]')).map((el) =>
+  return `Array.from(document.querySelectorAll('button, [role="button"]')).map((el) =>
     (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 200))`;
 }
 
@@ -113,7 +120,7 @@ function crossTabProbeSource(channelPrefix) {
     const originalFetch = window.fetch;
     window.fetch = function (...args) {
       window.__slCrossTab.fetches += 1;
-      return originalFetch.apply(this, args);
+      return originalFetch.apply(this === undefined ? window : this, args);
     };
   })()`;
 }
@@ -239,7 +246,7 @@ export async function runLoadingAndEmpty({ cdp, width, baseUrl, navigate, evalua
 export async function runErrorAndRetry({
   cdp,
   width,
-  projectPath,
+  projectFlat,
   ticketKey,
   navigate,
   evaluate,
@@ -271,8 +278,13 @@ export async function runErrorAndRetry({
       }
       await cdp.send("Fetch.continueRequest", { requestId: params.requestId }).catch(() => {});
     });
-    await cdp.send("Fetch.enable", { patterns: [{ urlPattern: "*" }] });
-    await navigate(cdp, `${projectPath}/tickets/${ticketKey}`);
+    await cdp.send("Fetch.enable", {
+      patterns: [
+        { urlPattern: "*", resourceType: "XHR" },
+        { urlPattern: "*", resourceType: "Fetch" },
+      ],
+    });
+    await navigate(cdp, `${projectFlat}/tickets/${ticketKey}`);
     const probe = await evaluate(cdp, alertExpression());
     shots.push(await screenshot(cdp, state, width, "500"));
     if (probe?.hasAlert) checks.push(passed("500 renders an alert"));
@@ -300,7 +312,7 @@ export async function runErrorAndRetry({
   }
 
   try {
-    await navigate(cdp, `${projectPath}/tickets/${MISSING_TICKET_KEY}`);
+    await navigate(cdp, `${projectFlat}/tickets/${MISSING_TICKET_KEY}`);
     const probe = await evaluate(cdp, alertExpression());
     shots.push(await screenshot(cdp, state, width, "404"));
     const verdict = notFoundVerdict(probe);
@@ -393,17 +405,32 @@ export async function runCrossTab({
   return cellFromChecks(state, width, checks, shots, axe);
 }
 
-export async function runKeyboard({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }) {
+export async function runKeyboard({ cdp, width, projectFlat, navigate, evaluate, screenshot, runAxe }) {
   const state = "keyboard-and-accessibility";
   const shots = [];
   const checks = [];
   let axe = null;
   try {
-    await navigate(cdp, `${projectPath}/risks`);
-    const cellNames = await evaluate(cdp, riskCellsExpression());
+    await navigate(cdp, `${projectFlat}/risks`);
+    let cellNames = await evaluate(cdp, riskCellsExpression());
+    for (let waited = 0; waited < 12000; waited += 750) {
+      if (Array.isArray(cellNames) && cellNames.some((n) => RISK_CELL_PATTERN.test(n))) break;
+      await sleep(750);
+      cellNames = await evaluate(cdp, riskCellsExpression());
+    }
     if (!Array.isArray(cellNames) || !cellNames.some((n) => RISK_CELL_PATTERN.test(n))) {
       shots.push(await screenshot(cdp, state, width, "risks"));
-      checks.push(unreached("risk matrix", "no named risk cells were rendered on this route"));
+      const landed = await evaluate(cdp, "location.pathname");
+      const seen = Array.isArray(cellNames) ? cellNames.length : "not-an-array";
+      const sample = Array.isArray(cellNames)
+        ? cellNames.filter((n) => /probability/i.test(n)).slice(0, 2).join(" | ") || "none named probability"
+        : "";
+      checks.push(
+        unreached(
+          "risk matrix",
+          `no named risk cells on ${landed} (${seen} buttons seen; ${sample})`,
+        ),
+      );
       return cellFromChecks(state, width, checks, shots, await runAxe(cdp));
     }
     await evaluate(cdp, "document.body.focus()");
@@ -455,12 +482,12 @@ export async function runKeyboard({ cdp, width, projectPath, navigate, evaluate,
   return cellFromChecks(state, width, checks, shots, axe);
 }
 
-export async function runResponsive({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }) {
+export async function runResponsive({ cdp, width, projectPath, projectFlat, navigate, evaluate, screenshot, runAxe }) {
   const state = "responsive-layout";
   const shots = [];
   const checks = [];
   let axe = null;
-  const routes = ["/build/all", `${projectPath}`, `${projectPath}/backlog`];
+  const routes = ["/build/all", `${projectPath}`, `${projectFlat}/backlog`];
   try {
     for (const route of routes) {
       await navigate(cdp, route);

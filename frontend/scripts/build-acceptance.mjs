@@ -301,11 +301,12 @@ async function main() {
     if (!projectId)
       throw new Error("could not resolve a project from /build/all — no numeric project link and no navigable row");
     if (!projectPath) projectPath = `/build/${projectId}`;
+    const projectFlat = `/build/${projectId}`;
     log(`projectId = ${projectId} · projectPath = ${projectPath}`);
 
     let ticketKey = "";
     for (let attempt = 1; attempt <= 3 && !ticketKey; attempt += 1) {
-      await navigate(cdp, projectPath);
+      await navigate(cdp, `${projectFlat}/backlog`);
       const found = await evaluate(
         cdp,
         `(() => {
@@ -315,7 +316,15 @@ async function main() {
           return link ? link.split("/tickets/")[1] : "";
         })()`,
       );
-      if (found) ticketKey = String(found);
+      if (found) {
+        ticketKey = String(found);
+        break;
+      }
+      await evaluate(cdp, `(() => { const r = document.querySelector('main tbody tr'); if (r) r.click(); return ""; })()`);
+      await sleep(settleMs);
+      const landed = await evaluate(cdp, "location.pathname");
+      const match = String(landed).match(/\/tickets\/([A-Za-z0-9-]+)$/);
+      if (match) ticketKey = match[1];
     }
     log(ticketKey ? `ticketKey = ${ticketKey}` : "ticketKey unresolved — error state will be NOT-RUN");
 
@@ -330,7 +339,7 @@ async function main() {
         await runErrorAndRetry({
           cdp,
           width,
-          projectPath,
+          projectFlat,
           ticketKey,
           navigate,
           evaluate,
@@ -356,10 +365,10 @@ async function main() {
         }),
       );
       cells.push(
-        await runKeyboard({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }),
+        await runKeyboard({ cdp, width, projectFlat, navigate, evaluate, screenshot, runAxe }),
       );
       cells.push(
-        await runResponsive({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }),
+        await runResponsive({ cdp, width, projectPath, projectFlat, navigate, evaluate, screenshot, runAxe }),
       );
     }
 
@@ -370,6 +379,7 @@ async function main() {
       baseUrl,
       widths,
       projectPath,
+      projectFlat,
       ticketKey: ticketKey || null,
       planned,
       counts,
