@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState, useTransition } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -54,8 +54,13 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed" },
 ];
 
+const PAGE_SIZE = 20;
+
 export function CampaignListPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
   const layout = useTenantLayout(CAMPAIGN_LAYOUT);
   const money = useOrgDisplay();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -64,18 +69,50 @@ export function CampaignListPage() {
   const canManageCampaigns = useCan("crm:campaigns:manage");
   const canViewReports = useCan("crm:reports:view");
 
+  const page = Number(searchParams.get("page")) || 1;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
   const { data, isLoading, isError, refetch } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
-    limit: 50,
+    page,
+    limit: PAGE_SIZE,
   });
 
   const campaigns = data?.items ?? [];
+  const total = data?.total ?? 0;
   const isFiltered = statusFilter !== "all";
   const statusFilterLabel =
     STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
-  const handleClearFilters = useCallback(() => setStatusFilter("all"), []);
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    updateParams({ page: null });
+  }, [updateParams]);
+  const handleStatusFilterChange = useCallback(
+    (value: string) => {
+      setStatusFilter(value);
+      updateParams({ page: null });
+    },
+    [updateParams],
+  );
+  const handlePageChange = useCallback(
+    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
+    [updateParams],
+  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -99,7 +136,7 @@ export function CampaignListPage() {
       subtitle="Track lead sources and ROI"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36")} aria-label="Status">
               <SelectValue />
             </SelectTrigger>
@@ -170,6 +207,13 @@ export function CampaignListPage() {
             density={density}
             money={money}
             minWidth="900px"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total,
+              onPageChange: handlePageChange,
+            }}
             className={CONTENT_FILL_PANEL}
           />
         )}

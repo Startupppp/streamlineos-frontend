@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { label: "Pipelines", href: "/crm/settings/pipelines" },
   { label: "Options", href: "/crm/settings/options" },
+  { label: "Subject Types", href: "/crm/settings/subject-types" },
   { label: "Validation Rules", href: "/crm/settings/validation-rules" },
   { label: "Data Quality", href: "/crm/settings/data-quality" },
   { label: "Blueprints", href: "/crm/settings/blueprints" },
