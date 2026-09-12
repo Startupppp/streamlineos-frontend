@@ -81,7 +81,7 @@ The organization role and module standing are independent. Individual grants sur
 - [x] AB-06 Verify list, detail, mutation, export, attachment and background access for representative own/all/none cases; a held permission is not object membership. `ScopedRead` installs tenant and scope; no cast or dropped predicate. ADR 0005 currently documents team behaving as own without materialized team data: either hide unsupported team choices or implement one approved tenant-scoped team contract with tests, not a misleading broader label. Verify disabled product and per-user module deny against API and all navigation surfaces. Inbox/calendar/chat remain available to active members while private objects retain ACLs.
 - [x] AB-07 Test trial start/expiry, missing subscription (FREE), active STARTER/PROFESSIONAL/ENTERPRISE, payment failure, PAST_DUE grace, expiry, cancellation, renewal and downgrade using a fake clock. Trace cron-produced states against `resolveTier` (which currently does not read `currentPeriodEnd` for ACTIVE); specify the existing grace policy before changing it. Same-plan ACTIVE card currently disables purchasing: verify whether renewal/cycle-change is actually supported or falsely described as automatic renewal. Paid activation must retain annual term and agreed price; downgrade preserves data and core communication. Test January 31/leap-day/month-end terms under the agreed anniversary policy. billing-webhook-effects.ts sends every payment.failed to billing-payment-state.ts, which picks an ACTIVE subscription without purchase/period association: failed AI-pack purchases or delayed unrelated failures must not mark subscriptions PAST_DUE. Validate seats against pending/expired/cancelled invites, employee without login, suspension/removal/reactivation, guests, enterprise negotiated seats and parallel last-seat admission.
 - [x] AB-08 Apply the cache matrix below. Measure cold/warm request and query counts; use shared Query hooks with their existing actor/tenant hash, not global component state. Do not add cache to correctness-sensitive membership/quota/payment transition checks. After purchase, invalidate frontend access/module visibility as well as subscription/summary/entitlements/seats where those depend on tier; after webhook reconciliation, refresh the user's status with bounded polling/realtime and stop at terminal state. Keep reads during refresh visible; never render configuration failure merely because access is still loading.
-- [ ] AB-09 Search source, exports, route registration, dynamic imports, test fixtures, schema relations and migration journal before deleting or merging a file. Consolidate duplicate contract types in `hooks/api/subscription.ts` against existing schema-derived contracts; verify static pricing duplicates in `lib/pricing.ts`, `PlanCard`, plan catalog and coupon validation before choosing their canonical owner. Remove stale route comment in `PlanCard` naming retired `/billing/subscription/order` only alongside verified checkout work. Do not delete provider resolver/adapter, seat ledger, access cache or durable payment history because a path looks redundant. Record each removal and replacement.
+- [x] AB-09 Search source, exports, route registration, dynamic imports, test fixtures, schema relations and migration journal before deleting or merging a file. Consolidate duplicate contract types in `hooks/api/subscription.ts` against existing schema-derived contracts; verify static pricing duplicates in `lib/pricing.ts`, `PlanCard`, plan catalog and coupon validation before choosing their canonical owner. Remove stale route comment in `PlanCard` naming retired `/billing/subscription/order` only alongside verified checkout work. Do not delete provider resolver/adapter, seat ledger, access cache or durable payment history because a path looks redundant. Record each removal and replacement.
 - [x] AB-10 Make first billing-profile access race-safe using the existing unique tenant contract; prefer a side-effect-free default read or atomic upsert where required. Trace `isTaxExempt` through invoice/tax calculations and platform/customer edit boundaries; customer-supplied status must not silently become platform-verified exemption. Test concurrent first reads, profile validation and cross-tenant access without legal/tax policy invention.
 - [x] AB-11 Coordinate people P3's expired-invitation reservation under the canonical member-quota lock. Test another invite taking the last seat and concurrent resends; people owns the resend implementation and this lane owns the shared seat definition.
 
@@ -119,7 +119,8 @@ content is this lane's and matches the working tree.
 | AB-05 / AB-06 | Done | `six-standings-matrix`, `record-scope-sql`, `universal-surfaces-carry-no-module-gate`, `assignment-cap-determinism` |
 | AB-07 | Done | `resolveTier` honours `current_period_end`; expiry sweep added; `nextPeriodEnd` clamps month end |
 | AB-08 | Partial | Cache writers audited and invalidation tested; **no measured cold/warm request or SQL counts** |
-| AB-09 | OPEN | Frontend contract dedup done; `knip`/module-graph dead-code proof not run |
+| Gates | Added | backend `tsc --noEmit` 0 errors in-lane (2 remain in another session's `organization/onboarding` spec); frontend `tsc --noEmit` 0; `madge --circular` 0 in both repos |
+| AB-09 | Done | `knip` + `madge` run in both repos; `billablePrice` consolidated onto `resolveQuotePrice`; dead `successSchema` re-export removed; `UNSCHEDULED_BILLING_JOBS` deliberately kept as a decision ledger |
 | AB-10 | Done | `billing-profile-race.spec.ts` |
 | AB-11 | Done | Seat idempotency double now enforces the partial unique index |
 | AB-12 | Done | `marketplace-catalog-contract.spec.ts`; `extra_storage` no longer advertised; `/settings/billing/ai-credits` |
@@ -132,10 +133,30 @@ Runs, `backend/` unless noted:
 - frontend `features/billing` + `hooks/api/__tests__/billing`: **7 suites, 97 tests, exit 0**
 - frontend `lib/rbac/permissions/__tests__/catalog-sync.test.ts`: **10 tests, exit 0**
 
+Second verification pass, 2026-09-12 (commits `e21d45de0`, `7cf3c79a6`):
+
+- backend `tsc --noEmit` went from **34 errors to 2**, and **0 in this lane**; the
+  two remaining are another session's `organization/onboarding` spec.
+- `madge --circular`: **0 cycles**, backend 6,589 files and frontend 6,046 files.
+- frontend `tsc --noEmit`: **0 errors**.
+- backend billing + access + rbac + module-access + ownership + cron:
+  **200 suites, 2419 tests, exit 0**.
+- frontend billing + rbac catalog + pricing: **9 suites, 115 tests, exit 0**.
+- `pnpm check:route-classification`: exit 0.
+
+The typecheck earned its place: it caught an arity break jest could not see. The
+webhook's subscription-activation branch took an **optional** `activation`
+dependency that `BillingService` never passed, so a capture arriving with no
+browser callback activated nothing -- while all 782 billing tests were green. It
+also guarded on `purchase !== null` with callers passing four of five arguments,
+so `purchase` was `undefined` and the guard admitted it. Both are fixed.
+
+Separately, `period-expiry` was declared and routed but had no scheduler runner,
+no dead-man alert entry and no operator-contract line: a sweep nothing watches.
+
 BLOCKED, not passed: live/sandbox provider charge, browser and keyboard/responsive
 acceptance, migration `1090` applied to any database, `.db.spec` and `*e2e-spec`
-suites, measured cache/request budgets, full-repo typecheck and production build.
-`madge --circular` and `knip` were not run.
+suites, measured cache/request budgets, and a production build.
 
 Residual risks: the rank read is deterministic but still capped at 100, so an
 actor beyond that cap can lose standing; `couponRedemptions.amountPaise` changed
