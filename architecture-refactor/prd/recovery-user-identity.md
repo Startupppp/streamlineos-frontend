@@ -33,7 +33,7 @@ All backend routes below use `backend/src/modules/auth/auth.controller.ts`; the 
 | `POST /auth/magic-link` | `useSendMagicLink` -> `requestMagicLink` | Public IP tier; shared identity upsert; email failure consumes issued token | Provider delivery/retry requires disposable transport |
 | `/verify-email` -> `POST /auth/verify-email` | `useVerifyEmail` -> `AuthEmailVerificationService.verifyEmail` -> credentials bridge | Read token, separate update/delete, then issue auto-login token | Source defect I2; previous simulated reproduction is not rerun evidence |
 | `POST /auth/resend-verification` | `useResendVerificationEmail` -> `resendVerification` | Generic response; deletes prior verification rows, inserts new hash, sends email | Delivery failure/concurrent resend test gap |
-| `POST /auth/register` | Public legacy API -> `AuthService.register`; no frontend `/auth/register` caller found | Immediately creates verified user, organization, owner membership, trial and modules; identity projection after transaction | Placement compensation suite passes; proof-of-email defect I3 |
+| ~~`POST /auth/register`~~ | **REMOVED (I3)** — no consumer existed; the e2e suite now asserts 404 | Formerly stamped `emailVerified` from submitted input and provisioned an org: a second signup engine any anonymous caller could drive | Removal evidenced by knip (no orphan in `modules/auth`) + regenerated OpenAPI |
 | Google callback -> `POST /auth/google` | NextAuth `signIn` -> `resolveGoogleUser` -> `AuthService.googleOAuth` | Internal-secret boundary; Google account ID lookup then normalized-email link/create; login session | `auth-internal-secret-gate.spec.ts`; provider claim trust and simultaneous create require further tests |
 | Session read -> `GET /auth/session-data/:userId` | NextAuth session/jwt callbacks -> `fetchSessionData[Cached]` -> `getSessionData` | Internal secret; 60s backend `CACHE_KEYS.userSession(userId)`; identity organization index + live membership + subscription/module reads | Source traced; failure/null routing and post-mutation freshness need integrated checks |
 | Session read -> `POST /auth/session-exchange` | `exchangeSessionForBackendJwt` -> controller | Internal secret + signed 30s proof + nonce + account/membership checks; returns session-bound JWT | `auth-session-exchange.spec.ts` passes; frontend cache key breaks device identity (I1) |
@@ -46,10 +46,10 @@ All backend routes below use `backend/src/modules/auth/auth.controller.ts`; the 
 
 Evidence: `frontend/lib/auth.ts:211` constructs `${userId}:${claims.orgId ?? ""}`; `auth-session.ts` keeps that token in a process-level Map. Exchange signs `sessionId` into the returned JWT. Device B with the same user/organization on the same worker therefore receives device A's token. A token-based logout can revoke A; a later login can reuse the revoked cached token. This is session confusion within one account, not a claim of cross-user disclosure.
 
-- [ ] Exercise the real NextAuth session callback with two session IDs for one user/org and a stubbed exchange. First callback fills the store; second must receive a JWT for its own session. Decode and assert the session claim, not merely unequal strings.
-- [ ] Include user, session and org in the cache identity; add scoped in-flight coalescing only if measured contention requires it (the current Map does not provide it). Bound/evict expired entries (current expiry removal only happens on lookup, allowing abandoned keys to remain).
-- [ ] Reject/recover malformed or missing session IDs through the established login path; inspect the existing random-ID compatibility fallback before changing it. A new fallback ID must not bypass server session registration/revocation.
-- [ ] Acceptance: concurrent A/B sessions stay distinct; revoke A leaves B usable; new login after A logout succeeds; org A/B tokens stay isolated; expired entries cannot grow indefinitely. Coordinate server-store invalidation with logout; clearing the browser token cache alone cannot clear a server Map.
+- [x] Exercise the real NextAuth session callback with two session IDs for one user/org and a stubbed exchange. First callback fills the store; second must receive a JWT for its own session. Decode and assert the session claim, not merely unequal strings.
+- [x] Include user, session and org in the cache identity; add scoped in-flight coalescing only if measured contention requires it (the current Map does not provide it). Bound/evict expired entries (current expiry removal only happens on lookup, allowing abandoned keys to remain).
+- [x] Reject/recover malformed or missing session IDs through the established login path; inspect the existing random-ID compatibility fallback before changing it. A new fallback ID must not bypass server session registration/revocation.
+- [x] Acceptance: concurrent A/B sessions stay distinct; revoke A leaves B usable; new login after A logout succeeds; org A/B tokens stay isolated; expired entries cannot grow indefinitely. Coordinate server-store invalidation with logout; clearing the browser token cache alone cannot clear a server Map.
 
 ### I2 — P1: verification is not atomically consumed (confirmed source defect)
 
@@ -57,55 +57,55 @@ Evidence: `auth-email-verification.service.ts:27-65` reads a valid record then i
 
 Historical evidence (2026-09-12): a deterministic adapter around the actual verification method produced two successes and two login tokens from one proof (expected one; exit 1, no external connections). This is not PostgreSQL proof; preserve the interleaving in a durable regression rather than rely on the temporary harness.
 
-- [ ] Add a concurrent two-call reproduction against the actual service with a controlled token-store seam, then a disposable database race test for transaction correctness.
-- [ ] Claim the exact unexpired hashed token atomically and perform verified-state plus auto-login-token writes in the same transaction. Claim failure returns the existing invalid/expired contract. Preserve a newly resent token created after the old token was selected.
-- [ ] Add active/deleted-account checks before issuing login material. Downstream magic verification already denies inactive/deleted accounts; preserve that second boundary.
-- [ ] Acceptance: exactly one successful result for a token; expired/replayed token produces none; rollback permits safe retry after insert failure; resending versus verifying has documented deterministic behavior.
+- [x] Add a concurrent two-call reproduction against the actual service with a controlled token-store seam, then a disposable database race test for transaction correctness.
+- [x] Claim the exact unexpired hashed token atomically and perform verified-state plus auto-login-token writes in the same transaction. Claim failure returns the existing invalid/expired contract. Preserve a newly resent token created after the old token was selected.
+- [x] Add active/deleted-account checks before issuing login material. Downstream magic verification already denies inactive/deleted accounts; preserve that second boundary.
+- [x] Acceptance: exactly one successful result for a token; expired/replayed token produces none; rollback permits safe retry after insert failure; resending versus verifying has documented deterministic behavior.
 
 ### I3 — P1: public legacy registration asserts email verification without proof (confirmed source defect)
 
 Evidence: controller `register` is `@Public()` and service `register` sets `emailVerified: new Date()` from arbitrary submitted email. It neither validates email possession nor sends verification. The current `/signin` uses OTP/Google and a frontend search found no `/auth/register` caller. Absence of a frontend caller does not prove no external clients.
 
-- [ ] Search SDKs, API contracts, tests, docs and external-client compatibility records for legacy registration. Record whether it must be retained. Coordinate its provisioning transaction with the organization owner.
-- [ ] Remove unsupported exposure if no supported consumer exists, updating OpenAPI/contracts/tests; otherwise require the established verified identity before provisioning. Do not add a second signup engine or grant verification from input.
-- [ ] Acceptance: anonymous caller cannot create a verified identity for another address; OTP/Google new-user setup remains supported; existing account request stays enumeration-resistant; transaction/index failure does not create a second organization on retry.
+- [x] Search SDKs, API contracts, tests, docs and external-client compatibility records for legacy registration. Record whether it must be retained. Coordinate its provisioning transaction with the organization owner.
+- [x] Remove unsupported exposure if no supported consumer exists, updating OpenAPI/contracts/tests; otherwise require the established verified identity before provisioning. Do not add a second signup engine or grant verification from input.
+- [x] Acceptance: anonymous caller cannot create a verified identity for another address; OTP/Google new-user setup remains supported; existing account request stays enumeration-resistant; transaction/index failure does not create a second organization on retry.
 
 ### I4 — P1: failed credentials sign-in can report success for an unrelated existing session (confirmed source defect)
 
 Evidence: `frontend/hooks/common/auth-hooks.ts:57-74` falls back from a failed token sign-in to `Boolean(session?.user)`. An already signed-in user A opening invalid user B invitation/magic material can be reported as successfully signed in. Invitation outcome handling is owned by the people lane; this helper owns truthful identity establishment.
 
-- [ ] Reproduce with failed credentials result plus existing A session; require failure unless success is positively bound to the newly established intended session. Also test server success with lost response using the agreed identity/session proof.
-- [ ] Remove unconditional existing-session success; return an explicit outcome that callers can distinguish. Do not retry a consumed single-use credential. Coordinate any result-contract change with invitation callers.
-- [ ] Acceptance: invalid/expired token never navigates as successful because another account exists; genuine successful sign-in navigates once; ambiguous network outcome offers safe reauthentication without claiming success.
+- [x] Reproduce with failed credentials result plus existing A session; require failure unless success is positively bound to the newly established intended session. Also test server success with lost response using the agreed identity/session proof.
+- [x] Remove unconditional existing-session success; return an explicit outcome that callers can distinguish. Do not retry a consumed single-use credential. Coordinate any result-contract change with invitation callers.
+- [x] Acceptance: invalid/expired token never navigates as successful because another account exists; genuine successful sign-in navigates once; ambiguous network outcome offers safe reauthentication without claiming success.
 
 ### I5 — P2: sign-in controls contradict available actions (confirmed source defects)
 
 Evidence: `frontend/features/auth/components/passwordless-signin-form.tsx:177` renders Verify only for 1–5 digits while line 181 disables it unless six, so the manual control is never usable. Auto-submit still exists; this does not mean OTP login always fails. `signin/page.tsx` exposes Microsoft from `!!NEXT_PUBLIC_MICROSOFT_ENABLED`, but `auth.ts` registers only Google and Credentials. Both provider flags also treat the string `"false"` as true.
 
-- [ ] Make six-digit paste, keyboard submit and explicit button verification converge on one pending-guarded action. Render a usable fallback, visible progress and inline error/live-region feedback; prevent double request from auto-submit plus click.
-- [ ] Render only configured supported providers from a canonical availability contract; parse booleans explicitly. Remove unsupported Microsoft surface/hook if product support is absent; do not implement a new integration in this assignment.
-- [ ] Acceptance: 0–5 digits cannot submit; six digits can submit exactly once; resend/back while verification is pending cannot redirect with a stale response; 429 cooldown, network error, expired code, keyboard focus and 320px view are usable.
+- [x] Make six-digit paste, keyboard submit and explicit button verification converge on one pending-guarded action. Render a usable fallback, visible progress and inline error/live-region feedback; prevent double request from auto-submit plus click.
+- [x] Render only configured supported providers from a canonical availability contract; parse booleans explicitly. Remove unsupported Microsoft surface/hook if product support is absent; do not implement a new integration in this assignment.
+- [x] Acceptance: 0–5 digits cannot submit; six digits can submit exactly once; resend/back while verification is pending cannot redirect with a stale response; 429 cooldown, network error, expired code, keyboard focus and 320px view are usable.
 
 ### I6 — P1: switch success ignores failed claim refresh (confirmed control-flow gap; observed symptom unverified)
 
 Evidence: `useSwitchOrg.onSuccess` awaits `refreshSessionClaims` but ignores its nullable result, clears queries and redirects. The helper resolves null after 18s or update failure. Server `fetchSessionData` makes up to two 8s attempts, so a stalled identity read can materially delay transitions; this is not proof of the reported 1–2 minute provisioning cause.
 
-- [ ] Coordinate a single switch contract with organization/frontend-data owners: block tenant reads during switch, require fresh session.orgId equals mutation result, then release reads and navigate. On timeout show recoverable pending/error state; do not announce completed switch.
-- [ ] Test delayed old-org query completion across switch, rejected switch, refresh null, refreshed wrong org, two tabs, suspended destination and rapid A/B/A switching. Clear/cancel only under the agreed Query ownership contract.
-- [ ] Fence or serialize refresh generations: timeout resolves null without cancelling NextAuth `update()`. Test timeout of A, successful switch to B, then late A completion; stale completion must not overwrite or release reads under the new scope.
-- [ ] Instrument identity read, exchange and claim refresh separately in a disposable run; use bounded retry only for transient statuses. Never cache authorization failures as a successful session to reduce latency.
+- [x] Coordinate a single switch contract with organization/frontend-data owners: block tenant reads during switch, require fresh session.orgId equals mutation result, then release reads and navigate. On timeout show recoverable pending/error state; do not announce completed switch.
+- [x] Test delayed old-org query completion across switch, rejected switch, refresh null, refreshed wrong org, two tabs, suspended destination and rapid A/B/A switching. Clear/cancel only under the agreed Query ownership contract.
+- [x] Fence or serialize refresh generations: timeout resolves null without cancelling NextAuth `update()`. Test timeout of A, successful switch to B, then late A completion; stale completion must not overwrite or release reads under the new scope.
+- [x] Instrument identity read, exchange and claim refresh separately in a disposable run; use bounded retry only for transient statuses. Never cache authorization failures as a successful session to reduce latency.
 
 ## Required gap checks before closing this lane
 
-- [ ] Auth transport deadlines: test stalled headers and bodies for credentials, Google bridge, session-data and session-exchange. Credentials Axios and Google fetch lack local deadlines; session fetch timers clear before body parsing in `frontend/lib/auth-session.ts`. Bound the whole operation through parsing and clear timers in finally. Ambiguous one-use-token consumption requires safe reauthentication, not blind retry; infrastructure timeouts are a separate check.
+- [x] Auth transport deadlines: test stalled headers and bodies for credentials, Google bridge, session-data and session-exchange. Credentials Axios and Google fetch lack local deadlines; session fetch timers clear before body parsing in `frontend/lib/auth-session.ts`. Bound the whole operation through parsing and clear timers in finally. Ambiguous one-use-token consumption requires safe reauthentication, not blind retry; infrastructure timeouts are a separate check.
 
-- [ ] Identity creation: mixed-case/trimmed email, simultaneous OTP/magic/Google creation, unique-email conflict recovery, inactive/deleted identity, malformed DTO and rate-limited request. `findOrCreateUser` already uses conflict fallback; preserve it. Google new-user transaction lacks equivalent fallback: reproduce before labeling it broken.
-- [ ] OTP: first/fifth/sixth wrong attempt; resend invalidates prior code; parallel resends and delivery inversion; expiry between initial read and atomic claim; failure after consume before auto-login insert. Current consume predicate checks usedAt but not expiry/attempts at final claim: establish race evidence before repair.
-- [ ] OAuth: verify trusted provider email semantics, subject binding, missing email, denied consent, wrong secret, duplicate callback, existing email account linking and disabled/deleted account. Use provider fixtures locally; real provider verification remains environment work.
-- [ ] Verification page: missing token, replay, transient failure then retry, unmount/remount after `attemptedTokens` entry, navigation to a different token, and successful verification followed by failed login. The module-level Set can suppress remount work without restoring UI result; reproduce in a browser/component test before changing dedupe.
-- [ ] Session: no org routes to setup, suspended preference shows access-suspended, owner reaches organization gate, employee reaches employee gate, platform operator uses its dedicated route. Exercise actual server layout + `requireSession`/wizard/access seams, not only isolated predicates.
-- [ ] Revocation: current, all-other, admin, inactive account, expired session, missing session, Redis miss/error and database error. `JwtAuthGuard` already has tombstone/database fallback: inspect it and existing session tests before suggesting new caching. Session exchange currently checks Redis tombstone but not the session row; determine acceptance policy and test revoked-session exchange with absent Redis, without falsely claiming issued JWT necessarily bypasses guarded APIs.
-- [ ] Logout: a failed backend logout is swallowed by `useSignOut`; verify cookie clearing and report whether server revocation completed. Reproduce offline logout/reconnect and distinguish local signout from remote-device revocation. Do not silently promise global revocation.
+- [x] Identity creation: mixed-case/trimmed email, simultaneous OTP/magic/Google creation, unique-email conflict recovery, inactive/deleted identity, malformed DTO and rate-limited request. `findOrCreateUser` already uses conflict fallback; preserve it. Google new-user transaction lacks equivalent fallback: reproduce before labeling it broken.
+- [x] OTP: first/fifth/sixth wrong attempt; resend invalidates prior code; parallel resends and delivery inversion; expiry between initial read and atomic claim; failure after consume before auto-login insert. Current consume predicate checks usedAt but not expiry/attempts at final claim: establish race evidence before repair.
+- [x] OAuth: verify trusted provider email semantics, subject binding, missing email, denied consent, wrong secret, duplicate callback, existing email account linking and disabled/deleted account. Use provider fixtures locally; real provider verification remains environment work.
+- [x] Verification page: missing token, replay, transient failure then retry, unmount/remount after `attemptedTokens` entry, navigation to a different token, and successful verification followed by failed login. The module-level Set can suppress remount work without restoring UI result; reproduce in a browser/component test before changing dedupe.
+- [ ] Session: no org routes to setup, suspended preference shows access-suspended, owner reaches organization gate, employee reaches employee gate, platform operator uses its dedicated route. Exercise actual server layout + `requireSession`/wizard/access seams, not only isolated predicates. **PARTIAL — 4 of 5 clauses done** in `app/(authenticated)/session-gate.test.tsx` (13 tests through the real layout + `requireSession` + `resolveWizardGate` + MFA): no org → `/org-setup`, suspended → `/access-suspended`, owner → the organization gate, employee → the employee gate. The remaining clause, **platform operator uses its dedicated route, is NOT IMPLEMENTABLE** as written: `/owner` does not exist under `frontend/app/**`, and neither `Session` nor `AuthSessionData` carries a platform-admin claim — the concept exists only as the backend `PLATFORM_ADMIN_USER_IDS` env allowlist (`common/rbac/platform-operators.ts`). It needs a session-data claim plus a new route, which is a NEW REQUIREMENT for an owner, not a repair in this lane. Today a platform operator with no organization lands at `/org-setup`, which `wizard-gate.test.ts` documents.
+- [x] Revocation: current, all-other, admin, inactive account, expired session, missing session, Redis miss/error and database error. `JwtAuthGuard` already has tombstone/database fallback: inspect it and existing session tests before suggesting new caching. Session exchange currently checks Redis tombstone but not the session row; determine acceptance policy and test revoked-session exchange with absent Redis, without falsely claiming issued JWT necessarily bypasses guarded APIs.
+- [x] Logout: a failed backend logout is swallowed by `useSignOut`; verify cookie clearing and report whether server revocation completed. Reproduce offline logout/reconnect and distinguish local signout from remote-device revocation. Do not silently promise global revocation.
 
 ## Cache and cleanup contract
 
@@ -116,9 +116,9 @@ Evidence: `useSwitchOrg.onSuccess` awaits `refreshSessionClaims` but ignores its
 | Credentials/proofs/token claims | Existing token tables, one-use atomic claims | `no-store` for HTTP identity/token responses; never memoize verification outcomes as reusable credentials |
 | Organization picker and permissions | Existing Query keys/access provider | Agree switch cancellation and tenant-key ownership with frontend-data lane; dedupe shared reads without hoisting page-specific data into global bootstrap |
 
-- [ ] Search declarations and consumers before adding identity types/schemas/hooks. Reuse canonical response schemas; replace `unwrapBackend<T>` forced casts at security boundaries with runtime contracts without unrelated API refactoring.
-- [ ] Treat legacy register, Microsoft hook/surface and redundant auth response types as candidates, not preapproved deletions. Preserve live verify-email/resend and migration/token schema compatibility until proven unused.
-- [ ] Every deletion needs import graph/knip evidence, dynamic route/export/script/doc references, relevant build and contract checks. Schema removal additionally needs migration/raw SQL/FK checks. Do not erase historical migration evidence or delete a live table because it is empty.
+- [x] Search declarations and consumers before adding identity types/schemas/hooks. Reuse canonical response schemas; replace `unwrapBackend<T>` forced casts at security boundaries with runtime contracts without unrelated API refactoring.
+- [x] Treat legacy register, Microsoft hook/surface and redundant auth response types as candidates, not preapproved deletions. Preserve live verify-email/resend and migration/token schema compatibility until proven unused.
+- [x] Every deletion needs import graph/knip evidence, dynamic route/export/script/doc references, relevant build and contract checks. Schema removal additionally needs migration/raw SQL/FK checks. Do not erase historical migration evidence or delete a live table because it is empty.
 
 ## Verification record and handoff
 
@@ -248,6 +248,22 @@ The second-to-last row is deliberate: `isAccountActive` is Redis-cached for
 `MEMBERSHIP_STATUS_TTL_SECONDS`, and a direct row write bypasses the writer that
 busts it. The product's deactivation path invalidates immediately, so both halves
 are recorded rather than mistaking correct behaviour for a leak.
+
+### Measured: the identity hops are not the reported delay
+
+Instrumented against the live backend on the local disposable stack, three calls each:
+
+| Hop | Cold | Warm | Warm |
+| --- | --- | --- | --- |
+| `GET /auth/session-data/:userId` | 30.2 ms | 8.9 ms | 7.3 ms |
+| `POST /auth/session-exchange` | 20.3 ms | 14.8 ms | 13.3 ms |
+
+Worst observed hop **30.2 ms** against frontend deadlines of 8 s (session-data, two
+attempts) and 8 s (exchange). **The 18 s claim-refresh timeout is therefore not reachable by
+these two hops on a healthy stack**, so the reported 1–2 minute provisioning delay does not
+originate here. That is a discriminating observation for the organization-setup lane, which owns
+the remaining candidates; this lane's I6 repair makes the switch refuse to *announce* completion
+on a stalled refresh, which is a truthfulness fix and was never claimed to be the latency fix.
 
 ### BLOCKED — the one gate that remains
 
