@@ -44,8 +44,6 @@ import { useDealLayout } from "./use-deal-layout";
  * confirmation still fire.
  */
 
-const PAGE_SIZE = 25;
-
 interface DealRowActionsProps {
   deal: RecordValue;
   stages: readonly CrmPipelineStage[];
@@ -104,6 +102,10 @@ export interface DealListProps {
   canCreate: boolean;
   canUpdate: boolean;
   activeFilterLabels: string[];
+  /** Server-mode pagination over `deals` -- see the windowing note below. */
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
   onRetry: () => void;
   onClearFilters: () => void;
   onCreateDeal: () => void;
@@ -118,6 +120,9 @@ export function DealList({
   canCreate,
   canUpdate,
   activeFilterLabels,
+  page,
+  pageSize,
+  onPageChange,
   onRetry,
   onClearFilters,
   onCreateDeal,
@@ -129,6 +134,21 @@ export function DealList({
   const { data: stages } = useCrmStages("deal");
 
   const rows = useMemo(() => asRecordValues(deals.map(dealRecordFields)), [deals]);
+  /**
+   * CRM-P4-AUDIT. `deals` here is the tenant's whole matching set -- the same
+   * array the kanban board, the stats bar and the search box all read from
+   * (see `app/(authenticated)/crm/deals/page.tsx`), because `/deals` returns
+   * no total count and has no server-side text search. Slicing it here still
+   * gets the one thing `DataTable`'s `mode: "server"` exists for: the DOM
+   * never renders more than one page of rows. It does not shrink the network
+   * request -- that needs the backend to support paging with a count, at
+   * which point this can become a real second query instead of a slice.
+   */
+  const pageStart = (page - 1) * pageSize;
+  const pagedRows = useMemo(
+    () => rows.slice(pageStart, pageStart + pageSize),
+    [rows, pageStart, pageSize],
+  );
 
   const handleRowClick = useCallback(
     (row: RecordValue) => router.push(`/crm/deals/${String(row.id)}`),
@@ -157,8 +177,8 @@ export function DealList({
    * Checked before the loading branch on purpose: a query that was never allowed
    * to run has no loading state worth waiting for.
    */
-  if (useCanState("crm:leads:view") === "denied")
-    return <NoPermissionState permission="crm:leads:view" />;
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
 
   if (isLoading)
     return <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />;
@@ -191,13 +211,19 @@ export function DealList({
   return (
     <RecordList
       layout={layout}
-      rows={rows}
+      rows={pagedRows}
       getRowKey={(row) => String(row.id)}
       onRowClick={handleRowClick}
       actions={renderActions}
       density={density}
       money={money}
-      pagination={{ pageSize: PAGE_SIZE }}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize,
+        total: rows.length,
+        onPageChange,
+      }}
       minWidth="1100px"
       className={CONTENT_FILL_PANEL}
     />
