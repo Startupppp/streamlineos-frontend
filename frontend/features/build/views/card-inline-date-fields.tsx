@@ -11,18 +11,20 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { InlineFieldWrapper } from "./card-inline-fields";
 import { format, parseISO, isValid } from "date-fns";
-import { Calendar as CalendarIcon, CalendarClock } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface InlineDueDateProps {
   ticketId: number;
   projectId: number;
   currentDueDate?: string | null;
+  fallbackDate?: string | null;
 }
 
 export const InlineDueDate = memo(function InlineDueDate({
   ticketId,
   projectId,
   currentDueDate,
+  fallbackDate,
 }: InlineDueDateProps) {
   const [open, setOpen] = useState(false);
   const updateTicket = useUpdateTicket(projectId, {
@@ -35,6 +37,15 @@ export const InlineDueDate = memo(function InlineDueDate({
         return isValid(d) ? d : undefined;
       })()
     : undefined;
+
+  const fallbackParsed = !parsedDate && fallbackDate
+    ? (() => {
+        const d = parseISO(fallbackDate);
+        return isValid(d) ? d : undefined;
+      })()
+    : undefined;
+
+  const displayDate = parsedDate ?? fallbackParsed;
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
@@ -57,19 +68,19 @@ export const InlineDueDate = memo(function InlineDueDate({
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Set due date"
           >
-            <CalendarClock
+            <CalendarIcon
               className={cn(
-                "h-3 w-3 shrink-0",
-                parsedDate ? "text-foreground" : "text-muted-foreground/50",
+                "h-3.5 w-3.5 shrink-0",
+                displayDate ? "text-muted-foreground" : "text-muted-foreground/50",
               )}
             />
             <span
               className={cn(
-                "text-micro",
-                parsedDate ? "text-foreground" : "text-muted-foreground/50",
+                "text-xs",
+                displayDate ? "text-muted-foreground" : "text-muted-foreground/50",
               )}
             >
-              {parsedDate ? format(parsedDate, "MMM d") : "Due date"}
+              {displayDate ? format(displayDate, "MMM d, yyyy") : "Due date"}
             </span>
           </button>
         </PopoverTrigger>

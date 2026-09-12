@@ -6,7 +6,7 @@ import {
   type DraggableProvidedDragHandleProps,
   type DraggableProvidedDraggableProps,
 } from "@hello-pangea/dnd";
-import { Plus } from "lucide-react";
+import { FileText, CircleCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuickAddInput } from "./kanban-quick-add";
 import { KanbanColumnHeader } from "./kanban-column-header";
@@ -74,7 +74,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
       ref={columnInnerRef}
       {...columnDraggableProps}
       className={cn(
-        "flex w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-lg border bg-muted/20 min-h-0",
+        "flex w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-2xl border bg-muted/30 min-h-0",
         overWip && "border-destructive/60",
         isColumnDragging && "opacity-95 shadow-lg ring-2 ring-primary/20",
       )}
@@ -111,17 +111,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
               )}
             >
               {!snapshot.isDraggingOver ? (
-                <div
-                  className={cn(
-                    "flex flex-col items-center justify-center text-center",
-                    minHeightClass === "min-h-[60px]" ? "py-6" : "py-8",
-                  )}
-                >
-                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50">
-                    <Plus className="h-4 w-4 text-muted-foreground/50" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Drop tickets here</p>
-                </div>
+                <ColumnEmptyState column={column} compact={minHeightClass === "min-h-[60px]"} />
               ) : null}
               {provided.placeholder}
             </div>
@@ -151,3 +141,60 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
     </div>
   );
 });
+
+function ColumnEmptyState({
+  column,
+  compact,
+}: {
+  column: KanbanColumn;
+  compact: boolean;
+}) {
+  const kind = emptyColumnKind(column);
+  const copy = EMPTY_COLUMN_COPY[kind];
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-6" : "py-10",
+      )}
+    >
+      <div
+        className={cn(
+          "mb-3 flex h-11 w-11 items-center justify-center rounded-xl",
+          kind === "done" ? "bg-status-success-surface" : "bg-muted/70",
+        )}
+      >
+        {kind === "done" ? (
+          <CircleCheck className="h-5 w-5 text-status-success-ink" />
+        ) : (
+          <FileText className="h-5 w-5 text-muted-foreground/70" />
+        )}
+      </div>
+      <p className="text-sm font-medium text-foreground">{copy.title}</p>
+      <p className="mt-1 max-w-[12rem] text-xs text-muted-foreground">{copy.hint}</p>
+    </div>
+  );
+}
+
+const EMPTY_COLUMN_COPY = {
+  progress: {
+    title: "No tickets in progress",
+    hint: "Drag tickets here when work begins.",
+  },
+  done: {
+    title: "No completed tickets",
+    hint: "Drag tickets here when they're done.",
+  },
+  default: {
+    title: "No tickets",
+    hint: "Drag tickets here to get started.",
+  },
+} as const;
+
+function emptyColumnKind(column: KanbanColumn): keyof typeof EMPTY_COLUMN_COPY {
+  const haystack = `${column.id} ${column.name}`.toLowerCase();
+  if (haystack.includes("progress") || haystack.includes("doing")) return "progress";
+  if (haystack.includes("done") || haystack.includes("complete")) return "done";
+  return "default";
+}

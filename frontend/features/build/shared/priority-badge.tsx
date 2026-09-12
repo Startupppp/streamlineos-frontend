@@ -20,8 +20,8 @@ const config = {
   HIGH: {
     label: "High",
     icon: ArrowUp,
-    color: "text-status-warning-ink",
-    bg: "bg-status-warning-surface",
+    color: "text-category-orange-ink",
+    bg: "bg-category-orange-surface",
   },
   MEDIUM: {
     label: "Medium",

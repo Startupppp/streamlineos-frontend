@@ -21,19 +21,30 @@ import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { InlineFieldWrapper } from "./card-inline-fields";
 import { Check, Tag, RefreshCw, Zap } from "lucide-react";
 import type { TicketLabel } from "@/types/projects";
+import { resolveLabelColor } from "@/components/labels/label-colors";
 
 const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
+
+const TYPE_PILL_CLASS: Record<string, string> = {
+  BUG: "bg-status-info-surface text-status-info-ink",
+  TASK: "bg-muted text-muted-foreground",
+  STORY: "bg-status-success-surface text-status-success-ink",
+  EPIC: "bg-category-orange-surface text-category-orange-ink",
+  SUBTASK: "bg-muted text-muted-foreground",
+};
 
 interface InlineTypeProps {
   ticketId: number;
   projectId: number;
   currentType?: string | null;
+  showLabel?: boolean;
 }
 
 export const InlineType = memo(function InlineType({
   ticketId,
   projectId,
   currentType,
+  showLabel = false,
 }: InlineTypeProps) {
   const [open, setOpen] = useState(false);
   const updateTicket = useUpdateTicket(projectId, {
@@ -53,10 +64,21 @@ export const InlineType = memo(function InlineType({
         <ResponsivePopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center rounded p-0.5 hover:bg-muted/60 transition-colors"
+            className={cn(
+              "inline-flex items-center rounded p-0.5 hover:bg-muted/60 transition-colors",
+              showLabel &&
+                cn(
+                  "gap-1 rounded-full px-2 py-0.5 text-xs font-medium hover:opacity-90",
+                  TYPE_PILL_CLASS[currentType ?? "TASK"] ?? TYPE_PILL_CLASS.TASK,
+                ),
+            )}
             aria-label="Change type"
           >
-            <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
+            {showLabel ? (
+              typeConfig[currentType ?? "TASK"]?.label ?? currentType ?? "Task"
+            ) : (
+              <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
+            )}
           </button>
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent title="Type" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-32")} align="start">
@@ -102,6 +124,7 @@ export const InlineLabels = memo(function InlineLabels({
   }, [currentIdsKey]);
 
   const selectedIds = optimisticIds ?? currentLabelIds;
+  const selectedLabels = labels.filter((label) => selectedIds.includes(label.id));
 
   const addLabel = useAddLabelToTicket({
     onError: (e) => {
@@ -140,17 +163,31 @@ export const InlineLabels = memo(function InlineLabels({
         <ResponsivePopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-0.5 rounded p-0.5 hover:bg-muted/60 transition-colors"
+            className="inline-flex max-w-full items-center gap-1 rounded p-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Edit labels"
           >
-            <Tag
-              className={cn(
-                "h-3.5 w-3.5 shrink-0",
-                selectedIds.length > 0 ? "text-foreground" : "text-muted-foreground/50",
-              )}
-            />
-            {selectedIds.length > 0 && (
-              <span className="text-micro text-muted-foreground font-mono">{selectedIds.length}</span>
+            {selectedLabels.length > 0 ? (
+              <span className="flex min-w-0 flex-wrap items-center gap-1">
+                {selectedLabels.slice(0, 2).map((label) => (
+                  <span
+                    key={label.id}
+                    className="max-w-[7.5rem] truncate rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    style={{
+                      backgroundColor: `${resolveLabelColor(label.color)}1a`,
+                      color: resolveLabelColor(label.color),
+                    }}
+                  >
+                    {label.name}
+                  </span>
+                ))}
+                {selectedLabels.length > 2 ? (
+                  <span className="text-xs text-muted-foreground">
+                    +{selectedLabels.length - 2}
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
             )}
           </button>
         </ResponsivePopoverTrigger>

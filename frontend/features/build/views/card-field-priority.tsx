@@ -31,12 +31,14 @@ interface InlinePriorityProps {
   ticketId: number;
   projectId: number;
   currentPriority?: string | null;
+  showLabel?: boolean;
 }
 
 export const InlinePriority = memo(function InlinePriority({
   ticketId,
   projectId,
   currentPriority,
+  showLabel = false,
 }: InlinePriorityProps) {
   const [open, setOpen] = useState(false);
   const updateTicket = useUpdateTicket(projectId, {
@@ -59,7 +61,11 @@ export const InlinePriority = memo(function InlinePriority({
             className="inline-flex rounded p-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Change priority"
           >
-            <PriorityBadge priority={currentPriority} />
+            <PriorityBadge
+              priority={currentPriority}
+              showLabel={showLabel}
+              className={showLabel ? "bg-transparent px-0" : undefined}
+            />
           </button>
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent

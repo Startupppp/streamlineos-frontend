@@ -26,7 +26,7 @@ import type { KanbanTicket, DisplayOptions } from "../shared/types";
 
 export const TICKET_DND_TYPE = "TICKET";
 
-const DEFAULT_ROW_HEIGHT = 118;
+const DEFAULT_ROW_HEIGHT = 148;
 const ROW_GAP_PX = 6;
 const OVERSCAN_COUNT = 6;
 
