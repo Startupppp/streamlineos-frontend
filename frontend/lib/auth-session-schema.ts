@@ -19,6 +19,7 @@ export const sessionDataSchema = z.object({
   userOnboardingCompletedAt: z.string().nullable(),
   organizationAccess: z.enum(["active", "suspended", "none"]),
   suspendedOrganizationName: z.string().nullable(),
+  isPlatformAdmin: z.boolean().default(false),
 });
 
 export type SessionData = z.infer<typeof sessionDataSchema>;

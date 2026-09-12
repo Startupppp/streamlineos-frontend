@@ -155,6 +155,19 @@ describe("(authenticated) layout — session gate routing", () => {
     expect(result.redirectedTo).toBe("/access-suspended");
   });
 
+  it("routes a platform operator with no organization to its own route, not a wizard", async () => {
+    getServerAuthMock.mockResolvedValue(
+      activeSession({
+        orgId: null,
+        organizationAccess: "none",
+        isPlatformAdmin: true,
+      }),
+    );
+    const result = await runLayout();
+    expect(result.redirectedTo).toBe("/owner");
+    expect(prefetchAccessMock).not.toHaveBeenCalled();
+  });
+
   it("routes an account with no organization to organization setup", async () => {
     getServerAuthMock.mockResolvedValue(
       activeSession({ orgId: null, organizationAccess: "none" }),

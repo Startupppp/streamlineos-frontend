@@ -6,6 +6,7 @@ export type WizardGate =
   | "/access-suspended"
   | "/org-setup"
   | "/employee-onboarding"
+  | "/owner"
   | null;
 
 interface GateCookieReader {
@@ -21,6 +22,12 @@ export function resolveWizardGate(
   const isOrgOwner = session.user?.isOrgOwner === true;
 
   if (session.organizationAccess === "suspended") return "/access-suspended";
+
+  // Root section 8: the onboarding wizards are never shown to a platform
+  // operator. They hold PLATFORM_ONLY_PERMISSION_KEYS by deployment allowlist
+  // rather than by membership, so an operator without an organization has
+  // nothing to set up and belongs on their own route.
+  if (session.isPlatformAdmin === true && !orgId) return "/owner";
 
   if (!orgId) return "/org-setup";
 

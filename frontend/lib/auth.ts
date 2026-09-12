@@ -122,6 +122,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
           user.organizationAccess = claims.organizationAccess;
           user.suspendedOrganizationName = claims.suspendedOrganizationName;
+          user.isPlatformAdmin = claims.isPlatformAdmin;
         }
       }
       return true;
@@ -142,6 +143,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationAccess = user.organizationAccess ?? "none";
         token.suspendedOrganizationName =
           user.suspendedOrganizationName ?? null;
+        token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = user.sessionId ?? `~${randomUUID()}`;
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
@@ -163,6 +165,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
             token.organizationAccess = claims.organizationAccess;
             token.suspendedOrganizationName = claims.suspendedOrganizationName;
+            token.isPlatformAdmin = claims.isPlatformAdmin;
           } else if (
             session &&
             typeof session === "object" &&
@@ -210,6 +213,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
         session.organizationAccess = claims.organizationAccess;
         session.suspendedOrganizationName = claims.suspendedOrganizationName;
+        session.isPlatformAdmin = claims.isPlatformAdmin;
 
         const rawSessionId = token.sessionId?.trim();
         const sessionIsRegistered =
@@ -254,6 +258,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.userOnboardingCompletedAt = claims.userOnboardingCompletedAt;
         session.organizationAccess = claims.organizationAccess;
         session.suspendedOrganizationName = claims.suspendedOrganizationName;
+        session.isPlatformAdmin = claims.isPlatformAdmin;
         return session;
       }
     },

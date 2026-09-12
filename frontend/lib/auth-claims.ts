@@ -17,6 +17,7 @@ export interface FreshClaims {
   userOnboardingCompletedAt?: string | null;
   organizationAccess?: "active" | "suspended" | "none";
   suspendedOrganizationName?: string | null;
+  isPlatformAdmin?: boolean;
 }
 
 export interface TokenClaims {
@@ -30,6 +31,7 @@ export interface TokenClaims {
   userOnboardingCompletedAt?: string | null;
   organizationAccess?: "active" | "suspended" | "none";
   suspendedOrganizationName?: string | null;
+  isPlatformAdmin?: boolean;
 }
 
 export interface SessionClaims {
@@ -45,6 +47,7 @@ export interface SessionClaims {
   userOnboardingCompletedAt: string | null;
   organizationAccess: "active" | "suspended" | "none";
   suspendedOrganizationName: string | null;
+  isPlatformAdmin: boolean;
 }
 
 export function resolveSessionDisplayName(data: {
@@ -89,5 +92,7 @@ export function resolveSessionClaims(
     suspendedOrganizationName: fresh
       ? (fresh.suspendedOrganizationName ?? null)
       : (token.suspendedOrganizationName ?? null),
+    isPlatformAdmin:
+      (fresh ? fresh.isPlatformAdmin : token.isPlatformAdmin) ?? false,
   };
 }

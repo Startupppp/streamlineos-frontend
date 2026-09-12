@@ -29,14 +29,54 @@ function withCookie(name: string) {
 }
 
 describe("resolveWizardGate", () => {
-  describe("platform admin gap — /owner route not built", () => {
-    it("an account with no orgId lands at /org-setup (platform admin cannot be distinguished in the current Session type)", () => {
+  describe("platform operator routes to /owner, never into a wizard", () => {
+    it("a platform operator with no organization lands at /owner, not /org-setup", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: null,
+            organizationAccess: "none",
+            isPlatformAdmin: true,
+          }),
+          noCookies,
+        ),
+      ).toBe("/owner");
+    });
+
+    it("an ordinary account with no organization still lands at /org-setup", () => {
       expect(
         resolveWizardGate(
           session({ orgId: null, organizationAccess: "none" }),
           noCookies,
         ),
       ).toBe("/org-setup");
+    });
+
+    it("a suspended membership still wins over operator standing", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: null,
+            organizationAccess: "suspended",
+            isPlatformAdmin: true,
+          }),
+          noCookies,
+        ),
+      ).toBe("/access-suspended");
+    });
+
+    it("an operator who also belongs to an organization is admitted to it, not diverted", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            isPlatformAdmin: true,
+            userOnboardingCompletedAt: "2026-01-01T00:00:00.000Z",
+          }),
+          noCookies,
+        ),
+      ).toBeNull();
     });
   });
 

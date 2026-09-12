@@ -13,6 +13,7 @@ declare module "next-auth" {
     userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
     organizationAccess?: SessionClaims["organizationAccess"];
     suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
+    isPlatformAdmin?: SessionClaims["isPlatformAdmin"];
     backendJwt?: string;
     authProvider?: string;
     user: {
@@ -36,6 +37,7 @@ declare module "next-auth" {
     userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
     organizationAccess?: SessionClaims["organizationAccess"];
     suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
+    isPlatformAdmin?: SessionClaims["isPlatformAdmin"];
     name?: string | null;
     sessionId?: string;
   }
@@ -54,6 +56,7 @@ declare module "next-auth/jwt" {
     userOnboardingCompletedAt?: SessionClaims["userOnboardingCompletedAt"];
     organizationAccess?: SessionClaims["organizationAccess"];
     suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
+    isPlatformAdmin?: SessionClaims["isPlatformAdmin"];
     authProvider?: string;
   }
 }
