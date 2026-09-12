@@ -2,10 +2,21 @@
 
 Required acceptance and independent implementation review: [full-stack completion contract](README.md#mandatory-full-stack-completion-contract).
 
-Status: PARTIAL — implementation exists; measured journey cost, cross-tab/revocation,
-cache-failure, UI and current-build acceptance remain open. Not a whole-app rewrite.
-Source audit: 2026-09-12. Read root/frontend/backend `CLAUDE.md`,
+Status: PARTIAL — FD2, FD3, FD8 and FD9 are closed; FD4 is measured and its dataset
+blocker is cleared; FD5 has source findings but no injected fault. What remains is
+**one browser/build window**, not further source work: FD1 runtime waterfalls, the FD6
+route-bundle manifest, and FD7 screenshots all need a production build and an
+uncontended `scratch_local`. Not a whole-app rewrite.
+Updated 2026-09-12 after the origin/main merge. Read root/frontend/backend `CLAUDE.md`,
 `architecture-refactor/AGENTS.md` and this directory's index before starting.
+
+The merge regressed four frontend gates that were green before it (`check-over-300` 525
+vs the 513 baseline, `check-file-sizes` on a 578-line `week-grid.tsx`,
+`check-request-params`, `check-dead-code`). Those are ARCH-003's, tracked in
+[release-completion.md](release-completion.md); no baseline or ceiling was raised to
+absorb them. Several `hooks/api/accounting/**` exports read as unused only because the
+merge deleted their consumers — confirm against `git log --diff-filter=D` before giving
+any of them a dead-code verdict.
 
 Own query/provider/prefetch integration only when reserved by the coordinator.
 Resume only the remaining FD tasks below. Before shared-file implementation, the coordinator
@@ -67,7 +78,7 @@ flowchart TD
   mutation. Mark KEEP / REPAIR / CONSOLIDATE / REMOVE only with consumer evidence.
   Completion: duplicate HTTP, repeated SQL and duplicate React subscriptions are
   separately counted; no global prefetch just to reduce visible hook count.
-- [ ] **FD3 — Write the invalidation matrix before adding caching.** For every
+- [x] **FD3 — Write the invalidation matrix before adding caching.** For every
   changed read list its writers, org/actor/record dimensions, version, TTL, expiry,
   invalidation timing, stale failure policy and cross-tab effect. Test logout,
   org A→B, same user/different session, grant revoke, employee removal, module
@@ -122,11 +133,11 @@ that supply the entry point/badge; gating them on an already-open view hides acc
 | --- | --- | --- |
 | FD1 | OPEN runtime inventory | Six journeys source-inventoried. Hook/key coalescing is not measured zero HTTP; capture actual cold/warm/focus/reconnect/mutation waterfalls. |
 | FD2 | SOURCE IMPLEMENTATION COMPLETE | Key/hydration/read gating repairs exist; runtime coalescing and waterfall proof remains FD1. |
-| FD3 | OPEN cross-tab and revocation proof | Calendar invalidation and I6 switch fencing are implemented; writer matrix corrections and bounded revocation acceptance below remain. |
-| FD4 | BLOCKED on DATASET, not environment | Inspected list paths have server bounds; caps do not prove completeness or bounded underlying work. 3 MEDIUM findings. `scratch_local` **was reached** and probed as the RLS-bound role — but the tenant holds **1 active member**, so a plan proves nothing |
-| FD5 | OPEN fault injection | Two recorded post-commit/stampede findings; cache-miss fallback does not prove fresh authorization on a cache hit or atomic quota admission. Coordinate with access/billing. |
+| FD3 | DONE | All seven scenarios answered. The two that were open are now pinned by tests: grant revoke is **version-keyed** (`orgId:userId:version`), not a plain TTL, so a bump invalidates rather than waiting out an expiry — ~0 ms same-process, ≤1 s cross-process. Employee removal denies on all four surfaces; the weakest is named rather than averaged away — Ably token revocation runs after commit with a 1 h TTL backstop. `access-version-revocation.spec.ts` + `jwt-auth.guard.spec.ts` 17/17. [Evidence](evidence/frontend-data/fd3-revocation-acceptance.md) |
+| FD4 | MEASURED; one path still unmeasured | The dataset blocker is **cleared** — the tenant now holds **500 ACTIVE members**, not 1. Plans taken as `streamline_app` under the tenant GUC after `VACUUM ANALYZE`: roster and unselective search are org-led and bounded (36 buffers via `idx_org_members_org_status`); a *selective* search flips the driver to a `Seq Scan on users`, and `users` carries no RLS, so that cost tracks the **global** user count, not the tenant's members. Two audit claims corrected: the proposed trigram indexes **already exist** and are reachable, and `idx_chat_messages_unread` does not carry `channel_position` — `idx_chat_messages_unread_position` does. Chat paths remain unmeasured: `chat_messages` holds 0 rows. [Evidence](evidence/frontend-data/fd4-measured-query-plans.md) · [source gaps](evidence/frontend-data/fd4-source-gap-resolution.md) |
+| FD5 | SOURCE FINDINGS; fault injection NOT run | Seats PASS — `lockMembersQuota` is held by all five writers and `seatCount` counts members plus live pending invitations in one SQL, so a reserved seat cannot be double-sold. Two MEDIUM findings: fourteen other `assertWithinLimit` call sites are check-then-act with no lock and no transaction (`projects-provision` checks at :35, opens its transaction at :46); and `void maybeAlertQuota(...)` writes to the DB while setting its Redis dedup key independently of that write, so a rolled-back request marks the 80%/100% quota alert sent and never delivers it. No fault was injected — these are code-path findings. [Evidence](evidence/frontend-data/fd5-quota-admission-atomicity.md) |
 | FD6 | PARTIAL | Bypass removed; production build recorded. Current bundle manifest is STALE, not a usable budget verdict; browser timing and current integrated type/build gates remain. |
-| FD7 | PARTIAL | Icon-label gate extended to any button size + 7 real fixes. Remaining findings listed in the evidence file. **No screenshots or browser interaction** — contract gate 8 is BLOCKED |
+| FD7 | SOURCE COMPLETE; screenshots still blocked | Every F1–F10 finding plus the calendar observation is now resolved. F1/F2/F9 were already fixed and were verified rather than redone; F3 (chat `PageWrapper`), F4/F5 (hardcoded skeleton heights and a raw `animate-pulse`), F6 (`CONTENT_PANEL_SOLID`), F7 (canonical `DataTable` cursor mode), F8 (`Tabs`/`PageTabsToolbar` replacing `aria-pressed` pills), F10 (`TABS_CONTENT_PAGE_BODY_CLASS`) and the calendar `ErrorState` landed this pass. `CursorPageControls` was **kept**, not deleted — it has 8 live consumers — and is now in the frontend CLAUDE.md §15 index. 12 tests pass. **Still no screenshots, no 200% zoom and no keyboard run** — those need the browser window. [Findings](evidence/frontend-data/fd7-ui-consistency.md) |
 | FD8 | DONE (audit) | knip: 221 findings, **0 confirmed dead**; every one KEEP-BY-DESIGN or boundary-validation. Nothing deleted |
 | FD9 | DONE | 5/5 unit tests pass (`fd9-provider-failure-connection-release.spec.ts`, exit 0). Every request-path provider call confirmed outside its transaction; outbox consumer isolation confirmed mitigated by `withDeliveryDeadline`. Ops gaps linked to OPS-001/002/003/004 in `evidence/frontend-data/fd9-provider-failure-and-handoff.md`. |
 
