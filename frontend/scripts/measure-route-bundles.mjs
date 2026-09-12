@@ -75,8 +75,18 @@ export function chunksFromManifestSource(source) {
     if (!entries || typeof entries !== "object") continue;
     for (const entry of Object.values(entries)) {
       if (!entry || typeof entry !== "object") continue;
+      /*
+       * `chunks` alternates webpack chunk ID and emitted file path
+       * (["1234", "static/chunks/abc.js", …]). Adding the IDs as if they were
+       * paths made every route report about half its "chunks" as missing from
+       * disk, which reads as a systematic undercount — it is not: an ID
+       * resolves to no file and contributes 0 bytes, so the byte totals were
+       * always right and only the missing counter was wrong.
+       */
       if (Array.isArray(entry.chunks))
-        for (const c of entry.chunks) if (typeof c === "string") chunks.add(c);
+        for (const c of entry.chunks)
+          if (typeof c === "string" && c.includes("/") && c.endsWith(".js"))
+            chunks.add(c);
     }
   }
   return chunks;
@@ -246,6 +256,19 @@ function runMeasure() {
     manifest.budgets[r.route].measuredFirstLoadJsBytes = r.firstLoadJsBytes;
     manifest.budgets[r.route].measuredPageChunkBytes = r.pageOnly;
   }
+  /*
+   * check-route-bundle-budget refuses a manifest whose `buildId` does not match
+   * `.next/BUILD_ID`, and its failure text tells you to re-run this measurement
+   * to stamp it — but this writer never did, so the gate could not be satisfied
+   * by any number of re-runs. Stamping it here is what closes that loop.
+   */
+  const buildIdPath = join(NEXT_DIR, "BUILD_ID");
+  if (!existsSync(buildIdPath))
+    throw new Error(
+      "Refusing to record a measurement with no .next/BUILD_ID to attribute it to — run a production build first.",
+    );
+  manifest.buildId = readFileSync(buildIdPath, "utf8").trim();
+  manifest.measuredAt = new Date().toISOString();
   writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log("\nWrote measured bytes into contracts/route-bundle-manifest.json.");
 }

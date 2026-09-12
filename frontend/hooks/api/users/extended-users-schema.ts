@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import type { ResponseContract } from "@/lib/api-envelope";
+import type { InvitationsResponse } from "./types";
 
 /**
  * Response contracts for `UsersController`, `UserProfileService` and
@@ -8,12 +10,6 @@ import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
  * Derived from `users-response.schemas.ts` in the backend.
  *
  * DISAGREEMENTS FOUND:
- * - `invitationListResponseSchema` in the backend uses cursor-page pagination,
- *   but the frontend `InvitationsResponse` type uses offset pagination
- *   `{ page, limit, total, totalPages }`. The frontend hook sends a `page`
- *   query param. Since the hook sends `page`, offset pagination is likely still
- *   active; using the frontend-observed shape here until the backend is confirmed
- *   to have switched.
  * - `inviteUserResponseSchema` returns `organizationName: z.string()` that the
  *   frontend type does not include. The contract accepts it (no .strict()).
  * - Backend `userPreferencesResponseSchema` has `updatedAt: wireDate().optional()`
@@ -159,24 +155,17 @@ const invitationItemContract = z.object({
   id: z.string(),
   email: z.string(),
   role: z.string(),
-  invitedBy: z.string(),
   expiresAt: z.string(),
   acceptedAt: z.string().nullable(),
   createdAt: z.string(),
   status: z.enum(["PENDING", "ACCEPTED", "DECLINED", "EXPIRED", "REVOKED"]),
   revokedAt: z.string().nullable(),
+  declinedAt: z.string().nullable(),
   deliveryFailed: z.boolean(),
 });
 
-export const invitationsResponseContract = z.object({
-  data: z.array(invitationItemContract),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }),
-});
+export const invitationsResponseContract: ResponseContract<InvitationsResponse> =
+  cursorPageContract(invitationItemContract);
 
 export const inviteUserContract = z.object({
   success: z.literal(true),
@@ -185,10 +174,13 @@ export const inviteUserContract = z.object({
 });
 
 export const bulkInviteContract = z.object({
+  deliveryMode: z.enum(["background", "enqueue"]),
   results: z.array(z.object({
     email: z.string(),
+    originalEmail: z.string(),
     success: z.boolean(),
     invitationId: z.string().optional(),
+    isDuplicate: z.boolean().optional(),
     error: z.string().optional(),
   })),
 });

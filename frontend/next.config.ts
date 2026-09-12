@@ -56,7 +56,6 @@ const nextConfig: NextConfig = {
   },
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
-  typescript: { ignoreBuildErrors: true },
   experimental: {
     webpackBuildWorker: true,
     webpackMemoryOptimizations: true,
