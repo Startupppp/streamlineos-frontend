@@ -28,7 +28,11 @@ import { BulkRejectDialog } from "./bulk-reject-dialog";
 import { ApprovalDetailSheet } from "./approval-detail-sheet";
 import { summarizeBorrowedAuthority } from "./approval-standing";
 import { DelegateActingBanner } from "./delegate-acting-banner";
-import { ApprovalsTabPanel, type ApprovalTab } from "./approvals-tab-panel";
+import {
+  APPROVALS_TABPANEL_ID,
+  ApprovalsTabPanel,
+  type ApprovalTab,
+} from "./approvals-tab-panel";
 import { ApprovalTabFilter } from "./approval-tab-filter";
 
 export function ApprovalsView() {
@@ -46,15 +50,17 @@ export function ApprovalsView() {
   /**
    * Whose authority the viewer would be using is decided on membership ids: a
    * period names its owner and its assigned approver by `organization_members.id`
-   * on both backends, and the period contract parses nothing else. So the
-   * comparison needs the viewer's own membership id, and no read this page can
-   * make carries one yet — `/me/access` has none and `/organization/members`
-   * needs `settings:view`, which a line manager's delegate does not hold. The
-   * session's `users.id` would never match, and would mark every assigned row
-   * as borrowed. Until a membership id is exposed the banner stays silent rather
-   * than claiming authority it cannot evidence.
+   * on both backends, and the period contract parses nothing else. `/me/access`
+   * carries the caller's own membership id for exactly this, because the session
+   * holds a `users.id` that would match no period, and `/organization/members`
+   * needs `settings:view`, which a line manager's delegate need not hold. A
+   * principal with no membership (an agent token, a system job) reads null and
+   * the banner stays silent rather than claiming authority it cannot evidence.
    */
-  const viewerMembershipId: string | null = null;
+  const viewerMembershipId: string | null =
+    accessData?.membershipId === null || accessData?.membershipId === undefined
+      ? null
+      : String(accessData.membershipId);
   const shouldReduceMotion = useReducedMotion();
 
   const [activeTab, setActiveTab] = useState<ApprovalTab>("SUBMITTED");
@@ -256,7 +262,7 @@ export function ApprovalsView() {
           className="shrink-0"
         />
         <div
-          id="approvals-tabpanel"
+          id={APPROVALS_TABPANEL_ID}
           role="tabpanel"
           aria-labelledby={`approvals-tab-${activeTab}`}
           className="flex min-h-0 flex-1 flex-col"

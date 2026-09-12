@@ -152,7 +152,9 @@ describe("approvals accessibility", () => {
     const user = userEvent.setup();
     renderApprovals();
 
-    expect(screen.getByRole("checkbox", { name: "Select all" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: "Select all rows on this page" }),
+    ).toBeInTheDocument();
     const rowBoxes = screen.getAllByRole("checkbox", { name: "Select row" });
     expect(rowBoxes).toHaveLength(ROWS.length);
 

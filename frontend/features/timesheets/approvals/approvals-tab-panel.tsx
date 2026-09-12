@@ -19,6 +19,8 @@ export type ApprovalTab = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJE
 
 export const ALL_APPROVAL_TABS: ApprovalTab[] = ["SUBMITTED", "APPROVED", "REJECTED"];
 
+export const APPROVALS_TABPANEL_ID = "approvals-tabpanel";
+
 export const APPROVAL_TAB_LABEL: Record<ApprovalTab, string> = {
   SUBMITTED: "Pending",
   APPROVED: "Approved",

@@ -52,15 +52,20 @@ const access = useAccess as unknown as jest.Mock;
 const approvals = useApprovals as unknown as jest.Mock;
 const employees = useHrEmployees as unknown as jest.Mock;
 
-const ME = "usr_me";
-const MANAGER = "usr_manager";
-const DIRECTOR = "usr_director";
+const ME_MEMBERSHIP = 101;
+const MANAGER_MEMBERSHIP = 202;
+const DIRECTOR_MEMBERSHIP = 303;
+const WORKER_MEMBERSHIP = 404;
+
+const ME = String(ME_MEMBERSHIP);
+const MANAGER = String(MANAGER_MEMBERSHIP);
+const DIRECTOR = String(DIRECTOR_MEMBERSHIP);
 
 function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
   return {
     id: 1,
     orgId: "org_1",
-    userId: "usr_worker",
+    userMembershipId: WORKER_MEMBERSHIP,
     periodStart: "2026-09-07",
     periodEnd: "2026-09-13",
     status: "SUBMITTED",
@@ -71,7 +76,7 @@ function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
     approvedAt: null,
     rejectedAt: null,
     lockedAt: null,
-    currentApproverId: null,
+    currentApproverMembershipId: null,
     rejectionReason: null,
     createdAt: "2026-09-07T00:00:00.000Z",
     updatedAt: "2026-09-14T09:00:00.000Z",
@@ -164,20 +169,22 @@ describe("delegate acting banner", () => {
 });
 
 interface ViewState {
-  viewerId?: string | null;
+  viewerMembershipId?: number | null;
   isOrgOwner?: boolean;
   periods?: TimesheetPeriod[];
 }
 
 function renderApprovals({
-  viewerId = ME,
+  viewerMembershipId = ME_MEMBERSHIP,
   isOrgOwner = false,
   periods = [],
 }: ViewState = {}) {
   session.mockReturnValue({
-    data: viewerId ? { user: { id: viewerId }, orgId: "org_1" } : null,
+    data: { user: { id: "usr_me" }, orgId: "org_1" },
   });
-  access.mockReturnValue({ data: { isOrgOwner, scopes: {} } });
+  access.mockReturnValue({
+    data: { membershipId: viewerMembershipId, isOrgOwner, scopes: {} },
+  });
   approvals.mockReturnValue({
     data: { pages: [{ data: periods, pagination: { limit: 25, nextCursor: null, hasMore: false } }], pageParams: [undefined] },
     hasNextPage: false,
@@ -205,8 +212,8 @@ describe("approvals page delegate banner", () => {
   it("appears on the page when the pending queue belongs to someone else", () => {
     renderApprovals({
       periods: [
-        period({ id: 1, currentApproverId: MANAGER }),
-        period({ id: 2, currentApproverId: MANAGER }),
+        period({ id: 1, currentApproverMembershipId: MANAGER_MEMBERSHIP }),
+        period({ id: 2, currentApproverMembershipId: MANAGER_MEMBERSHIP }),
       ],
     });
 
@@ -218,8 +225,8 @@ describe("approvals page delegate banner", () => {
   it("does not appear when every pending timesheet is the viewer's own to decide", () => {
     renderApprovals({
       periods: [
-        period({ id: 1, currentApproverId: ME }),
-        period({ id: 2, currentApproverId: null }),
+        period({ id: 1, currentApproverMembershipId: ME_MEMBERSHIP }),
+        period({ id: 2, currentApproverMembershipId: null }),
       ],
     });
 
@@ -232,10 +239,10 @@ describe("approvals page delegate banner", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
-  it("does not claim borrowed authority before the session has resolved", () => {
+  it("does not claim borrowed authority for a principal with no membership", () => {
     renderApprovals({
-      viewerId: null,
-      periods: [period({ id: 1, currentApproverId: MANAGER })],
+      viewerMembershipId: null,
+      periods: [period({ id: 1, currentApproverMembershipId: MANAGER_MEMBERSHIP })],
     });
 
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
@@ -244,7 +251,7 @@ describe("approvals page delegate banner", () => {
   it("tells an org owner they are overriding, not standing in", () => {
     renderApprovals({
       isOrgOwner: true,
-      periods: [period({ id: 1, currentApproverId: MANAGER })],
+      periods: [period({ id: 1, currentApproverMembershipId: MANAGER_MEMBERSHIP })],
     });
 
     expect(screen.getByRole("status")).toHaveTextContent(

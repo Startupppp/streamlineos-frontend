@@ -2,7 +2,12 @@
 
 import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { ALL_APPROVAL_TABS, APPROVAL_TAB_LABEL, type ApprovalTab } from "./approvals-tab-panel";
+import {
+  ALL_APPROVAL_TABS,
+  APPROVALS_TABPANEL_ID,
+  APPROVAL_TAB_LABEL,
+  type ApprovalTab,
+} from "./approvals-tab-panel";
 
 interface ApprovalTabFilterProps {
   value: ApprovalTab;
@@ -68,7 +73,7 @@ export function ApprovalTabFilter({ value, onChange }: ApprovalTabFilterProps) {
             id={`approvals-tab-${tab}`}
             data-tab={tab}
             aria-selected={active}
-            aria-controls="approvals-tabpanel"
+            aria-controls={APPROVALS_TABPANEL_ID}
             tabIndex={active ? 0 : -1}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
