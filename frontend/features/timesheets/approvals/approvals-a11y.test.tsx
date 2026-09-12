@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
-import { useHrEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import { ApprovalsView } from "./approvals-view";
 
@@ -27,11 +26,6 @@ jest.mock("@/hooks/api/timesheets-core/approvals", () => ({
   useBulkReject: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
-jest.mock("@/hooks/api/hr", () => ({
-  useHrEmployees: jest.fn(() => ({ data: [] })),
-  unwrapEmployees: (raw: unknown) => (Array.isArray(raw) ? raw : []),
-}));
-
 const openedPeriods: (TimesheetPeriod | null)[] = [];
 
 jest.mock("./approval-detail-sheet", () => ({
@@ -45,7 +39,6 @@ const session = useSession as unknown as jest.Mock;
 const access = useAccess as unknown as jest.Mock;
 const gate = usePermissionGate as unknown as jest.Mock;
 const approvals = useApprovals as unknown as jest.Mock;
-const employees = useHrEmployees as unknown as jest.Mock;
 
 function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
   return {
@@ -110,7 +103,6 @@ beforeEach(() => {
   openedPeriods.length = 0;
   session.mockReturnValue({ data: { user: { id: "usr_me" }, orgId: "org_1" } });
   access.mockReturnValue({ data: { isOrgOwner: false, scopes: {} } });
-  employees.mockReturnValue({ data: [] });
   gate.mockReturnValue({
     permission: "timesheets:approvals:view",
     allowed: true,

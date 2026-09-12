@@ -212,8 +212,8 @@ describe("approvals page delegate banner", () => {
   it("appears on the page when the pending queue belongs to someone else", () => {
     renderApprovals({
       periods: [
-        period({ id: 1, currentApproverMembershipId: MANAGER_MEMBERSHIP }),
-        period({ id: 2, currentApproverMembershipId: MANAGER_MEMBERSHIP }),
+        period({ id: 1, currentApproverMembershipId: MANAGER_MEMBERSHIP, user: { membershipId: MANAGER_MEMBERSHIP, name: "Priya Menon", email: "priya@example.com" } }),
+        period({ id: 2, currentApproverMembershipId: MANAGER_MEMBERSHIP, user: { membershipId: MANAGER_MEMBERSHIP, name: "Priya Menon", email: "priya@example.com" } }),
       ],
     });
 

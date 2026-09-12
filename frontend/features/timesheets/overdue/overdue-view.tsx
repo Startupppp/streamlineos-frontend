@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { usePermissionGate, useScope } from "@/hooks/api/access";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import {
   OVERDUE_PAGE_SIZE,
   useOverduePeriods,
@@ -107,11 +106,20 @@ export function OverdueView() {
     page,
   });
 
-  const { data: employeesRaw } = useHrEmployees(
-    { limit: 100 },
-    { enabled: canFilterByMember },
-  );
-  const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
+  const memberOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (data?.items) {
+      for (const item of data.items) {
+        if (item.userId && !map.has(item.userId)) {
+          map.set(item.userId, {
+            id: item.userId,
+            name: item.userName ?? item.userEmail ?? item.userId,
+          });
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [data?.items]);
 
   const thresholds = useMemo(
     () => data?.escalationThresholds ?? [],
@@ -154,9 +162,9 @@ export function OverdueView() {
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
         <SelectItem value={ALL}>All members</SelectItem>
-        {employees.map((emp) => (
+        {memberOptions.map((emp) => (
           <SelectItem key={emp.id} value={emp.id}>
-            {emp.name ?? emp.email}
+            {emp.name}
           </SelectItem>
         ))}
       </SelectContent>

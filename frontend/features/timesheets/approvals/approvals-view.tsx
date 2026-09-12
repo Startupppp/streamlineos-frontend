@@ -20,9 +20,7 @@ import {
   useBulkApprove,
   useBulkReject,
 } from "@/hooks/api/timesheets-core/approvals";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
-import type { EmployeeListItem } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { BulkRejectDialog } from "./bulk-reject-dialog";
@@ -94,21 +92,29 @@ export function ApprovalsView() {
     canAccess,
   );
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: EmployeeListItem[] = useMemo(
-    () => unwrapEmployees(employeesRaw),
-    [employeesRaw],
-  );
-
-  const employeeNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const emp of employees) map.set(emp.id, emp.name ?? emp.email ?? emp.id);
-    return map;
-  }, [employees]);
+  const memberOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (pendingData) {
+      for (const page of pendingData.pages) {
+        for (const period of page.data) {
+          const u = period.user;
+          if (u?.membershipId) {
+            const id = String(u.membershipId);
+            const name = u.name ?? u.email ?? id;
+            if (!map.has(id)) map.set(id, { id, name });
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [pendingData]);
 
   const resolveApproverName = useCallback(
-    (userId: string) => employeeNameById.get(userId) ?? "another approver",
-    [employeeNameById],
+    (userId: string) => {
+      const match = memberOptions.find((m) => m.id === userId);
+      return match?.name ?? "another approver";
+    },
+    [memberOptions],
   );
 
   const borrowedAuthority = useMemo(
@@ -222,9 +228,9 @@ export function ApprovalsView() {
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All members</SelectItem>
-          {employees.map((emp) => (
+          {memberOptions.map((emp) => (
             <SelectItem key={emp.id} value={emp.id}>
-              {emp.name ?? emp.email}
+              {emp.name}
             </SelectItem>
           ))}
         </SelectContent>

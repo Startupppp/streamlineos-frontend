@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { usePermissionGate, useCan, useScope } from "@/hooks/api/access";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import {
   useDismissException,
   useExceptionsSummary,
@@ -95,11 +94,22 @@ export function ExceptionsView() {
 
   const { data: summary, isLoading: isSummaryLoading } = useExceptionsSummary();
 
-  const { data: employeesRaw } = useHrEmployees(
-    { limit: 100 },
-    { enabled: canFilterByMember },
-  );
-  const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
+  const memberOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (exceptions) {
+      for (const page of exceptions.pages) {
+        for (const item of page.data) {
+          const u = item.user;
+          if (u?.membershipId) {
+            const id = String(u.membershipId);
+            const name = u.name ?? u.email ?? id;
+            if (!map.has(id)) map.set(id, { id, name });
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [exceptions]);
 
   const resolveMutation = useResolveException();
   const dismissMutation = useDismissException();
@@ -228,9 +238,9 @@ export function ExceptionsView() {
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value={ALL}>All members</SelectItem>
-            {employees.map((emp) => (
+            {memberOptions.map((emp) => (
               <SelectItem key={emp.id} value={emp.id}>
-                {emp.name ?? emp.email}
+                {emp.name}
               </SelectItem>
             ))}
           </SelectContent>
