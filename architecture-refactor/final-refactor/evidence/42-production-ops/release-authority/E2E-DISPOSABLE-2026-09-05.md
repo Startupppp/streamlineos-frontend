@@ -16,7 +16,7 @@ in this session are labelled (TRUST).
 > HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge,
 > Workflows and Inbox/mail.
 
-The former duplicate `PRD-10-10-TODO.md` was removed after current work moved to `architecture-refactor/prd/README.md`.
+The former duplicate `PRD-10-10-TODO.md` was removed after current work moved to `architecture-refactor/prd/completion-plan.md`.
 
 > - [ ] Run representative disposable-database E2E for Organization/RBAC, Home, Settings,
 > HRMS, Payroll, Build, Billing, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows

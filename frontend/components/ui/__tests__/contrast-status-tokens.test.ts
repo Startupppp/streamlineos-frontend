@@ -71,8 +71,14 @@ describe("WCAG AA contrast — chrome surfaces", () => {
     );
   });
 
-  it("records that muted-foreground on --muted (light) is below AA normal text", () => {
-    expect(ratioOf(lightCss, "muted-foreground", "muted")).toBeLessThan(
+  it("muted-foreground on --muted (light) meets AA normal text — every module renders text-sm muted copy on muted surfaces", () => {
+    expect(ratioOf(lightCss, "muted-foreground", "muted")).toBeGreaterThanOrEqual(
+      WCAG_AA_NORMAL,
+    );
+  });
+
+  it("muted-foreground on --muted (dark) meets AA normal text", () => {
+    expect(ratioOf(darkCss, "muted-foreground", "muted")).toBeGreaterThanOrEqual(
       WCAG_AA_NORMAL,
     );
   });

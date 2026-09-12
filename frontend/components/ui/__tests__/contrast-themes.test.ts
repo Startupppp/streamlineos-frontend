@@ -92,6 +92,7 @@ describe("PRD-C138 contrast — every selectable theme, not just the default", (
     ["card-foreground", "card"],
     ["foreground", "background"],
     ["muted-foreground", "card"],
+    ["muted-foreground", "muted"],
     ["sidebar-foreground", "sidebar"],
     ["sidebar-accent-foreground", "sidebar"],
   ];

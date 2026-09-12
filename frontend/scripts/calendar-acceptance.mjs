@@ -51,6 +51,7 @@ import {
   DEEP_LINK_SOURCE_KEY,
   FOREIGN_EVENT_NUMERIC_ID,
   FOREIGN_ZONE,
+  RETRY_CONTROL_LABELS,
   SYNTHETIC_SOURCES,
   UNIMPLEMENTED_DEEP_LINKS,
   announcementVerdict,
@@ -58,10 +59,13 @@ import {
   classifyCalendarRequest,
   createDeepLinkVerdict,
   deepLinkVerdict,
+  failureSurfaceSettled,
   foreignEventDetail,
   foreignZoneStringVerdict,
   foreignZoneVerdict,
   keyboardVerdict,
+  obstructionVerdict,
+  offRouteVerdict,
   readerZoneExpression,
   sourceFailureVerdict,
   surfaceExpression,
@@ -173,6 +177,61 @@ function runSelfTest() {
     announcementVerdict([{ label: "month → next", movedPeriod: true, liveBefore: "Showing September 2026", liveAfter: "Showing October 2026" }]).ok === true,
   );
   assert("no navigation at all is not a pass", announcementVerdict([]).ok === false);
+
+  assert(
+    "a control nothing covers is operable",
+    obstructionVerdict({ found: true, obstructed: false }, "List View", "360 px").ok === true,
+  );
+  assert(
+    "a covered control is not a calendar failure",
+    obstructionVerdict(
+      { found: true, obstructed: true, x: 285, y: 130, hit: "div.card :: Getting Started", target: "button :: List View" },
+      "List View",
+      "360 px",
+    ).obstructed === true,
+  );
+  assert(
+    "the obstruction reason names what took the press",
+    obstructionVerdict(
+      { found: true, obstructed: true, x: 285, y: 130, hit: "div.card :: Getting Started", target: "button :: List View" },
+      "List View",
+      "360 px",
+    ).reason.includes("Getting Started"),
+  );
+  assert(
+    "an absent control is reported as absent, not as an obstruction",
+    obstructionVerdict({ found: false }, "List View", "360 px").obstructed === false,
+  );
+  assert(
+    "a press that left /calendar did not operate the calendar",
+    offRouteVerdict("http://h/settings/users", "List View").ok === false,
+  );
+  assert(
+    "a press that stayed on /calendar is on route",
+    offRouteVerdict("http://h/calendar?create=1", "Add event").ok === true,
+  );
+
+  assert(
+    "both product retry labels are known to the probe",
+    RETRY_CONTROL_LABELS.includes("Try Again") && RETRY_CONTROL_LABELS.includes("Try again"),
+  );
+  assert(
+    "a surface with no failure has not settled",
+    failureSurfaceSettled({ hasAlert: false, warningBanners: [], retryControls: [] }) === false,
+  );
+  assert(
+    "an announced failure with no retry has not settled",
+    failureSurfaceSettled({ hasAlert: true, warningBanners: [], retryControls: [] }) === false,
+  );
+  assert(
+    "an announced failure offering a retry has settled",
+    failureSurfaceSettled({ hasAlert: true, warningBanners: [], retryControls: ["Try Again"] }) === true,
+  );
+
+  assert(
+    "the event detail fixture carries the optimistic-concurrency version",
+    typeof foreignEventDetail(new Date(), false).localVersion === "number",
+  );
 
   assert("keyboard fails when Tab never lands", keyboardVerdict({ reachedName: null }).ok === false);
   assert(

@@ -3,7 +3,6 @@ import {
   darkCss,
   lightCss,
   resolvePair,
-  WCAG_AA_LARGE,
   WCAG_AA_NORMAL,
   type TokenPair,
 } from "@/test-utils/globals-css-tokens";
@@ -37,20 +36,16 @@ describe("WCAG AA contrast — light mode token pairs", () => {
       bg: "accent",
       label: "accent-foreground on accent",
     },
-  ];
-
-  const secondaryTextPairs: TokenPair[] = [
     {
       fg: "muted-foreground",
       bg: "muted",
-      label: "muted-foreground on muted (secondary/hint text — large-text threshold)",
-      largeTextOnly: true,
+      label:
+        "muted-foreground on muted (text-sm secondary text on a muted surface is normal text)",
     },
     {
       fg: "muted-foreground",
       bg: "background",
       label: "muted-foreground on page background (secondary text)",
-      largeTextOnly: true,
     },
   ];
 
@@ -61,16 +56,6 @@ describe("WCAG AA contrast — light mode token pairs", () => {
       if (!resolved) return;
       const ratio = contrastRatio(resolved.fg, resolved.bg);
       expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
-    });
-  }
-
-  for (const pair of secondaryTextPairs) {
-    it(`${pair.label} meets WCAG AA large-text threshold (${WCAG_AA_LARGE}:1)`, () => {
-      const resolved = resolvePair(lightCss, pair.fg, pair.bg);
-      expect(resolved).not.toBeNull();
-      if (!resolved) return;
-      const ratio = contrastRatio(resolved.fg, resolved.bg);
-      expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     });
   }
 });
@@ -91,6 +76,16 @@ describe("WCAG AA contrast — dark mode token pairs", () => {
       fg: "primary-foreground",
       bg: "primary",
       label: "primary-foreground on primary (dark)",
+    },
+    {
+      fg: "muted-foreground",
+      bg: "muted",
+      label: "muted-foreground on muted (dark)",
+    },
+    {
+      fg: "muted-foreground",
+      bg: "background",
+      label: "muted-foreground on background (dark)",
     },
   ];
 

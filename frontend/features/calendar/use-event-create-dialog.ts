@@ -8,6 +8,7 @@ import {
   useUpdateCalendarEvent,
   useUpsertOccurrenceException,
   useCalendarMemberLookup,
+  useCalendarEvent,
   useEventAttendees,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
@@ -70,6 +71,7 @@ export function useEventCreateDialog({
   const { data: members = [] } = useCalendarMemberLookup();
   const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
+  const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
 
   useEffect(() => {
     if (!open) return;
@@ -235,7 +237,11 @@ export function useEventCreateDialog({
         const numericId = extractEventNumericId(event.id);
         if (numericId === null) { toast.error("Cannot edit this event type"); return; }
         const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = result.payload;
-        await updateEvent.mutateAsync({ id: numericId, ...editPayload });
+        await updateEvent.mutateAsync({
+          id: numericId,
+          ...editPayload,
+          ...(editingDetail ? { expectedVersion: editingDetail.localVersion } : {}),
+        });
         toast.success("Event updated");
       } else {
         const res = await createEvent.mutateAsync(result.payload);
@@ -251,7 +257,7 @@ export function useEventCreateDialog({
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope]);
+  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 

@@ -4,7 +4,7 @@ Next.js web application. The separate `backend/` repository owns business
 endpoints, authorization, database schema, migrations, email and payments.
 
 Read [shared rules](../CLAUDE.md), [frontend rules](CLAUDE.md) and the
-[delivery index](../architecture-refactor/prd/README.md) before changing the app.
+[delivery index](../architecture-refactor/prd/completion-plan.md) before changing the app.
 Historical test counts and build logs are not current release certification.
 
 ## Local development

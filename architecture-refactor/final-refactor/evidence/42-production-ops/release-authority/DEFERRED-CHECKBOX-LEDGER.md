@@ -12,7 +12,7 @@ because it converts a 195-row backlog into three piles with different owners.
 | Backend commit | `2f37e1bb035006e5c03680497298ad62031e79d6` (`release/code-10-10-v2`) |
 | Source of criteria | `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md` |
 | Historical source of ownership | Removed `.scratch/code-release-10-10-v2/TRACEABILITY.md`; retained here only as provenance for the 2026-09-03 classification |
-| Current source of task ownership | `architecture-refactor/prd/README.md` and its indexed module lanes |
+| Current source of task ownership | `architecture-refactor/prd/completion-plan.md` with its in-file task owners |
 | Current mapping gate | `pnpm -C frontend check:prd-traceability` validates indexed lanes, unique task ids, PRD mappings, metadata and dependencies |
 | Author | Automation. **Nothing in this file is signed, and nothing in it may be read as an approval.** |
 
@@ -184,7 +184,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C169 · ticket 33 · Cloud, recovery and operations
 
-> Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
+> Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](../../../../runbooks/RB-01-cell-isolation.md) and [RB-08](../../../../runbooks/RB-08-cell-resource-accounts.md).
 
 - **Class:** DEPLOYED
 - **The criterion's own wording forces this:** "Prove credentials, routing, jobs, namespaces and data **cannot cross cells** using RB-01 and RB-08"
@@ -192,7 +192,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C170 · ticket 33 · Cloud, recovery and operations
 
-> Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
+> Provision a physical replica and prove lag/fallback using [RB-03](../../../../runbooks/RB-03-read-replica.md).
 
 - **Class:** DEPLOYED
 - **The criterion's own wording forces this:** "**Provision a physical replica** and prove lag/fallback using RB-03"
@@ -200,7 +200,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C171 · ticket 33 · Cloud, recovery and operations
 
-> Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
+> Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](../../../../runbooks/RB-02-pitr-backup.md) and [RB-04](../../../../runbooks/RB-04-recovery-drill.md).
 
 - **Class:** DEPLOYED
 - **The criterion's own wording forces this:** "**Configure five-minute-or-better PITR/RPO** and run recovery/relocation drills using RB-02 and RB-04"
@@ -208,7 +208,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C172 · ticket 34 · Cloud, recovery and operations
 
-> Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md).
+> Measure/approve per-cell and active-tenant cost using [RB-07](../../../../runbooks/RB-07-per-cell-cost.md).
 
 - **Class:** DEPLOYED  ·  **Also needs:** HUMAN
 - **The criterion's own wording forces this:** "**Measure/approve** per-cell and active-tenant cost using RB-07"
@@ -223,7 +223,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C174 · ticket 34 · Cloud, recovery and operations
 
-> Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
+> Test live alerts and human acknowledgement using [RB-06](../../../../runbooks/RB-06-live-alert-delivery.md).
 
 - **Class:** DEPLOYED  ·  **Also needs:** HUMAN
 - **The criterion's own wording forces this:** "Test **live alerts** and **human acknowledgement** using RB-06"
@@ -231,7 +231,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C175 · ticket 34 · Cloud, recovery and operations
 
-> Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
+> Capture passing RB-01â€“RB-08 manifests under [production evidence](../../../../final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
 
 - **Class:** DEPLOYED  ·  **Also needs:** HUMAN
 - **The criterion's own wording forces this:** "Capture **passing RB-01–RB-08 manifests** under production evidence with identity, topology, SHA, **operator**, timestamps, exit code and hashes"
@@ -345,7 +345,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C182 · ticket 35 · Compliance and approvals
 
-> Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md) and [the decision template](decisions/README.md).
+> Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](../../../../runbooks/RB-10-privacy-compliance-decisions.md) and [the decision template](../../../../decisions/README.md).
 
 - **Class:** HUMAN
 - **The criterion's own wording forces this:** "**Obtain named** Product, Security, Privacy/DPO, Operations, Legal and Finance **decisions** using RB-10 and the decision template"
@@ -353,7 +353,7 @@ the call, so the classification can be disputed on the text rather than on opini
 
 #### PRD-C183 · ticket 35 · Compliance and approvals
 
-> Complete [DATA-CATALOGUE.md](DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
+> Complete [DATA-CATALOGUE.md](../../../../DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
 
 - **Class:** HUMAN
 - **The criterion's own wording forces this:** "Complete DATA-CATALOGUE.md with purpose, **lawful basis**, subjects, processors, location, **retention**, **owner** and deletion behavior"
@@ -595,21 +595,21 @@ Ordered by criterion ID. `Also` records a secondary dependency that does not cha
 | **PRD-C166** | 34 | **DEPLOYED** | — | Deployed security, provider and performance | Run realistic load and capture pools, queues, CPU, memory, errors, replica behavior and sustained/burst capacity. |
 | **PRD-C167** | 34 | **DEPLOYED** | — | Deployed security, provider and performance | Prove declared SLOs with at least 40% capacity headroom. |
 | **PRD-C168** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring. |
-| **PRD-C169** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and… |
-| **PRD-C170** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md). |
-| **PRD-C171** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and… |
-| **PRD-C172** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md). |
+| **PRD-C169** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](../../../../runbooks/RB-01-cell-isolation.md) and… |
+| **PRD-C170** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Provision a physical replica and prove lag/fallback using [RB-03](../../../../runbooks/RB-03-read-replica.md). |
+| **PRD-C171** | 33 | **DEPLOYED** | — | Cloud, recovery and operations | Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](../../../../runbooks/RB-02-pitr-backup.md) and… |
+| **PRD-C172** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Measure/approve per-cell and active-tenant cost using [RB-07](../../../../runbooks/RB-07-per-cell-cost.md). |
 | **PRD-C173** | 34 | **DEPLOYED** | — | Cloud, recovery and operations | Configure production logs, traces and release metadata with redaction. |
-| **PRD-C174** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md). |
-| **PRD-C175** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology,… |
+| **PRD-C174** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Test live alerts and human acknowledgement using [RB-06](../../../../runbooks/RB-06-live-alert-delivery.md). |
+| **PRD-C175** | 34 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Capture passing RB-01â€“RB-08 manifests under [production evidence](../../../../final-refactor/evidence/42-production-ops/README.md) with identity, topology,… |
 | **PRD-C176** | 34 | **DEPLOYED** | — | Cloud, recovery and operations | Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure. |
 | **PRD-C177** | 34 | **DEPLOYED** | — | Cloud, recovery and operations | Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling. |
 | **PRD-C178** | 34 | **HUMAN** | — | Cloud, recovery and operations | Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures. |
 | **PRD-C179** | 33 | **DEPLOYED** | HUMAN | Cloud, recovery and operations | Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership. |
 | **PRD-C180** | 35 | **HUMAN** | — | Compliance and approvals | Approve operator/break-glass roles, reason, two-person/no-self approval, duration, expiry, tenant scope, notification, immutable audit and revocation. |
 | **PRD-C181** | 35 | **DEPLOYED** | — | Compliance and approvals | Verify deployed sensitive routes reject expired, revoked, cross-tenant, wrong-scope, concurrent-approval and audit-failure cases. |
-| **PRD-C182** | 35 | **HUMAN** | — | Compliance and approvals | Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md)… |
-| **PRD-C183** | 35 | **HUMAN** | — | Compliance and approvals | Complete [DATA-CATALOGUE.md](DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior. |
+| **PRD-C182** | 35 | **HUMAN** | — | Compliance and approvals | Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](../../../../runbooks/RB-10-privacy-compliance-decisions.md)… |
+| **PRD-C183** | 35 | **HUMAN** | — | Compliance and approvals | Complete [DATA-CATALOGUE.md](../../../../DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior. |
 | **PRD-C184** | 35 | **HUMAN** | — | Compliance and approvals | Decide PII policy for audit metadata, residency/transfers, subprocessors, breach handling, payroll/tax jurisdiction and controller/processor duties. |
 | **PRD-C185** | 35 | **HUMAN** | — | Compliance and approvals | Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure. |
 | **PRD-C186** | 35 | **DEPLOYED** | — | Compliance and approvals | Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills. |

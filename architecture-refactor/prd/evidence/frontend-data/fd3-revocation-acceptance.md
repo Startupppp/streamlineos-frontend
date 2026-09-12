@@ -1,5 +1,8 @@
 # FD3 — Revocation Acceptance Evidence
 
+> Reference only. Execute [the single completion plan](../../completion-plan.md); historical verdicts below do not assign work or certify current release readiness.
+> Mock/source evidence only. Earlier immediate/≤1-second cross-process PASS claims are not deployment proof: failed shared clear can retain authority up to the recorded 30-second shared version TTL, and stream-token failure remains a separate gate. FD3/RBAC-002 require measured two-instance, rollback and provider-failure controls.
+
 **Date:** 2026-09-12  
 **Scope:** Two open FD3 scenarios — grant revoke and employee removal  
 **Method:** Source trace + unit tests with mocks only (no DB, no server, no browser)

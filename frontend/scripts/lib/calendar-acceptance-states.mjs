@@ -14,6 +14,13 @@ import { sleep } from "./cdp.mjs";
 import { seriousViolations } from "./axe.mjs";
 import { cellFromChecks, overflowVerdict, passed, failed, unreached } from "./acceptance-matrix.mjs";
 import {
+  ENTER,
+  ESCAPE,
+  TAB,
+  pressKey,
+  realClick,
+} from "./acceptance-browser.mjs";
+import {
   DEEP_LINK_SOURCE_KEY,
   FOREIGN_EVENT_TITLE,
   FOREIGN_LOCATION_EVENT_TITLE,
@@ -28,11 +35,15 @@ import {
   createDeepLinkVerdict,
   deepLinkVerdict,
   dialogExpression,
+  failureSurfaceSettled,
   foreignZoneStringVerdict,
   foreignZoneVerdict,
   keyboardVerdict,
   liveRegionExpression,
+  obstructionVerdict,
+  offRouteVerdict,
   overflowExpression,
+  pointerObstructionExpression,
   rowGeometryExpression,
   skeletonCountExpression,
   sourceFailureVerdict,
@@ -47,81 +58,38 @@ import {
 export const FAILED_SOURCE = { key: "leaves", label: "Leave" };
 export const UNSUPPORTED_EVENT_ACTIONS = ["Edit", "Delete", "Delete event", "Cancel occurrence", "Unlink ticket"];
 const TAB_LIMIT = 60;
+const FAILURE_SURFACE_POLLS = 24;
 
-function element(name) {
-  return `(() => {
-    const named = (el) => (el.getAttribute("aria-label") || el.textContent || "").replace(/\\s+/g, " ").trim();
-    const visible = (el) => el.getClientRects().length > 0;
-    const target = Array.from(document.querySelectorAll('button, [role="button"], [role="option"], a'))
-      .filter(visible)
-      .find((el) => named(el) === ${JSON.stringify(name)});
-    if (!target) return null;
-    target.scrollIntoView({ block: "center" });
-    const r = target.getBoundingClientRect();
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
-  })()`;
+async function operate(ctx, name, waitMs = 0) {
+  const { cdp, evaluate, viewport } = ctx;
+  const probe = await evaluate(cdp, pointerObstructionExpression(name));
+  const reach = obstructionVerdict(probe, name, viewport.label);
+  if (!reach.ok) return { ok: false, obstructed: reach.obstructed, reason: reach.reason };
+  const clicked = await realClick(cdp, evaluate, name);
+  if (clicked !== true)
+    return { ok: false, obstructed: false, reason: `"${name}" could not be pressed` };
+  if (waitMs > 0) await sleep(waitMs);
+  const here = await evaluate(cdp, "location.href");
+  const onRoute = offRouteVerdict(here, name);
+  if (!onRoute.ok) return { ok: false, obstructed: true, reason: onRoute.reason };
+  return { ok: true, obstructed: false, reason: null };
 }
 
-export async function realClick(cdp, evaluate, name) {
-  const point = await evaluate(cdp, element(name));
-  if (!point) return false;
-  for (const type of ["mousePressed", "mouseReleased"]) {
-    await cdp.send("Input.dispatchMouseEvent", {
-      type,
-      x: point.x,
-      y: point.y,
-      button: "left",
-      buttons: type === "mousePressed" ? 1 : 0,
-      clickCount: 1,
-    });
+async function switchToListMode(ctx) {
+  return operate(ctx, "List View", ctx.settleMs);
+}
+
+async function switchCalendarView(ctx, label) {
+  const opened = await operate(ctx, "Calendar view", 600);
+  if (!opened.ok) return opened;
+  const chosen = await operate(ctx, label, ctx.settleMs);
+  if (chosen.ok) return chosen;
+  const fallback = await ctx.evaluate(ctx.cdp, clickByAccessibleNameExpression(label));
+  if (fallback === true) {
+    await sleep(ctx.settleMs);
+    return { ok: true, obstructed: false, reason: null };
   }
-  return true;
-}
-
-export async function pressKey(cdp, { key, code, keyCode, text }) {
-  await cdp.send("Input.dispatchKeyEvent", {
-    type: "rawKeyDown",
-    key,
-    code,
-    windowsVirtualKeyCode: keyCode,
-    nativeVirtualKeyCode: keyCode,
-  });
-  if (text)
-    await cdp.send("Input.dispatchKeyEvent", {
-      type: "char",
-      key,
-      code,
-      text,
-      windowsVirtualKeyCode: keyCode,
-      nativeVirtualKeyCode: keyCode,
-    });
-  await cdp.send("Input.dispatchKeyEvent", {
-    type: "keyUp",
-    key,
-    code,
-    windowsVirtualKeyCode: keyCode,
-    nativeVirtualKeyCode: keyCode,
-  });
-}
-
-export const TAB = { key: "Tab", code: "Tab", keyCode: 9 };
-export const ENTER = { key: "Enter", code: "Enter", keyCode: 13, text: "\r" };
-export const ESCAPE = { key: "Escape", code: "Escape", keyCode: 27 };
-
-async function switchToListMode(cdp, evaluate, settleMs) {
-  const clicked = await realClick(cdp, evaluate, "List View");
-  if (clicked) await sleep(settleMs);
-  return clicked;
-}
-
-async function switchCalendarView(cdp, evaluate, label, settleMs) {
-  const opened = await realClick(cdp, evaluate, "Calendar view");
-  if (!opened) return false;
-  await sleep(600);
-  let chose = await realClick(cdp, evaluate, label);
-  if (!chose) chose = (await evaluate(cdp, clickByAccessibleNameExpression(label))) === true;
-  await sleep(settleMs);
-  return chose === true;
+  return chosen;
 }
 
 /**
@@ -142,9 +110,11 @@ async function navigateCalendar(ctx, path = "/calendar", wait) {
     surface?.hasAlert === true || (surface?.warningBanners ?? []).length > 0;
   if (failed) {
     recovered = surface.alertText ?? (surface.warningBanners ?? []).join(" | ");
-    const retried =
-      (await realClick(cdp, evaluate, "Retry")) ||
-      (await evaluate(cdp, clickByAccessibleNameExpression("Try Again"))) === true;
+    let retried = false;
+    for (const label of surface.retryControls ?? []) {
+      retried = (await evaluate(cdp, clickByAccessibleNameExpression(label))) === true;
+      if (retried) break;
+    }
     if (retried) await sleep(settleMs);
     surface = await evaluate(cdp, surfaceExpression());
   }
@@ -213,15 +183,19 @@ export async function runLoadingAndPopulated(ctx) {
     scenario.events = syntheticCalendarEvents(now, readerZone);
     scenario.failures = [];
     await navigateCalendar(ctx);
-    await switchToListMode(cdp, evaluate, settleMs);
+    const listed = await switchToListMode(ctx);
     const surface = await evaluate(cdp, surfaceExpression());
     shots.push(await screenshot(cdp, state, viewport.key, "populated-rows"));
-    const titles = surface?.eventButtons ?? [];
-    const missing = [LOCAL_EVENT_TITLE, FOREIGN_EVENT_TITLE, FOREIGN_LOCATION_EVENT_TITLE].filter(
-      (t) => !titles.includes(t),
-    );
-    if (missing.length === 0) checks.push(passed("every seeded event row rendered"));
-    else checks.push(failed("populated rows", `rows missing from the list: ${missing.join(", ")}`));
+    if (!listed.ok) {
+      checks.push(unreached("populated rows", listed.reason));
+    } else {
+      const titles = surface?.eventButtons ?? [];
+      const missing = [LOCAL_EVENT_TITLE, FOREIGN_EVENT_TITLE, FOREIGN_LOCATION_EVENT_TITLE].filter(
+        (t) => !titles.includes(t),
+      );
+      if (missing.length === 0) checks.push(passed("every seeded event row rendered"));
+      else checks.push(failed("populated rows", `rows missing from the list: ${missing.join(", ")}`));
+    }
     axe = await axeCell(runAxe, cdp, checks);
   } catch (e) {
     checks.push(unreached("populated rows", String(e.message ?? e)));
@@ -242,9 +216,13 @@ export async function runEmptyPeriod(ctx) {
     scenario.events = [];
     scenario.failures = [];
     const { recovered } = await navigateCalendar(ctx);
-    await switchToListMode(cdp, evaluate, settleMs);
+    const listed = await switchToListMode(ctx);
     const surface = await evaluate(cdp, surfaceExpression());
     shots.push(await screenshot(cdp, state, viewport.key, "list"));
+    if (!listed.ok) {
+      checks.push(unreached("empty state", listed.reason));
+      return cellFromChecks(state, viewport.key, checks, shots, await runAxe(cdp));
+    }
     const text = String(surface?.bodyText ?? "");
     if (/No events in this period|No upcoming events/i.test(text))
       checks.push(passed("empty period renders empty-state copy"));
@@ -278,8 +256,12 @@ export async function runErrorAndRetry(ctx) {
   try {
     scenario.mode = "error";
     scenario.rangeRequests = 0;
-    await navigate(cdp, "/calendar", settleMs + 3000);
-    const surface = await evaluate(cdp, surfaceExpression());
+    await navigate(cdp, "/calendar", settleMs);
+    let surface = await evaluate(cdp, surfaceExpression());
+    for (let i = 0; i < FAILURE_SURFACE_POLLS && !failureSurfaceSettled(surface); i += 1) {
+      await sleep(500);
+      surface = await evaluate(cdp, surfaceExpression());
+    }
     shots.push(await screenshot(cdp, state, viewport.key, "500"));
     const banners = surface?.warningBanners ?? [];
     if (banners.length > 0 || surface?.hasAlert === true)
@@ -287,9 +269,12 @@ export async function runErrorAndRetry(ctx) {
     else checks.push(failed("500 banner", "a 500 on /calendar/events announced nothing on the page"));
     const before = scenario.rangeRequests;
     let control = null;
-    if (await realClick(cdp, evaluate, "Retry")) control = "Retry (inline banner)";
-    else if ((await evaluate(cdp, clickByAccessibleNameExpression("Try Again"))) === true)
-      control = "Try Again (route error boundary)";
+    for (const label of surface?.retryControls ?? []) {
+      if ((await evaluate(cdp, clickByAccessibleNameExpression(label))) === true) {
+        control = label;
+        break;
+      }
+    }
     if (control) {
       await sleep(settleMs);
       if (scenario.rangeRequests > before)
@@ -328,15 +313,19 @@ export async function runSourceFailure(ctx) {
     scenario.events = survivingSourceEvents(now, readerZone);
     scenario.failures = [FAILED_SOURCE];
     await navigateCalendar(ctx);
-    await switchToListMode(cdp, evaluate, settleMs);
+    const listed = await switchToListMode(ctx);
     const surface = await evaluate(cdp, surfaceExpression());
     shots.push(await screenshot(cdp, state, viewport.key, "surface"));
+    if (!listed.ok) {
+      checks.push(unreached("source failure", listed.reason));
+      return cellFromChecks(state, viewport.key, checks, shots, await runAxe(cdp));
+    }
     const survivingVisible = (surface?.eventButtons ?? []).includes(SURVIVING_SOURCE_EVENT_TITLE);
 
-    await realClick(cdp, evaluate, "Event sources");
-    await sleep(900);
+    const opened = await operate(ctx, "Event sources", 900);
     const panel = await evaluate(cdp, surfaceExpression());
     shots.push(await screenshot(cdp, state, viewport.key, "sources-panel"));
+    if (!opened.ok) checks.push(unreached("source panel", opened.reason));
 
     const verdict = sourceFailureVerdict({
       bannerTextOnSurface: String(surface?.bodyText ?? ""),
@@ -378,9 +367,9 @@ export async function runNavigation(ctx) {
     await navigateCalendar(ctx);
 
     for (const step of NAVIGATION_STEPS) {
-      const switched = await switchCalendarView(cdp, evaluate, step.view, settleMs);
-      if (!switched) {
-        checks.push(unreached(`view ${step.view}`, "the calendar view select could not be operated"));
+      const switched = await switchCalendarView(ctx, step.view);
+      if (!switched.ok) {
+        checks.push(unreached(`view ${step.view}`, switched.reason));
         continue;
       }
       const surfaceBefore = await evaluate(cdp, surfaceExpression());
@@ -390,8 +379,8 @@ export async function runNavigation(ctx) {
         continue;
       }
       const liveBefore = String((await evaluate(cdp, liveRegionExpression())) ?? "");
-      const moved = await realClick(cdp, evaluate, control);
-      await sleep(1500);
+      const move = await operate(ctx, control, 1500);
+      const moved = move.ok;
       const surfaceAfter = await evaluate(cdp, surfaceExpression());
       const liveAfter = String((await evaluate(cdp, liveRegionExpression())) ?? "");
       steps.push({
@@ -404,7 +393,7 @@ export async function runNavigation(ctx) {
         liveBefore,
         liveAfter,
       });
-      if (moved !== true) checks.push(failed(step.label, `the "${control}" control could not be clicked`));
+      if (moved !== true) checks.push(unreached(step.label, move.reason));
       else if (surfaceAfter?.hasAlert === true)
         checks.push(
           failed(
@@ -419,6 +408,8 @@ export async function runNavigation(ctx) {
     shots.push(await screenshot(cdp, state, viewport.key, "navigated"));
     const verdict = announcementVerdict(steps);
     if (verdict.ok) checks.push(passed("every navigation step updates the aria-live period"));
+    else if (steps.length === 0)
+      checks.push(unreached("period announcement", verdict.reason));
     else checks.push(failed("period announcement", verdict.reason));
     axe = await axeCell(runAxe, cdp, checks);
   } catch (e) {
@@ -443,10 +434,10 @@ export async function runKeyboardAndDetailSheet(ctx) {
     scenario.failures = [];
     scenario.canManage = false;
     await navigateCalendar(ctx);
-    const listed = await switchToListMode(cdp, evaluate, settleMs);
-    if (!listed) {
+    const listed = await switchToListMode(ctx);
+    if (!listed.ok) {
       shots.push(await screenshot(cdp, state, viewport.key, "no-list"));
-      checks.push(unreached("list view", "the List View control could not be operated"));
+      checks.push(unreached("list view", listed.reason));
       return cellFromChecks(state, viewport.key, checks, shots, await runAxe(cdp));
     }
 
@@ -609,9 +600,10 @@ export async function runResponsiveAndForeignZone(ctx) {
       checks.push(failed("overflow calendar view", `document scrolls ${gridOverflow.by}px horizontally`));
     else checks.push(passed("no horizontal overflow in calendar view"));
 
-    await switchToListMode(cdp, evaluate, settleMs);
+    const listed = await switchToListMode(ctx);
     const listOverflow = overflowVerdict((await evaluate(cdp, overflowExpression())) ?? {});
     shots.push(await screenshot(cdp, state, viewport.key, "list"));
+    if (!listed.ok) checks.push(unreached("list view", listed.reason));
     if (!listOverflow.measured) checks.push(unreached("overflow list view", "layout could not be measured"));
     else if (listOverflow.overflows)
       checks.push(failed("overflow list view", `document scrolls ${listOverflow.by}px horizontally`));

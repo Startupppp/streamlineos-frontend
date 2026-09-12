@@ -218,6 +218,22 @@ export function useMessagePanelData({
     setRenderPages(1);
   }, [channelId]);
 
+  /**
+   * Every older page the reader asks for has to land INSIDE the render window,
+   * or the fetch paints nothing: `messages` is oldest-first, so a 50-row page
+   * arrives at the front and `resolveMessageWindowStart`'s tail immediately
+   * slices it back off. Both routes to an older page — the "Load older messages"
+   * control and `useChatScroll`'s scroll-to-top auto-load, which calls
+   * `fetchNextPage` directly — went through that, so the reader saw no change
+   * and had to ask twice. The server page is 50 (`chat.schemas.ts`) against a
+   * 60-row window, so one window page per network page covers it.
+   */
+  const loadedPageCount = messagesData?.pages.length ?? 0;
+  useEffect(() => {
+    if (loadedPageCount <= 1) return;
+    setRenderPages((p) => Math.max(p, loadedPageCount));
+  }, [loadedPageCount]);
+
   useChatPollReconciliation({
     channelId,
     newestLoadedAt: messages.at(-1)?.createdAt ?? null,
@@ -376,8 +392,10 @@ export function useMessagePanelData({
   const hasOlderHeld = windowStart > 0;
 
   const handleLoadOlder = useCallback(() => {
-    setRenderPages((p) => p + 1);
-    if (hasOlderHeld) return;
+    if (hasOlderHeld) {
+      setRenderPages((p) => p + 1);
+      return;
+    }
     void fetchNextPage();
   }, [hasOlderHeld, fetchNextPage]);
 

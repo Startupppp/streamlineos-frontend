@@ -87,6 +87,17 @@ export function zoomVerdict(measured, viewport) {
   return { ok: true, reason: null };
 }
 
+export function obstructionVerdict(probe, label, viewport) {
+  if (probe?.found !== true)
+    return { ok: false, obstructed: false, reason: `no "${label}" control is on screen at ${viewport}` };
+  if (probe.obstructed !== true) return { ok: true, obstructed: false, reason: null };
+  return {
+    ok: false,
+    obstructed: true,
+    reason: `"${label}" is on screen at ${viewport} but ${probe.hit} owns the pixel at (${probe.x}, ${probe.y}), so a real press never reaches it`,
+  };
+}
+
 // ------------------------------------------------------------- wire fixtures
 
 export function envelope(data) {
@@ -266,6 +277,35 @@ export function pointByAccessibleNameExpression(name) {
     target.scrollIntoView({ block: "center" });
     const r = target.getBoundingClientRect();
     return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+  })()`;
+}
+
+export function pointerObstructionExpression(name) {
+  return `(() => {
+    ${NAMED_HELPER}
+    ${VISIBLE_HELPER}
+    const describe = (el) => {
+      if (!el) return "nothing";
+      const cls = String(el.className || "").split(/\\s+/).filter(Boolean).slice(0, 4).join(".");
+      return el.tagName.toLowerCase() + (cls ? "." + cls : "") + " :: " + named(el).slice(0, 48);
+    };
+    const target = Array.from(document.querySelectorAll('button, [role="button"], [role="option"], [role="tab"], [role="menuitem"], a'))
+      .filter(visible)
+      .find((el) => named(el) === ${JSON.stringify(name)});
+    if (!target) return { found: false };
+    target.scrollIntoView({ block: "center" });
+    const r = target.getBoundingClientRect();
+    const x = Math.round(r.left + r.width / 2);
+    const y = Math.round(r.top + r.height / 2);
+    const top = document.elementFromPoint(x, y);
+    return {
+      found: true,
+      x: x,
+      y: y,
+      obstructed: !(top && (top === target || target.contains(top) || top.contains(target))),
+      hit: describe(top),
+      target: describe(target),
+    };
   })()`;
 }
 

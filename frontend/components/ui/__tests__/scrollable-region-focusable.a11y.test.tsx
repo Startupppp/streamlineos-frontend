@@ -10,6 +10,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { expectNoAxeViolations } from "@/test-utils";
 
 describe("Table container is a focusable named region (scrollable-region-focusable)", () => {
@@ -202,5 +204,64 @@ describe("CommandList scroll container is keyboard-accessible (scrollable-region
     const scroller = container.querySelector('[tabindex="-1"]');
     expect(scroller).not.toBeNull();
     expect(scroller?.getAttribute("tabindex")).toBe("-1");
+  });
+});
+
+describe("ScrollArea viewport is keyboard-reachable (scrollable-region-focusable)", () => {
+  it("gives the viewport tabIndex=0 by default, so the focus-visible ring it already styles is reachable", () => {
+    const { container } = render(
+      <ScrollArea className="max-h-40">
+        <p>Message one</p>
+        <p>Message two</p>
+      </ScrollArea>,
+    );
+    const viewport = container.querySelector('[data-slot="scroll-area-viewport"]');
+    expect(viewport).not.toBeNull();
+    expect(viewport).toHaveAttribute("tabindex", "0");
+  });
+
+  it("keeps the default when the caller passes only fill and hideScrollbar", () => {
+    const { container } = render(
+      <ScrollArea fill hideScrollbar>
+        <p>Body</p>
+      </ScrollArea>,
+    );
+    expect(
+      container.querySelector('[data-slot="scroll-area-viewport"]'),
+    ).toHaveAttribute("tabindex", "0");
+  });
+
+  it("lets a caller that owns its own focus order opt out with viewportTabIndex", () => {
+    const { container } = render(
+      <ScrollArea viewportTabIndex={-1}>
+        <p>Body</p>
+      </ScrollArea>,
+    );
+    expect(
+      container.querySelector('[data-slot="scroll-area-viewport"]'),
+    ).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("passes axe with scrolling content", async () => {
+    const { container } = render(
+      <ScrollArea className="max-h-40">
+        <p>Message one</p>
+        <p>Message two</p>
+      </ScrollArea>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("BITE — the Radix viewport carries no tabIndex of its own, so the ring style alone left it unreachable", () => {
+    const { container } = render(
+      <ScrollAreaPrimitive.Root>
+        <ScrollAreaPrimitive.Viewport data-slot="raw-viewport">
+          <p>Body</p>
+        </ScrollAreaPrimitive.Viewport>
+      </ScrollAreaPrimitive.Root>,
+    );
+    const raw = container.querySelector('[data-slot="raw-viewport"]');
+    expect(raw).not.toBeNull();
+    expect(raw?.getAttribute("tabindex")).toBeNull();
   });
 });

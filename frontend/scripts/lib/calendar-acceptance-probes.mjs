@@ -13,7 +13,9 @@ export {
   clickByAccessibleNameExpression,
   dialogExpression,
   liveRegionExpression,
+  obstructionVerdict,
   overflowExpression,
+  pointerObstructionExpression,
   skeletonCountExpression,
   viewportExpression,
   zoomVerdict,
@@ -138,6 +140,7 @@ export function foreignEventDetail(now, canManage) {
     linkedTicket: null,
     rrule: null,
     isRecurring: false,
+    localVersion: 1,
     canManage,
   };
 }
@@ -149,6 +152,8 @@ export const SYNTHETIC_SOURCES = [
 ];
 
 export const DEEP_LINK_SOURCE_KEY = "leaves";
+
+export const RETRY_CONTROL_LABELS = ["Retry", "Try Again", "Try again"];
 
 /**
  * The two deep links `/calendar` actually implements: `?source=<key>`
@@ -212,9 +217,10 @@ export function surfaceExpression() {
       .filter((el) => el.getClientRects().length > 0)
       .map((el) => el.innerText.replace(/\\s+/g, " ").trim())
       .filter((t) => t.length > 0);
-    const hasRetry = Array.from(document.querySelectorAll("button")).some(
-      (b) => named(b) === "Retry" && b.getClientRects().length > 0,
-    );
+    const retryLabels = ${JSON.stringify(RETRY_CONTROL_LABELS)};
+    const retryControls = Array.from(document.querySelectorAll("button"))
+      .filter((b) => b.getClientRects().length > 0 && retryLabels.indexOf(named(b)) !== -1)
+      .map(named);
     return {
       url: location.href,
       title: periodTrigger ? (periodTrigger.textContent || "").replace(/\\s+/g, " ").trim() : null,
@@ -223,7 +229,8 @@ export function surfaceExpression() {
       prevLabel: labelStartingWith("Previous "),
       nextLabel: labelStartingWith("Next "),
       warningBanners: banners,
-      hasRetry,
+      retryControls: retryControls,
+      hasRetry: retryControls.length > 0,
       hasAlert: Boolean(alert),
       alertText: alert ? alert.innerText.replace(/\\s+/g, " ").slice(0, 400) : null,
       eventButtons: Array.from(document.querySelectorAll("main button[aria-label]"))
@@ -308,6 +315,27 @@ export function foreignZoneStringVerdict(text, foreignZone, readerZone) {
   if (!text.includes(readerZone))
     return { ok: false, reason: `the reader's zone ${readerZone} is not named in "${text}"` };
   return { ok: true, reason: null };
+}
+
+export function failureSurfaceSettled(surface) {
+  const announced =
+    surface?.hasAlert === true || (surface?.warningBanners ?? []).length > 0;
+  return announced && (surface?.retryControls ?? []).length > 0;
+}
+
+export function offRouteVerdict(url, label) {
+  const path = (() => {
+    try {
+      return new URL(String(url)).pathname;
+    } catch {
+      return String(url);
+    }
+  })();
+  if (path.indexOf("/calendar") === 0) return { ok: true, reason: null };
+  return {
+    ok: false,
+    reason: `pressing "${label}" left /calendar for ${path} — the press reached some other control`,
+  };
 }
 
 export function sourceFailureVerdict({

@@ -89,6 +89,7 @@ export interface CalendarEventDetail {
   rrule: string | null;
   isRecurring: boolean;
   canManage: boolean;
+  localVersion: number;
 }
 
 export interface ParsedCalendarEventId {

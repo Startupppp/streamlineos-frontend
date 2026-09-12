@@ -2,7 +2,7 @@
 
 Audited: 2026-09-01.
 
-This repository audit supports the [active module backlog](prd/README.md), [RETENTION-POLICY.md](RETENTION-POLICY.md), the cron controllers, and the retention modules. It records implementation evidence only. It does not establish deployment cadence, successful execution, alert delivery, provider behavior, or policy approval.
+This repository audit supports the [active module backlog](prd/completion-plan.md), [RETENTION-POLICY.md](RETENTION-POLICY.md), the cron controllers, and the retention modules. It records implementation evidence only. It does not establish deployment cadence, successful execution, alert delivery, provider behavior, or policy approval.
 
 ## Scheduled repository routes
 

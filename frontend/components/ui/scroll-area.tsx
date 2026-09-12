@@ -13,6 +13,7 @@ function ScrollArea({
   scrollbarClassName,
   viewportRef,
   viewportClassName,
+  viewportTabIndex = 0,
   onViewportScroll,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
@@ -21,6 +22,7 @@ function ScrollArea({
   scrollbarClassName?: string
   viewportRef?: React.Ref<HTMLDivElement>
   viewportClassName?: string
+  viewportTabIndex?: number
   onViewportScroll?: React.UIEventHandler<HTMLDivElement>
 }) {
   const content = fill ? (
@@ -40,6 +42,7 @@ function ScrollArea({
         ref={viewportRef}
         data-slot="scroll-area-viewport"
         style={{ maxHeight: "inherit" }}
+        tabIndex={viewportTabIndex}
         onScroll={onViewportScroll}
         className={cn(
           "focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1",

@@ -84,7 +84,7 @@
   --popover: #ffffff;
   --popover-foreground: #0b1220;
   --muted: #f1f5f9; /* slate-100 â€” muted surfaces */
-  --muted-foreground: #64748b; /* slate-500 */
+  --muted-foreground: #556377; /* slate-500/600 midpoint - 5.58:1 on --muted, 5.84:1 on --background, 6.11:1 on --card (WCAG AA normal text); slate-500 #64748b measured 4.34:1 on --muted */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
   --ring: #3b82f6; /* blue-500 focus ring - 3.52:1 on --background, meets WCAG 2.2 SC 1.4.11 (3:1); slate-400 was 2.45:1 */

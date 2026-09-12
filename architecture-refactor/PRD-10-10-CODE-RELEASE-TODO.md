@@ -1,6 +1,6 @@
 # Code-release criterion registry
 
-This compact registry provides stable identifiers for the active module backlog. It is not a task list and contains no status claims. Current work, ownership, dependencies and completion checks live only in [`prd/README.md`](prd/README.md).
+This compact registry provides stable identifiers for the active module backlog. It is not a task list and contains no status claims. Current work, ownership, dependencies and completion checks live only in [`prd/completion-plan.md`](prd/completion-plan.md).
 
 Do not infer pending work from this file. A criterion may map to zero, one or several current tasks.
 
@@ -225,6 +225,6 @@ In-request paths are covered: `JwtAuthGuard` checks liveness before the permissi
 
 **Severity:** P2 — authorization gap in background workers only; all in-request paths are protected by `JwtAuthGuard`.
 
-**Owner:** active release backlog (`architecture-refactor/prd/README.md`). Needs its own audit; not folded into the completed AuthContext change.
+**Owner:** active release backlog (`architecture-refactor/prd/completion-plan.md`). Needs its own audit; not folded into the completed AuthContext change.
 
 **Accountable criterion: PRD-C082** — "Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam." The gap is that background-worker permission resolution omits the user-liveness seam that `MembershipStateService.resolve` provides and that `JwtAuthGuard` enforces for in-request paths.

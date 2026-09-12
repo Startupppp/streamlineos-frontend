@@ -95,6 +95,7 @@ interface UpdateCalendarEventPayload {
   attendeeIds?: string[];
   rrule?: string | null;
   recurrenceEnd?: string | null;
+  expectedVersion?: number;
 }
 
 interface UpsertOccurrenceExceptionPayload {

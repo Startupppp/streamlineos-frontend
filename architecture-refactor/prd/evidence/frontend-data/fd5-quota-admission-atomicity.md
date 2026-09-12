@@ -1,5 +1,8 @@
 # FD5 — quota admission atomicity and the quota-alert write
 
+> Reference only. Execute [the single completion plan](../../completion-plan.md); historical verdicts below do not assign work or certify current release readiness.
+> The earlier MEDIUM/not-release-blocker wording is not an approved waiver. FD5 owns current quota/alert repair and fault-injection acceptance; CRM/Inventory remain out of scope.
+
 Source audit 2026-09-12 against the current working tree. **Source-level, not runtime-proved**
 — no fault injection was run, because another session holds this environment. Every claim
 below is anchored to code; none is a measured failure.
@@ -106,7 +109,7 @@ Redis key written independently of the commit.
 
 ## Correction to the existing audit
 
-`fd4-fd5-server-cost-cache.md` §3.3 gives the tier cache key as
+the superseded source audit §3.3 gives the tier cache key as
 `billing:plan-tier:${orgId}`. The actual key is **`billing:tier:${orgId}`**
 (`PlanLimitsService.tierCacheKey`). `bust(orgId)` invalidates that key **and**
 `billing:entitlements:${orgId}` together, and it has five writers, two of which are cron

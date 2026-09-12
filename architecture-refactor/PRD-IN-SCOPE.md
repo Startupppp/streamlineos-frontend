@@ -584,6 +584,6 @@ The final report must contain separate sections for VERIFIED DONE, REGRESSED, ST
 
 ## 28. Current completion execution
 
-The architecture contract above is stable. The sole active execution backlog is [prd/README.md](prd/README.md), which routes module-owned files for parallel work. Do not create ad hoc session status files. Completed implementation facts live in durable evidence and executable gates; the legacy PRDs retain requirements and history.
+The architecture contract above is stable. The sole active execution backlog is [prd/completion-plan.md](prd/completion-plan.md), which assigns bounded work within one file. Do not create ad hoc session status files. Completed implementation facts live in durable evidence and executable gates; superseded module PRDs have been consolidated into that single plan.
 
 Historical session reports and completed ticket trees were removed because their point-in-time counts contradicted executable gates. Git history remains the archive. CRM and Inventory remain excluded, and public landing-page visuals and animations must not change.

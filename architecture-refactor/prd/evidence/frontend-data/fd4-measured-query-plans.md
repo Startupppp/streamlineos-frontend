@@ -1,5 +1,8 @@
 # FD4 — measured query plans, not source inference
 
+> Reference only. Execute [the single completion plan](../../completion-plan.md); historical verdicts below do not assign work or certify current release readiness.
+> Dated app-role query plans remain evidence, not current production capacity. Reuse populated fixtures and remeasure changed paths before removing an index or changing search authority.
+
 Measured 2026-09-12 on `scratch_local` (PostgreSQL 18.6, `127.0.0.1:5432`), as
 **`streamline_app` with `app.organization_id` set inside the transaction** — never as
 `neondb_owner`, which holds BYPASSRLS and would hide the policy cost. `VACUUM ANALYZE`
@@ -37,7 +40,7 @@ does not have.
 
 ## Two corrections to the source audit
 
-**The proposed index already exists.** `fd4-fd5-server-cost-cache.md` lists "`users` — GIN
+**The proposed index already exists.** the superseded source audit lists "`users` — GIN
 `(name, first_name, last_name, email) gin_trgm_ops`" as a proposal and marks `/org/members`
 **REPAIR NEEDED — no trgm index evidence**. Four GIN trigram indexes are already present:
 

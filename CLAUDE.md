@@ -38,7 +38,7 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 ## 3. Workflow
 
 - The user's current request defines the scope. Proceed with already-authorized repairs; ask only for unresolved product choices, destructive operations, or external actions outside that scope. **"go"** continues the currently assigned task, not an arbitrary unchecked page.
-- Use `architecture-refactor/prd/README.md` to find the active delivery lane. Historical reports are reference evidence, not new work. Check `.claude/` instructions relevant to the assigned task.
+- Use `architecture-refactor/prd/completion-plan.md` to find the active delivery lane. Historical reports are reference evidence, not new work. Check `.claude/` instructions relevant to the assigned task.
 - Verification is part of an authorized repair: run the smallest relevant typecheck, regression, contract or browser check. Review the command first; database writes and provider transactions require a named disposable/test environment. Never load production credentials merely to make a test pass.
 - Before changing behavior, capture a failing reproduction where feasible; distinguish source proof, mocked checks, database checks and deployed evidence. A passing typecheck or mock suite does not certify a customer journey.
 - After fixing, rerun the original reproduction and relevant checks; run a build for bundling/runtime wiring changes. Update only the assigned lane and affected `PAGES.md` entries, preserving concurrent edits.

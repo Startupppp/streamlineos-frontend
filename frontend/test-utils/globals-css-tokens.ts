@@ -78,13 +78,11 @@ export const lightCss = collectBlocks(cssSource, ":root");
 export const darkCss = collectBlocks(cssSource, ".dark");
 
 export const WCAG_AA_NORMAL = 4.5;
-export const WCAG_AA_LARGE = 3.0;
 
 export interface TokenPair {
   fg: string;
   bg: string;
   label: string;
-  largeTextOnly?: boolean;
 }
 
 export function resolvePair(

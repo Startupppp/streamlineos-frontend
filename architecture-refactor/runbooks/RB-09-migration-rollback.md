@@ -1,7 +1,8 @@
 # RB-09 Migration rollback
 
-**Status: CODE-PROVEN — the strategy is enforced by gates; a live rollback drill against a
-disposable branch remains OPEN (needs a scratch database, see §5).**
+**Reference runbook, not a current pass.** Execute rollback and migration acceptance under
+[the single completion plan](../prd/completion-plan.md), OPS-003 / REL-001.
+Validate the explicitly authorized disposable target before commands; never load production defaults.
 
 Applies to the expand/contract sequence this repo uses for every schema change:
 **additive → backfill → validate → cutover → drop.**
@@ -46,19 +47,17 @@ If that query returns zero rows, the drop already ran and you are in §3.
 
 ## 3. Rolling back after the drop
 
-There is no forward path. Recover the data, then re-apply.
+A dropped column's data cannot be restored by an application rollback alone. Prefer an approved forward repair when sufficient; otherwise restore a named disposable/recovery target to a verified pre-drop point and bind it to compatible application artifacts.
 
 ```bash
 # Restore to a branch at a timestamp before the drop migration committed.
-# The drop's commit time is its ledger row:
+# Inspect migration lineage; created_at is a migration identifier, not proof of wall-clock commit time:
 psql "$DATABASE_URL" -c "\
   SELECT id, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 5;"
 ```
 
 Then follow **[RB-02](RB-02-pitr-backup.md)** to branch at that point, and
-**[RB-04](RB-04-recovery-drill.md)** for the cutover procedure. Delete the drop's journal entry and
-its ledger row together — a journal entry with no ledger row re-applies; a ledger row with no
-journal entry is an orphan and `check:migration-ledger` fails on it.
+**[RB-04](RB-04-recovery-drill.md)** for the approved cutover procedure. Determine the restore timestamp from actual deployment/DB evidence, verify restored data and ledger lineage, and select the matching immutable application/migration artifact. Preserve the sealed journal and ledger; do not delete or fabricate entries to prevent replay. Any subsequent repair is a reviewed forward migration with upgrade and cold-replay proof. Keep the current target intact until the authorized recovery cutover and rollback checks pass.
 
 ## 4. What the gates already enforce
 
@@ -69,9 +68,7 @@ These are not conventions; they fail CI.
   `SET NOT NULL` → drop-check sequence; no `--> statement-breakpoint` inside a `DO $$` block; no
   `CONCURRENTLY` (it cannot run inside the migration transaction); every file has a journal entry.
 - `check:migration-chain` — numeric order matches journal order, no duplicate `idx` or numeric prefix.
-- `check:migration-ledger` — joins on `created_at`, **not on hash**. Hash drift from editing an
-  already-applied file is expected and must not be read as an orphan; joining on hash once caused
-  three live rows to be deleted as false orphans.
+- Ledger verification must distinguish stable migration identity, sealed content hash, actual objects and explicitly recorded legacy lineage. A mismatched hash is evidence to investigate, not permission to edit an applied migration or delete ledger rows. Reconcile the current checker through REL-001; historical counts or a row-count match alone do not prove convergence.
 
 ## 5. What is still OPEN
 

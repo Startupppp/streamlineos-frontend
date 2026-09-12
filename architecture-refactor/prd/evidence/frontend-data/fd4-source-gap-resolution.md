@@ -1,6 +1,9 @@
 # FD4 Source Gap Resolution
 
-Closes the six "BLOCKED — needs source verification" entries in `fd4-fd5-server-cost-cache.md`.
+> Reference only. Execute [the single completion plan](../../completion-plan.md); historical verdicts below do not assign work or certify current release readiness.
+> Source batching/cache observations are not measured HTTP/SQL cost. The earlier 99%+ warm-traffic and minor-race severity assertions were not measured or approved; FD1/FD4 own representative captures.
+
+Closes the six "BLOCKED — needs source verification" entries in the superseded source audit.
 Source read date: 2026-09-12. No live DB or Redis involved.
 
 ---

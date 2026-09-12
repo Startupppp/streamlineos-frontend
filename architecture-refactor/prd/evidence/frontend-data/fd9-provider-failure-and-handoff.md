@@ -1,5 +1,8 @@
 # FD9 — Provider Failure and Maintenance Handoff
 
+> Reference only. Execute [the single completion plan](../../completion-plan.md); historical verdicts below do not assign work or certify current release readiness.
+> Mocked inner-transaction depth does not prove outer HTTP/outbox commit or real connection release. Promise.race bounds waiting, not provider cancellation; deadline rollback, retries, late effects and other-tenant progress remain FD9/OPS acceptance.
+
 **Source revision:** frontend `a61e8f6a6` / backend `d3bf57982` (2026-09-12).
 **Evidence class:** source inspection + unit test with passing exit code.
 No database, server, browser or production credential was accessed.
@@ -40,14 +43,14 @@ Both exceed `idle_in_transaction_session_timeout` (60 s per `withTenant`). Witho
 **Mitigation in place:** `withDeliveryDeadline` (`outbox-delivery-deadline.ts:82`)
 - Deadline = `idle_in_transaction_session_timeout − 15_000 ms` (typically 45,000 ms)
 - Uses `Promise.race([work, deadline])` to abandon a stuck consumer before Postgres does
-- On abandonment: transaction rolls back, connection is released, retry is recorded, `retryCount` advances, dead-letter fires eventually
+- Intended on abandonment: rollback, connection release and bounded retries; these real-resource outcomes remain unverified
 - Abandoned promise's rejection is forwarded to `onAbandoned` (never silently swallowed)
 - Existing test: `outbox-delivery-deadline.spec.ts` — "gives up on a consumer that never answers, and records a retry instead of hanging" and "leaves room for the longest bounded consumer chain in the repo"
 
 **Blast radius without mitigation:** one customer webhook endpoint that never answers stalls every other tenant's outbox events until the idle guard kills the connection — then the event replays from the start.
-**Blast radius with mitigation:** a stuck consumer is abandoned at 45 s, transaction rolls back cleanly, batch continues.
+**Intended mitigation:** waiting is bounded near 45 s; real rollback, connection release and batch progress require runtime proof.
 
-**Residual risk:** The mocked `outbox-delivery-deadline.spec.ts` mocks `runInNewTenantTransaction`, so it does not prove real transaction tracking. Accepted: `withDeliveryDeadline` is a `Promise.race` over the real work; correctness is not dependent on the transaction mock.
+**Residual risk:** The mocked `outbox-delivery-deadline.spec.ts` mocks `runInNewTenantTransaction`, so it does not prove real transaction tracking. Not accepted as closure: Promise.race does not cancel the provider operation or prove the outer transaction has released its connection.
 
 ### FINDING B — Old payment services have no timeout (dormant path)
 
@@ -88,7 +91,7 @@ Exit: 0
 
 **Bite proof:** The last case ("moving the send INSIDE the transaction") records `txDepth = 1` at provider call time. This confirms the mock is not vacuous and the assertion distinguishes the defect from the correct pattern.
 
-**trackingDb pattern:** Follows `kb-doc-ai-buffered-connection-release.spec.ts` — `db.transaction()` increments `state.txDepth` before invoking its callback and decrements on exit; `txDepth` is captured at the moment the email mock fires, confirming the transaction has committed before the provider is reached.
+**trackingDb pattern:** Follows `kb-doc-ai-buffered-connection-release.spec.ts` — `db.transaction()` increments `state.txDepth` before invoking its callback and decrements on exit; `txDepth` is captured at the moment the email mock fires, confirming only the mocked inner transaction has returned before the mocked provider is reached; outer transaction/real commit remain unproved.
 
 ---
 
@@ -97,7 +100,7 @@ Exit: 0
 | Ops concern | Owning task | Evidence gap carried there? |
 |---|---|---|
 | Pooling limits (Neon pool size, `idle_in_transaction_session_timeout`, connection starvation) | OPS-001 — provider failure drills | Yes — the deadline mitigation exists; live pool-exhaustion drill under outbox load is part of OPS-001 scope ("payments, Ably/realtime, mail, … queues") |
-| Migration rollback (1087 cold-build blocker, forward/back safety) | OPS-003 — recovery, rollback and data-protection drills | Yes — OPS-003 scope includes "rollback, restore/PITR, retention" and the 1087 finding is recorded in recovery-frontend-data.md §Migrations |
+| Migration rollback (1087 cold-build blocker, forward/back safety) | OPS-003 — recovery, rollback and data-protection drills | Yes — OPS-003 scope includes "rollback, restore/PITR, retention" and the 1087 finding is recorded in completion-plan.md REL-001 |
 | Backup restore (Neon PITR, recovery point objectives) | OPS-003 | Yes — "restore/PITR, retention" are explicit in OPS-003 scope |
 | Readiness checks (`/health/ready`, `/health/db`) | OPS-001 | Yes — OPS-001 scope includes "recovery, reconciliation" for each provider |
 | Worker heartbeat (outbox relay worker liveness) | OPS-001 | Yes — delivery retries and dead-letter behavior are the observable signals for OPS-001 |
@@ -105,4 +108,4 @@ Exit: 0
 | Monitoring and alerts (signals, delivery, escalation) | OPS-002 — prove alert delivery and incident routing | Yes — OPS-002 explicitly covers "release-critical alerts, delivery, escalation, runbook linkage, acknowledgement" |
 | Security, privacy and provider approvals | OPS-004 — depends on OPS-001/002/003 | Yes — OPS-004 collects completed evidence from the three preceding tasks |
 
-No new operations task is created. The gaps above are exactly the BLOCKED-EXTERNAL items in OPS-001 through OPS-004 (`production-and-approvals.md`), which cannot be closed without a named staging environment, test resource identities and explicit operator authority.
+No new operations task is created. The gaps above are exactly the BLOCKED-EXTERNAL items in OPS-001 through OPS-004 (completion-plan.md OPS-001–004), which cannot be closed without a named staging environment, test resource identities and explicit operator authority.

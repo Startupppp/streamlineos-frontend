@@ -106,6 +106,7 @@ export const calendarEventDetailContract = z.object({
   rrule: z.string().nullable(),
   isRecurring: z.boolean(),
   canManage: z.boolean(),
+  localVersion: z.number().int(),
 });
 
 /** `calendarAttendeeListResponseSchema` */

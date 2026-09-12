@@ -35,6 +35,7 @@ const wirePayload = {
   linkedTicket: null,
   rrule: null,
   isRecurring: false,
+  localVersion: 3,
   canManage: true,
 };
 
