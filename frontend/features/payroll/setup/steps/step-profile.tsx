@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Form,
   FormField,
@@ -20,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { MonthPicker } from "@/features/payroll/shared";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
@@ -29,50 +28,13 @@ import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/consta
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const COUNTRY_DEFAULT_CURRENCY: Record<string, string> = {
-  IN: "INR",
-  US: "USD",
-  GB: "GBP",
-  AE: "AED",
-  SG: "SGD",
-  AU: "AUD",
-};
-
-const COUNTRIES: ComboboxOption[] = [
-  { value: "IN", label: "India" }, { value: "US", label: "United States" },
-  { value: "GB", label: "United Kingdom" }, { value: "AE", label: "United Arab Emirates" },
-  { value: "SG", label: "Singapore" }, { value: "AU", label: "Australia" },
-  { value: "CA", label: "Canada" }, { value: "DE", label: "Germany" },
-  { value: "FR", label: "France" }, { value: "NL", label: "Netherlands" },
-  { value: "MY", label: "Malaysia" }, { value: "PH", label: "Philippines" },
-  { value: "NZ", label: "New Zealand" }, { value: "ZA", label: "South Africa" },
-  { value: "NG", label: "Nigeria" }, { value: "KE", label: "Kenya" },
-  { value: "BD", label: "Bangladesh" }, { value: "PK", label: "Pakistan" },
-  { value: "LK", label: "Sri Lanka" }, { value: "NP", label: "Nepal" },
-];
-
-const PAY_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => {
-  const day = i + 1;
-  const suffix = day === 1 ? "st" : day === 2 ? "nd" : day === 3 ? "rd" : "th";
-  return { value: String(day), label: `${day}${suffix}` };
-});
-
-const schema = z.object({
-  country: z.string().min(1, "Country is required"),
-  state: z.string().optional(),
-  legalEntityName: z.string().optional(),
-  currency: z.string().min(1, "Currency is required"),
-  payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
-  payDay: z.string().min(1, "Pay day is required"),
-  startMonth: z.string().min(1, "Start month is required"),
-  employeeCount: z.string().optional().refine(
-    (v) => !v || (Number.isFinite(Number(v)) && Number(v) > 0 && Number.isInteger(Number(v))),
-    { message: "Must be a positive whole number" },
-  ),
-});
-
-type ProfileForm = z.infer<typeof schema>;
+import {
+  stepProfileSchema,
+  type ProfileForm,
+  COUNTRY_DEFAULT_CURRENCY,
+  COUNTRIES,
+  PAY_DAY_OPTIONS,
+} from "./step-profile-schema";
 
 type StepProfileProps = {
   draft: SetupDraft;
@@ -85,7 +47,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
   const updatePolicy = useUpdatePolicy();
 
   const form = useForm<ProfileForm>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(stepProfileSchema),
     defaultValues: {
       country: draft.profile?.country ?? "",
       state: draft.profile?.state ?? "",

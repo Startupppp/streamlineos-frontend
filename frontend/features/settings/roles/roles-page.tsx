@@ -12,16 +12,12 @@ import {
   FlaskConical,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
@@ -34,16 +30,6 @@ import {
   useRolesAnalytics,
   type RoleListRow,
 } from "@/hooks/api/roles";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   StatCard,
   StatCardGrid,
@@ -59,6 +45,7 @@ import { RenameRoleDialog } from "@/components/rbac/rename-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { useRoleListState } from "./use-role-list-state";
 import { RolesListPanel } from "./roles-list-panel";
+import { DeleteRoleDialog } from "./delete-role-dialog";
 
 const ROLES_PAGE_TABS = ["roles", "groups"] as const;
 
@@ -282,52 +269,16 @@ export function RolesPage() {
         onOpenChange={setAssignmentsOpen}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete role</AlertDialogTitle>
-            <AlertDialogDescription>
-              Deleting{" "}
-              <span className="font-semibold">{deleteTarget?.name}</span>{" "}
-              will permanently remove this role.{" "}
-              {deleteTarget
-                ? deleteTarget.memberCount === 0
-                  ? "No members currently hold it."
-                  : `${deleteTarget.memberCount} ${deleteTarget.memberCount === 1 ? "member" : "members"} will lose the permissions it grants.`
-                : "Members assigned to it will lose the associated permissions."}{" "}
-              This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2 py-1">
-            <Label className="text-sm">
-              Type{" "}
-              <span className="font-mono font-semibold">{deleteTarget?.name}</span>{" "}
-              to confirm
-            </Label>
-            <Input
-              value={deleteConfirmation}
-              onChange={handleDeleteConfirmationChange}
-              placeholder={deleteTarget?.name ?? ""}
-              className="font-mono"
-              autoComplete="off"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton
-                onClick={handleDeleteRole}
-                isPending={deleteRole.isPending}
-                disabled={!deleteEnabled}
-                loadingText="Deleting…"
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRoleDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogClose}
+        deleteTarget={deleteTarget}
+        deleteConfirmation={deleteConfirmation}
+        deleteEnabled={deleteEnabled}
+        isPending={deleteRole.isPending}
+        onDelete={handleDeleteRole}
+        onConfirmationChange={handleDeleteConfirmationChange}
+      />
     </PageWrapper>
   );
 }

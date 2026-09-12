@@ -4,135 +4,25 @@ import { useState, useMemo, useCallback, useRef, type ChangeEvent } from "react"
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { usePayoutBatch, useImportBankReturn } from "@/hooks/api/payroll/payout-batches";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { formatMoney } from "@/features/payroll/shared";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { ItemActionDialog, RevealCell } from "./batch-item-actions";
+import { ItemActionDialog } from "./batch-item-actions";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import type { BankBatchStatus, BankItemStatus } from "@/types/payroll";
 import type { BatchItemRow } from "@/hooks/api/payroll/payout-schema";
-
-const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
-  PENDING: "bg-muted text-muted-foreground",
-  SENT: "bg-status-warning-surface text-status-warning-ink",
-  PAID: "bg-status-success-surface text-status-success-ink",
-  FAILED: "bg-status-danger-surface text-status-danger-ink",
-  HELD: "bg-status-info-surface text-status-info-ink",
-};
-
-const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
-  DRAFT: "bg-muted text-muted-foreground",
-  GENERATED: "bg-status-info-surface text-status-info-ink",
-  SENT: "bg-status-warning-surface text-status-warning-ink",
-  PARTIALLY_PAID: "bg-status-warning-surface text-status-warning-ink",
-  PAID: "bg-status-success-surface text-status-success-ink",
-  FAILED: "bg-status-danger-surface text-status-danger-ink",
-};
+import { buildColumns, BATCH_STATUS_STYLES } from "./batch-columns";
 
 interface BatchDetailSheetProps {
   batchId: number | null;
   onClose: () => void;
   canManage: boolean;
-}
-
-function buildColumns(
-  canManage: boolean,
-  onAction: (type: "paid" | "failed", item: BatchItemRow) => void,
-  resolveMemberName: (userId: string) => string,
-): DataTableColumn<BatchItemRow>[] {
-  const cols: DataTableColumn<BatchItemRow>[] = [
-    {
-      key: "userId",
-      header: "Employee",
-      className: "max-w-[180px]",
-      cell: (row) => (
-        <TruncatedText text={resolveMemberName(row.userId ?? "")} className="font-medium text-foreground" />
-      ),
-    },
-    {
-      key: "account",
-      header: "Account",
-      cell: (row) =>
-        canManage && row.userId ? (
-          <RevealCell userId={row.userId} masked={row.accountMasked} />
-        ) : (
-          <span className="font-mono text-xs text-muted-foreground">{row.accountMasked}</span>
-        ),
-    },
-    {
-      key: "ifsc",
-      header: "IFSC",
-      className: "text-xs text-muted-foreground",
-      cell: (row) => row.ifsc ?? "—",
-    },
-    {
-      key: "amount",
-      header: "Amount",
-      headerClassName: "text-right",
-      className: "text-xs font-medium tabular-nums text-right",
-      cell: (row) => formatMoney(row.amount),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <span
-          className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
-            ITEM_STATUS_STYLES[row.status],
-          )}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      key: "transactionRef",
-      header: "Txn Ref",
-      className: "text-xs text-muted-foreground font-mono",
-      cell: (row) => row.transactionRef ?? "—",
-    },
-  ];
-
-  if (canManage) {
-    cols.push({
-      key: "actions",
-      header: "Actions",
-      cell: (row) =>
-        row.status === "PENDING" || row.status === "SENT" ? (
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-6 text-micro px-2"
-              onClick={() => onAction("paid", row)}
-            >
-              Mark Paid
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => onAction("failed", row)}
-            >
-              Mark Failed
-            </Button>
-          </div>
-        ) : null,
-    });
-  }
-
-  return cols;
 }
 
 export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailSheetProps) {
@@ -162,10 +52,6 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   );
 
   const batch = data?.batch;
-  // Optional all the way down on purpose: `items` is required by the type, so a
-  // missing one can only mean this observer was handed a foreign payload — the
-  // shape that used to reach here through a shared query key. Crashing the sheet
-  // takes mark-paid, mark-failed and import-return down with it.
   const items = data?.items?.data ?? [];
   const hasMoreItems = data?.items?.hasMore ?? false;
   const canImportReturn =
@@ -229,6 +115,17 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     void refetch();
   }, [refetch]);
 
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) onClose();
+    },
+    [onClose],
+  );
+
   const columns = useMemo(
     () => buildColumns(canManage, handleAction, resolveMemberName),
     [canManage, handleAction, resolveMemberName],
@@ -236,7 +133,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
 
   return (
     <>
-      <Sheet open={batchId !== null} onOpenChange={(open) => !open && onClose()}>
+      <Sheet open={batchId !== null} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-2xl">
           <div className="shrink-0 px-6 py-4 border-b space-y-2">
             <SheetHeader>
@@ -278,7 +175,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                     className="h-7 text-xs"
                     isPending={importReturn.isPending}
                     loadingText="Importing…"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={handleImportClick}
                   >
                     <Upload className="mr-1 h-3.5 w-3.5" />
                     Import return CSV

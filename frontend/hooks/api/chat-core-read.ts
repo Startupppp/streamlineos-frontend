@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -13,6 +14,7 @@ import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Channel,
+  ChannelPage,
   Message,
   MessagesPage,
   OnlineUser,
@@ -21,9 +23,24 @@ import type {
 } from "@/types/chat";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-interface ChannelPage<TChannel> {
+/**
+ * What a channel-list consumer gets instead of a plain array. `hasMore` and
+ * `isTruncated` are the two states the eager drain could not express: the first
+ * says "more exist, ask for them", the second says "the client stopped asking".
+ */
+export interface ChannelListResult<TChannel> {
   channels: TChannel[];
-  nextCursor: string | null;
+  hasMore: boolean;
+  isTruncated: boolean;
+  isLoading: boolean;
+  isFetching: boolean;
+  isFetchingNextPage: boolean;
+  /** Kept on the adapter so a permission gate stays directly assertable. */
+  fetchStatus: "fetching" | "paused" | "idle";
+  isError: boolean;
+  error: Error | null;
+  loadMore: () => void;
+  refetch: () => void;
 }
 
 /**
@@ -79,88 +96,146 @@ const chatOrgUsersContract = lazyContract(() =>
 /**
  * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
  * first page truncated the sidebar, the forward dialog and the channel combobox
- * with nothing on screen to say a channel was missing — so the cursor is
- * followed. But following it to exhaustion made every mount pay for the whole
- * channel set, which grows with the tenant.
+ * with nothing on screen to say a channel was missing; following the cursor to
+ * exhaustion made every mount pay for the whole channel set, which grows with
+ * the tenant, and at the ceiling it returned a plain array — no cursor, no
+ * truncated verdict, nothing a screen could render.
  *
- * So: a real ceiling. It is not silent — hitting it is reported with the path
- * and the row count, because a cap nobody can see is the truncation this was
- * written to avoid. The screen affordance ("showing the first N, search for
- * more") needs the three consumers in `components/ui/` and `features/chat/`,
- * which this session does not own. A repeated cursor is a server fault, not a
- * page.
+ * So the drain is gone. One page is fetched, and the remaining state travels
+ * with it: `hasMore` means the consumer may ask for more, `isTruncated` means
+ * the client itself stopped asking at the ceiling. A repeated cursor is a server
+ * fault, not a page, so it is reported and ends the sequence rather than
+ * spinning.
  */
 export const MAX_CHANNEL_PAGES = 20;
 
-export async function drainChannelPages<TChannel>(
+export async function fetchChannelPage<TChannel>(
   path: string,
   signal: AbortSignal,
   contract: ContractSource<ChannelPage<TChannel>>,
-): Promise<TChannel[]> {
-  const channels: TChannel[] = [];
-  const seenCursors = new Set<string>();
-  let cursor: string | null = null;
-  for (let page = 0; page < MAX_CHANNEL_PAGES; page += 1) {
-    const result: ChannelPage<TChannel> = await apiClient.get<ChannelPage<TChannel>>(
-      path,
-      cursor === null ? undefined : { cursor },
-      signal,
-      contract,
-    );
-    channels.push(...result.channels);
-    if (result.nextCursor === null || seenCursors.has(result.nextCursor))
-      return channels;
-    seenCursors.add(result.nextCursor);
-    cursor = result.nextCursor;
-  }
-  reportError(new Error(`Channel drain hit its ${MAX_CHANNEL_PAGES}-page ceiling`), {
+  cursor?: string,
+): Promise<ChannelPage<TChannel>> {
+  const page: ChannelPage<TChannel> = await apiClient.get<ChannelPage<TChannel>>(
     path,
-    pages: MAX_CHANNEL_PAGES,
-    loaded: channels.length,
-  });
-  return channels;
+    cursor === undefined ? undefined : { cursor },
+    signal,
+    contract,
+  );
+  if (page.nextCursor !== null && page.nextCursor === cursor) {
+    reportError(new Error("Channel page repeated the cursor it was given"), {
+      path,
+      cursor,
+      loaded: page.channels.length,
+    });
+    return { channels: page.channels, nextCursor: null };
+  }
+  return page;
 }
 
-export function useChatChannels(enabled = true) {
+/**
+ * The route stays a LITERAL at each hook's own `fetchChannelPage` call. Hoisting
+ * it into this adapter as a `path` option made `check:response-contracts` lose
+ * two routes and gain an unresolvable seam site — the scanner reads the first
+ * argument, so a path that arrives as a parameter is invisible to every
+ * route-based rule in that gate and in `check:gated-reads`.
+ */
+interface ChannelPagesOptions<TChannel> {
+  queryKey: readonly unknown[];
+  fetchPage: (
+    signal: AbortSignal,
+    cursor: string | undefined,
+  ) => Promise<ChannelPage<TChannel>>;
+  staleTime: number;
+  enabled: boolean;
+  refetchOnWindowFocus?: boolean;
+}
+
+function useChannelPages<TChannel>({
+  queryKey,
+  fetchPage,
+  staleTime,
+  enabled,
+  refetchOnWindowFocus = false,
+}: ChannelPagesOptions<TChannel>): ChannelListResult<TChannel> {
+  const query = useInfiniteQuery({
+    queryKey,
+    queryFn: ({ pageParam, signal }) =>
+      fetchPage(signal, pageParam === null ? undefined : pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: ChannelPage<TChannel>, allPages) =>
+      allPages.length >= MAX_CHANNEL_PAGES ? undefined : lastPage.nextCursor,
+    staleTime,
+    refetchOnWindowFocus,
+    enabled,
+  });
+
+  const pages = query.data?.pages;
+  const channels = useMemo(
+    () => (pages === undefined ? [] : pages.flatMap((p) => p.channels)),
+    [pages],
+  );
+
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = query;
+
+  const loadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  return {
+    channels,
+    hasMore: hasNextPage,
+    isTruncated:
+      !hasNextPage &&
+      (pages?.length ?? 0) >= MAX_CHANNEL_PAGES &&
+      (pages?.at(-1)?.nextCursor ?? null) !== null,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isFetchingNextPage,
+    fetchStatus: query.fetchStatus,
+    isError: query.isError,
+    error: query.error,
+    loadMore,
+    refetch: handleRefetch,
+  };
+}
+
+export function useChatChannels(enabled = true): ChannelListResult<Channel> {
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canRead = useCan("chat:channels:read");
   const chatEnabled = useModuleEnabled("chat");
-  return useQuery({
+  return useChannelPages<Channel>({
     queryKey: collaborationQueryKeys.chat.myChannels(),
-    queryFn: ({ signal }) =>
-      drainChannelPages<Channel>("/chat/channels", signal, myChannelsContract),
+    fetchPage: (signal, cursor) =>
+      fetchChannelPage<Channel>("/chat/channels", signal, myChannelsContract, cursor),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
   });
 }
 
-export function useArchivedChannels(enabled = true) {
+export function useArchivedChannels(enabled = true): ChannelListResult<Channel> {
   const canRead = useCan("chat:channels:read");
-  return useQuery({
+  return useChannelPages<Channel>({
     queryKey: collaborationQueryKeys.chat.archivedChannels(),
-    queryFn: ({ signal }) =>
-      drainChannelPages<Channel>(
-        "/chat/channels/archived",
-        signal,
-        myChannelsContract,
-      ),
+    fetchPage: (signal, cursor) =>
+      fetchChannelPage<Channel>("/chat/channels/archived", signal, myChannelsContract, cursor),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
 }
 
-export function usePublicChannels(enabled = true) {
+export function usePublicChannels(enabled = true): ChannelListResult<PublicChannel> {
   const canRead = useCan("chat:channels:read");
-  return useQuery({
+  return useChannelPages<PublicChannel>({
     queryKey: collaborationQueryKeys.chat.publicChannels(),
-    queryFn: ({ signal }) =>
-      drainChannelPages<PublicChannel>(
-        "/chat/channels/public",
-        signal,
-        publicChannelsContract,
-      ),
+    fetchPage: (signal, cursor) =>
+      fetchChannelPage<PublicChannel>("/chat/channels/public", signal, publicChannelsContract, cursor),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -197,23 +272,47 @@ export type PollPage = {
   messages: Message[];
   nextCursor: number | null;
   hasMore: boolean;
+  latestPosition: number | null;
 };
+
+/**
+ * Where the caller has read up to. `cursor` is `chat_messages.channel_position`,
+ * a server-assigned monotonic integer, and it is the only position that survives
+ * a skewed client clock, a multi-page outage or an arrival mid-recovery.
+ * `since` exists solely to open a sequence for a caller who holds no position
+ * yet, and even then the timestamp should come from a server-authored message
+ * rather than the browser's wall clock.
+ */
+export type ChatPollPosition =
+  | { kind: "since"; since: string }
+  | { kind: "cursor"; cursor: number };
+
+export function chatPollPositionKey(position: ChatPollPosition): string {
+  return position.kind === "since"
+    ? `since:${position.since}`
+    : `cursor:${position.cursor}`;
+}
 
 const CHAT_POLL_FALLBACK_INTERVAL_MS = 30_000;
 
 /** `enabled` is the caller's realtime verdict: it polls only while the socket is down. */
 export function useChatPoll(
   channelId: number,
-  since: string,
+  position: ChatPollPosition,
   enabled: boolean,
 ) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: collaborationQueryKeys.chat.poll(channelId, since),
+    queryKey: collaborationQueryKeys.chat.poll(
+      channelId,
+      chatPollPositionKey(position),
+    ),
     queryFn: ({ signal }) =>
       apiClient.get<PollPage>(
         `/chat/channels/${channelId}/messages/poll`,
-        { since },
+        position.kind === "since"
+          ? { since: position.since }
+          : { cursor: position.cursor },
         signal,
         pollPageContract,
       ),

@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useCallback, useMemo, type MouseEvent } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tag, CheckCircle2, Archive, Clock, Pencil } from "lucide-react";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import {
   useReleases,
   useDeleteRelease,
@@ -22,7 +21,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   PmPageShell,
   PmSection,
@@ -33,72 +31,15 @@ import {
   TEXT_FLEX_CHILD,
 } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const STATUS_CONFIG: Record<
-  Release["status"],
-  { label: string; className: string }
-> = {
-  draft: {
-    label: "Draft",
-    className:
-      "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
-  },
-  released: {
-    label: "Released",
-    className:
-      "text-status-success-ink border-status-success-rule bg-status-success-surface",
-  },
-  archived: {
-    label: "Archived",
-    className:
-      "text-muted-foreground border-border bg-muted",
-  },
-};
-
-function statusSort(r: Release): number {
-  return r.status === "released" ? 0 : r.status === "draft" ? 1 : 2;
-}
+import {
+  STATUS_CONFIG,
+  statusSort,
+  NewReleaseButton,
+  DeleteReleaseButton,
+} from "./releases-page-parts";
 
 interface ReleasesPageProps {
   projectId: number;
-}
-
-function NewReleaseButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="sm"
-      className="gap-1 text-dense"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-      New Release
-    </Button>
-  );
-}
-
-function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      onClick();
-    },
-    [onClick],
-  );
-  return (
-    <Button
-      size="icon"
-      variant="ghost"
-      className="w-7 text-destructive hover:text-destructive"
-      onClick={handleClick}
-      aria-label="Delete release"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </Button>
-  );
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
@@ -207,7 +148,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
               {format(new Date(r.releaseDate), "MMM d, yyyy")}
             </span>
           ) : (
-            <span className="text-xs text-muted-foreground/50">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       },
       {

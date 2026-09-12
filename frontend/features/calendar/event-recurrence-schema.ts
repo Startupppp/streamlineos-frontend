@@ -35,6 +35,13 @@ export const WEEKDAY_LABELS: Record<WeekDay, string> = {
   SU: "Sun",
 };
 
+export const BYSETPOS_LABELS: Record<number, string> = {
+  1: "First",
+  2: "Second",
+  3: "Third",
+  4: "Fourth",
+  [-1]: "Last",
+};
 
 export function defaultRecurrenceState(startDate?: string): RecurrenceState {
   const dayOfMonth = startDate
