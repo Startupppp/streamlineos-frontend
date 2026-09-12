@@ -8,6 +8,7 @@ import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
 
 interface PlanConfig {
   monthlyPrice: number;
+  annualTotalPaise: number;
   annualPrice: number;
   label: string;
   features: string[];
@@ -54,10 +55,17 @@ export function PlanCard({
   const isSelected = selectedPlan === plan;
   const displayPrice =
     billingCycle === "annual" ? config.annualPrice : config.monthlyPrice;
-  const annualTotal = config.annualPrice * 12;
+  const annualTotal = Math.round(config.annualTotalPaise / 100);
 
   function handleCardClick() {
     if (!isCurrentPlan) onSelect(plan);
+  }
+
+  function handleCardKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (isCurrentPlan) return;
+    e.preventDefault();
+    onSelect(plan);
   }
 
   function handleUpgrade(e: React.MouseEvent<HTMLButtonElement>) {
@@ -82,12 +90,7 @@ export function PlanCard({
               : "border-border hover:shadow-sm cursor-pointer",
       )}
       onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && !isCurrentPlan) {
-          e.preventDefault();
-          onSelect(plan);
-        }
-      }}
+      onKeyDown={handleCardKeyDown}
     >
       {isCurrentPlan && (
         <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">

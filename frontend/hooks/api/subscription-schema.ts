@@ -89,6 +89,7 @@ export const planDefinitionContract = z.object({
   monthlyPrice: z.number(),
   annualPrice: z.number(),
   monthlyPricePaise: z.number(),
+  annualTotalPaise: z.number(),
   features: z.array(z.string()),
   maxEmployees: z.number().nullable(),
 });

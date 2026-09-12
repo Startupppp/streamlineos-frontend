@@ -58,10 +58,11 @@ function resolveAnnualSavingsPct(plans: PlanDefinition[]): number | null {
 
 function planConfigFromDefinition(
   plan: PlanDefinition,
-): { monthlyPrice: number; annualPrice: number; label: string; features: string[] } {
+): { monthlyPrice: number; annualPrice: number; annualTotalPaise: number; label: string; features: string[] } {
   return {
     monthlyPrice: plan.monthlyPrice,
     annualPrice: plan.annualPrice,
+    annualTotalPaise: plan.annualTotalPaise,
     label: plan.name,
     features: plan.features,
   };
@@ -99,7 +100,7 @@ export function PlanTab() {
   const planConfigById = Object.fromEntries(
     planCatalog.map((p) => [p.id, planConfigFromDefinition(p)]),
   ) as Partial<
-    Record<SubscriptionPlan, { monthlyPrice: number; annualPrice: number; label: string; features: string[] }>
+    Record<SubscriptionPlan, { monthlyPrice: number; annualPrice: number; annualTotalPaise: number; label: string; features: string[] }>
   >;
 
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
