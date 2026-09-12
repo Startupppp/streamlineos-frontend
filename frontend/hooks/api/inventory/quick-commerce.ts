@@ -15,6 +15,7 @@ import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-muta
  */
 export type QuickCommerceProvider = "BLINKIT" | "INSTAMART" | "ZEPTO";
 export type PlatformPoStatus = "RECEIVED" | "REJECTED" | "ACCEPTED" | "CANCELLED";
+export type AsnStatus = "DRAFT" | "CONFIRMED" | "IN_TRANSIT" | "ARRIVED" | "CLOSED" | "CANCELLED";
 
 export interface PlatformPoSummary {
   id: number;
@@ -46,6 +47,27 @@ export interface PlatformPoDetail extends PlatformPoSummary {
   warehouseId: number | null;
   currency: string;
   lines: PlatformPoLine[];
+}
+
+/**
+ * `GET /inventory/quick-commerce/asns` — the eleven columns
+ * `QuickCommerceInboundService.listAsns` projects off `inv_asns`, and the field
+ * list `inventory-response-shape-drift.spec.ts` (backend) compares that
+ * projection against. Restored after `useAsns` and this type were deleted as
+ * collateral of an AbortSignal sweep; the endpoint never went anywhere.
+ */
+export interface AsnSummary {
+  id: number;
+  asnNumber: string;
+  poId: number;
+  platformPoId: number | null;
+  warehouseId: number | null;
+  status: AsnStatus;
+  carrierName: string | null;
+  appointmentStart: string | null;
+  appointmentEnd: string | null;
+  expectedArrival: string | null;
+  createdAt: string;
 }
 
 export interface FillRateLine {
@@ -143,6 +165,20 @@ export function useAcceptPlatformPo() {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPoolsAll });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrdersList });
     },
+  });
+}
+
+export function useAsns(filters?: { poId?: number; status?: AsnStatus }) {
+  const canView = useCan("inventory:purchase-orders:read");
+  return useQuery<AsnSummary[], Error>({
+    queryKey: queryKeys.inventory.asns(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<AsnSummary[]>("/inventory/quick-commerce/asns", {
+        ...(filters?.poId ? { poId: String(filters.poId) } : {}),
+        ...(filters?.status ? { status: filters.status } : {}),
+      }, signal),
+    enabled: canView,
+    staleTime: 30_000,
   });
 }
 

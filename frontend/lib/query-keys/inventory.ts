@@ -191,6 +191,12 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "platformPurchaseOrders", filters),
     platformPurchaseOrder: (platformPoId: number) =>
       k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
+    /**
+     * Restored: `useAsns` (`hooks/api/inventory/quick-commerce.ts`) reads this.
+     * It was deleted as "no caller anywhere" while that hook was calling it, and
+     * the hook was then deleted too rather than the key being put back.
+     */
+    asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
     /** NEO-9, NEO-11, NEO-12. Params-less prefixes, then the shapes screens read. */
     kitsAll: [...base, "inventory", "kits"] as const,
     kitBom: (kitVariantId: number) => k(...base, "inventory", "kits", "bom", kitVariantId),
