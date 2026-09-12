@@ -101,7 +101,7 @@ flowchart TD
   validation association, pending actions, recovery, 360px viewport and 200% zoom.
   Completion: before/after screenshots of actual flows with readable content and
   no clipped actions; broader brand redesign and Build screen deletion remain deferred.
-- [ ] **FD9 — Maintenance handoff.** Existing architecture/production lanes own
+- [x] **FD9 — Maintenance handoff.** Existing architecture/production lanes own
   pooling limits, migration rollback, backup restore, readiness, worker heartbeat,
   dead-letter recovery, monitoring and alerts. Link exact evidence gaps there rather
   than create a second operations backlog. Prove one failed external provider does
@@ -128,7 +128,7 @@ that supply the entry point/badge; gating them on an already-open view hides acc
 | FD6 | PARTIAL | Bypass removed; production build recorded. Current bundle manifest is STALE, not a usable budget verdict; browser timing and current integrated type/build gates remain. |
 | FD7 | PARTIAL | Icon-label gate extended to any button size + 7 real fixes. Remaining findings listed in the evidence file. **No screenshots or browser interaction** — contract gate 8 is BLOCKED |
 | FD8 | DONE (audit) | knip: 221 findings, **0 confirmed dead**; every one KEEP-BY-DESIGN or boundary-validation. Nothing deleted |
-| FD9 | PARTIAL | Operations pointers exist; provider-failure/transaction-duration proof remains with OPS-001 and FD5, not a second backlog. |
+| FD9 | DONE | 5/5 unit tests pass (`fd9-provider-failure-connection-release.spec.ts`, exit 0). Every request-path provider call confirmed outside its transaction; outbox consumer isolation confirmed mitigated by `withDeliveryDeadline`. Ops gaps linked to OPS-001/002/003/004 in `evidence/frontend-data/fd9-provider-failure-and-handoff.md`. |
 
 ### FD6 — two gate mechanisms were reporting untrue results
 
