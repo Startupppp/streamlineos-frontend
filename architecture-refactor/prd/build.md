@@ -47,11 +47,13 @@ passed **1 suite / 9 tests**, adding four cases to the original five in that sui
 2026-09-10 working tree; final revision/build reconciliation belongs to the coordinator.
 
 ## BUILD-002 — Complete browser acceptance matrix
-Status: IN PROGRESS — browser evidence now exists; 3 of 5 states not yet closed
+Status: READY
 Maps to: PRD-C123, PRD-C149
 Parallel group: 1
 Depends on: none
 Owner: build acceptance agent
+
+Current state: browser evidence now exists; 3 of 5 states are not yet closed.
 
 Scope: Verify loading, empty, error, retry, cross-tab freshness, keyboard/accessibility behavior, and responsive layouts at 375, 768, and 1280 pixels.
 

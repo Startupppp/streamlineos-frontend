@@ -2,7 +2,7 @@
 
 Required acceptance and independent implementation review: [full-stack completion contract](README.md#mandatory-full-stack-completion-contract).
 
-Status: IMPLEMENTED-VERIFICATION-PENDING as of 2026-09-12. Source repairs landed for AB-01 to AB-08 and AB-10 to AB-12; AB-09 stays open. No live payment, browser, or database evidence is claimed.
+Status: PARTIAL — implementation repairs and verification remain. Source recheck 2026-09-12 found remaining AB-03/07 correctness work and AB-08/10/11 acceptance gaps. Localstack/sandbox evidence below is recorded prior evidence, not independently rerun in this reconciliation.
 
 ## Start here
 
@@ -12,27 +12,42 @@ Outcome: a newly created organization's active owner can see the correct subscri
 
 Scope: platform subscription billing and access governance. The earlier PayPal mention was a typo. Do not add a provider, redesign customer invoicing, or require each customer to create a merchant account merely to pay StreamlineOS.
 
-Work in small reviewable patches: AB-01/02 billing blockers, AB-03 payment integrity, AB-04 commercial authority, AB-05/06 access, AB-07/08 lifecycle and caches, AB-09 cleanup and acceptance. Do not batch all into a speculative refactor.
+Start with AB-03 and AB-07 below, then remaining acceptance. Preserve landed repairs; completed implementation instructions have been consolidated into evidence.
 
-## Findings verified against current source
+## Landed repair milestones and historical findings
 
-| ID | Evidence and implication | Certainty |
-|---|---|---|
-| AB-F01 | `billing/core/billing.service.ts:getSubscription` and `billing-payment-activation.ts:createOrder` call `PaymentProviderResolver.resolveConfigured(orgId)`. `billing/payments/payment-provider-resolver.service.ts` reads tenant `paymentProviders`, then tenant encrypted credentials; no rows returns undefined. `frontend/features/billing/components/plan-card.tsx` disables Upgrade on `!isConfigured`. `backend/src/config/env.validation.ts` accepts `RAZORPAY_KEY_ID/KEY_SECRET`, but production billing resolution does not consume them. Configured platform env alone cannot enable a fresh tenant's checkout. | Source-confirmed path; actual user's rows/network response not inspected. |
-| AB-F02 | `PlanTab.handleUpgrade` creates an annual/coupon order but confirms only order/payment/signature/plan. `VerifySubscriptionInput` omits cycle/coupon; server confirmation defaults to monthly. An annual purchase is activated for one month on this path. | Source-confirmed contract mismatch; no charge made. |
-| AB-F03 | `BillingPaymentActivation.createOrder` does not persist an authoritative purchase binding. `verifyAndActivate` verifies HMAC over order/payment but chooses plan, period and coupon from caller and reprices at confirmation. No captured amount/currency/order-tenant lookup binds activation to purchase. It records undiscounted current price. | Source-confirmed integrity gap; prior foundation finding remains pending. |
-| AB-F04 | Confirmation catches almost any unique violation and returns success with the submitted plan, without verifying the stored payment and organization outcome. Credit grant follows the inner transaction callback, but HTTP calls still have an ambient `TenantContextInterceptor` transaction; this is not proof the subscription committed. `ExternalEffectLedger` claims/finalizes in separate transactions while invoking its callback in caller context. Duplicate confirmation returns before credit grant. | Source-confirmed branches and transaction boundaries; actual durable crash/retry outcome requires fault injection across ambient commit, ledger and credit writes. |
-| AB-F05 | `BillingController` permits coupon creation with `billing:coupons:manage`; active org owners/admins receive the product catalog in `access-permission.resolver.ts`; `BillingCoupons.create` creates a tenant coupon redeemable against that same tenant's platform subscription. This lets the customer author their own platform discount. | Source-confirmed authority error; not an invitation to test on production. |
-| AB-F06 | `PlanTab` injects checkout script without loaded/error state, constructs `window.Razorpay`, and hardcodes `currency: "INR"` despite the order's currency field. `PlanCard` prices from static catalog and hardcodes annual `0.8`; activation uses versioned catalog prices. Coupon validation uses static monthly prices. | Source-confirmed readiness and pricing inconsistencies. |
-| AB-F07 | `PaymentProviderResolver.resolveConfigured` selects the first resolved provider even if runtime `isReady()` is false; it does not continue to another ready provider. It repeats a provider lookup after reading the provider list. | Source-confirmed; primary/fallback semantics must be explicit. |
-| AB-F08 | `seat-definition.ts:seatCount` counts every membership plus live pending invitations, whereas `MEMBER_DEACTIVATED` ledger delta is -1. Determine whether the departure path deletes the row before calling this a quota discrepancy; never assume suspension frees a seat. | Audit discriminator, not confirmed defect. |
-| AB-F09 | `billing-profile.service.ts:get` performs SELECT then INSERT without conflict handling when absent; concurrent first profile reads can race. `updateBillingProfileSchema` also accepts `isTaxExempt` from a customer editor; trace tax consumers before deciding whether this is verified status or an unsafe self-attestation. | Read/write race source-confirmed; tax authority impact requires consumer trace. |
+These are implementation milestones, not full-flow acceptance. AB-F01–09 described
+the pre-repair source; their former present-tense defect table is superseded here.
 
-Actual RBAC evidence: `AccessPermissionResolver.computeUserPermissions` grants active structural owner/admin catalog access; a missing billing button is not proof the owner needs another role. `access-policy.ts` filters platform-only keys separately. No application claim of missing caching is justified: access is versioned and cached, plan tier uses Redis (30 seconds), entitlements use Redis (60 seconds), frontend subscription uses Query (5 minutes).
+| Item | Landed evidence / retained distinction |
+| --- | --- |
+| AB-01/02; AB-F01/07 | Platform merchant uses validated server configuration, independently of tenant provider rows; webhook and redrive use that boundary. Current mocked readiness suite passes. Tenant collection remains separate. |
+| AB-03; AB-F02/03/04 | Durable `subscription_purchases`, narrowed confirmation body and callback captured amount/currency checks exist. Webhook/replay gaps below prevent closure. |
+| AB-04; AB-F05/06 | Promotion creation moved to `platform/promotions` with `INTERNAL_API_SECRET`, not merely a customer catalog key; customer discount minting removed. Preserve legacy promotion history and verify direct HTTP authority. |
+| AB-05/06 | Six-standing, scoped-record and universal-surface regression work landed; RBAC-006 owns remaining coverage/UX/integration. |
+| AB-07 | Tier expiry and clamped-month helper implemented; actual activation still uses unclamped `setMonth`. |
+| AB-08 | Writer invalidation tests recorded; measured cold/warm request/SQL budgets remain absent. |
+| AB-09 | Cleanup recorded at root `cb55134fd` / backend `0d5af8f2f`: schema-derived subscription contracts, canonical authenticated pricing and removed stale route comment/`READINESS_MESSAGES`. Provider/access/payment history retained. |
+| AB-10; AB-F09 | Side-effect-free profile reads and atomic upsert implemented; current five mocked cases pass. Tax-authority consumer trace remains open. |
+| AB-11; AB-F08 | Canonical seat definition and seat-idempotency mock retained; resend/last-seat acceptance belongs to people P3 and is not proved by the billing mock alone. |
+| AB-12 | Unsupported extra-storage promise removed; AI-credit catalog link corrected to `/settings/billing/ai-credits`; recorded catalog contract test. |
+
+Active structural owner/admin access already exists. Missing checkout readiness is
+not evidence that the owner needs another role. Access is versioned/cached, tier
+uses Redis (30 seconds), entitlements Redis (60 seconds), and subscription uses Query.
+Public `lib/pricing.ts` and authenticated `GET /billing/plans` deliberately serve
+different audiences; preserve their consistency test instead of deleting the public owner.
+
+AB-09's recorded knip runs found no unused billing files/exports in either repo.
+Unrelated hits (`UNSCHEDULED_BILLING_JOBS` as a cron decision ledger and timesheet
+`BillingExportSnapshot`) were retained. `subscription-schema.ts` owns Zod-derived
+contracts and `subscription.ts` re-exports; no parallel billing interface was retained.
 
 ## Route, source and test map
 
-Backend paths in this table start at `backend/src/`; frontend paths start at `frontend/`.
+Backend module shorthand (`billing/`, `access/`, `ownership/`, `cron/`) starts at
+`backend/src/modules/`; explicit `modules/` or `common/` paths start at `backend/src/`.
+Bare sibling filenames refer to the same listed module. Frontend paths start at `frontend/`.
 
 | Flow/routes | Source chain to inspect | Existing tests to extend |
 |---|---|---|
@@ -73,23 +88,13 @@ The organization role and module standing are independent. Individual grants sur
 
 ## Executable checklist
 
-- [x] AB-01 Capture a fresh owner's route, visible CTA state, redacted `GET /me/access` scopes and `GET /billing` readiness. Distinguish hidden CTA, disabled CTA, API 403, configuration 503, script failure and provider rejection. Reproduce with mocked tenant provider rows absent and fake configured platform credentials; do not print env values. If owner's billing scopes exist, do not repair roles to solve a readiness issue.
-- [x] AB-02 Give platform subscriptions an explicit platform merchant configuration boundary, reusing the adapter and validated server config. Align subscription webhook signature verification/redrive with the same platform merchant and resolve tenant from the authoritative purchase, not URL/notes alone; current webhook handler also resolves tenant credentials. Keep tenant merchant collection isolated; do not add a fallback that charges a different tenant account. Inspect existing platform configuration ownership first. Return safe readiness reasons, disable with actionable support text, load checkout script once with loading/failure/retry, use the server order's currency, prevent repeated clicks while an order/modal is active. No live provider call is needed to implement this.
-- [x] AB-03 Persist/reuse an authoritative pending purchase containing tenant, merchant/provider/environment, immutable plan/cycle, catalog version, amount/currency and discount before activation. Bind callback/webhook to that purchase and verified captured payment; never trust submitted plan/cycle/coupon, and never treat HMAC alone as a captured-amount check. Reject cross-org/order substitutions, wrong merchant/environment, mismatched amount/currency and unpaid/invalid attempts. Reconcile verified capture arriving after local expiry/cancellation under the agreed fulfillment/refund policy; never silently strand captured money. Lock/conditionally transition once; duplicate success must return the actual stored outcome. Store/replay durable activation and credit effects with existing outbox/effect ledger; do not hide unrelated unique violations. Handle callback-before-webhook, webhook-before-callback and capture with no browser callback at all. billing-webhook-effects.ts currently grants captured AI packs but has no subscription activation branch: converge both inputs on one purchase transition. Fault-inject around outer HTTP commit, credit writes and separately committed effect-ledger completion; inner transaction return is not durable commit proof.
-- [x] AB-04 Move platform promotion creation/update/deletion to existing platform-operator authority. Customer owners/admins may redeem authorized promotions but cannot mint their own subscription discount. Preserve existing rows/history; inventory usages and reconcile legacy tenant-created promotions deliberately. Validate eligibility, amount, period and currency from the same purchase quote; reserve/consume coupon usage atomically. Verify refund/cancel policy does not silently restore a single-use code. PlanTab currently selects a plan only inside handleUpgrade while coupon validation needs one: allow plan/cycle selection and promotion validation before the first order, revalidating on selection change. Test first-attempt discounted checkout. Do not alter customer-invoicing discounts.
-- [x] AB-05 Verify all six standings with two organizations: new owner, owner transfer, admin demotion, module-owner transfer, module-admin removal, ordinary member, invited-not-accepted user and removed/rejoined membership. Trace structural owner flags from bootstrap through live membership and access snapshot. No new role-creation UI. Preserve existing role assignments during any fixed-standing migration; inventory legacy role data before deciding it is dead. Test direct role, group, personal grant and expiring delegation paths; grantors cannot self-escalate, delegate billing, cross modules or grant beyond held authority. Use canonical module vocabulary so Home's mail/chat/calendar namespaces agree.
-- [x] AB-06 Verify list, detail, mutation, export, attachment and background access for representative own/all/none cases; a held permission is not object membership. `ScopedRead` installs tenant and scope; no cast or dropped predicate. ADR 0005 currently documents team behaving as own without materialized team data: either hide unsupported team choices or implement one approved tenant-scoped team contract with tests, not a misleading broader label. Verify disabled product and per-user module deny against API and all navigation surfaces. Inbox/calendar/chat remain available to active members while private objects retain ACLs.
-- [x] AB-07 Test trial start/expiry, missing subscription (FREE), active STARTER/PROFESSIONAL/ENTERPRISE, payment failure, PAST_DUE grace, expiry, cancellation, renewal and downgrade using a fake clock. Trace cron-produced states against `resolveTier` (which currently does not read `currentPeriodEnd` for ACTIVE); specify the existing grace policy before changing it. Same-plan ACTIVE card currently disables purchasing: verify whether renewal/cycle-change is actually supported or falsely described as automatic renewal. Paid activation must retain annual term and agreed price; downgrade preserves data and core communication. Test January 31/leap-day/month-end terms under the agreed anniversary policy. billing-webhook-effects.ts sends every payment.failed to billing-payment-state.ts, which picks an ACTIVE subscription without purchase/period association: failed AI-pack purchases or delayed unrelated failures must not mark subscriptions PAST_DUE. Validate seats against pending/expired/cancelled invites, employee without login, suspension/removal/reactivation, guests, enterprise negotiated seats and parallel last-seat admission.
-- [x] AB-08 Apply the cache matrix below. Measure cold/warm request and query counts; use shared Query hooks with their existing actor/tenant hash, not global component state. Do not add cache to correctness-sensitive membership/quota/payment transition checks. After purchase, invalidate frontend access/module visibility as well as subscription/summary/entitlements/seats where those depend on tier; after webhook reconciliation, refresh the user's status with bounded polling/realtime and stop at terminal state. Keep reads during refresh visible; never render configuration failure merely because access is still loading.
-- [x] AB-09 Search source, exports, route registration, dynamic imports, test fixtures, schema relations and migration journal before deleting or merging a file. Consolidate duplicate contract types in `hooks/api/subscription.ts` against existing schema-derived contracts; verify static pricing duplicates in `lib/pricing.ts`, `PlanCard`, plan catalog and coupon validation before choosing their canonical owner. Remove stale route comment in `PlanCard` naming retired `/billing/subscription/order` only alongside verified checkout work. Do not delete provider resolver/adapter, seat ledger, access cache or durable payment history because a path looks redundant. Record each removal and replacement.
-- [x] AB-10 Make first billing-profile access race-safe using the existing unique tenant contract; prefer a side-effect-free default read or atomic upsert where required. Trace `isTaxExempt` through invoice/tax calculations and platform/customer edit boundaries; customer-supplied status must not silently become platform-verified exemption. Test concurrent first reads, profile validation and cross-tenant access without legal/tax policy invention.
-- [x] AB-11 Coordinate people P3's expired-invitation reservation under the canonical member-quota lock. Test another invite taking the last seat and concurrent resends; people owns the resend implementation and this lane owns the shared seat definition.
-
-- [x] AB-12 After checkout blockers, trace `billing-marketplace.ts` catalog consumers:
-  listAddons advertises storage unavailable to its purchase handler and the retired
-  `/billing/ai-credits` route. Prove visible consumption, remove unsupported promises
-  and use `/settings/billing/ai-credits` with contract tests. Preserve order history;
-  do not build storage to justify a stale catalog entry.
+- [ ] AB-03 Close webhook binding and replay recovery. `billing-webhook.handler.ts:settle` currently matches purchase/tenant, then passes payment amount/currency through `BillingWebhookEffects` into `performActivationFromWebhook` without the callback's immutable amount/currency/merchant/environment checks. Apply one authoritative validation/activation boundary to both entrances. Test wrong amount/currency, merchant/environment, cross-org order, and missing browser callback. Both activation entry points return early for ACTIVATED purchases before plan-credit recovery: fault-inject around outer HTTP commit, activation, credit write and separately committed effect-ledger completion, then prove retries finish missing effects exactly once. Return stored outcomes; reconcile late capture under the agreed fulfillment/refund policy without stranding money.
+- [ ] AB-07 Finish lifecycle correctness. `billing-payment-activation.ts:runActivationTransaction` and `buildStoredOutcome` still use `Date.setMonth` although a clamped-month helper exists. Test the actual activation and replay result at January 31, leap day and year end, then use the canonical term contract. Failed webhook payments require a purchase now, but still call org-wide `transitionToPastDue` without current-period association: a stale failure from an older purchase must not downgrade a newer paid term. Preserve trial/free/grace/expiry and data-retaining downgrade tests; verify same-plan renewal/cycle-change UI matches supported behavior.
+- [ ] AB-08 Measure cold/warm HTTP, SQL and latency under a stated load and verify the cache matrix below. Retain existing Query scope/invalidation machinery. Test temporal expiry, fill-after-bust, cache failure and late org-switch responses. After checkout/webhook reconciliation, refresh dependent access/entitlements/status with bounded polling or realtime. RBAC-006 owns the explicit revocation-window discriminator; cached data never replaces atomic quota/payment admission.
+- [ ] AB-10 Finish `isTaxExempt` consumer and authority trace: `dto/billing.schemas.ts` still accepts the customer field and profile upsert spreads it. Establish whether this is self-attestation or verified status in actual invoice/tax consumers; implement the existing authority contract and negative tests without inventing tax policy. Retain the passing read-race/upsert repair.
+- [ ] AB-11 Reconcile people P3 evidence for expired-invitation resend under the canonical quota lock, another invite taking the last seat and concurrent resends. People owns resend implementation; billing owns the seat definition. The seat-idempotency double alone does not close this item.
+- [ ] AB-05/06 integration: complete RBAC-006 in `rbac.md` under the same access owner. Preserve six standings, live structural membership, scope unions and private-record ACLs. No duplicated role engine or second access backlog.
+- [ ] Combined acceptance: fresh owner monthly/annual captured sandbox purchase; member/module-admin HTTP denials; exact amount/currency/term; first-attempt promotion; browser close/retry; reordered/duplicate callback/webhook; concurrent confirmation and last-seat admission. Preserve financial history through migration/recovery. Browser proof includes 375/768/1280, keyboard/modal focus, loading/error/denied states and no duplicate checkout requests. Record final revision pair and independent review; BILL-001/002 below remain release requirements.
 
 ## Cache authority and invalidation
 
@@ -103,72 +108,55 @@ The organization role and module standing are independent. Individual grants sur
 | Price catalog/coupon preview | Published catalog and eligibility, not hardcoded card price | Catalog publication, coupon changes/expiry; immutable checkout quote is authoritative even if preview cache changes |
 | Quota admission/activation/replay | Database transaction and durable purchase/event records | Not served from stale UI counts or cached authorization; advisory lock/conditional transition and uniqueness protect concurrency |
 
-## Delivered evidence — 2026-09-12
+## Dated implementation and verification evidence
 
-Backend commits `f900e8bee`, `c8b034e44`, `e0ec41eec`, `5d6fd9d95`, `2e4fc6a5f`;
-root commit `52618914c`. Six other sessions were editing the same tree, so the
-backend source for this lane was swept into `e0ec41eec` by a peer commit; the
-content is this lane's and matches the working tree.
+Prior recorded source repairs: backend `f900e8bee`, `c8b034e44`, `e0ec41eec`,
+`5d6fd9d95`, `2e4fc6a5f`; root `52618914c`. Shared-tree commits captured work
+from concurrent sessions; use a reconciled final revision pair for release.
 
-| Item | Outcome | Evidence |
-| --- | --- | --- |
-| AB-01 | Reproduced and fixed | `platform-checkout-readiness.spec.ts` separates absent-credentials, partial-credentials, unsupported-provider and the fresh-tenant case that now checks out with zero `payment_providers` rows |
-| AB-02 | Done | `PlatformMerchantService` from validated env through the existing adapter; webhook verify and redrive both use it; tenant merchant config untouched |
-| AB-03 | Done | `subscription_purchases` + migration `1090`, journal idx 849; confirm body narrowed to `{orderId,paymentId,signature}`; `fetchPayment` checks captured amount/currency; conditional `markActivated` |
-| AB-04 | Done | Customer coupon mint removed; `platform/promotions` behind `INTERNAL_API_SECRET`; atomic reserve/release/redeem |
-| AB-05 / AB-06 | Done | `six-standings-matrix`, `record-scope-sql`, `universal-surfaces-carry-no-module-gate`, `assignment-cap-determinism` |
-| AB-07 | Done | `resolveTier` honours `current_period_end`; expiry sweep added; `nextPeriodEnd` clamps month end |
-| AB-08 | Partial | Cache writers audited and invalidation tested; **no measured cold/warm request or SQL counts** |
-| Gates | Added | backend `tsc --noEmit` 0 errors in-lane (2 remain in another session's `organization/onboarding` spec); frontend `tsc --noEmit` 0; `madge --circular` 0 in both repos |
-| AB-09 | Done | `knip` + `madge` run in both repos; `billablePrice` consolidated onto `resolveQuotePrice`; dead `successSchema` re-export removed; `UNSCHEDULED_BILLING_JOBS` deliberately kept as a decision ledger |
-| AB-10 | Done | `billing-profile-race.spec.ts` |
-| AB-11 | Done | Seat idempotency double now enforces the partial unique index |
-| AB-12 | Done | `marketplace-catalog-contract.spec.ts`; `extra_storage` no longer advertised; `/settings/billing/ai-credits` |
+At the recorded second pass (`e21d45de0`, `7cf3c79a6`): backend billing/access/
+RBAC/module-access/ownership/cron **200 suites, 2419 tests passed**; frontend billing/
+catalog/pricing **9 suites, 115 tests passed**; backend and frontend builds exited 0.
+Frontend compiled in 4.4 minutes with both billing routes emitted. Source types had
+no in-lane errors, but two concurrent onboarding spec errors remained; these are
+historical results, not today's blanket pass.
 
-Runs, `backend/` unless noted:
+The consolidated former billing proof lane recorded root `967e6a549` / backend
+`4ef590f3a`: billing **63 suites/782 tests**, access/RBAC **92/1286**, frontend
+billing/catalog **9/115**; billing source types clean. That established local repair
+prerequisites, not captured-payment acceptance. Its earlier “no database/provider/
+migration run” statement was superseded by the localstack evidence below.
 
-- `modules/billing` (excluding e2e and `.db.spec`): **63 suites, 782 tests, exit 0**
-- `modules/access` + `common/rbac` + `module-access` + `ownership`: **92 suites, 1286 tests, exit 0**
-- `pnpm check:route-classification`: **exit 0, 0 undeclared**
-- frontend `features/billing` + `hooks/api/__tests__/billing`: **7 suites, 97 tests, exit 0**
-- frontend `lib/rbac/permissions/__tests__/catalog-sync.test.ts`: **10 tests, exit 0**
+Useful regressions discovered during implementation: an optional webhook activation
+dependency was not supplied by BillingService despite green billing mocks; wiring was
+fixed. Period-expiry routing needed scheduler/dead-man/operator coverage. Annual UI
+first divided the discounted monthly price by twelve, then rounded monthly display
+times twelve disagreed with provider amount: `annualTotalPaise` now carries the
+exact total. Preserve these regression cases. `couponRedemptions.amountPaise` was
+changed from discount to charged amount; discount is stored on the purchase. Retain
+that historical semantic change in migration/reconciliation review.
 
-Second verification pass, 2026-09-12 (commits `e21d45de0`, `7cf3c79a6`):
+### Current independent local recheck — 2026-09-12
 
-- backend `tsc --noEmit` went from **34 errors to 2**, and **0 in this lane**; the
-  two remaining are another session's `organization/onboarding` spec.
-- `madge --circular`: **0 cycles**, backend 6,589 files and frontend 6,046 files.
-- frontend `tsc --noEmit`: **0 errors**.
-- backend billing + access + rbac + module-access + ownership + cron:
-  **200 suites, 2419 tests, exit 0**.
-- frontend billing + rbac catalog + pricing: **9 suites, 115 tests, exit 0**.
-- `pnpm check:route-classification`: exit 0.
-- backend `pnpm build` (nest): **exit 0**.
-- frontend `pnpm build` (next 16, webpack): **exit 0**, compiled in 4.4min, 0 errors,
-  `/settings/billing` and `/settings/billing/ai-credits` both emitted. Required
-  because the checkout script loader changed how the page loads a third-party script.
-- ownership/last-owner/standing suites for RBAC-006 bullet 3: **6 suites, 90 tests, exit 0**.
+No env, database, provider or browser was used. Jest setup and selected mock seams
+were inspected. From `backend/`:
 
-The typecheck earned its place: it caught an arity break jest could not see. The
-webhook's subscription-activation branch took an **optional** `activation`
-dependency that `BillingService` never passed, so a capture arriving with no
-browser callback activated nothing -- while all 782 billing tests were green. It
-also guarded on `purchase !== null` with callers passing four of five arguments,
-so `purchase` was `undefined` and the guard admitted it. Both are fixed.
+```powershell
+node ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/modules/billing/payments/platform-checkout-readiness.spec.ts src/modules/billing/core/billing-profile-race.spec.ts src/modules/access/access-explain.resolver.spec.ts src/modules/rbac/permission-catalog-sync.service.spec.ts
+node ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/modules/billing/core/billing-purchase-binding.spec.ts src/modules/billing/core/subscription-lifecycle.spec.ts
+```
 
-Separately, `period-expiry` was declared and routed but had no scheduler runner,
-no dead-man alert entry and no operator-contract line: a sweep nothing watches.
+First command: **3 suites passed, 1 failed; 33 tests passed, 4 failed; exit 1**.
+The four `permission-catalog-sync.service.spec.ts` administering-module assertions
+at lines 86, 93, 99 and 110 still fail; RBAC-006 owns reconciliation. Readiness,
+profile and access-explanation suites pass. Second command: **2 suites, 39 tests
+passed; exit 0**. Those passing mocked tests do not cover the AB-03/07 counterexamples.
 
-BLOCKED, not passed: live/sandbox provider charge, browser and keyboard/responsive
-acceptance, migration `1090` applied to any database, `.db.spec` and `*e2e-spec`
-suites, measured cache/request budgets, and a production build.
+## Recorded localstack + Razorpay sandbox evidence — 2026-09-12
 
-Residual risks: the rank read is deterministic but still capped at 100, so an
-actor beyond that cap can lose standing; `couponRedemptions.amountPaise` changed
-meaning from the discount to the charged amount (no runtime consumer reads it,
-and the discount is now on `subscription_purchases.discountAmountMinor`).
-
-## Live evidence on localstack + Razorpay sandbox — 2026-09-12
+Prior implementation-session report, preserved but not independently rerun here.
+Sandbox order creation is not a captured purchase or activated term. A conditional
+UPDATE race is not the complete activation/effect transaction.
 
 Environment: `scratch_local` on `127.0.0.1:5432` (PostgreSQL 18.6, 957 tables), driven
 from `backend/.env.localstack`. **Production Aurora was never contacted.** Razorpay
@@ -180,9 +168,9 @@ calls used the `rzp_test_` key only; no live charge was made.
 | Its guards bite | duplicate `provider_order_id` → `23505`; duplicate `provider_payment_id` → `23505`; unknown `org_id` → `23503`; null `amount_minor` → `23502`; two NULL payment ids correctly allowed; probe transaction rolled back leaving 0 rows |
 | Platform merchant with ZERO tenant `payment_providers` rows | `readiness.configured: true`, `environment: test`, `resolve().isReady() === true` — this is the AB-F01 P0, reproduced as fixed |
 | Real sandbox order, monthly | `order_Tb6T6JHAeStPiw`, 99900 paise INR (₹999) |
-| Real sandbox order, annual | `order_Tb6T6Z66gI3Cwm`, 959040 paise INR (₹9,590.40) — correct 12-month term and discount |
+| Real sandbox order, annual | `order_Tb6T6Z66gI3Cwm`, 959040 paise INR (₹9,590.40) — correct annual order amount; activated 12-month term not established |
 | Provider failure mapping (live) | `pnpm verify:razorpay-sandbox` exit 0; observed HTTP 401 and 400 from `api.razorpay.com`, each mapped to `BadGatewayException` after exactly one attempt |
-| Concurrent confirmation, REAL database | Two separate connections raced the conditional `UPDATE … WHERE status IN (…) RETURNING`; **exactly one won**. This closes the gap the audit recorded as "real DB concurrency pending" |
+| Concurrent confirmation, REAL database | Two separate connections raced the conditional `UPDATE … WHERE status IN (…) RETURNING`; **exactly one won**. This proves the conditional claim only; full activation/effect concurrency remains open |
 | Duplicate/replayed confirmation | Re-running the claim after activation matched no row — a no-op, not a second activation |
 | Two-tenant receipt substitution | The same claim under another `org_id` matched no row |
 
@@ -196,35 +184,46 @@ over HTTP, last-seat admission, and the whole of the 375/768/1280 + keyboard +
 focus-restoration check. A forced provider 5xx remains impossible to induce in the
 Razorpay sandbox, which is why BILL-001 stays open.
 
-## Verification and acceptance
+## BILL-001 — Prove deployed payment failure and recovery paths
 
-### AB-09 cleanup evidence — 2026-09-12 (root `cb55134fd`, backend `0d5af8f2f`)
+Status: BLOCKED-EXTERNAL
+Maps to: PRD-C162
+Parallel group: 3
+Depends on: none
+Owner: payments operator
 
-Proven with knip in BOTH repos, not grep: zero unused files or exports across the
-billing surface. The only knip hits are pre-existing and in other modules
-(`UNSCHEDULED_BILLING_JOBS` in cron retention, `BillingExportSnapshot` in
-*timesheet* billing).
+Blocked for release evidence; AB-03/07 local prerequisites remain open. The real
+prerequisite is the relevant access/billing merchant/webhook, activation and
+reconciliation repairs at a coordinator-recorded integrated revision. Earlier
+prerequisite pair `967e6a549` / `4ef590f3a` does not override current source
+counterexamples.
 
-| Question | Answer |
-|---|---|
-| Duplicate contract types in `hooks/api/subscription.ts` | Resolved. `hooks/api/subscription-schema.ts` owns Zod contracts and every type is `z.infer`; `subscription.ts` re-exports. No parallel interface remains. |
-| Canonical owner of static pricing | **Split, deliberately.** `lib/pricing.ts` is the owner for PUBLIC landing pages that cannot call authenticated APIs (it says so, and a consistency test pins it to the backend constants). The authenticated billing UI now prices only from `GET /billing/plans`. `lib/pricing.ts` was never a duplicate to delete — different audience. |
-| Stale `/billing/subscription/order` comment in `PlanCard` | Removed. |
-| Removals | `READINESS_MESSAGES` (unreferenced, keyed by superseded uppercase reason codes). Nothing else deleted. Provider resolver/adapter, seat ledger, access cache and durable payment history all retained. |
+Scope: on a named disposable environment, verify provider failure, webhook retry,
+reconciliation and recovery, including the required provider-side failure not
+inducible on demand in the Razorpay sandbox. Preserve the successful recorded
+401/400 mapping and order-creation evidence; they do not prove provider-5xx handling
+or end-to-end captured payment. Confirm the environment's migration chain and
+purchase constraints rather than assuming the earlier scratch schema is current.
 
-Found while verifying, not predicted by the brief: `PlanCard` misread the catalog's
-`annualPrice`. That field is the discounted MONTHLY rate
-(`monthlyPriceInr * (1 - ANNUAL_DISCOUNT_PCT)`), and the card divided it by 12 and
-also printed it as the annual total — so annual STARTER read "₹67/mo" and
-"₹799 billed annually" instead of "₹799/mo" and "₹9,588". Wrong by 12x on the
-screen where a customer decides to pay. Fixed in `cb55134fd`.
+Completion: timestamped provider and application evidence proves failure detection,
+idempotent recovery, ledger reconciliation and no duplicate charge. Record external
+failure-injection limitations and the approved verification method; do not trigger
+a real customer charge to satisfy the gate.
 
-Existing isolated unit verification run during this audit: `pnpm exec jest --runInBand --runTestsByPath src/modules/billing/payments/payment-provider-resolver.spec.ts src/modules/access/access-membership-authority.spec.ts src/modules/access/__tests__/org-only-keys-never-resolve.spec.ts` from `backend/`: **3 suites, 15 tests passed**. Jest config/setup inspected; mocked stores/adapters, no provider or database calls. These tests prove existing provider/standing behavior, not repaired checkout.
+## BILL-002 — Record Finance release approval
 
-- [x] Run the original owner-readiness reproduction after repair, then relevant existing suites in the matrix and newly added behavior regressions. Inspect each command/config before executing; `.db.spec.ts` and e2e suites are separate from the default unit runner.
-- [x] Complete focused backend/frontend typechecking and repository boundary/contract checks appropriate to changed files. Production build is required for script-loading/bundling changes; compile success is not payment success.
-- [ ] On a named disposable environment, verify fresh-owner monthly and annual sandbox purchases; member/module admin denials; correct amount/currency/term; retry after browser close; duplicate/reordered callback and webhook; provider outage; two-tenant receipt substitution; concurrent confirmation and last-seat admission. Never run a live charge for verification.
-- [ ] Verify keyboard, focus restoration after checkout modal, 375/768/1280 layouts, readable pricing/currency, loading/error/denied states, and no duplicate upgrade requests. Attach redacted request waterfall and screenshots to this assignment's evidence, not new unindexed status documents.
+Status: BLOCKED-EXTERNAL
+Maps to: PRD-C182, PRD-C193
+Parallel group: 3
+Depends on: BILL-001
+Owner: Finance approver
+
+Scope: review payment evidence and record the accountable Finance/final release decision.
+Completion: named approver, decision, timestamp, scope and residual risks are recorded
+in release authority evidence.
+
+The former `billing-payments.md` is superseded by these preserved tasks and dated
+prerequisite evidence, not deleted because BILL-001/002 are complete.
 
 ## Shared-file ownership and migration contract
 
