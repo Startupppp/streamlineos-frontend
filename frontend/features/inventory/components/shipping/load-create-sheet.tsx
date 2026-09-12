@@ -169,7 +169,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   </FormControl>
                   <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
                     <SelectItem value={NO_SELECTION}>No source warehouse</SelectItem>
-                    {(warehousesQuery.data ?? []).map((warehouse) => (
+                    {(warehousesQuery.data?.items ?? []).map((warehouse) => (
                       <SelectItem key={warehouse.id} value={String(warehouse.id)}>
                         {warehouse.name}
                       </SelectItem>

@@ -30,8 +30,10 @@ import { useVendors } from "@/hooks/api/inventory/vendors";
 import {
   useCreateRecall,
   useSimulateRecall,
+  type Recall,
   type RecallImpact,
 } from "@/hooks/api/inventory/quality";
+import { isRecallLineUnheld, toRecallLineQuarantine } from "@/features/inventory/lib";
 import { RecallImpactPanel } from "./recall-impact-panel";
 import { RecallLotPicker } from "./recall-lot-picker";
 import { randomId } from "@/lib/random-id";
@@ -221,10 +223,27 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
         idempotencyKey,
       },
       {
-        onSuccess: () => {
-          toast.success("Recall executed");
+        onSuccess: (data: Recall) => {
           setConfirmOpen(false);
           handleOpenChange(false);
+
+          // INV-33. The recall's own status is OPEN whether the quarantine held
+          // every line or none of them — the same failure the list/detail
+          // screens (recall-affected-lines.tsx) were fixed for. A create screen
+          // that only ever says "Recall executed" is the one place left where
+          // that gap still reads as success.
+          const unheld = data.lines.filter((line) =>
+            isRecallLineUnheld(toRecallLineQuarantine(line.status)),
+          );
+          if (unheld.length === 0) {
+            toast.success("Recall executed");
+            return;
+          }
+          toast.warning(
+            unheld.length === data.lines.length
+              ? "Recall created, but no stock was quarantined"
+              : `Recall created — ${unheld.length} of ${data.lines.length} lines hold no stock`,
+          );
         },
         onError: (e) => {
           setConfirmOpen(false);

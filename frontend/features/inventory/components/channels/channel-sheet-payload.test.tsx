@@ -15,7 +15,7 @@ import { ChannelSheet } from "./channel-sheet";
  */
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [] }),
+  useWarehouses: () => ({ data: { items: [], total: 0, page: 1, totalPages: 0 } }),
 }));
 
 const createMutateAsync = jest.fn(() => Promise.resolve());
@@ -96,3 +96,30 @@ it("keeps the status field for an update, which is the only body that takes one"
     warehouseIds: [],
   });
 });
+
+it("sends apiCredential when entered into the token field", async () => {
+  renderWithProviders(<ChannelSheet open onOpenChange={jest.fn()} />);
+
+  await userEvent.type(
+    screen.getByPlaceholderText("e.g. Shopify Main Store"),
+    "Shopify Store",
+  );
+  await userEvent.type(
+    screen.getByPlaceholderText("e.g. shpat_..."),
+    "shpat_test_token_123",
+  );
+  submitSheet();
+
+  await waitFor(() => {
+    expect(createMutateAsync).toHaveBeenCalledTimes(1);
+  });
+  expect(createMutateAsync).toHaveBeenCalledWith({
+    name: "Shopify Store",
+    channelType: "INTERNAL",
+    safetyBuffer: undefined,
+    publishThreshold: undefined,
+    warehouseIds: [],
+    apiCredential: "shpat_test_token_123",
+  });
+});
+

@@ -92,7 +92,7 @@ const zone = {
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
   ...jest.requireActual("@/hooks/api/inventory/warehouses"),
   useWarehouses: () => ({
-    data: [{ id: 5, name: "Leeds DC", code: "LDS" }],
+    data: { items: [{ id: 5, name: "Leeds DC", code: "LDS" }], total: 1, page: 1, totalPages: 1 },
     isLoading: false,
   }),
   useLocations: (warehouseId: number) => ({

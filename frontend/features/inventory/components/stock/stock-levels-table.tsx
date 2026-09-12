@@ -39,13 +39,21 @@ const StockStatusIcon = memo(function StockStatusIcon({ status }: { status: Stoc
   return <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" aria-label="Stock OK" />;
 });
 
+interface StockLevelsTablePagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}
+
 interface StockLevelsTableProps {
   rows: StockLevelRow[];
   onShowAvailability?: (variantId: number, variantName: string) => void;
   className?: string;
+  pagination?: StockLevelsTablePagination;
 }
 
-export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAvailability, className }: StockLevelsTableProps) {
+export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAvailability, className, pagination }: StockLevelsTableProps) {
   const router = useRouter();
 
   const handleAdjust = useCallback((row: StockLevelRow) => {
@@ -218,6 +226,7 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       getRowKey={(row) => row.id}
       rowClassName={getRowClassName}
       className={className}
+      pagination={pagination ? { mode: "server", ...pagination } : undefined}
     />
   );
 });

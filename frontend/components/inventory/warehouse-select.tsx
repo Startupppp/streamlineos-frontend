@@ -28,9 +28,8 @@ export function WarehouseSelect({
   className,
   activeOnly = true,
 }: WarehouseSelectProps) {
-  const { data: warehouses = [], isLoading } = useWarehouses(
-    activeOnly ? { status: "active" } : undefined,
-  );
+  const { data, isLoading } = useWarehouses(activeOnly ? { status: "active" } : undefined);
+  const warehouses = data?.items ?? [];
 
   const options = useMemo(
     () =>

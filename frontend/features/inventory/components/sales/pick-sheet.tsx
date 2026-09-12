@@ -71,7 +71,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
   const watchedWarehouseId = useWatch({ control: form.control, name: "warehouseId" });
   const locationsQuery = useLocations(watchedWarehouseId);
 
-  const warehouses = warehousesQuery.data ?? [];
+  const warehouses = warehousesQuery.data?.items ?? [];
   const locations = locationsQuery.data ?? [];
 
   function handleSubmit(values: PickFormValues): void {

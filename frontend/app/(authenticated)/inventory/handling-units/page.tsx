@@ -198,17 +198,19 @@ function HandlingUnitPanel({
   );
 }
 
+const UNITS_PAGE_SIZE = 24;
+
 function HandlingUnitsContent() {
   const canView = useCan("inventory:stock:read");
   const canCreate = useCan("inventory:stock:transfer");
-  const { data, isLoading, isError, refetch } = useHandlingUnits({ rootsOnly: true });
-  const units = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const [unitsPage, setUnitsPage] = useState(1);
-  const unitsPageSize = 24;
-  const visibleUnits = useMemo(
-    () => units.slice((unitsPage - 1) * unitsPageSize, unitsPage * unitsPageSize),
-    [units, unitsPage],
-  );
+  const { data, isLoading, isError, refetch } = useHandlingUnits({
+    rootsOnly: true,
+    page: unitsPage,
+    limit: UNITS_PAGE_SIZE,
+  });
+  const units = useMemo(() => data?.data ?? [], [data]);
+  const unitsTotal = data?.pagination.total ?? 0;
   const shouldReduceMotion = useReducedMotion();
   const create = useCreateHandlingUnit();
 
@@ -299,7 +301,7 @@ function HandlingUnitsContent() {
             initial={shouldReduceMotion ? undefined : "hidden"}
             animate={shouldReduceMotion ? undefined : "visible"}
           >
-            {visibleUnits.map((unit) => (
+            {units.map((unit) => (
               <motion.div key={unit.id} variants={fadeUp}>
                 <Card className="h-full">
                   <CardContent className="p-4 space-y-3">
@@ -323,8 +325,8 @@ function HandlingUnitsContent() {
             </motion.div>
             <TablePagination
               page={unitsPage}
-              pageSize={unitsPageSize}
-              total={units.length}
+              pageSize={UNITS_PAGE_SIZE}
+              total={unitsTotal}
               onPageChange={setUnitsPage}
               className="shrink-0"
             />

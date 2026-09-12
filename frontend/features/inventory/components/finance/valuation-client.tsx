@@ -119,7 +119,8 @@ export function ValuationClient() {
   const [selectedVariantId, setSelectedVariantId] = useState<number>(0);
   const [layersOpen, setLayersOpen] = useState(false);
 
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const { data, isLoading, error, refetch } = useValuationReport({
     warehouseId: warehouseFilter,
     page,

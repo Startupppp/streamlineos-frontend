@@ -35,7 +35,7 @@ jest.mock("@/hooks/api/inventory/transit", () => ({
 }));
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [{ id: 7, name: "North DC", code: "GDC" }] }),
+  useWarehouses: () => ({ data: { items: [{ id: 7, name: "North DC", code: "GDC" }], total: 1, page: 1, totalPages: 1 } }),
 }));
 
 function row(overrides: Partial<StrandedTransitRow> = {}): StrandedTransitRow {

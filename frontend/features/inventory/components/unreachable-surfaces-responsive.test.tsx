@@ -38,7 +38,7 @@ jest.mock("@/hooks/api/org-display", () => ({
   useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }),
 }));
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: [{ id: 1, name: "North DC", code: "GDC" }] }),
+  useWarehouses: () => ({ data: { items: [{ id: 1, name: "North DC", code: "GDC" }], total: 1, page: 1, totalPages: 1 } }),
 }));
 jest.mock("@/hooks/api/inventory/operations", () => ({
   useGoodsReceipts: () => ({ data: { items: [] }, isLoading: false }),
