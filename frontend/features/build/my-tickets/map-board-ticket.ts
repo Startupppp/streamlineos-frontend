@@ -19,6 +19,7 @@ export function mapBoardTicketToKanban(t: Ticket): KanbanTicket {
     moduleId: t.moduleId ?? null,
     dueDate: t.dueDate ?? null,
     startDate: t.startDate ?? null,
+    createdAt: t.createdAt != null ? String(t.createdAt) : null,
     updatedAt: t.updatedAt != null ? String(t.updatedAt) : null,
     sequenceId: t.sequenceId ?? null,
     assignees: t.assignees,
