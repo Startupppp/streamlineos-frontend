@@ -165,6 +165,27 @@ and the discount is now on `subscription_purchases.discountAmountMinor`).
 
 ## Verification and acceptance
 
+### AB-09 cleanup evidence — 2026-09-12 (root `cb55134fd`, backend `0d5af8f2f`)
+
+Proven with knip in BOTH repos, not grep: zero unused files or exports across the
+billing surface. The only knip hits are pre-existing and in other modules
+(`UNSCHEDULED_BILLING_JOBS` in cron retention, `BillingExportSnapshot` in
+*timesheet* billing).
+
+| Question | Answer |
+|---|---|
+| Duplicate contract types in `hooks/api/subscription.ts` | Resolved. `hooks/api/subscription-schema.ts` owns Zod contracts and every type is `z.infer`; `subscription.ts` re-exports. No parallel interface remains. |
+| Canonical owner of static pricing | **Split, deliberately.** `lib/pricing.ts` is the owner for PUBLIC landing pages that cannot call authenticated APIs (it says so, and a consistency test pins it to the backend constants). The authenticated billing UI now prices only from `GET /billing/plans`. `lib/pricing.ts` was never a duplicate to delete — different audience. |
+| Stale `/billing/subscription/order` comment in `PlanCard` | Removed. |
+| Removals | `READINESS_MESSAGES` (unreferenced, keyed by superseded uppercase reason codes). Nothing else deleted. Provider resolver/adapter, seat ledger, access cache and durable payment history all retained. |
+
+Found while verifying, not predicted by the brief: `PlanCard` misread the catalog's
+`annualPrice`. That field is the discounted MONTHLY rate
+(`monthlyPriceInr * (1 - ANNUAL_DISCOUNT_PCT)`), and the card divided it by 12 and
+also printed it as the annual total — so annual STARTER read "₹67/mo" and
+"₹799 billed annually" instead of "₹799/mo" and "₹9,588". Wrong by 12x on the
+screen where a customer decides to pay. Fixed in `cb55134fd`.
+
 Existing isolated unit verification run during this audit: `pnpm exec jest --runInBand --runTestsByPath src/modules/billing/payments/payment-provider-resolver.spec.ts src/modules/access/access-membership-authority.spec.ts src/modules/access/__tests__/org-only-keys-never-resolve.spec.ts` from `backend/`: **3 suites, 15 tests passed**. Jest config/setup inspected; mocked stores/adapters, no provider or database calls. These tests prove existing provider/standing behavior, not repaired checkout.
 
 - [ ] Run the original owner-readiness reproduction after repair, then relevant existing suites in the matrix and newly added behavior regressions. Inspect each command/config before executing; `.db.spec.ts` and e2e suites are separate from the default unit runner.
