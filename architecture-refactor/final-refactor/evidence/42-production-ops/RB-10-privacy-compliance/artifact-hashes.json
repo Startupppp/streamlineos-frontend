@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-09-03",
-  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) — PRD-C186/C187/C188 drill evidence",
+  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) \u2014 PRD-C186/C187/C188 drill evidence",
   "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/RB-10-privacy-compliance",
   "covers": "the three narrative documents at the top level of this bundle only. runs/ and probes/ carry their own seals; this seal says nothing about them.",
   "redaction": "Every subject in every run is synthetic and addressed on a reserved TLD (.invalid or .test). Generations 1 and 2 asserted this in prose and nothing re-ran the scan as the tree grew. Generation 3 replaces the assertion with a gate: streamlineos-backend src/scripts/check-evidence-redaction.mjs derives its corpus from these seals (every sealed file, every seal, and every regular file directly inside a sealed directory), applies 14 credential and PII patterns each carrying a positive and a negative control, refuses to pass below its corpus floors, and pins its two deliberate probe fixtures by sha256 so a stale exemption fails. Run it: node src/scripts/check-evidence-redaction.mjs. Regression spec: src/scripts/evidence-redaction-gate.spec.ts (runs/40); bite proof: runs/41.",
@@ -13,7 +13,7 @@
     "FINDINGS.md": "28185f17f5743c9c7bb44718085d468934c69cc73bed0d3c21803094a74e3929",
     "README.md": "304a5e1b4f6f6198b2c9608ea28b3f3e3c34ce55fa27c6981549b5ab0714a2d1"
   },
-  "resealedAt": "2026-09-04 — ticket 35, v2 close-out generation 3: README.md gained the generation-3 provenance, the redaction-gate section and the rewritten PRD-C188 outcome; FINDINGS.md re-measured F-12 at head (22 -> 25) and opened F-13. Both re-hashed.",
+  "resealedAt": "2026-09-04 \u2014 ticket 35, v2 close-out generation 3: README.md gained the generation-3 provenance, the redaction-gate section and the rewritten PRD-C188 outcome; FINDINGS.md re-measured F-12 at head (22 -> 25) and opened F-13. Both re-hashed.",
   "reseal2026-09-04": {
     "date": "2026-09-04",
     "reason": "Narrative documents updated during code-release-10-10-v2 gate closure. Files verified to not contain secrets.",

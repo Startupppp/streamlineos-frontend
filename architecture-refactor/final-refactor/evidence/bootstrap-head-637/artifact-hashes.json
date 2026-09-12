@@ -4,7 +4,7 @@
   "generatedBy": "code-release-10-10 ticket 04 (recorder)",
   "sourceDir": "architecture-refactor/final-refactor/evidence/bootstrap-head-637",
   "covers": "journal head 637 (0991_calendar_event_local_version); see README.md and manifest.json",
-  "algorithm": "sha256 over the exact bytes on disk — NO redaction was applied before hashing, because no retained file contains a connection string. See README.md > Sanitization. Text digests are taken over the file content with CRLF normalised to LF: this tree holds seals recorded on both line-ending forms, so a raw byte digest can never verify on one platform. Content is unchanged; every re-pointed digest was proved to match the previously sealed bytes under the other line ending before it was rewritten (2026-09-06).",
+  "algorithm": "sha256 over the exact bytes on disk \u2014 NO redaction was applied before hashing, because no retained file contains a connection string. See README.md > Sanitization. Text digests are taken over the file content with CRLF normalised to LF: this tree holds seals recorded on both line-ending forms, so a raw byte digest can never verify on one platform. Content is unchanged; every re-pointed digest was proved to match the previously sealed bytes under the other line ending before it was rewritten (2026-09-06).",
   "recompute": "find . -type f ! -name artifact-hashes.json | sort | xargs shasum -a 256",
   "fileCount": 28,
   "totalBytes": 314720,
