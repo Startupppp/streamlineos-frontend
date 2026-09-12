@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import {
+  DataTable,
+  DataTableSkeleton,
+  type DataTableColumn,
+} from "@/components/ui/data-table";
+import { ErrorState, Gated } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
@@ -168,74 +172,84 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
     },
   ];
 
-  if (exceptions.isError) {
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load the exception queue"
-        description={getErrorMessage(exceptions.error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
   return (
     <>
-      <DataTable
-        data={exceptions.data?.items ?? []}
-        columns={columns}
-        getRowKey={(row) => row.pickLineId}
+      <Gated
+        permission="inventory:picking:review"
         isLoading={exceptions.isLoading}
-        className="flex-1 min-h-0"
-        minWidth="1100px"
-        mobileCard={(row) => (
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-sm tabular-nums">{row.sku}</span>
-              <Badge
-                variant="outline"
-                className={cn("h-5 px-2 py-0.5 text-micro", PICK_EXCEPTION_BADGE[row.reason])}
-              >
-                {PICK_EXCEPTION_LABEL[row.reason]}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="flex min-w-0 items-center gap-1">
-                <span className="truncate">{row.pickNumber} ·</span>
-                <ExceptionOwnerCell exception={row} />
-              </span>
-              <span className="shrink-0 font-mono tabular-nums">
-                {Number(row.quantityPicked).toFixed(2)} /{" "}
-                {Number(row.quantityToPick).toFixed(2)}
-              </span>
-            </div>
-            {row.status === "OPEN" ? (
-              <ReviewButton exception={row} onReview={setReviewing} />
-            ) : null}
-          </div>
-        )}
-        emptyState={
-          <InventoryEmptyState
-            illustration={<EmptyOrdersIllustration />}
-            title={status === "OPEN" ? "Nothing waiting on you" : "No exceptions here"}
-            description={
-              ownership === "MINE"
-                ? "Exceptions land here when a picker cannot close a line the way the wave asked."
-                : "When a picker reports a shortfall, a damaged unit or a swap, it arrives here with an owner."
-            }
-            compact
+        isError={exceptions.isError}
+        className="flex-1"
+        loading={
+          <DataTableSkeleton
+            rows={10}
+            columns={columns.length}
+            className="flex-1 min-h-0"
           />
         }
-        pagination={{
-          mode: "server",
-          page,
-          pageSize,
-          total: exceptions.data?.total ?? 0,
-          onPageChange: setPage,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-        }}
-      />
+        error={
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load the exception queue"
+            description={getErrorMessage(exceptions.error)}
+            onRetry={handleRetry}
+          />
+        }
+      >
+        <DataTable
+          data={exceptions.data?.items ?? []}
+          columns={columns}
+          getRowKey={(row) => row.pickLineId}
+          className="flex-1 min-h-0"
+          minWidth="1100px"
+          mobileCard={(row) => (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-mono text-sm tabular-nums">{row.sku}</span>
+                <Badge
+                  variant="outline"
+                  className={cn("h-5 px-2 py-0.5 text-micro", PICK_EXCEPTION_BADGE[row.reason])}
+                >
+                  {PICK_EXCEPTION_LABEL[row.reason]}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="flex min-w-0 items-center gap-1">
+                  <span className="truncate">{row.pickNumber} ·</span>
+                  <ExceptionOwnerCell exception={row} />
+                </span>
+                <span className="shrink-0 font-mono tabular-nums">
+                  {Number(row.quantityPicked).toFixed(2)} /{" "}
+                  {Number(row.quantityToPick).toFixed(2)}
+                </span>
+              </div>
+              {row.status === "OPEN" ? (
+                <ReviewButton exception={row} onReview={setReviewing} />
+              ) : null}
+            </div>
+          )}
+          emptyState={
+            <InventoryEmptyState
+              illustration={<EmptyOrdersIllustration />}
+              title={status === "OPEN" ? "Nothing waiting on you" : "No exceptions here"}
+              description={
+                ownership === "MINE"
+                  ? "Exceptions land here when a picker cannot close a line the way the wave asked."
+                  : "When a picker reports a shortfall, a damaged unit or a swap, it arrives here with an owner."
+              }
+              compact
+            />
+          }
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: exceptions.data?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </Gated>
 
       <ResolveExceptionDialog
         open={reviewing !== null}

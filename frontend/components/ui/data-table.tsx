@@ -366,7 +366,7 @@ export function DataTable<T>({
           </div>
         ) : rows.length === 0 ? (
           <div
-            role="status"
+            role={emptyState ? undefined : "status"}
             className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
           >
             {emptyState ?? (

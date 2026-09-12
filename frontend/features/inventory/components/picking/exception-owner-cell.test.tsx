@@ -23,7 +23,10 @@ let mockRoster: {
   error: Error | null;
 } = { data: undefined, isLoading: false, isError: false, error: null };
 
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan[key] ?? false }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockCan[key] ?? false,
+  useCanState: (key: string) => (mockCan[key] ? "granted" : "denied"),
+}));
 
 jest.mock("@/hooks/api/inventory/pick-exceptions", () => ({
   ...jest.requireActual("@/hooks/api/inventory/pick-exceptions"),

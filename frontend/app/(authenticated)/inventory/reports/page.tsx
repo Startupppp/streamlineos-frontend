@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAccess, useCan } from "@/hooks/api/access";
@@ -125,6 +126,12 @@ export default function InventoryReportsHubPage() {
         />
       ) : denied ? (
         <NoPermissionState className="flex-1" permission={REPORTS_READ} />
+      ) : open.length === 0 ? (
+        <EmptyState
+          className="flex-1"
+          title="No reports open to you"
+          description="Inventory reporting is on for this workspace, but none of its reports is granted to your role yet. Ask an administrator for the ones you need."
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {open.map(({ href, label, icon: Icon }) => (

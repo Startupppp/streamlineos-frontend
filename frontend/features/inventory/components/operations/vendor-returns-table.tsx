@@ -2,8 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import {
+  DataTable,
+  DataTableSkeleton,
+  type DataTableColumn,
+} from "@/components/ui/data-table";
+import { ErrorState, Gated } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -144,44 +148,58 @@ export function VendorReturnsTable({
 
   return (
     <>
-      <DataTable
-        data={query.data?.items ?? []}
-        columns={columns}
-        className="flex-1 min-h-0"
-        getRowKey={(row) => row.id}
+      <Gated
+        permission={VENDOR_RETURNS_PERMISSION}
         isLoading={query.isLoading}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize,
-          total: query.data?.total ?? 0,
-          onPageChange,
-        }}
-        emptyState={
-          query.error ? (
-            <ErrorState
-              title="Couldn't load vendor returns"
-              description={getErrorMessage(query.error)}
-              onRetry={handleRetry}
-              compact
-            />
-          ) : status ? (
-            <InventoryEmptyState
-              title="No returns match this filter"
-              description="Clear the status filter to see every vendor return."
-              compact
-            />
-          ) : (
-            <InventoryEmptyState
-              title="No vendor returns"
-              description="Raise a vendor return to send goods back to a supplier."
-              action={{ label: "New Vendor Return", onClick: onCreate }}
-              compact
-            />
-          )
+        isError={query.isError}
+        className="flex-1 min-h-0"
+        loading={
+          <DataTableSkeleton
+            rows={10}
+            columns={columns.length}
+            className="flex-1 min-h-0"
+          />
         }
-        minWidth="640px"
-      />
+        error={
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load vendor returns"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        }
+      >
+        <DataTable
+          data={query.data?.items ?? []}
+          columns={columns}
+          className="flex-1 min-h-0"
+          getRowKey={(row) => row.id}
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: query.data?.total ?? 0,
+            onPageChange,
+          }}
+          emptyState={
+            status ? (
+              <InventoryEmptyState
+                title="No returns match this filter"
+                description="Clear the status filter to see every vendor return."
+                compact
+              />
+            ) : (
+              <InventoryEmptyState
+                title="No vendor returns"
+                description="Raise a vendor return to send goods back to a supplier."
+                action={{ label: "New Vendor Return", onClick: onCreate }}
+                compact
+              />
+            )
+          }
+          minWidth="640px"
+        />
+      </Gated>
 
       <ReturnApproveDialog
         open={approving !== null}
