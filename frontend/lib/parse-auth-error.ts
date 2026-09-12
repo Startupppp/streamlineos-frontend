@@ -1,3 +1,6 @@
+import { isApiError } from "@/lib/api-client";
+import { isRecord } from "@/lib/is-record";
+
 export type AuthErrorCode =
   | "AUTH_INVALID_CREDENTIALS"
   | "AUTH_EMAIL_NOT_VERIFIED"
@@ -33,4 +36,22 @@ export function parseAuthErrorCode(raw: string): ParsedAuthError {
   }
   const match = KNOWN_CODES.find((c) => c === raw);
   return { code: match ?? "UNKNOWN" };
+}
+
+const MAX_AUTH_RETRY_AFTER_SECONDS = 15 * 60;
+
+/**
+ * `AuthController.enforceRateLimit` answers a 429 with
+ * `details: { retryAfterSeconds }`. Returns null for anything that is not a
+ * usable 429 retry-after, so the caller keeps its own default rather than
+ * inheriting a zero, a negative or a value that would strand the control.
+ */
+export function readRetryAfterSeconds(error: unknown): number | null {
+  if (!isApiError(error) || error.status !== 429) return null;
+  if (!isRecord(error.details)) return null;
+  const raw = error.details.retryAfterSeconds;
+  const seconds =
+    typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : Number.NaN;
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return Math.min(Math.ceil(seconds), MAX_AUTH_RETRY_AFTER_SECONDS);
 }

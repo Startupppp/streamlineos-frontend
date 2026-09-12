@@ -25,7 +25,7 @@ import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
 import { ClientOnboardingTab } from "@/features/crm/clients/client-onboarding-tab";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
-import { AccountInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
+import { AccountInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu-account";
 import type { ClientAccountStatus } from "@/types/crm";
 
 const STATUS_LABELS: Record<ClientAccountStatus, string> = {

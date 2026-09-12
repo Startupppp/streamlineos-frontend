@@ -25,7 +25,7 @@ import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
-import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
+import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu-account";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 function ContactDetailSkeleton() {

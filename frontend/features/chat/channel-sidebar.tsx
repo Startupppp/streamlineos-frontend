@@ -197,7 +197,7 @@ export function ChannelSidebar({
 
         <ChannelSidebarHeader
           isCollapsed={isCollapsed}
-          onlineCount={onlineUsers?.length ?? 0}
+          onlineUserCount={onlineUsers?.length ?? 0}
           search={search}
           showArchived={showArchived}
           searchInputRef={searchInputRef}

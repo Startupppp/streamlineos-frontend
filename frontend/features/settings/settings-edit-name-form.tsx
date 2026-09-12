@@ -8,7 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -23,7 +23,7 @@ interface SettingsEditNameFormProps {
 }
 
 export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProps) {
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const updateProfile = useUpdateMyProfile();
   const form = useForm<SettingsDisplayNameValues>({
     resolver: zodResolver(settingsDisplayNameSchema),
@@ -36,12 +36,13 @@ export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProp
 
   const handleSave = form.handleSubmit((values) => {
     const nextName = values.name.trim();
+    const claimsRun = beginClaimsRefresh();
     updateProfile.mutate(
       { name: nextName },
       {
         onSuccess: async () => {
-          await refreshSessionClaims({ name: nextName });
-          toast.success("Name updated");
+          const confirmed = await claimsRun.confirmOrWarn({ name: nextName });
+          if (confirmed) toast.success("Name updated");
           onClose();
         },
         onError: (err) => {

@@ -38,7 +38,7 @@ interface ChannelSidebarHeaderProps {
   onOpenBrowse: () => void;
   onOpenNewDM: () => void;
   onOpenNewGroup: () => void;
-  searchInputRef: React.RefObject<HTMLInputElement>;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function ChannelSidebarHeader({

@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { apiClient } from "@/lib/api-client";
 import { z } from "zod";
 
@@ -35,7 +35,7 @@ const SettingsEditNameForm = dynamic(
 
 export function SettingsProfile() {
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
 
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -92,13 +92,14 @@ export function SettingsProfile() {
         uploadKeyContract,
       );
 
+      const claimsRun = beginClaimsRefresh();
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
           { image: key },
           {
             onSuccess: async () => {
-              await refreshSessionClaims({});
-              toast.success("Profile photo updated");
+              const confirmed = await claimsRun.confirmOrWarn({});
+              if (confirmed) toast.success("Profile photo updated");
               setTimeout(() => setPreviewUrl(null), 1000);
               resolve();
             },
@@ -118,28 +119,33 @@ export function SettingsProfile() {
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile, refreshSessionClaims]);
+  }, [session, updateProfile, beginClaimsRefresh]);
 
   const handleRemovePhoto = useCallback(async () => {
     if (!session?.user?.id) return;
     setUploading(true);
     try {
+      const claimsRun = beginClaimsRefresh();
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
           { image: "" },
           {
-            onSuccess: async () => { await refreshSessionClaims({}); setPreviewUrl(null); resolve(); },
+            onSuccess: async () => {
+              const confirmed = await claimsRun.confirmOrWarn({});
+              setPreviewUrl(null);
+              if (confirmed) toast.success("Profile photo removed");
+              resolve();
+            },
             onError: (err) => reject(err),
           }
         );
       });
-      toast.success("Profile photo removed");
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile, refreshSessionClaims]);
+  }, [session, updateProfile, beginClaimsRefresh]);
 
   const handleOpenFileInput = useCallback(() => {
     fileInputRef.current?.click();

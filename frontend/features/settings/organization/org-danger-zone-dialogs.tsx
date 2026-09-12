@@ -19,7 +19,7 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useDeleteOrg, useOrgMembers } from "@/hooks/api/organization";
 import { useInitiateOrgTransfer } from "@/hooks/api/ownership";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
 
@@ -145,7 +145,7 @@ export function DeleteOrganizationDialog({
 }: DeleteOrganizationDialogProps) {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const deleteMutation = useDeleteOrg();
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -171,6 +171,7 @@ export function DeleteOrganizationDialog({
 
   function handleConfirmDelete() {
     if (deleteConfirmation !== deleteMatchValue) return;
+    const claimsRun = beginClaimsRefresh();
     deleteMutation.mutate(
       { confirmation: deleteConfirmation },
       {
@@ -181,7 +182,10 @@ export function DeleteOrganizationDialog({
               : "Organization deleted. Create or join an organization to continue.",
           );
           handleOpenChange(false);
-          await refreshSessionClaims({ orgId: data.nextOrgId });
+          const confirmed = await claimsRun.confirmOrWarn({
+            orgId: data.nextOrgId,
+          });
+          if (!confirmed) return;
           queryClient.clear();
           router.replace(data.nextOrgId ? "/dashboard" : "/org-setup");
           router.refresh();

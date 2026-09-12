@@ -11,6 +11,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
+import { readRetryAfterSeconds } from "@/lib/parse-auth-error";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { useRequestOtp, useVerifyOtp, useSendMagicLink } from "@/hooks/api/auth";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
   const codeStageActiveRef = useRef(false);
+  const otpFieldRef = useRef<HTMLInputElement>(null);
 
   const emailForm = useForm<EmailValues>({
     resolver: zodResolver(emailSchema),
@@ -49,8 +51,18 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     };
   }, []);
 
-  const startCooldown = useCallback(() => {
-    setResendCooldown(OTP_RESEND_COOLDOWN);
+  useEffect(function focusCodeFieldOnStageEntry() {
+    if (stage !== "code") return;
+    otpFieldRef.current?.focus();
+  }, [stage]);
+
+  useEffect(function focusCodeFieldAfterVerifyError() {
+    if (!verifyError) return;
+    otpFieldRef.current?.focus();
+  }, [verifyError]);
+
+  const startCooldown = useCallback((seconds: number = OTP_RESEND_COOLDOWN) => {
+    setResendCooldown(seconds);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     cooldownRef.current = setInterval(() => {
       setResendCooldown((prev) => {
@@ -62,6 +74,14 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
       });
     }, 1000);
   }, []);
+
+  const applyRateLimitCooldown = useCallback(
+    (error: unknown) => {
+      if (!isApiError(error) || error.status !== 429) return;
+      startCooldown(readRetryAfterSeconds(error) ?? OTP_RESEND_COOLDOWN);
+    },
+    [startCooldown],
+  );
 
   const requestOtpMutation = useRequestOtp({
     onSuccess: (data, email) => {
@@ -75,6 +95,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
       toast.success(getErrorMessage(data));
     },
     onError: (error) => {
+      applyRateLimitCooldown(error);
       toast.error(getErrorMessage(error));
     },
   });
@@ -99,6 +120,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     },
     onError: (error) => {
       setVerifyError(getErrorMessage(error));
+      applyRateLimitCooldown(error);
       toast.error(getErrorMessage(error));
       // A server verdict (the code was wrong, expired or rate-limited) means this
       // code is spent, so the field is cleared and a new one must be requested.
@@ -179,6 +201,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           </p>
           <div className="flex justify-center py-2">
             <InputOTP
+              ref={otpFieldRef}
               id="otp-code"
               aria-label="Verification code"
               aria-describedby={

@@ -15,7 +15,7 @@ import {
   usePendingOrgTransfers,
   useCancelOrgTransfer,
 } from "@/hooks/api/ownership";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
 import { OrgSettingsCard, OrgSettingsActionRow } from "./org-settings-chrome";
@@ -33,7 +33,7 @@ const DESTRUCTIVE_OUTLINE_BTN =
 
 export function OrgDangerZoneSection({ org }: Props) {
   const canManage = useCan("settings:manage");
-  const refreshSessionClaims = useSessionClaimsRefresh();
+  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const { data: access } = useAccess();
   const isOwner = access?.isOrgOwner === true;
   const isKnownNonOwner = access?.isOrgOwner === false;
@@ -76,39 +76,33 @@ export function OrgDangerZoneSection({ org }: Props) {
   }
 
   function handleConfirmArchive() {
+    const claimsRun = beginClaimsRefresh();
     archiveMutation.mutate(undefined, {
       onSuccess: async (data) => {
         toast.success("Organization archived");
         setArchiveOpen(false);
-        await refreshSessionClaims(
-          data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
-        );
+        const nextOrgId = data.nextOrgId ?? null;
+        const confirmed = await claimsRun.confirmOrWarn({ orgId: nextOrgId });
+        if (!confirmed) return;
         queryClient.clear();
-        if (data.nextOrgId) {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/org-setup");
-        }
+        router.replace(nextOrgId ? "/dashboard" : "/org-setup");
         router.refresh();
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
-  async function handleConfirmLeave() {
+  function handleConfirmLeave() {
+    const claimsRun = beginClaimsRefresh();
     leaveMutation.mutate(undefined, {
       onSuccess: async (data) => {
         toast.success("You have left the organization");
         setLeaveOpen(false);
-        await refreshSessionClaims(
-          data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
-        );
+        const nextOrgId = data.nextOrgId ?? null;
+        const confirmed = await claimsRun.confirmOrWarn({ orgId: nextOrgId });
+        if (!confirmed) return;
         queryClient.clear();
-        if (data.nextOrgId) {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/org-setup");
-        }
+        router.replace(nextOrgId ? "/dashboard" : "/org-setup");
         router.refresh();
       },
       onError: (err) => toast.error(getErrorMessage(err)),

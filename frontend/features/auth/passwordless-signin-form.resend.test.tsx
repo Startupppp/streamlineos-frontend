@@ -199,27 +199,113 @@ describe("PasswordlessSigninForm", () => {
       expect(screen.queryByText(/resend in/i)).toBeNull();
     });
 
-    it("PINNED GAP: a 429 surfaces its message but starts no cooldown of its own", async () => {
-      // The only cooldown in this form is the 30s resend timer, started by a
-      // SUCCESSFUL request. Nothing reads the 429's `retryAfterSeconds`, so after
-      // the resend timer elapses the control is offered again immediately even
-      // though the server is still refusing. Recorded, not repaired: wiring the
-      // server's retry-after into this control is a product decision.
+    function rateLimited(retryAfterSeconds?: unknown): ApiError {
+      return new ApiError(
+        "Too many attempts. Try again later.",
+        429,
+        "AUTH_RATE_LIMITED",
+        retryAfterSeconds === undefined ? undefined : { retryAfterSeconds },
+      );
+    }
+
+    async function elapseInitialCooldown(): Promise<void> {
       await renderInCodeStage();
       act(() => {
         jest.advanceTimersByTime(30_000);
       });
       expect(resendControl()).toBeEnabled();
+    }
+
+    it("a 429 holds Resend for the server's retryAfterSeconds, not the local 30", async () => {
+      await elapseInitialCooldown();
 
       await act(async () => {
-        verifyOtpOnError?.(
-          new ApiError("Too many attempts. Try again later.", 429, "AUTH_RATE_LIMITED"),
-        );
+        verifyOtpOnError?.(rateLimited(120));
       });
 
       expect(screen.getByRole("alert")).toHaveTextContent("Too many attempts");
-      expect(resendControl()).toBeEnabled();
+      expect(resendControl()).toHaveTextContent("Resend in 120s");
+      expect(resendControl()).toBeDisabled();
+
+      act(() => {
+        jest.advanceTimersByTime(60_000);
+      });
+      expect(resendControl()).toHaveTextContent("Resend in 60s");
+      expect(resendControl()).toBeDisabled();
+
+      act(() => {
+        jest.advanceTimersByTime(60_000);
+      });
       expect(resendControl()).toHaveTextContent("Resend code");
+      expect(resendControl()).toBeEnabled();
+    });
+
+    it("a 429 on the resend request itself holds the control for the same window", async () => {
+      await elapseInitialCooldown();
+
+      await act(async () => {
+        requestOtpOnError?.(rateLimited(45));
+      });
+
+      expect(resendControl()).toHaveTextContent("Resend in 45s");
+      expect(resendControl()).toBeDisabled();
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["not a number", "soon"],
+      ["zero", 0],
+      ["negative", -30],
+    ])("falls back to 30s when retryAfterSeconds is %s", async (_label, value) => {
+      await elapseInitialCooldown();
+
+      await act(async () => {
+        verifyOtpOnError?.(rateLimited(value));
+      });
+
+      expect(resendControl()).toHaveTextContent("Resend in 30s");
+      expect(resendControl()).toBeDisabled();
+    });
+
+    it("(negative) a failure that is not a 429 starts no cooldown at all", async () => {
+      await elapseInitialCooldown();
+
+      await act(async () => {
+        verifyOtpOnError?.(new ApiError("Invalid or expired code", 401, "AUTH_TOKEN_INVALID"));
+      });
+
+      expect(screen.getByRole("alert")).toHaveTextContent("Invalid or expired code");
+      expect(resendControl()).toHaveTextContent("Resend code");
+      expect(resendControl()).toBeEnabled();
+    });
+  });
+
+  describe("focus management", () => {
+    it("moves focus to the code field when the email stage advances", async () => {
+      await renderInCodeStage();
+
+      expect(screen.getByTestId("otp-input")).toHaveFocus();
+    });
+
+    it("returns focus to the code field after a verify error resolves", async () => {
+      await renderInCodeStage();
+      screen.getByTestId("otp-input").blur();
+      expect(screen.getByTestId("otp-input")).not.toHaveFocus();
+
+      await act(async () => {
+        verifyOtpOnError?.(new ApiError("Invalid or expired code", 401, "AUTH_TOKEN_INVALID"));
+      });
+
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(screen.getByTestId("otp-input")).toHaveFocus();
+    });
+
+    it("(negative) does not reach for a code field that the email stage has not rendered", () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+
+      expect(screen.queryByTestId("otp-input")).toBeNull();
+      expect(screen.getByLabelText(/email/i)).toHaveFocus();
     });
   });
 });
