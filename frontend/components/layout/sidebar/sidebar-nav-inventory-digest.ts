@@ -317,6 +317,11 @@
  * Updated 2026-09-06: Workflows nav group gained module: "workflows" (nav gate
  * fix) and Variables/Secrets/Access routes moved to /workflows/settings/*
  * (route-conformance §8).
+ * Widened 2026-09-12: the SignOS group's own gate now lists every key one of
+ * its routes needs (bulk_send:run, audit:view, access:view, admin:manage
+ * joined envelope:view and template:manage). A member holding only
+ * sign:audit:view saw no SignOS entry at all. Strictly widening: nobody who
+ * saw the group loses it, and each route keeps its own key.
  */
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "ca94134d34f0545cfc42f0fbf591a6cabb660073caecae0f04a365a9165c42db";
+  "f4abf3d67c312de8db9e317a6f53db483f673a964d64bf0fbbbb50cea3cf1c73";
