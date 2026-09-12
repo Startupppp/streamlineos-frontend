@@ -31,6 +31,54 @@ Query-scope exit 0; request-params exit 1 (undeclared hierarchy `mode`).
 Bundle gate exit 1 for stale build provenance; see [frontend data](recovery-frontend-data.md).
 These are targeted checks, not a rerun of historical Architecture/Documents suites.
 
+### Superseded by the origin/main merge — re-measured after `3efb3d6bf`
+
+The figures above predate the `380d5a4d9` merge and no longer describe this tree.
+`check-over-300`'s own header says as much for a merge: *"neither number describes the
+merged tree; re-measure before trusting a red or a green."* Current frontend state:
+
+| Gate | Exit | Note |
+| --- | --- | --- |
+| `check-file-sizes` | **0** | the 508-line file is gone; `week-grid.tsx` 578 → 407 plus two extracted modules |
+| `check-request-params` | **0** | the hierarchy `mode` was fixed earlier; the merge added an undeclared `limit` on `/inventory/projects/at-risk`, now declared |
+| `tsc --noEmit --incremental false` | **0** | |
+| `check-test-typecheck` | **0** | |
+| `check-named-handlers`, `check-no-arbitrary-colors`, `check-query-scope` | **0** | |
+| `madge --circular` (both repos) | **0** | no circular dependency |
+| `check-over-300` | **1** | **524 of 513** — 11 over |
+| `check-dead-code` | **1** | **10 dead files**, see below |
+
+Two of ARCH-003's four gates are closed. The other two are open for stated reasons, and
+**no baseline was raised** — a raise of the dead-code baseline from 0 to 10 was attempted
+and reverted, because absorbing a failure into a ceiling is the exact failure mode these
+gates exist to catch.
+
+### The 10 dead files are one unreachable island — owner: accounting rewrite
+
+`check-dead-code` reports these with "no live importers found in module graph":
+
+```
+types/accounting.ts                                hooks/api/accounting/overview.ts
+features/accounting/shared/index.ts                features/accounting/shared/money.tsx
+features/accounting/shared/finance-status.tsx      features/accounting/shared/download-csv.ts
+features/accounting/shared/finance-page-icons.tsx  features/accounting/overview/bank-accounts-list.tsx
+features/accounting/purchases/bill-detail-columns.tsx
+features/accounting/purchases/bill-detail-view.tsx
+```
+
+These were **restored** during the merge repair on the (correct) observation that
+`types/accounting.ts` has 3 importers. It does — but those importers are themselves in
+this set. The whole subtree hangs off `features/accounting/overview/bank-accounts-list.tsx`,
+which nothing imports at all, so it is internally consistent and externally unreachable.
+That is why it surfaced as `TS2307`: the errors were island files importing each other,
+and restoring silenced the compiler without making anything reachable. Deleting the island
+would have silenced it equally.
+
+Resolve by deciding whether `bank-accounts-list.tsx` is a surface about to be routed (then
+it needs a route and an importer) or pre-rewrite leftovers superseded by
+`types/accounting-{kernel,ar,ap}.ts` (then the island is deleted). Do not settle it by
+moving the baseline.
+
 # Architecture and performance — retained evidence and remaining gates
 
 ## Completed: ARCH-001 — HR keyset pagination contraction
