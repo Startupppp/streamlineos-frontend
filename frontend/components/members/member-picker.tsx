@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -333,6 +332,7 @@ export function MemberPicker(props: MemberPickerProps) {
         type="button"
         variant="outline"
         role="combobox"
+        aria-label={placeholder}
         disabled={disabled}
         className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
       >
@@ -373,20 +373,23 @@ export function MemberPicker(props: MemberPickerProps) {
                 value={search}
                 onValueChange={handleSearchChange}
               />
-              <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
-                <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
+              {filtered.length === 0 ? (
+                <div role="status" aria-live="polite" className="py-2 text-center text-xs text-muted-foreground">
                   No members found.
-                </CommandEmpty>
-                <CommandGroup>
-                  {filtered.map((m) => (
-                    <CommandItem key={m.id} value={m.id} onSelect={() => handleToggle(m.id)}>
-                      <MemberAvatar member={m} className="mr-2" />
-                      <TruncatedText text={getUserDisplayName(m)} className="text-xs" />
-                      {values.includes(m.id) && <Check className="ml-auto h-3 w-3" />}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
+                </div>
+              ) : (
+                <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
+                  <CommandGroup>
+                    {filtered.map((m) => (
+                      <CommandItem key={m.id} value={m.id} onSelect={() => handleToggle(m.id)}>
+                        <MemberAvatar member={m} className="mr-2" />
+                        <TruncatedText text={getUserDisplayName(m)} className="text-xs" />
+                        {values.includes(m.id) && <Check className="ml-auto h-3 w-3" />}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              )}
             </Command>
           </PopoverContent>
         </Popover>
@@ -410,6 +413,7 @@ export function MemberPicker(props: MemberPickerProps) {
       type="button"
       variant="outline"
       role="combobox"
+      aria-label={placeholder}
       disabled={disabled}
       className={cn(
         TRIGGER_CLASS,
@@ -445,27 +449,30 @@ export function MemberPicker(props: MemberPickerProps) {
             value={search}
             onValueChange={handleSearchChange}
           />
-          <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
-            <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
+          {filtered.length === 0 && !allowUnassigned ? (
+            <div role="status" aria-live="polite" className="py-2 text-center text-xs text-muted-foreground">
               No members found.
-            </CommandEmpty>
-            <CommandGroup>
-              {allowUnassigned && (
-                <CommandItem value="__unassigned__" onSelect={() => handleSelect(null)}>
-                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs">Unassigned</span>
-                  {!value && <Check className="ml-auto h-3 w-3" />}
-                </CommandItem>
-              )}
-              {filtered.map((m) => (
-                <CommandItem key={m.id} value={m.id} onSelect={() => handleSelect(m.id)}>
-                  <MemberAvatar member={m} className="mr-2" />
-                  <span className="truncate text-xs">{getUserDisplayName(m)}</span>
-                  {m.id === value && <Check className="ml-auto h-3 w-3" />}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
+            </div>
+          ) : (
+            <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
+              <CommandGroup>
+                {allowUnassigned && (
+                  <CommandItem value="__unassigned__" onSelect={() => handleSelect(null)}>
+                    <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs">Unassigned</span>
+                    {!value && <Check className="ml-auto h-3 w-3" />}
+                  </CommandItem>
+                )}
+                {filtered.map((m) => (
+                  <CommandItem key={m.id} value={m.id} onSelect={() => handleSelect(m.id)}>
+                    <MemberAvatar member={m} className="mr-2" />
+                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === value && <Check className="ml-auto h-3 w-3" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

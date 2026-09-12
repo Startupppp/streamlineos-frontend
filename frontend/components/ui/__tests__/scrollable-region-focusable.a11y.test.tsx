@@ -3,6 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { expectNoAxeViolations } from "@/test-utils";
 
 describe("Table container is a focusable named region (scrollable-region-focusable)", () => {
@@ -150,5 +157,50 @@ describe("PageWrapper scroll container is a focusable named region", () => {
   it("BITE — without role=region the scroll container is invisible to AT", () => {
     const { container } = render(<div tabIndex={0}>scrollable</div>);
     expect(container.querySelector('[role="region"]')).toBeNull();
+  });
+});
+
+describe("CommandList scroll container is keyboard-accessible (scrollable-region-focusable)", () => {
+  it("wraps CommandPrimitive.List in a div with tabIndex=0 so keyboard users can scroll", () => {
+    const { container } = render(
+      <Command>
+        <CommandInput placeholder="Search…" />
+        <CommandList>
+          <CommandGroup>
+            <CommandItem value="alpha">Alpha</CommandItem>
+            <CommandItem value="beta">Beta</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>,
+    );
+    const scroller = container.querySelector('[tabindex="0"]');
+    expect(scroller).not.toBeNull();
+  });
+
+  it("passes axe with items present", async () => {
+    const { container } = render(
+      <Command>
+        <CommandInput placeholder="Search…" />
+        <CommandList>
+          <CommandGroup>
+            <CommandItem value="alice">Alice</CommandItem>
+            <CommandItem value="bob">Bob</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("BITE — a scrollable div with tabIndex=-1 and no focusable children is not keyboard-accessible", () => {
+    const { container } = render(
+      <div className="overflow-y-auto max-h-52" tabIndex={-1}>
+        <div>Item one</div>
+        <div>Item two</div>
+      </div>,
+    );
+    const scroller = container.querySelector('[tabindex="-1"]');
+    expect(scroller).not.toBeNull();
+    expect(scroller?.getAttribute("tabindex")).toBe("-1");
   });
 });

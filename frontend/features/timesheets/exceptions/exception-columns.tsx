@@ -99,7 +99,7 @@ export function buildExceptionColumns({
             {format(parseISO(row.dueDate), "MMM d, yyyy")}
           </span>
         ) : (
-          <span className="text-muted-foreground/30">—</span>
+          <span className="text-muted-foreground">—</span>
         ),
     },
     {
@@ -131,13 +131,13 @@ export function buildExceptionColumns({
               className="text-dense text-muted-foreground"
             />
             {row.resolvedAt && (
-              <p className="text-micro text-muted-foreground/70 tabular-nums">
+              <p className="text-micro text-muted-foreground tabular-nums">
                 {format(parseISO(row.resolvedAt), "MMM d, yyyy")}
               </p>
             )}
           </div>
         ) : (
-          <span className="text-muted-foreground/30">—</span>
+          <span className="text-muted-foreground">—</span>
         ),
     });
   }

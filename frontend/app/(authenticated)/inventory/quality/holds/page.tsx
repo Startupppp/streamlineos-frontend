@@ -210,7 +210,7 @@ function HoldsPageInner() {
         return grain === null ? (
           // Not "—" as a placeholder for missing data: loose owned stock is the
           // ordinary case, and it genuinely has nothing more to say.
-          <span className="text-muted-foreground/60">Loose, owned</span>
+          <span className="text-muted-foreground">Loose, owned</span>
         ) : (
           <span>{grain}</span>
         );

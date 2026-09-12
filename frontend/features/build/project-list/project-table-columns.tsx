@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { Calendar, Ticket, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -70,10 +71,12 @@ export function useProjectTableColumns({
             >
               {p.key.slice(0, 2).toUpperCase()}
             </span>
-            <TruncatedText
-              text={p.name}
-              className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
-            />
+            <Link href={`/build/${p.id}`} className="min-w-0 flex-1">
+              <TruncatedText
+                text={p.name}
+                className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
+              />
+            </Link>
             <span className="hidden shrink-0 font-mono text-micro text-muted-foreground sm:inline-block">
               {p.key}
             </span>

@@ -175,6 +175,7 @@ export function DepartmentCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={placeholder ?? "Select department"}
           disabled={disabled}
           className={cn(
             "h-8 w-full justify-between font-normal border-input bg-card data-[placeholder]:text-muted-foreground",

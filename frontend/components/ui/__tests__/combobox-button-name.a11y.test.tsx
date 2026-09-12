@@ -1,5 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { Combobox } from "@/components/ui/combobox";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { expectNoAxeViolations } from "@/test-utils";
 
 const OPTIONS = [
@@ -87,5 +94,50 @@ describe("Combobox trigger has an accessible name (button-name)", () => {
     );
     expect(screen.queryByRole("combobox", { name: "Select…" })).toBeNull();
     expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
+});
+
+describe("Combobox empty state does not produce aria-required-children violation", () => {
+  it("renders a status region instead of an empty listbox when no options match", () => {
+    render(
+      <Command>
+        <div role="status" aria-live="polite">No results found.</div>
+      </Command>,
+    );
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
+  it("passes axe when no items and a status region is shown instead of an empty listbox", async () => {
+    const { container } = render(
+      <Command>
+        <div role="status" aria-live="polite" className="py-4 text-center text-sm">No results found.</div>
+      </Command>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("BITE — a role=listbox with only a role=presentation child violates aria-required-children", async () => {
+    const { container } = render(
+      <Command>
+        <CommandList>
+          <CommandEmpty>No results.</CommandEmpty>
+        </CommandList>
+      </Command>,
+    );
+    await expect(expectNoAxeViolations(container)).rejects.toThrow();
+  });
+
+  it("passes axe when the listbox has option children", async () => {
+    const { container } = render(
+      <Command>
+        <CommandList>
+          <CommandGroup>
+            <CommandItem value="alice">Alice</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>,
+    );
+    await expectNoAxeViolations(container);
   });
 });

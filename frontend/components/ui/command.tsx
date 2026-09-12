@@ -107,11 +107,9 @@ const CommandList = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
-    {...props}
-  />
+  <div tabIndex={0} className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden outline-none", className)}>
+    <CommandPrimitive.List ref={ref} {...props} />
+  </div>
 ))
 
 CommandList.displayName = CommandPrimitive.List.displayName

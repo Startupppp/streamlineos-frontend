@@ -5,7 +5,6 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -75,11 +74,12 @@ export function Combobox({
   disabled = false,
   className,
   onSearchChange,
-  ariaLabel,
+  ariaLabel: legacyAriaLabel,
   footer,
-  "aria-label": ariaLabel,
+  "aria-label": ariaLabelAttr,
   "aria-labelledby": ariaLabelledBy,
 }: ComboboxProps) {
+  const ariaLabel = ariaLabelAttr ?? legacyAriaLabel;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -160,34 +160,39 @@ export function Combobox({
             value={search}
             onValueChange={handleSearchInput}
           />
-          <CommandList className="max-h-52 overflow-y-auto overscroll-contain scrollbar-hide">
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {filtered.map((opt) => (
-                <CommandItem
-                  key={opt.value}
-                  value={opt.value}
-                  onSelect={() => handleSelect(opt.value)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4 shrink-0",
-                      value === opt.value ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm truncate">{opt.label}</span>
-                    {opt.sublabel && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {opt.sublabel}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            {footer}
-          </CommandList>
+          {filtered.length === 0 ? (
+            <div role="status" aria-live="polite" className="py-4 text-center text-sm text-muted-foreground">
+              {emptyText}
+            </div>
+          ) : (
+            <CommandList className="max-h-52 overflow-y-auto overscroll-contain scrollbar-hide">
+              <CommandGroup>
+                {filtered.map((opt) => (
+                  <CommandItem
+                    key={opt.value}
+                    value={opt.value}
+                    onSelect={() => handleSelect(opt.value)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4 shrink-0",
+                        value === opt.value ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm truncate">{opt.label}</span>
+                      {opt.sublabel && (
+                        <span className="text-xs text-muted-foreground truncate">
+                          {opt.sublabel}
+                        </span>
+                      )}
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          )}
+          {footer}
         </Command>
       </PopoverContent>
     </Popover>

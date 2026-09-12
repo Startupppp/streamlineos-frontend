@@ -456,23 +456,23 @@ export interface DownloadConfig {
   method?: "GET" | "POST";
   body?: unknown;
   signal?: AbortSignal;
+  onResponseHeaders?: (headers: Headers) => void;
 }
 
 async function download(
   url: string,
   params?: QueryParams,
-  onResponseHeaders?: (headers: Headers) => void,
+  config?: DownloadConfig,
 ): Promise<Blob> {
-  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`;
-    try {
-      const body = await res.json();
-      if (typeof body?.error === "string") message = body.error;
-    } catch {}
-    throw new Error(message);
+  const method = config?.method ?? "GET";
+  const init: RequestInit = { method, signal: config?.signal };
+  if (method === "POST" && config?.body !== undefined) {
+    init.headers = { "Content-Type": "application/json" };
+    init.body = JSON.stringify(config.body);
   }
-  onResponseHeaders?.(res.headers);
+  const res = await authedFetch(buildUrl(url, params), init, url);
+  if (!res.ok) throw await apiErrorFromResponse(res);
+  config?.onResponseHeaders?.(res.headers);
   return res.blob();
 }
 

@@ -14,7 +14,9 @@ export function warnIfExportTruncated(headers: Headers): void {
 }
 
 export async function downloadCalendarExport(from: string, to: string): Promise<void> {
-  const blob = await apiClient.download("/calendar/export", { from, to }, warnIfExportTruncated);
+  const blob = await apiClient.download("/calendar/export", { from, to }, {
+    onResponseHeaders: warnIfExportTruncated,
+  });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
