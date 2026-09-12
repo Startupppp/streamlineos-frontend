@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { useAuditEvents } from "@/hooks/api/timesheets-core/audit";
 import { useCan } from "@/hooks/api/access";
-import type { AuditEvent } from "@/features/timesheets/audit-types";
+import { auditActorLabel, type AuditEvent } from "@/features/timesheets/audit-types";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -80,7 +80,7 @@ const COLUMNS: DataTableColumn<AuditEvent>[] = [
     header: "Actor",
     cell: (row) => (
       <span className="text-xs">
-        {row.actorName ?? "System"}
+        {auditActorLabel(row)}
       </span>
     ),
   },

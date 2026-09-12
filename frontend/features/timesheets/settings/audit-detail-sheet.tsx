@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import type { AuditEvent } from "@/features/timesheets/audit-types";
+import { auditActorLabel, type AuditEvent } from "@/features/timesheets/audit-types";
 
 function renderValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -128,7 +128,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
               </div>
               <div>
                 <p className="text-muted-foreground mb-0.5">Actor</p>
-                <p>{event.actorName ?? "System"}</p>
+                <p>{auditActorLabel(event)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground mb-0.5">Action</p>
