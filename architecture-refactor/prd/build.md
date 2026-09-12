@@ -106,18 +106,32 @@ Four ordering traps cost real time and will recur on any rebuild:
    gate reads the membership column, not `users`; the seed stamps only `users`
    and `organizations`, so a non-owner bounces to `/employee-onboarding`.
 
-### Matrix — best complete run, current head
+### Matrix — full coverage, current head
 
-Owner session, production build, `--base-url=http://localhost:1000`, 27 screenshots
-under `D:\localstack\build-acceptance\`. **PASS 6 · FAIL 6 · NOT-RUN 3 of 15.**
+Owner session, production build (`BUILD_ID j09vTP3gcAq2O94XHqA60`, API URL verified
+local: 0 chunks contain `api.streamlineos.in`, 100 contain `127.0.0.1:1500`),
+`--base-url=http://localhost:1000`, 27 screenshots under
+`D:\localstack\build-acceptance-final\`. **PASS 10 · FAIL 5 · NOT-RUN 0 of 15** —
+every state is measured at every viewport.
 
 | Acceptance state | 375 px | 768 px | 1280 px |
 | --- | --- | --- | --- |
-| Loading and empty | FAIL | FAIL | FAIL |
-| Error and retry | FAIL | FAIL | FAIL |
+| Loading and empty | PASS | FAIL | FAIL |
+| Error and retry | PASS | PASS | PASS |
 | Cross-tab freshness | PASS | PASS | PASS |
-| Keyboard and accessibility | NOT-RUN | NOT-RUN | NOT-RUN |
+| Keyboard and accessibility | FAIL | FAIL | FAIL |
 | Responsive layout | PASS | PASS | PASS |
+
+Error and retry now passes at every width: a CDP-injected 500 on the ticket read
+renders `role="alert"` with a retry control that genuinely re-issues the request,
+and `INVALID-99999` renders not-found with **no** retry — the 500-vs-404 split
+the ticket-detail suite asserts, now proved in a browser.
+
+**Two harness defects produced the earlier NOT-RUN cells**, not the product:
+`peer.close()` closed the WebSocket but not the browser tab, so each width left an
+orphaned page polling in the background and later states degraded progressively;
+and axe was attributing the third-party Feedbucket widget
+(`#feedbucket-root .launcher-logo`) to the Build surface. Both fixed.
 
 **Cross-tab freshness is now browser-proved**, not merely jsdom-proved: two CDP
 targets, a real UI mutation in tab 1, peer refetch in tab 2 without a reload.
@@ -143,16 +157,17 @@ ticket page URL contains "ticket", so it replaced the top-level **document** wit
 its JSON body and the product never rendered. Both are fixed; the three
 error-and-retry FAILs are therefore **not yet real** and must be re-run.
 
-### Open
+### Open — BUILD-002 is NOT closed
 
-- Keyboard/a11y is NOT-RUN at every width. Root-caused, fix unverified: the
-  cross-tab probe installs via `addScriptToEvaluateOnNewDocument`, persists into
-  later navigations, and wrapped fetch with `originalFetch.apply(this, …)` — a
-  bare `fetch()` has `this === undefined`, so native fetch threw *Illegal
-  invocation* and every later data request died, blanking the risks route.
-- Error-and-retry needs re-running against the scoped interceptor.
-- Re-run blocked at the time of writing: a concurrent `next build` from another
-  session replaced `.next` without the local API-URL overrides.
+The five FAIL cells are **real product accessibility defects**, deliberately left
+failing rather than accepted or scoped away. BUILD-002's completion clause
+requires blocking defects fixed and rechecked, or explicit coordinator acceptance
+of a residual — neither has happened, so this task stays open.
+
+They are **not Build-specific**: `color-contrast` lands on `text-muted-foreground/80`
+and `/50` token usages, and `aria-required-children` / `button-name` sit on shared
+table, list and combobox primitives used by every module. Fixing them is a design-token
+and shared-primitive change, which is why it is not folded into this lane. **Owner needed.**
 
 ### Route model — correction worth keeping
 
@@ -181,10 +196,26 @@ Scope: Re-run the Build user journey on the accepted Web Vitals build.
 Completion: Browser acceptance and performance evidence name the same frontend revision.
 
 Still blocked, but the reason has changed. The browser half is no longer missing
-— BUILD-002 now produces real captures. What is missing is the performance half:
-`.browser-driver-results.json` **does not exist at all**, so ARCH-002's artifact
-is absent rather than merely 161 commits stale, and `measure:web-vitals` was not
-run because a concurrent `next build` from another session replaced `.next`.
+— BUILD-002 now produces real captures. What is missing is the performance half.
+
+`measure:web-vitals` was run against the local production build and **refused its
+own capture**: 20 of 20 samples measured `/signin` rather than the requested route.
+That refusal is correct — mid-run, a concurrent session **purged the seeded tenant
+from `scratch_local`** (organization row deleted, `org_modules` emptied,
+`user_sessions` cleared), and a re-seed then failed with 246 errors because that
+session had also applied migrations dropping
+`organization_members.onboarding_completed_at`. The capture cannot be trusted
+until the scratch database has a single owner for the duration of a run.
+
+Server-side TTFB was recorded before the refusal (p75 ≈ 46–51 ms local), but no
+LCP/INP/CLS figure from this run is admissible, and none is claimed.
+
+Before trusting any prior mobile-INP number, note the standing 728 ms / 1152 ms
+readings were taken against a build that may have inlined
+`https://api.streamlineos.in`; a capture pointed at the local API can differ
+substantially. Rebuild with the API URL forced local, confirm
+`grep -rl api.streamlineos.in .next/static` is empty, then capture alone on a
+quiet host **with no other session writing to `scratch_local`**.
 
 Before trusting any prior mobile-INP number, note the standing 728 ms / 1152 ms
 readings were taken against a build that may have inlined
