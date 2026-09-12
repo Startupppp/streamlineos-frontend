@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "jest",
+      "@testing-library/jest-dom"
+    ],
+    "incremental": false
+  },
+  "files": [
+    "jest.setup.js"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "drizzle",
+    "scripts",
+    ".next/dev/types"
+  ]
+}
