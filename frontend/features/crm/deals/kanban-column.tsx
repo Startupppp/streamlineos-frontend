@@ -13,6 +13,21 @@ interface KanbanColumnStage {
   color?: string;
 }
 
+/**
+ * CRM-P4-AUDIT. `deals.map(...)` below renders every card in the column with
+ * no windowing -- the canonical fix is `features/build/views/kanban-virtual-ticket-list.tsx`
+ * (`react-window` v2 `List` + `Droppable mode="virtual"` + `renderClone` + the
+ * `display:contents` shell it documents for `provided.innerRef`).
+ *
+ * Not applied here: that pattern needs a column with its own fixed height and
+ * internal scroll, which `List` measures to decide what is offscreen. This
+ * column instead auto-grows (`min-h-[200px]`, no max) inside one page-level
+ * horizontal `ScrollArea` (`app/(authenticated)/crm/deals/page.tsx`) that
+ * scrolls the whole board together -- there is no bounded container here for
+ * `List` to virtualize against without first reworking that shared scroll
+ * model into a per-column one, which risks the drag-and-drop wiring more than
+ * this pass should without a browser to verify it in.
+ */
 interface KanbanColumnProps {
   stage: KanbanColumnStage;
   deals: Deal[];
