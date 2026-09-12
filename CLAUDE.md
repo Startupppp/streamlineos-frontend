@@ -16,14 +16,14 @@
 
 1. **Inspect before you change.** Confirm every file, symbol, route, API, schema exists. Never assume.
 2. **Reuse before you create.** New code only when nothing existing fits, and minimally.
-3. **Page by page, audit-first.** Only pages I name: AUDIT → PLAN → my confirmation → edit.
+3. **Work within the assigned flow.** Audit current source, identify a bounded change, implement when the user requested a fix, and verify. An audit/handoff request produces evidence and assignments; it does not authorize unrelated implementation.
 4. **Business logic is backend-only** (`streamlineos-api`). Frontend = UI, client state, Query hooks. (§5)
 5. **Authorize at the data layer**, every read AND write, tenant-scoped. Middleware and client checks are advisory.
 6. **Strict TypeScript.** No `any`, no cast hacks, no `@ts-ignore`/`@ts-expect-error`, no `!` abuse.
 7. **Verify before "done".** Types pass (build where it is the only proof), then update `PAGES.md`.
-8. **Small files.** ≤300 lines target, 500 hard review. Exceptions in §7.
-9. **Leave less code than you found.** Delete dead code and its files. No speculative abstractions.
-10. **Living rules.** Any rule I state mid-task goes into the right file immediately — shared here, side-specific in that side's file.
+8. **Cohesive files.** Use the existing size gates and exception process. File length alone does not justify fragmentation or a repository-wide refactor.
+9. **Repair the customer outcome.** Reuse existing implementations. Remove code only after proving it unused; a correctness fix may legitimately add code or tests.
+10. **Stable rules.** Record durable user decisions in the appropriate rule file. Keep session status, measurements and task instructions in the indexed delivery lane rather than appending them to every agent's context.
 11. **Git is orchestrator-only.** MAY `commit` verified work on the current branch between tasks. NEVER push/checkout/branch/merge/pull/fetch/reset/stash/rebase. Subagents run no git.
 12. **No cyclic dependencies.** Keep both frontend and backend import graphs acyclic. Do not use `forwardRef`, dynamic imports, barrels, duplicated types or pass-through wrappers to hide a cycle; move the shared contract to its proper neutral owner and verify zero cycles with the repository's dependency-cycle gate.
 
@@ -37,11 +37,14 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 
 ## 3. Workflow
 
-- Audit → plan (change/remove/add) → **wait for confirmation** → edit. **"go"** = next unchecked page in `PAGES.md`.
-- Ambiguous + structural → ask briefly. Check `.claude/` rules first.
-- **`tsc --noEmit` is the default proof and always allowed. Never run lint or tests unless I ask** — report them *not run*, never as passing.
-- After fixing: typecheck (plus `next build` / `nest build` where it is the only proof), then update `PAGES.md`.
-- **Parallelism:** independent sub-tasks, one subagent each, commit between tasks.
+- The user's current request defines the scope. Proceed with already-authorized repairs; ask only for unresolved product choices, destructive operations, or external actions outside that scope. **"go"** continues the currently assigned task, not an arbitrary unchecked page.
+- Use `architecture-refactor/prd/README.md` to find the active delivery lane. Historical reports are reference evidence, not new work. Check `.claude/` instructions relevant to the assigned task.
+- Verification is part of an authorized repair: run the smallest relevant typecheck, regression, contract or browser check. Review the command first; database writes and provider transactions require a named disposable/test environment. Never load production credentials merely to make a test pass.
+- Before changing behavior, capture a failing reproduction where feasible; distinguish source proof, mocked checks, database checks and deployed evidence. A passing typecheck or mock suite does not certify a customer journey.
+- After fixing, rerun the original reproduction and relevant checks; run a build for bundling/runtime wiring changes. Update only the assigned lane and affected `PAGES.md` entries, preserving concurrent edits.
+- **Parallelism:** give each agent a bounded task and explicit file ownership. Share a contract before parallel frontend/backend implementation. The coordinator owns integration and commits; avoid two agents editing shared auth, schema or cache files concurrently.
+- **Reservation before shared edits:** record exclusive ownership in the indexed lane/index for shared guards, auth hooks, schema, query factories and cache primitives. Other agents may inspect and propose changes while that file is reserved. Review actual diffs at one frontend/backend revision pair; a peer's summary is not integration proof.
+- **Credit control:** one concrete outcome per assignment. Stop expanding an investigation once an actionable failure is established. After two unsuccessful repair hypotheses, return evidence and the missing discriminator before spending another iteration. Broad audits and full-suite reruns require a concrete reason.
 
 ## 4. Before coding
 
@@ -62,7 +65,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 ## 5. Frontend ↔ Backend Boundary
 
 - Backend owns **all** APIs and business logic. **No `app/api/**` business routes, no `lib/services/**` business logic in the frontend** — the only frontend `route.ts` is NextAuth / auth-bridge.
-- **Schema source of truth `backend/src/db/schema/**`;** Drizzle config + `backend/migrations/` live there and migrate there only (`pnpm -C backend db:generate | db:push | db:migrate`).
+- **Schema source of truth `backend/src/db/schema/**`;** Drizzle config and migrations stay backend-owned. Follow backend/CLAUDE.md's journaled migration workflow and named disposable-environment requirements; do not assume generation or schema push is supported.
 - **Frontend has NO database access** — no client, schema, adapter, migration. NextAuth is `strategy: "jwt"`; server components fetch with the session's `backendJwt` (`lib/rbac/get-server-access.ts`).
 - **Third-party connectivity goes through Composio**, backend `integrations` module, server-side only. Never direct provider OAuth or provider tokens in our DB; mirror only `user_integration_connections`.
 - **Identity comes from the token.** `JwtAuthGuard` sets `req.user.userId` (JWT `sub`) / `orgId`; read via `@CurrentUser()`. The client never sends its own actor id (`userId`/`actorId`/`createdById`/`authorId` = impersonation) or the active org id (= cross-tenant hole). Self reads use `/me` routes, never `?userId=<self>`. Legit to send: a DIFFERENT person's id, a DIFFERENT org's id (`POST /organization/switch`, membership-checked), `@Public()` routes where URL `orgId` is the only tenant selector, client-only values (cache keys, localStorage, realtime channels).
@@ -95,7 +98,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
 - **Named handler functions inside components and pages.** Every JSX event or action callback must reference a named handler declared inside that component or page (`onClick={handleSave}`, `onSubmit={handleSubmit}`), never an inline arrow or anonymous function. Handlers coordinate the local UI event; reusable state, validation, data access and business behavior remain in the proper hook, service or module and are called by the handler. **Single-statement `if`/`for` bodies omit braces.**
-- **No comments in code — none.** Delete stray comments, commented-out code, `console.log`s. Never add a comment; if something needs explaining, put it in a name, a test, or the PRD. Migration `.sql` headers follow their neighbours and are the only exception.
+- **Comments explain invariants and tradeoffs.** Preserve useful security, concurrency, migration and compatibility explanations. Remove stale comments and temporary debugging within the assigned change; avoid comments that merely restate code.
 - Mentally test: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 
 ## 7. Structure & Naming (both repos)
@@ -108,7 +111,7 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 
 ## 8. Product Rules
 
-- Every page has list, create, edit, delete, filters, pagination, permissions, all states. ADD what's missing, REMOVE what isn't required (including files), fix folder placement + imports.
+- A screen exposes only actions required by its customer workflow. Read-only, aggregate, onboarding and billing screens do not acquire CRUD controls merely for checklist completeness. Applicable loading, error, empty, denied and populated states must be explicit; collections are bounded and authorized.
 - **The delivery/strategy module is "Build"** — project management (`projects`, tickets, sprints, QA, backlog) AND product management (`managed_products`, roadmap, OKRs, feedback). Route `/build` (`/projects` redirects), RBAC `build:*`, module key `BUILD`, folders `build/`. **`project` ≠ `product`:** distinct tables, never merged; only the namespace is `build`.
 - **Employee self-service and knowledge are platform core, not paid entitlements.** Every active member keeps Home, mail, chat, notifications, dashboard, their own time off/attendance/expenses/pay/employment documents, announcements, referrals + internal job openings (never the candidate pipeline, interviews or hiring administration), people directory and KB reading — even when their only enabled product is Build/CRM. The surface is universal; actions inside stay permission-gated. Canonical routes `/me/*`; handlers use `self:*`, derive the subject from `@CurrentUser()`, never accept a self `userId`, never carry `@RequireModule`. KB reads keep space/audience/record ACLs. HR/payroll/finance administration and KB authoring/analytics/settings stay permission- and module-gated. Enforce in backend effective permissions and shared navigation — never as a visible-only exception or a frontend entitlement constant.
 - **Home holds universal work only:** dashboard/communication, `For Me`, announcements, people directory. Recruitment, interviews, employee administration, policies, payroll runs, accounting and every other module destination stay in their owning product nav.
@@ -122,6 +125,11 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 - **Organization hierarchy is archive/restore, never hard delete.** Business units, branches, departments, teams, locations, cost centers archive via a status mutation through `HierarchyArchiveDialog` — never add a permanent-delete control. A dependency conflict keeps the dialog open, lists every actionable dependency + count, and confirms nothing changed. Child-assignment selectors offer only `ACTIVE`, non-deleted parents. Every hierarchy mutation invalidates the `queryKeys.hierarchy.all` prefix.
 
 ## 9. Reliability
+
+- **Read ownership before caching.** Reuse the existing query/service owner; shell-wide identity/access/lightweight badges may be shared, while filtered lists, detail reads and drafts stay with their route/feature. Multiple hook consumers do not prove duplicate HTTP. Measure cold/warm requests before hoisting, adding a cache or introducing another endpoint.
+- **Every changed cache has a writer matrix:** resource, tenant, actor/session/record scope where applicable, response-shaping filters, authority/version, TTL/cardinality, writers, post-commit invalidation, failure behavior and cross-tab effects. Test scope changes, revoked access, rollback and unavailable cache. Cached permission or payment data never substitutes for authoritative atomic writes.
+- **Trace the outer transaction.** A service's inner transaction callback returning is not proof of durable commit when HTTP/outbox infrastructure owns an ambient transaction. Check actual caller context before claiming atomicity, moving invalidation or issuing external effects. Reuse durable outbox/idempotency machinery instead of adding a parallel system.
+- **Universal is surface availability, not universal records or administration.** Inbox, calendar and chat remain available to active organization members; recipient, account, channel, entity and tenant ACLs still govern data/actions. Organization billing administration is not StreamlineOS platform promotion/merchant authority.
 
 - Idempotent + transactional writes so retries are safe. Stateless services. One-directional flow (features → shared, never shared → features).
 - **The import graph stays acyclic, proven by `madge --circular` — both repos are at zero.** Run it before claiming done. Fixes in order: (1) move the shared type to a neutral module — a type beside runtime code drags that file into every importer (`Db`/`TenantTx` in `db/drizzle.types.ts`; a form's Zod schema in `*-schema.ts`); (2) extract the leaf service into its own module — `forwardRef` hides a cycle, it does not remove one, and is banned in new code; (3) never import a barrel from inside its own tree; (4) co-locate mutually-referencing tables (`bugs` ↔ `test_cases`).
@@ -138,12 +146,25 @@ Remove dead/duplicate code, unused schemas/APIs/hooks/components/types — and d
 
 ## 11. Definition of Done & Testing
 
-Types ✓ (Build ✓ where run; **Lint/Tests only when I explicitly ask — otherwise reported as not run, never as passing**) · CRUD complete · RBAC gated + scoped · tenant-scoped queries · caching invalidated on mutation · responsive (375/768/1280) · accessible · secure (BOLA re-asserted, inputs validated, no secrets leaked) · tests present · no file over 500 lines without a §7 exception · `PAGES.md` updated.
+For the assigned scope: customer acceptance criteria verified; relevant types/build/regressions pass; authorization and tenant isolation checked; retries and cache invalidation checked; applicable responsive/accessibility states inspected; evidence and residual risks recorded. Report unrun checks explicitly. Production readiness additionally needs the named environment's migration, recovery, provider and monitoring evidence. Never claim zero bugs, a numeric quality score, or product completion from static checks alone.
 
 A new module ships **controller e2e specs** (auth + RBAC + scope allow/deny, credit exhaustion, cross-tenant isolation) **and** unit tests for access/credit/permission logic. Two traps: a `db.transaction` mock must invoke its callback (a bare `jest.fn()` silently voids every assertion inside it), and `*e2e-spec` files run only under `pnpm test:e2e`.
 
 ## 12. Output & Precedence
 
-**Audit:** violations found + intended changes, then wait. **Fix:** only the modified/added/deleted paths and their changes — no prose unless justifying a decision. Always be able to state: Findings · Root cause · Solution · Files changed · Validation.
+**Audit/handoff:** current findings, evidence level, smallest repair, owner, dependencies and acceptance checks. **Fix:** outcome, relevant changed paths, verification and remaining limitations. Keep the next step concrete; do not require fresh approval for work the user already authorized.
+
+**Markdown maintenance:** keep one current task source. Before removing a document, read it, check inbound links and script/CI references in both repositories, and preserve unique requirements, ADRs, migration records and operational evidence. Prefer consolidation into an existing canonical document; list deleted paths and Git recovery information. Duplicate files used by separate installed tools are not automatically unnecessary. Remove broken instruction imports rather than creating empty files to satisfy them.
+
+**Completed tasks:** remove a checkbox/action only after matching its exact acceptance
+to durable evidence at the actual entry point. Reconcile the current source and latest
+appended evidence before trusting an opening status or checked box; a helper-only test
+does not certify an unwired caller. Preserve historical provenance, label source inference
+separately from measured behavior, and keep failed, unrun and external checks open. Merge overlapping
+assignments under one owner, update inbound pointers, and preserve unique findings.
+An agent handoff contains source anchors, ordered work, file ownership, negative
+tests, cache/cleanup proof and exact verification results—not empty placeholder files,
+duplicate reports or a second PDF backlog. Rules are checked through existing
+type/contract/test/build gates; do not claim that writing a rule enforces compliance.
 
 Precedence: my instruction now → Cardinal Rules (§1) → the side-specific file on its own domain → this file → the repo's established pattern (and tell me when you rely on it, so we codify it). When genuinely unsure and the choice is structural, **ask briefly** rather than guess.

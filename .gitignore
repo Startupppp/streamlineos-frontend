@@ -8,3 +8,6 @@
 # Agent scratch probes: local-only, may hold credentials in the process env. Never commit.
 frontend/.scratch/
 architecture-refactor/audit-2026-09-09/logs
+
+
+/backend/dist-verify
