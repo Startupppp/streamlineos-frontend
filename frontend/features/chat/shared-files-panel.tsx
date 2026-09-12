@@ -71,7 +71,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-              <Paperclip className="h-5 w-5 text-muted-foreground/50" />
+              <Paperclip className="h-5 w-5 text-muted-foreground" />
             </div>
             <h4 className="text-label font-semibold mb-1">No files yet</h4>
             <p className="text-dense text-muted-foreground text-center">Files shared in this channel appear here.</p>

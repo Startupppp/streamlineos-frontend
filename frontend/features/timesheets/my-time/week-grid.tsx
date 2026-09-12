@@ -236,7 +236,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
               {days.map((d) => (
                 <th key={d} className="text-center px-1 py-2 font-medium text-muted-foreground w-16">
                   <div>{format(parseISO(d), "EEE")}</div>
-                  <div className="text-micro text-muted-foreground/70">{format(parseISO(d), "d")}</div>
+                  <div className="text-micro text-muted-foreground">{format(parseISO(d), "d")}</div>
                 </th>
               ))}
               <th className="text-center px-2 py-2 font-medium text-muted-foreground w-14">Total</th>
@@ -290,7 +290,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                               !displayValue && "border-dashed",
                             )}
                           />
-                          {locked && <Lock className="absolute right-0.5 top-0.5 h-2.5 w-2.5 text-muted-foreground/50 pointer-events-none" />}
+                          {locked && <Lock className="absolute right-0.5 top-0.5 h-2.5 w-2.5 text-muted-foreground pointer-events-none" />}
                         </div>
                       </td>
                     );

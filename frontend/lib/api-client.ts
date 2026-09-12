@@ -420,6 +420,7 @@ async function upload<T>(
 async function download(
   url: string,
   params?: QueryParams,
+  onResponseHeaders?: (headers: Headers) => void,
 ): Promise<Blob> {
   const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
   if (!res.ok) {
@@ -430,6 +431,7 @@ async function download(
     } catch {}
     throw new Error(message);
   }
+  onResponseHeaders?.(res.headers);
   return res.blob();
 }
 

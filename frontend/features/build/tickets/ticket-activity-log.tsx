@@ -70,7 +70,7 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
         <span className="font-medium text-foreground">{actorName}</span>{" "}
         <span className="text-muted-foreground">{entry.label}</span>
         {showTransition && (
-          <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground/90">
+          <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground">
             {entry.fromValue && (
               <span className="max-w-[16rem] truncate rounded bg-muted px-1.5 py-0.5 text-dense text-foreground/80 line-through decoration-muted-foreground/50" title={entry.fromValue}>
                 {entry.fromValue}
@@ -87,7 +87,7 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
           </span>
         )}
         {timeAgo && (
-          <span className="mt-0.5 block text-micro text-muted-foreground/70">{timeAgo}</span>
+          <span className="mt-0.5 block text-micro text-muted-foreground">{timeAgo}</span>
         )}
       </div>
     </li>

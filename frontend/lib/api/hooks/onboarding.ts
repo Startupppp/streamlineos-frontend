@@ -3,7 +3,12 @@ import type { z } from "zod";
 import type { bankDetailsContract as bankDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
 import type { personalDetailsContract as personalDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -21,10 +26,10 @@ const onboardingSuccessContract = lazyContract(() =>
 export interface PersonalDetailsPayload {
   phone: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
-  dateOfBirth?: string;
-  emergencyName?: string;
-  emergencyRelation?: string;
-  emergencyPhone?: string;
+  dateOfBirth: string;
+  emergencyName: string;
+  emergencyRelation: string;
+  emergencyPhone: string;
   addressLine1?: string;
   addressCity?: string;
   addressState?: string;
@@ -67,11 +72,17 @@ export type BankDetailsPayload = z.infer<typeof bankDetailsContractDef>;
 
 export type BankDetails = BankDetailsPayload;
 
-export function useBankDetailsQuery() {
+export type BankDetailsQueryOptions = Omit<
+  UseQueryOptions<BankDetails, Error>,
+  "queryKey" | "queryFn"
+>;
+
+export function useBankDetailsQuery(options?: BankDetailsQueryOptions) {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
     queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal, bankDetailsContract),
     staleTime: 30_000,
+    ...options,
   });
 }
 
@@ -96,6 +107,8 @@ export function useBankDetailsMutation() {
 }
 
 export function useSubmitOnboardingMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: ["onboarding", "submit"],
     mutationFn: () =>
@@ -105,5 +118,10 @@ export function useSubmitOnboardingMutation() {
         undefined,
         onboardingSuccessContract,
       ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.onboardingFlow.all,
+      });
+    },
   });
 }

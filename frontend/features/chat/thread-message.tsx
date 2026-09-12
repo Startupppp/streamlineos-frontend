@@ -23,7 +23,7 @@ export function ThreadMessage({ message, currentUserId, isParent, resolveUserNam
   if (message.isDeleted) {
     return (
       <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15 mx-4">
-        <p className="text-dense text-muted-foreground/40 italic">Message deleted</p>
+        <p className="text-dense text-muted-foreground italic">Message deleted</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export function ThreadMessage({ message, currentUserId, isParent, resolveUserNam
             {formatMessageTime(message.createdAt)}
           </span>
           {message.isEdited && (
-            <span className="text-micro text-muted-foreground/60">edited</span>
+            <span className="text-micro text-muted-foreground">edited</span>
           )}
         </div>
         {message.content && (

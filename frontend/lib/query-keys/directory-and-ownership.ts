@@ -109,6 +109,8 @@ export const directoryAndOwnershipQueryKeys = {
       [...base, "moduleAccess", moduleKey, "me", "permissions"] as const,
     memberGrants: (moduleKey: string, membershipId: number) =>
       [...base, "moduleAccess", moduleKey, "members", membershipId, "grants"] as const,
+    grantable: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "standing", "grantable"] as const,
   },
 
   portal: {

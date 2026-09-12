@@ -46,7 +46,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   if (!canManage) {
     return (
       <div className="flex flex-col gap-2 rounded-xl border border-dashed p-6 text-center">
-        <User className="mx-auto h-8 w-8 text-muted-foreground/50" />
+        <User className="mx-auto h-8 w-8 text-muted-foreground" />
         <p className="text-sm font-medium text-muted-foreground">
           You don&apos;t have invite permissions.
         </p>

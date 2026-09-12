@@ -39,6 +39,7 @@ import {
 import {
   invitationAcceptSchema,
   type InvitationAcceptFormValues,
+  canonicalEmail,
 } from "./invitation-accept-schema";
 
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
@@ -220,9 +221,11 @@ export default function InvitationPage() {
   }
 
   if (invitation.userExists) {
+    const sessionEmail = session?.user?.email;
     const signedInAsOtherAccount =
-      session?.user?.email !== undefined &&
-      session.user.email !== invitation.email;
+      sessionEmail !== undefined &&
+      sessionEmail !== null &&
+      canonicalEmail(sessionEmail) !== canonicalEmail(invitation.email);
 
     return (
       <motion.div
@@ -247,7 +250,7 @@ export default function InvitationPage() {
               {signedInAsOtherAccount && (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                   You are currently signed in as{" "}
-                  <span className="font-medium">{session.user.email}</span>.
+                  <span className="font-medium">{sessionEmail}</span>.
                   Accepting will sign you in as the invited account instead.
                 </p>
               )}

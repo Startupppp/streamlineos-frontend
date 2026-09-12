@@ -12,3 +12,7 @@ export const invitationAcceptSchema = z.object({
 });
 
 export type InvitationAcceptFormValues = z.infer<typeof invitationAcceptSchema>;
+
+export function canonicalEmail(value: string): string {
+  return value.trim().toLowerCase();
+}

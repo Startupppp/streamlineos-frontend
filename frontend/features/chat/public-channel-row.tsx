@@ -36,10 +36,10 @@ export function PublicChannelRow({
           <TruncatedText text={channel.description} className="text-dense text-muted-foreground" />
         )}
         <div className="flex items-center gap-1 mt-0.5">
-          <Users className="h-3 w-3 text-muted-foreground/50" />
-          <span className="text-dense text-muted-foreground/60">{channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}</span>
-          <Globe className="h-3 w-3 text-muted-foreground/50 ml-2" />
-          <span className="text-dense text-muted-foreground/60">Public</span>
+          <Users className="h-3 w-3 text-muted-foreground" />
+          <span className="text-dense text-muted-foreground">{channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}</span>
+          <Globe className="h-3 w-3 text-muted-foreground ml-2" />
+          <span className="text-dense text-muted-foreground">Public</span>
         </div>
       </div>
     </>

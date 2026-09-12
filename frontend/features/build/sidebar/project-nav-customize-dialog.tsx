@@ -96,7 +96,7 @@ export function ProjectNavCustomizeDialog({
                 className="border-border/50"
               >
                 <AccordionTrigger className="px-2 py-2.5 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                  <span className="text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                  <span className="text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     {section.label}
                   </span>
                 </AccordionTrigger>
@@ -199,7 +199,7 @@ function CustomizeRow({
         {item.label}
       </span>
       {pinned ? (
-        <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground/70">
+        <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
           Pinned
         </span>
       ) : null}

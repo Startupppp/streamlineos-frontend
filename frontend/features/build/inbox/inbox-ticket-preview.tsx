@@ -219,7 +219,7 @@ export function InboxTicketPreview({
                 {displayKey}
               </span>
               <span
-                className="shrink-0 text-micro text-muted-foreground/35"
+                className="shrink-0 text-micro text-muted-foreground"
                 aria-hidden
               >
                 ·

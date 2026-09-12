@@ -281,6 +281,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                           type="button"
                           variant="outline"
                           role="combobox"
+                          aria-label="Select project manager"
                           className={cn(
                             "w-full justify-between gap-2 font-normal h-8",
                             !selectedManager && "text-muted-foreground",

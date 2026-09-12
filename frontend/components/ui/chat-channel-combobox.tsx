@@ -26,7 +26,14 @@ export function ChatChannelCombobox({
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const { data: channels = [], isFetching } = useChatChannels();
+  const {
+    channels,
+    isFetching,
+    hasMore,
+    isTruncated,
+    isFetchingNextPage,
+    loadMore,
+  } = useChatChannels();
   const numericLookup =
     /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;
   const { data: lookedUpChannel } = useChatChannel(numericLookup);
@@ -86,11 +93,31 @@ export function ChatChannelCombobox({
       className={className}
       onSearchChange={handleSearchChange}
       footer={
-        truncated ? (
-          <ListTruncationNotice
-            shown={MAX_CHANNEL_OPTIONS}
-            hint="Search by name or # to reach the rest."
-          />
+        truncated || hasMore || isTruncated ? (
+          <div>
+            {truncated ? (
+              <ListTruncationNotice
+                shown={MAX_CHANNEL_OPTIONS}
+                hint="Search by name or # to reach the rest."
+              />
+            ) : null}
+            {isTruncated ? (
+              <ListTruncationNotice
+                shown={channels.length}
+                hint="Search by # to reach the rest."
+              />
+            ) : null}
+            {hasMore ? (
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={isFetchingNextPage}
+                className="w-full border-t border-border/40 px-3 py-2 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground disabled:opacity-60"
+              >
+                {isFetchingNextPage ? "Loading more channels…" : "Load more channels"}
+              </button>
+            ) : null}
+          </div>
         ) : null
       }
     />

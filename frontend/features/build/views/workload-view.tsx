@@ -232,7 +232,7 @@ export const WorkloadView = memo(function WorkloadView({
             {memberWorkload.length === 0 && !showUnassignedRow ? (
               <div className="flex flex-1 items-center justify-center px-4 py-12 text-center">
                 <div>
-                  <Users className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+                  <Users className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
                     {hasActiveFilters
                       ? "No members match the current filters. Try adjusting or clearing filters."

@@ -228,7 +228,7 @@ export function FindExpertPage() {
                                   <TruncatedText text={expert.designation} className="text-xs text-muted-foreground" />
                                 )}
                                 {expert.role && (
-                                  <TruncatedText text={expert.role} className="text-micro text-muted-foreground/70" />
+                                  <TruncatedText text={expert.role} className="text-micro text-muted-foreground" />
                                 )}
                               </div>
                             </Link>

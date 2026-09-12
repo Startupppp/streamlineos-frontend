@@ -58,12 +58,76 @@ export const simulationCandidatesPageContract = cursorPageContract(
   simulationCandidateContract,
 );
 
+/**
+ * A source scope may be `none` even though the effective one never is: a role
+ * grant pinned to `none` still appears in the provenance of a key another path
+ * broadened. Only the resolved scope is filtered.
+ */
+export const grantSourceScopeContract = z.enum(["all", "team", "own", "none"]);
+
+export const grantSourceKindContract = z.enum([
+  "org-standing",
+  "universal-member",
+  "employee-self-service",
+  "role-grant",
+  "role-default",
+  "delegation",
+  "user-grant",
+  "module-ownership",
+  "platform-capability",
+  "access-view-implication",
+]);
+
+export const grantSourceContract = z.object({
+  kind: grantSourceKindContract,
+  label: z.string(),
+  scope: grantSourceScopeContract,
+  moduleKey: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+});
+
+export const explainedPermissionContract = z.object({
+  permissionKey: z.string(),
+  moduleKey: z.string(),
+  scope: simulatedScopeContract,
+  expiresAt: z.string().nullable(),
+  sources: z.array(grantSourceContract),
+});
+
+export const moduleStandingContract = z.enum([
+  "owner",
+  "admin",
+  "member",
+  "none",
+]);
+
+export const explainedModuleStandingContract = z.object({
+  moduleKey: z.string(),
+  standing: moduleStandingContract,
+  available: z.boolean(),
+  permissionCount: z.number(),
+});
+
+export const orgStandingContract = z.enum(["OWNER", "ORG_ADMIN", "MEMBER"]);
+
 export const simulatedAccessContract = z.object({
   userId: z.string(),
   permissions: z.array(z.string()),
   scopes: z.record(z.string(), simulatedScopeContract),
   isOrgOwner: z.boolean(),
+  standing: orgStandingContract,
+  provenance: z.array(explainedPermissionContract),
+  moduleStandings: z.array(explainedModuleStandingContract),
 });
+
+export type GrantSource = z.infer<typeof grantSourceContract>;
+export type GrantSourceKind = z.infer<typeof grantSourceKindContract>;
+export type ExplainedPermission = z.infer<typeof explainedPermissionContract>;
+export type ExplainedModuleStanding = z.infer<
+  typeof explainedModuleStandingContract
+>;
+export type OrgStanding = z.infer<typeof orgStandingContract>;
+export type ModuleStandingLevel = z.infer<typeof moduleStandingContract>;
 
 export type Role = z.infer<typeof roleContract>;
 export type RoleListItem = z.infer<typeof roleListItemContract>;

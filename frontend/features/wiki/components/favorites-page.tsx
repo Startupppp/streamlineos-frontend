@@ -79,7 +79,7 @@ export default function FavoritesPage() {
       {!isLoading && isError && (
         <EmptyState
           illustration={
-            <KbStarIcon className="w-8 text-muted-foreground/40" />
+            <KbStarIcon className="w-8 text-muted-foreground" />
           }
           title="Could not load favorites"
           description="There was a problem fetching your favorited pages."
@@ -90,7 +90,7 @@ export default function FavoritesPage() {
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
           illustration={
-            <KbStarIcon className="w-8 text-muted-foreground/40" />
+            <KbStarIcon className="w-8 text-muted-foreground" />
           }
           title="No favorites yet"
           description="Star pages to pin them here for quick access."

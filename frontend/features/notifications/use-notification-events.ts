@@ -5,7 +5,7 @@ import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { invalidateNotificationInbox } from "@/hooks/api/notifications-shared";
 import { consumeNotificationStream, type IncomingNotification } from "./notification-event-stream";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { getBackendToken } from "@/lib/api-client";
@@ -65,10 +65,7 @@ function openStream(orgId: string, queryClient: QueryClient, router: AppRouter):
   let retryCount = 0;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.unreadCount(), exact: true });
-    void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.unreadList(), exact: true });
-  };
+  const invalidate = () => invalidateNotificationInbox(queryClient);
 
   const scheduleRetry = () => {
     if (controller.signal.aborted) return;

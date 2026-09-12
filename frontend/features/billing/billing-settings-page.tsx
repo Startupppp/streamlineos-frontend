@@ -4,7 +4,7 @@ import { useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CreditCard, Receipt, Building2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { BillingPageSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { PlanTab } from "@/features/billing/components/plan-tab";
 import { PaymentsTab } from "@/features/billing/components/payments-tab";
@@ -54,15 +54,15 @@ function BillingPageContent() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="plan" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+        <TabsContent value="plan" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <PlanTab />
         </TabsContent>
 
-        <TabsContent value="payments" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+        <TabsContent value="payments" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <PaymentsTab />
         </TabsContent>
 
-        <TabsContent value="profile" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+        <TabsContent value="profile" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <BillingProfileTab />
         </TabsContent>
       </Tabs>

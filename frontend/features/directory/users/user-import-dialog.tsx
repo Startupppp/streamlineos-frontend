@@ -159,7 +159,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
               className="w-full border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-muted-foreground/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={handleChooseFile}
             >
-              <Upload className="h-8 w-8 text-muted-foreground/50" />
+              <Upload className="h-8 w-8 text-muted-foreground" />
               <div className="text-center">
                 <p className="text-sm font-medium">
                   {fileName ?? "Click to upload CSV file"}

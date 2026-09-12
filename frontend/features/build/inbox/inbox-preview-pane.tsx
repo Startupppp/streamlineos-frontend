@@ -148,7 +148,7 @@ function NotificationFallbackPreview({
               <span className="text-xs text-muted-foreground">
                 {getCategoryLabel(notification.category)}
               </span>
-              <span className="text-xs text-muted-foreground/40">·</span>
+              <span className="text-xs text-muted-foreground">·</span>
               <span
                 className="tabular-nums text-xs text-muted-foreground"
                 title={format(createdAt, "PPpp")}
@@ -157,7 +157,7 @@ function NotificationFallbackPreview({
               </span>
               {!notification.isRead && (
                 <>
-                  <span className="text-xs text-muted-foreground/40">·</span>
+                  <span className="text-xs text-muted-foreground">·</span>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Unread

@@ -70,7 +70,7 @@ export const SubtaskRow = memo(function SubtaskRow({
         />
       </span>
 
-      <span className="text-micro font-mono text-muted-foreground/60 shrink-0 select-none">
+      <span className="text-micro font-mono text-muted-foreground shrink-0 select-none">
         {displayKey}
       </span>
 

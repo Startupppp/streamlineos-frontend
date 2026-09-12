@@ -74,6 +74,9 @@ export const unifiedInboxContract = z.object({
       kind: z.enum(["notification", "broadcast", "mail", "build_approval"]),
       included: z.boolean(),
       reason: z.string().nullable(),
+      available: z.boolean(),
+      error: z.string().nullable(),
     }),
   ),
+  degraded: z.boolean(),
 });

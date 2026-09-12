@@ -58,7 +58,7 @@ export function AccessDeniedView({ projectName, hint }: { projectName: string; h
           Ask the project manager or admin to add you as a member to get access.
         </p>
         {hint && (
-          <p className="text-xs text-muted-foreground/70 mb-5">{hint}</p>
+          <p className="text-xs text-muted-foreground mb-5">{hint}</p>
         )}
         {!hint && <div className="mb-5" />}
         <Link href="/build">

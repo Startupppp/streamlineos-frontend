@@ -151,6 +151,14 @@ jest.mock("@/features/calendar/calendar-source-panel", () => ({
   CalendarSourcePanel: ({ failures: _f }: { failures?: Array<{ key: string; label: string }> }) => (
     <button type="button" aria-label="Calendar sources">Sources</button>
   ),
+  SourceFailureBanner: ({
+    failures,
+  }: {
+    failures: ReadonlyArray<{ key: string; label: string }>;
+  }) =>
+    failures.length === 0 ? null : (
+      <div role="status">{failures.map((f) => f.label).join(", ")}</div>
+    ),
 }));
 
 jest.mock("@/features/calendar/big-calendar-wrapper", () => ({}));
@@ -215,12 +223,12 @@ describe("a11y — Calendar surface (CalendarToolbar)", () => {
 
   it("Previous navigation button has accessible label", () => {
     render(<CalendarToolbar {...makeProps()} />);
-    expect(screen.getByRole("button", { name: "Previous" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Previous / })).toBeInTheDocument();
   });
 
   it("Next navigation button has accessible label", () => {
     render(<CalendarToolbar {...makeProps()} />);
-    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Next / })).toBeInTheDocument();
   });
 
   it("Today button is present and keyboard operable", () => {
@@ -239,18 +247,29 @@ describe("a11y — Calendar surface (CalendarToolbar)", () => {
 
   it("attendance toggle button has aria-label describing current state", () => {
     render(<CalendarToolbar {...makeProps({ attendanceEventsVisible: false })} />);
-    expect(screen.getByRole("button", { name: "Show attendance events" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Attendance events" })).toHaveAttribute("aria-pressed");
   });
 
-  it("when attendance events visible, button label flips", () => {
-    render(<CalendarToolbar {...makeProps({ attendanceEventsVisible: true })} />);
-    expect(screen.getByRole("button", { name: "Hide attendance events" })).toBeInTheDocument();
+  it("when attendance events visible, the toggle state flips but the name stays stable", () => {
+    const { unmount } = render(
+      <CalendarToolbar {...makeProps({ attendanceEventsVisible: true })} />,
+    );
+    expect(screen.getByRole("button", { name: "Attendance events" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    unmount();
+    render(<CalendarToolbar {...makeProps({ attendanceEventsVisible: false })} />);
+    expect(screen.getByRole("button", { name: "Attendance events" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
   it("BITE PROOF (axe) — Previous button has aria-label", () => {
     render(<CalendarToolbar {...makeProps()} />);
-    const prevBtn = screen.getByRole("button", { name: "Previous" });
-    expect(prevBtn).toHaveAttribute("aria-label", "Previous");
+    const prevBtn = screen.getByRole("button", { name: /^Previous / });
+    expect(prevBtn.getAttribute("aria-label")).toMatch(/^Previous (day|week|month)$/);
   });
 
   it("BITE PROOF (viewport 375px) — Today and nav buttons visible at mobile", () => {
@@ -258,8 +277,8 @@ describe("a11y — Calendar surface (CalendarToolbar)", () => {
     try {
       render(<CalendarToolbar {...makeProps()} />);
       expect(screen.getByRole("button", { name: /Today/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Previous" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Previous / })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Next / })).toBeInTheDocument();
     } finally {
       restore();
     }

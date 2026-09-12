@@ -208,7 +208,7 @@ export default function ImportPage() {
       <PageWrapper title="Import & Export">
         <EmptyState
           illustration={
-            <KbUploadIcon className="w-8 text-muted-foreground/40" />
+            <KbUploadIcon className="w-8 text-muted-foreground" />
           }
           title="Access denied"
           description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
@@ -394,7 +394,7 @@ export default function ImportPage() {
             <EmptyState
               compact
               illustration={
-                <KbFileTextIcon className="h-5 w-5 text-muted-foreground/40" />
+                <KbFileTextIcon className="h-5 w-5 text-muted-foreground" />
               }
               title="No imports yet"
               description="Import history will appear here after your first import."

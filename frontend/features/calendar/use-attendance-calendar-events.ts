@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { eachMonthOfInterval, format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
@@ -13,7 +14,9 @@ const attendanceLogListContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.attendanceLogListContract),
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import type { AttendanceLog } from "@/types/hr";
+import type { AttendanceLog, WfhRequest } from "@/types/hr";
+
+const NO_WFH_REQUESTS: readonly WfhRequest[] = Object.freeze([]);
 
 function toTimestamp(value: Date | string | null): number {
   if (!value) return 0;
@@ -27,7 +30,8 @@ export function useAttendanceCalendarEvents(
   attendanceVisible: boolean,
 ): CalendarListItem[] {
   const canViewAttendance = useCan("self:attendance");
-  const { data: wfhRequests = [] } = useHrWfhRequests();
+  const { data } = useHrWfhRequests();
+  const wfhRequests = data ?? NO_WFH_REQUESTS;
   const months = useMemo(
     () => eachMonthOfInterval({ start: rangeStart, end: rangeEnd }),
     [rangeEnd, rangeStart],
@@ -35,10 +39,7 @@ export function useAttendanceCalendarEvents(
 
   const queries = useQueries({
     queries: months.map((month) => {
-      const params = {
-        year: month.getFullYear(),
-        month: month.getMonth(),
-      };
+      const params = { year: month.getFullYear(), month: month.getMonth() };
       return {
         queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
         queryFn: ({ signal }) =>

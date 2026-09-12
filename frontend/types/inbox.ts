@@ -62,6 +62,8 @@ export type InboxSourceStatus = {
   kind: "notification" | "broadcast" | "mail" | "build_approval";
   included: boolean;
   reason: string | null;
+  available: boolean;
+  error: string | null;
 };
 
 export type UnifiedInboxResponse = {
@@ -69,6 +71,7 @@ export type UnifiedInboxResponse = {
   hasMore: boolean;
   nextCursor: string | null;
   sources: InboxSourceStatus[];
+  degraded: boolean;
 };
 
 export type InboxKind = UnifiedInboxItem["kind"];

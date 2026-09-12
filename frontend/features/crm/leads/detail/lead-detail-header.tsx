@@ -121,7 +121,7 @@ function PipelineStep({
                 : "text-primary"
               : isPast
                 ? "text-muted-foreground"
-                : "text-muted-foreground/40 group-hover:text-muted-foreground/70"
+                : "text-muted-foreground group-hover:text-muted-foreground"
           )}
         >
           {STATUS_LABELS[status]}
@@ -178,7 +178,7 @@ export function LeadDetailHeader({
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-baseline gap-2">
               <TruncatedText text={lead.name} className="text-xl font-bold leading-tight" />
-              <span className="text-xs font-mono text-muted-foreground/60 shrink-0">
+              <span className="text-xs font-mono text-muted-foreground shrink-0">
                 LD-{String(lead.id).padStart(5, "0")}
               </span>
             </div>
@@ -191,7 +191,7 @@ export function LeadDetailHeader({
                   </span>
                 )}
                 {lead.company && lead.designation && (
-                  <span className="text-muted-foreground/40 shrink-0">·</span>
+                  <span className="text-muted-foreground shrink-0">·</span>
                 )}
                 {lead.designation && (
                   <span className="flex items-center gap-1 min-w-0">

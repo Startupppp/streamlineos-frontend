@@ -204,7 +204,7 @@ export function ReimbursementRequestSheet({
               disabled={uploadFile.isPending}
               className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
             >
-              <Upload className="mb-2 h-7 w-7 text-muted-foreground/50" />
+              <Upload className="mb-2 h-7 w-7 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground/70">
                 {uploadFile.isPending ? "Uploading…" : "Upload receipt"}
               </span>

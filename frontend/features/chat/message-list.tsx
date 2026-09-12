@@ -300,7 +300,7 @@ export function MessageList({
             <Fragment key={group.date}>
               <div className="flex items-center gap-3 my-3">
                 <div className="flex-1 h-px bg-border/40" />
-                <span className="text-micro font-semibold text-muted-foreground/60 bg-background px-2.5 py-0.5 rounded-full border border-border/30">
+                <span className="text-micro font-semibold text-muted-foreground bg-background px-2.5 py-0.5 rounded-full border border-border/30">
                   {group.date}
                 </span>
                 <div className="flex-1 h-px bg-border/40" />

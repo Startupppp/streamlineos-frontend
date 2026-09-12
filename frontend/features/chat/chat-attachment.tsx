@@ -158,7 +158,7 @@ function AttachmentFile({
       <ArrowDown
         className={cn(
           "h-4 w-4 shrink-0",
-          isOwn ? "text-primary-foreground/50" : "text-muted-foreground/50",
+          isOwn ? "text-primary-foreground/50" : "text-muted-foreground",
         )}
       />
     </a>

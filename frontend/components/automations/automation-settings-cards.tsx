@@ -28,7 +28,7 @@ function actionSummary(actions: AutomationRule["actions"]) {
 export function ModuleDisabledCard({ name }: { name: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[24dvh] gap-4 py-12">
-      <Building2 className="h-9 w-9 text-muted-foreground/40" />
+      <Building2 className="h-9 w-9 text-muted-foreground" />
       <div className="text-center">
         <p className="font-semibold text-sm text-foreground">{name} module not enabled</p>
         <p className="text-xs text-muted-foreground mt-1">

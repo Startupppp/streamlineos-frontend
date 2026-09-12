@@ -160,6 +160,66 @@ describe("CalendarSourcePanel", () => {
     });
   });
 
+  it("keeps every loaded source toggle when the sources read itself fails", async () => {
+    useCalendarSources.mockReturnValue({
+      data: [
+        { key: "hr-leaves", label: "Leaves", module: "hr", enabled: true },
+        { key: "hr-holidays", label: "Holidays", module: "hr", enabled: false },
+      ],
+      isLoading: false,
+      isError: true,
+      error: new Error("Failed to refresh sources"),
+      refetch: jest.fn(),
+    });
+    render(<CalendarSourcePanel />);
+    openPanel();
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: "Toggle Leaves" })).not.toBeNull();
+    });
+    expect(screen.getByRole("switch", { name: "Toggle Holidays" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: /try again/i })).not.toBeNull();
+  });
+
+  it("still toggles a source while the sources read is in a failed state", async () => {
+    const mutate = jest.fn();
+    useSetCalendarSourcePreference.mockReturnValue({ mutate, isPending: false });
+    useCalendarSources.mockReturnValue({
+      data: [{ key: "hr-leaves", label: "Leaves", module: "hr", enabled: true }],
+      isLoading: false,
+      isError: true,
+      error: new Error("Failed to refresh sources"),
+      refetch: jest.fn(),
+    });
+    render(<CalendarSourcePanel />);
+    openPanel();
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: "Toggle Leaves" })).not.toBeNull();
+    });
+    fireEvent.click(screen.getByRole("switch", { name: "Toggle Leaves" }));
+    expect(mutate).toHaveBeenCalledWith(
+      { sourceKey: "hr-leaves", enabled: false },
+      expect.any(Object),
+    );
+  });
+
+  it("retries the sources read from the degraded state", async () => {
+    const refetch = jest.fn();
+    useCalendarSources.mockReturnValue({
+      data: [{ key: "hr-leaves", label: "Leaves", module: "hr", enabled: true }],
+      isLoading: false,
+      isError: true,
+      error: new Error("Failed to refresh sources"),
+      refetch,
+    });
+    render(<CalendarSourcePanel />);
+    openPanel();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /try again/i })).not.toBeNull();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("shows a failure banner naming the failed sources", async () => {
     setSourcesData([]);
     render(

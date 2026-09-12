@@ -141,7 +141,7 @@ export function WfhTabContent({
               animate="visible"
             >
               {filteredWfhRequests.map((req) => (
-                <motion.div key={req.id} variants={fadeIn}>
+                <motion.div key={req.id} role="listitem" variants={fadeIn}>
                   <WfhRequestItem request={req as WfhRequest} />
                 </motion.div>
               ))}

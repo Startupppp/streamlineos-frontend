@@ -133,7 +133,7 @@ export function ProviderRow({
     >
       <div className="flex items-center gap-2 mt-0.5 shrink-0">
         <HealthDot status={provider.healthStatus} />
-        <Server className="h-3.5 w-3.5 text-muted-foreground/60" />
+        <Server className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -188,17 +188,17 @@ export function ProviderRow({
         </div>
         <div className="mt-0.5 flex items-center gap-3 flex-wrap">
           {provider.dailySendLimit != null && (
-            <span className="text-dense text-muted-foreground/70">
+            <span className="text-dense text-muted-foreground">
               Limit: {provider.dailySendLimit.toLocaleString()}/day
             </span>
           )}
           {provider.monthlyCostLimit != null && (
-            <span className="text-dense text-muted-foreground/70">
+            <span className="text-dense text-muted-foreground">
               Cost cap: ${provider.monthlyCostLimit}/mo
             </span>
           )}
           {provider.lastTestedAt && (
-            <span className="text-dense text-muted-foreground/50">
+            <span className="text-dense text-muted-foreground">
               Tested {formatRelativeTime(provider.lastTestedAt)}
             </span>
           )}

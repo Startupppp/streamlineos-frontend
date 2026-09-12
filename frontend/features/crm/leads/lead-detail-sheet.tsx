@@ -176,7 +176,7 @@ export function LeadDetailSheet({
                       <Building2 className="h-3.5 w-3.5 shrink-0" />
                       <TruncatedText text={lead.company} />
                       {lead.designation && (
-                        <span className="text-muted-foreground/60">
+                        <span className="text-muted-foreground">
                           · {lead.designation}
                         </span>
                       )}

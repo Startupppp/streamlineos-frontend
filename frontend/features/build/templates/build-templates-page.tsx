@@ -125,12 +125,13 @@ export function BuildTemplatesPage() {
                 aria-label="Project templates"
               >
                 {templates.map((t) => (
-                  <TemplateCard
-                    key={t.id}
-                    template={t}
-                    onApply={handleApplyTarget}
-                    onDelete={handleDeleteTarget}
-                  />
+                  <div key={t.id} role="listitem">
+                    <TemplateCard
+                      template={t}
+                      onApply={handleApplyTarget}
+                      onDelete={handleDeleteTarget}
+                    />
+                  </div>
                 ))}
               </PmStaggerList>
             ) : (

@@ -382,6 +382,9 @@ function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "expo
   if (TEST_INFRA_RE.test(filePath)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; exports are available for all test suites" };
   }
+  if (SCRIPTS_RE.test(filePath)) {
+    return { cls: "RETAINED-BY-CONVENTION", reason: "standalone executable script, not a module — exports are available to sibling scripts" };
+  }
   if (CRM_INVENTORY_RE.test(filePath)) {
     return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
   }

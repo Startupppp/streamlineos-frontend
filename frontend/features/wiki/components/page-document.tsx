@@ -219,7 +219,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
               onChange={handleTitleChange}
               onKeyDown={handleTitleKeyDown}
               placeholder="Untitled"
-              className="flex-1 min-w-0 w-full resize-none overflow-hidden bg-transparent border-0 outline-none text-3xl font-bold text-left text-foreground placeholder:text-muted-foreground/50 leading-tight"
+              className="flex-1 min-w-0 w-full resize-none overflow-hidden bg-transparent border-0 outline-none text-3xl font-bold text-left text-foreground placeholder:text-muted-foreground leading-tight"
               rows={1}
               style={{ height: "auto" }}
               readOnly={!isEditable}

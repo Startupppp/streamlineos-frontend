@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import type React from "react";
 import {
   Bell,
   BellOff,
@@ -54,6 +55,31 @@ const NOTIFICATION_OPTIONS: { value: ChatNotificationPreference; label: string }
   { value: "NOTHING", label: "Nothing" },
 ];
 
+function isNotificationPreference(value: string): value is ChatNotificationPreference {
+  return NOTIFICATION_OPTIONS.some((option) => option.value === value);
+}
+
+type MuteDuration = (typeof MUTE_DURATIONS)[number]["value"];
+
+function MuteDurationItem({
+  duration,
+  label,
+  onMute,
+}: {
+  duration: MuteDuration;
+  label: string;
+  onMute: (duration: MuteDuration) => void;
+}) {
+  const handleSelect = useCallback(
+    (event: Event) => {
+      event.preventDefault();
+      onMute(duration);
+    },
+    [onMute, duration],
+  );
+  return <DropdownMenuItem onSelect={handleSelect}>{label}</DropdownMenuItem>;
+}
+
 export function ChannelItemMenu({
   channel,
   currentUserId,
@@ -62,8 +88,8 @@ export function ChannelItemMenu({
 }: {
   channel: Channel;
   currentUserId: string;
-  onStartCall: (channelId: number, type: "huddle") => void;
-  onOpenSettings: (channelId: number) => void;
+  onStartCall?: (channelId: number, type: "huddle") => void;
+  onOpenSettings?: (channelId: number) => void;
 }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const favoriteChannel = useFavoriteChannel();
@@ -106,7 +132,7 @@ export function ChannelItemMenu({
   );
 
   const handleMute = useCallback(
-    async (duration: "15m" | "1h" | "8h" | "24h" | "forever") => {
+    async (duration: MuteDuration) => {
       try {
         await muteChannel.mutateAsync({ channelId: channel.id, duration });
         toast.success("Conversation muted");
@@ -115,6 +141,11 @@ export function ChannelItemMenu({
       }
     },
     [muteChannel, channel.id],
+  );
+
+  const handleMuteDuration = useCallback(
+    (duration: MuteDuration) => { void handleMute(duration); },
+    [handleMute],
   );
 
   const handleUnmute = useCallback(
@@ -133,9 +164,10 @@ export function ChannelItemMenu({
   const handleNotificationPreferenceChange = useCallback(
     async (value: string) => {
       try {
+        if (!isNotificationPreference(value)) return;
         await setNotificationPreference.mutateAsync({
           channelId: channel.id,
-          preference: value as ChatNotificationPreference,
+          preference: value,
         });
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -160,10 +192,14 @@ export function ChannelItemMenu({
   const handleStartCall = useCallback(
     (event: Event) => {
       event.preventDefault();
-      onStartCall(channel.id, "huddle");
+      onStartCall?.(channel.id, "huddle");
     },
     [onStartCall, channel.id],
   );
+
+  const handleStopPropagation = useCallback((event: React.SyntheticEvent) => {
+    event.stopPropagation();
+  }, []);
 
   const handleOpenInvite = useCallback((event: Event) => {
     event.preventDefault();
@@ -173,7 +209,7 @@ export function ChannelItemMenu({
   const handleOpenSettings = useCallback(
     (event: Event) => {
       event.preventDefault();
-      onOpenSettings(channel.id);
+      onOpenSettings?.(channel.id);
     },
     [onOpenSettings, channel.id],
   );

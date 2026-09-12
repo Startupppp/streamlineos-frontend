@@ -242,7 +242,7 @@ export function ExceptionsView() {
               {format(parseISO(row.dueDate), "MMM d, yyyy")}
             </span>
           ) : (
-            <span className="text-muted-foreground/30">—</span>
+            <span className="text-muted-foreground">—</span>
           ),
         sortable: true,
         sortValue: (row) => row.dueDate ?? "",

@@ -134,7 +134,7 @@ export function AskOsConversationList({
         <div className="overscroll-contain py-1">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <MessageCircle className="w-8 text-muted-foreground/40" />
+            <MessageCircle className="w-8 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">{search ? "No matches" : "No conversations yet"}</p>
           </div>
         ) : (
@@ -143,7 +143,7 @@ export function AskOsConversationList({
             if (items.length === 0) return null;
             return (
               <div key={group}>
-                <p className="px-3 pb-0.5 pt-2 text-micro font-medium uppercase tracking-wider text-muted-foreground/60">{group}</p>
+                <p className="px-3 pb-0.5 pt-2 text-micro font-medium uppercase tracking-wider text-muted-foreground">{group}</p>
                 {items.map((conv) => (
                   <div key={conv.id} className="group relative">
                     {editingId === conv.id ? (
@@ -155,7 +155,7 @@ export function AskOsConversationList({
                         className={cn("flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted",
                           conv.id === activeConversationId && "bg-muted font-medium")}>
                         <TruncatedText text={conv.title ?? "New conversation"} className="flex-1 text-foreground" />
-                        <span className="shrink-0 text-micro text-muted-foreground/60">{relativeTime(conv.updatedAt)}</span>
+                        <span className="shrink-0 text-micro text-muted-foreground">{relativeTime(conv.updatedAt)}</span>
                       </button>
                     )}
                     {editingId !== conv.id && (

@@ -64,10 +64,10 @@ const SCAN_DIRS = ["hooks", "app", "features", "components", "lib"];
 const SEAM_METHODS = { get: 3, post: 3, put: 3, patch: 3, delete: 3, upload: 2 };
 
 /**
- * `drainChannelPages` is a seam function, not a caller of one.
+ * `fetchChannelPage` is a seam function, not a caller of one.
  *
- * It wraps `apiClient.get` in a cursor loop and takes the path as a PARAMETER,
- * so until it was listed here the route it reads was invisible to every
+ * It wraps `apiClient.get` with the keyset cursor and takes the path as a
+ * PARAMETER, so until it was listed here the route it reads was invisible to every
  * route-based rule in this gate and in `check:gated-reads` — and the route it
  * reads is `/chat/channels`, the exact call site the `members[].membership.user`
  * defect shipped through. The wrapper's own inner `apiClient.get(path, …)` is
@@ -80,7 +80,7 @@ const SEAM_FUNCTIONS = {
   serverGet: 1,
   publicGet: 2,
   publicGetNoStore: 2,
-  drainChannelPages: 2,
+  fetchChannelPage: 2,
 };
 
 /** Every seam function that READS. A contracted route must not be read uncontracted. */
@@ -89,7 +89,7 @@ const READ_METHODS = new Set([
   "serverGet",
   "publicGet",
   "publicGetNoStore",
-  "drainChannelPages",
+  "fetchChannelPage",
 ]);
 
 /**
@@ -128,7 +128,7 @@ const BASELINE = {
  *
  * These are NOT known to be safe. They are invisible to every route-based rule
  * in this gate and in `check:gated-reads` — `hooks/api/chat-core-read.ts` is
- * `drainChannelPages(path)`, which is the exact call site the `members[]`
+ * `fetchChannelPage(path)`, which is the exact call site the `members[]`
  * defect above shipped through, and no route rule can see it. A NEW one fails;
  * a file that no longer has one fails as a stale entry, so this cannot rot into
  * an allowlist nobody re-reads.
@@ -423,8 +423,8 @@ function selfTest() {
       'serverGet("/h");',
       'publicGet("/i", 60, iContract);',
       'publicGet("/j", 60);',
-      'drainChannelPages("/k", signal, kContract);',
-      'drainChannelPages("/l", signal);',
+      'fetchChannelPage("/k", signal, kContract);',
+      'fetchChannelPage("/l", signal);',
     ]).map((c) => `${c.route}:${c.validated}`),
     ["/a:true", "/b:false", "/c:true", "/d:false", "/e:true", "/f:false", "/g:true", "/h:false", "/i:true", "/j:false", "/k:true", "/l:false"],
   );

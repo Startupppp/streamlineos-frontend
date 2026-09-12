@@ -184,7 +184,7 @@ export function DefaultStarButton({
           "h-7 w-7 shrink-0 transition-colors duration-200",
           isCurrentDefault
             ? "text-status-warning-ink hover:text-status-warning-ink"
-            : "text-muted-foreground/40 hover:text-status-warning-ink",
+            : "text-muted-foreground hover:text-status-warning-ink",
         )}
         onClick={handleClick}
         disabled={isPending}

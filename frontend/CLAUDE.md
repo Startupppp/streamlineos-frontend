@@ -1,17 +1,15 @@
-@AGENTS.md
-
 # frontend/CLAUDE.md — StreamlineOS web app
 
 > In force for every change under `frontend/`. Root `CLAUDE.md` (cardinal rules, boundary, TS quality, product rules, DoD) still applies; this file adds the frontend half and **wins on UI matters**.
 > Next.js 16 App Router · React 19 · TS strict · Tailwind 4 · shadcn/ui · TanStack Query v5 · react-hook-form + Zod 4 · Sonner · Framer Motion.
-> **UI, client state and Query hooks only** — no business APIs, no DB, no schema (root §5). Auth pages (`/signin`, `/signup`) and the landing page are **IMMUTABLE reference surfaces**: the app conforms to them.
+> **UI, client state and Query hooks only** — no business APIs or database access (root §5). Client validation schemas remain in their owning feature. Preserve public landing visuals unless assigned; authorized authentication/onboarding repairs may change those flows. `/signup` currently redirects to `/signin`; verify route behavior before inventing another registration screen.
 
 ---
 
 ## 1. Next.js (v16)
 
 - Server Components by default; `"use client"` only for state, handlers, effects or browser APIs, pushed to the **leaves**. Pass Server Components into Client Components as `children`. Parallelize independent fetches (`Promise.all`/preload); wrap non-`fetch` server data access in React `cache()`.
-- **Caching (v16 Cache Components):** dynamic by default — opt in with `use cache` + `cacheLife` + `cacheTag`; a cached function can't read `cookies()`/`headers()`, so read them outside and pass values in. Every mutation pairs with a specific `revalidateTag`/`revalidatePath` (`updateTag` for read-your-writes). Test caching with `next build && next start`, never `next dev`.
+- **Caching:** Query mutations invalidate affected canonical Query keys. Add Next.js server-cache revalidation only for an actual server-cached read with documented scope/ownership. Check installed configuration before introducing Cache Components; validate server caching in a production build, not development behavior.
 - **Business Server Actions and Route Handlers are NOT used here.** The only `route.ts` is NextAuth / auth-bridge. If one ever exists, treat it as a public POST endpoint: Zod-validate, verify auth + object-level + tenant authz, keep it thin.
 - **Params are Promises:** `const { projectId } = await params`; validate bracket params as untrusted input. **Route params are descriptive, never `[id]`** — backend `:projectId`, folder `[projectId]` and the variable all match.
 - **Middleware is NOT authorization** — bypassable (CVE-2025-29927): optimistic redirects / locale / coarse routing UX only; re-verify at the data layer. Strip `x-middleware-subrequest` at the proxy.
@@ -21,24 +19,24 @@
 
 ## 2. Data Layer (TanStack Query v5)
 
-- **NEVER `useEffect` to trigger an API call** — `useQuery` reads, `useMutation` writes; `useEffect` is for DOM sync, subscriptions and framework concerns. Minimize `useState`/`useEffect` generally.
+- Ordinary reads belong in Query hooks, not fetch effects. Necessary lifecycle-triggered mutations use the canonical mutation hook, replay protection and server idempotency; component refs alone do not protect remounts or retries.
 - **Zustand is NOT installed; do not add it.** Query owns all server state; genuinely shared client state uses **React Context**, co-located with its feature.
-- **All client fetching goes through Query hooks in `lib/api/` / `hooks/api/`** — no raw `fetch`/`axios` in components. Any `useEffect` firing a mutation guards StrictMode double-invoke with a `calledRef`, reset only in a user-initiated retry.
+- **All client fetching goes through Query hooks in `lib/api/` / `hooks/api/`** — no raw `fetch`/`axios` in components. Lifecycle effects follow the replay/idempotency rule above; a calledRef may suppress duplicate work within a mount but is not the correctness boundary.
 
 **Query keys** — one `queryKeys` object in `lib/query-keys.ts`, one factory per entity, `const base = ["streamlineos"]`; co-locate `queryKey` + `queryFn` + `staleTime` per entity. **Never hand-type a key array.**
-⚠️ **The tenant segment lives in the query HASH, not in `base`.** Every key is hashed as `[authenticated:<orgId>:<userId>, key]` by `scopedQueryKeyHashFn` (`lib/query-scope.ts`), which `createAppQueryClient` and `createServerQueryClient` both install, and `QueryProvider` remounts on `key={scope}` so the cache is empty the moment the scope changes. A cross-org read is therefore structurally impossible, including for a factory nobody remembered to thread — proved without `clear()` by `lib/query-scope-isolation.test.tsx`. The key ARRAY stays tenant-free on purpose: `invalidateQueries` matches the array, not the hash.
+⚠️ **The tenant segment lives in the query HASH, not in `base`.** Every key is hashed as `[authenticated:<orgId>:<userId>, key]` by `scopedQueryKeyHashFn` (`lib/query-scope.ts`), which `createAppQueryClient` and `createServerQueryClient` both install, and `QueryProvider` remounts on `key={scope}` so the cache is empty the moment the scope changes. This isolates entries after scope changes, covered by `lib/query-scope-isolation.test.tsx`; it does not fence in-flight switches or late session updates. Require the intended refreshed identity before releasing tenant reads. The key ARRAY stays tenant-free on purpose: `invalidateQueries` matches the array, not the hash.
 - **Never hand-thread `orgId` into a factory for an authenticated surface.** That was a second, weaker pattern and it is collapsed: `access.me()`, `access.simulate(targetUserId)`, `access.simulationCandidates(params)`, `hr.attendanceStatus()`, `hr.hub(today)`, `dashboard.*()` and `notifications.*()` all take no org. An `orgId` argument is legitimate only where it selects a **public** tenant the viewer does not belong to — `roadmap.publicBoard(orgId)`, `kbAttachments.publicList(orgId, slug)`, `supportChatWidget.session(orgId, token)`.
 - **`queryClient.clear()` stays** at all eight call sites as defence in depth. It is no longer load-bearing; it is the last line against a provider change that drops the scope.
 - **A cache outside Query is still a cache.** Org-owned `localStorage` (stored entity ids, per-org drafts) carries the same scope segment via `lib/org-scoped-storage.ts`; pure UI preferences (theme, density, panel-collapsed) deliberately do not.
 - `scripts/check-query-scope.mjs` fails the build on a `new QueryClient(` outside the two sanctioned factories, a stray `queryKeyHashFn`, or a prefetch that dehydrates from a client it did not get from `createServerQueryClient` — that last one is what made every authenticated route render a spinner.
 
-**staleTime tiers** — live `0` + `refetchInterval` (realtime counters, in-flight jobs) · volatile `15_000` (fast queues) · standard list `30_000` (permissions, fast-changing lists) · **standard entity `60_000` — the default** · slow list `2 * 60_000` (reference lists, aggregates) · session/org `5 * 60_000` · catalog `30 * 60_000`. Every `useQuery` declares one; every `useMutation` a `mutationKey`. (v5: `cacheTime` → `gcTime`.)
+**staleTime tiers** — live `0` + `refetchInterval` (realtime counters, in-flight jobs) · volatile `15_000` (fast queues) · standard list `30_000` (permissions, fast-changing lists) · **standard entity `60_000`** · slow list `2 * 60_000` (reference lists, aggregates) · session/org `5 * 60_000` · catalog `30 * 60_000`. The provider currently defaults to `2 * 60_000`; select freshness from the writer contract. Every `useQuery` declares one; every `useMutation` a `mutationKey`. (v5: `cacheTime` → `gcTime`.)
 
 **Hooks** — `hooks/api/<module>/<entity>.ts`. Naming `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`. Options pass-through `options?: Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">`, spread **before** the gate — **never re-declare `enabled` after `...options`** (it silently clobbers every caller's gate); combine `enabled: !!orgId && (options?.enabled ?? true)`.
-**Never hardcode pagination params in a hook** (`?page=1&limit=100` + `select`-away-the-envelope). Hooks take `{ page, limit, status? }` and return the real `{ data, pagination }`; per-status filter badges come from a server-side `statusCounts` aggregate so filtering paginates server-side. **Never hydrate a collection through a parent-detail endpoint** — read a dedicated paginated, column-projected endpoint (`GET /projects/:id/tickets`), never `with: { tickets: … }`.
+**Never hardcode pagination params in a hook** (`?page=1&limit=100` + `select`-away-the-envelope). Hooks accept the endpoint’s canonical cursor/page/filter contract and retain its envelope; preserve continuation rather than invent totals or drain every page; per-status filter badges come from a server-side `statusCounts` aggregate so filtering paginates server-side. **Never hydrate a collection through a parent-detail endpoint** — read a dedicated paginated, column-projected endpoint (`GET /projects/:id/tickets`), never `with: { tickets: … }`.
 
-**Gating** (`hooks/api/access.ts`): `useCan(key)` (owner short-circuits true) · `useModuleEnabled(moduleKey)` (defaults true while loading) · `useAccess()` (staleTime 30_000, `GET /me/access`). **Gate every query:** `enabled: useCan("<the endpoint's exact @RequirePermission key>")`, plus a module check where `@RequireModule` applies. **Never fire an API the role cannot access** — it 403-spams and burns Neon CPU, worst on globally-mounted surfaces (shell, sidebar, header, banners, providers) and dashboard widgets. The key must match the backend catalog **exactly**. Server pages use `requirePermission()`; module on/off is `useModuleEnabled` or `<RequireModule module="…">`; denied UI renders `NoPermissionState`.
-**Never POST a lowercase/mixed-case role slug.** Slugs are `UPPERCASE_SNAKE` matching `/^[A-Z0-9_]+$/` — digits allowed (`TIER_2_SUPPORT`); uppercase before sending (canonical `CreateRoleDialog.slugify()`, which strips `[^A-Z0-9_]`), and when cloning a template omit `slug`/`name` to inherit canonical values (template **ids** stay lowercase).
+**Gating follows the actual endpoint contract** (`hooks/api/access.ts`). Permission-guarded queries combine the exact backend key through `useCan` with caller readiness and module checks where required. Authenticated universal queries use verified session/org readiness, retaining server recipient/record/source ACLs; do not invent an admin key to gate them. Public identity queries follow their validated public contract and rate limits. Service-authorized routes retain their service checks rather than an unrelated catalog gate. `useModuleEnabled` returning true while access loads is not proof of authorization. Prevent predictable 403 fetch loops; server guards and live membership remain authoritative. Denied UI uses `NoPermissionState`, not an empty-success state.
+**Roles are fixed standings, not user-created role definitions.** Present organization owner/admin/member and module owner/admin/member using the backend's current contracts. Individual permissions and record scope are separate controls. Existing internal role slugs are implementation identifiers, not permission to introduce a role-creation screen. Platform billing authority is separate from module administration.
 
 **Mutations** — invalidate by **true key prefix** (no trailing `undefined`; `exact: true` only when meant), listing every affected surface, and always re-call the caller's handler:
 
@@ -55,6 +53,12 @@ onSuccess: (data, variables, context, mutFnCtx) => {
 **Never replace the app with `AppLoadingScreen` on a background refetch or ordinary mutation** — that loader is for the true initial load with no verified session/access data. Preserve stale data during refetch; show pending state only on the affected control/row. Never refresh the NextAuth session to reconcile state Query already owns.
 
 ## 3. Components & Memoization
+
+**Read locality:** reuse canonical query options for identical reads and let Query
+deduplicate consumers. Keep filtered/range lists route-owned and unopened detail/
+dialog reads disabled. Shell reads stay lightweight. Include every response-shaping
+input (including limit) in keys, preserve hydration hashing and test every writer's
+invalidation. Root §9 governs scope, switching and failure checks.
 
 **Pages compose; they don't implement.** A route `page.tsx` fetches and composes — UI lives in `features/<feature>/components/`. Extract the moment a block owns state, repeats, or pushes the file past ~200 lines (hard limits root §7). A 600-line page with five inline sections is a bug, not a style.
 
@@ -336,7 +340,7 @@ Rung 1 `features/build/views/card-inline-fields.tsx` · rung 2 `components/ui/re
 | **AP-8** | `text-[#3b82f6]`, `style={{ backgroundColor: '#0b1220' }}` | colors reference tokens; only semantic status families may be literal Tailwind colors (§7) |
 
 - [ ] Loading / empty / error all implemented and **filling** height via the flex chain; no hardcoded heights; skeleton mirrors the real layout
-- [ ] Every query gated by `useCan("<the endpoint's exact key>")`; no raw IDs rendered anywhere
+- [ ] Every query follows its actual exposure/readiness contract (§2): exact keys for permissioned reads; existing public/universal/service authorization otherwise. Display human-readable record labels.
 - [ ] Filters update the URL; pagination resets on filter change; server-side pagination
 - [ ] Field controls left at `h-9`; numeric cells `font-mono tabular-nums`
 - [ ] Mobile: sole filter and sole action fill width; multi-filter collapses into a **Drawer**
@@ -356,7 +360,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Page chrome constants | `PAGE_CHROME_X`, `PAGE_CHROME_BOTTOM`, `CONTENT_PANEL_SOLID`, `CONTENT_FILL_PANEL`, `FILTER_TOOLBAR_ROW`, `FILTER_SELECT_TRIGGER`, `PAGE_BODY_SKELETON_CLASS`, `PAGE_BODY_EMPTY_CLASS` — `components/ui/content-fill-panel.tsx` |
 | Field sizing constants | `FIELD_CONTROL_CLASS`, `FIELD_SELECT_CONTENT_CLASS`, `FIELD_DATE_POPOVER_CONTENT_CLASS`, `INLINE_POPOVER_MIN_CLASS` — `components/ui/field-control.ts` |
 | Table · skeleton | `DataTable`, `DataTableColumn`, `DataTableSkeleton` — `components/ui/data-table.tsx` |
-| Pagination | `TablePagination`, `useCursorPager` — `components/ui/table-pagination.tsx` · `DataTablePagination` — `components/shared/data-table-pagination.tsx` |
+| Pagination | `TablePagination`, `useCursorPager` — `components/ui/table-pagination.tsx` · `DataTablePagination` — `components/shared/data-table-pagination.tsx` · `CursorPageControls` — `components/ui/cursor-page-controls.tsx` (standalone prev/next + page-size for non-`DataTable` cursor lists) |
 | Stats · search | `StatCard`, `StatCardGrid`, `StatCardSkeleton`, `StatCardGridSkeleton` — `components/ui/stat-card.tsx` · `SearchInput` — `search-input.tsx` |
 | Tabs | `Tabs`, `TABS_CONTENT_PAGE_BODY_CLASS` — `components/ui/tabs.tsx` · `PageTabsToolbar` — `page-tabs-toolbar.tsx` |
 | Form shells · primitives | `EntityFormSheet`, `EntityFormDialog`, `AppSheet`, `AppDialog` — `components/shared` · `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage` — `components/ui/form.tsx` |
@@ -511,3 +515,13 @@ h-dvh flex flex-col overflow-hidden
 - **Every module's navigation is permission-driven, not just the ones someone remembered to gate.** A route without a `requiredPermission` is visible to people who cannot use it, and a module surface gated on a *global* `settings:*` key is invisible to that module's own owner — both are defects. `sidebar-permission-coverage.test.ts` fails on either: every non-universal route must carry a requirement, and every universal one must not. Universal means the surfaces root §8 guarantees every active member — Home, communication, `/me/*`, `/knowledge/*` reading, the people directory, and `/settings` (My Account) — and that list is the allowlist, so widening it is a deliberate edit.
 - **Every mutation control uses the exact backend mutation permission** — hide unauthorized buttons, row menus, bulk actions, create/import/export, builder actions, empty-state CTAs and configuration tabs, and still fail closed in the handler. A hidden control is UX only; the backend guard is the boundary. Universal self-service (root §8) is the only exception.
 - Module Access ownership is narrow: only the canonical module owner sees the Ownership tab; org owners/admins and canonical module owners/admins may manage module members and roles; ordinary or custom permission grants never unlock those controls.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

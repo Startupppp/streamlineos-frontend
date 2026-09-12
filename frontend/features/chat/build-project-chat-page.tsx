@@ -3,8 +3,10 @@
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useEntityChannel } from "@/hooks/api/chat";
+import { useCreateEntityChannel, useEntityChannel } from "@/hooks/api/chat";
+import { useCan } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -32,6 +34,8 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   );
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const isChatMobile = useIsChatMobile();
+  const canCreateChannel = useCan("chat:channels:write");
+  const createEntityChannel = useCreateEntityChannel();
 
   const handleToggleInfo = useCallback(() => {
     setShowInfoPanel((open) => !open);
@@ -44,6 +48,20 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleCreateChannel = useCallback(() => {
+    createEntityChannel.mutate(
+      { entityType: "project", entityId: projectId },
+      {
+        onSuccess: () => {
+          toast.success("Project chat channel created");
+        },
+        onError: (mutationError) => {
+          toast.error(getErrorMessage(mutationError));
+        },
+      },
+    );
+  }, [createEntityChannel, projectId]);
 
   const isNotFound = isApiError(error) && error.status === 404;
 
@@ -59,7 +77,21 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
             className="flex-1"
             illustrationPreset="chat"
             title="No chat channel linked"
-            description="This project does not have an associated chat channel yet. Ask a project admin to link one from the project settings."
+            description={
+              canCreateChannel
+                ? "This project does not have an associated chat channel yet. Create one to start the conversation."
+                : "This project does not have an associated chat channel yet. Ask a project admin to link one from the project settings."
+            }
+            action={
+              canCreateChannel
+                ? {
+                    label: createEntityChannel.isPending
+                      ? "Creating channel…"
+                      : "Create chat channel",
+                    onClick: handleCreateChannel,
+                  }
+                : undefined
+            }
           />
         </PmPageShell>
       </PageWrapper>

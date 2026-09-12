@@ -175,7 +175,7 @@ export function MessageInput({
 
           {typingText && (
             <div className="px-4 pb-1">
-              <span className="text-xs text-muted-foreground/70 italic animate-pulse">
+              <span className="text-xs text-muted-foreground italic animate-pulse">
                 {typingText}
               </span>
             </div>
@@ -199,7 +199,7 @@ export function MessageInput({
               onPaste={handlePaste}
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
-              className="w-full bg-transparent text-sm resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
+              className="w-full bg-transparent text-sm resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground min-h-[40px] max-h-[160px]"
             />
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
@@ -210,7 +210,7 @@ export function MessageInput({
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     uploading
                       ? "text-status-info-ink animate-pulse"
-                      : "text-muted-foreground/70 hover:text-foreground",
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   title="Attach file (max 10MB)"
                   aria-label="Attach file"
@@ -223,7 +223,7 @@ export function MessageInput({
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     showEmojiPicker
                       ? "text-status-info-ink bg-muted/50"
-                      : "text-muted-foreground/70 hover:text-foreground",
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   title="Emoji"
                   aria-label="Add emoji"
@@ -232,7 +232,7 @@ export function MessageInput({
                 </button>
                 <button
                   onClick={handleInsertMentionAt}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors"
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Mention someone"
                   aria-label="Mention someone"
                 >
@@ -241,7 +241,7 @@ export function MessageInput({
                 <div className="w-px h-4 bg-border/40 mx-0.5" />
                 <button
                   onClick={handleFormatBold}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors font-bold"
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-bold"
                   title="Bold (**text**)"
                   aria-label="Bold"
                 >
@@ -249,7 +249,7 @@ export function MessageInput({
                 </button>
                 <button
                   onClick={handleFormatItalic}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors"
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Italic (*text*)"
                   aria-label="Italic"
                 >
@@ -257,7 +257,7 @@ export function MessageInput({
                 </button>
                 <button
                   onClick={handleFormatCode}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors font-mono"
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-mono"
                   title="Inline code (`code`)"
                   aria-label="Code"
                 >
@@ -265,7 +265,7 @@ export function MessageInput({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-micro text-muted-foreground/50 hidden sm:inline">
+                <span className="text-micro text-muted-foreground hidden sm:inline">
                   Shift+Enter for new line
                 </span>
                 <button
@@ -279,7 +279,7 @@ export function MessageInput({
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                     messageInput.trim() || pendingAttachments.length > 0
                       ? "bg-gradient-to-r from-gradient-info-from to-gradient-gold-to text-white shadow-md hover:shadow-lg hover:scale-105"
-                      : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed",
+                      : "bg-muted/50 text-muted-foreground cursor-not-allowed",
                   )}
                 >
                   {sendMessage.isPending ? (

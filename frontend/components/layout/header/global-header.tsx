@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { ShellVariant } from "@/lib/shell-variant";
+import type { LucideIcon } from "lucide-react";
 import { Search, CalendarDays, MessageSquare } from "lucide-react";
 import {
   Tooltip,
@@ -76,6 +77,17 @@ function HeaderIconLink({
   );
 }
 
+export interface HeaderIconLinkItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+export const HEADER_ICON_LINKS: HeaderIconLinkItem[] = [
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
+];
+
 function NotificationBellPlaceholder() {
   return <div className="size-8 rounded-lg shrink-0" aria-hidden="true" />;
 }
@@ -129,13 +141,14 @@ function DesktopHeader({
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
-        <HeaderIconLink href="/calendar" label="Calendar">
-          <CalendarDays className="h-4 w-4" />
-        </HeaderIconLink>
-
-        <HeaderIconLink href="/chat" label="Chat">
-          <MessageSquare className="h-4 w-4" />
-        </HeaderIconLink>
+        {HEADER_ICON_LINKS.map((link) => {
+          const Icon = link.icon;
+          return (
+            <HeaderIconLink key={link.href} href={link.href} label={link.label}>
+              <Icon className="h-4 w-4" />
+            </HeaderIconLink>
+          );
+        })}
 
         {afterLoad ? (notificationBellSlot ?? null) : <NotificationBellPlaceholder />}
 

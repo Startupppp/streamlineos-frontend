@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Calendar, CreditCard, RefreshCw } from "lucide-react";
@@ -12,6 +12,7 @@ import {
   useSubscription,
   useCreateSubscriptionOrder,
   useVerifySubscription,
+  useAwaitCheckoutReconciliation,
   useValidateCoupon,
   useBillingPlans,
   type SubscriptionPlan,
@@ -93,7 +94,10 @@ export function PlanTab() {
     useCreateSubscriptionOrder();
   const { mutateAsync: verifySubscription, isPending: isVerifying } =
     useVerifySubscription();
+  const awaitReconciliation = useAwaitCheckoutReconciliation();
   const { state: scriptState, retry: retryScript } = useCheckoutScript();
+  const [isReconciling, setIsReconciling] = useState(false);
+  const checkoutInFlightRef = useRef(false);
 
   const planCatalog = plansResponse?.plans ?? [];
   const annualSavingsPct = resolveAnnualSavingsPct(planCatalog);
@@ -123,6 +127,20 @@ export function PlanTab() {
   const planLabel = useCallback(
     (plan: SubscriptionPlan): string => planConfigById[plan]?.label ?? plan,
     [planConfigById],
+  );
+
+  const reconcileInBackground = useCallback(
+    async (plan: SubscriptionPlan, options?: { attempts?: number; quiet?: boolean }) => {
+      if (options?.quiet !== true) setIsReconciling(true);
+      try {
+        const settled = await awaitReconciliation(plan, { attempts: options?.attempts });
+        if (settled)
+          toast.success(`Upgraded to ${planLabel(plan)} plan successfully!`);
+      } finally {
+        if (options?.quiet !== true) setIsReconciling(false);
+      }
+    },
+    [awaitReconciliation, planLabel],
   );
 
   function handleRetry() {
@@ -186,6 +204,15 @@ export function PlanTab() {
         toast.error("Payment gateway not configured. Contact support.");
         return;
       }
+      if (checkoutInFlightRef.current) return;
+      checkoutInFlightRef.current = true;
+
+      const handleCheckoutDismissed = () => {
+        checkoutInFlightRef.current = false;
+        setUpgradingPlan(null);
+        void reconcileInBackground(plan, { attempts: 1, quiet: true });
+      };
+
       setSelectedPlan(plan);
       setUpgradingPlan(plan);
       setUpgradeError(null);
@@ -214,34 +241,38 @@ export function PlanTab() {
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
               });
+              checkoutInFlightRef.current = false;
               setUpgradingPlan(null);
               toast.success(
                 `Upgraded to ${planLabel(result.plan)} plan successfully!`,
               );
             } catch (err) {
+              checkoutInFlightRef.current = false;
               setUpgradingPlan(null);
               toast.error(getErrorMessage(err));
+              await reconcileInBackground(plan);
             }
           },
           modal: {
-            ondismiss: () => setUpgradingPlan(null),
+            ondismiss: handleCheckoutDismissed,
           },
         });
         rzp.open();
       } catch (err) {
+        checkoutInFlightRef.current = false;
         setUpgradeError(err);
         toast.error(getErrorMessage(err));
         setUpgradingPlan(null);
       }
     },
-    [scriptState, data?.platformCheckout, data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, selectedPlan, planLabel],
+    [scriptState, data?.platformCheckout, data?.isConfigured, createOrder, verifySubscription, reconcileInBackground, session, billingCycle, appliedCoupon, selectedPlan, planLabel],
   );
 
   const [now] = useState(Date.now);
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
-  const isBusy = isCreatingOrder || isVerifying;
+  const isBusy = isCreatingOrder || isVerifying || isReconciling;
   const trialEndsAt = data?.subscription?.trialEndsAt;
   const trialDaysRemaining = trialEndsAt
     ? Math.max(

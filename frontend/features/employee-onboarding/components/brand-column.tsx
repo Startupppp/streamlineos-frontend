@@ -63,7 +63,7 @@ function BrandColumnInner({ stepId, snapshot }: BrandColumnProps) {
           className="min-h-0 flex-1"
         />
         {guide.minutes > 0 ? (
-          <p className="shrink-0 text-dense text-muted-foreground/80">
+          <p className="shrink-0 text-dense text-muted-foreground">
             About {guide.minutes} min on this step
           </p>
         ) : null}

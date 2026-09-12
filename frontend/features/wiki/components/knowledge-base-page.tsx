@@ -348,7 +348,7 @@ export default function KnowledgeBasePage() {
                       </div>
                     ) : (
                       persisted.length > 0 && (
-                        <p className="pb-1 text-center text-micro text-muted-foreground/60">Beginning of your conversation</p>
+                        <p className="pb-1 text-center text-micro text-muted-foreground">Beginning of your conversation</p>
                       )
                     )}
                     {rows.map((row) =>

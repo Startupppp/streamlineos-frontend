@@ -1,12 +1,9 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
-import { format } from "date-fns";
 import type { CalendarListItem, ExternalCalendarEventsResponse } from "@/hooks/api/calendar";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 import { BigCalendarWrapper, type BigCalEvent, type View, type SlotInfo } from "./big-calendar-wrapper";
 import { useHrCalendarEventsMapped } from "./use-hr-calendar-events";
-import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 
@@ -27,7 +24,6 @@ interface CalendarGridLayerProps {
   onNavigate: (date: Date) => void;
   onSelectSlot: ((slotInfo: SlotInfo) => void) | undefined;
   onSelectEvent: (event: BigCalEvent) => void;
-  onCalendarEventsChange: (events: CalendarListItem[]) => void;
 }
 
 export function CalendarGridLayer({
@@ -47,32 +43,11 @@ export function CalendarGridLayer({
   onNavigate,
   onSelectSlot,
   onSelectEvent,
-  onCalendarEventsChange,
 }: CalendarGridLayerProps) {
   const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd, hrEventsVisible);
-  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd, attendanceEventsVisible);
-
-  const calendarEvents = useMemo(() => {
-    const aggregateAttendanceDates = new Set(
-      events
-        .filter((e) => e.source === "attendance")
-        .map((e) => format(new Date(e.start), "yyyy-MM-dd")),
-    );
-    return [
-      ...events,
-      ...selfAttendanceEvents.filter(
-        (e) =>
-          !aggregateAttendanceDates.has(format(new Date(e.start), "yyyy-MM-dd")),
-      ),
-    ];
-  }, [events, selfAttendanceEvents]);
-
-  useEffect(() => {
-    onCalendarEventsChange(calendarEvents);
-  }, [calendarEvents, onCalendarEventsChange]);
 
   const { allCalEvents } = useCalendarComputed({
-    events: calendarEvents,
+    events,
     externalData,
     hiddenIds,
     connections,

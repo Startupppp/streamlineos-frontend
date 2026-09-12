@@ -136,23 +136,30 @@ export interface Invitation {
   id: string;
   email: string;
   role: string;
-  invitedBy: string;
   expiresAt: string;
   acceptedAt: string | null;
   createdAt: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
   revokedAt: string | null;
+  declinedAt: string | null;
   deliveryFailed: boolean;
 }
 
 export interface InvitationsResponse {
   data: Invitation[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    hasMore: boolean;
+    nextCursor: string | null;
   };
+}
+
+export interface InvitationsListParams {
+  cursor?: string;
+  limit?: number;
+  includeAccepted?: boolean;
+  status?: "pending" | "accepted" | "expired" | "revoked" | "declined";
+  q?: string;
 }
 
 export interface LoginHistoryItem {

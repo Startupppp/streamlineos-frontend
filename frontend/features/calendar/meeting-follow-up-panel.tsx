@@ -202,7 +202,7 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
           } else if (data.error === "auth_required") {
             setNeedsReauth(true);
           } else {
-            toast.error(data.message ?? "Failed to send follow-up");
+            toast.error(getErrorMessage(data.message));
           }
         },
         onError: (error) => {

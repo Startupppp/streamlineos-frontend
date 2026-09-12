@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Repeat } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import {
   type RecurrenceState,
+  type RruleEndType,
   type WeekDay,
   WEEKDAYS,
   WEEKDAY_LABELS,
@@ -22,7 +23,6 @@ import {
   RECURRENCE_FREQ_OPTIONS,
   MONTHLY_MODES,
   RRULE_END_TYPES,
-  buildRrule,
 } from "./event-recurrence-schema";
 
 interface RecurrenceEditorProps {
@@ -39,13 +39,56 @@ const FREQ_OPTIONS = [
   { value: "YEARLY", label: "Yearly" },
 ];
 
-const BYSETPOS_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: "First" },
-  { value: 2, label: "Second" },
-  { value: 3, label: "Third" },
-  { value: 4, label: "Fourth" },
-  { value: -1, label: "Last" },
-];
+
+interface WeekDayToggleProps {
+  day: WeekDay;
+  label: string;
+  isSelected: boolean;
+  onToggle: (day: WeekDay) => void;
+}
+
+function WeekDayToggle({ day, label, isSelected, onToggle }: WeekDayToggleProps) {
+  const handleClick = useCallback(() => onToggle(day), [day, onToggle]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-pressed={isSelected}
+      className={cn(
+        "h-6 w-9 rounded text-micro font-medium border transition-colors",
+        isSelected
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-transparent text-muted-foreground border-border hover:border-primary/40",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+interface EndTypeOptionProps {
+  type: RruleEndType;
+  isSelected: boolean;
+  onSelect: (type: RruleEndType) => void;
+  children: ReactNode;
+}
+
+function EndTypeOption({ type, isSelected, onSelect, children }: EndTypeOptionProps) {
+  const handleChange = useCallback(() => onSelect(type), [type, onSelect]);
+  return (
+    <label className="flex items-center gap-2 text-xs cursor-pointer">
+      <input
+        type="radio"
+        name="rrule-end"
+        value={type}
+        checked={isSelected}
+        onChange={handleChange}
+        className="accent-primary"
+      />
+      {children}
+    </label>
+  );
+}
 
 export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEditorProps) {
   const set = useCallback(
@@ -121,10 +164,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
   );
 
   const handleEndTypeChange = useCallback(
-    (v: string) => {
-      const endType = RRULE_END_TYPES.find((candidate) => candidate === v);
-      if (endType) set("endType", endType);
-    },
+    (endType: RruleEndType) => set("endType", endType),
     [set],
   );
 
@@ -160,7 +200,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
               max={99}
               value={state.interval}
               onChange={handleIntervalChange}
-              className="w-16 text-xs h-7 px-2"
+              className="w-16 text-xs px-2"
             />
             <span className="text-xs text-muted-foreground">{freqLabel}(s)</span>
           </div>
@@ -168,19 +208,13 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
           {state.freq === "WEEKLY" && (
             <div className="flex flex-wrap gap-1">
               {WEEKDAYS.map((day) => (
-                <button
+                <WeekDayToggle
                   key={day}
-                  type="button"
-                  onClick={() => toggleDay(day)}
-                  className={cn(
-                    "h-6 w-9 rounded text-micro font-medium border transition-colors",
-                    state.byDay.includes(day)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40",
-                  )}
-                >
-                  {WEEKDAY_LABELS[day]}
-                </button>
+                  day={day}
+                  label={WEEKDAY_LABELS[day]}
+                  isSelected={state.byDay.includes(day)}
+                  onToggle={toggleDay}
+                />
               ))}
             </div>
           )}
@@ -189,7 +223,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Select value={state.monthlyMode} onValueChange={handleMonthlyModeChange}>
-                  <SelectTrigger className="text-xs h-7 w-fit min-w-[9rem]">
+                  <SelectTrigger className="text-xs w-fit min-w-[9rem]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -205,13 +239,13 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
               {state.monthlyMode === "bysetpos" && (
                 <div className="flex items-center gap-2">
                   <Select value={String(state.bySetPos)} onValueChange={handleBySetPosChange}>
-                    <SelectTrigger className="text-xs h-7 w-24">
+                    <SelectTrigger className="text-xs w-24">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {BYSETPOS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={String(opt.value)} className="text-xs">
-                          {opt.label}
+                      {Object.entries(BYSETPOS_LABELS).map(([val, label]) => (
+                        <SelectItem key={val} value={val} className="text-xs">
+                          {label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -220,7 +254,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                     value={state.byDay[0] ?? "MO"}
                     onValueChange={handleByDayForMonthly}
                   >
-                    <SelectTrigger className="text-xs h-7 w-24">
+                    <SelectTrigger className="text-xs w-24">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,16 +273,13 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Ends</Label>
             <div className="space-y-1">
-              {(["never", "count", "until"] as const).map((type) => (
-                <label key={type} className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
-                    type="radio"
-                    name="rrule-end"
-                    value={type}
-                    checked={state.endType === type}
-                    onChange={() => handleEndTypeChange(type)}
-                    className="accent-primary"
-                  />
+              {RRULE_END_TYPES.map((type) => (
+                <EndTypeOption
+                  key={type}
+                  type={type}
+                  isSelected={state.endType === type}
+                  onSelect={handleEndTypeChange}
+                >
                   {type === "never" && <span>Never</span>}
                   {type === "count" && (
                     <span className="flex items-center gap-1.5">
@@ -260,7 +291,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                           max={999}
                           value={state.count}
                           onChange={handleCountChange}
-                          className="w-14 h-6 text-xs px-1.5"
+                          className="w-14 text-xs px-1.5"
                         />
                       )}
                       occurrences
@@ -274,12 +305,12 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                           value={state.until}
                           onChange={handleUntilChange}
                           placeholder="Pick date"
-                          className="h-6 text-xs"
+                          className="text-xs"
                         />
                       )}
                     </span>
                   )}
-                </label>
+                </EndTypeOption>
               ))}
             </div>
           </div>

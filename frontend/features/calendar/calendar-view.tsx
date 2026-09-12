@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { startOfMonth, endOfMonth, addMonths, subMonths, format } from "date-fns";
+import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,13 @@ import {
   CalendarOverlayFallback,
   CalendarSheetFallback,
 } from "./calendar-lazy-fallbacks";
+import { CALENDAR_TRUNCATED_WARNING } from "./calendar-event-constants";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
 import {
@@ -39,7 +41,11 @@ import {
   CalendarToolbarPrimaryActions,
 } from "./calendar-toolbar";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
-import { useCalendarComputed } from "./use-calendar-computed";
+import {
+  mergeSelfAttendanceEvents,
+  useCalendarComputed,
+} from "./use-calendar-computed";
+import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
@@ -200,11 +206,17 @@ export function CalendarView() {
     toggle: toggleAttendanceEvents,
   } = useCalendarSourceVisibility("attendance", true);
 
-  const [gridCalendarEvents, setGridCalendarEvents] = useState<CalendarListItem[]>([]);
-  const handleGridCalendarEventsChange = useCallback(
-    (evts: CalendarListItem[]) => setGridCalendarEvents(evts),
-    [],
+  const gridActive = viewMode === "calendar" && afterLoad;
+  const selfAttendanceEvents = useAttendanceCalendarEvents(
+    rangeStart,
+    rangeEnd,
+    attendanceEventsVisible && gridActive,
   );
+  const calendarEvents = useMemo(
+    () => mergeSelfAttendanceEvents(events, selfAttendanceEvents),
+    [events, selfAttendanceEvents],
+  );
+
   // External events take only the date range, so waiting for the connection
   // list before asking is a pure waterfall. Ask optimistically and stop only
   // once we know the org has no active connection.
@@ -217,16 +229,12 @@ export function CalendarView() {
   const selectedEvent = useMemo<CalendarListItem | null>(
     () => {
       if (selectedEventId === null) return null;
-      return (
-        events.find((e) => e.id === selectedEventId) ??
-        gridCalendarEvents.find((e) => e.id === selectedEventId) ??
-        null
-      );
+      return calendarEvents.find((e) => e.id === selectedEventId) ?? null;
     },
-    [selectedEventId, events, gridCalendarEvents],
+    [selectedEventId, calendarEvents],
   );
 
-  const { visibleEvents, visibleRange } = useCalendarComputed({
+  const { visibleEvents, visibleRange, formattedRange } = useCalendarComputed({
     events,
     externalData,
     hiddenIds,
@@ -264,7 +272,7 @@ export function CalendarView() {
       title={
         <CalendarMonthYearPicker
           currentDate={currentDate}
-          title={format(currentDate, "MMMM yyyy")}
+          title={formattedRange}
           onDateChange={setCurrentDate}
         />
       }
@@ -312,9 +320,9 @@ export function CalendarView() {
               )}
             >
               {viewMode === "calendar" ? (
-                afterLoad ? (
+                gridActive ? (
                   <CalendarGridLayer
-                    events={events}
+                    events={calendarEvents}
                     externalData={externalData}
                     hiddenIds={hiddenIds}
                     connections={connections}
@@ -332,7 +340,6 @@ export function CalendarView() {
                       isCalendarOverlayOpen ? undefined : guardedSelectSlot
                     }
                     onSelectEvent={handleSelectEvent}
-                    onCalendarEventsChange={handleGridCalendarEventsChange}
                   />
                 ) : (
                   <CalendarAgendaPreview events={visibleEvents} />
@@ -354,24 +361,19 @@ export function CalendarView() {
         </div>
 
         {eventsIsError && (
-          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
-            <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
-              {getErrorMessage(eventsError)}
-            </span>
-            <button
-              type="button"
-              onClick={handleRetryEvents}
-              className="shrink-0 self-start text-dense font-medium text-status-warning-ink underline underline-offset-2 sm:self-auto"
-            >
-              Retry
-            </button>
-          </div>
+          <ErrorState
+            compact
+            title="Couldn't load calendar events"
+            description={getErrorMessage(eventsError)}
+            onRetry={handleRetryEvents}
+            className="shrink-0 border border-border rounded-xl"
+          />
         )}
 
         {eventsTruncated && (
           <div className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
-              Too many events in this period — only the first 2,000 are shown. Switch to a shorter range to see all events.
+              {CALENDAR_TRUNCATED_WARNING}
             </span>
           </div>
         )}

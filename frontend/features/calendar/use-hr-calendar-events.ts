@@ -90,18 +90,22 @@ export function useHrCalendarEventsMapped(
     }
   }, [isError, error]);
 
-  const hrCalEvents: BigCalEvent[] = (data ?? []).map((ev) => ({
-    id: `hr-${ev.id}`,
-    title: ev.title,
-    start: new Date(ev.date),
-    end: new Date(ev.endDate ?? ev.date),
-    allDay: true,
-    resource: {
-      source: "hr",
-      color: HR_TYPE_COLORS[ev.type] ?? "#3b82f6",
-      hrEventType: ev.type,
-    },
-  }));
+  const hrCalEvents = useMemo<BigCalEvent[]>(
+    () =>
+      (data ?? []).map((ev) => ({
+        id: `hr-${ev.id}`,
+        title: ev.title,
+        start: new Date(ev.date),
+        end: new Date(ev.endDate ?? ev.date),
+        allDay: true,
+        resource: {
+          source: "hr",
+          color: HR_TYPE_COLORS[ev.type] ?? "#3b82f6",
+          hrEventType: ev.type,
+        },
+      })),
+    [data],
+  );
 
   return { hrCalEvents, hrEnabled: !forbidden && canView && hrModuleEnabled };
 }

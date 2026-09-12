@@ -53,7 +53,7 @@ export function LinkPreviewCard({ content, isOwn }: { content: string; isOwn: bo
           </p>
         )}
       </div>
-      <ExternalLink className={cn("h-3 w-3 shrink-0 mt-2.5 mr-2.5", isOwn ? "text-white/40" : "text-muted-foreground/40")} />
+      <ExternalLink className={cn("h-3 w-3 shrink-0 mt-2.5 mr-2.5", isOwn ? "text-white/40" : "text-muted-foreground")} />
     </a>
   );
 }

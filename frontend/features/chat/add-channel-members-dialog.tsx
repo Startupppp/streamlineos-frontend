@@ -286,7 +286,7 @@ export function AddChannelMembersDialog({
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-micro text-muted-foreground/70 mt-1.5">
+            <p className="text-micro text-muted-foreground mt-1.5">
               Anyone signed in to your org with this link can join this channel. The expiry applies
               to the next link you generate; the current link keeps the expiry it was created with.
             </p>

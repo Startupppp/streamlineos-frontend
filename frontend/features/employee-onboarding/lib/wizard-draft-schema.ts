@@ -58,6 +58,27 @@ export type PersonalDraft = z.infer<typeof personalDraftSchema>;
 export type BankDraft = z.infer<typeof bankDraftSchema>;
 export type WizardDraft = z.infer<typeof wizardDraftSchema>;
 
+export const BANK_DRAFT_SECRET_FIELDS = [
+  "accountNumber",
+  "routingCode",
+  "iban",
+  "swift",
+  "statutory",
+] as const satisfies readonly (keyof BankDraft)[];
+
+export type PersistableBankDraft = Omit<
+  BankDraft,
+  (typeof BANK_DRAFT_SECRET_FIELDS)[number]
+>;
+
+export function persistableBankDraft(bank: BankDraft): PersistableBankDraft {
+  return {
+    countryCode: bank.countryCode,
+    accountHolder: bank.accountHolder,
+    bankName: bank.bankName,
+  };
+}
+
 export const EMPTY_PERSONAL_DRAFT: PersonalDraft = {
   phone: "",
   gender: "",

@@ -7,13 +7,18 @@ import { cn } from "../../lib/utils";
 function Table({
   className,
   containerClassName,
+  containerAriaLabel,
   ...props
 }: React.ComponentProps<"table"> & {
   containerClassName?: string;
+  containerAriaLabel?: string;
 }) {
   return (
     <div
       data-slot="table-container"
+      role="region"
+      aria-label={containerAriaLabel ?? "Table"}
+      tabIndex={0}
       className={cn("relative w-full overflow-x-auto", containerClassName)}
     >
       <table

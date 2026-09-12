@@ -103,10 +103,16 @@ export function matrixExitCode(cells, planned) {
   return cells.every((c) => c.verdict === PASS) ? 0 : 1;
 }
 
-export function renderMarkdownTable(cells, widths, states = STATES) {
+/**
+ * `columnLabel` exists because a column is not always a CSS pixel width. A zoom
+ * column is "1280 px @ 200% zoom", and rendering that as "1280-zoom200 px"
+ * would misstate what was measured. The default keeps every existing caller's
+ * header byte-identical.
+ */
+export function renderMarkdownTable(cells, widths, states = STATES, columnLabel = (w) => `${w} px`) {
   const byKey = new Map();
   for (const c of cells) byKey.set(`${c.state}:${c.width}`, c);
-  const header = `| Acceptance state | ${widths.map((w) => `${w} px`).join(" | ")} |`;
+  const header = `| Acceptance state | ${widths.map((w) => columnLabel(w)).join(" | ")} |`;
   const divider = `| --- | ${widths.map(() => "---").join(" | ")} |`;
   const rows = states.map((s) => {
     const cols = widths.map((w) => {

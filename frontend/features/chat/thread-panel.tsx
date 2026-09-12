@@ -160,7 +160,7 @@ export function ThreadPanel({
                 />
                 <div className="mx-4 my-2 flex items-center gap-2">
                   <div className="flex-1 h-px bg-border/40" />
-                  <span className="text-micro font-semibold text-muted-foreground/60 whitespace-nowrap">
+                  <span className="text-micro font-semibold text-muted-foreground whitespace-nowrap">
                     {replies.length} {replies.length === 1 ? "reply" : "replies"}
                   </span>
                   <div className="flex-1 h-px bg-border/40" />

@@ -116,7 +116,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
               <ChevronRight
                 className={cn(
                   "h-3 w-3",
-                  doneCount > idx ? "text-status-success-ink" : "text-muted-foreground/30"
+                  doneCount > idx ? "text-status-success-ink" : "text-muted-foreground"
                 )}
               />
             )}

@@ -82,7 +82,7 @@ export function BroadcastRow({
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{broadcast.message}</p>
-        <div className="flex items-center gap-3 mt-0.5 text-dense text-muted-foreground/60">
+        <div className="flex items-center gap-3 mt-0.5 text-dense text-muted-foreground">
           {broadcast.status === "SENT" && (
             <span>{broadcast.deliveredCount} / {broadcast.recipientCount} delivered</span>
           )}

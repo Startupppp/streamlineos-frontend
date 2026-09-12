@@ -11,6 +11,7 @@ export interface BackendRouteRef {
 export interface RouteAccessExtension {
   readonly prefix: string;
   readonly exact?: boolean;
+  readonly descendantsOnly?: boolean;
   readonly product?: ProductKey;
   readonly permission?: PermissionRequirement;
   readonly reason: string;
@@ -150,6 +151,19 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Knowledge purge is an administrative destructive surface.",
   },
   {
+    prefix: "/directory",
+    descendantsOnly: true,
+    permission: "directory:people:view",
+    reason:
+      "The people directory root is platform core for every active member (root §8), but an individual person's profile is a record read. Gating the descendants here keeps the root universal while leaving profile access decidable and fail-closed, which one navigation entry covering both could not express.",
+  },
+  {
+    prefix: "/directory/access",
+    permission: "directory:access:view",
+    reason:
+      "Directory access administration is governance, not the people directory. It carries its own key so the descendants rule above cannot lower it to directory:people:view.",
+  },
+  {
     prefix: "/directory/workers",
     permission: "directory:workers:view",
     reason:
@@ -178,7 +192,9 @@ export function matchRouteAccessExtension(
   for (const entry of ROUTE_ACCESS_EXTENSIONS) {
     const owns = entry.exact
       ? pathname === entry.prefix
-      : pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`);
+      : entry.descendantsOnly
+        ? pathname.startsWith(`${entry.prefix}/`)
+        : pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`);
     if (!owns) continue;
     if (!best || entry.prefix.length > best.prefix.length) best = entry;
   }

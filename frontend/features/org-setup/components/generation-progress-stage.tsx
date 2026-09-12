@@ -272,6 +272,12 @@ export function GenerationProgressStage({
             <p className="mt-0.5 break-words text-xs text-status-warning-ink">
               {provisioningIssue.message}
             </p>
+            {provisioningIssue.reference !== null && (
+              <p className="mt-1.5 flex flex-wrap items-baseline gap-1 text-[11px] text-status-warning-ink/70">
+                <span className="shrink-0 font-medium">Support ref:</span>
+                <code className="select-all break-all font-mono">{provisioningIssue.reference}</code>
+              </p>
+            )}
             <div className="mt-2.5 flex gap-2">
               <LoadingButton
                 size="sm"

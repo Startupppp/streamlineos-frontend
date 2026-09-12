@@ -97,7 +97,7 @@ export function DelegationRow({
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
           {lifecycleLabel} {lifecycleDate ? formatRelative(new Date(lifecycleDate), new Date()) : ""}
           {delegation.reason && (
-            <span className="text-muted-foreground/60">
+            <span className="text-muted-foreground">
               {" "}
               · {delegation.reason}
             </span>

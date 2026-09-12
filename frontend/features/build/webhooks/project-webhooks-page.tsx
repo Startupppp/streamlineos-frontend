@@ -175,12 +175,13 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
             <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
               <AnimatePresence initial={false}>
                 {webhooks.map((wh) => (
-                  <WebhookCard
-                    key={wh.id}
-                    webhook={wh}
-                    projectId={projectId}
-                    onDelete={handleDelete}
-                  />
+                  <div key={wh.id} role="listitem">
+                    <WebhookCard
+                      webhook={wh}
+                      projectId={projectId}
+                      onDelete={handleDelete}
+                    />
+                  </div>
                 ))}
               </AnimatePresence>
             </PmStaggerList>

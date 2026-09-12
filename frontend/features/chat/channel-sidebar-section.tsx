@@ -42,7 +42,7 @@ export function ChannelSidebarSection({
       <SectionToggleButton
         collapsed={collapsed}
         onClick={onToggle}
-        className="w-full flex items-center gap-1 px-2 py-1.5 text-dense font-semibold text-muted-foreground/60 uppercase tracking-wider hover:text-foreground transition-colors"
+        className="w-full flex items-center gap-1 px-2 py-1.5 text-dense font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
       >
         {icon}
         <span className="flex-1 text-left">{title}</span>

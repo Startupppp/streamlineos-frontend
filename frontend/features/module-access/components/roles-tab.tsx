@@ -318,7 +318,7 @@ export function RolesTab({
           ) : (
             <Card className="flex items-center justify-center min-h-[220px] lg:min-h-0">
               <div className="text-center px-6">
-                <Shield className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                <Shield className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm font-medium text-foreground">Select a group</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Choose a role group to view and edit its permissions

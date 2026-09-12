@@ -36,6 +36,8 @@ interface ComboboxProps {
   className?: string;
   onSearchChange?: (search: string) => void;
   footer?: React.ReactNode;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
 }
 
 export function Combobox({
@@ -49,6 +51,8 @@ export function Combobox({
   className,
   onSearchChange,
   footer,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -100,6 +104,8 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? placeholder)}
+          aria-labelledby={ariaLabelledBy}
           disabled={disabled}
           className={cn(
             FIELD_CONTROL_CLASS,

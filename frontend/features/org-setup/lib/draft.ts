@@ -2,6 +2,7 @@ import { DEFAULT_DATA, DRAFT_KEY } from "./constants";
 import { parseWizardDraft, type WizardData } from "./wizard-data-schema";
 
 const STEP_KEY = "org-setup-step";
+const COMPLETION_BASE = "org-setup-complete";
 
 function draftKey(scopeId: string): string {
   return `${DRAFT_KEY}--${scopeId}`;
@@ -9,6 +10,32 @@ function draftKey(scopeId: string): string {
 
 function stepKey(scopeId: string): string {
   return `${STEP_KEY}--${scopeId}`;
+}
+
+function completionKey(userId: string, orgId: string): string {
+  return `${COMPLETION_BASE}--${userId}--${orgId}`;
+}
+
+export function setCompletionMarker(userId: string, orgId: string): void {
+  try {
+    sessionStorage.setItem(completionKey(userId, orgId), "1");
+  } catch {}
+}
+
+export function hasCompletionMarker(userId: string, orgId: string): boolean {
+  try {
+    if (!userId || !orgId) return false;
+    return sessionStorage.getItem(completionKey(userId, orgId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function clearCompletionMarker(userId: string, orgId: string): void {
+  try {
+    sessionStorage.removeItem(completionKey(userId, orgId));
+    sessionStorage.removeItem(COMPLETION_BASE);
+  } catch {}
 }
 
 export function loadDraft(scopeId: string): WizardData {

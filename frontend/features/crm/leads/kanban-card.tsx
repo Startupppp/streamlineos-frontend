@@ -300,7 +300,7 @@ export const KanbanCard = memo(function KanbanCard({
                     {...dragProvided.dragHandleProps}
                     className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
                   >
-                    <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
 
@@ -308,7 +308,7 @@ export const KanbanCard = memo(function KanbanCard({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <TruncatedText text={lead.name} className="text-sm font-medium" />
-                      <p className="text-micro font-mono text-muted-foreground/50 leading-none mt-0.5">
+                      <p className="text-micro font-mono text-muted-foreground leading-none mt-0.5">
                         LD-{String(lead.id).padStart(5, "0")}
                       </p>
                     </div>

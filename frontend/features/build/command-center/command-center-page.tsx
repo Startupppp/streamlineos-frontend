@@ -251,7 +251,7 @@ export function CommandCenterPage() {
           </div>
 
           <motion.p
-            className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground/70 md:block"
+            className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground md:block"
             initial={shouldReduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ ...pmSnappy, delay: 0.28 }}

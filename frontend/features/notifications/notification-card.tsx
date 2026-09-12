@@ -294,7 +294,7 @@ function NotificationCardInner({
             )}
           </div>
         )}
-        <span className="text-dense text-muted-foreground/60 whitespace-nowrap tabular-nums">
+        <span className="text-dense text-muted-foreground whitespace-nowrap tabular-nums">
           {formatRelativeTime(createdAt)}
         </span>
         {isUnread && !isArchived && (

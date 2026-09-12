@@ -41,7 +41,7 @@ export function ProjectNavSection({
   return (
     <div className="space-y-0.5">
       {pinned ? (
-        <p className="px-2.5 pb-1 pt-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground/55">
+        <p className="px-2.5 pb-1 pt-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {group.label}
         </p>
       ) : (
@@ -52,7 +52,7 @@ export function ProjectNavSection({
           className={cn(
             "group/section flex w-full items-center gap-1 rounded-md px-2.5 py-1",
             "text-micro font-semibold uppercase tracking-[0.14em]",
-            "text-muted-foreground/55 transition-colors",
+            "text-muted-foreground transition-colors",
             "hover:bg-muted/40 hover:text-muted-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             hasActiveChild && "text-muted-foreground",
@@ -70,9 +70,11 @@ export function ProjectNavSection({
       )}
 
       {open ? (
-        <div className="space-y-0.5" role="list">
-          {group.items.map((item) => renderItem(item))}
-        </div>
+        <ul className="space-y-0.5" aria-label={group.label}>
+          {group.items.map((item) => (
+            <li key={item.id}>{renderItem(item)}</li>
+          ))}
+        </ul>
       ) : null}
     </div>
   );

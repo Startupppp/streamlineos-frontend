@@ -123,7 +123,7 @@ export const EmployeeCard = memo(function EmployeeCard({
 
           {emp.email ? (
             <div className="mt-auto flex min-w-0 items-center gap-1.5 border-t border-border/50 pt-2 sm:pt-2.5">
-              <Mail className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+              <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
               <TruncatedText
                 text={emp.email}
                 className="text-dense text-muted-foreground"

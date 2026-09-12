@@ -135,7 +135,7 @@ export function ProjectMoreMenu({
             <div className="p-1.5">
               {filteredGroups.map((group) => (
                 <div key={group.id} className="mb-1.5 last:mb-0">
-                  <p className="px-2 py-1 text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                  <p className="px-2 py-1 text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     {group.label}
                   </p>
                   <div className="space-y-0.5">

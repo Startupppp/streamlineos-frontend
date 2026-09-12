@@ -227,7 +227,7 @@ export function LeaveApprovalsContent({
                 animate="visible"
               >
                 {pendingWfhRequests.map((req) => (
-                  <motion.div key={req.id} variants={fadeIn}>
+                  <motion.div key={req.id} role="listitem" variants={fadeIn}>
                     <WfhRequestItem
                       request={req as WfhRequest}
                       showUser

@@ -226,7 +226,7 @@ export function KanbanColumnHeader({
         {dragHandleProps ? (
           <button
             type="button"
-            className="flex h-6 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/60 hover:text-muted-foreground active:cursor-grabbing"
+            className="flex h-6 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground hover:text-muted-foreground active:cursor-grabbing"
             aria-label="Drag to reorder column"
             {...dragHandleProps}
           >

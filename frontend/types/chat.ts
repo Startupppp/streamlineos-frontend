@@ -201,13 +201,8 @@ export interface MessagesPage {
   nextCursor: number | null;
 }
 
-export interface ChannelsPage {
-  channels: Channel[];
-  nextCursor: string | null;
-}
-
-export interface PublicChannelsPage {
-  channels: PublicChannel[];
+export interface ChannelPage<TChannel> {
+  channels: TChannel[];
   nextCursor: string | null;
 }
 

@@ -119,7 +119,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            <span className="text-micro tabular-nums text-muted-foreground/80 sm:text-dense">
+            <span className="text-micro tabular-nums text-muted-foreground sm:text-dense">
               {age}
             </span>
             <AnimatedIconButton
@@ -137,7 +137,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
         {projectName ? (
           <TruncatedText
             text={projectName}
-            className="mt-0.5 min-w-0 text-dense text-muted-foreground/80"
+            className="mt-0.5 min-w-0 text-dense text-muted-foreground"
           />
         ) : null}
 

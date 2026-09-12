@@ -43,6 +43,8 @@ export function EventSeriesScopeDialog({
     [isPending, onOpenChange],
   );
 
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xs">
@@ -81,7 +83,7 @@ export function EventSeriesScopeDialog({
             variant="outline"
             size="sm"
             className="text-xs"
-            onClick={() => onOpenChange(false)}
+            onClick={handleCancel}
             disabled={isPending}
           >
             Cancel

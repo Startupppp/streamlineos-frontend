@@ -193,7 +193,7 @@ export function SkillsMatrixPage() {
                             ) : (
                               <>
                                 <span className="sr-only">{`${skill}: not assessed`}</span>
-                                <span aria-hidden="true" className="text-muted-foreground/30">—</span>
+                                <span aria-hidden="true" className="text-muted-foreground">—</span>
                               </>
                             )}
                           </td>

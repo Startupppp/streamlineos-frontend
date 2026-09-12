@@ -1,4 +1,7 @@
-import type { ChannelsPage, PublicChannelsPage } from "@/types/chat";
+import type { Channel, ChannelPage, PublicChannel } from "@/types/chat";
+
+type ChannelsPage = ChannelPage<Channel>;
+type PublicChannelsPage = ChannelPage<PublicChannel>;
 
 /**
  * `GET /chat/channels` is keyset-paginated and answers `{ channels, nextCursor }`.

@@ -60,7 +60,7 @@ function MutedCard({ isOwn, children }: { isOwn: boolean; children: React.ReactN
         isOwn ? "bg-white/5 border-white/10" : "bg-muted/30 border-border/30",
       )}
     >
-      <p className={cn("text-dense", isOwn ? "text-white/40" : "text-muted-foreground/60")}>
+      <p className={cn("text-dense", isOwn ? "text-white/40" : "text-muted-foreground")}>
         {children}
       </p>
     </div>
@@ -171,7 +171,7 @@ function CommentPreviewCard({
         <MessageSquare
           className={cn(
             "h-3 w-3 shrink-0 mt-0.5",
-            isOwn ? "text-white/50" : "text-muted-foreground/60",
+            isOwn ? "text-white/50" : "text-muted-foreground",
           )}
         />
         <div className="min-w-0 flex-1">
@@ -186,7 +186,7 @@ function CommentPreviewCard({
           <p
             className={cn(
               "text-micro mt-0.5",
-              isOwn ? "text-white/40" : "text-muted-foreground/60",
+              isOwn ? "text-white/40" : "text-muted-foreground",
             )}
           >
             {data.author.name ?? "Unknown"} &middot; {relativeTime}
@@ -274,7 +274,7 @@ function TicketPreviewCard({
           </span>
         </div>
         <ExternalLink
-          className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/40" : "text-muted-foreground/40")}
+          className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/40" : "text-muted-foreground")}
         />
       </div>
     </CardShell>

@@ -69,6 +69,7 @@ function makeInfiniteMailData(
 
 function makeUnifiedPage(mailId: string, isRead: boolean): UnifiedInboxResponse {
   return {
+    degraded: false,
     items: [
       {
         kind: "mail",

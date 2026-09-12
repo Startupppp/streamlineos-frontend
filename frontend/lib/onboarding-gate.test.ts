@@ -70,6 +70,33 @@ describe("clearGateCookies", () => {
     expect(cookieNames()).not.toContain(written);
   });
 
+  it("returns the resolved session value from refreshSessionClaims", async () => {
+    const fakeSession = { expires: "2099-01-01", user: { id: "user-1" } };
+    const result = await completeOnboardingGate(
+      "org-setup-done",
+      ORG_ID,
+      async () => fakeSession,
+    );
+    expect(result).toBe(fakeSession);
+  });
+
+  it("returns null when refreshSessionClaims resolves null (timeout shape)", async () => {
+    const result = await completeOnboardingGate(
+      "org-setup-done",
+      ORG_ID,
+      async () => null,
+    );
+    expect(result).toBeNull();
+  });
+
+  it("cookie scoping still holds — only the scoped name is written", async () => {
+    wipeAll();
+    await completeOnboardingGate("org-setup-done", ORG_ID, async () => null);
+    const scopedName = gateCookieName("org-setup-done", ORG_ID);
+    expect(cookieNames()).toContain(scopedName);
+    expect(cookieNames()).not.toContain("org-setup-done");
+  });
+
   it("still expires the legacy unscoped names", () => {
     seed("org-setup-done");
     seed("onboarding-done");

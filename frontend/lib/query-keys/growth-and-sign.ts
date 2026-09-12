@@ -133,8 +133,10 @@ export const growthAndSignQueryKeys = {
     subscription: () => [...base, "billing", "subscription"] as const,
     summary: () => [...base, "billing", "summary"] as const,
     plans: () => [...base, "billing", "plans"] as const,
-    coupon: (code: string, plan: string | null) =>
-      [...base, "billing", "coupon", code, plan] as const,
+    coupon: (code: string, plan: string | null, billingCycle?: string) =>
+      billingCycle !== undefined
+        ? ([...base, "billing", "coupon", code, plan, billingCycle] as const)
+        : ([...base, "billing", "coupon", code, plan] as const),
     profile: () => [...base, "billing", "profile"] as const,
     seats: () => [...base, "billing", "seats"] as const,
   },

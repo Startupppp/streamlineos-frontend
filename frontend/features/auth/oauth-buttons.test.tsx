@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { OAuthButtons } from "./components/oauth-buttons";
 
@@ -109,7 +109,10 @@ describe("OAuthButtons", () => {
       expect(results).toHaveNoViolations();
     });
 
-    it("renders within a 320px container without error", () => {
+    // jsdom reports zero for every layout measurement, so an overflow is not
+    // observable here. `scripts/verify-identity-journey.mjs` is what checks 320px
+    // for real; this only pins that the buttons mount in a narrow container.
+    it("mounts inside a 320px container (overflow itself is proved in the browser harness)", () => {
       const { container } = render(
         <div style={{ width: "320px" }}>
           <OAuthButtons
@@ -121,6 +124,40 @@ describe("OAuthButtons", () => {
         </div>,
       );
       expect(container.firstChild).toBeInTheDocument();
+    });
+  });
+
+  describe("the Google control is actually wired", () => {
+    it("invokes the handler it was given, once per click", () => {
+      const onGoogleSignIn = jest.fn();
+      render(
+        <OAuthButtons
+          hasGoogleProvider={true}
+          isGooglePending={false}
+          isSignInPending={false}
+          onGoogleSignIn={onGoogleSignIn}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /continue with google/i }));
+
+      expect(onGoogleSignIn).toHaveBeenCalledTimes(1);
+    });
+
+    it("(negative) a disabled control does not reach the handler", () => {
+      const onGoogleSignIn = jest.fn();
+      render(
+        <OAuthButtons
+          hasGoogleProvider={true}
+          isGooglePending={false}
+          isSignInPending={true}
+          onGoogleSignIn={onGoogleSignIn}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /continue with google/i }));
+
+      expect(onGoogleSignIn).not.toHaveBeenCalled();
     });
   });
 });

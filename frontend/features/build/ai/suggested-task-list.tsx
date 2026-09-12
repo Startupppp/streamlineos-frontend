@@ -164,7 +164,7 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
           <div key={label || "__flat__"}>
             {label && (
               <div className="px-3 py-1.5 bg-muted/40">
-                <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground/80">
+                <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </p>
               </div>

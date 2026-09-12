@@ -114,13 +114,13 @@ export const InlineEstimate = memo(function InlineEstimate({
         <Gauge
           className={cn(
             "h-3 w-3 shrink-0",
-            display != null ? "text-foreground" : "text-muted-foreground/50",
+            display != null ? "text-foreground" : "text-muted-foreground",
           )}
         />
         <span
           className={cn(
             "font-mono text-micro",
-            display != null ? "text-foreground" : "text-muted-foreground/50",
+            display != null ? "text-foreground" : "text-muted-foreground",
           )}
         >
           {display != null ? `${display} pts` : "pts"}

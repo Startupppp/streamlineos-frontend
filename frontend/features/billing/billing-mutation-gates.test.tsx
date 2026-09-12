@@ -193,7 +193,7 @@ describe("NewInvoiceForm", () => {
 });
 
 describe("PlanCard", () => {
-  const config = { monthlyPrice: 999, annualPrice: 9590, label: "Professional", features: ["Everything"] };
+  const config = { monthlyPrice: 999, annualPrice: 9590, annualTotalPaise: 115080, label: "Professional", features: ["Everything"] };
 
   function planCard(overrides?: Partial<ComponentProps<typeof PlanCard>>) {
     return (

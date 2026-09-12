@@ -243,7 +243,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   <span className="text-foreground">{progressValue}%</span> complete
                 </span>
                 <ChevronRightIcon
-                  className="h-3 w-3 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
+                  className="h-3 w-3 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
                   aria-hidden="true"
                 />
               </div>
@@ -268,11 +268,11 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           ) : (
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 rounded-md border border-dashed border-border/70 bg-muted/30 px-1.5 py-0.5">
-                <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/50" aria-hidden="true" />
-                <span className="text-micro text-muted-foreground/70">No tickets yet</span>
+                <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="text-micro text-muted-foreground">No tickets yet</span>
               </div>
               <ChevronRightIcon
-                className="h-3 w-3 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
+                className="h-3 w-3 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
                 aria-hidden="true"
               />
             </div>

@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -44,7 +43,6 @@ const billingProfileSchema = z.object({
   state: z.string().max(100).nullable(),
   pincode: z.string().max(10).nullable(),
   country: z.string().length(2, "Must be a 2-letter ISO country code"),
-  isTaxExempt: z.boolean(),
 });
 
 type BillingProfileFormValues = z.infer<typeof billingProfileSchema>;
@@ -94,7 +92,6 @@ export function BillingProfileTab() {
       state: profile?.state ?? null,
       pincode: profile?.pincode ?? null,
       country: profile?.country ?? "IN",
-      isTaxExempt: profile?.isTaxExempt ?? false,
     },
   });
 
@@ -337,24 +334,6 @@ export function BillingProfileTab() {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isTaxExempt"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <div>
-                    <FormLabel className="text-sm font-medium">Tax Exempt</FormLabel>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Mark this organization as tax exempt
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
                 </FormItem>
               )}
             />

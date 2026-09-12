@@ -60,7 +60,7 @@ export default function PageIconPicker({
             type="button"
             className={cn(
               "flex h-9 min-w-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xl leading-none transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              !icon && "text-muted-foreground/70"
+              !icon && "text-muted-foreground"
             )}
             aria-label={icon ? "Change page icon" : "Pick page icon"}
           >

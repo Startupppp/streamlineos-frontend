@@ -54,6 +54,10 @@ jest.mock("@/hooks/api/notifications-inbox", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/notifications-broadcasts", () => ({
+  useDismissBroadcast: () => ({ mutate: jest.fn() }),
+}));
+
 const fetchNextPage = jest.fn();
 
 jest.mock("@/hooks/api/inbox", () => ({

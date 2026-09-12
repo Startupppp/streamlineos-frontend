@@ -1,32 +1,20 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  Archive,
-  MessageSquareText,
-  Star,
-} from "lucide-react";
-import {
-  CompassIcon,
-  PlusIcon,
-  SearchIcon,
-  UsersIcon,
-} from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
+import { Archive, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   useChatChannels,
   useArchivedChannels,
   useChatOnlineUsers,
 } from "@/hooks/api/chat-core-read";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
@@ -35,6 +23,8 @@ import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { ChannelCompactRail } from "./channel-compact-rail";
 import { ChannelArchivedSection } from "./channel-archived-section";
+import { ChannelSidebarHeader } from "./channel-sidebar-header";
+import { ChannelLoadMore } from "./channel-load-more";
 
 const NewDMDialog = dynamic(
   () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
@@ -52,20 +42,6 @@ const ChatSearchDialog = dynamic(
     import("./chat-search-dialog").then((m) => ({ default: m.ChatSearchDialog })),
   { ssr: false, loading: () => <ChatOverlayFallback label="Loading chat search" /> },
 );
-
-const RAIL_ICON_SIZE = 14;
-
-const SidebarSearchButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function SidebarSearchButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <SearchIcon ref={iconRef} size={RAIL_ICON_SIZE} />
-    </button>
-  );
-});
 
 interface ChannelSidebarProps {
   activeChannelId: number | null;
@@ -89,8 +65,24 @@ export function ChannelSidebar({
   onOpenSettings,
 }: ChannelSidebarProps) {
   const router = useRouter();
-  const { data: channels, isLoading, isError, refetch } = useChatChannels();
-  const { data: archivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
+  const canReadChannels = useCan("chat:channels:read");
+  const {
+    channels,
+    isLoading,
+    isError,
+    refetch: refetchChannels,
+    hasMore: hasMoreChannels,
+    isTruncated: channelsTruncated,
+    isFetchingNextPage: isLoadingMoreChannels,
+    loadMore: loadMoreChannels,
+  } = useChatChannels();
+  const {
+    channels: archivedChannels,
+    isLoading: isArchivedLoading,
+    hasMore: hasMoreArchived,
+    isFetchingNextPage: isLoadingMoreArchived,
+    loadMore: loadMoreArchived,
+  } = useArchivedChannels();
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -106,8 +98,8 @@ export function ChannelSidebar({
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleRetryChannels = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    refetchChannels();
+  }, [refetchChannels]);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
   const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
@@ -141,7 +133,6 @@ export function ChannelSidebar({
   );
 
   const filteredChannels = useMemo(() => {
-    if (!channels) return [];
     if (!search) return channels;
     const q = search.toLowerCase();
     return channels.filter(
@@ -152,7 +143,6 @@ export function ChannelSidebar({
   }, [channels, search]);
 
   const filteredArchivedChannels = useMemo(() => {
-    if (!archivedChannels) return [];
     if (!search) return archivedChannels;
     const q = search.toLowerCase();
     return archivedChannels.filter(
@@ -163,7 +153,7 @@ export function ChannelSidebar({
   }, [archivedChannels, search]);
 
   const archivedUnreadCount = useMemo(
-    () => (archivedChannels ?? []).reduce((sum, ch) => sum + ch.unreadCount, 0),
+    () => archivedChannels.reduce((sum, ch) => sum + ch.unreadCount, 0),
     [archivedChannels],
   );
 
@@ -205,68 +195,19 @@ export function ChannelSidebar({
       <div className="relative flex flex-col h-full overflow-visible">
         <ChatSidebarNav isCollapsed={isCollapsed} />
 
-        <div className={cn("px-4 pt-3 pb-2", isCollapsed && "md:hidden")}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-                <MessageSquareText className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold leading-tight">Messages</h2>
-                <p className="text-dense text-muted-foreground leading-tight">
-                  {onlineUsers?.length ?? 0} online
-                </p>
-              </div>
-            </div>
-            <div className="hidden items-center gap-0.5 sm:flex">
-              <SidebarSearchButton
-                type="button"
-                onClick={handleOpenChatSearch}
-                className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                aria-label="Search"
-                title="Search"
-              />
-              <button
-                type="button"
-                onClick={handleOpenBrowse}
-                className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                aria-label="Browse public channels"
-                title="Browse Channels"
-              >
-                <CompassIcon size={RAIL_ICON_SIZE} />
-              </button>
-              <AnimatedIconButton
-                icon={PlusIcon}
-                iconSize={RAIL_ICON_SIZE}
-                variant="ghost"
-                size="icon"
-                className="w-7 rounded-lg"
-                onClick={handleOpenNewDM}
-                title="New Direct Message"
-                aria-label="New Direct Message"
-              />
-              <AnimatedIconButton
-                icon={UsersIcon}
-                iconSize={RAIL_ICON_SIZE}
-                variant="ghost"
-                size="icon"
-                className="w-7 rounded-lg"
-                onClick={handleOpenNewGroup}
-                title="New Channel"
-                aria-label="New Channel"
-              />
-            </div>
-          </div>
-
-          <SearchInput
-            ref={searchInputRef}
-            placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
-            value={search}
-            onValueChange={handleSearchChange}
-            onClear={handleClearSearch}
-            inputClassName="bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground/40"
-          />
-        </div>
+        <ChannelSidebarHeader
+          isCollapsed={isCollapsed}
+          onlineCount={onlineUsers?.length ?? 0}
+          search={search}
+          showArchived={showArchived}
+          searchInputRef={searchInputRef}
+          onSearchChange={handleSearchChange}
+          onClearSearch={handleClearSearch}
+          onOpenChatSearch={handleOpenChatSearch}
+          onOpenBrowse={handleOpenBrowse}
+          onOpenNewDM={handleOpenNewDM}
+          onOpenNewGroup={handleOpenNewGroup}
+        />
 
         <ChannelCompactRail
           isCollapsed={isCollapsed}
@@ -277,7 +218,14 @@ export function ChannelSidebar({
         />
 
         <ScrollArea className={cn("flex-1", isCollapsed ? "md:px-1 px-2" : "px-2")}>
-          {showArchived ? (
+          {!canReadChannels ? (
+            <NoPermissionState
+              compact
+              className="m-2"
+              permission="chat:channels:read"
+              description="You don’t have permission to see this workspace’s conversations."
+            />
+          ) : showArchived ? (
             <ChannelArchivedSection
               isLoading={isArchivedLoading}
               channels={filteredArchivedChannels}
@@ -288,6 +236,9 @@ export function ChannelSidebar({
               onlineUserIds={onlineUserIds}
               onSelectChannel={onSelectChannel}
               onClose={handleCloseArchived}
+              hasMore={hasMoreArchived}
+              isLoadingMore={isLoadingMoreArchived}
+              onLoadMore={loadMoreArchived}
               onStartCall={onStartCall}
               onOpenSettings={onOpenSettings}
             />
@@ -351,7 +302,7 @@ export function ChannelSidebar({
               </div>
 
               <div className={cn("py-1", isCollapsed && "md:hidden")}>
-                {!search && (archivedChannels?.length ?? 0) > 0 && (
+                {!search && archivedChannels.length > 0 && (
                   <button
                     type="button"
                     onClick={handleOpenArchived}
@@ -429,7 +380,7 @@ export function ChannelSidebar({
                   </ChannelSidebarSection>
                 )}
 
-                {filteredChannels.length === 0 && (
+                {filteredChannels.length === 0 && !hasMoreChannels && (
                   <EmptyState
                     compact
                     illustrationPreset="mail"
@@ -440,6 +391,13 @@ export function ChannelSidebar({
                     onClearFilters={handleClearSearch}
                   />
                 )}
+
+                <ChannelLoadMore
+                  hasMore={hasMoreChannels}
+                  isTruncated={channelsTruncated}
+                  isLoading={isLoadingMoreChannels}
+                  onLoadMore={loadMoreChannels}
+                />
               </div>
             </>
           )}

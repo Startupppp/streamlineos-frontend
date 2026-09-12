@@ -18,7 +18,7 @@ function GlobalNotifications({
   activeChannelId: number | null;
   currentUserId: string | undefined;
 }) {
-  const { data: channels } = useChatChannels();
+  const { channels } = useChatChannels();
   useChatGlobalNotifications(channels, activeChannelId, currentUserId);
   return null;
 }

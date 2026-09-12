@@ -167,7 +167,7 @@ function ProductsPageInner() {
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded bg-muted flex items-center justify-center shrink-0">
               <Package
-                className="h-3 w-3 text-muted-foreground/60"
+                className="h-3 w-3 text-muted-foreground"
                 aria-hidden="true"
               />
             </div>

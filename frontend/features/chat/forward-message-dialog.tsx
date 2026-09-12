@@ -12,6 +12,7 @@ import { useChatChannels, useSendMessage } from "@/hooks/api";
 import type { Channel, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ChannelLoadMore } from "./channel-load-more";
 
 export interface ForwardableMessage {
   content: string | null;
@@ -31,12 +32,65 @@ interface ForwardMessageDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function forwardChannelLabel(c: Channel): string {
+  if (c.type === "DIRECT")
+    return c.members?.find(() => true)?.user?.name ?? "Direct Message";
+  return c.name ?? "Channel";
+}
+
+function forwardChannelIcon(c: Channel) {
+  if (c.type === "DIRECT") return <MessageSquare className="h-3.5 w-3.5" />;
+  if (c.type === "GROUP") return <Users className="h-3.5 w-3.5" />;
+  return <Hash className="h-3.5 w-3.5" />;
+}
+
+interface ForwardChannelRowProps {
+  channel: Channel;
+  isSelected: boolean;
+  onToggle: (channelId: number) => void;
+}
+
+function ForwardChannelRow({ channel, isSelected, onToggle }: ForwardChannelRowProps) {
+  const handleClick = useCallback(() => onToggle(channel.id), [onToggle, channel.id]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-pressed={isSelected}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
+        isSelected ? "bg-primary/10" : "hover:bg-muted/40",
+      )}
+    >
+      <div className={cn(
+        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground",
+        isSelected ? "bg-primary/10 text-primary" : "bg-muted",
+      )}>
+        {forwardChannelIcon(channel)}
+      </div>
+      <TruncatedText text={forwardChannelLabel(channel)} className="text-label font-medium flex-1" />
+      {isSelected && (
+        <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
+          <div className="h-1.5 w-1.5 rounded-full bg-white" />
+        </div>
+      )}
+    </button>
+  );
+}
+
 export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMessageDialogProps) {
   const [query, setQuery] = useState("");
   const [selectedChannelId, setSelectedChannelId] = useState<number | null>(null);
   const [comment, setComment] = useState("");
 
-  const { data: channels } = useChatChannels(open);
+  const {
+    channels,
+    hasMore,
+    isTruncated,
+    isFetchingNextPage,
+    loadMore,
+  } = useChatChannels(open);
   const sendMessage = useSendMessage();
 
   const previewText = useMemo(() => {
@@ -49,7 +103,6 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
   }, [message]);
 
   const filteredChannels = useMemo(() => {
-    if (!channels) return [];
     const q = query.toLowerCase();
     return channels.filter(c =>
       !q || c.name?.toLowerCase().includes(q) || c.type === "DIRECT"
@@ -97,18 +150,13 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
   const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value), []);
   const handleCommentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setComment(e.target.value), []);
 
-  const getChannelLabel = useCallback((c: Channel) => {
-    if (c.type === "DIRECT") {
-      return c.members?.find(() => true)?.user?.name ?? "Direct Message";
-    }
-    return c.name ?? "Channel";
-  }, []);
+  const handleToggleChannel = useCallback(
+    (channelId: number) =>
+      setSelectedChannelId((current) => (current === channelId ? null : channelId)),
+    [],
+  );
 
-  const getChannelIcon = useCallback((c: Channel) => {
-    if (c.type === "DIRECT") return <MessageSquare className="h-3.5 w-3.5" />;
-    if (c.type === "GROUP") return <Users className="h-3.5 w-3.5" />;
-    return <Hash className="h-3.5 w-3.5" />;
-  }, []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,32 +182,24 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
         </div>
 
         <div className="max-h-[220px] overflow-y-auto rounded-lg border border-border/40 divide-y divide-border/20">
-          {filteredChannels.map(c => (
-            <button
+          {filteredChannels.map((c) => (
+            <ForwardChannelRow
               key={c.id}
-              onClick={() => setSelectedChannelId(c.id === selectedChannelId ? null : c.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
-                selectedChannelId === c.id ? "bg-primary/10" : "hover:bg-muted/40",
-              )}
-            >
-              <div className={cn(
-                "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground",
-                selectedChannelId === c.id ? "bg-primary/10 text-primary" : "bg-muted",
-              )}>
-                {getChannelIcon(c)}
-              </div>
-              <TruncatedText text={getChannelLabel(c)} className="text-label font-medium flex-1" />
-              {selectedChannelId === c.id && (
-                <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                </div>
-              )}
-            </button>
+              channel={c}
+              isSelected={selectedChannelId === c.id}
+              onToggle={handleToggleChannel}
+            />
           ))}
-          {filteredChannels.length === 0 && (
+          {filteredChannels.length === 0 && !hasMore && (
             <div className="py-6 text-center text-xs text-muted-foreground">No conversations found</div>
           )}
+          <ChannelLoadMore
+            hasMore={hasMore}
+            isTruncated={isTruncated}
+            isLoading={isFetchingNextPage}
+            onLoadMore={loadMore}
+            className="px-3 py-2"
+          />
         </div>
 
         <input
@@ -170,7 +210,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
         />
 
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
           <LoadingButton
             size="sm"
             disabled={!selectedChannelId}

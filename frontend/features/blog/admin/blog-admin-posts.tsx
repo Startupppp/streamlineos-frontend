@@ -324,7 +324,7 @@ export function BlogAdminPosts() {
 
   const emptyState = (
     <EmptyState
-      illustration={<FileText className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+      illustration={<FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
       title={debouncedSearch || statusFilter !== "all" ? "No posts match your filters" : "No posts yet"}
       description={
         debouncedSearch || statusFilter !== "all"

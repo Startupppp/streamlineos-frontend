@@ -53,7 +53,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
             <TruncatedText text={entry.project.name} className="text-xs text-muted-foreground" />
           )}
           {entry.ticket && (
-            <span className="text-dense text-muted-foreground/70">#{entry.ticket.ticketNumber}</span>
+            <span className="text-dense text-muted-foreground">#{entry.ticket.ticketNumber}</span>
           )}
         </div>
         {entry.description && (
@@ -67,7 +67,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
             {BILLING_TYPE_LABEL[entry.billingType]}
           </Badge>
           {isLocked && (
-            <span className="text-micro text-muted-foreground/60">Locked</span>
+            <span className="text-micro text-muted-foreground">Locked</span>
           )}
         </div>
       </div>

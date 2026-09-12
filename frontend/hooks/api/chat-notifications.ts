@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,18 +50,31 @@ export function useChatGlobalNotifications(
   // eslint-disable-next-line react-hooks/refs
   currentUserIdRef.current = currentUserId;
 
+  const channelsRef = useRef(channels);
+  // eslint-disable-next-line react-hooks/refs
+  channelsRef.current = channels;
+
+  const channelIdSignature = useMemo(
+    () =>
+      (channels ?? [])
+        .map((c) => c.id)
+        .sort((a, b) => a - b)
+        .join(","),
+    [channels],
+  );
+
   // RT-003: the second on-mount permission prompt, removed. Opening chat is not
   // consent to be notified, and a denial here is effectively permanent — the ask now
   // belongs to the explicit control in notification preferences (`usePushSubscription`).
   // Chat still shows OS notifications when permission was already granted.
 
   useEffect(() => {
-    if (!orgId || !channels?.length) return;
+    if (!orgId || channelIdSignature === "") return;
 
     // Captured after the guard: the narrowing does not reach into the hoisted
     // `setup` declaration below, and the channel name builder takes a string.
     const org = orgId;
-    const channelList = channels;
+    const channelIds = channelIdSignature.split(",").map(Number);
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
@@ -69,17 +82,18 @@ export function useChatGlobalNotifications(
     }> = [];
 
     async function setup() {
-      for (const channel of channelList) {
+      for (const channelId of channelIds) {
         if (cancelled) return;
 
-        const ablyChannel = ably.channels.get(chatChannelName(org, channel.id));
-        const channelId = channel.id;
-        const channelType = channel.type;
-        const channelDisplayName = channel.name;
+        const ablyChannel = ably.channels.get(chatChannelName(org, channelId));
 
         const handler = (msg: InboundMessage) => {
           const payload = readChatNotification(msg.data);
           if (!payload || payload.senderId === currentUserIdRef.current) return;
+
+          const current = channelsRef.current?.find((c) => c.id === channelId);
+          const channelType = current?.type;
+          const channelDisplayName = current?.name;
 
           queryClient.invalidateQueries({
             queryKey: collaborationQueryKeys.chat.myChannels(),
@@ -127,7 +141,7 @@ export function useChatGlobalNotifications(
         safeUnsubscribe(ch, "message", h);
       }
     };
-  }, [orgId, channels, ably, queryClient]);
+  }, [orgId, channelIdSignature, ably, queryClient]);
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;

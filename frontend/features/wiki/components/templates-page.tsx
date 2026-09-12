@@ -256,7 +256,7 @@ export default function TemplatesPage() {
           {!isLoading && isError && (
             <EmptyState
               illustration={
-                <KbLayoutTemplateIcon className="w-8 text-muted-foreground/40" />
+                <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
               }
               title="Could not load templates"
               description="There was a problem fetching page templates."
@@ -267,7 +267,7 @@ export default function TemplatesPage() {
           {!isLoading && !isError && templates.length === 0 && (
             <EmptyState
               illustration={
-                <KbLayoutTemplateIcon className="w-8 text-muted-foreground/40" />
+                <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
               }
               title="No saved templates yet"
               description="Save a page as a template to reuse its structure across your wiki."

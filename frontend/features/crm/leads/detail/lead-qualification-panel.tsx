@@ -134,7 +134,7 @@ export function LeadQualificationPanel({ leadId, customData }: LeadQualification
                   {checked ? (
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                   ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                    <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                   )}
                   <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-primary" : "text-muted-foreground"}`} />
                   <div className="min-w-0">

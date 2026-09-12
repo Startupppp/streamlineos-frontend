@@ -168,7 +168,7 @@ function ColumnEmptyState({
         {kind === "done" ? (
           <CircleCheck className="h-5 w-5 text-status-success-ink" />
         ) : (
-          <FileText className="h-5 w-5 text-muted-foreground/70" />
+          <FileText className="h-5 w-5 text-muted-foreground" />
         )}
       </div>
       <p className="text-sm font-medium text-foreground">{copy.title}</p>

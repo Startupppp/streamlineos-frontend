@@ -71,13 +71,13 @@ export const InlineDueDate = memo(function InlineDueDate({
             <CalendarIcon
               className={cn(
                 "h-3.5 w-3.5 shrink-0",
-                displayDate ? "text-muted-foreground" : "text-muted-foreground/50",
+                displayDate ? "text-muted-foreground" : "text-muted-foreground",
               )}
             />
             <span
               className={cn(
                 "text-xs",
-                displayDate ? "text-muted-foreground" : "text-muted-foreground/50",
+                displayDate ? "text-muted-foreground" : "text-muted-foreground",
               )}
             >
               {displayDate ? format(displayDate, "MMM d, yyyy") : "Due date"}
@@ -156,13 +156,13 @@ export const InlineStartDate = memo(function InlineStartDate({
             <CalendarIcon
               className={cn(
                 "h-3 w-3 shrink-0",
-                parsedDate ? "text-foreground" : "text-muted-foreground/50",
+                parsedDate ? "text-foreground" : "text-muted-foreground",
               )}
             />
             <span
               className={cn(
                 "text-micro",
-                parsedDate ? "text-foreground" : "text-muted-foreground/50",
+                parsedDate ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {parsedDate ? format(parsedDate, "MMM d") : "Start date"}

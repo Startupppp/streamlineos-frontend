@@ -49,7 +49,7 @@ export function PublicHelpCentreContent({
 
         {articles.length === 0 ? (
           <div className="flex min-h-[40dvh] flex-col items-center justify-center text-center">
-            <FileText className="h-8 w-8 text-muted-foreground/40 mb-3" />
+            <FileText className="h-8 w-8 text-muted-foreground mb-3" />
             <p className="text-sm font-medium text-foreground">No articles published yet</p>
             <p className="text-xs text-muted-foreground mt-1">Check back soon.</p>
           </div>

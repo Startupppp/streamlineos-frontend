@@ -109,7 +109,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
                 {stages.map((toStage) => (
                   <td key={toStage.key} className="px-1.5 py-1.5 text-center">
                     {fromStage.key === toStage.key ? (
-                      <span className="text-muted-foreground/40">—</span>
+                      <span className="text-muted-foreground">—</span>
                     ) : (
                       <MatrixCell
                         fromStage={fromStage}

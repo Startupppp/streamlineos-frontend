@@ -8,12 +8,19 @@ export function axeSourcePath() {
   return fromJestAxe.resolve("axe-core/axe.min.js");
 }
 
-export function axeExpression(tags = AXE_TAGS, timeoutMs = 20000) {
+/**
+ * `contextExpression` is a page expression producing an axe context. It defaults
+ * to the whole document, which is what every existing caller measures. Scoping
+ * it matters when a shell violation would otherwise be attributed to the page
+ * under test: a third-party widget or a sidebar shortcut chip fails on every
+ * route and says nothing about the surface being accepted.
+ */
+export function axeExpression(tags = AXE_TAGS, timeoutMs = 20000, contextExpression = "document") {
   return `(() => {
     if (typeof window.axe === "undefined")
       return Promise.resolve({ ran: false, reason: "axe-not-injected" });
     const run = window.axe
-      .run(document, { runOnly: { type: "tag", values: ${JSON.stringify(tags)} } })
+      .run(${contextExpression}, { runOnly: { type: "tag", values: ${JSON.stringify(tags)} } })
       .then((r) => ({
         ran: true,
         nodesChecked:
@@ -23,6 +30,7 @@ export function axeExpression(tags = AXE_TAGS, timeoutMs = 20000) {
           id: v.id,
           impact: v.impact,
           nodes: v.nodes.length,
+          target: v.nodes.slice(0, 2).map((n) => String(n.target)),
           html: v.nodes.slice(0, 2).map((n) => String(n.html).slice(0, 200)),
         })),
       }))

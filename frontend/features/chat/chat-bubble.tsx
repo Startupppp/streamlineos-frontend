@@ -152,6 +152,7 @@ export function ChatBubble({
     : null;
   const dueDateAction = useEntityAction(ticketReference, "due-date");
   const canSetDueDate = Boolean(dueDateAction);
+  const isPendingSend = message.id < 0;
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
   const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);
@@ -196,7 +197,7 @@ export function ChatBubble({
     return (
       <div className={cn("flex mb-0.5 w-full min-w-0", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
         <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15">
-          <p className="text-dense text-muted-foreground/40 italic flex items-center gap-1.5">
+          <p className="text-dense text-muted-foreground italic flex items-center gap-1.5">
             <Trash2 className="h-2.5 w-2.5" />
             Message deleted
           </p>
@@ -207,10 +208,13 @@ export function ChatBubble({
 
   return (
     <div
+      data-pending={isPendingSend ? "true" : undefined}
+      aria-busy={isPendingSend || undefined}
       className={cn(
         "group flex gap-2 w-full min-w-0",
         isOwn ? "justify-end" : "justify-start",
-        showSender ? "mt-3 mb-0.5" : "mb-0.5"
+        showSender ? "mt-3 mb-0.5" : "mb-0.5",
+        isPendingSend && "opacity-60",
       )}
     >
 
@@ -266,9 +270,9 @@ export function ChatBubble({
             </div>
             <div className="flex items-center gap-2 mt-1 px-1">
               <button onClick={onCancelEdit} className="text-dense text-muted-foreground hover:text-foreground">Cancel</button>
-              <span className="text-muted-foreground/30">|</span>
+              <span className="text-muted-foreground">|</span>
               <button onClick={onSaveEdit} className="text-dense text-primary font-bold hover:underline">Save</button>
-              <span className="text-micro text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
+              <span className="text-micro text-muted-foreground ml-auto hidden sm:inline">Esc / Enter</span>
             </div>
           </div>
         ) : (
@@ -348,7 +352,7 @@ export function ChatBubble({
                 {formatMessageTime(message.createdAt)}
               </span>
               {message.isEdited && (
-                <span className={cn("text-dense", isOwn ? "text-primary-foreground/60" : "text-muted-foreground/70")}>
+                <span className={cn("text-dense", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
                   edited
                 </span>
               )}

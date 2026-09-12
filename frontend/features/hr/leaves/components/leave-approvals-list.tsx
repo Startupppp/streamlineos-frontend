@@ -87,17 +87,18 @@ export function LeaveApprovalsList({
 
   return (
     <>
-      <div className="space-y-3" role="list" aria-label="Leave approvals">
+      <ul className="space-y-3" aria-label="Leave approvals">
         {requests.map((req) => (
-          <LeaveApprovalItem
-            key={req.id}
-            req={req}
-            processingId={isPending ? (processingId ?? null) : null}
-            currentUserId={currentUserId}
-            onProcess={handleProcess}
-          />
+          <li key={req.id}>
+            <LeaveApprovalItem
+              req={req}
+              processingId={isPending ? (processingId ?? null) : null}
+              currentUserId={currentUserId}
+              onProcess={handleProcess}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <SheetContent className="sm:max-w-sm p-0 flex flex-col">
           <SheetHeader className="p-5 pb-4 border-b">

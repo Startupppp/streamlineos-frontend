@@ -278,7 +278,7 @@ export function ChannelInfoPanel({
 
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-dense text-muted-foreground/50 text-center">
+              <p className="text-dense text-muted-foreground text-center">
                 {channel.type === "GROUP"
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}

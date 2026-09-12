@@ -154,7 +154,7 @@ export const InlineDescription = memo(function InlineDescription({
               "line-clamp-1 text-left text-xs transition-colors",
               preview
                 ? "text-muted-foreground hover:text-foreground"
-                : "text-muted-foreground/50 hover:text-muted-foreground",
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
             aria-label="Edit description"
           >

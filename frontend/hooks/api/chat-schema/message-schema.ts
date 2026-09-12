@@ -143,4 +143,5 @@ export const chatPollPageContract = z.object({
   messages: z.array(chatMessageContract),
   nextCursor: z.number().nullable(),
   hasMore: z.boolean(),
+  latestPosition: z.number().nullable(),
 });

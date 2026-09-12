@@ -19,8 +19,10 @@ import {
   useUpdateCalendarEvent,
   type CalendarListItem,
 } from "@/hooks/api/calendar";
+import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import {
@@ -68,7 +70,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const { data: detail, isLoading: detailLoading } = useCalendarEvent(
     isCalendarEvent ? numericEventId : null,
   );
-  const canUpdate = isCalendarEvent;
+  const canUpdate = isCalendarEvent && detail?.canManage === true;
+  const canMutateEvent = canUpdate && event?.category !== "huddle";
+  const canExport = useCan("calendar:events:export");
   const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } = useAnimatedIcon();
   const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
   const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } = useAnimatedIcon();
@@ -79,8 +83,8 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       await updateEvent({ id: numericEventId, entityType: null, entityId: null });
       toast.success("Ticket unlinked");
       setUnlinkConfirmOpen(false);
-    } catch {
-      toast.error("Failed to unlink ticket");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [numericEventId, updateEvent]);
 
@@ -90,8 +94,8 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       await deleteEvent(numericEventId);
       toast.success("Event deleted");
       onClose();
-    } catch {
-      toast.error("Failed to delete event");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [deleteEvent, event, numericEventId, onClose]);
 
@@ -107,8 +111,8 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       toast.success("Occurrence cancelled");
       setCancelOccurrenceOpen(false);
       onClose();
-    } catch {
-      toast.error("Failed to cancel occurrence");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [cancelOccurrence, event, numericEventId, parsedEventId, onClose]);
 
@@ -117,20 +121,20 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     try {
       await rsvpMutation({ eventId: numericEventId, status });
       toast.success(`RSVP updated: ${RSVP_STATUS_LABELS[status]}`);
-    } catch {
-      toast.error("Failed to update RSVP");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [event, numericEventId, rsvpMutation]);
 
-  const handleExportIcs = useCallback(async () => {
+  const handleExportDay = useCallback(async () => {
     if (!event) return;
     try {
       await downloadCalendarExport(
         format(new Date(event.start), "yyyy-MM-dd"),
         format(new Date(event.end), "yyyy-MM-dd"),
       );
-    } catch {
-      toast.error("Failed to export event");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [event]);
 
@@ -139,8 +143,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     setAiFollowUpOpen(true);
   }, []);
 
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) onClose();
+  }, [onClose]);
+
+  const handleRequestDelete = useCallback(() => setConfirmOpen(true), []);
+  const handleRequestCancelOccurrence = useCallback(() => setCancelOccurrenceOpen(true), []);
+  const handleRequestUnlink = useCallback(() => setUnlinkConfirmOpen(true), []);
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+  const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
+
   return <>
-    <Sheet open={!!event} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={!!event} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
@@ -148,21 +162,21 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             <TruncatedText text={event?.title ?? ""} className="min-w-0 flex-1" />
           </SheetTitle>
         </SheetHeader>
-        <EventDetailContent event={event} numericEventId={numericEventId} isCalendarEvent={isCalendarEvent} canUpdate={canUpdate} deleteEventIsPending={deleteEventIsPending} rsvpMutationIsPending={rsvpMutationIsPending} detail={detail} detailLoading={detailLoading} onClose={onClose} onRequestUnlink={() => setUnlinkConfirmOpen(true)} onRsvp={handleRsvp} />
+        <EventDetailContent event={event} numericEventId={numericEventId} isCalendarEvent={isCalendarEvent} canUpdate={canUpdate} deleteEventIsPending={deleteEventIsPending} rsvpMutationIsPending={rsvpMutationIsPending} detail={detail} detailLoading={detailLoading} onClose={onClose} onRequestUnlink={handleRequestUnlink} onRsvp={handleRsvp} />
         {event?.category === "huddle" && event.entityId ? <div className="px-5 pt-3 pb-1 shrink-0"><Link href={`/chat?channel=${event.entityId}`} onClick={onClose}><Button size="sm" className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white" {...huddleHoverHandlers}><MicIcon ref={huddleIconRef} size={14} />Join Huddle</Button></Link></div> : null}
         <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-          {isCalendarEvent && event?.category !== "huddle" ? (
+          {canMutateEvent ? (
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmOpen(true)} {...deleteHoverHandlers}><Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />Delete</Button>
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleRequestDelete} {...deleteHoverHandlers}><Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />Delete</Button>
               {detail?.isRecurring ? (
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => setCancelOccurrenceOpen(true)}>Cancel occurrence</Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={handleRequestCancelOccurrence}>Cancel occurrence</Button>
               ) : null}
             </div>
           ) : <div />}
           <div className="flex items-center gap-2">
-            {isCalendarEvent && event?.category !== "huddle" ? <Button variant="outline" size="sm" onClick={() => setAiPrepOpen(true)} className="gap-1.5"><Sparkles className="h-3.5 w-3.5" />AI Prep</Button> : null}
-            <Button variant="outline" size="sm" onClick={handleExportIcs} aria-label="Export as .ics" {...downloadHoverHandlers}><DownloadIcon ref={downloadIconRef} size={14} className="mr-1.5" />.ics</Button>
-            {isCalendarEvent && event?.category !== "huddle" ? <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="h-3.5 w-3.5 mr-1.5" />Edit</Button> : null}
+            {isCalendarEvent && event?.category !== "huddle" ? <Button variant="outline" size="sm" onClick={handleOpenAiPrep} className="gap-1.5"><Sparkles className="h-3.5 w-3.5" />AI Prep</Button> : null}
+            {canExport ? <Button variant="outline" size="sm" onClick={handleExportDay} aria-label="Export this day's events as CSV" {...downloadHoverHandlers}><DownloadIcon ref={downloadIconRef} size={14} className="mr-1.5" />Export day</Button> : null}
+            {canMutateEvent ? <Button variant="outline" size="sm" onClick={handleOpenEdit}><Pencil className="h-3.5 w-3.5 mr-1.5" />Edit</Button> : null}
             <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
           </div>
         </div>

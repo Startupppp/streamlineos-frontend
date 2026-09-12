@@ -88,6 +88,7 @@ export interface CalendarEventDetail {
   } | null;
   rrule: string | null;
   isRecurring: boolean;
+  canManage: boolean;
 }
 
 export interface ParsedCalendarEventId {
@@ -138,6 +139,7 @@ export interface ExternalCalendarEvent {
   start: string;
   end: string;
   allDay: boolean;
+  timezone?: string | null;
   location: string | null;
   meetingUrl: string | null;
   webLink: string | null;

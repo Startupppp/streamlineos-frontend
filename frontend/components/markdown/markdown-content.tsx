@@ -14,12 +14,12 @@ const components: Components = {
   ),
   p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
   ul: ({ children }) => (
-    <ul className="list-disc list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground/70">
+    <ul className="list-disc list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground/70">
+    <ol className="list-decimal list-outside mb-2 space-y-1 pl-5 marker:text-muted-foreground">
       {children}
     </ol>
   ),

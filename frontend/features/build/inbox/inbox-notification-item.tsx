@@ -229,7 +229,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
             ) : null}
           </div>
         ) : notification.sourceModule ? (
-          <span className="mt-1 inline-flex items-center text-micro font-medium uppercase tracking-wide text-muted-foreground/70">
+          <span className="mt-1 inline-flex items-center text-micro font-medium uppercase tracking-wide text-muted-foreground">
             {notification.sourceModule}
           </span>
         ) : null}

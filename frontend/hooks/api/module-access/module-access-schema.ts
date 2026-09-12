@@ -190,3 +190,18 @@ export const moduleMemberGrantsSetContract = z.object({
   success: z.literal(true),
   granted: z.number(),
 });
+
+/**
+ * `GET /module-access/:moduleKey/standing/grantable` — the ceiling of what the
+ * CALLER may hand out in this module, not what anyone currently holds. The
+ * effective-access screen reads it so it offers only grantable options.
+ */
+export const moduleGrantableContract = z.object({
+  grantableRanks: z.array(z.number()),
+  scopeCeiling: dataScopeContract,
+  canGrantModuleOwnership: z.boolean(),
+  isOrgOwner: z.boolean(),
+  isOrgAdmin: z.boolean(),
+});
+
+export type ModuleGrantable = z.infer<typeof moduleGrantableContract>;

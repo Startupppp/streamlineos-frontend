@@ -113,7 +113,7 @@ export default function SpacesPage() {
       {!isLoading && isError && (
         <EmptyState
           illustration={
-            <KbLayoutGridIcon className="w-8 text-muted-foreground/40" />
+            <KbLayoutGridIcon className="w-8 text-muted-foreground" />
           }
           title="Could not load spaces"
           description="There was a problem fetching spaces."
@@ -124,7 +124,7 @@ export default function SpacesPage() {
       {!isLoading && !isError && spaces.length === 0 && (
         <EmptyState
           illustration={
-            <KbLayoutGridIcon className="w-8 text-muted-foreground/40" />
+            <KbLayoutGridIcon className="w-8 text-muted-foreground" />
           }
           title="No spaces yet"
           description="Create a space to organize your wiki pages."

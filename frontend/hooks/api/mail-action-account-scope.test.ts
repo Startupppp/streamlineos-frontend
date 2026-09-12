@@ -77,6 +77,7 @@ function seed(isRead = false) {
         hasMore: false,
         nextCursor: null,
         sources: [],
+        degraded: false,
       },
     ],
     pageParams: [undefined],

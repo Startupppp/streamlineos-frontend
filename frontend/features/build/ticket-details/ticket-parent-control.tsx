@@ -127,7 +127,7 @@ export function TicketParentControl({
               disabled={updateTicket.isPending}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
             >
-              <span className="shrink-0 font-mono text-micro text-muted-foreground/70">
+              <span className="shrink-0 font-mono text-micro text-muted-foreground">
                 {r.projectKey}-{r.ticketNumber}
               </span>
               <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>

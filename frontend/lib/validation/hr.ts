@@ -51,6 +51,7 @@ export const onboardEmployeeInputSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
+  attachToExistingMember: z.boolean().optional(),
   joiningDate: z.date(),
   dateOfBirth: z
     .date()

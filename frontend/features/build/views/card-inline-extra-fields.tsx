@@ -187,7 +187,7 @@ export const InlineLabels = memo(function InlineLabels({
                 ) : null}
               </span>
             ) : (
-              <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+              <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             )}
           </button>
         </ResponsivePopoverTrigger>
@@ -243,13 +243,13 @@ export const InlineCycle = memo(function InlineCycle({
             <RefreshCw
               className={cn(
                 "h-3 w-3 shrink-0",
-                currentCycle ? "text-foreground" : "text-muted-foreground/50",
+                currentCycle ? "text-foreground" : "text-muted-foreground",
               )}
             />
             <span
               className={cn(
                 "max-w-[60px] truncate text-micro",
-                currentCycle ? "text-foreground" : "text-muted-foreground/50",
+                currentCycle ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {currentCycle ? currentCycle.name : "No cycle"}
@@ -327,7 +327,7 @@ export const InlineSprint = memo(function InlineSprint({
             <span
               className={cn(
                 "max-w-[60px] truncate text-micro",
-                currentSprint ? "text-foreground" : "text-muted-foreground/50",
+                currentSprint ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {currentSprint ? currentSprint.name : "No sprint"}

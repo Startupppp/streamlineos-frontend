@@ -35,7 +35,7 @@ export function AuditTrailSheet({ envelopeId, open, onOpenChange }: { envelopeId
                   <p className="text-xs text-muted-foreground">
                     {event.actorName ?? "System"} {event.actorEmail ? `(${event.actorEmail})` : ""} · {new Date(event.createdAt).toLocaleString()}
                   </p>
-                  {event.ipAddress && <p className="text-xs text-muted-foreground/70">IP: {event.ipAddress}</p>}
+                  {event.ipAddress && <p className="text-xs text-muted-foreground">IP: {event.ipAddress}</p>}
                 </li>
               ))}
             </ul>

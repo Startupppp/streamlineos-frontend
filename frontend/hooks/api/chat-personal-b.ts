@@ -10,6 +10,11 @@ const chatOkContract = lazyContract(() =>
 const chatChannelDetailContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
 );
+const chatEntityChannelLookupContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) =>
+    m.chatChannelDetailContract.nullable(),
+  ),
+);
 const chatMuteResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatMuteResponseContract),
 );
@@ -81,18 +86,50 @@ export function useMarkChannelUnread() {
   });
 }
 
+function entityChannelQueryKey(entityType: string | null, entityId: string | null) {
+  return [...collaborationQueryKeys.chat.all, "entity", entityType, entityId] as const;
+}
+
 export function useEntityChannel(
   entityType: string | null,
   entityId: string | null,
 ) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: [...collaborationQueryKeys.chat.all, "entity", entityType, entityId] as const,
+    queryKey: entityChannelQueryKey(entityType, entityId),
     queryFn: ({ signal }) =>
-      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatChannelDetailContract),
+      apiClient.get<Channel | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
     enabled: canRead && Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
+}
+
+export interface CreateEntityChannelInput {
+  entityType: string;
+  entityId: string;
+}
+
+export function useCreateEntityChannel() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<Channel, Error, CreateEntityChannelInput>(
+    "chat:channels:write",
+    {
+      mutationKey: ["chat", "channels", "entity", "create"],
+      mutationFn: ({ entityType, entityId }) =>
+        apiClient.post<Channel>(
+          `/chat/channels/entity/${entityType}/${entityId}`,
+          undefined,
+          undefined,
+          chatChannelDetailContract,
+        ),
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: entityChannelQueryKey(variables.entityType, variables.entityId),
+        });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      },
+    },
+  );
 }
 
 export function useMuteChannel() {

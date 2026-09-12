@@ -99,7 +99,7 @@ export function DealDetailBody({
                   ? "bg-primary/10 text-foreground ring-1 ring-primary/30"
                   : isPast
                     ? "bg-muted/50 text-muted-foreground"
-                    : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
+                    : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/30",
               )}
               style={
                 isActive && currentStageColor
@@ -112,7 +112,7 @@ export function DealDetailBody({
             >
               {stage.label}
               {i < stages.length - 1 && (
-                <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />
+                <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground" />
               )}
             </button>
           );

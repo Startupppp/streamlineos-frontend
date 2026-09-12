@@ -23,11 +23,6 @@ import type {
 } from "@/types/chat";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-/**
- * What a channel-list consumer gets instead of a plain array. `hasMore` and
- * `isTruncated` are the two states the eager drain could not express: the first
- * says "more exist, ask for them", the second says "the client stopped asking".
- */
 export interface ChannelListResult<TChannel> {
   channels: TChannel[];
   hasMore: boolean;
@@ -35,7 +30,6 @@ export interface ChannelListResult<TChannel> {
   isLoading: boolean;
   isFetching: boolean;
   isFetchingNextPage: boolean;
-  /** Kept on the adapter so a permission gate stays directly assertable. */
   fetchStatus: "fetching" | "paused" | "idle";
   isError: boolean;
   error: Error | null;
@@ -93,20 +87,6 @@ const chatOrgUsersContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOrgUsersContract),
 );
 
-/**
- * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
- * first page truncated the sidebar, the forward dialog and the channel combobox
- * with nothing on screen to say a channel was missing; following the cursor to
- * exhaustion made every mount pay for the whole channel set, which grows with
- * the tenant, and at the ceiling it returned a plain array — no cursor, no
- * truncated verdict, nothing a screen could render.
- *
- * So the drain is gone. One page is fetched, and the remaining state travels
- * with it: `hasMore` means the consumer may ask for more, `isTruncated` means
- * the client itself stopped asking at the ceiling. A repeated cursor is a server
- * fault, not a page, so it is reported and ends the sequence rather than
- * spinning.
- */
 export const MAX_CHANNEL_PAGES = 20;
 
 export async function fetchChannelPage<TChannel>(
@@ -132,13 +112,6 @@ export async function fetchChannelPage<TChannel>(
   return page;
 }
 
-/**
- * The route stays a LITERAL at each hook's own `fetchChannelPage` call. Hoisting
- * it into this adapter as a `path` option made `check:response-contracts` lose
- * two routes and gain an unresolvable seam site — the scanner reads the first
- * argument, so a path that arrives as a parameter is invisible to every
- * route-based rule in that gate and in `check:gated-reads`.
- */
 interface ChannelPagesOptions<TChannel> {
   queryKey: readonly unknown[];
   fetchPage: (
@@ -275,14 +248,6 @@ export type PollPage = {
   latestPosition: number | null;
 };
 
-/**
- * Where the caller has read up to. `cursor` is `chat_messages.channel_position`,
- * a server-assigned monotonic integer, and it is the only position that survives
- * a skewed client clock, a multi-page outage or an arrival mid-recovery.
- * `since` exists solely to open a sequence for a caller who holds no position
- * yet, and even then the timestamp should come from a server-authored message
- * rather than the browser's wall clock.
- */
 export type ChatPollPosition =
   | { kind: "since"; since: string }
   | { kind: "cursor"; cursor: number };

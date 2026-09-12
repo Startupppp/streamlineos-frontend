@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -45,12 +46,13 @@ export function WorkerEngagementsSheet({
   const [editingEngagement, setEditingEngagement] =
     useState<WorkerEngagement | null>(null);
 
+  const engagementsQuery = useWorkerEngagements(worker.workerId);
   const {
     data: engagements,
     isLoading,
     isError,
     refetch,
-  } = useWorkerEngagements(worker.workerId);
+  } = engagementsQuery;
 
   function handleRetry() {
     void refetch();
@@ -181,13 +183,20 @@ export function WorkerEngagementsSheet({
             Engagements — {workerLabel}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            {worker.workerNumber ? `#${worker.workerNumber} Â· ` : ""}
+            {worker.workerNumber ? `#${worker.workerNumber} · ` : ""}
             Manage engagements for this worker.
           </SheetDescription>
         </SheetHeader>
 
         <SheetBody className="flex flex-col gap-4 px-6 py-4">
-          {isLoading ? (
+          {engagementsQuery.access.denied ? (
+            <NoPermissionState
+              compact
+              permission={engagementsQuery.access.permission}
+              title="Engagements unavailable"
+              description="You no longer hold workforce access, so this worker's engagements cannot be shown."
+            />
+          ) : isLoading || engagementsQuery.access.pending ? (
             <DataTableSkeleton rows={5} columns={6} />
           ) : isError ? (
             <ErrorState compact onRetry={handleRetry} />

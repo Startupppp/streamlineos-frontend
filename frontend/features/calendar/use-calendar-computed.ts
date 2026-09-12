@@ -16,6 +16,24 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { BigCalEvent, View } from "./big-calendar-wrapper";
 import { accountColor } from "./calendar-account-colors";
 
+export function mergeSelfAttendanceEvents(
+  events: CalendarListItem[],
+  selfAttendanceEvents: CalendarListItem[],
+): CalendarListItem[] {
+  if (selfAttendanceEvents.length === 0) return events;
+  const aggregateAttendanceDates = new Set(
+    events
+      .filter((event) => event.source === "attendance")
+      .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
+  );
+  const additions = selfAttendanceEvents.filter(
+    (event) =>
+      !aggregateAttendanceDates.has(format(new Date(event.start), "yyyy-MM-dd")),
+  );
+  if (additions.length === 0) return events;
+  return [...events, ...additions];
+}
+
 interface UseCalendarComputedParams {
   events: CalendarListItem[];
   externalData: ExternalCalendarEventsResponse | undefined;
@@ -102,6 +120,7 @@ export function useCalendarComputed({
               webLink: e.webLink,
               connectionId: e.connectionId,
               externalId: e.id,
+              timezone: e.timezone,
             },
           };
         }),

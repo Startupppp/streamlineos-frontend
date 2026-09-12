@@ -132,7 +132,7 @@ export function EventRow({
             ))}
           </div>
         </div>
-        <p className="text-dense font-mono text-muted-foreground/60">{event.eventKey}</p>
+        <p className="text-dense font-mono text-muted-foreground">{event.eventKey}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Switch

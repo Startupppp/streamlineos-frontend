@@ -47,7 +47,7 @@ export function ExportJobsCard() {
         <EmptyState
           compact
           illustration={
-            <KbDownloadIcon className="h-5 w-5 text-muted-foreground/40" />
+            <KbDownloadIcon className="h-5 w-5 text-muted-foreground" />
           }
           title="No exports yet"
           description="Use the ⋯ menu on a page to export it as Markdown or HTML."

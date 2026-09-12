@@ -18,7 +18,7 @@ import {
 import type { Invitation } from "@/hooks/api/users";
 import { USER_INVITE_ROLES, formatRoleLabel } from "@/lib/constants/user-invite-roles";
 
-export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
+export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked" | "declined";
 export type InvitationStatusFilter = "all" | InvitationStatus;
 
 export const INVITATION_STATUS_FILTERS = [
@@ -27,6 +27,7 @@ export const INVITATION_STATUS_FILTERS = [
   "accepted",
   "expired",
   "revoked",
+  "declined",
 ] as const satisfies readonly InvitationStatusFilter[];
 
 export function resolveInvitationStatusFilter(raw: string | null): InvitationStatusFilter {
@@ -42,10 +43,13 @@ const STATUS_CLASSES: Record<InvitationStatus, string> = {
     "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   revoked:
     "bg-muted text-foreground border-border",
+  declined:
+    "bg-muted text-muted-foreground border-border",
 };
 
 function getInvitationStatus(invitation: Invitation): InvitationStatus {
   if (invitation.status === "REVOKED") return "revoked";
+  if (invitation.status === "DECLINED") return "declined";
   if (invitation.acceptedAt || invitation.status === "ACCEPTED") return "accepted";
   if (isPast(new Date(invitation.expiresAt))) return "expired";
   return "pending";
@@ -69,11 +73,13 @@ export function isInvitationRoleChangePending(
 
 function InvitationRoleSelect({
   invitationId,
+  email,
   role,
   disabled,
   onChange,
 }: {
   invitationId: string;
+  email: string;
   role: string;
   disabled: boolean;
   onChange: (invitationId: string, role: string) => void;
@@ -85,7 +91,10 @@ function InvitationRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
-      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-dense">
+      <SelectTrigger
+        aria-label={`Role for ${email}`}
+        className="h-6 w-fit min-w-[7rem] border-input bg-card text-dense"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -155,7 +164,7 @@ function InvitationActionCell({
           onClick={handleResend}
           isPending={isResendingRow}
           disabled={isCancelling}
-          aria-label="Resend invitation"
+          aria-label={`Resend invitation to ${invitation.email}`}
         >
           <RefreshCw className="h-4 w-4" />
         </LoadingButton>
@@ -168,7 +177,7 @@ function InvitationActionCell({
           onClick={handleReinvite}
           isPending={isResendingRow}
           disabled={isCancelling}
-          aria-label="Re-invite"
+          aria-label={`Re-invite ${invitation.email}`}
         >
           <RefreshCw className="mr-1 h-3.5 w-3.5" />
           Re-invite
@@ -183,7 +192,7 @@ function InvitationActionCell({
           className="h-7 w-7 text-destructive hover:text-destructive"
           onClick={handleCancel}
           disabled={isResendingRow || isCancelling}
-          aria-label="Cancel invitation"
+          aria-label={`Cancel invitation to ${invitation.email}`}
         />
       )}
     </div>
@@ -232,6 +241,7 @@ export function getInvitationColumns({
     return (
       <InvitationRoleSelect
         invitationId={invitation.id}
+        email={invitation.email}
         role={invitation.role}
         disabled={isInvitationRoleChangePending(
           isChangingRole,

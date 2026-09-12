@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { InboxVirtualList } from "./inbox-virtual-list";
+import { InboxVirtualList, type InboxVirtualListProps } from "./inbox-virtual-list";
 import type { UnifiedInboxItem } from "@/types/inbox";
 
 jest.mock("react-window", () => ({
@@ -14,6 +14,7 @@ jest.mock("react-window", () => ({
       <div data-testid={testId ?? "virtual-list"} data-row-count={String(rowCount)} />
     ),
   ),
+  useDynamicRowHeight: () => 96,
 }));
 
 function makeNotificationItem(id: number): UnifiedInboxItem {
@@ -25,29 +26,32 @@ function makeNotificationItem(id: number): UnifiedInboxItem {
     notifType: "GENERAL",
     priority: "NORMAL",
     category: "SYSTEM",
-    sourceModule: null,
+    sourceModule: "system",
+    actor: null,
     isRead: false,
     pinned: false,
     deepLink: null,
     eventKey: null,
+    dedupKey: `notification:${String(id)}`,
     timestamp: new Date().toISOString(),
-  } as unknown as UnifiedInboxItem;
+  };
 }
 
 const noop = () => undefined;
 const noopItem = (_item: unknown) => undefined;
 
-const baseProps = {
+const baseProps: Omit<InboxVirtualListProps, "items"> = {
   hasNextPage: false,
   isFetchingNextPage: false,
   isOnline: true,
-  onNotificationClick: noop as Parameters<typeof InboxVirtualList>[0]["onNotificationClick"],
-  onMailClick: noopItem as Parameters<typeof InboxVirtualList>[0]["onMailClick"],
-  onApprovalClick: noopItem as Parameters<typeof InboxVirtualList>[0]["onApprovalClick"],
-  onArchive: noop as Parameters<typeof InboxVirtualList>[0]["onArchive"],
-  onDelete: noop as Parameters<typeof InboxVirtualList>[0]["onDelete"],
-  onApprove: noop as Parameters<typeof InboxVirtualList>[0]["onApprove"],
-  onReject: noop as Parameters<typeof InboxVirtualList>[0]["onReject"],
+  onNotificationClick: noopItem,
+  onBroadcastClick: noopItem,
+  onMailClick: noopItem,
+  onApprovalClick: noopItem,
+  onArchive: noop,
+  onDelete: noop,
+  onApprove: noop,
+  onReject: noop,
   approvingId: undefined,
   rejectingId: undefined,
   archivingId: undefined,

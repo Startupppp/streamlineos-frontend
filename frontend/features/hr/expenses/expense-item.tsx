@@ -127,7 +127,7 @@ export function AdminExpenseItem({
               </span>
             </div>
           ) : (
-            <Receipt className="h-6 w-6 text-muted-foreground/50" />
+            <Receipt className="h-6 w-6 text-muted-foreground" />
           )}
           {receipts.length > 1 && (
             <span className="absolute bottom-1 right-1 rounded-md bg-background/90 px-1.5 py-0.5 text-micro font-semibold text-foreground shadow-sm">

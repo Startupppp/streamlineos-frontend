@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { invalidatePersonAccountAccess } from "./cache";
 import type {
+  InvitationsListParams,
   InvitationsResponse,
   InviteUserPayload,
 } from "./types";
@@ -53,17 +54,30 @@ export const useInviteUser = () => {
 export const useBulkInviteUsers = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
-    { results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> },
+    {
+      deliveryMode: "background" | "enqueue";
+      results: Array<{
+        email: string;
+        originalEmail: string;
+        success: boolean;
+        invitationId?: string;
+        isDuplicate?: boolean;
+        error?: string;
+      }>;
+    },
     Error,
     { emails: string[]; role: string }
   >("settings:organization:manage", {
     mutationKey: ["users", "bulk-invite"],
     mutationFn: (invitationBatch) =>
       apiClient.post<{
+        deliveryMode: "background" | "enqueue";
         results: Array<{
           email: string;
+          originalEmail: string;
           success: boolean;
           invitationId?: string;
+          isDuplicate?: boolean;
           error?: string;
         }>;
       }>("/users/bulk-invite", invitationBatch, undefined, bulkInviteContract),
@@ -77,13 +91,7 @@ export const useBulkInviteUsers = () => {
 };
 
 export const useInvitations = (
-  params?: {
-    page?: number;
-    limit?: number;
-    includeAccepted?: boolean;
-    status?: "pending" | "accepted" | "expired" | "revoked";
-    q?: string;
-  },
+  params?: InvitationsListParams,
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">,
 ) => {
   const canView = useCan("settings:organization:manage");
@@ -91,7 +99,7 @@ export const useInvitations = (
     queryKey: usersAndCommerceQueryKeys.users.invitations(params),
     queryFn: ({ signal }) =>
       apiClient.get<InvitationsResponse>("/users/invitations", {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
         ...(params?.status ? { status: params.status } : {}),

@@ -108,6 +108,7 @@ function AddProjectPicker({
             type="button"
             variant="outline"
             role="combobox"
+            aria-label="Add project to team"
             size="sm"
             className={cn(
               "h-8 min-w-[180px] justify-start gap-1.5 text-xs font-normal",

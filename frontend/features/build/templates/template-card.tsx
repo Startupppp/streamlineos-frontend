@@ -80,7 +80,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5">
       <span
-        className="w-3 shrink-0 text-center text-micro tabular-nums text-muted-foreground/50"
+        className="w-3 shrink-0 text-center text-micro tabular-nums text-muted-foreground"
         aria-hidden="true"
       >
         {index + 1}
@@ -190,16 +190,19 @@ export const TemplateCard = memo(function TemplateCard({
 
         <div className="mt-auto space-y-2.5 border-t border-border/60 pt-2.5">
           {hasTasks ? (
-            <div className="space-y-1" role="list" aria-label="Task preview">
-              {preview.map((ticket, idx) => (
-                <TaskPreviewRow
-                  key={ticket.id}
-                  index={idx}
-                  title={ticket.title}
-                  type={ticket.type}
-                  phase={ticket.phase}
-                />
-              ))}
+            <div>
+              <ul className="space-y-1" aria-label="Task preview">
+                {preview.map((ticket, idx) => (
+                  <li key={ticket.id}>
+                    <TaskPreviewRow
+                      index={idx}
+                      title={ticket.title}
+                      type={ticket.type}
+                      phase={ticket.phase}
+                    />
+                  </li>
+                ))}
+              </ul>
               {overflow > 0 ? (
                 <p className="pl-1 text-micro text-muted-foreground">
                   +{overflow} more {overflow === 1 ? "task" : "tasks"}
@@ -209,10 +212,10 @@ export const TemplateCard = memo(function TemplateCard({
           ) : (
             <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-2.5 py-2">
               <ListTodo
-                className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50"
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                 aria-hidden="true"
               />
-              <span className="text-micro text-muted-foreground/70">No tasks defined</span>
+              <span className="text-micro text-muted-foreground">No tasks defined</span>
             </div>
           )}
 

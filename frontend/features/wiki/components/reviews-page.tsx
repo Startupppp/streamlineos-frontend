@@ -379,7 +379,7 @@ export default function ReviewsPage() {
       <PageWrapper title="Reviews">
         <EmptyState
           illustration={
-            <KbLockIcon className="w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
@@ -431,7 +431,7 @@ export default function ReviewsPage() {
         {isError ? (
           <EmptyState
             illustration={
-              <KbAlertCircleIcon className="w-8 text-muted-foreground/40" />
+              <KbAlertCircleIcon className="w-8 text-muted-foreground" />
             }
             title="Failed to load reviews"
             description="An error occurred while fetching reviews."
@@ -447,7 +447,7 @@ export default function ReviewsPage() {
             emptyState={
               <EmptyState
                 illustration={
-                  <KbClipboardCheckIcon className="w-8 text-muted-foreground/40" />
+                  <KbClipboardCheckIcon className="w-8 text-muted-foreground" />
                 }
                 title="No reviews"
                 description={

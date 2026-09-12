@@ -2,9 +2,7 @@ import type { useChatChannels } from "@/hooks/api";
 import type { TicketEntityRef, CommentEntityRef, MessageMetadata } from "@/types/chat";
 export type { TicketEntityRef, CommentEntityRef, MessageMetadata };
 
-type ChannelRaw = NonNullable<
-  ReturnType<typeof useChatChannels>["data"]
->[number];
+type ChannelRaw = ReturnType<typeof useChatChannels>["channels"][number];
 export type Channel = Omit<ChannelRaw, "lastMessage"> & {
   lastMessage?: {
     content?: string | null;

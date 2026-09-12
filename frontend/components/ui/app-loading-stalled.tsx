@@ -38,7 +38,7 @@ export function AppLoadingStalled({ className, label }: AppLoadingStalledProps) 
           {STALLED_DESCRIPTION}
         </p>
       </div>
-      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/70">
+      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
       <Button variant="outline" size="sm" onClick={handleReload}>

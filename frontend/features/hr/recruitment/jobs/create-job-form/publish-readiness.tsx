@@ -34,7 +34,7 @@ function ReadinessStepButton({ step, idx, onStepClick }: ReadinessStepButtonProp
       ) : step.hasError ? (
         <AlertCircle className="h-3.5 w-3.5 text-status-danger-ink shrink-0" />
       ) : (
-        <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+        <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       )}
       <span className={cn("truncate", step.completed && !step.hasError ? "text-foreground" : "text-muted-foreground")}>
         {step.title}

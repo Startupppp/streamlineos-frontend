@@ -201,7 +201,7 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
                     onSelect={() => handleHealthSelect(h)}
                   />
                 ))}
-                <p className="mt-2 text-micro text-muted-foreground/70 italic">
+                <p className="mt-2 text-micro text-muted-foreground italic">
                   Health score is a backend gap — not in current API response.
                 </p>
               </FilterSection>

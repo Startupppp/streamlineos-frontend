@@ -106,7 +106,7 @@ export function TemplateRow({
               </Badge>
             )}
         </div>
-        <p className="mt-0.5 text-dense font-mono text-muted-foreground/70">
+        <p className="mt-0.5 text-dense font-mono text-muted-foreground">
           {template.templateKey}
         </p>
         {template.subject && (
@@ -114,7 +114,7 @@ export function TemplateRow({
             Subject: {template.subject}
           </p>
         )}
-        <p className="text-dense text-muted-foreground/50 mt-0.5">
+        <p className="text-dense text-muted-foreground mt-0.5">
           v{template.version} · {template.locale}
         </p>
       </div>

@@ -1,14 +1,18 @@
 "use client";
 
-import { format } from "date-fns";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 
+export type ExternalBigCalEvent = Omit<BigCalEvent, "resource"> & {
+  resource?: NonNullable<BigCalEvent["resource"]> & { timezone?: string | null };
+};
+
 interface ExternalEventDetailSheetProps {
-  event: BigCalEvent | null;
+  event: ExternalBigCalEvent | null;
   onClose: () => void;
 }
 
@@ -30,8 +34,8 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
               <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
                 {event.allDay
-                  ? format(event.start, "EEE, MMM d, yyyy")
-                  : `${format(event.start, "EEE, MMM d · h:mm a")} – ${format(event.end, "h:mm a")}`}
+                  ? `${formatEventDate(event.start, "UTC")} · All day`
+                  : formatEventTimeRange(event.start, event.end, event.resource?.timezone)}
               </span>
             </div>
             {event.resource?.location && (

@@ -126,7 +126,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
                       {item.person}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground/50">·</span>
+                  <span className="text-xs text-muted-foreground">·</span>
                   <span className="text-xs text-muted-foreground">
                     {item.time}
                   </span>

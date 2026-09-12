@@ -10,7 +10,6 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Switch } from "@/components/ui/switch";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -21,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { CONTENT_PANEL_SOLID, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import {
   useAiCreditsWallet,
@@ -53,7 +52,7 @@ const AiCreditsDailyChart = dynamic(
     import("@/features/billing/ai-credits-daily-chart").then((m) => ({
       default: m.AiCreditsDailyChart,
     })),
-  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full rounded-lg" /> },
+  { ssr: false, loading: () => <Skeleton className="aspect-[16/7] w-full rounded-lg" /> },
 );
 
 type TxnPageSize = (typeof STANDARD_PAGE_SIZE_OPTIONS)[number];
@@ -320,10 +319,7 @@ export function AiCreditsSettingsPage() {
               {isLoading ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {Array.from({ length: 4 }, (_, i) => (
-                    <div
-                      key={`pack-skel-${i}`}
-                      className="h-[180px] rounded-lg border border-border bg-card animate-pulse"
-                    />
+                    <Skeleton key={`pack-skel-${i}`} className="aspect-[4/5] rounded-lg" />
                   ))}
                 </div>
               ) : packs.length === 0 ? (
@@ -351,7 +347,7 @@ export function AiCreditsSettingsPage() {
               )}
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className={cn(CONTENT_PANEL_SOLID, "p-4")}>
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold">Auto Top-Up</p>
                 <div className="flex items-center gap-2">
@@ -377,7 +373,7 @@ export function AiCreditsSettingsPage() {
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className={cn(CONTENT_PANEL_SOLID, "overflow-hidden")}>
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <p className="text-sm font-semibold">Usage History</p>
                 <Button
@@ -413,20 +409,16 @@ export function AiCreditsSettingsPage() {
                   columns={TXN_COLUMNS}
                   getRowKey={getTxnRowKey}
                   className="rounded-none border-0"
-                  pagination={{ pageSize: txnLimit }}
-                />
-              )}
-              {(txnCursors.length > 1 || txnPagination?.hasMore) && (
-                <CursorPageControls
-                  page={txnCursors.length}
-                  hasNext={txnPagination?.hasMore ?? false}
-                  disabled={txnLoading}
-                  onPrevious={handlePreviousTxnPage}
-                  onNext={handleNextTxnPage}
-                  pageSize={txnLimit}
-                  onPageSizeChange={handleTxnPageSizeChange}
-                  pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
-                  className="m-3"
+                  pagination={{
+                    mode: "cursor",
+                    pageSize: txnLimit,
+                    hasMore: txnPagination?.hasMore ?? false,
+                    hasPrevious: txnCursors.length > 1,
+                    onNext: handleNextTxnPage,
+                    onPrevious: handlePreviousTxnPage,
+                    onPageSizeChange: handleTxnPageSizeChange,
+                    pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+                  }}
                 />
               )}
             </div>

@@ -18,12 +18,14 @@ import {
   useUnpinNotification,
   useSnoozeNotification,
 } from "@/hooks/api/notifications-inbox";
+import { useDismissBroadcast } from "@/hooks/api/notifications-broadcasts";
 
 export const INBOX_OFFLINE_MESSAGE = OFFLINE_MESSAGE;
 
 export interface InboxActions {
   isOnline: boolean;
   markReadOnOpen: (id: number) => void;
+  dismissBroadcastOnOpen: (broadcastId: number) => void;
   handleMarkRead: (id: number) => void;
   handleArchive: (id: number) => void;
   handleUnarchive: (id: number) => void;
@@ -53,6 +55,7 @@ export function useInboxActions(): InboxActions {
   const snooze = useSnoozeNotification();
   const approve = useApproveNotification();
   const reject = useRejectNotification();
+  const dismissBroadcast = useDismissBroadcast();
 
   const markReadMutate = markRead.mutate;
   const markReadOnOpen = useCallback(
@@ -61,6 +64,15 @@ export function useInboxActions(): InboxActions {
       markReadMutate(id);
     },
     [isOnline, markReadMutate],
+  );
+
+  const dismissBroadcastMutate = dismissBroadcast.mutate;
+  const dismissBroadcastOnOpen = useCallback(
+    (broadcastId: number) => {
+      if (!isOnline) return;
+      dismissBroadcastMutate(broadcastId);
+    },
+    [isOnline, dismissBroadcastMutate],
   );
 
   const handleMarkRead = useCallback(
@@ -136,6 +148,7 @@ export function useInboxActions(): InboxActions {
   return {
     isOnline,
     markReadOnOpen,
+    dismissBroadcastOnOpen,
     handleMarkRead,
     handleArchive,
     handleUnarchive,

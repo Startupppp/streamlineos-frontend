@@ -14,16 +14,21 @@
  * when the stream connected — so a connection that stayed quiet (the normal case)
  * carried every earlier failure forward and gave up mid-session.
  */
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type { QueryKey } from "@tanstack/react-query";
 import { useNotificationEvents } from "./use-notification-events";
 import { consumeNotificationStream } from "./notification-event-stream";
+import type { IncomingNotification } from "./notification-event-stream";
+import { queryKeys } from "@/lib/query-keys";
 
 jest.mock("./notification-event-stream", () => ({
   consumeNotificationStream: jest.fn(),
 }));
 
+const invalidateQueries = jest.fn();
+
 jest.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+  useQueryClient: () => ({ invalidateQueries }),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -50,6 +55,7 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     jest.useFakeTimers();
     consume.mockReset();
     fetchMock.mockReset();
+    invalidateQueries.mockReset();
     global.fetch = fetchMock as unknown as typeof fetch;
   });
 
@@ -120,5 +126,61 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     expect(fetchMock.mock.calls.length).toBeGreaterThan(5);
     // And it is still armed, rather than having quietly given up.
     await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
+  });
+});
+
+describe("useNotificationEvents — a live notification refreshes every surface it lands on", () => {
+  const fetchMock = jest.fn();
+
+  const arriving: IncomingNotification = {
+    id: 1,
+    title: "Deploy finished",
+    message: "main is live",
+    priority: "NORMAL",
+    category: "SYSTEM",
+    link: null,
+  };
+
+  beforeEach(() => {
+    consume.mockReset();
+    fetchMock.mockReset();
+    invalidateQueries.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    fetchMock.mockImplementation((input: unknown) =>
+      Promise.resolve(
+        String(input).includes("/notifications/events/token")
+          ? { ok: true, json: async () => ({ token: "stream-token" }) }
+          : { ok: true, json: async () => ({ backendJwt: "jwt-1" }) },
+      ),
+    );
+  });
+
+  function invalidatedKeys(): string[] {
+    return invalidateQueries.mock.calls.map((call) => {
+      const filters: unknown = call[0];
+      const key =
+        typeof filters === "object" && filters !== null && "queryKey" in filters
+          ? (filters as { queryKey?: QueryKey }).queryKey
+          : undefined;
+      return JSON.stringify(key);
+    });
+  }
+
+  it("invalidates the unified inbox and the notification lists, not just the bell", async () => {
+    let emit: ((notification: IncomingNotification) => void) | undefined;
+    consume.mockImplementation((_url, _token, _signal, onNotification) => {
+      emit = onNotification;
+      return new Promise<void>(() => undefined);
+    });
+
+    renderHook(() => useNotificationEvents());
+    await waitFor(() => expect(emit).toBeDefined());
+
+    act(() => emit?.(arriving));
+
+    const keys = invalidatedKeys();
+    expect(keys).toContain(JSON.stringify(queryKeys.inbox.all));
+    expect(keys).toContain(JSON.stringify(queryKeys.notifications.lists()));
+    expect(keys).toContain(JSON.stringify(queryKeys.notifications.unreadCount()));
   });
 });

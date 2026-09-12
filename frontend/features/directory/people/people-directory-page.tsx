@@ -18,6 +18,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { SearchInput } from "@/components/ui/search-input";
@@ -90,7 +91,7 @@ function PersonRowActions({
           variant="ghost"
           size="icon"
           className="w-7"
-          aria-label="Person actions"
+          aria-label={`Actions for ${displayName(person)}`}
           {...hoverHandlers}
         >
           <EllipsisIcon ref={iconRef} size={14} />
@@ -129,11 +130,12 @@ export function PeopleDirectoryPage({
   const [editTarget, setEditTarget] = useState<OrganizationPerson | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<OrganizationPerson | null>(null);
 
-  const { data, isLoading, isError, refetch } = usePeople({
+  const peopleQuery = usePeople({
     cursor: pagination.cursor,
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
   });
+  const { data, isLoading, isError, refetch } = peopleQuery;
 
   const deletePerson = useDeletePerson();
 
@@ -293,7 +295,14 @@ export function PeopleDirectoryPage({
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {peopleQuery.access.denied ? (
+            <NoPermissionState
+              permission={peopleQuery.access.permission}
+              className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
+              title="Directory unavailable"
+              description="Your access to the people directory was withdrawn. Nothing is missing from the directory itself."
+            />
+          ) : isLoading || peopleQuery.access.pending ? (
             <DataTableSkeleton rows={12} columns={6} className="min-h-0 w-full flex-1" />
           ) : isError ? (
             <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />

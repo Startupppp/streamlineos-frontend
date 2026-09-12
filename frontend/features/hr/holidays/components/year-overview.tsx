@@ -37,7 +37,7 @@ export function YearOverview({ holidays, yearFilter }: YearOverviewProps) {
                       {format(parseISO(h.date), "d")}
                     </span>
                     <TruncatedText text={h.name} className="text-xs text-muted-foreground" />
-                    {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />}
+                    {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground shrink-0" />}
                   </div>
                 ))}
               </div>

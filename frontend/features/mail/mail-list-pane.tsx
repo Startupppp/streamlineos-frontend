@@ -279,7 +279,7 @@ export function MailListPane({
         </div>
       ) : isError && !isOnline ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-          <WifiOff className="h-6 w-6 text-muted-foreground/50" aria-hidden />
+          <WifiOff className="h-6 w-6 text-muted-foreground" aria-hidden />
           <p className="text-label font-medium text-foreground/80">
             You&apos;re offline
           </p>

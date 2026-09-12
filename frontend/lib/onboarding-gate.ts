@@ -47,9 +47,9 @@ export async function completeOnboardingGate(
   cookieName: GateCookieBase,
   scopeId: string,
   refreshSessionClaims: SessionClaimsRefreshFn,
-): Promise<void> {
+): Promise<unknown> {
   const name = gateCookieName(cookieName, scopeId);
   const secure = secureFlag();
   document.cookie = `${name}=1; path=/; max-age=${GATE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
-  await refreshSessionClaims();
+  return refreshSessionClaims();
 }

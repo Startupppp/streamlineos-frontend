@@ -103,7 +103,7 @@ export function HrLeaveCalendar() {
         />
       ) : !data || data.length === 0 ? (
         <EmptyState
-          illustration={<Calendar className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+          illustration={<Calendar className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
           title="No leaves this month"
           description="No approved leave requests for this period."
           className="border-0 bg-transparent min-h-[120px]"

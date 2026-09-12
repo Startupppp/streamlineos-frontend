@@ -268,7 +268,7 @@ export function CommandPaletteDialogBody() {
           <CommandEmpty>
             <div className="flex flex-col items-center gap-2 py-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
-                <Search className="h-5 w-5 text-muted-foreground/50" />
+                <Search className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-foreground">
                 No results for &ldquo;{query}&rdquo;

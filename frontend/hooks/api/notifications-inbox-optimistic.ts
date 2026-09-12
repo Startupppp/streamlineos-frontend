@@ -44,6 +44,7 @@ export async function beginInboxPatch(
   const unreadKey = platformCoreQueryKeys.notifications.unreadCount();
   await queryClient.cancelQueries({ queryKey: listKey });
   await queryClient.cancelQueries({ queryKey: unreadKey });
+  await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.inbox.all });
   return {
     listKey,
     unreadKey,

@@ -54,7 +54,7 @@ function FieldRow({ label, value, placeholder, filled }: FieldRowProps) {
           transition={{ duration: 0.18, ease: WIZARD_EASE }}
           className={cn(
             "min-w-0 flex-1 text-right text-xs leading-snug",
-            filled ? "font-medium text-foreground" : "text-muted-foreground/55",
+            filled ? "font-medium text-foreground" : "text-muted-foreground",
           )}
         >
           {filled ? value : placeholder}
@@ -154,7 +154,7 @@ function ProfilePreviewInner({
                   transition={{ duration: 0.18, ease: WIZARD_EASE }}
                   className={cn(
                     "truncate font-display text-lg font-extrabold tracking-[-0.03em]",
-                    nameFilled ? "text-foreground" : "text-muted-foreground/60",
+                    nameFilled ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
                   {name}
@@ -167,7 +167,7 @@ function ProfilePreviewInner({
                     <span className="truncate">{role}</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/80 px-2 py-0.5 text-micro text-muted-foreground/55">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/80 px-2 py-0.5 text-micro text-muted-foreground">
                     <Briefcase className="h-3 w-3 shrink-0" aria-hidden />
                     Role
                   </span>
@@ -225,7 +225,7 @@ function ProfilePreviewInner({
                   "whitespace-pre-line text-xs leading-relaxed",
                   address
                     ? "font-medium text-foreground"
-                    : "text-muted-foreground/55",
+                    : "text-muted-foreground",
                 )}
               >
                 {address || "Street, city, and postal code appear here"}

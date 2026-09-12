@@ -66,7 +66,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
 
   return (
     <div className="flex items-center gap-2 group">
-      <svg className="h-4 w-4 text-muted-foreground/40 shrink-0 cursor-grab" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <svg className="h-4 w-4 text-muted-foreground shrink-0 cursor-grab" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <circle cx="9" cy="5" r="1" fill="currentColor" /><circle cx="15" cy="5" r="1" fill="currentColor" />
         <circle cx="9" cy="12" r="1" fill="currentColor" /><circle cx="15" cy="12" r="1" fill="currentColor" />
         <circle cx="9" cy="19" r="1" fill="currentColor" /><circle cx="15" cy="19" r="1" fill="currentColor" />

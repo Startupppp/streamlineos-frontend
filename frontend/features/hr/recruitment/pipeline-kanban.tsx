@@ -85,7 +85,7 @@ const KanbanColumn = memo(function KanbanColumn({
               {provided.placeholder}
               {items.length === 0 && !snapshot.isDraggingOver && (
                 <div className="flex flex-col items-center justify-center h-16 rounded-lg border border-dashed border-border/40 gap-1">
-                  <p className="text-micro text-muted-foreground/60 font-medium">Drop here</p>
+                  <p className="text-micro text-muted-foreground font-medium">Drop here</p>
                 </div>
               )}
             </div>
@@ -167,7 +167,7 @@ export function PipelineKanban({
           {FLOW_STAGES.map((s, i) => (
             <div key={s.label} className="flex items-center gap-1.5">
               <div className="h-6 w-20 rounded bg-muted animate-pulse" />
-              {i < FLOW_STAGES.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />}
+              {i < FLOW_STAGES.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />}
             </div>
           ))}
         </div>
@@ -192,7 +192,7 @@ export function PipelineKanban({
               )}
             </span>
             {i < FLOW_STAGES.length - 1 && (
-              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             )}
           </div>
         ))}

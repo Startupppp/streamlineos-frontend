@@ -149,7 +149,7 @@ export const InlineProjectDescription = memo(function InlineProjectDescription({
               "mt-1 flex-1 text-left text-micro transition-colors",
               preview
                 ? "text-muted-foreground hover:text-foreground"
-                : "text-muted-foreground/50 hover:text-muted-foreground",
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
             aria-label="Edit project description"
             title={preview || undefined}

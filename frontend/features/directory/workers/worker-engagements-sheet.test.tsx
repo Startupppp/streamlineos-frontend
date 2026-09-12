@@ -95,6 +95,20 @@ const plannedEngagement: WorkerEngagement = {
   updatedAt: "2026-08-08T00:00:00.000Z",
 };
 
+const allowedGate = {
+  permission: "directory:workers:view" as const,
+  allowed: true,
+  denied: false,
+  pending: false,
+};
+
+const deniedGate = {
+  permission: "directory:workers:view" as const,
+  allowed: false,
+  denied: true,
+  pending: false,
+};
+
 describe("WorkerEngagementsSheet", () => {
   const createMutate = jest.fn();
   const updateMutate = jest.fn();
@@ -107,6 +121,7 @@ describe("WorkerEngagementsSheet", () => {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
+      access: allowedGate,
     });
     (useCreateEngagement as jest.Mock).mockReturnValue({
       mutate: createMutate,
@@ -210,5 +225,27 @@ describe("WorkerEngagementsSheet", () => {
         onError: expect.any(Function),
       }),
     );
+  });
+
+  it("names a withdrawn read instead of claiming there are no engagements", () => {
+    (useWorkerEngagements as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+      access: deniedGate,
+    });
+
+    render(
+      <WorkerEngagementsSheet
+        open
+        onOpenChange={jest.fn()}
+        worker={worker}
+      />,
+    );
+
+    expect(screen.getByText("Engagements unavailable")).toBeInTheDocument();
+    expect(screen.getByText("directory:workers:view")).toBeInTheDocument();
+    expect(screen.queryByText("No engagements yet")).not.toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -41,12 +42,8 @@ export function PersonDetailPage({
   const canViewWorkers = useCan("directory:workers:view");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const {
-    data: person,
-    isLoading,
-    isError,
-    refetch,
-  } = usePerson(organizationPersonId);
+  const personQuery = usePerson(organizationPersonId);
+  const { data: person, isLoading, isError, refetch } = personQuery;
 
   const tabs = useMemo(() => {
     const availableTabs = [{ value: "profile", label: "Profile" }];
@@ -89,7 +86,14 @@ export function PersonDetailPage({
         ) : undefined
       }
     >
-      {isLoading ? (
+      {personQuery.access.denied ? (
+        <NoPermissionState
+          permission={personQuery.access.permission}
+          className="flex-1"
+          title="Person record unavailable"
+          description="Your access to the people directory was withdrawn, so this record cannot be shown."
+        />
+      ) : isLoading || personQuery.access.pending ? (
         <PersonDetailSkeleton />
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
@@ -97,7 +101,7 @@ export function PersonDetailPage({
         <EmptyState
           illustrationPreset="team"
           title="Person not found"
-          description="This record may have been deleted or you may not have access."
+          description="This record may have been deleted or removed from the directory."
           className="flex-1"
         />
       ) : (

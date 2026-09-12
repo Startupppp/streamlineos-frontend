@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { GatedQueryResult } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   workerContract,
@@ -30,12 +31,13 @@ export interface UseWorkersParams {
   organizationPersonId?: string;
 }
 
-export function useWorkers(params: UseWorkersParams = {}) {
-  const canView = useCan("directory:workers:view");
+export function useWorkers(
+  params: UseWorkersParams = {},
+): GatedQueryResult<WorkersPage> {
   const { cursor, limit = 20, status, search, organizationPersonId } = params;
   const queryParams = workersListParams(params);
 
-  return useQuery<WorkersPage, Error>({
+  return useGatedQuery<WorkersPage>("directory:workers:view", {
     queryKey: directoryAndOwnershipQueryKeys.directory.workers(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
@@ -48,7 +50,6 @@ export function useWorkers(params: UseWorkersParams = {}) {
       return apiClient.get(`/directory/workers?${searchParams.toString()}`, undefined, signal, workersPageContract);
     },
     staleTime: 60_000,
-    enabled: canView,
   });
 }
 
@@ -65,9 +66,10 @@ export function useCreateWorker() {
   });
 }
 
-export function useWorkerEngagements(workerId: string) {
-  const canView = useCan("directory:workers:view");
-  return useQuery({
+export function useWorkerEngagements(
+  workerId: string,
+): GatedQueryResult<WorkerEngagement[]> {
+  return useGatedQuery<WorkerEngagement[]>("directory:workers:view", {
     queryKey: directoryAndOwnershipQueryKeys.directory.engagements(workerId),
     queryFn: ({ signal }) =>
       apiClient.get<WorkerEngagement[]>(
@@ -77,7 +79,7 @@ export function useWorkerEngagements(workerId: string) {
         workerEngagementListContract,
       ),
     staleTime: 60_000,
-    enabled: canView && !!workerId,
+    enabled: !!workerId,
   });
 }
 

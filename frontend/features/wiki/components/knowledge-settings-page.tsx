@@ -21,7 +21,7 @@ export default function KnowledgeSettingsPage() {
       <PageWrapper title="Settings">
         <EmptyState
           illustration={
-            <KbLockIcon className="w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."

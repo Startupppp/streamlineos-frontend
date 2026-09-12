@@ -113,7 +113,7 @@ export const CustomerTable = React.memo(function CustomerTable({
           (c.openRequestCount ?? 0) > 0 ? (
             <span className="tabular-nums text-xs text-foreground">{c.openRequestCount}</span>
           ) : (
-            <span className="tabular-nums text-xs text-muted-foreground/50">—</span>
+            <span className="tabular-nums text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -125,7 +125,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         className: "w-[130px] hidden md:table-cell",
         headerClassName: "hidden md:table-cell",
         cell: () => (
-          <span className="tabular-nums text-xs text-muted-foreground/50">—</span>
+          <span className="tabular-nums text-xs text-muted-foreground">—</span>
         ),
       });
     }
@@ -145,7 +145,7 @@ export const CustomerTable = React.memo(function CustomerTable({
               <span className="tabular-nums">{c.size}</span>
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -157,7 +157,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         className: "w-[120px] hidden md:table-cell",
         headerClassName: "hidden md:table-cell",
         cell: () => (
-          <span className="text-xs text-muted-foreground/50">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         ),
       });
     }
@@ -193,7 +193,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         className: "w-[80px] hidden lg:table-cell",
         headerClassName: "hidden lg:table-cell",
         cell: () => (
-          <span className="text-xs text-muted-foreground/50">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         ),
       });
     }
@@ -213,7 +213,7 @@ export const CustomerTable = React.memo(function CustomerTable({
               <TruncatedText text={c.domain} className="max-w-[96px]" />
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -225,7 +225,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         className: "w-[110px] hidden lg:table-cell",
         headerClassName: "hidden lg:table-cell",
         cell: () => (
-          <span className="text-xs text-muted-foreground/50">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         ),
       });
     }

@@ -51,7 +51,7 @@ export function HrOnboardingProgress() {
         />
       ) : !data ? null : data.total === 0 ? (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+          illustration={<Users className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
           title="No active onboardings"
           description="No new hires are currently onboarding."
           className="border-0 bg-transparent min-h-[100px]"

@@ -76,7 +76,7 @@ export function useProjectTableColumns({
               text={p.name}
               className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
             />
-            <span className="hidden shrink-0 font-mono text-micro text-muted-foreground/60 sm:inline-block">
+            <span className="hidden shrink-0 font-mono text-micro text-muted-foreground sm:inline-block">
               {p.key}
             </span>
           </div>
@@ -96,7 +96,7 @@ export function useProjectTableColumns({
               className="text-dense text-muted-foreground"
             />
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -225,7 +225,7 @@ export function useProjectTableColumns({
               />
             </div>
           ) : (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <User className="h-3.5 w-3.5" aria-hidden="true" />
               Unassigned
             </span>
@@ -248,7 +248,7 @@ export function useProjectTableColumns({
               className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-micro"
             />
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -260,7 +260,7 @@ export function useProjectTableColumns({
         className: "w-[140px]",
         cell: (p) => {
           if (!p.teams || p.teams.length === 0) {
-            return <span className="text-xs text-muted-foreground/40">—</span>;
+            return <span className="text-xs text-muted-foreground">—</span>;
           }
           return (
             <div className="flex flex-wrap gap-1">
@@ -309,7 +309,7 @@ export function useProjectTableColumns({
               {targetDate.label}
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           );
         },
       });
@@ -329,7 +329,7 @@ export function useProjectTableColumns({
               {format(new Date(p.startDate), "MMM d")}
             </span>
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ),
       });
     }
@@ -372,7 +372,7 @@ export function useProjectTableColumns({
               </span>
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           );
         },
       });

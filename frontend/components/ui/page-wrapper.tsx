@@ -51,6 +51,7 @@ export function PageWrapper({
   noInternalScroll = false,
   variant = "default",
 }: PageWrapperProps) {
+  const headingId = React.useId();
   const titleClass =
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
@@ -120,11 +121,11 @@ export function PageWrapper({
                 {(title != null || badge) && (
                   <div className="flex min-w-0 items-center gap-2 flex-wrap">
                     {typeof title === "string" ? (
-                      <h1 className={cn(titleClass, "min-w-0 max-w-2xl")}>
+                      <h1 id={headingId} className={cn(titleClass, "min-w-0 max-w-2xl")}>
                         <TruncatedText text={title} />
                       </h1>
                     ) : title != null ? (
-                      <h1 className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
+                      <h1 id={headingId} className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
                     ) : null}
                     {badge && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-dense font-medium tabular-nums border border-primary/20">
@@ -187,7 +188,13 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+        <div
+          role="region"
+          aria-labelledby={title != null ? headingId : undefined}
+          aria-label={title == null ? "Page content" : undefined}
+          tabIndex={0}
+          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide"
+        >
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",

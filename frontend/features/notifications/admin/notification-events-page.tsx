@@ -217,11 +217,11 @@ export function NotificationEventsPage() {
               transition={{ duration: 0.2, delay: Math.min(groupIdx, 10) * 0.04, ease: "easeOut" }}
             >
               <div className="flex items-center gap-2 mb-1.5">
-                <Bell className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                <Bell className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {module}
                 </span>
-                <span className="text-micro text-muted-foreground/50 tabular-nums">
+                <span className="text-micro text-muted-foreground tabular-nums">
                   {moduleEvents.length}
                 </span>
               </div>

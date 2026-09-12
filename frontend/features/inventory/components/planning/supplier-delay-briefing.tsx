@@ -150,7 +150,7 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
 
             {data.vendors.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-center">
-                <TruckIcon className="h-7 w-7 text-muted-foreground/40 mb-2" />
+                <TruckIcon className="h-7 w-7 text-muted-foreground mb-2" />
                 <p className="text-xs font-medium text-foreground">No supplier delays detected</p>
                 <p className="text-dense text-muted-foreground mt-0.5">
                   All vendors are within expected delivery windows.

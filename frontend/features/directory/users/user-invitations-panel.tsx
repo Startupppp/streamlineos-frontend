@@ -9,7 +9,8 @@ import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCan, useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -23,6 +24,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { UserInviteDialog } from "@/features/directory/users/user-invite-dialog";
 import {
   useInvitations,
@@ -30,13 +32,12 @@ import {
   useCancelInvitation,
   useChangeInvitationRole,
 } from "@/hooks/api/users";
+import type { Invitation } from "@/hooks/api/users";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   DEFAULT_PAGE_SIZE,
-  getLastPage,
-  parsePage,
   parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
@@ -63,21 +64,24 @@ export function UserInvitationsPanel() {
   } = useQueryParamOpen("create");
   const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
   const canManageMembership = useCanManageOrganizationMembership();
-  const canViewInvitations = useCan("settings:organization:manage");
+  const invitationsGate = usePermissionGate("settings:organization:manage");
+  const canViewInvitations = invitationsGate.allowed;
   const canInvite = canManageMembership;
   const canCancelInvitation = canManageMembership;
 
   const searchQuery = searchParams.get("q") ?? "";
   const status: InvitationStatusFilter = resolveInvitationStatusFilter(searchParams.get("status"));
-  const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
+  const resetKey = `${status}:${searchQuery}:${pageSize}`;
+  const pager = useCursorPager(resetKey);
+
   const { data, isLoading, isError, error, refetch } = useInvitations(
     {
-      page,
+      cursor: pager.cursor,
       limit: pageSize,
       q: searchQuery || undefined,
       status: status === "all" ? undefined : status,
@@ -98,6 +102,7 @@ export function UserInvitationsPanel() {
   } = useChangeInvitationRole();
 
   const rows = data?.data ?? [];
+  const pagination = data?.pagination;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -119,7 +124,7 @@ export function UserInvitationsPanel() {
 
   useEffect(() => {
     if (debouncedLocalSearch === searchQuery) return;
-    updateParams({ q: debouncedLocalSearch || null, page: null });
+    updateParams({ q: debouncedLocalSearch || null });
   }, [debouncedLocalSearch, searchQuery, updateParams]);
 
   const handleSearchChange = useCallback(
@@ -129,7 +134,7 @@ export function UserInvitationsPanel() {
 
   const handleStatusChange = useCallback(
     (value: string) =>
-      updateParams({ status: value === "all" ? null : value, page: null }),
+      updateParams({ status: value === "all" ? null : value }),
     [updateParams],
   );
 
@@ -200,30 +205,25 @@ export function UserInvitationsPanel() {
   }, [refetch]);
   const handleClearFilters = useCallback(() => {
     setLocalSearch("");
-    updateParams({ q: null, status: null, page: null });
+    updateParams({ q: null, status: null });
   }, [updateParams]);
-  const handlePageChange = useCallback(
-    (nextPage: number) =>
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
-    [updateParams],
-  );
   const handlePageSizeChange = useCallback(
     (size: number) =>
       updateParams({
         size: size === DEFAULT_PAGE_SIZE ? null : String(size),
-        page: null,
       }),
     [updateParams],
   );
-  const pagination = data?.pagination;
-  const isPageOutOfRange =
-    !!pagination && page > getLastPage(pagination.total, pageSize);
-
-  useEffect(() => {
-    if (!pagination) return;
-    const lastPage = getLastPage(pagination.total, pageSize);
-    if (page > lastPage) handlePageChange(lastPage);
-  }, [handlePageChange, page, pageSize, pagination]);
+  const getInvitationRowKey = useCallback(
+    (invitation: Invitation) => invitation.id,
+    [],
+  );
+  const handleNext = useCallback(() => {
+    pager.goNext(pagination?.nextCursor);
+  }, [pager, pagination?.nextCursor]);
+  const handlePrevious = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
   const hasFilters = !!searchQuery || status !== "all";
 
@@ -318,6 +318,7 @@ export function UserInvitationsPanel() {
                 <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="revoked">Revoked</SelectItem>
+                <SelectItem value="declined">Declined</SelectItem>
               </SelectContent>
               </Select>
             }
@@ -325,7 +326,14 @@ export function UserInvitationsPanel() {
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {isError ? (
+          {invitationsGate.denied ? (
+            <NoPermissionState
+              permission="settings:organization:manage"
+              title="Invitations are restricted"
+              description="You do not have permission to view this organization's invitations."
+              className="flex-1"
+            />
+          ) : isError ? (
             <ErrorState
               title="Failed to load invitations"
               description={getErrorMessage(error)}
@@ -336,15 +344,16 @@ export function UserInvitationsPanel() {
               className="flex-1 min-h-0"
               data={rows}
               columns={columns}
-              getRowKey={(invitation) => invitation.id}
-              isLoading={isLoading || isPageOutOfRange}
+              getRowKey={getInvitationRowKey}
+              isLoading={isLoading || invitationsGate.pending}
               emptyState={emptyState}
               pagination={{
-                mode: "server",
-                page,
+                mode: "cursor",
                 pageSize,
-                total: pagination?.total ?? 0,
-                onPageChange: handlePageChange,
+                hasMore: pagination?.hasMore ?? false,
+                hasPrevious: pager.hasPrevious,
+                onNext: handleNext,
+                onPrevious: handlePrevious,
                 onPageSizeChange: handlePageSizeChange,
                 pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
               }}

@@ -351,7 +351,7 @@ export function MemberPicker(props: MemberPickerProps) {
                 <TruncatedText text={getUserDisplayName(m)} className="text-dense max-w-[120px]" />
                 <button
                   type="button"
-                  className="text-muted-foreground/70 hover:text-destructive transition-colors leading-none"
+                  className="text-muted-foreground hover:text-destructive transition-colors leading-none"
                   onClick={() => handleToggle(m.id)}
                   aria-label={`Remove ${getUserDisplayName(m)}`}
                 >

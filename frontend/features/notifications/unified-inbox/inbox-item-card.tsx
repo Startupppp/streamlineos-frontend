@@ -9,12 +9,95 @@ import { NotificationCard } from "@/features/notifications/notification-card";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import type {
   UnifiedInboxItem,
+  NotificationInboxItem,
+  BroadcastInboxItem,
   MailInboxItem,
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 
 function assertNever(x: never): never {
   throw new Error(`Unhandled inbox kind: ${String((x as { kind: string }).kind)}`);
+}
+
+interface NotificationItemCardProps {
+  item: NotificationInboxItem;
+  onClick: (item: NotificationInboxItem) => void;
+  onArchive?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onApprove?: (id: number) => void;
+  onReject?: (id: number) => void;
+  isApproving?: boolean;
+  isRejecting?: boolean;
+  isArchiving?: boolean;
+  isDeleting?: boolean;
+}
+
+function NotificationItemCard({
+  item,
+  onClick,
+  onArchive,
+  onDelete,
+  onApprove,
+  onReject,
+  isApproving,
+  isRejecting,
+  isArchiving,
+  isDeleting,
+}: NotificationItemCardProps) {
+  const handleClick = useCallback(() => onClick(item), [item, onClick]);
+  return (
+    <NotificationCard
+      id={item.id}
+      title={item.subject}
+      message={item.body}
+      type={item.notifType}
+      priority={item.priority}
+      category={item.category}
+      sourceModule={item.sourceModule}
+      isRead={item.isRead}
+      pinned={item.pinned}
+      archivedAt={null}
+      createdAt={item.timestamp}
+      link={item.deepLink}
+      isApproval={false}
+      isApproving={isApproving}
+      isRejecting={isRejecting}
+      isArchiving={isArchiving}
+      isDeleting={isDeleting}
+      onClick={handleClick}
+      onArchive={onArchive}
+      onDelete={onDelete}
+      onApprove={onApprove}
+      onReject={onReject}
+    />
+  );
+}
+
+interface BroadcastItemCardProps {
+  item: BroadcastInboxItem;
+  onClick: (item: BroadcastInboxItem) => void;
+}
+
+function BroadcastItemCard({ item, onClick }: BroadcastItemCardProps) {
+  const handleClick = useCallback(() => onClick(item), [item, onClick]);
+  return (
+    <NotificationCard
+      id={item.id}
+      title={item.subject}
+      message={item.body}
+      type={item.notifType}
+      priority={item.priority}
+      category={item.category}
+      sourceModule={item.sourceModule}
+      isRead={item.isRead}
+      pinned={false}
+      archivedAt={null}
+      createdAt={item.timestamp}
+      link={item.deepLink}
+      isApproval={false}
+      onClick={handleClick}
+    />
+  );
 }
 
 interface MailItemCardProps {
@@ -123,7 +206,8 @@ function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
 
 export interface InboxItemCardProps {
   item: UnifiedInboxItem;
-  onNotificationClick: (n: { id: number; isRead: boolean; link: string | null }) => void;
+  onNotificationClick: (item: NotificationInboxItem) => void;
+  onBroadcastClick: (item: BroadcastInboxItem) => void;
   onMailClick: (item: MailInboxItem) => void;
   onApprovalClick: (item: BuildApprovalInboxItem) => void;
   onArchive?: (id: number) => void;
@@ -139,6 +223,7 @@ export interface InboxItemCardProps {
 export const InboxItemCard = memo(function InboxItemCard({
   item,
   onNotificationClick,
+  onBroadcastClick,
   onMailClick,
   onApprovalClick,
   onArchive,
@@ -153,50 +238,21 @@ export const InboxItemCard = memo(function InboxItemCard({
   switch (item.kind) {
     case "notification":
       return (
-        <NotificationCard
-          id={item.id}
-          title={item.subject}
-          message={item.body}
-          type={item.notifType}
-          priority={item.priority}
-          category={item.category}
-          sourceModule={item.sourceModule}
-          isRead={item.isRead}
-          pinned={item.pinned}
-          archivedAt={null}
-          createdAt={item.timestamp}
-          link={item.deepLink}
-          isApproval={false}
-          isApproving={isApproving}
-          isRejecting={isRejecting}
-          isArchiving={isArchiving}
-          isDeleting={isDeleting}
+        <NotificationItemCard
+          item={item}
           onClick={onNotificationClick}
           onArchive={onArchive}
           onDelete={onDelete}
           onApprove={onApprove}
           onReject={onReject}
+          isApproving={isApproving}
+          isRejecting={isRejecting}
+          isArchiving={isArchiving}
+          isDeleting={isDeleting}
         />
       );
     case "broadcast":
-      return (
-        <NotificationCard
-          id={item.id}
-          title={item.subject}
-          message={item.body}
-          type={item.notifType}
-          priority={item.priority}
-          category={item.category}
-          sourceModule={item.sourceModule}
-          isRead={item.isRead}
-          pinned={false}
-          archivedAt={null}
-          createdAt={item.timestamp}
-          link={item.deepLink}
-          isApproval={false}
-          onClick={onNotificationClick}
-        />
-      );
+      return <BroadcastItemCard item={item} onClick={onBroadcastClick} />;
     case "mail":
       return <MailItemCard item={item} onClick={onMailClick} />;
     case "build_approval":

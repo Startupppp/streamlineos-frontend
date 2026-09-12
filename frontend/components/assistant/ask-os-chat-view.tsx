@@ -96,7 +96,7 @@ export function AskOsChatView({
               </div>
             ) : (
               persisted.length > 0 && (
-                <p className="pb-1 text-center text-micro text-muted-foreground/60">
+                <p className="pb-1 text-center text-micro text-muted-foreground">
                   Beginning of conversation
                 </p>
               )

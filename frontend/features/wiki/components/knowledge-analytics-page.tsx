@@ -195,7 +195,7 @@ export default function KnowledgeAnalyticsPage() {
       <PageWrapper title="Analytics">
         <EmptyState
           illustration={
-            <KbLockIcon className="w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base analytics."
@@ -277,7 +277,7 @@ export default function KnowledgeAnalyticsPage() {
           {noResults.length === 0 ? (
             <EmptyState
               illustration={
-                <KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />
+                <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
               title="No zero-result searches"
               description="All recent searches returned at least one result."
@@ -315,7 +315,7 @@ export default function KnowledgeAnalyticsPage() {
           {pageAnalytics.length === 0 ? (
             <EmptyState
               illustration={
-                <KbFileTextIcon className="h-6 w-6 text-muted-foreground/40" />
+                <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
               }
               title="No page data yet"
               description="Page view data will appear here once users start reading pages."
@@ -373,7 +373,7 @@ export default function KnowledgeAnalyticsPage() {
           {gaps.length === 0 ? (
             <EmptyState
               illustration={
-                <KbSearchIcon className="h-6 w-6 text-muted-foreground/40" />
+                <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
               title="No knowledge gaps"
               description="All searches are finding relevant content."

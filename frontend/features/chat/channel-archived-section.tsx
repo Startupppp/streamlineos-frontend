@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSectionList } from "./channel-section-list";
+import { ChannelLoadMore } from "./channel-load-more";
 
 interface ChannelArchivedSectionProps {
   isLoading: boolean;
@@ -16,6 +17,9 @@ interface ChannelArchivedSectionProps {
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
   onClose: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
@@ -30,6 +34,9 @@ export function ChannelArchivedSection({
   onlineUserIds,
   onSelectChannel,
   onClose,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   onStartCall,
   onOpenSettings,
 }: ChannelArchivedSectionProps) {
@@ -57,16 +64,24 @@ export function ChannelArchivedSection({
           ))}
         </div>
       ) : channels.length > 0 ? (
-        <ChannelSectionList
-          channels={channels}
-          label="Archived conversations"
-          activeChannelId={activeChannelId}
-          currentUserId={currentUserId}
-          onlineUserIds={onlineUserIds}
-          onSelectChannel={onSelectChannel}
-          onStartCall={onStartCall}
-          onOpenSettings={onOpenSettings}
-        />
+        <>
+          <ChannelSectionList
+            channels={channels}
+            label="Archived conversations"
+            activeChannelId={activeChannelId}
+            currentUserId={currentUserId}
+            onlineUserIds={onlineUserIds}
+            onSelectChannel={onSelectChannel}
+            onStartCall={onStartCall}
+            onOpenSettings={onOpenSettings}
+          />
+          <ChannelLoadMore
+            hasMore={hasMore}
+            isLoading={isLoadingMore}
+            onLoadMore={onLoadMore}
+            label="Load more archived chats"
+          />
+        </>
       ) : (
         <div className="text-center py-10 px-4">
           <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">

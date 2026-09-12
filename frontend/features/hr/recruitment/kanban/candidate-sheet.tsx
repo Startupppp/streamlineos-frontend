@@ -177,7 +177,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                           "h-4 w-4",
                           i < (candidate.rating ?? 0)
                             ? "text-status-warning-ink fill-amber-400"
-                            : "text-muted-foreground/30"
+                            : "text-muted-foreground"
                         )}
                       />
                     ))}

@@ -91,7 +91,7 @@ export const MyWorkRow = memo(function MyWorkRow({
             <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
               {item.projectKey}
             </span>
-            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground">·</span>
             <TruncatedText
               text={item.projectName}
               className="min-w-0 flex-1 text-micro text-muted-foreground"
@@ -177,7 +177,7 @@ export const ProjectCard = memo(function ProjectCard({
           {project.description ? (
             <TruncatedText text={project.description} className="text-dense text-muted-foreground" />
           ) : (
-            <p className="font-mono text-micro text-muted-foreground/80">{project.key}</p>
+            <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
           )}
         </Link>
         {project.progress.total > 0 ? (

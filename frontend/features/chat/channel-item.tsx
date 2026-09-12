@@ -170,7 +170,7 @@ export function ChannelItem({
           </div>
 
           <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
-            <p className="min-w-0 flex-1 text-dense text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
+            <p className="min-w-0 flex-1 text-dense text-muted-foreground line-clamp-1 break-all break-words leading-tight">
               {channel.lastMessage?.content
                 ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}

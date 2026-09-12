@@ -291,9 +291,8 @@ export function LeavesTabContent({
             </p>
           </div>
 
-          <div
+          <ul
             className="grid grid-cols-2 gap-3 lg:grid-cols-3"
-            role="list"
             aria-label="Leave balances"
           >
             {balances
@@ -301,14 +300,15 @@ export function LeavesTabContent({
                 (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
               )
               .map((bal, index) => (
-                <BalanceCard
-                  key={`${bal.leaveTypeId}-${index}`}
-                  typeName={bal.typeName}
-                  balance={bal.balance}
-                  daysPerYear={bal.daysPerYear}
-                />
+                <li key={`${bal.leaveTypeId}-${index}`}>
+                  <BalanceCard
+                    typeName={bal.typeName}
+                    balance={bal.balance}
+                    daysPerYear={bal.daysPerYear}
+                  />
+                </li>
               ))}
-          </div>
+          </ul>
 
           <div className="grid gap-4 md:grid-cols-2">
             <LeaveBalanceDonut balances={balances} allowedNames={allowedLeaveTypeNames} />

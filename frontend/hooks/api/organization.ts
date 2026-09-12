@@ -8,6 +8,7 @@ import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type { OrgSettings } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarMemberLookups } from "@/hooks/api/users/cache";
 import { lazyContract } from "@/lib/api-envelope";
 import type { OrgMembersPage as MembersResponse } from "@/hooks/api/organization-schema";
 
@@ -141,6 +142,7 @@ export const useRemoveOrgMember = () => {
       });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 };

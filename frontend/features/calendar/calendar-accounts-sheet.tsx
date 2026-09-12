@@ -8,16 +8,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
@@ -349,28 +340,20 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
         </Sheet>
       )}
 
-      <AlertDialog open={disconnectTarget !== null} onOpenChange={handleDisconnectAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {disconnectTarget
-                ? `${disconnectTarget.accountEmail ?? TOOLKIT_LABELS[disconnectTarget.toolkit]} will be removed and its events will no longer appear in your calendar.`
-                : "This account will be disconnected."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDisconnect}
-              disabled={disconnect.isPending}
-            >
-              Disconnect
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={disconnectTarget !== null}
+        onOpenChange={handleDisconnectAlertOpenChange}
+        title="Disconnect account?"
+        description={
+          disconnectTarget
+            ? `${disconnectTarget.accountEmail ?? TOOLKIT_LABELS[disconnectTarget.toolkit]} will be removed and its events will no longer appear in your calendar.`
+            : "This account will be disconnected."
+        }
+        confirmLabel="Disconnect"
+        destructive
+        isPending={disconnect.isPending}
+        onConfirm={handleConfirmDisconnect}
+      />
     </>
   );
 }

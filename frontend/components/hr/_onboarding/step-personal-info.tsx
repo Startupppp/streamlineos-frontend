@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo, useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -15,13 +15,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import {
+  employeeAdmissionGuidance,
+  fetchEmployeeAdmissionCheck,
+} from "@/components/hr/check-employee-email";
 import { latinNameFieldChange } from "./restricted-field-change";
-
-const checkEmailContract = lazyContract(() =>
-  import("@/components/hr/check-email-schema").then((m) => m.checkEmailContract),
-);
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -39,6 +37,7 @@ interface StepPersonalInfoProps {
 
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
   const checkedEmailRef = useRef<string>("");
+  const [attachNotice, setAttachNotice] = useState<string | null>(null);
   // eslint-disable-next-line react-hooks/purity
   const minDob = useMemo(() => new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000), []);
 
@@ -48,12 +47,15 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!isValidEmail) return;
     try {
-      const res = await apiClient.get(`/hr/employees/check-email?email=${encodeURIComponent(email)}`, undefined, undefined, checkEmailContract);
+      const res = await fetchEmployeeAdmissionCheck(email);
       checkedEmailRef.current = email;
-      if (res.exists) {
-        form.setError("email", { type: "manual", message: "This email already belongs to an employee in your organization" });
-      }
+      const guidance = employeeAdmissionGuidance(res.status);
+      form.setValue("attachToExistingMember", guidance.attachToExistingMember);
+      setAttachNotice(guidance.attachToExistingMember ? guidance.message : null);
+      if (guidance.blocking && guidance.message)
+        form.setError("email", { type: "manual", message: guidance.message });
     } catch {
+      setAttachNotice(null);
     }
   }, [form]);
 
@@ -105,6 +107,14 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
                 />
               </FormControl>
               <FormMessage />
+              {attachNotice ? (
+                <p
+                  role="status"
+                  className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                >
+                  {attachNotice}
+                </p>
+              ) : null}
             </FormItem>
           );
         }}

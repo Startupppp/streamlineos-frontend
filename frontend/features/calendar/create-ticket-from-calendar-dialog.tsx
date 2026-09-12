@@ -100,6 +100,8 @@ export function CreateTicketFromCalendarDialog({
     [onClose],
   );
 
+  const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+
   const handleSubmit = useCallback(
     async (values: CreateTicketFromCalendarInput) => {
       const numericProjectId = Number(values.projectId);
@@ -255,7 +257,7 @@ export function CreateTicketFromCalendarDialog({
             variant="outline"
             size="sm"
             className="text-xs"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleCancel}
             disabled={isPending}
           >
             Cancel

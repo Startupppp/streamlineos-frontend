@@ -179,7 +179,7 @@ export const ModuleCard = memo(function ModuleCard({
                   <span className="text-foreground">{progress}%</span> complete
                 </span>
                 <ArrowRight
-                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
                   aria-hidden="true"
                 />
               </div>

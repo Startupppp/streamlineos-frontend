@@ -228,7 +228,10 @@ export const useDeleteNotification = () => {
     onMutate: async (id) => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
-      const previousLists = snapshotAndRemoveFromLists(queryClient, listKey, id);
+      const previousLists = [
+        ...snapshotAndRemoveFromLists(queryClient, listKey, id),
+        ...snapshotAndRemoveFromUnified(queryClient, platformCoreQueryKeys.inbox.all, new Set([id])),
+      ];
       applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },
@@ -330,7 +333,10 @@ export const useBulkDelete = () => {
       const idSet = new Set(ids);
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const cleared = countUnreadAmong(queryClient, listKey, idSet);
-      const previousLists = snapshotAndRemoveFromListsMulti(queryClient, listKey, idSet);
+      const previousLists = [
+        ...snapshotAndRemoveFromListsMulti(queryClient, listKey, idSet),
+        ...snapshotAndRemoveFromUnified(queryClient, platformCoreQueryKeys.inbox.all, idSet),
+      ];
       applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },

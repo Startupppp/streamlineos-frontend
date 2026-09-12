@@ -156,7 +156,7 @@ export function StarRatingInput({ question, value, onChange }: QuestionInputProp
             <Star
               className={cn(
                 "h-9 w-9",
-                n <= current ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground/25",
+                n <= current ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground",
               )}
             />
           </button>

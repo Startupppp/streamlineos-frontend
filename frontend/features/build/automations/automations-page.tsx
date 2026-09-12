@@ -208,13 +208,14 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
               <PmStaggerList className="space-y-2.5" role="list" aria-label="Automations">
                 <AnimatePresence initial={false}>
                   {automations.map((auto) => (
-                    <AutomationCard
-                      key={auto.id}
-                      automation={auto}
-                      onToggle={handleToggle}
-                      onDelete={handleDelete}
-                      onEdit={handleEdit}
-                    />
+                    <div key={auto.id} role="listitem">
+                      <AutomationCard
+                        automation={auto}
+                        onToggle={handleToggle}
+                        onDelete={handleDelete}
+                        onEdit={handleEdit}
+                      />
+                    </div>
                   ))}
                 </AnimatePresence>
               </PmStaggerList>

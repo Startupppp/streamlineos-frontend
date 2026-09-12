@@ -30,6 +30,7 @@ import {
   mergeBankDraft,
   mergePersonalDraft,
   parseWizardDraft,
+  persistableBankDraft,
   personalDraftHasPrefill,
   type BankDraft,
   type PersonalDraft,
@@ -55,7 +56,7 @@ const ROLE_LABELS: Record<string, string> = {
 const DRAFT_PERSIST_MS = 600;
 
 function draftPayload(draft: WizardDraft): Record<string, unknown> {
-  return { personal: draft.personal, bank: draft.bank };
+  return { personal: draft.personal, bank: persistableBankDraft(draft.bank) };
 }
 
 function resolveStepFromSession(currentStep: string | null | undefined): StepId {

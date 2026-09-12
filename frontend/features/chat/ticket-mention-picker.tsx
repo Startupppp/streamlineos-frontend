@@ -59,15 +59,15 @@ export function TicketMentionPicker({
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center gap-1.5 px-3 py-5 text-center">
             {isSearching ? (
-              <Search className="h-4 w-4 text-muted-foreground/40" />
+              <Search className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <Clock className="h-4 w-4 text-muted-foreground/40" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
             )}
             <p className="text-xs text-muted-foreground">
               {isSearching ? "No matching tickets" : "No recent tickets"}
             </p>
             {!isSearching && (
-              <p className="text-dense text-muted-foreground/60">
+              <p className="text-dense text-muted-foreground">
                 Type to search all tickets
               </p>
             )}
@@ -75,7 +75,7 @@ export function TicketMentionPicker({
         ) : (
           <div>
             {!isSearching && tickets.length > 0 && (
-              <p className="px-3 pt-2 pb-1 text-micro font-medium text-muted-foreground/60 uppercase tracking-wide flex items-center gap-1">
+              <p className="px-3 pt-2 pb-1 text-micro font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 Recently updated
               </p>

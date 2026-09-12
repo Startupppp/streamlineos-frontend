@@ -34,6 +34,58 @@ function getYearRangeStart(year: number): number {
   return Math.floor(year / YEARS_PER_PAGE) * YEARS_PER_PAGE;
 }
 
+interface MonthButtonProps {
+  label: string;
+  index: number;
+  isSelected: boolean;
+  onSelect: (index: number) => void;
+}
+
+function MonthButton({ label, index, isSelected, onSelect }: MonthButtonProps) {
+  const handleClick = useCallback(() => onSelect(index), [index, onSelect]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "rounded-md py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isSelected
+          ? "bg-primary text-primary-foreground"
+          : "text-foreground hover:bg-muted",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+interface YearButtonProps {
+  year: number;
+  isSelected: boolean;
+  isCurrentYear: boolean;
+  onSelect: (year: number) => void;
+}
+
+function YearButton({ year, isSelected, isCurrentYear, onSelect }: YearButtonProps) {
+  const handleClick = useCallback(() => onSelect(year), [year, onSelect]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "rounded-md py-2 text-xs font-medium tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isSelected
+          ? "bg-primary text-primary-foreground"
+          : isCurrentYear
+            ? "bg-muted text-foreground"
+            : "text-foreground hover:bg-muted",
+      )}
+    >
+      {year}
+    </button>
+  );
+}
+
 interface CalendarMonthYearPickerProps {
   currentDate: Date;
   title: string;
@@ -115,11 +167,19 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
+      <span
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {`Showing ${title}`}
+      </span>
       <PopoverTrigger asChild>
         <button
           type="button"
           className="w-fit shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-left text-base font-normal text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 md:text-lg"
-          aria-label="Choose month and year"
+          aria-label={`Choose month and year, currently ${title}`}
         >
           {title}
         </button>
@@ -156,25 +216,15 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               />
             </div>
             <div className="grid grid-cols-3 gap-1">
-              {MONTHS_SHORT.map((label, index) => {
-                const isSelected =
-                  index === selectedMonth && pickerYear === selectedYear;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handleMonthSelect(index)}
-                    className={cn(
-                      "rounded-md py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {MONTHS_SHORT.map((label, index) => (
+                <MonthButton
+                  key={label}
+                  label={label}
+                  index={index}
+                  isSelected={index === selectedMonth && pickerYear === selectedYear}
+                  onSelect={handleMonthSelect}
+                />
+              ))}
             </div>
           </>
         ) : (
@@ -203,27 +253,15 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               />
             </div>
             <div className="grid grid-cols-3 gap-1">
-              {yearOptions.map((year) => {
-                const isSelected = year === pickerYear;
-                const isCurrentYear = year === selectedYear;
-                return (
-                  <button
-                    key={year}
-                    type="button"
-                    onClick={() => handleYearSelect(year)}
-                    className={cn(
-                      "rounded-md py-2 text-xs font-medium tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : isCurrentYear
-                          ? "bg-muted text-foreground"
-                          : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {year}
-                  </button>
-                );
-              })}
+              {yearOptions.map((year) => (
+                <YearButton
+                  key={year}
+                  year={year}
+                  isSelected={year === pickerYear}
+                  isCurrentYear={year === selectedYear}
+                  onSelect={handleYearSelect}
+                />
+              ))}
             </div>
           </>
         )}

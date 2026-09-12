@@ -58,8 +58,8 @@ export function TicketParentLink({
         className,
       )}
     >
-      <CornerLeftUp className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-      <span className="shrink-0 font-mono text-micro text-muted-foreground/80 group-hover:text-foreground">
+      <CornerLeftUp className="h-3 w-3 shrink-0 text-muted-foreground" />
+      <span className="shrink-0 font-mono text-micro text-muted-foreground group-hover:text-foreground">
         {displayKey}
       </span>
       <TruncatedText

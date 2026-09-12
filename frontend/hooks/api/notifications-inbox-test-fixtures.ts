@@ -3,6 +3,11 @@ import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
 import type { Notification } from "@/types/notifications";
+import type {
+  NotificationInboxItem,
+  UnifiedInboxItem,
+  UnifiedInboxResponse,
+} from "@/types/inbox";
 
 /**
  * The harness the notification-inbox specs share. `makeNotif` was once the
@@ -39,6 +44,45 @@ export function makeInfiniteData(
   return {
     pages,
     pageParams: pages.map((_, i) => (i === 0 ? undefined : i)),
+  };
+}
+
+export function makeUnifiedNotif(id: number, isRead = false): NotificationInboxItem {
+  return {
+    kind: "notification",
+    id,
+    notifType: "INFO",
+    priority: "NORMAL",
+    category: "SYSTEM",
+    eventKey: null,
+    body: "",
+    pinned: false,
+    sourceModule: "notifications",
+    actor: null,
+    subject: `Notification ${id}`,
+    timestamp: "2026-01-01T00:00:00.000Z",
+    isRead,
+    deepLink: null,
+    dedupKey: `notification:${id}`,
+  };
+}
+
+export function makeUnifiedPage(items: UnifiedInboxItem[]): UnifiedInboxResponse {
+  return {
+    items,
+    hasMore: false,
+    nextCursor: null,
+    sources: [],
+    degraded: false,
+  };
+}
+
+export function makeUnifiedInfiniteData(
+  pages: UnifiedInboxResponse[],
+): InfiniteData<UnifiedInboxResponse> {
+  return {
+    pages,
+    pageParams: pages.map((_, i) => (i === 0 ? undefined : String(i))),
   };
 }
 

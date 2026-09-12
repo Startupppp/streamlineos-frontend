@@ -193,7 +193,7 @@ export function NewDMDialog({
           {filteredUsers.length === 0 ? (
             !isLoading && (
               <div className="text-center py-10">
-                <Users className="w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <Users className="w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-label text-muted-foreground">
                   No users found
                 </p>

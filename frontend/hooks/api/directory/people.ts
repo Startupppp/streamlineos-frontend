@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { GatedQueryResult } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   organizationPersonContract,
@@ -40,9 +41,8 @@ function isPeoplePage(value: unknown): value is PeoplePage {
 export function usePerson(
   organizationPersonId: string,
   options?: { enabled?: boolean },
-) {
-  const canView = useCan("directory:people:view");
-  return useQuery({
+): GatedQueryResult<OrganizationPerson> {
+  return useGatedQuery<OrganizationPerson>("directory:people:view", {
     queryKey: directoryAndOwnershipQueryKeys.directory.person(organizationPersonId),
     queryFn: ({ signal }) =>
       apiClient.get(
@@ -52,17 +52,18 @@ export function usePerson(
         organizationPersonContract,
       ),
     staleTime: 60_000,
-    enabled: canView && !!organizationPersonId && (options?.enabled ?? true),
+    enabled: !!organizationPersonId && (options?.enabled ?? true),
   });
 }
 
-export function usePeople(params: UsePeopleParams = {}) {
-  const canView = useCan("directory:people:view");
+export function usePeople(
+  params: UsePeopleParams = {},
+): GatedQueryResult<PeoplePage> {
   const { cursor, limit = 20, search } = params;
   const queryParams: Record<string, unknown> = { cursor, limit };
   if (search) queryParams.search = search;
 
-  return useQuery({
+  return useGatedQuery<PeoplePage>("directory:people:view", {
     queryKey: directoryAndOwnershipQueryKeys.directory.people(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
@@ -78,7 +79,6 @@ export function usePeople(params: UsePeopleParams = {}) {
       );
     },
     staleTime: 60_000,
-    enabled: canView,
   });
 }
 

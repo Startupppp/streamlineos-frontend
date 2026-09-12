@@ -96,7 +96,7 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
                   </div>
                 </div>
                 {i < arr.length - 1 && (
-                  <ArrowDown className="h-3.5 w-3.5 text-muted-foreground/30 my-0.5" />
+                  <ArrowDown className="h-3.5 w-3.5 text-muted-foreground my-0.5" />
                 )}
               </motion.div>
             );

@@ -146,13 +146,23 @@ describe("§8 platform-core surfaces are universally accessible to every active 
 });
 
 describe("a gated route is never also a universal route", () => {
-  const probes = ROUTE_ACCESS_EXTENSIONS.flatMap((entry) =>
-    entry.exact ? [entry.prefix] : [entry.prefix, `${entry.prefix}/child`],
-  );
+  const probes = ROUTE_ACCESS_EXTENSIONS.flatMap((entry) => {
+    if (entry.exact) return [entry.prefix];
+    if (entry.descendantsOnly) return [`${entry.prefix}/child`];
+    return [entry.prefix, `${entry.prefix}/child`];
+  });
 
   it.each(probes)("%s resolves gated, not universal", (path) => {
     expect(matchRouteAccessExtension(path)).not.toBeNull();
     expect(isUniversalRoute(path)).toBe(false);
+  });
+
+  it.each(
+    ROUTE_ACCESS_EXTENSIONS.filter((entry) => entry.descendantsOnly).map((entry) => entry.prefix),
+  )("%s keeps its own root universal while gating descendants", (prefix) => {
+    expect(matchRouteAccessExtension(prefix)).toBeNull();
+    expect(resolveRouteAccess(prefix).kind).toBe("universal");
+    expect(resolveRouteAccess(`${prefix}/child`).kind).toBe("permission");
   });
 
   it("no universal root's subtree swallows a gated prefix", () => {

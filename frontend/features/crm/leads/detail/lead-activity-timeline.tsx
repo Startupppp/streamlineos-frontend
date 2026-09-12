@@ -174,7 +174,7 @@ export function LeadActivityTimeline({
                         )}
 
                         {data.author ? (
-                          <p className="text-micro text-muted-foreground/70 mt-1.5 flex items-center gap-1">
+                          <p className="text-micro text-muted-foreground mt-1.5 flex items-center gap-1">
                             <User className="h-2.5 w-2.5" />
                             {String(
                               (data.author as Record<string, unknown>).name ??

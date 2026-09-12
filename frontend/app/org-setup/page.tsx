@@ -34,6 +34,7 @@ import {
   saveStep,
   clampStep,
   hasDraftProgress,
+  hasCompletionMarker,
 } from "@/features/org-setup/lib/draft";
 import {
   parseWizardDraft,
@@ -148,6 +149,12 @@ export default function OrgSetupPage() {
       toast.error(getErrorMessage(err));
     }
   }, [skipOrgSetup, refreshSessionClaims, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    if (!hasCompletionMarker(userId, session?.orgId ?? "")) return;
+    window.location.replace("/dashboard");
+  }, [userId, session?.orgId]);
 
   useEffect(() => {
     if (!userId || mountedOnceRef.current) return;

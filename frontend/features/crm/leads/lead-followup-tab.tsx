@@ -310,7 +310,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                       {formatTaskDue(task.dueDate)}
                     </p>
                     {task.notes && (
-                      <p className="text-micro text-muted-foreground/70 mt-1 truncate">
+                      <p className="text-micro text-muted-foreground mt-1 truncate">
                         {task.notes}
                       </p>
                     )}
@@ -339,8 +339,8 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/10 border border-border/20"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink shrink-0" />
-                <TruncatedText text={task.title} className="text-dense text-muted-foreground/70 line-through flex-1" />
-                <span className="text-micro text-muted-foreground/50 shrink-0">
+                <TruncatedText text={task.title} className="text-dense text-muted-foreground line-through flex-1" />
+                <span className="text-micro text-muted-foreground shrink-0">
                   {task.completedAt
                     ? new Date(task.completedAt).toLocaleDateString("en-IN", {
                         day: "numeric",
@@ -372,7 +372,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
       ) : (
         pendingTasks.length === 0 &&
         doneTasks.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground/50">
+          <div className="text-center py-8 text-muted-foreground">
             <CalendarClock className="w-8 mx-auto mb-2 opacity-40" />
             <p className="text-xs">No follow-ups yet</p>
             <p className="text-dense mt-0.5">

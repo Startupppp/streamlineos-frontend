@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useChatChannel, useChatMessages, useChatPoll, useMarkChannelRead,
+  useChatChannel, useChatMessages, useMarkChannelRead,
   useSendMessage, useDeleteMessage, useEditMessage, useChatOnlineUsers,
   useChatOrgUsers, useToggleReaction, useChatPins, usePinMessage,
   useUnpinMessage, useSavedMessages, useSaveMessage, useUnsaveMessage,
 } from "@/hooks/api/chat";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
@@ -48,7 +47,6 @@ export function useMessagePanelData({
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
-  const queryClient = useQueryClient();
   const { data: channel } = useChatChannel(channelId);
   const {
     data: messagesData,
@@ -106,7 +104,6 @@ export function useMessagePanelData({
 
   const typingText = useChatTypingText(typingUsers);
 
-  const [lastPollTime, setLastPollTime] = useState(() => new Date().toISOString());
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
   const autoStartHandledRef = useRef(false);
   const markReadCalledRef = useRef<number | null>(null);
@@ -221,18 +218,13 @@ export function useMessagePanelData({
     setRenderPages(1);
   }, [channelId]);
 
-  // Gated on the realtime verdict alone. `messages.length > 0` used to be the
-  // second half, which switched the fallback off for exactly the channel that
-  // needs it most — one whose first message never arrived.
-  const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected);
-
-  useEffect(() => {
-    if (pollResult && pollResult.messages.length > 0) {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.messages(channelId) });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-      setLastPollTime(new Date().toISOString());
-    }
-  }, [pollResult, channelId, queryClient]);
+  useChatPollReconciliation({
+    channelId,
+    newestLoadedAt: messages.at(-1)?.createdAt ?? null,
+    isRealtimeConnected: ablyConnected,
+    isHistoryLoading: isLoading,
+    refetchHistory: refetchMessages,
+  });
 
   useEffect(() => {
     if (channelId > 0 && markReadCalledRef.current !== channelId) {
@@ -252,7 +244,6 @@ export function useMessagePanelData({
   scrollToBottomRef.current = scrollToBottom;
 
   useEffect(() => {
-    setLastPollTime(new Date().toISOString());
     setReplyTo(null);
     setMessageInput(localStorage.getItem(draftKey) ?? "");
     setEditingMessage(null);

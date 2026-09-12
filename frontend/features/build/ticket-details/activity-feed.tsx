@@ -316,7 +316,7 @@ export function ActivityFeed({
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (
-            <span className="shrink-0 text-muted-foreground/70">
+            <span className="shrink-0 text-muted-foreground">
               ({comments.length})
             </span>
           )}

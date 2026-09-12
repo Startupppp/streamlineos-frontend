@@ -2,6 +2,7 @@ import { cache } from "react";
 import { randomUUID } from "crypto";
 import { decodeJwt, SignJWT } from "jose";
 import {
+  googleOAuthResponseSchema,
   sessionDataSchema,
   sessionExchangeResponseSchema,
   type SessionData,
@@ -60,8 +61,21 @@ export function setBackendJwtInStore(key: string, token: string): void {
   }
 }
 
-export function invalidateBackendJwtSession(userId: string, sessionId: string, orgId: string | null): void {
-  backendJwtStore.delete(`${userId}:${sessionId}:${orgId ?? ""}`);
+/**
+ * Evicts every cached backend JWT belonging to one device session, across every
+ * organization that session minted for. The key is `user:session:org`, so a
+ * single-org delete would strand the entries an org switch left behind — and
+ * logout ends the whole device session, not one of its tenants. User and session
+ * ids are UUIDs, so the `:` prefix cannot straddle a neighbouring key.
+ *
+ * This is a mint cache, never the revocation authority: the backend re-checks the
+ * tombstone and `user_sessions.is_revoked` on every request, so revoking another
+ * device (which the web tier never observes) is answered there, not here.
+ */
+export function invalidateBackendJwtSession(userId: string, sessionId: string): void {
+  const prefix = `${userId}:${sessionId}:`;
+  for (const key of backendJwtStore.keys())
+    if (key.startsWith(prefix)) backendJwtStore.delete(key);
 }
 
 export function clearBackendJwtStoreForTesting(): void {
@@ -112,9 +126,7 @@ export async function exchangeSessionForBackendJwt(
     });
     if (!res.ok) return null;
     const body: unknown = await res.json();
-    const parsed = sessionExchangeResponseSchema.safeParse(
-      unwrapBackend<unknown>(body),
-    );
+    const parsed = sessionExchangeResponseSchema.safeParse(unwrapBackend(body));
     return parsed.success ? parsed.data.token : null;
   } catch {
     return null;
@@ -136,7 +148,7 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
       });
       if (!res.ok) continue;
       const body: unknown = await res.json();
-      const parsed = sessionDataSchema.safeParse(unwrapBackend<unknown>(body));
+      const parsed = sessionDataSchema.safeParse(unwrapBackend(body));
       if (parsed.success) return parsed.data;
     } catch {
     } finally {
@@ -152,18 +164,20 @@ async function fetchSessionDataWithCache(userId: string): Promise<SessionData | 
 
 export const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
-export function unwrapBackend<T>(body: unknown): T {
-  if (isRecord(body) && body.success === true && "data" in body) return body.data as T;
-  return body as T;
-}
-
-function readString(value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value : undefined;
+/**
+ * Strips the `{ success: true, data }` envelope and returns the payload as
+ * `unknown`. It deliberately does not take a type parameter: a generic here is a
+ * cast on a value that just arrived from the network, and every caller already
+ * has a schema to narrow it with.
+ */
+export function unwrapBackend(body: unknown): unknown {
+  if (isRecord(body) && body.success === true && "data" in body) return body.data;
+  return body;
 }
 
 export interface GoogleAuthResult {
   userId: string;
-  sessionId: string | null;
+  sessionId: string;
 }
 
 export async function resolveGoogleUser(
@@ -197,12 +211,8 @@ export async function resolveGoogleUser(
     });
     if (!res.ok) return null;
     const raw: unknown = await res.json();
-    if (!isRecord(raw)) return null;
-    const envelope = isRecord(raw.data) ? raw.data : undefined;
-    const userId = readString(envelope?.userId) ?? readString(raw.userId);
-    if (!userId) return null;
-    const sessionId = readString(envelope?.sessionId) ?? readString(raw.sessionId) ?? null;
-    return { userId, sessionId };
+    const parsed = googleOAuthResponseSchema.safeParse(unwrapBackend(raw));
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   } finally {

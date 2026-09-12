@@ -1,25 +1,7 @@
+import type { NavRoute } from "./sidebar-nav-items";
 import { flattenNavRoutes, NAV_GROUPS } from "./sidebar-nav-items";
-
-const UNIVERSAL_HREFS = ["/settings"];
-
-const UNIVERSAL_HREF_PREFIXES = [
-  "/home",
-  "/dashboard",
-  "/me",
-  "/inbox",
-  "/mail",
-  "/chat",
-  "/notifications",
-  "/calendar",
-  "/announcements",
-  "/directory",
-  "/kb",
-  "/docs",
-  "/knowledge",
-  "/support/my",
-  "/referrals",
-  "/jobs",
-];
+import { HOME_NAV_GROUPS } from "./sidebar-home-nav";
+import { isUniversalRoute } from "@/lib/rbac/route-access/universal-routes";
 
 /**
  * Access administration and module-level settings are never universal, even
@@ -27,37 +9,48 @@ const UNIVERSAL_HREF_PREFIXES = [
  * /chat/settings govern admin administration of it. /directory is the people
  * directory (universal), /directory/settings is the directory config (admin).
  */
-function isAccessAdministration(href: string): boolean {
-  return href === "/access" || href.endsWith("/access");
+function isUniversal(href: string): boolean {
+  return isUniversalRoute(href);
 }
 
-const UNIVERSAL_ADMIN_EXCLUSIONS = [
-  "/directory/settings",
-];
-
-function isUniversal(href: string): boolean {
-  if (isAccessAdministration(href)) return false;
-  if (UNIVERSAL_ADMIN_EXCLUSIONS.some(
-    (prefix) => href === prefix || href.startsWith(`${prefix}/`),
-  )) return false;
-  if (UNIVERSAL_HREFS.includes(href)) return true;
-  return UNIVERSAL_HREF_PREFIXES.some(
-    (prefix) => href === prefix || href.startsWith(`${prefix}/`),
-  );
+function describeRoute(route: NavRoute): string {
+  const required = route.requiredPermission;
+  const keys = required
+    ? Array.isArray(required)
+      ? required.join(" | ")
+      : required
+    : "none";
+  return `${route.href}  (${route.label})  [${keys}]`;
 }
 
 describe("sidebar navigation is permission-driven", () => {
-  const routes = flattenNavRoutes(NAV_GROUPS.flatMap((group) => group.routes));
+  const routes = flattenNavRoutes(
+    [...NAV_GROUPS, ...HOME_NAV_GROUPS].flatMap((group) => group.routes),
+  );
 
   it("collects the whole navigation tree", () => {
     expect(routes.length).toBeGreaterThan(100);
+  });
+
+  it("scans the Home navigation, not only the product navigation", () => {
+    const scanned = new Set(routes.map((route) => route.href));
+    const missing = flattenNavRoutes(
+      HOME_NAV_GROUPS.flatMap((group) => group.routes),
+    )
+      .map((route) => route.href)
+      .filter((href) => !scanned.has(href))
+      .sort();
+    expect(missing).toEqual([]);
+    expect(scanned.has("/calendar")).toBe(true);
+    expect(scanned.has("/chat")).toBe(true);
+    expect(scanned.has("/dashboard")).toBe(true);
   });
 
   it("gates every non-universal route on a permission", () => {
     const ungated = routes
       .filter((route) => !route.requiredPermission)
       .filter((route) => !isUniversal(route.href))
-      .map((route) => `${route.href}  (${route.label})`)
+      .map(describeRoute)
       .sort();
     expect(ungated).toEqual([]);
   });
@@ -65,7 +58,7 @@ describe("sidebar navigation is permission-driven", () => {
   it("never gates a universal surface, which every active member keeps", () => {
     const gatedUniversal = routes
       .filter((route) => route.requiredPermission && isUniversal(route.href))
-      .map((route) => `${route.href}  (${route.label})`)
+      .map(describeRoute)
       .sort();
     expect(gatedUniversal).toEqual([]);
   });

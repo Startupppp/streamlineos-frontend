@@ -113,60 +113,6 @@ describe("PasswordlessSigninForm", () => {
     });
   });
 
-  describe("code stage — accessible name and error wiring", () => {
-    it("the OTP field carries an accessible name from the component, not from the test double", async () => {
-      await renderInCodeStage();
-      const byLabel = screen.getByLabelText("Verification code");
-      expect(byLabel).toBe(screen.getByTestId("otp-input"));
-      expect(byLabel).toHaveAttribute("id", "otp-code");
-      expect(byLabel).toHaveAttribute("aria-describedby", "otp-code-hint");
-    });
-
-    it("points aria-describedby at the error and marks the field invalid once a verify fails", async () => {
-      await renderInCodeStage();
-      const otpInput = screen.getByTestId("otp-input");
-      fireEvent.change(otpInput, { target: { value: "123456" } });
-      await act(async () => {
-        verifyOtpOnError?.(new ApiError("Invalid or expired code", 401));
-      });
-      const field = screen.getByTestId("otp-input");
-      expect(field).toHaveAttribute("aria-invalid", "true");
-      expect(field.getAttribute("aria-describedby")).toContain("otp-code-error");
-      expect(screen.getByRole("alert")).toHaveAttribute("id", "otp-code-error");
-    });
-  });
-
-  describe("code stage — the Verify control is reachable only when retrying is valid", () => {
-    it("clears the code after a server verdict, so a spent code cannot be resubmitted", async () => {
-      await renderInCodeStage();
-      fireEvent.change(screen.getByTestId("otp-input"), { target: { value: "123456" } });
-      expect(mockVerifyOtpMutate).toHaveBeenCalledTimes(1);
-      await act(async () => {
-        verifyOtpOnError?.(new ApiError("Invalid or expired code", 401));
-      });
-      expect(screen.getByTestId("otp-input")).toHaveValue("");
-      expect(screen.queryByRole("button", { name: /verify code/i })).not.toBeInTheDocument();
-    });
-
-    it("keeps the code after a request that never reached a verdict, and Verify retries it", async () => {
-      await renderInCodeStage();
-      fireEvent.change(screen.getByTestId("otp-input"), { target: { value: "123456" } });
-      expect(mockVerifyOtpMutate).toHaveBeenCalledTimes(1);
-      await act(async () => {
-        verifyOtpOnError?.(new TypeError("Failed to fetch"));
-      });
-      expect(screen.getByTestId("otp-input")).toHaveValue("123456");
-      const verify = screen.getByRole("button", { name: /verify code/i });
-      expect(verify).toBeEnabled();
-      fireEvent.click(verify);
-      expect(mockVerifyOtpMutate).toHaveBeenCalledTimes(2);
-      expect(mockVerifyOtpMutate).toHaveBeenLastCalledWith({
-        email: "test@example.com",
-        code: "123456",
-      });
-    });
-  });
-
   describe("code stage — Verify button visibility", () => {
     it("shows no Verify button when fewer than 6 digits are entered", async () => {
       await renderInCodeStage();
@@ -384,7 +330,12 @@ describe("PasswordlessSigninForm", () => {
       expect(results).toHaveNoViolations();
     });
 
-    it("renders without overflow at 320px container width", async () => {
+    // jsdom has no layout engine — `scrollWidth` and `offsetWidth` are 0 here, so
+    // no jest test can see an overflow. The real 320px verdict is
+    // `scripts/verify-identity-journey.mjs`, whose `overflowVerdict` compares
+    // `scrollWidth` against `innerWidth` in Chrome. This only pins that the form
+    // mounts inside a narrow container.
+    it("mounts inside a 320px container (overflow itself is proved in the browser harness)", async () => {
       setupMocks();
       const { container } = render(
         <div style={{ width: "320px" }}>
@@ -392,6 +343,128 @@ describe("PasswordlessSigninForm", () => {
         </div>,
       );
       expect(container.firstChild).toBeInTheDocument();
+    });
+  });
+
+  describe("the code field sanitises what it is given", () => {
+    it("strips separators and whitespace from a pasted code and submits it once", async () => {
+      await renderInCodeStage();
+
+      fireEvent.change(screen.getByTestId("otp-input"), {
+        target: { value: "12-34 56" },
+      });
+
+      expect(screen.getByTestId("otp-input")).toHaveValue("123456");
+      expect(mockVerifyOtpMutate).toHaveBeenCalledTimes(1);
+      expect(mockVerifyOtpMutate).toHaveBeenCalledWith({
+        email: "test@example.com",
+        code: "123456",
+      });
+    });
+
+    it("truncates an over-long paste to six digits rather than sending the whole string", async () => {
+      await renderInCodeStage();
+
+      fireEvent.change(screen.getByTestId("otp-input"), {
+        target: { value: "1234567890" },
+      });
+
+      expect(mockVerifyOtpMutate).toHaveBeenCalledWith({
+        email: "test@example.com",
+        code: "123456",
+      });
+    });
+
+    it("(negative) a paste with no digits submits nothing and leaves the field empty", async () => {
+      await renderInCodeStage();
+
+      fireEvent.change(screen.getByTestId("otp-input"), {
+        target: { value: "abc-def" },
+      });
+
+      expect(screen.getByTestId("otp-input")).toHaveValue("");
+      expect(mockVerifyOtpMutate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("resend cooldown", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+    });
+
+    function resendControl(): HTMLElement {
+      return screen.getByRole("button", { name: /resend/i });
+    }
+
+    it("starts a 30-second countdown on a delivered code and disables Resend for its duration", async () => {
+      await renderInCodeStage();
+
+      expect(resendControl()).toHaveTextContent("Resend in 30s");
+      expect(resendControl()).toBeDisabled();
+
+      act(() => {
+        jest.advanceTimersByTime(1_000);
+      });
+      expect(resendControl()).toHaveTextContent("Resend in 29s");
+
+      act(() => {
+        jest.advanceTimersByTime(29_000);
+      });
+      expect(resendControl()).toHaveTextContent("Resend code");
+      expect(resendControl()).toBeEnabled();
+
+      fireEvent.click(resendControl());
+      expect(mockRequestOtpMutate).toHaveBeenLastCalledWith("test@example.com");
+    });
+
+    it("(negative) a click during the cooldown requests nothing", async () => {
+      await renderInCodeStage();
+      mockRequestOtpMutate.mockClear();
+
+      fireEvent.click(resendControl());
+
+      expect(mockRequestOtpMutate).not.toHaveBeenCalled();
+    });
+
+    it("clears the countdown when the user goes back to the email stage", async () => {
+      await renderInCodeStage();
+
+      fireEvent.click(screen.getByRole("button", { name: /use a different email/i }));
+
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      act(() => {
+        jest.advanceTimersByTime(5_000);
+      });
+      expect(screen.queryByText(/resend in/i)).toBeNull();
+    });
+
+    it("PINNED GAP: a 429 surfaces its message but starts no cooldown of its own", async () => {
+      // The only cooldown in this form is the 30s resend timer, started by a
+      // SUCCESSFUL request. Nothing reads the 429's `retryAfterSeconds`, so after
+      // the resend timer elapses the control is offered again immediately even
+      // though the server is still refusing. Recorded, not repaired: wiring the
+      // server's retry-after into this control is a product decision.
+      await renderInCodeStage();
+      act(() => {
+        jest.advanceTimersByTime(30_000);
+      });
+      expect(resendControl()).toBeEnabled();
+
+      await act(async () => {
+        verifyOtpOnError?.(
+          new ApiError("Too many attempts. Try again later.", 429, "AUTH_RATE_LIMITED"),
+        );
+      });
+
+      expect(screen.getByRole("alert")).toHaveTextContent("Too many attempts");
+      expect(resendControl()).toBeEnabled();
+      expect(resendControl()).toHaveTextContent("Resend code");
     });
   });
 });

@@ -42,7 +42,7 @@ function EmojiTabButton({ name, idx, activeTab, onSetTab }: EmojiTabButtonProps)
         "px-2 py-1.5 text-micro font-medium rounded-t-md transition-colors",
         idx === activeTab
           ? "bg-primary/10 text-foreground"
-          : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
       )}
     >
       {name}

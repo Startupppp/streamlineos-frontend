@@ -48,7 +48,7 @@ export function OnboardingProgressRing({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted-foreground/20"
+          className="text-muted-foreground"
         />
         <circle
           cx={center}

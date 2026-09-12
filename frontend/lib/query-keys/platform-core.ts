@@ -133,11 +133,6 @@ export const platformCoreQueryKeys = {
 
   inbox: {
     all: [...base, "inbox"] as const,
-    list: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "inbox", "list"] as const)
-        : ([...base, "inbox", "list", params] as const),
-    count: () => [...base, "inbox", "count"] as const,
     unified: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "inbox", "unified"] as const)

@@ -156,7 +156,7 @@ export const ConnectionRow = memo(function ConnectionRow({
               iconSize={14}
             />
           </div>
-          <p className="text-dense text-muted-foreground/80">
+          <p className="text-dense text-muted-foreground">
             The full secret is shown only once at creation. Recreate the connection if it is lost.
           </p>
         </div>

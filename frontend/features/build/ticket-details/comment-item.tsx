@@ -202,7 +202,7 @@ function CommentItemComponent({
           </span>
           <span className="shrink-0 text-dense text-muted-foreground">{timeAgo}</span>
           {isEdited && (
-            <span className="text-micro text-muted-foreground/60 italic">(edited)</span>
+            <span className="text-micro text-muted-foreground italic">(edited)</span>
           )}
         </div>
 

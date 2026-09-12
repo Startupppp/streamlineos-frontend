@@ -86,7 +86,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
               "flex shrink-0 items-center gap-0.5 text-micro font-medium transition-colors hover:opacity-80",
               dateMeta
                 ? dateToneClasses[dateMeta.tone]
-                : "text-muted-foreground/60",
+                : "text-muted-foreground",
             )}
             aria-label="Edit project dates"
           >

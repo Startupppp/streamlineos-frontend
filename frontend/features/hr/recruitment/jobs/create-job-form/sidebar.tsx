@@ -61,7 +61,7 @@ function SidebarStepButton({ step, idx, onStepClick }: SidebarStepButtonProps) {
             step.hasError && "text-status-danger-ink"
           )}
         />
-        <TruncatedText text={step.subtitle} className="text-micro text-muted-foreground/70 leading-tight mt-0.5" />
+        <TruncatedText text={step.subtitle} className="text-micro text-muted-foreground leading-tight mt-0.5" />
       </div>
     </button>
   );

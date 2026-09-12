@@ -172,7 +172,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                 <p className="text-dense text-muted-foreground font-medium mb-0.5">
                   {timer.project?.name ?? "No project"}
                   {timer.ticket && (
-                  <span className="ml-1.5 text-muted-foreground/70">
+                  <span className="ml-1.5 text-muted-foreground">
                     · {timer.ticket.title}
                   </span>
                 )}

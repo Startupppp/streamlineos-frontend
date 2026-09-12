@@ -14,7 +14,7 @@ export function BankAccountsList({ accounts }: BankAccountsListProps) {
   if (accounts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-        <Landmark className="w-8 text-muted-foreground/40" />
+        <Landmark className="w-8 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">No bank accounts connected</p>
         <Link href="/accounting/banking" className="text-xs text-primary hover:underline">
           Add account

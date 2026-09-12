@@ -40,7 +40,7 @@ export function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
   return (
     <div className="group flex items-center gap-3 rounded-md border bg-muted/20 px-3 py-2">
       <svg
-        className="h-4 w-4 shrink-0 text-muted-foreground/40"
+        className="h-4 w-4 shrink-0 text-muted-foreground"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

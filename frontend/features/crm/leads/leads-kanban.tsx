@@ -89,7 +89,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                         {provided.placeholder}
 
                         {columnLeads.length === 0 && !snapshot.isDraggingOver && (
-                          <div className="text-center py-8 text-muted-foreground/40">
+                          <div className="text-center py-8 text-muted-foreground">
                             <p className="text-xs">No leads</p>
                           </div>
                         )}

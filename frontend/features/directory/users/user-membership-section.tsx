@@ -212,7 +212,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
         <div key={row.label} className="flex items-center gap-2.5 text-xs">
           {row.icon}
           <span className="text-muted-foreground w-20 shrink-0">{row.label}</span>
-          <span className="text-foreground truncate">{row.value ?? <span className="italic text-muted-foreground/60">Not set</span>}</span>
+          <span className="text-foreground truncate">{row.value ?? <span className="italic text-muted-foreground">Not set</span>}</span>
         </div>
       ))}
     </div>

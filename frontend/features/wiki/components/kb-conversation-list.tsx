@@ -225,7 +225,7 @@ export function KbConversationList({
           <>
             {groups.map(({ label, items }) => (
               <div key={label} className="mb-1">
-                <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-wide text-muted-foreground/60">{label}</p>
+                <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
                 {items.map((conv) => (
                   <div
                     key={conv.id}

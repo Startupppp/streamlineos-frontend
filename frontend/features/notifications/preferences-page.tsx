@@ -172,7 +172,7 @@ export function NotificationPreferencesPage() {
               return (
                 <div key={key} className="flex items-center justify-between px-3 py-2.5 gap-3 bg-card">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={cn("h-4 w-4 shrink-0", enabled ? "text-primary" : "text-muted-foreground/60")} />
+                    <Icon className={cn("h-4 w-4 shrink-0", enabled ? "text-primary" : "text-muted-foreground")} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-snug">{label}</p>
                       <p className="text-dense text-muted-foreground">{description}</p>
@@ -292,7 +292,7 @@ export function NotificationPreferencesPage() {
               <EmptyState
                 compact
                 className="bg-card py-8"
-                illustration={<BellOff className="w-8 text-muted-foreground/40" />}
+                illustration={<BellOff className="w-8 text-muted-foreground" />}
                 title="Nothing muted"
                 description="Mute specific notification types from the notification detail drawer."
               />

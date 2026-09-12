@@ -55,7 +55,7 @@ export function ShortcutsHelpDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground">
               Global
             </p>
             <div className="divide-y divide-border/50">
@@ -65,7 +65,7 @@ export function ShortcutsHelpDialog() {
             </div>
           </div>
           <div>
-            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground">
               Inside a project
             </p>
             <div className="divide-y divide-border/50">
@@ -75,7 +75,7 @@ export function ShortcutsHelpDialog() {
             </div>
           </div>
         </div>
-        <p className="mt-4 text-dense text-muted-foreground/50">
+        <p className="mt-4 text-dense text-muted-foreground">
           Shortcuts are disabled while typing in inputs.
         </p>
       </DialogContent>

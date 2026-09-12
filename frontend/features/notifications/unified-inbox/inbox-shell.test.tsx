@@ -1,4 +1,5 @@
-import { render, act } from "@testing-library/react";
+import { render, act, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createElement, type ReactNode } from "react";
 import { InboxShell } from "./inbox-shell";
 
@@ -46,6 +47,10 @@ jest.mock("@/hooks/api/notifications-inbox", () => ({
     isPending: false,
     variables: undefined,
   }),
+}));
+
+jest.mock("@/hooks/api/notifications-broadcasts", () => ({
+  useDismissBroadcast: () => ({ mutate: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/inbox", () => ({
@@ -133,6 +138,10 @@ jest.mock("next/dynamic", () => () =>
 
 jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
+}));
+
+jest.mock("@/components/ui/page-tabs-toolbar", () => ({
+  PageTabsToolbar: ({ tabs }: { tabs?: ReactNode }) => createElement("div", null, tabs),
 }));
 
 type SonerMock = { toast: { error: jest.Mock; success: jest.Mock } };
@@ -255,5 +264,45 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
     act(() => capturedOnApprove!(1));
 
     expect(getSonerMock().toast.error).toHaveBeenCalledWith("Approve failed");
+  });
+});
+
+describe("inbox view switcher — tab semantics and view switching", () => {
+  it("renders all four tabs with role=tab", async () => {
+    await act(async () => { render(<InboxShell />); });
+
+    const tabs = screen.getAllByRole("tab");
+    const labels = tabs.map((t) => t.textContent);
+    expect(labels).toEqual(["All", "Notifications", "Mail", "Approvals"]);
+  });
+
+  it("All tab is active by default", async () => {
+    await act(async () => { render(<InboxShell />); });
+
+    const allTab = screen.getByRole("tab", { name: "All" });
+    expect(allTab).toHaveAttribute("data-state", "active");
+  });
+
+  it("clicking Notifications tab makes it active and deactivates All", async () => {
+    const user = userEvent.setup();
+    await act(async () => { render(<InboxShell />); });
+
+    const notifTab = screen.getByRole("tab", { name: "Notifications" });
+    await user.click(notifTab);
+
+    expect(notifTab).toHaveAttribute("data-state", "active");
+    const allTab = screen.getByRole("tab", { name: "All" });
+    expect(allTab).toHaveAttribute("data-state", "inactive");
+  });
+
+  it("arrow keys move focus between tabs", async () => {
+    const user = userEvent.setup();
+    await act(async () => { render(<InboxShell />); });
+
+    const allTab = screen.getByRole("tab", { name: "All" });
+    await act(async () => { allTab.focus(); });
+    await user.keyboard("{ArrowRight}");
+
+    expect(screen.getByRole("tab", { name: "Notifications" })).toHaveFocus();
   });
 });

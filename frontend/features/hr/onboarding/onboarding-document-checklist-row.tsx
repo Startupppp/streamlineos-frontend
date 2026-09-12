@@ -46,7 +46,7 @@ function docStatusIcon(status: DocStatus) {
   if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-status-warning-ink" />;
   if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-status-danger-ink" />;
   if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-status-warning-ink" />;
-  return <Circle className="h-4 w-4 text-muted-foreground/40" />;
+  return <Circle className="h-4 w-4 text-muted-foreground" />;
 }
 
 function useBlobPreviewUrl(file: File | null): string | null {

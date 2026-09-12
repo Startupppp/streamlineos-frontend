@@ -122,7 +122,7 @@ export function EventFormFields({
             onChange={onTitleChange}
             placeholder="Add Title"
             className={cn(
-              "text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium",
+              "text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground font-medium",
               titleError && "border-destructive",
             )}
             autoFocus

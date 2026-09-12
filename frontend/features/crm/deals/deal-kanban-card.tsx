@@ -82,7 +82,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
           <div className="flex-1 min-w-0 mr-1">
             <TruncatedText text={deal.name} className="text-sm font-medium" />
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="font-mono text-micro text-muted-foreground/70 select-all">{formatDealId(deal.id)}</span>
+              <span className="font-mono text-micro text-muted-foreground select-all">{formatDealId(deal.id)}</span>
               <DealHealthBadge expectedCloseDate={deal.expectedCloseDate} />
             </div>
           </div>

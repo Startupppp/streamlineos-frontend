@@ -2,7 +2,8 @@
 
 import { memo, useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Search, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Dialog,
   DialogContent,
@@ -49,25 +50,21 @@ function TicketPickerBody({
   const debouncedQ = useDebouncedValue(q, 300);
   const { data: tickets = [], isLoading } = useTicketSearch(debouncedQ);
 
-  const handleQChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQ(e.target.value);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((value: string) => {
+    setQ(value);
+  }, []);
 
   return (
     <div className="flex-1 min-h-0 px-4 py-2 flex flex-col gap-2">
-      <div className="relative shrink-0">
-        <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-        <input
-          autoFocus
-          value={q}
-          onChange={handleQChange}
-          placeholder="Search by ticket key or title…"
-          className="w-full h-8 pl-8 pr-3 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
-        />
-      </div>
+      <SearchInput
+        fill
+        autoFocus
+        className="shrink-0"
+        value={q}
+        onValueChange={handleSearchChange}
+        placeholder="Search by ticket key or title…"
+        aria-label="Search tickets"
+      />
       <div className="overflow-y-auto space-y-0.5 max-h-[min(40dvh,20rem)]">
         {isLoading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">

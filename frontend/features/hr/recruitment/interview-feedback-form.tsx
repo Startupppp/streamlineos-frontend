@@ -52,7 +52,7 @@ function StarButton({ starValue, displayRating, onStarClick, onStarHover }: Star
           "h-7 w-7 transition-colors duration-200",
           starValue <= displayRating
             ? "text-status-warning-ink fill-amber-400"
-            : "text-muted-foreground/30"
+            : "text-muted-foreground"
         )}
       />
     </button>

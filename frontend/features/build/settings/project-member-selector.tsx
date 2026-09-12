@@ -164,6 +164,7 @@ export function MembersSelector({
           variant="outline"
           className="w-full justify-between text-left font-normal"
           role="combobox"
+          aria-label="Select members"
         >
           {memberIds.length > 0
             ? `${memberIds.length} member${memberIds.length > 1 ? "s" : ""} selected`

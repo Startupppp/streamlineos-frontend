@@ -8,7 +8,7 @@ import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
   if (sorted === "asc") return <ArrowUp className="h-3 w-3 text-primary" />;
   if (sorted === "desc") return <ArrowDown className="h-3 w-3 text-primary" />;
-  return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
+  return <ArrowUpDown className="h-3 w-3 text-muted-foreground" />;
 }
 
 interface DataTableHeaderProps<T> {

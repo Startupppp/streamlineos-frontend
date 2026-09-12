@@ -81,6 +81,18 @@ export const useCancelBroadcast = () => {
   });
 };
 
+export const useDismissBroadcast = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "broadcasts", "dismiss"],
+    mutationFn: (broadcastId) => apiClient.post<{ success: boolean }>(`/broadcasts/${broadcastId}/dismiss`, undefined, undefined, broadcastSuccessContract),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
+    },
+  });
+};
+
 export const useDeleteBroadcast = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:broadcasts:manage", {

@@ -21,6 +21,9 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useCreateWorker } from "@/hooks/api/directory/workers";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getApiErrorCode } from "@/lib/api-client";
+
+const WORKER_NUMBER_RESERVED_CODE = "WORKER_NUMBER_RESERVED";
 
 const workerSchema = z
   .object({
@@ -75,19 +78,26 @@ export function WorkerFormDialog({
     const subject = values.organizationPersonId
       ? { organizationPersonId: values.organizationPersonId }
       : { memberUserId: values.memberUserId ?? "" };
+
+    function handleCreated() {
+      toast.success("Worker added");
+      onOpenChange(false);
+    }
+
+    function handleCreateError(error: unknown) {
+      const message = getErrorMessage(error);
+      if (getApiErrorCode(error) === WORKER_NUMBER_RESERVED_CODE)
+        form.setError("workerNumber", { type: "server", message });
+      toast.error(message);
+    }
+
     createWorker.mutate(
       {
         ...subject,
         workerNumber: values.workerNumber || undefined,
         isPayee: values.isPayee,
       },
-      {
-        onSuccess: () => {
-          toast.success("Worker added");
-          onOpenChange(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
+      { onSuccess: handleCreated, onError: handleCreateError },
     );
   }
 

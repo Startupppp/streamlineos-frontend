@@ -34,9 +34,22 @@ const orgSetupInviteeSchema = z
 
 export type OrgSetupInvitee = z.infer<typeof orgSetupInviteeSchema>;
 
+export const orgSetupStatusErrorCodeSchema = z.enum([
+  "SETUP_BACKGROUND_PARTIAL",
+  "SETUP_BACKGROUND_RETRYING",
+  "SETUP_BACKGROUND_DEAD",
+  "SETUP_BACKGROUND_INVALID",
+  "SETUP_BACKGROUND_SUPPRESSED",
+]);
+
+export type OrgSetupStatusErrorCode = z.infer<
+  typeof orgSetupStatusErrorCodeSchema
+>;
+
 export const orgSetupStatusContract = z.object({
   orgId: z.string().nullable(),
   onboardingCompletedAt: z.string().nullable(),
+  ready: z.boolean(),
   provisioning: z.enum([
     "not-started",
     "pending",
@@ -44,7 +57,8 @@ export const orgSetupStatusContract = z.object({
     "completed",
     "failed",
   ]),
-  lastError: z.string().nullable(),
+  errorCode: orgSetupStatusErrorCodeSchema.nullable(),
+  correlationId: z.string().nullable(),
 });
 
 export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;

@@ -216,7 +216,7 @@ export function WorkLogEntryRow({
             </span>
           )}
           {isWeekendDay && !today && (
-            <span className="mt-0.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground/80">
+            <span className="mt-0.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
               Wknd
             </span>
           )}

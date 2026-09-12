@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
-import { invalidatePersonAccountAccess } from "./cache";
+import { invalidateCalendarMemberLookups, invalidatePersonAccountAccess } from "./cache";
 import type { BulkActionResult, BulkUpdatePayload } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -31,6 +31,7 @@ export function useBulkSuspend() {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 }
@@ -44,6 +45,7 @@ export function useBulkArchive() {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 }
@@ -57,6 +59,7 @@ export function useBulkRestore() {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 }

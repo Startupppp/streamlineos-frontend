@@ -152,7 +152,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center gap-2 py-4 text-center"
               >
-                <Columns3 className="w-8 text-muted-foreground/30" />
+                <Columns3 className="w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   No statuses configured
                 </p>

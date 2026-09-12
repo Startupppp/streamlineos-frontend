@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, type Key } from "react";
+import { useMemo, type CSSProperties, type Key } from "react";
 import { format, isWithinInterval } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import { List, type RowComponentProps } from "react-window";
+import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 
 interface CalendarEventsPanelProps {
@@ -25,9 +26,8 @@ interface PanelRowData {
   onSelectEvent: (eventId: string) => void;
 }
 
-const HEADER_ROW_HEIGHT = 40;
-const EVENT_ROW_HEIGHT_BASE = 72;
-const EVENT_ROW_HEIGHT_LOCATION = 92;
+const ESTIMATED_ROW_HEIGHT = 96;
+const ROW_GAP_PX = 8;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
 
@@ -45,18 +45,21 @@ function groupByDate(events: CalendarListItem[]): Map<string, CalendarListItem[]
   return groups;
 }
 
-function getPanelRowHeight(index: number, data: PanelRowData): number {
-  const row = data.rows[index];
-  if (!row) return EVENT_ROW_HEIGHT_BASE;
-  if (row.type === "header") return HEADER_ROW_HEIGHT;
-  return row.event.location ? EVENT_ROW_HEIGHT_LOCATION : EVENT_ROW_HEIGHT_BASE;
-}
-
 function getPanelRowKey(index: number, data: PanelRowData): Key {
   const row = data.rows[index];
   if (!row) return index;
   if (row.type === "header") return `hdr:${row.dateKey}`;
   return `evt:${row.event.id}`;
+}
+
+function mergeEventRowStyle(windowStyle: CSSProperties): CSSProperties {
+  return {
+    ...windowStyle,
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingBottom: ROW_GAP_PX,
+    boxSizing: "border-box",
+  };
 }
 
 function PanelVirtualRow({
@@ -71,7 +74,7 @@ function PanelVirtualRow({
 
   if (row.type === "header") {
     return (
-      <div style={style} {...ariaAttributes} className="flex items-end px-4 pb-1">
+      <div style={style} {...ariaAttributes} className="flex items-end px-4 pt-5 pb-1">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {format(new Date(row.dateKey), "EEEE, MMMM d, yyyy")}
         </h3>
@@ -81,14 +84,17 @@ function PanelVirtualRow({
 
   const { event } = row;
   const color = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
-  const start = new Date(event.start);
-  const end = new Date(event.end);
+
+  function handleSelectEvent() {
+    onSelectEvent(event.id);
+  }
 
   return (
-    <div style={{ ...style, paddingLeft: 16, paddingRight: 16, paddingBottom: 8 }} {...ariaAttributes}>
+    <div style={mergeEventRowStyle(style)} {...ariaAttributes}>
       <button
         type="button"
-        onClick={() => onSelectEvent(event.id)}
+        aria-label={event.title}
+        onClick={handleSelectEvent}
         className={cn(
           "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40",
         )}
@@ -103,7 +109,7 @@ function PanelVirtualRow({
             <p className="mt-0.5 text-xs text-muted-foreground">
               {event.allDay
                 ? "All day"
-                : `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`}
+                : formatEventTimeRange(event.start, event.end, event.timezone)}
             </p>
             {event.location ? (
               <TruncatedText
@@ -165,6 +171,19 @@ export function CalendarEventsPanel({
     [rows, onSelectEvent],
   );
 
+  const heightKey = useMemo(
+    () =>
+      rows
+        .map((row) => (row.type === "header" ? `hdr:${row.dateKey}` : `evt:${row.event.id}`))
+        .join("|"),
+    [rows],
+  );
+
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: ESTIMATED_ROW_HEIGHT,
+    key: heightKey,
+  });
+
   if (filteredEvents.length === 0) {
     return (
       <EmptyState
@@ -185,7 +204,7 @@ export function CalendarEventsPanel({
       <List<PanelRowData>
         rowComponent={PanelVirtualRow}
         rowCount={rows.length}
-        rowHeight={getPanelRowHeight}
+        rowHeight={rowHeight}
         rowProps={rowProps}
         rowKey={getPanelRowKey}
         defaultHeight={DEFAULT_LIST_HEIGHT}

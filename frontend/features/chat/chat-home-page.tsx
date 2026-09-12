@@ -15,6 +15,8 @@ import {
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 
 const ChatAblySuite = dynamic(
   () =>
@@ -188,7 +190,12 @@ export function ChatHomePage() {
   );
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col">
+    <PageWrapper
+      noInternalScroll
+      title={<VisuallyHidden.Root>Chat</VisuallyHidden.Root>}
+      contentClassName="!px-0"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+    >
       <div className="flex flex-1 min-h-0 min-w-0 bg-background">
         <div
           className={cn(
@@ -276,6 +283,6 @@ export function ChatHomePage() {
           />
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

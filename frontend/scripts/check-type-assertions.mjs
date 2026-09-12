@@ -259,7 +259,11 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
  * tree. SCAN_FLOOR_FILES catches a broken walker; this catches a broken counter
  * walking a healthy tree.
  */
-const CEILING_FLOOR_TOTAL = 500;
+// Lowered 500 -> 499 on 2026-09-12: `lib/auth-session.ts` lost both of its
+// assertions when `unwrapBackend<T>` stopped taking a type parameter and its two
+// call sites narrowed through Zod instead. The tree really is one lower, so the
+// tripwire moves with it rather than reporting a broken counter.
+const CEILING_FLOOR_TOTAL = 499;
 
 function loadCeilingLedger() {
   try {

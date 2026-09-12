@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
+import { invalidateCalendarMemberLookups } from "./cache";
 import type {
   UpdateUserInput,
   UpdateUserPreferencesInput,
@@ -50,6 +51,7 @@ export const useUpdateUserStatus = () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 };
@@ -63,6 +65,7 @@ export const useDeleteUser = () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      invalidateCalendarMemberLookups(queryClient);
     },
   });
 };

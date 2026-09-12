@@ -12,6 +12,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ function WorkerRowActions({
           variant="ghost"
           size="icon"
           className="w-7"
-          aria-label="Worker actions"
+          aria-label={`Actions for ${workerDisplayName(worker)}`}
           {...hoverHandlers}
         >
           <EllipsisIcon ref={iconRef} size={14} />
@@ -135,12 +136,13 @@ export function WorkersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [engagementsTarget, setEngagementsTarget] = useState<Worker | null>(null);
 
-  const { data, isLoading, isError, refetch } = useWorkers({
+  const workersQuery = useWorkers({
     cursor,
     limit: PAGE_SIZE,
     search: search || undefined,
     status: status === "ALL" ? undefined : status,
   });
+  const { data, isLoading, isError, refetch } = workersQuery;
 
   const rows = data?.data ?? [];
   const pageInfo = data?.pageInfo;
@@ -298,7 +300,14 @@ export function WorkersPage() {
     >
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {workersQuery.access.denied ? (
+            <NoPermissionState
+              permission={workersQuery.access.permission}
+              className={CONTENT_FILL_PANEL}
+              title="Workforce unavailable"
+              description="You no longer hold workforce access, so worker records cannot be listed. The records themselves are unchanged."
+            />
+          ) : isLoading || workersQuery.access.pending ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />

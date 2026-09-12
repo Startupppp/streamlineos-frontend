@@ -28,7 +28,7 @@ interface TeamTableProps {
 }
 
 const DayCell = memo(function DayCell({ hours }: { hours: number }) {
-  if (hours === 0) return <span className="text-muted-foreground/30">—</span>;
+  if (hours === 0) return <span className="text-muted-foreground">—</span>;
   return (
     <span
       className={cn(

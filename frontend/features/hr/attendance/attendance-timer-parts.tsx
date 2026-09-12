@@ -22,7 +22,7 @@ export function TimerDigit({ value, label }: { value: number; label: string }) {
 export function TimerSeparator() {
   return (
     <span
-      className="mb-5 select-none text-xl font-semibold text-muted-foreground/50"
+      className="mb-5 select-none text-xl font-semibold text-muted-foreground"
       aria-hidden
     >
       :

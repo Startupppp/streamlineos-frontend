@@ -177,7 +177,7 @@ export default function TrashPage() {
         {!isLoading && isError && (
           <EmptyState
             illustration={
-              <KbTrash2Icon className="w-8 text-muted-foreground/40" />
+              <KbTrash2Icon className="w-8 text-muted-foreground" />
             }
             title="Could not load trash"
             description="There was a problem fetching deleted pages."
@@ -187,7 +187,7 @@ export default function TrashPage() {
         {!isLoading && !isError && pages.length === 0 && (
           <EmptyState
             illustration={
-              <KbTrash2Icon className="w-8 text-muted-foreground/40" />
+              <KbTrash2Icon className="w-8 text-muted-foreground" />
             }
             title="Trash is empty"
             description="Deleted pages will appear here and can be restored or permanently removed."

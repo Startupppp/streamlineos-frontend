@@ -27,7 +27,7 @@ const EMPLOYEE_PERMISSIONS = [
 ];
 
 describe("Home employee navigation", () => {
-  it("keeps HR self-service hidden without permission (module state is irrelevant)", () => {
+  it("keeps universal self-service visible without any granted permission (module state is irrelevant)", () => {
     const homeRoutes = getNavGroupsForProduct("home", "MEMBER", scopesOf([]), ["build"])
       .flatMap((group) => flattenNavRoutes(group.routes));
     const knowledgeRoutes = getNavGroupsForProduct(
@@ -38,8 +38,9 @@ describe("Home employee navigation", () => {
     ).flatMap((group) => flattenNavRoutes(group.routes));
 
     expect(homeRoutes.map((route) => route.href)).toContain("/dashboard");
-    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/documents");
-    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/onboarding");
+    expect(homeRoutes.map((route) => route.href)).toContain("/me/documents");
+    expect(homeRoutes.map((route) => route.href)).toContain("/me/onboarding");
+    expect(homeRoutes.map((route) => route.href)).not.toContain("/directory/workers");
     expect(knowledgeRoutes.map((route) => route.href)).toEqual(
       expect.arrayContaining(["/knowledge/chat", "/knowledge/wiki"]),
     );

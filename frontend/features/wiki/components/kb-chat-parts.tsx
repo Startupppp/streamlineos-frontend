@@ -173,7 +173,7 @@ function Citations({
 
   return (
     <div className="mt-2.5 border-t border-border/60 pt-2.5">
-      <p className="mb-1.5 text-micro font-medium uppercase tracking-wide text-muted-foreground/70">
+      <p className="mb-1.5 text-micro font-medium uppercase tracking-wide text-muted-foreground">
         Sources
       </p>
       <div className="flex flex-wrap gap-1.5">

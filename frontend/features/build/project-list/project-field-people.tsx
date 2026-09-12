@@ -69,7 +69,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
           />
         </div>
       ) : (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <User className="h-3.5 w-3.5" aria-hidden="true" />
           Unassigned
         </span>
@@ -126,7 +126,7 @@ export const InlineProjectMembers = memo(function InlineProjectMembers({
           className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-micro"
         />
       ) : (
-        <span className="text-xs text-muted-foreground/40">Add members</span>
+        <span className="text-xs text-muted-foreground">Add members</span>
       )}
     </button>
   );

@@ -31,6 +31,7 @@ export interface BigCalEvent {
   resource?: {
     color?: string | null;
     category?: string;
+    timezone?: string | null;
     description?: string | null;
     location?: string | null;
     source?: string;

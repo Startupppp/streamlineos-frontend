@@ -93,7 +93,7 @@ export function AdminExpenseList({
           <EmptyState
             compact
             className="flex-1 border-0 bg-transparent"
-            illustration={<EmptyExpensesIllustration className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={<EmptyExpensesIllustration className="h-8 w-8 text-muted-foreground" />}
             title="No expenses found"
             description={statusFilter !== "ALL" ? "Try adjusting your filters" : "No expense claims to review"}
             action={statusFilter !== "ALL" ? { label: "Show All Claims", onClick: onShowAll } : undefined}

@@ -261,7 +261,7 @@ export function NewGroupDialog({
                     {uploadingAvatar ? (
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     ) : (
-                      <Camera className="h-5 w-5 text-muted-foreground/50" />
+                      <Camera className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
                 )}
@@ -276,7 +276,7 @@ export function NewGroupDialog({
                 Channel name <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <Hash className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                <Hash className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={name}
                   onChange={handleNameChange}
@@ -293,7 +293,7 @@ export function NewGroupDialog({
             <div>
               <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Description{" "}
-                <span className="text-muted-foreground/50">(optional)</span>
+                <span className="text-muted-foreground">(optional)</span>
               </Label>
               <Input
                 value={description}

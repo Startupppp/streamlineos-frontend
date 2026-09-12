@@ -80,7 +80,7 @@ export function KnowledgeGapCard({
                 className="flex items-center justify-between gap-1 text-xs text-muted-foreground min-w-0"
               >
                 <span className="truncate min-w-0">&ldquo;{sq.query}&rdquo;</span>
-                <span className="ml-2 shrink-0 text-muted-foreground/60">
+                <span className="ml-2 shrink-0 text-muted-foreground">
                   ×{sq.count}
                 </span>
               </li>

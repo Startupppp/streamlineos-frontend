@@ -99,9 +99,9 @@ const BoardItem = memo(function BoardItem({
 
   const visibilityIcon =
     board.visibility === "private" ? (
-      <Lock className="h-3 w-3 shrink-0 text-muted-foreground/60" aria-label="Private" />
+      <Lock className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Private" />
     ) : board.visibility === "public" ? (
-      <Globe className="h-3 w-3 shrink-0 text-muted-foreground/60" aria-label="Public" />
+      <Globe className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Public" />
     ) : null;
 
   return (

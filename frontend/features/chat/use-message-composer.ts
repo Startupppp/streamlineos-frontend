@@ -13,13 +13,14 @@ import type { TicketSearchResult } from "@/hooks/api/build";
 import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
 
 type Attachment = AttachmentInput;
-type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[]; clientKey: string };
+type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[]; mentionedUserIds?: string[]; clientKey: string };
 
 /**
  * Identity of one logical send: the draft the user can still see and change.
  * Derived fields (mentions, ticket entities) are deliberately excluded — they
- * are cleared on send and not restored on failure, so including them would mint
- * a fresh key for an unchanged draft and reintroduce the duplicate.
+ * are restored verbatim when a send fails, so they cannot distinguish two
+ * attempts at the same draft, and including them would only risk minting a
+ * fresh key for an unchanged draft and reintroducing the duplicate.
  */
 function sendSignature(
   content: string,
@@ -110,18 +111,37 @@ export function useMessageComposer({
     setTimeout(() => { el.focus(); const pos = at + token.length + 1; el.setSelectionRange(pos, pos); }, 0);
   }, [messageInput]);
 
+  const flushMessageQueue = useCallback(async () => {
+    const queued = messageQueue.current;
+    if (!queued.length) return;
+    messageQueue.current = [];
+    const failed: QueuedMessage[] = [];
+    for (const msg of queued) {
+      try {
+        await sendMessage.mutateAsync({ channelId, clientKey: msg.clientKey, content: msg.content || undefined, replyToId: msg.replyToId, attachments: msg.attachments, metadata: msg.metadata, mentionedUserIds: msg.mentionedUserIds });
+      } catch { failed.push(msg); }
+    }
+    if (!failed.length) return;
+    messageQueue.current = [...failed, ...messageQueue.current];
+    toast.error(failed.length === 1 ? "A message you wrote offline could not be sent. It will be retried on the next reconnect." : `${failed.length} messages you wrote offline could not be sent. They will be retried on the next reconnect.`);
+  }, [channelId, sendMessage]);
+
   const handleSend = useCallback(async () => {
     const content = messageInput.trim(); if (!content && !pendingAttachments.length) return;
-    const attachments = [...pendingAttachments], entities = [...pendingEntitiesRef.current]; const replyToId = replyTo?.id;
+    const attachments = [...pendingAttachments], entities = [...pendingEntitiesRef.current]; const replyToMessage = replyTo; const replyToId = replyTo?.id;
     const metadata = entities.length ? { entities } : undefined;
-    const mentionedUserIds = [...new Set([...pendingMentionsRef.current].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
+    const mentions = new Map(pendingMentionsRef.current);
+    const mentionedUserIds = [...new Set([...mentions].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
     setMessageInput(""); localStorage.removeItem(draftKey); setReplyTo(null); setPendingAttachments([]); pendingEntitiesRef.current = []; pendingMentionsRef.current.clear();
     const signature = sendSignature(content, replyToId, attachments);
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
     pendingSendRef.current = { signature, clientKey };
-    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
+    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
     try { await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined }); pendingSendRef.current = null; markRead.mutate({ channelId }); scrollToBottom("smooth"); }
-    catch (error) { setMessageInput(content); setPendingAttachments(attachments); toast.error(getErrorMessage(error)); }
+    catch (error) {
+      setMessageInput(content); setPendingAttachments(attachments); setReplyTo(replyToMessage); pendingEntitiesRef.current = entities; pendingMentionsRef.current = mentions;
+      toast.error(getErrorMessage(error));
+    }
   }, [messageInput, pendingAttachments, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

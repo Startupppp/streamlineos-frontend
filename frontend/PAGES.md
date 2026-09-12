@@ -4,6 +4,8 @@
 
 **How to use it:**
 
+Build-resource verification (2026-09-11): Vercel reported an OOM during production compilation, leaving `routes-manifest.json` absent. Production builds now use Webpack with a 4096 MB Node heap allowance, explicit build workers, memory optimizations, and the production compiler cache disabled. Runtime caching and minification remain enabled. An isolated full build restricted to two logical CPUs completed in 513 seconds, generated all 466 static pages and both `BUILD_ID` and `routes-manifest.json`, and had a sampled build-process-tree RSS peak of 4252 MB. Production HTTP checks returned 200 for `/signin`, `/legal/privacy`, `/legal/terms`, and all 27 referenced sign-in JS/CSS assets; static assets retained one-year immutable caching. TypeScript passed after the full build; the import-cycle check passed with 22 resolution warnings. Lint and unit tests were not run. Browser hydration and authenticated workflows were not verified because no browser was connected. Vercel redeployment remains unverified; these results do not certify individual page audits.
+
 Current local verification (2026-09-10): the final full frontend unit run passed 486 suites /
 5,123 tests, including ten cross-tab cases and Support create/edit trigger coverage. Build mutations
 now notify same-user/same-organization peer caches, including when the originating
@@ -12,7 +14,7 @@ cells, parent search and reaction controls expose accessible state/names and tou
 controls. Wiki comments distinguish read errors from empty results and support retry.
 These checks do not mark responsive or screen-reader journeys visually certified:
 the browser runtime has no connected browser. Current evidence and unresolved work:
-`architecture-refactor/prd/build.md`, `architecture-refactor/prd/documents.md` and
+`architecture-refactor/prd/build.md`, `architecture-refactor/prd/release-completion.md` and
 `architecture-refactor/prd/overall-release.md`.
 
 Build acceptance follow-up (2026-09-09): the KB isolation gap is closed (946/946 declared coverage; 469 runtime suites / 1,992 tests; two real-PostgreSQL controls). Whole OpenAPI snapshots were regenerated and committed byte-identically; 2,668/2,668 response seam calls carry parsing contracts. Exact timesheet totals remain synchronous by explicit compatibility decision, with their O(history) cost disclosed. Browser discovery still finds no connection, so loading/empty/error/retry/responsive states and current Web Vitals remain unverified. Evidence: `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/BUILD-ACCEPTANCE-FOLLOWUP-2026-09-09.md`.

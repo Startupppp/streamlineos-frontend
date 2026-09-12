@@ -58,7 +58,7 @@ function CandidateOptionButton({ candidate: c, isKept, onSelect }: CandidateOpti
         />
       )}
       <p className="text-xs text-muted-foreground mt-1">Status: {c.status}</p>
-      <p className="text-dense text-muted-foreground/70 mt-1">
+      <p className="text-dense text-muted-foreground mt-1">
         Added {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
       </p>
     </button>

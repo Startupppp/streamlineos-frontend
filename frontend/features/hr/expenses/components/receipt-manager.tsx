@@ -74,7 +74,7 @@ export function ReceiptManager({
   if (totalReceipts === 0) {
     return (
       <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-        <Upload className="w-7 text-muted-foreground/50 mb-1.5" />
+        <Upload className="w-7 text-muted-foreground mb-1.5" />
         <span className="text-sm font-medium text-foreground/70">Upload receipts</span>
         <span className="text-dense text-muted-foreground mt-0.5">
           PDF, PNG, JPG up to 10MB · max {MAX_EXPENSE_RECEIPTS} files

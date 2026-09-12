@@ -19,12 +19,23 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { PublicChannelRow } from "./public-channel-row";
 import { NewGroupDialog } from "./new-group-dialog";
+import { ChannelLoadMore } from "./channel-load-more";
 
 const PAGE_SIZE = 10;
 
 export function ChannelsDiscoveryPage() {
   const router = useRouter();
-  const { data: publicChannels, isLoading, isError, error, refetch } = usePublicChannels(true);
+  const {
+    channels: publicChannels,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasMore,
+    isTruncated,
+    isFetchingNextPage,
+    loadMore,
+  } = usePublicChannels(true);
   const joinChannel = useJoinChannel();
   const leaveChannel = useLeaveChannel();
   const [search, setSearch] = useState("");
@@ -39,7 +50,6 @@ export function ChannelsDiscoveryPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!publicChannels) return [];
     if (!search) return publicChannels;
     const q = search.toLowerCase();
     return publicChannels.filter(
@@ -54,10 +64,14 @@ export function ChannelsDiscoveryPage() {
   const rangeEnd = Math.min(filtered.length, currentPage * PAGE_SIZE + PAGE_SIZE);
 
   const handlePrevPage = useCallback(() => setPage((p) => Math.max(0, p - 1)), []);
-  const handleNextPage = useCallback(
-    () => setPage((p) => Math.min(totalPages - 1, p + 1)),
-    [totalPages],
-  );
+  const handleNextPage = useCallback(() => {
+    if (currentPage >= totalPages - 1 && hasMore) {
+      loadMore();
+      setPage((p) => p + 1);
+      return;
+    }
+    setPage((p) => Math.min(totalPages - 1, p + 1));
+  }, [currentPage, totalPages, hasMore, loadMore]);
 
   const handleJoin = useCallback(
     async (channelId: number) => {
@@ -138,8 +152,8 @@ export function ChannelsDiscoveryPage() {
             ))}
           </div>
         ) : isError ? (
-          <ErrorState className="flex-1" title="Couldn't load channels" description={getErrorMessage(error)} onRetry={() => void refetch()} />
-        ) : filtered.length === 0 ? (
+          <ErrorState className="flex-1" title="Couldn't load channels" description={getErrorMessage(error)} onRetry={refetch} />
+        ) : filtered.length === 0 && !hasMore ? (
           <EmptyState
             illustrationPreset={search ? "search" : "chat"}
             title={search ? "No channels match your search" : "No public channels yet"}
@@ -170,9 +184,20 @@ export function ChannelsDiscoveryPage() {
               ))}
             </div>
 
+            <ChannelLoadMore
+              hasMore={hasMore}
+              isTruncated={isTruncated}
+              isLoading={isFetchingNextPage}
+              onLoadMore={loadMore}
+              label="Load more channels"
+              truncatedHint="Search by name to reach the rest."
+              className="mt-3"
+            />
+
             <div className="flex items-center justify-end gap-3 mt-4 text-xs text-muted-foreground">
               <span>
                 {rangeStart}-{rangeEnd} / {filtered.length}
+                {hasMore ? "+" : ""}
               </span>
               <div className="flex items-center gap-1">
                 <AnimatedIconButton
@@ -194,7 +219,7 @@ export function ChannelsDiscoveryPage() {
                   size="icon"
                   className="w-7"
                   onClick={handleNextPage}
-                  disabled={currentPage >= totalPages - 1}
+                  disabled={currentPage >= totalPages - 1 && !hasMore}
                   aria-label="Next page"
                 />
               </div>

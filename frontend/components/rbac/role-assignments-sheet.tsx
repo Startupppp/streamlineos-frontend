@@ -311,15 +311,16 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   </p>
                 ) : (
                   directUsers.map((member) => (
-                    <MemberRow
-                      key={member.id}
-                      name={member.name}
-                      subtitle={member.email}
-                      image={member.image}
-                      principalId={member.principalId}
-                      removing={isRemoving("user", member.principalId)}
-                      onRemove={handleRemoveUser}
-                    />
+                    <div key={member.id} role="listitem">
+                      <MemberRow
+                        name={member.name}
+                        subtitle={member.email}
+                        image={member.image}
+                        principalId={member.principalId}
+                        removing={isRemoving("user", member.principalId)}
+                        onRemove={handleRemoveUser}
+                      />
+                    </div>
                   ))
                 )}
               </div>
@@ -368,13 +369,14 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   </p>
                 ) : (
                   assignedDepartments.map((member) => (
-                    <DepartmentRow
-                      key={member.id}
-                      name={member.name ?? member.departmentName}
-                      principalId={Number(member.principalId)}
-                      removing={isRemoving("department", member.principalId)}
-                      onRemove={handleRemoveDepartment}
-                    />
+                    <div key={member.id} role="listitem">
+                      <DepartmentRow
+                        name={member.name ?? member.departmentName}
+                        principalId={Number(member.principalId)}
+                        removing={isRemoving("department", member.principalId)}
+                        onRemove={handleRemoveDepartment}
+                      />
+                    </div>
                   ))
                 )}
               </div>

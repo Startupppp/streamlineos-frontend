@@ -84,14 +84,14 @@ export const WorkItemRow = memo(function WorkItemRow({
             <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
               {item.projectKey}
             </span>
-            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground">·</span>
             <span
               className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
               title={item.projectName}
             >
               {item.projectName}
             </span>
-            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground">·</span>
             <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
           </div>
         </div>

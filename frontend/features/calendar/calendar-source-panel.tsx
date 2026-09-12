@@ -11,7 +11,9 @@ import {
   ResponsivePopoverTrigger,
   ResponsivePopoverContent,
 } from "@/components/ui/responsive-popover";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import {
   useCalendarSources,
   useSetCalendarSourcePreference,
@@ -45,13 +47,30 @@ function SourceRow({ source, isPending, onToggle }: SourceRowProps) {
 
 interface SourceFailureBannerProps {
   failures: ReadonlyArray<{ key: string; label: string }>;
+  className?: string;
 }
 
-function SourceFailureBanner({ failures }: SourceFailureBannerProps) {
+/**
+ * A partially failed aggregate renders as a calendar quietly missing one
+ * source's events — the surviving sources still draw, so nothing on screen is
+ * broken enough to notice. The banner therefore has to be reachable without
+ * opening the Sources popover; `CalendarToolbar` renders it on the surface and
+ * the popover keeps a copy beside the toggles that explain it.
+ */
+export function SourceFailureBanner({
+  failures,
+  className,
+}: SourceFailureBannerProps) {
   if (failures.length === 0) return null;
 
   return (
-    <div className="mb-2 flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2">
+    <div
+      role="status"
+      className={cn(
+        "flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2",
+        className,
+      )}
+    >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink-strong" />
       <p className="text-dense text-status-warning-ink-strong">
         Some events could not be loaded:{" "}
@@ -106,7 +125,7 @@ export function CalendarSourcePanel({ failures = [] }: CalendarSourcePanelProps)
       >
         <p className="mb-2 text-xs font-semibold text-foreground">Event sources</p>
 
-        <SourceFailureBanner failures={failures} />
+        <SourceFailureBanner failures={failures} className="mb-2" />
 
         {isLoading ? (
           <div className="flex flex-1 min-h-0 flex-col gap-2">
@@ -114,32 +133,34 @@ export function CalendarSourcePanel({ failures = [] }: CalendarSourcePanelProps)
             <Skeleton className="h-8 w-full rounded-md" />
             <Skeleton className="h-8 w-full rounded-md" />
           </div>
-        ) : isError ? (
-          <div className="flex min-h-[8rem] flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-destructive/30 bg-destructive/5 px-4 py-6">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <p className="text-center text-xs text-muted-foreground">
-              {getErrorMessage(error)}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={handleRetry}
-            >
-              Try again
-            </Button>
-          </div>
         ) : sources && sources.length > 0 ? (
-          <div className="flex flex-1 min-h-0 flex-col gap-0.5">
-            {sources.map((source) => (
-              <SourceRow
-                key={source.key}
-                source={source}
-                isPending={setPreference.isPending}
-                onToggle={handleToggle}
+          <div className="flex flex-1 min-h-0 flex-col gap-2">
+            {isError ? (
+              <ErrorState
+                compact
+                title="Source list is out of date"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
               />
-            ))}
+            ) : null}
+            <div className="flex flex-col gap-0.5">
+              {sources.map((source) => (
+                <SourceRow
+                  key={source.key}
+                  source={source}
+                  isPending={setPreference.isPending}
+                  onToggle={handleToggle}
+                />
+              ))}
+            </div>
           </div>
+        ) : isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load event sources"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : (
           <div className="flex min-h-[6rem] flex-1 items-center justify-center">
             <p className="text-xs text-muted-foreground">No sources available.</p>

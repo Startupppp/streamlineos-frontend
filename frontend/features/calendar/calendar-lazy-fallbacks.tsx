@@ -1,19 +1,14 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, isToday, isTomorrow } from "date-fns";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
+import { EVENT_COLORS } from "./calendar-event-constants";
 
-function agendaDate(start: string): string {
-  const d = new Date(start);
-  if (isToday(d)) return "Today";
-  if (isTomorrow(d)) return "Tomorrow";
-  return format(d, "EEE, MMM d");
-}
-
-function agendaTime(start: string, allDay: boolean | undefined): string {
-  if (allDay) return "All day";
-  return format(new Date(start), "h:mm a");
+function agendaWhen(event: CalendarListItem): string {
+  if (event.allDay)
+    return `${formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
+  return formatEventTimeRange(event.start, event.end, event.timezone);
 }
 
 export function CalendarAgendaPreview({
@@ -48,8 +43,7 @@ export function CalendarAgendaPreview({
           <div
             className="mt-1 h-2 w-2 shrink-0 rounded-full"
             style={{
-              backgroundColor:
-                typeof event.color === "string" ? event.color : "#6366f1",
+              backgroundColor: EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue,
             }}
           />
           <div className="min-w-0 flex-1">
@@ -57,7 +51,7 @@ export function CalendarAgendaPreview({
               {event.title}
             </p>
             <p className="text-xs text-muted-foreground">
-              {agendaDate(event.start)} · {agendaTime(event.start, event.allDay)}
+              {agendaWhen(event)}
             </p>
           </div>
         </div>

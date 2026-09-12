@@ -173,7 +173,7 @@ export function BlogAdminCategories() {
 
   const emptyState = (
     <EmptyState
-      illustration={<Tag className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />}
+      illustration={<Tag className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
       title="No categories"
       description="Create a category to organise your blog posts."
       action={canManage ? { label: "Add category", onClick: () => setCreateOpen(true) } : undefined}

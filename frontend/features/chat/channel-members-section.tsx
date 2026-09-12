@@ -155,7 +155,7 @@ export function ChannelMembersSection({
 
       {offlineMembers.length > 0 && (
         <div>
-          <p className="text-micro font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
+          <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider px-2 mb-1">
             Offline — {offlineMembers.length}
           </p>
           <div role="list" aria-label="Offline members" className="space-y-0.5">

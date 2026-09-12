@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
+import { usePermissionGate } from "@/hooks/api/access";
 import { workersListKey } from "@/lib/query-keys/directory-workers-list";
 import type { Worker, WorkersPage } from "@/types/directory/workers";
 import { WorkersPage as WorkersPageComponent } from "./workers-page";
@@ -29,6 +30,12 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  usePermissionGate: jest.fn((permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
 }));
 
 jest.mock("@/lib/api-client", () => ({
@@ -89,6 +96,14 @@ function Wrapper({
 describe("WorkersPage server-prefetch seam", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (usePermissionGate as jest.Mock).mockImplementation(
+      (permission: string) => ({
+        permission,
+        allowed: true,
+        denied: false,
+        pending: false,
+      }),
+    );
   });
 
   it("renders rows from the hydrated cache and makes no API call", () => {
@@ -123,5 +138,49 @@ describe("WorkersPage server-prefetch seam", () => {
       expect.any(AbortSignal),
       expect.anything(),
     );
+  });
+
+  it("shows a denied state rather than an empty workforce, and sends no request", () => {
+    (usePermissionGate as jest.Mock).mockImplementation(
+      (permission: string) => ({
+        permission,
+        allowed: false,
+        denied: true,
+        pending: false,
+      }),
+    );
+    const client = new QueryClient();
+
+    render(
+      <Wrapper client={client}>
+        <WorkersPageComponent />
+      </Wrapper>,
+    );
+
+    expect(screen.getByText("Workforce unavailable")).toBeInTheDocument();
+    expect(screen.getByText("directory:workers:view")).toBeInTheDocument();
+    expect(screen.queryByText("No workers yet")).not.toBeInTheDocument();
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
+  it("shows a skeleton, never a denial, while the access snapshot is pending", () => {
+    (usePermissionGate as jest.Mock).mockImplementation(
+      (permission: string) => ({
+        permission,
+        allowed: false,
+        denied: false,
+        pending: true,
+      }),
+    );
+    const client = new QueryClient();
+
+    render(
+      <Wrapper client={client}>
+        <WorkersPageComponent />
+      </Wrapper>,
+    );
+
+    expect(screen.queryByText("Workforce unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByText("No workers yet")).not.toBeInTheDocument();
   });
 });

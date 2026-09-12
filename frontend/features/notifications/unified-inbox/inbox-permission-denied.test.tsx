@@ -34,6 +34,10 @@ jest.mock("@/hooks/api/notifications-inbox", () => {
   };
 });
 
+jest.mock("@/hooks/api/notifications-broadcasts", () => ({
+  useDismissBroadcast: () => ({ mutate: jest.fn() }),
+}));
+
 jest.mock("@/hooks/api/inbox", () => ({
   useUnifiedInbox: () => ({
     data: {
@@ -75,20 +79,26 @@ const MAIL_DENIED: InboxSourceStatus = {
   kind: "mail",
   included: false,
   reason: "no permission: mail:inbox:view",
+  available: true,
+  error: null,
 };
 const MAIL_ALLOWED: InboxSourceStatus = {
   kind: "mail",
   included: true,
   reason: null,
+  available: true,
+  error: null,
 };
 const APPROVALS_DENIED: InboxSourceStatus = {
   kind: "build_approval",
   included: false,
   reason: "no permission: build:approvals:view",
+  available: true,
+  error: null,
 };
 
 async function selectView(label: string) {
-  await userEvent.click(screen.getByRole("button", { name: label }));
+  await userEvent.click(screen.getByRole("tab", { name: label }));
 }
 
 beforeEach(() => {

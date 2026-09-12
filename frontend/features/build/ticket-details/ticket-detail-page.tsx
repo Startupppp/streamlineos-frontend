@@ -222,7 +222,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           </span>
           {ticket.parentTicketId != null ? (
             <>
-              <span className="shrink-0 text-muted-foreground/40" aria-hidden>
+              <span className="shrink-0 text-muted-foreground" aria-hidden>
                 ·
               </span>
               <TicketParentControl

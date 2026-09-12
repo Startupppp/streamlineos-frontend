@@ -227,7 +227,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               </Avatar>
             ) : (
               <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-muted-foreground/60 transition-colors">
-                <User className="h-2.5 w-2.5 text-muted-foreground/60" />
+                <User className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
             )}
           </button>

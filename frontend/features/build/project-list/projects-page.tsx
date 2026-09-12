@@ -423,20 +423,18 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
               }
             />
           ) : viewMode === "grid" ? (
-            <div role="list" aria-label="Projects grid">
-              <PmStaggerList className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleProjects.map((project) => (
-                  <motion.div
-                    key={project.id}
-                    variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
-                    className="h-full"
-                    role="presentation"
-                  >
-                    <ProjectCard project={project} />
-                  </motion.div>
-                ))}
-              </PmStaggerList>
-            </div>
+            <PmStaggerList className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3" role="list" aria-label="Projects grid">
+              {visibleProjects.map((project) => (
+                <motion.div
+                  key={project.id}
+                  variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
+                  className="h-full"
+                  role="listitem"
+                >
+                  <ProjectCard project={project} />
+                </motion.div>
+              ))}
+            </PmStaggerList>
           ) : (
             <div className="flex min-h-0 flex-1 gap-3">
               <div className="flex min-w-0 flex-1 flex-col">

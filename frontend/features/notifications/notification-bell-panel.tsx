@@ -83,7 +83,7 @@ function NotificationItem({
                 : "font-semibold text-foreground",
             )}
           />
-          <span className="shrink-0 text-dense text-muted-foreground/50">
+          <span className="shrink-0 text-dense text-muted-foreground">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>
@@ -175,7 +175,7 @@ export function NotificationBellPanel({
           <PanelSkeleton />
         ) : isError ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            <Inbox className="mb-2 w-8 text-muted-foreground/30" />
+            <Inbox className="mb-2 w-8 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">
               Couldn&apos;t load notifications
             </p>
@@ -189,7 +189,7 @@ export function NotificationBellPanel({
           </div>
         ) : recentNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            <Inbox className="mb-2 w-8 text-muted-foreground/30" />
+            <Inbox className="mb-2 w-8 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">
               You&apos;re all caught up
             </p>

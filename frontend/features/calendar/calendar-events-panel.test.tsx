@@ -8,6 +8,7 @@ jest.mock("react-window", () => ({
       <div data-testid="virtual-list" data-row-count={String(rowCount)} />
     ),
   ),
+  useDynamicRowHeight: jest.requireActual("react-window").useDynamicRowHeight,
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({

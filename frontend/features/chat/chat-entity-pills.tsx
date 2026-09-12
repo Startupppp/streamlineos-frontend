@@ -35,7 +35,7 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
 function UnresolvedPill({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-dense text-muted-foreground">
-      <Lock className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+      <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
       {label}
     </span>
   );
@@ -121,7 +121,7 @@ export function TicketPill({
           className="flex items-center gap-1.5 font-mono text-dense text-muted-foreground hover:text-foreground"
           aria-label={`Open ${ticketKey}`}
         >
-          <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+          <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" />
           {ticketKey}
         </button>
       </div>
@@ -136,7 +136,7 @@ export function TicketPill({
         className="flex items-center gap-1 font-mono text-dense text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Open ticket ${ticketKey}`}
       >
-        <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+        <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" />
         {ticketKey}
       </button>
       {ticketTitle && (

@@ -118,7 +118,7 @@ describe("backendJwtStore session isolation", () => {
     setBackendJwtInStore(`${UID}:${SID_A}:${ORG}`, jwtA);
     setBackendJwtInStore(`${UID}:${SID_B}:${ORG}`, jwtB);
 
-    invalidateBackendJwtSession(UID, SID_A, ORG);
+    invalidateBackendJwtSession(UID, SID_A);
 
     expect(getBackendJwtFromStore(`${UID}:${SID_A}:${ORG}`)).toBeNull();
 
@@ -132,7 +132,7 @@ describe("backendJwtStore session isolation", () => {
     const jwtA = await makeBackendJwt(SID_A, UID, ORG);
     setBackendJwtInStore(`${UID}:${SID_A}:${ORG}`, jwtA);
 
-    invalidateBackendJwtSession(UID, SID_A, ORG);
+    invalidateBackendJwtSession(UID, SID_A);
 
     const SID_NEW = "session-new-999";
     const jwtNew = await makeBackendJwt(SID_NEW, UID, ORG);
@@ -184,11 +184,44 @@ describe("backendJwtStore session isolation", () => {
     setBackendJwtInStore(`${UID}:${SID_B}:${ORG}`, jwtB);
     setBackendJwtInStore(`${UID}:${SID_C}:${ORG}`, jwtC);
 
-    invalidateBackendJwtSession(UID, SID_B, ORG);
+    invalidateBackendJwtSession(UID, SID_B);
 
     expect(getBackendJwtFromStore(`${UID}:${SID_A}:${ORG}`)).toBe(jwtA);
     expect(getBackendJwtFromStore(`${UID}:${SID_B}:${ORG}`)).toBeNull();
     expect(getBackendJwtFromStore(`${UID}:${SID_C}:${ORG}`)).toBe(jwtC);
+  });
+
+  test("invalidating a session evicts every org that session minted for, and only that session", async () => {
+    const ORG_A = "org-aaa-111";
+    const ORG_B = "org-bbb-222";
+    const OTHER_UID = "user-zzz-999";
+
+    setBackendJwtInStore(`${UID}:${SID_A}:${ORG_A}`, await makeBackendJwt(SID_A, UID, ORG_A));
+    setBackendJwtInStore(`${UID}:${SID_A}:${ORG_B}`, await makeBackendJwt(SID_A, UID, ORG_B));
+    setBackendJwtInStore(`${UID}:${SID_A}:`, await makeBackendJwt(SID_A, UID, null));
+    setBackendJwtInStore(`${UID}:${SID_B}:${ORG_A}`, await makeBackendJwt(SID_B, UID, ORG_A));
+    setBackendJwtInStore(`${OTHER_UID}:${SID_A}:${ORG_A}`, await makeBackendJwt(SID_A, OTHER_UID, ORG_A));
+
+    invalidateBackendJwtSession(UID, SID_A);
+
+    expect(getBackendJwtFromStore(`${UID}:${SID_A}:${ORG_A}`)).toBeNull();
+    expect(getBackendJwtFromStore(`${UID}:${SID_A}:${ORG_B}`)).toBeNull();
+    expect(getBackendJwtFromStore(`${UID}:${SID_A}:`)).toBeNull();
+    expect(getBackendJwtFromStore(`${UID}:${SID_B}:${ORG_A}`)).not.toBeNull();
+    expect(getBackendJwtFromStore(`${OTHER_UID}:${SID_A}:${ORG_A}`)).not.toBeNull();
+  });
+
+  test("(negative) a session id that is a prefix of another does not evict its neighbour", async () => {
+    const SHORT = "session-aaa";
+    const LONGER = "session-aaa-extended";
+
+    setBackendJwtInStore(`${UID}:${SHORT}:${ORG}`, await makeBackendJwt(SHORT, UID, ORG));
+    setBackendJwtInStore(`${UID}:${LONGER}:${ORG}`, await makeBackendJwt(LONGER, UID, ORG));
+
+    invalidateBackendJwtSession(UID, SHORT);
+
+    expect(getBackendJwtFromStore(`${UID}:${SHORT}:${ORG}`)).toBeNull();
+    expect(getBackendJwtFromStore(`${UID}:${LONGER}:${ORG}`)).not.toBeNull();
   });
 });
 
