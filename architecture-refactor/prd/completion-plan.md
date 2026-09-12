@@ -126,6 +126,9 @@ Preserve repaired identity claim/session fences, truthful setup readiness/savepo
 
 # S1 — Identity and organization setup
 
+Owner: S1
+Maps to: PRD-C004, PRD-C111, PRD-C112
+
 Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache remains user+device+org, bounded by token expiry and size; backend revocation is authoritative. Setup readiness requires active owner, target organization, stamp, latest allowed subscription (TRIAL/ACTIVE/PAST_DUE) and enabled catalog-active module. Optional enrichment uses durable retries/savepoints and cannot delay first usable entry or erase successful recipients. Wrong-cell/unverifiable membership is not an orphan.
 
 ## Authoritative remaining work
@@ -197,6 +200,9 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   Retain failed/timeout samples, explain attribution, fix demonstrated bottleneck and rerun it.
 
 # S1 — People, invitations and employee admission
+
+Owner: S1
+Maps to: PRD-C004, PRD-C118, PRD-C119
 
 Owner S1; S2 owns quota/RBAC definitions; S0 reserves shared models/contracts/migrations.
 
@@ -351,6 +357,9 @@ C8 migration safeguards: preserve 1109 and preflight-hr-module-org-admin-revocat
 
 # S2 — Billing
 
+Owner: S2
+Maps to: PRD-C125
+
 Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. Read existing ADRs 0004–0006 when changing merchant, access or payment policy. An active organization owner/admin purchases through StreamlineOS platform merchant configuration; tenant customer collection is separate and the buyer needs no merchant credentials. Module owner/admin/member alone is not billing authority. The PayPal mention was a typo.
 
 ## Executable checklist
@@ -389,6 +398,9 @@ Historical billing baseline (not current capacity/SLA): September 12 local PG18.
 
 # S2 — RBAC and tenant integrity
 
+Owner: S2
+Maps to: PRD-C003, PRD-C004, PRD-C081, PRD-C082, PRD-C113, PRD-C114
+
 Owner S2; reserve shared auth/access/schema/journal changes with S0. Source anchors: backend/src/modules/access/{authorize,access-permission.resolver,access-permission-members.resolver,access-explain.resolver}.ts, backend/src/common/rbac/resolve-actor-rank.ts, modules/module-access/** and frontend/lib/rbac/**. Resolve shorthand to actual paths before running commands.
 
 | Authority layer | Contract |
@@ -415,13 +427,13 @@ Status: IMPLEMENTED—VERIFICATION-PENDING. Owner: access agent.
 Status: REPAIR-THEN-FINAL-INTEGRATION. Maps to PRD-C043, PRD-C044, PRD-C045, PRD-C046.
 Owner: security release agent, with S0-reserved migration/gate changes. Depends on CHAT-002 and RBAC-004 for final aggregation; prerequisite repair can proceed now.
 
-- [ ] Resolve the journal's authoritative-versus-repair ordering/shape defect safely. Current migration-integrity.spec.ts fails at line 351: 0464a_gl_kernel index 717 follows repair 0619 index 340. The repair's gl_currencies lacks the authoritative primary key/CHECKs. Preserve sealed hashes, already-applied installations and full cold-build semantics; blanket IF NOT EXISTS or dropping depended-on constraints is not a repair. Migration owner must prove cold replay and upgrade convergence including keys, checks and seeds.
+- [ ] Resolve the journal's authoritative-versus-repair ordering/shape defect safely. Current migration-integrity.spec.ts fails at line 351: 0464a_gl_kernel index 717 follows repair 0619 index 340. The repair's gl_currencies lacks the authoritative primary key/CHECKs. Preserve sealed hashes, current data and full cold-build semantics; blanket IF NOT EXISTS or dropping depended-on constraints is not a repair. Migration owner must prove cold replay/catalog parity including keys, checks and seeds; require legacy-upgrade proof only when the explicit migration-scope decision below requires it.
 - [ ] Reconcile tenant-gate ledger validation against journal content, hashes and expected objects rather than row count alone. Current check-tenant-relationships.mjs still counts ledger rows; historical renumbering produced 867/870 despite reported matching contents. Include genuine missing/wrong/duplicate migration negative controls so a hash-based change cannot hide drift. Do not insert fictitious ledger rows.
 - [ ] Verify safe diagnostic target selection: current check-tenant-relationships.mjs skips dotenv when an explicit target is already supplied, so the old unconditional-load finding is partially fixed. It still falls back to backend .env when no target resolves. Use an explicit named disposable target and prove missing-target/remote-target refusal without exposing credentials; require missing/unidentified targets to fail before loading production defaults; preserve the explicitly identified disposable path.
 Reproduction entry points: backend/src/modules/billing/payments/payment-provider-resolver-tenant-isolation.spec.ts, backend/src/modules/billing/payments/payment-readiness-tenant-isolation.spec.ts and backend/src/modules/cron/cron-group-a-tenant-isolation.spec.ts. Inspect their isolation/config before using local Jest --runInBand --runTestsByPath; capture exit and failing assertions.
 
 - [ ] Resolve current payment-resolver transaction-boundary failures and reverify the reported cron-group-a failures. Today's isolated resolver/readiness run: **1 suite failed / 1 passed; 2 tests failed / 2 passed, exit 1**. The two resolver controls expect runInNewTenantTransaction and receive zero calls; readiness passes. Prior narrative calls failures merge fallout; that is not a passing check or proof the ambient/RLS contract is unnecessary. Trace HTTP and background callers before changing expectations. Preserve meaningful tenant predicates and real app-role GUC assertions. The combined cron probe's result was not captured; cron remains unverified in this recheck.
-- [ ] Inventory current app-role table/sequence privileges after cold replay and upgrade. Billing history recorded 21 unprivileged tables; do not assume a later blanket grant fixed future objects. Keep sensitive/operator data restricted and assign each missing privilege to its owning lane.
+- [ ] Inventory current app-role table/sequence privileges after cold replay and any explicitly supported upgrade. Billing history recorded 21 unprivileged tables; do not assume a later blanket grant fixed future objects. Keep sensitive/operator data restricted and assign each missing privilege to its owning lane.
 - [ ] Execute permission/scope/record/navigation/route/index/migration/tenant checks, cross-tenant negatives and app-role RLS/FK probes at the final backend revision. Record commands, statuses, principals, objects and actual artifacts. Prior single-FK 23503 proof used a bypass-RLS owner and cannot stand in for RLS or a full sweep.
 
 Migration invariants for RBAC-001/REL-001: preserve 1090 application-role table/sequence grants; 1110 nullable provider_order_id with retained uniqueness and pending-null index; 1085 saga org_id column/backfill/trigger/schema/writer convergence. A coupon with org_id NULL is a platform promotion: a blanket composite tenant FK would reject valid purchases. Keep only the named coupon-constraint exception and prove service-binding cross-tenant negatives.
@@ -441,6 +453,9 @@ Status: IMPLEMENTED—FINAL-INTEGRATION. Maps to PRD-C043, PRD-C044, PRD-C045, P
 - Acceptance retained: same-org non-Support rules cannot be read/updated/deleted/tested via Support; ticket.* trigger ownership is immutable across module boundaries; manual Support actions validate/scoped-resolve their positive safe-integer ticket; legitimate Support and generic automation remain working. Prior **8 backend suites/115 tests** and **1 frontend suite/2 tests**, rerun backend as 71+44, are recorded proof not today's rerun.
 
 # S3 — Inbox, notifications, calendar and chat
+
+Owner: S3
+Maps to: PRD-C008, PRD-C127, PRD-C128, PRD-C129, PRD-C130, PRD-C131, PRD-C132
 
 S3 owns feature/services and acceptance; S0/S4 own shared shell/tokens, S2/schema migration grants, S5 authorized provider proof. Universal availability never grants another recipient's, mailbox's, private event's or channel's records. Preserve existing source adapters, authorization, Query factories, durable jobs and realtime seams.
 
@@ -555,6 +570,9 @@ semantics and comparing actual plans. Do not add new caching simply because read
 
 # S4 — Frontend data, caching and shared UI
 
+Owner: S4
+Maps to: PRD-C005, PRD-C006, PRD-C007, PRD-C009, PRD-C065, PRD-C066, PRD-C067, PRD-C068, PRD-C069, PRD-C070, PRD-C071, PRD-C072, PRD-C073, PRD-C074, PRD-C075, PRD-C076, PRD-C077, PRD-C078, PRD-C079, PRD-C080, PRD-C083, PRD-C084, PRD-C085, PRD-C086, PRD-C087, PRD-C088, PRD-C089, PRD-C090, PRD-C091, PRD-C092, PRD-C093, PRD-C094, PRD-C095, PRD-C096, PRD-C097, PRD-C098, PRD-C099, PRD-C100, PRD-C101, PRD-C137, PRD-C138, PRD-C139, PRD-C140, PRD-C141, PRD-C142, PRD-C143, PRD-C144, PRD-C145, PRD-C146, PRD-C147, PRD-C148, PRD-C149, PRD-C150, PRD-C151
+
 S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-query-client, navigation, next.config, tsconfigs and generated artifacts. One domain owns each query and its writers; do not create a new global cache engine.
 
 ## Remaining assignment
@@ -625,6 +643,9 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
 
 # S4 — Build
 
+Owner: S4
+Maps to: PRD-C123, PRD-C149, PRD-C150
+
 S4 owns existing Build flows; S0 integrates. Preserve existing cross-tab invalidation, retry-vs-404 handling, link repairs and markup fixes. Product and project remain distinct.
 
 ## BUILD-002 — Complete browser acceptance matrix
@@ -672,6 +693,9 @@ all blocking defects fixed and independently rechecked. No environment or
 production operation is authorized merely by this task.
 
 # S4/S5 — Architecture and Documents
+
+Owner: S4/S5
+Maps to: PRD-C001, PRD-C011, PRD-C012, PRD-C013, PRD-C015, PRD-C018, PRD-C022, PRD-C023, PRD-C024, PRD-C025, PRD-C026, PRD-C027, PRD-C028, PRD-C029, PRD-C030, PRD-C031, PRD-C032, PRD-C033, PRD-C034, PRD-C035, PRD-C036, PRD-C037, PRD-C038, PRD-C039, PRD-C040, PRD-C041, PRD-C042, PRD-C043, PRD-C044, PRD-C045, PRD-C046, PRD-C047, PRD-C048, PRD-C049, PRD-C050, PRD-C051, PRD-C052, PRD-C053, PRD-C054, PRD-C055, PRD-C056, PRD-C057, PRD-C058, PRD-C059, PRD-C060, PRD-C061, PRD-C062, PRD-C063, PRD-C064, PRD-C104, PRD-C105, PRD-C106, PRD-C107, PRD-C108, PRD-C109, PRD-C110, PRD-C133, PRD-C134, PRD-C135
 
 S4 owns ARCH, S5 owns DOC, S0 integrates. Preserve existing HR keyset, benchmark failure-exit, KB and e-sign repairs. Existing KB/e-sign certification records remain qualified historical evidence, not present-day browser/DB/provider passes.
 
@@ -757,6 +781,9 @@ hashes or treating an existing object as a passing migration.
 
 # S5 — Operations and approvals
 
+Owner: S5
+Maps to: PRD-C002, PRD-C010, PRD-C014, PRD-C019, PRD-C021, PRD-C102, PRD-C103, PRD-C115, PRD-C116, PRD-C117, PRD-C120, PRD-C121, PRD-C122, PRD-C124, PRD-C126, PRD-C136, PRD-C140, PRD-C141, PRD-C142, PRD-C143, PRD-C144, PRD-C145, PRD-C146, PRD-C147, PRD-C148, PRD-C149, PRD-C150, PRD-C151, PRD-C152, PRD-C153, PRD-C154, PRD-C155, PRD-C156, PRD-C157, PRD-C158, PRD-C159, PRD-C160, PRD-C161, PRD-C162, PRD-C163, PRD-C164, PRD-C165, PRD-C166, PRD-C167, PRD-C168, PRD-C169, PRD-C170, PRD-C171, PRD-C172, PRD-C173, PRD-C174, PRD-C175, PRD-C176, PRD-C177, PRD-C178, PRD-C179, PRD-C180, PRD-C181, PRD-C182, PRD-C183, PRD-C184, PRD-C185, PRD-C186, PRD-C187, PRD-C188, PRD-C189
+
 Local preparation is actionable; actual external actions require identified authorized test targets. Resolve existing policy from runbooks before asking a human. Credentials remain in the secret store, never chat or Markdown.
 
 - [ ] **OPS-001 — Provider failure/recovery.** Inventory release providers (payments, Ably, mail, storage/search, queues), prepare bounded synthetic drills and execute only on authorized targets. Prove detection, bounded retry, reconciliation, recovery and customer impact with timestamps. Coordinate domain tasks; do not repeat the same drill under multiple IDs.
@@ -764,7 +791,42 @@ Local preparation is actionable; actual external actions require identified auth
 - [ ] **OPS-003 — Recovery/privacy.** Prove rollback, restore/PITR, retention, legal hold, erasure and break-glass on an identified disposable/authorized target. Compare measured recovery to existing RTO/RPO and privacy policy; a genuinely missing policy requires its accountable owner. Preserve evidence and assign residual risks.
 - [ ] **OPS-004 — Actual approvals.** After OPS-001–003 and BILL-001, obtain named security/privacy/legal-provider/Finance/release decisions with timestamp, scope, exceptions and expiry/follow-up. BILL-002 references the same Finance decision. An agent cannot sign on a human's behalf.
 
+## Additional release work recovered from older TODOs
+
+These requirements were found outside prd/. They remain part of this single checklist; do not execute the old reports as separate assignments. Local safety repairs below are actionable before deployed credentials arrive. S0 schedules confirmed security/privacy/payment/lease defects ahead of cosmetic work.
+
+- [ ] **OPS-DEPLOY — Lease fencing and actual rollout safety (PRD-C176/C177).** S5 with S0; source anchors backend/src/common/workflow/workflow-store.ts:128, common/placement/canary-rollout.ts:40 and src/scripts/run-cell-rollout.ts:53. Reproduce a step outliving its lease and a successor claiming the run; fence every terminal/retry/suspend/dead-letter write against the actual lease/claim token so the former worker updates zero rows. Preserve existing outbox fencing and real lease-recovery proof. Replace hardcoded schema/event version 1 with authoritative compatibility evidence and wire the existing check to the actual rollout entry point. Reconcile unused feature_flags governance versus working autonomy switches and boot-only worker flags; do not invent another flag engine or label restart-only controls incident-time switches. Extend the existing release runbook with rolling N/N−1 deployment, at least 30-minute canary/abort, kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and autoscaling tests. Prove no duplicated/lost work at deployed artifacts; local probes do not certify an actual rollout. R1–R6 from the former unsigned deploy form are owned here, with actual operator/engineering/release decisions under OPS-004.
+
+- [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Read existing retention/data-catalogue policies and approved inputs before proposing new durations.
+
+- [ ] **OPS-OPERATOR — Platform access and immutable audit (PRD-C180/C181).** S2 implements under S0 reservation; S5 proves deployed behavior. Trace modules/platform/platform-operator-access.controller.ts:58 and platform-operator-access.service.ts:108 at the actual guard/service boundary. Verify eligibility is the approved distinct platform population rather than tenant owner/admin plus a shared secret; enforce requester/approver/beneficiary separation, scoped short expiry, revocation and concurrent-approval controls. Verify organization owner/admin notification and denied-attempt audit, not only operator notification; audit failure must not silently grant access. Beneficiary self-approval refusal and migration1069 already exist—preserve them. Test migration1111 regranting UPDATE/DELETE against operator_access_log privileges and append-only triggers, including future objects. Direct HTTP/jobs and cross-tenant, wrong-scope, revoked/expired principal negatives are required.
+
+- [ ] **OPS-OBSERVABILITY — Meaningful inputs and real alerts (PRD-C173/C174/C178).** S5 extends OPS-002. backend/src/scripts/alert-tenant-ctx-errors.mjs must distinguish empty/malformed/no-relevant-event input from healthy measured traffic; add bite tests, do not report clear from no signal. Verify check-alert-system.mjs coverage for workflow-stranded and retention-dead-man; the latter script and alert-dispatch registration already exist. Bind APP_RELEASE/CELL_ID to the actual API and workers, configure logs/traces/collector with tested redaction, and prove heartbeat/dead-letter/detection/recovery. Confirm provider-specific alert payload shape and supported routing credentials before an authorized send. Real acknowledgement needs channel receipt and an accountable person; reading the nonce from terminal output is not channel-delivery proof. Preserve the sealed RB06 attestation as evidence, never copy its synthetic ACK fixture as a real ACK. Publish on-call ownership, escalation, severity, customer/status communication and post-incident review using existing procedures.
+
+- [ ] **OPS-SECURITY — Environment, edge and provider/data controls (PRD-C163/C164/C184/C185).** S2/S5. Recheck common/security/turnstile.service.ts missing-secret behavior against production policy; a deliberately no-send/local test config is not permission for production verification to fail open. Reverify current env-coverage and production dependency-vulnerability/licence gates rather than copying historical advisory counts. Preserve repaired XFF extraction, Ably CSP and powered-by behavior. At authorized deployed endpoints prove TLS/headers/CORS/CSP/request limits/WAF/rate limits and malicious-traffic negatives; prove encryption at rest, per-environment/cell secret isolation, key ownership and rotation/revocation. Validate every owner/app/regional DB URL and API destination before tests or background workers—not only DATABASE_URL. Complete the data catalogue's purpose/lawful basis/subjects/processors/region/retention/owner/deletion fields for current in-scope data. Review AI/free-text flows and Indian identifiers against modules/ai/core/redaction.util.ts and the approved provider policy. Preserve P16 Google Meet/Composio approval requirements; retired TURN/STUN work stays excluded. Reuse approved owner code defaults; actual deployed/legal/provider scope still needs its accountable decision.
+
+- [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run the existing 14 workload objectives under sustained/burst production-shaped load; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use current RB07 collector/runbook sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
+
+- [ ] **OPS-BACKUP — Complete restore, replica and recovery proof (PRD-C170/C171/C179).** S5 extends OPS-003. Verify five-minute-or-better PITR/RPO requirement against the recorded six-hour backup cadence; distinguish logical NDJSON data extraction from complete schema/ledger/restore. Fix cell-backup.mjs prerequisite parsing so --self-test is isolated while real execution still refuses missing/unsafe targets. Demonstrate encrypted/access-controlled backup, key ownership, recurring restore testing, RTO/RPO recovery and relocation, retained-subject/hold/erasure behavior on restore. Verify actual physical-replica lag, watermark privileges, fallback and routing; recheck zero-row versus 42501 isolation assertions against the real contract. Keep auth/access/financial authority on primary. A missing replica is not a primary-snapshot pass: obtain explicit release-scope/topology disposition if the intended deployment differs from the existing requirement.
+
+- [ ] **ARCH-PERF — Full in-scope performance coverage (PRD-C140–148/C151).** S4/domain owners. Preserve approved synchronous exact timesheet totals and legacy page>1 rejection; do not turn future optional pagination proposals into new mandatory features. Verify every in-scope module benchmark manifest, representative/skew dataset, bounded worker/pool behavior and authorized cache-hit/failure path. Existing targets: ordinary API p95 ≤300 ms (approved complex aggregate/search application overhead ≤800 ms, excluding provider/internet time); ordinary SQL ≤50 ms; approved complex SQL ≤200 ms; authorized cache-hit p95 ≤100 ms. Use current documented SLO exceptions, not invented thresholds. Produce statistically meaningful latency/query/buffer/payload/memory regressions and route JS/CSS/server-payload/image/font/third-party budgets. Historical timing detection was DISARMED: establish noise-aware executable acceptance rather than waive timing or reuse noisy measurements. Do not reopen the 152 redundant FKs: later evidence assigns all of them to excluded CRM/Inventory.
+
+- [ ] **AI-RELEASE — Every supported AI stream and billed effect (PRD-C152–155).** S4 frontend with S5/backend owner reserved by S0. Verify text/tool-progress dispatch, actual abort propagation, deadlines/circuit breakers, replay-safe pre-stream retries, paid-request deduplication and settlement/refund. Cover credit exhaustion, queueing, streaming, cancellation, partial/error output, citation/source integrity, provider failure and permission revocation. Measure supported newly streamed routes, not chat alone: existing target application overhead before provider dispatch p95 ≤250 ms and first visible streamed state within100 ms. Use the actual provider/transaction seam, not a source-only “streaming implemented” claim. Verify relevant focused abort tests at current source; historical flaky timings are not a new proven defect. Validate transactional email advertised locale, English fallback and template version; shared registry/wrapper and recipient migration0844 already exist. Distributed Redis circuit breakers are conditional on measured multi-node recovery need, not an unconditional rewrite.
+
+- [ ] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: PRD-IN-SCOPE §13 P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
+
+- [ ] **OPS-CATALOGUE — Resolve all in-scope catalogue decisions without policy invention.** S5 with actual approvers. Reconcile DATA-CATALOGUE §18 D1–D26 and every in-scope DECISION REQUIRED cell against existing C184/C185 records, approved H01–H17 and deferred D01–D08. Cover third-party-subject notices, device-fingerprint lawful basis/retention, sensitive HR collection/encryption/retention, model-influenced compensation human review/contest, Support versus Helpdesk retention, browser-log/screenshot sanitization/retention, subprocessor publication/change notice, in-scope webhook-secret rotation, and AI/terminal-model provider redaction/residency. Reuse answered decisions; dated legal periods are proposals, not authoritative current jurisdiction-specific advice or approved deletion policy. Keep actual Legal/privacy approval open only where missing. Old D16 missing export/object-delete/physical-purge claims have newer repairs; verify live behavior instead of recreating them.
+
+DOC-004 additional retrieval acceptance: kb-retrieval-strategy.ts already has the repaired 8,000-row threshold. Above it, supported cap120 can still choose ANN; reproduce the recorded recall-floor0.95 failure on representative embeddings/tenant sizes and supported caps. Report synthetic versus customer-representative recall separately, preserve permissions and exact-fallback behavior, and meet the existing latency/recall contract before closure.
+
+REL-001 must include current-head representative E2E for Home/Settings/Directory/Me, HRMS employee lifecycle, Payroll calculation/lock/publish/reversal/reconciliation, Workflow execution/retry/cancel, Accounting ledger/expense/reconciliation, uploads and shared adapters alongside the named foundation/communication/Build/Documents flows. Reuse valid exact-entrypoint evidence; add missing negative cases, do not infer completion from aggregate test counts. This is verification of existing in-scope products, not new feature development. Reconcile durable-rule differences (including root CLAUDE's deliberate unused-symbol/strictness deferrals) with the criterion registry explicitly; neither silently enable a repository-wide migration nor report a deferred rule as enforced.
+
+REL-001 additional integrated checks: SBOM/artifact hashes, vulnerability/licence and deployment-env gates; hosted CI execution and guarded DB suite coverage, not merely YAML presence. Preserve later BOLA/response-schema/conditional-suppression/one-attempt-payment repairs. Verify detached-worker deactivated/deleted-user/inactive-org refusal using current canonical MembershipReader, HR export liveness and workflow trigger checks; the old missing-liveness claim is source-stale. H08 private Build visibility remains approved scheduled work: record its explicit release disposition, never silently claim shipped.
+
 # S0 — Final integration and completion
+
+Owner: S0
+Maps to: PRD-C016, PRD-C017, PRD-C018, PRD-C019, PRD-C020, PRD-C021, PRD-C104, PRD-C156, PRD-C157, PRD-C158, PRD-C159, PRD-C160, PRD-C161, PRD-C190, PRD-C191, PRD-C192, PRD-C193, PRD-C194, PRD-C195
 
 ## REL-001 — Integrated revision-pair acceptance
 
@@ -773,8 +835,7 @@ Run the existing integrated gates without silently weakening them. If a gate rep
 - [ ] Resolve the current migration-integrity and payment-resolver failures through
   their S2 tasks. Preserve tenant/ambient-transaction boundaries; do not weaken tests
   just to make them pass. Reverify the reported cron-group failures with captured results.
-- [ ] Prove empty-journal replay and existing-installation upgrade convergence using
-  named disposable databases. Reconcile 0464a/0619 ordering/keys/checks/seeds, the
+- [ ] Prove two independent empty-journal bootstraps plus interrupted/resumed replay and exact catalog parity on named disposable databases. Registry C053/C159 records a recreation baseline; do not invent a legacy-watermark upgrade obligation. If a supported retained installation or a changed migration decision requires upgrade compatibility, document that scope and prove it too. Historical recreation authority does not authorize deleting today's unspecified/shared/customer database. S0 must identify the target and current explicit authority before any destructive action. Reconcile 0464a/0619 ordering/keys/checks/seeds, the
   recorded 1087 relocation-checksum policy dependency, sealed hashes, migration
   ledger content and current app-role/table/sequence/default privileges. Verify
   whether each historical defect remains before editing. Duplicate-object errors,

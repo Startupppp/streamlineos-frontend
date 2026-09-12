@@ -136,9 +136,10 @@ export function MobileShellFab({
       />
 
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Quick actions"
+        data-slot="mobile-shell-fab-sheet"
+        role={fabOpen ? "dialog" : undefined}
+        aria-modal={fabOpen ? true : undefined}
+        aria-label={fabOpen ? "Quick actions" : undefined}
         ref={sheetRef}
         inert={fabOpen ? undefined : true}
         className={cn(

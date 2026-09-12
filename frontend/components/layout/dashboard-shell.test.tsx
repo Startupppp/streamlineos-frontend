@@ -283,7 +283,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     expect(buttons.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("desktop variant on /chat still mounts the slot — the sm: breakpoint hides it, not the variant", () => {
+  it("desktop variant on /chat still mounts the slot — the md: breakpoint hides it, not the variant", () => {
     render(
       <DashboardShell
         userId="user-1"
@@ -296,7 +296,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     );
 
     expect(screen.queryByTestId("chat-mobile-nav")).not.toBeNull();
-    expect(getChatMobileBottomNavClassName()).toContain("sm:hidden");
+    expect(getChatMobileBottomNavClassName()).toContain("md:hidden");
   });
 
   it("off /chat the slot is never called, in either variant", () => {

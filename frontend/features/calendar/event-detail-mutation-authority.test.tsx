@@ -83,6 +83,7 @@ function detailFixture(overrides: Partial<CalendarEventDetail>): CalendarEventDe
     rrule: null,
     isRecurring: false,
     canManage: false,
+    localVersion: 1,
     ...overrides,
   };
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Calendar,
   dateFnsLocalizer,
@@ -21,6 +21,15 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales: { "en-IN": enIN },
 });
+
+const ORPHAN_ROLE_SELECTOR =
+  '.rbc-allday-cell[role="rowgroup"], .rbc-allday-cell [role="row"]';
+
+function normaliseOrphanVendorRoles(root: HTMLElement | null): void {
+  if (!root) return;
+  for (const node of root.querySelectorAll(ORPHAN_ROLE_SELECTOR))
+    node.setAttribute("role", "presentation");
+}
 
 export interface BigCalEvent {
   id: number | string;
@@ -75,10 +84,16 @@ export function BigCalendarWrapper({
   onSelectEvent,
   eventPropGetter,
 }: BigCalendarWrapperProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const calendarStyle =
     view === "month"
       ? { height: calHeight }
       : { height: "100%" };
+
+  useEffect(() => {
+    normaliseOrphanVendorRoles(gridRef.current);
+  }, [view, date, events]);
 
   const components = useMemo<Components>(
     () => ({
@@ -90,23 +105,25 @@ export function BigCalendarWrapper({
   );
 
   return (
-    <Calendar
-      localizer={localizer}
-      events={events}
-      date={date}
-      view={view}
-      onView={onView}
-      onNavigate={onNavigate}
-      selectable={!!onSelectSlot}
-      onSelectSlot={onSelectSlot}
-      onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
-      eventPropGetter={eventPropGetter as EventPropGetter<object>}
-      components={components}
-      toolbar={false}
-      scrollToTime={scrollToTime}
-      enableAutoScroll={enableAutoScroll}
-      style={calendarStyle}
-    />
+    <div ref={gridRef} className="contents">
+      <Calendar
+        localizer={localizer}
+        events={events}
+        date={date}
+        view={view}
+        onView={onView}
+        onNavigate={onNavigate}
+        selectable={!!onSelectSlot}
+        onSelectSlot={onSelectSlot}
+        onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
+        eventPropGetter={eventPropGetter as EventPropGetter<object>}
+        components={components}
+        toolbar={false}
+        scrollToTime={scrollToTime}
+        enableAutoScroll={enableAutoScroll}
+        style={calendarStyle}
+      />
+    </div>
   );
 }
 

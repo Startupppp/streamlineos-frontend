@@ -1,5 +1,7 @@
 # Retention Policy — StreamlineOS
 
+Reference policy/evidence. Current work: [completion-plan.md](prd/completion-plan.md), OPS-003 and OPS-PRIVACY. Dated measurements and proposed retention periods below are not new production approval; reconcile the approved decision register and enforce legal holds before destructive actions.
+
 Measured: 2026-09-01. Source: `pg_class + pg_stat_user_tables` on the live Neon instance via `src/scripts/report-table-growth.mjs`.
 
 `pg_stat_statements` is NOT installed on this Neon instance (confirmed). Slow-query identification uses application-layer span telemetry: `alert-seam-latency.mjs` (seam budgets), `alert-p95.mjs` (endpoint p95), `alert-queue-age.mjs` (outbox pressure).
@@ -44,10 +46,10 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 ### chat_messages — PARTITION+ARCHIVE
 - Measured: 4,250 rows, 7.5 MB.
 - Write path: every chat message in any org channel or DM. At enterprise scale (1,000 users × 20 messages/day = 20,000 rows/day, or 7.3M rows/year).
-- Decision: monthly partitioning + DETACH PARTITION CONCURRENTLY + DROP TABLE. 365-day retention window.
+- Historical proposal: monthly partitioning and 365-day retention. This is not an approved current DDL task; verify measured need, actual table ownership, FK compatibility and legal-hold/recovery requirements through OPS-PRIVACY before implementing.
 - Partitioning constraint: PK must include `created_at` for the partition key. Bare `id` is not globally unique across partitions. The `(org_id, id)` tenant key is preserved as a UNIQUE INDEX on each partition. FKs from other tables (e.g. `chat_channel_members`) target the parent table, which routes to the correct partition — this is supported in Postgres 14+.
-- Worker: `NotificationRetentionService` (`notification-retention.service.ts`). Uses `expiredPartitions()` from `notification-retention-policy.ts`. DETACH CONCURRENTLY cannot run inside a transaction block — the service correctly uses raw DDL outside a tenant tx.
-- Status: Partitioning of `chat_messages` is gated on c21-04. The retention mechanism is live and will activate once monthly partitions exist.
+- Worker ownership is not certified for chat by the notification service's existence. Trace current NotificationRetentionService / notification-retention-policy.ts table allowlist before claiming chat retention is wired.
+- Status: conditional design and runtime verification only; no instruction to create partitions merely to activate a historically described mechanism.
 
 ### timesheets — KEEP-FOREVER
 - Measured: 5,000 rows (seeded), 10.7 MB.
@@ -60,7 +62,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 - Decision: 730-day retention (2 years). Billing analytics must cover at least one full fiscal year; 2 years covers year-on-year comparisons and typical audit lookback periods.
 - Worker: `CronAiUsageRetentionService` (`cron-ai-usage-retention.service.ts`). **Dry-run is the default** — pass `{ dryRun: false }` to actually delete. Resumable Redis cursor (key: `cursor:ai-usage-retention:{orgId}`, TTL 7 days) — a crash mid-sweep resumes from the last committed batch ID rather than restarting. Batch size 500. `forEachOrg` iteration.
-- Legal hold: `ai_usage_logs` records token usage against `org_id` and optionally `user_id`. They are not personal data under HR retention law (they are billing records). No legal hold check is needed; `ai_credit_transactions` (the financial ledger) carries the immutable billing obligation and is KEEP-FOREVER.
+- Legal hold/privacy: usage records can reference organization and user identities. Billing/telemetry classification alone does not waive subject or organization holds. OPS-PRIVACY must reconcile the approved policy and actual enforcing sweep; ai_credit_transactions remains the distinct immutable financial ledger.
 - Financial proof: `ai_usage_logs` are analytics/telemetry rows. The authoritative billing record is `ai_credit_transactions`. Deleting old `ai_usage_logs` after 2 years does not affect the billing ledger.
 
 ### kb_chat_conversations - RETAIN-BOUNDED
@@ -77,7 +79,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Measured: `notifications_y2026_m08` has 355 rows. Other monthly partitions are empty (dev/staging).
 - Write path: one row per in-app notification delivery. At enterprise scale: millions of rows/month.
 - Decision: 180-day retention. Monthly partitions are detached and dropped when the month's last day is more than 180 days ago.
-- Worker: `NotificationRetentionService`. Same mechanism as `chat_messages`.
+- Worker: `NotificationRetentionService`. Chat ownership is separately unverified; do not infer it from notification partition maintenance.
 
 ### notification_events — RETAIN-BOUNDED
 - Measured: 154 rows, 1.2 MB.
@@ -96,12 +98,6 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Write path: one row per sent email. Rendered HTML/text body may contain sensitive values.
 - Decision: 90-day body purge (set `html = ''`, `text = null`), 13-month record deletion.
 - Worker: `CronNotificationRetentionService`. Sweeps globally (no RLS on `email_outbox`) and reports capped runs as truncated for explicit retry.
-
-### outbox_events — PENDING-DECISION
-- Measured: 18 rows live, 54 dead, 288 KB.
-- Write path: every mutation that needs reliable side-effect delivery emits an outbox event. At scale this grows proportionally to mutation rate.
-- Decision: no automated deletion is approved. Pending and in-flight events may be required for replay; delivered and dead events require an approved lifecycle and replay policy before deletion.
-- Worker: none. The coverage gate reports this table as uncovered until that policy and an implementation are approved.
 
 ### documents — RETAIN-BOUNDED
 - Decision: policy-driven deletion or anonymization through `CronHrRetentionService` using `hr_retention_policies` with bounded batches and legal-hold exclusion.
@@ -133,7 +129,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 ### mail_message_metadata — RETAIN-BOUNDED
 - Decision: 365-day (1-year) retention from `synced_at`. Mail metadata is synced from provider mailboxes as a cache for the platform's mail UI. The authoritative record remains at the provider; this table is a re-syncable projection, not the system of record.
-- Worker: `CronMailRetentionService` (`cron-mail-retention.service.ts`). Uses `forEachOrg`, batch 500. Physical DELETE (no `deleted_at` — records are a re-syncable projection). No legal-hold interaction — the authoritative records remain at the provider. Writes audit record to `hr_audit_logs` when rows are deleted.
+- Worker: `CronMailRetentionService` (`cron-mail-retention.service.ts`). Uses `forEachOrg`, batch 500. Physical DELETE (no `deleted_at` — records are a re-syncable projection). Provider authority alone does not prove local metadata is exempt from legal holds; verify the approved local/provider policy before destructive sweeps. Writes audit record to `hr_audit_logs` when rows are deleted.
 - Route: `GET`/`POST /cron/mail-metadata-retention-sweep`, `CRON_SECRET` + lease `mail-metadata-retention-sweep` (1800 seconds).
 - No child FK dependents: `pg_constraint` query against the live catalog returns 0 rows for `mail_message_metadata` as parent — DELETE is safe with no cascade required.
 
@@ -154,13 +150,13 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 ### outbox_events — RETAIN-BOUNDED
 - Decision: 30-day retention for terminal states (DELIVERED, DEAD, SUPPRESSED). PENDING and IN_FLIGHT rows are never touched — they are actively being relayed or pending relay.
 - Replay safety: `alert-dead-outbox.mjs` fires within 24 hours on any DEAD row. 30 days is generous for post-mortem replay needs. The corresponding `inbox_records` rows (where `processed_at IS NOT NULL AND processed_at < cutoff`) are also swept in the same run.
-- Worker: `CronOutboxRetentionService` (`cron-outbox-retention.service.ts`). Global sweep using the owner role (no tenant GUC needed — outbox operations follow their own execution path per RETENTION-SCHEDULING-AUDIT.md). Batch 1000, batched loop up to 50 batches, reports `truncated: true` if cap is hit.
+- Worker: `CronOutboxRetentionService` (`cron-outbox-retention.service.ts`). Global sweep using the owner role (no tenant GUC needed — outbox operations follow their own execution path under the scheduling contract below). Batch 1000, batched loop up to 50 batches, reports `truncated: true` if cap is hit.
 - Route: `GET`/`POST /cron/outbox-events-retention-sweep`, `CRON_SECRET` + `CronLeaseService` lease `outbox-events-retention-sweep` (1800 seconds).
 
 ### Dead-man heartbeat signal
 - `CronLeaseService.withLease` writes `cron:heartbeat:<jobKey>` (ISO timestamp, 7-day TTL) to Redis after every successful sweep completion. On failure, writes `cron:last-error:<jobKey>` (JSON `{error, ts}`, 7-day TTL).
 - **Observing staleness**: read `cron:heartbeat:<sweep-key>` from Redis. If the key is absent (TTL expired) or older than 2 × expected run interval, the sweep has not run recently. Alert on absence or age > threshold.
-- **Pending**: `src/scripts/alert-retention-dead-man.mjs` reads `REDIS_URL`, accepts `--sweep=<jobKey>` and `--max-age-hours=N`, and fires if the heartbeat is missing or stale. Register in `alert-dispatch.mjs` as `"retention-dead-man"` (`owner: "platform-reliability"`) and add to `check-alert-system.mjs`. Add `## retention-dead-man` section to FAILURE-RUNBOOKS.md.
+- **Implementation exists:** src/scripts/alert-retention-dead-man.mjs and alert-dispatch registration are present. OPS-002 owns remaining detector-gate/runbook coverage and actual missing/stale/healthy heartbeat delivery proof. Do not create a duplicate script.
 
 ### audit_logs — KEEP-FOREVER
 - Measured: 11 rows, 208 KB.
@@ -226,7 +222,10 @@ service's presence and unit tests must not be read as proof of operational execu
 | Mail metadata retention | `GET`/`POST /cron/mail-metadata-retention-sweep` | `CRON_SECRET` plus lease `mail-metadata-retention-sweep` (1,800 seconds); synced mail metadata older than 1 year, batch 500 | Route and lease are contract-tested; deployment cadence and successful execution remain unverified |
 | Announcements retention | `GET`/`POST /cron/announcements-retention-sweep` | `CRON_SECRET` plus lease `announcements-retention-sweep` (1,800 seconds); expired (grace 90 days) and aged (2 years) announcements, batch 200 per phase | Route and lease are contract-tested; deployment cadence and successful execution remain unverified |
 
-The scheduling contract test is `s05-retention-scheduling-contract.spec.ts`. It verifies route,
+| Outbox terminal-event retention | GET/POST /cron/outbox-events-retention-sweep | CRON_SECRET plus CronLeaseService, 1,800 seconds; terminal DELIVERED/DEAD/SUPPRESSED rows older than the recorded 30-day policy, batches 1,000 | Source contract only; deployed cadence, holds and replay/restore proof remain open |
+| Notification outbox retention | GET/POST /cron/notification-outbox-retention-sweep | CRON_SECRET plus CronLeaseService, 1,800 seconds; terminal PROCESSED/DEAD, recorded 30-day policy, batches 500 with forEachOrg | Source contract only; deployed cadence, holds and replay/restore proof remain open |
+
+The scheduling contract test is [s05-retention-scheduling-contract.spec.ts](../backend/src/modules/cron/__tests__/s05-retention-scheduling-contract.spec.ts). It verifies route,
 secret, lease, and service wiring for the operations above and deliberately asserts that the
 AI-usage route is authenticated, leased, and explicitly non-dry-run rather than treating a
 callable service alone as operational evidence.
@@ -236,7 +235,7 @@ callable service alone as operational evidence.
 - Identifies expired monthly partitions using `expiredPartitions(table, now)` from `notification-retention-policy.ts`.
 - Executes `SET lock_timeout = '5s'` before each DDL to prevent blocking the parent table indefinitely.
 - `ALTER TABLE ... DETACH PARTITION ... CONCURRENTLY` — no row locks, no exclusive lock on parent. Takes a ShareUpdateExclusiveLock on the parent and a ShareLock on the partition.
-- `DROP TABLE IF EXISTS` on the detached (now standalone) table — no FK targets, safe to drop.
+- Dropping a detached table requires actual dependency, held-data and recovery verification; detachment or IF EXISTS alone does not prove safe deletion.
 - **Cannot run inside a transaction block** — `DETACH PARTITION CONCURRENTLY` is disallowed in a transaction. The service calls `db.execute` directly (not through `runInTenantTransaction`) and uses the owner role (BYPASSRLS, no GUC needed) for DDL.
 - Guarded by `CronLeaseService.withLease` to prevent duplicate concurrent runs across multiple instances.
 
@@ -256,7 +255,7 @@ Before partitioning any new table:
 - **`hr_legal_holds`** (subject_user_id): HR-level hold on a specific employee. Blocks `CronHrRetentionService` from soft-deleting `hr_people`, `hr_cases`, and from physically deleting `attendance` rows for that employee. The exclusion is an atomic subquery in the WHERE clause.
 - **`organization_legal_holds`** (org-level): Blocks the org purge worker (`CronOrgPurgeWorkerService`) from proceeding with full org data deletion. The legal hold check runs inside `runInNewTenantTransaction` and returns `{ outcome: "legal-hold" }` BEFORE reaching the adapter deletion loop (proven by `financial-retention.spec.ts`).
 
-Neither hold type prevents PARTITION+ARCHIVE operations on global notification tables, because those tables are DDL-level objects shared across the platform — they are not per-org data rows.
+A global partition may contain held subjects or organizations. DDL-level operation is not a legal-hold exemption. OPS-PRIVACY must prove an approved hold-aware retention/restore design before dropping shared partitions.
 
 ---
 
@@ -279,7 +278,7 @@ The following tables must never be selected for deletion by any automated retent
 
 ## Slow-Query Telemetry
 
-`pg_stat_statements` is NOT available on this Neon instance (verified: `SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements')` returns `false`). This is a Neon architectural constraint — the extension requires a superuser to install, and Neon does not expose a true superuser.
+`pg_stat_statements` is NOT available on this Neon instance (verified: `SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements')` returns `false`). This is a dated observation of that named instance, not proof the extension is unavailable in every supported deployment. Inspect the explicitly authorized current target before selecting telemetry.
 
 **Alternative: application-layer span telemetry**
 
@@ -303,50 +302,21 @@ Pick the p95 for each endpoint from the output and add it as `--threshold-ms=N` 
 
 ## Handoffs (Lane 7 — Migrations)
 
-### chat_messages partition DDL (c21-04 blocker)
-The `NotificationRetentionService` is live but the DETACH calls are no-ops until monthly partitions exist. Pending DDL for Lane 7:
+### Partition and index changes are conditional, not an open migration assignment
 
-```sql
--- Convert chat_messages to a partitioned table (RANGE on created_at, monthly)
--- Pre-condition: backup + maintenance window (this is a table rewrite)
--- The existing PK (id serial) becomes (id, created_at) to include the partition key.
--- UNIQUE (org_id, id, created_at) replaces the bare (org_id, id) tenant key.
--- FKs from chat_reactions, chat_read_receipts etc. targeting chat_messages(id)
---   must be dropped and re-added targeting the composite PK or replaced with
---   (message_id, created_at) composite FKs.
--- Trigger row count check: do not proceed until chat_messages >= 500,000 rows or
---   write rate >= 10,000 rows/day (measure with pg_stat_user_tables.n_tup_ins delta).
-ALTER TABLE chat_messages RENAME TO chat_messages_old;
-CREATE TABLE chat_messages (
-  id            bigint        NOT NULL,
-  org_id        text          NOT NULL,
-  created_at    timestamptz   NOT NULL DEFAULT now(),
-  -- ... all other columns ...
-  PRIMARY KEY   (id, created_at)
-) PARTITION BY RANGE (created_at);
--- Then: CREATE TABLE chat_messages_y2026_m09 PARTITION OF chat_messages
---       FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
--- Pre-create 6 months ahead, drop when > 12 months old via NotificationRetentionService.
-```
-
-### ai_usage_logs — no migration needed now
-The current table structure (serial `id`, `org_id`, `created_at`) supports the resumable-cursor retention worker without schema changes. If `ai_usage_logs` grows beyond 10M rows, add a partial index:
-
-```sql
-CREATE INDEX CONCURRENTLY idx_ai_usage_retention
-  ON ai_usage_logs (org_id, id)
-  WHERE created_at < NOW() - INTERVAL '730 days';
-```
-
-This index makes the retention worker's range scan (`WHERE org_id = $1 AND id > $cursor AND created_at < $cutoff`) cheap without a sequential scan.
+The earlier illustrative chat table rewrite and time-varying partial-index example were removed. Preserve current schema until measured workload, full PK/UNIQUE/FK compatibility, legal-hold behavior and recovery evidence justify a reviewed design. Never drop an integrity relationship merely to make partitioning possible. For AI-usage retention, measure the actual tenant/cursor/cutoff query and design a valid stable index only when its plan justifies one. OPS-PRIVACY owns contradictions between historical worker claims and current source; this document does not authorize destructive DDL.
 
 ---
 
 ## Script Names (Lane 6 — package.json)
 
-Add these to `backend/package.json` `scripts`:
+These scripts already exist in backend/package.json; use the existing entries rather than recreate them:
 
 ```json
 "report:table-growth": "node src/scripts/report-table-growth.mjs",
 "check:retention-coverage": "node src/scripts/check-retention-coverage.mjs"
 ```
+
+## Scheduling evidence boundaries
+
+Consolidated from the redundant scheduling audit. The nine original route contracts, including the two outbox routes above, preserve authentication, leases, bounded/resumable work and selected audit outcomes. cron-dead-man-signal.spec.ts covers heartbeat/error signals; a source test is not proof of a deployed scheduler. Verify current external versus in-process scheduling configuration, cadence, successful run, retry, missing-heartbeat alarm and downstream deletion. Immutable payroll/financial/audit retention and legal holds remain explicit decisions, not deletion proof. Pending/in-flight events must survive retention; terminal retention must not silently erase unreconciled failures.

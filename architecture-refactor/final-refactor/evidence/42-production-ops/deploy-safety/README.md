@@ -101,5 +101,4 @@ shutdown hook — never by SIGKILL.
 - Live alert delivery and human acknowledgement (RB-06), per-cell cost (RB-07): out of scope
   here and blocked on a deployed environment regardless.
 
-`decision-record-C176-C177-UNSIGNED.md` in this directory records the residual risk that
-needs a named human signature. It is unsigned by design.
+The former unsealed unsigned form was consolidated into [completion-plan.md](../../../../prd/completion-plan.md), OPS-DEPLOY / OPS-004. All R1–R6 remain owned there: lease fencing, actual compatibility versions/caller, runtime versus boot-only switches, deployed rollout proof, operator runbook and actual named decisions. This historical local evidence is not release approval.

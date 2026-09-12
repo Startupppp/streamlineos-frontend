@@ -61,14 +61,45 @@ function renderFab() {
   );
 }
 
+function sheetElement(): HTMLElement {
+  const sheet = document.querySelector<HTMLElement>(
+    '[data-slot="mobile-shell-fab-sheet"]',
+  );
+  if (!sheet) throw new Error("the quick-actions sheet is not mounted");
+  return sheet;
+}
+
 beforeEach(() => {
   panelMounted.mockClear();
 });
 
 describe("MobileShellFab", () => {
-  it("renders the sheet in the DOM before any click (always mounted)", () => {
+  it("keeps the sheet element mounted before any click, so the slide-up transition has something to animate", () => {
     renderFab();
-    expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
+    expect(sheetElement()).toBeInTheDocument();
+  });
+
+  it("advertises no dialog while closed — a permanently-mounted role=dialog reads as an open modal to AT", () => {
+    renderFab();
+    const sheet = sheetElement();
+    expect(sheet).not.toHaveAttribute("role");
+    expect(sheet).not.toHaveAttribute("aria-modal");
+    expect(sheet).not.toHaveAttribute("aria-label");
+    expect(screen.queryAllByRole("dialog", { hidden: true })).toEqual([]);
+  });
+
+  it("becomes a labelled modal dialog only once open, and drops the role again on close", async () => {
+    renderFab();
+    const user = userEvent.setup();
+    const trigger = screen.getByRole("button", { name: "Open quick actions" });
+    await user.click(trigger);
+    const sheet = sheetElement();
+    expect(sheet).toHaveAttribute("role", "dialog");
+    expect(sheet).toHaveAttribute("aria-modal", "true");
+    expect(sheet).toHaveAttribute("aria-label", "Quick actions");
+    await user.click(trigger);
+    expect(sheet).not.toHaveAttribute("role");
+    expect(sheet).not.toHaveAttribute("aria-modal");
   });
 
   it("opens the dialog when the FAB is clicked", async () => {

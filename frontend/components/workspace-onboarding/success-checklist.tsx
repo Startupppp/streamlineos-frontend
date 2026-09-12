@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useOrgSettings } from "@/hooks/api/organization";
 import { useAccess } from "@/hooks/api/access";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   useWorkspaceChecklistProgress,
   type ChecklistItemId,
@@ -321,8 +322,10 @@ function SuccessChecklistInner() {
     canSetUpWorkspace && !storedDismissed && onboardingCompleted;
   const { completed, doneCount, isLoading } =
     useWorkspaceChecklistProgress(shouldTrackProgress);
-  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  const [collapsedChoice, setCollapsedChoice] = useState<boolean | null>(null);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const collapsed = collapsedChoice ?? isMobile;
 
   const progress = Math.round((doneCount / TOTAL) * 100);
   const progressFraction = doneCount / TOTAL;
@@ -352,8 +355,8 @@ function SuccessChecklistInner() {
   }, [orgId]);
 
   const handleToggleCollapse = useCallback(() => {
-    setCollapsed((prev) => !prev);
-  }, []);
+    setCollapsedChoice((prev) => !(prev ?? isMobile));
+  }, [isMobile]);
 
   if (!isActive) return null;
 

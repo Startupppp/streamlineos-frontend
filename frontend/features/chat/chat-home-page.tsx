@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
+import { getChatConversationListPaneClassName } from "@/features/chat/chat-shell-layout";
 import {
   ChatOverlayFallback,
   ChatPanelFallback,
@@ -198,11 +199,9 @@ export function ChatHomePage() {
     >
       <div className="flex flex-1 min-h-0 min-w-0 bg-background">
         <div
-          className={cn(
-            "relative z-0 flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-hidden",
-            "w-full",
-            sidebarCollapsed ? "md:w-[3.5rem]" : "md:w-[300px] lg:w-[340px]",
-            !showMobileList && "hidden md:flex",
+          className={getChatConversationListPaneClassName(
+            sidebarCollapsed,
+            showMobileList,
           )}
         >
           <ChannelSidebar
