@@ -134,6 +134,10 @@ export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: C
   const parsed = certificate.data ? certificateDetailsSchema.safeParse(certificate.data.certificate.certificateJson) : undefined;
   const notFound = isApiError(certificate.error) && certificate.error.status === 404;
 
+  function handleRetry() {
+    void certificate.refetch();
+  }
+
   function handleOpenPdf() {
     if (certificate.data) window.open(certificate.data.url, "_blank", "noopener,noreferrer");
   }
@@ -197,7 +201,12 @@ export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: C
           compact
         />
       ) : certificate.isError ? (
-        <ErrorState title="Failed to load the certificate" onRetry={() => void certificate.refetch()} compact />
+        <ErrorState
+          title="Failed to load the certificate"
+          description={getErrorMessage(certificate.error)}
+          onRetry={handleRetry}
+          compact
+        />
       ) : parsed?.success ? (
         <CertificateBody details={parsed.data} />
       ) : certificate.data ? (

@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { AuditChainVerification } from "@/features/timesheets/types";
 
 /**
@@ -20,8 +19,7 @@ import type { AuditChainVerification } from "@/features/timesheets/types";
  * the answer is a fact about current state that belongs in the cache.
  */
 export function useVerifyAuditChain() {
-  const canView = useCan("timesheets:audit:view");
-  const query = useQuery({
+  const query = useGatedQuery("timesheets:audit:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.auditVerify(),
     queryFn: () =>
       apiClient.get<AuditChainVerification>("/timesheets/audit/verify"),
@@ -35,5 +33,5 @@ export function useVerifyAuditChain() {
     gcTime: 30 * 60_000,
     retry: false,
   });
-  return { ...query, canVerify: canView };
+  return { ...query, canVerify: query.access.allowed };
 }

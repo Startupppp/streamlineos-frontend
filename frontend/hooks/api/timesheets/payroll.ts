@@ -107,7 +107,7 @@ export function useCreateTimesheetPayrollExport() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<CreateExportResponse, Error, CreateExportBody>("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "createExport"],
-    mutationFn: (data, idempotencyKey) =>
+    mutationFn: (data: CreateExportBody, idempotencyKey: string) =>
       apiClient.post<CreateExportResponse>(
         "/timesheets/payroll/export",
         data,
@@ -143,7 +143,7 @@ export function useAckPayrollExport() {
     "timesheets:payroll:export",
     {
       mutationKey: ["timesheets", "payroll", "ackExport"],
-      mutationFn: ({ exportId, data }, idempotencyKey) =>
+      mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }, idempotencyKey: string) =>
         apiClient.patch<AckExportResponse>(
           `/timesheets/payroll/exports/${exportId}/ack`,
           data,
