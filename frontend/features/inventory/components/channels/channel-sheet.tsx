@@ -74,6 +74,7 @@ function buildDefaultValues(channel?: Channel): ChannelFormValues {
     safetyBuffer: channel?.safetyBuffer ?? "",
     publishThreshold: channel?.publishThreshold ?? "",
     warehouseIds: channel?.warehouseIds ?? [],
+    apiCredential: "",
   };
 }
 
@@ -107,6 +108,7 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
   async function onSubmit(values: ChannelFormValues): Promise<void> {
     const safetyBuffer = optionalDecimal(values.safetyBuffer);
     const publishThreshold = optionalDecimal(values.publishThreshold);
+    const apiCredential = values.apiCredential?.trim() || undefined;
 
     try {
       if (isEdit) {
@@ -117,6 +119,7 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
           safetyBuffer,
           publishThreshold,
           warehouseIds: values.warehouseIds,
+          ...(apiCredential ? { apiCredential } : {}),
         });
         toast.success("Channel updated");
       } else {
@@ -126,6 +129,7 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
           safetyBuffer,
           publishThreshold,
           warehouseIds: values.warehouseIds,
+          ...(apiCredential ? { apiCredential } : {}),
         });
         toast.success("Channel created");
       }
@@ -135,6 +139,7 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
       toast.error(getErrorMessage(err));
     }
   }
+
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -263,7 +268,35 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
             />
           </div>
 
+          <FormField
+            control={form.control}
+            name="apiCredential"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>API Credential / Access Token</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder={
+                      channel?.apiCredentialHint
+                        ? `Saved token hint: ${channel.apiCredentialHint}`
+                        : "e.g. shpat_..."
+                    }
+                    {...field}
+                  />
+                </FormControl>
+                {channel?.apiCredentialHint ? (
+                  <p className="text-xs text-muted-foreground">
+                    Current token set: {channel.apiCredentialHint}
+                  </p>
+                ) : null}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {warehouses.length > 0 && (
+
             <FormField
               control={form.control}
               name="warehouseIds"
