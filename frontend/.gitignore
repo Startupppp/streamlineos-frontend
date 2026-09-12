@@ -107,3 +107,4 @@ docs/superpowers/
 
 .vercel
 .env*
+*.log
