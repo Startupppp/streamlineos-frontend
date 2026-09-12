@@ -13,6 +13,9 @@ export interface Carrier {
   name: string;
   code: string;
   trackingUrlTemplate?: string | null;
+  transport?: string | null;
+  apiBaseUrl?: string | null;
+  apiCredentialHint?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -58,3 +61,34 @@ export function useUpdateCarrier() {
     },
   });
 }
+
+export interface SetCarrierCredentialsData {
+  carrierId: number;
+  transport?: string | null;
+  apiBaseUrl?: string | null;
+  apiCredential?: string | null;
+  webhookSecret?: string | null;
+}
+
+export interface SetCarrierCredentialsResult {
+  carrierId: number;
+  apiCredentialHint: string | null;
+  webhookSecretSet: boolean;
+}
+
+export function useSetCarrierCredentials() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<
+    SetCarrierCredentialsResult,
+    Error,
+    SetCarrierCredentialsData
+  >("inventory:shipments:manage", {
+    mutationKey: ["inventory", "carrier", "setCredentials"],
+    mutationFn: ({ carrierId, ...data }) =>
+      apiClient.put<SetCarrierCredentialsResult>(`/inventory/carriers/${carrierId}/credentials`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.carriers() });
+    },
+  });
+}
+

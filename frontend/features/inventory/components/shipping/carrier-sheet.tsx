@@ -11,6 +11,13 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -21,14 +28,19 @@ import {
 import {
   useCreateCarrier,
   useUpdateCarrier,
+  useSetCarrierCredentials,
   type Carrier,
-} from "@/hooks/api/inventory/shipping";
+} from "@/hooks/api/inventory/shipping-carriers";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const carrierSchema = z.object({
   name: z.string().min(1, "Name is required"),
   code: z.string().min(1, "Code is required"),
-  trackingUrlTemplate: z.string(),
+  trackingUrlTemplate: z.string().optional(),
+  transport: z.string().optional(),
+  apiBaseUrl: z.string().optional(),
+  apiCredential: z.string().optional(),
+  webhookSecret: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -47,6 +59,7 @@ export function CarrierSheet({
 }: CarrierSheetProps) {
   const createMutation = useCreateCarrier();
   const updateMutation = useUpdateCarrier();
+  const credentialsMutation = useSetCarrierCredentials();
   const isEdit = carrier !== undefined;
 
   const form = useForm<CarrierFormValues>({
@@ -55,6 +68,10 @@ export function CarrierSheet({
       name: carrier?.name ?? "",
       code: carrier?.code ?? "",
       trackingUrlTemplate: carrier?.trackingUrlTemplate ?? "",
+      transport: carrier?.transport ?? "",
+      apiBaseUrl: carrier?.apiBaseUrl ?? "",
+      apiCredential: "",
+      webhookSecret: "",
       isActive: carrier?.isActive ?? true,
     },
   });
@@ -65,6 +82,10 @@ export function CarrierSheet({
         name: carrier?.name ?? "",
         code: carrier?.code ?? "",
         trackingUrlTemplate: carrier?.trackingUrlTemplate ?? "",
+        transport: carrier?.transport ?? "",
+        apiBaseUrl: carrier?.apiBaseUrl ?? "",
+        apiCredential: "",
+        webhookSecret: "",
         isActive: carrier?.isActive ?? true,
       });
     }
@@ -82,31 +103,58 @@ export function CarrierSheet({
 
   async function onSubmit(values: CarrierFormValues): Promise<void> {
     try {
+      let carrierId: number;
+
       if (isEdit && carrier) {
+        carrierId = carrier.id;
         await updateMutation.mutateAsync({
           carrierId: carrier.id,
           name: values.name.trim(),
           code: values.code.trim(),
-          trackingUrlTemplate: values.trackingUrlTemplate.trim() || undefined,
+          trackingUrlTemplate: values.trackingUrlTemplate?.trim() || undefined,
           isActive: values.isActive,
         });
-        toast.success(`Carrier "${values.name}" updated`);
       } else {
-        await createMutation.mutateAsync({
+        const created = await createMutation.mutateAsync({
           name: values.name.trim(),
           code: values.code.trim(),
-          trackingUrlTemplate: values.trackingUrlTemplate.trim() || undefined,
+          trackingUrlTemplate: values.trackingUrlTemplate?.trim() || undefined,
           isActive: values.isActive,
         });
-        toast.success(`Carrier "${values.name}" created`);
+        carrierId = created.id;
       }
+
+      // If transport or credentials were changed/specified, set them on the org row
+      const transportVal = values.transport?.trim() || null;
+      const apiBaseUrlVal = values.apiBaseUrl?.trim() || null;
+      const apiCredentialVal = values.apiCredential?.trim() || undefined;
+      const webhookSecretVal = values.webhookSecret?.trim() || undefined;
+
+      if (transportVal || apiBaseUrlVal || apiCredentialVal || webhookSecretVal) {
+        await credentialsMutation.mutateAsync({
+          carrierId,
+          transport: transportVal,
+          apiBaseUrl: apiBaseUrlVal,
+          apiCredential: apiCredentialVal,
+          webhookSecret: webhookSecretVal,
+        });
+      }
+
+      toast.success(
+        isEdit
+          ? `Carrier "${values.name}" updated`
+          : `Carrier "${values.name}" created`,
+      );
       handleClose();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    credentialsMutation.isPending;
 
   return (
     <AppSheet
@@ -115,8 +163,8 @@ export function CarrierSheet({
       title={isEdit ? `Edit ${carrier?.name}` : "Add Carrier"}
       description={
         isEdit
-          ? "Update carrier details."
-          : "Add a shipping carrier for tracking."
+          ? "Update carrier details and integration settings."
+          : "Add a shipping carrier for tracking and automated booking."
       }
       footer={
         <div className="grid grid-cols-2 gap-2 w-full">
@@ -153,7 +201,7 @@ export function CarrierSheet({
               <FormItem>
                 <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="DHL Express" className="text-sm" {...field} />
+                  <Input placeholder="Delhivery Surface / Express" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -167,12 +215,105 @@ export function CarrierSheet({
               <FormItem>
                 <FormLabel>Code <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="DHL" className="text-sm" {...field} />
+                  <Input placeholder="DELHIVERY" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="transport"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Integration Transport</FormLabel>
+                <Select
+                  value={field.value || "MANUAL"}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Select transport" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="MANUAL">Manual (No Integration)</SelectItem>
+                    <SelectItem value="DELHIVERY">Delhivery (Express Sandbox / Prod)</SelectItem>
+                    <SelectItem value="reference-http">Reference HTTP Carrier</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-micro text-muted-foreground">
+                  Select DELHIVERY to integrate with Delhivery courier API.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {form.watch("transport") === "DELHIVERY" && (
+            <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+              <p className="text-xs font-semibold">Delhivery Credentials (Per-Tenant)</p>
+
+              <FormField
+                control={form.control}
+                name="apiBaseUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">API Base URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://staging-express.delhivery.com"
+                        className="text-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="apiCredential"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">
+                      API Token {carrier?.apiCredentialHint ? `(Current: ${carrier.apiCredentialHint})` : ""}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Paste Delhivery API token"
+                        className="text-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="webhookSecret"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Webhook Secret</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Paste webhook secret (≥32 chars)"
+                        className="text-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
           <FormField
             control={form.control}
@@ -182,7 +323,7 @@ export function CarrierSheet({
                 <FormLabel>Tracking URL Template</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="https://track.carrier.com/{tracking}"
+                    placeholder="https://track.delhivery.com/p/{tracking}"
                     className="text-sm"
                     {...field}
                   />
