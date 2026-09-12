@@ -93,6 +93,8 @@
     "billing:marketplace:view",
     "billing:profile:update",
     "billing:profile:view",
+    "billing:promotions:manage",
+    "billing:promotions:view",
     "billing:referrals:manage",
     "billing:referrals:view",
     "billing:seats:view",

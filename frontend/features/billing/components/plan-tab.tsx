@@ -3,8 +3,9 @@
 import { useEffect, useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Calendar, CreditCard } from "lucide-react";
+import { Calendar, CreditCard, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -25,12 +26,35 @@ import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters
 import { PlanTabSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { EntitlementGate } from "@/components/entitlement-gate";
 import { PRICING } from "@/lib/pricing";
+import {
+  loadCheckoutScript,
+  useCheckoutScript,
+} from "@/features/billing/lib/checkout-script";
+import type { BillingReadiness } from "@/hooks/api/subscription";
+
+function assertNever(x: never): never {
+  throw new Error(`Unhandled readiness reason: ${String(x)}`);
+}
+
+function readinessUnavailableMessage(reason: NonNullable<BillingReadiness["unavailableReason"]>): string {
+  switch (reason) {
+    case "no_credentials":
+      return "Online payments are not enabled yet — contact StreamlineOS support to activate.";
+    case "incomplete_credentials":
+      return "Payment configuration is incomplete — contact StreamlineOS support.";
+    case "unsupported_provider":
+      return "Online payments are temporarily unavailable — contact StreamlineOS support.";
+    default:
+      return assertNever(reason);
+  }
+}
 
 function planConfigFromDefinition(
   plan: PlanDefinition,
-): { monthlyPrice: number; label: string; features: string[] } {
+): { monthlyPrice: number; annualPrice: number; label: string; features: string[] } {
   return {
     monthlyPrice: plan.monthlyPrice,
+    annualPrice: plan.annualPrice,
     label: plan.name,
     features: plan.features,
   };
@@ -47,6 +71,12 @@ const STATUS_BADGE: Record<
   EXPIRED: { label: "Expired", variant: "outline" },
 };
 
+const READINESS_MESSAGES: Record<string, string> = {
+  NOT_CONFIGURED: "Online payments are not enabled yet — contact support to activate.",
+  INCOMPLETE_CREDENTIALS: "Payment configuration is incomplete — contact support.",
+  PROVIDER_UNSUPPORTED: "Payment provider is not supported for this region — contact support.",
+};
+
 export function PlanTab() {
   const { data: session } = useSession();
   const { data, isLoading, isError, error, refetch } = useSubscription();
@@ -61,12 +91,13 @@ export function PlanTab() {
     useCreateSubscriptionOrder();
   const { mutateAsync: verifySubscription, isPending: isVerifying } =
     useVerifySubscription();
+  const { state: scriptState, retry: retryScript } = useCheckoutScript();
 
   const planCatalog = plansResponse?.plans ?? [];
   const planConfigById = Object.fromEntries(
     planCatalog.map((p) => [p.id, planConfigFromDefinition(p)]),
   ) as Partial<
-    Record<SubscriptionPlan, { monthlyPrice: number; label: string; features: string[] }>
+    Record<SubscriptionPlan, { monthlyPrice: number; annualPrice: number; label: string; features: string[] }>
   >;
 
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
@@ -74,23 +105,22 @@ export function PlanTab() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
-  const [selectedPlanForCoupon, setSelectedPlanForCoupon] =
-    useState<SubscriptionPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
 
   const { data: couponResult, isFetching: isValidatingCoupon } = useValidateCoupon(
     couponInput,
-    selectedPlanForCoupon,
+    selectedPlan,
+    billingCycle,
   );
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
+    void loadCheckoutScript();
   }, []);
+
+  const planLabel = useCallback(
+    (plan: SubscriptionPlan): string => planConfigById[plan]?.label ?? plan,
+    [planConfigById],
+  );
 
   function handleRetry() {
     void refetch();
@@ -101,16 +131,26 @@ export function PlanTab() {
     setUpgradeError(null);
   }
 
-  const planLabel = useCallback((plan: SubscriptionPlan): string => {
-    return planConfigById[plan]?.label ?? plan;
-  }, [planConfigById]);
+  function handleRetryScript() {
+    retryScript();
+  }
 
   function handleSetMonthly() {
     setBillingCycle("monthly");
+    setAppliedCoupon(null);
   }
 
   function handleSetAnnual() {
     setBillingCycle("annual");
+    setAppliedCoupon(null);
+  }
+
+  function handleSelectPlan(plan: SubscriptionPlan) {
+    if (plan !== selectedPlan) {
+      setAppliedCoupon(null);
+      setCouponInput("");
+    }
+    setSelectedPlan(plan);
   }
 
   function handleApplyCoupon() {
@@ -125,7 +165,7 @@ export function PlanTab() {
   function handleRemoveCoupon() {
     setAppliedCoupon(null);
     setCouponInput("");
-    setSelectedPlanForCoupon(null);
+    setSelectedPlan(null);
   }
 
   function handleCouponInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -135,40 +175,48 @@ export function PlanTab() {
 
   const handleUpgrade = useCallback(
     async (plan: SubscriptionPlan) => {
-      if (!data?.isConfigured) {
+      if (scriptState !== "ready") {
+        toast.error("Payment checkout is not available. Please retry or refresh the page.");
+        return;
+      }
+      if (data?.platformCheckout?.configured !== true && data?.isConfigured !== true) {
         toast.error("Payment gateway not configured. Contact support.");
         return;
       }
-      setSelectedPlanForCoupon(plan);
+      setSelectedPlan(plan);
       setUpgradingPlan(plan);
       setUpgradeError(null);
+      const couponId =
+        plan === selectedPlan && appliedCoupon?.valid
+          ? (appliedCoupon.couponId ?? undefined)
+          : undefined;
       try {
         const order = await createOrder({
           plan,
           billingCycle,
-          couponId:
-            appliedCoupon?.valid ? (appliedCoupon.couponId ?? undefined) : undefined,
+          couponId,
         });
         const rzp = new window.Razorpay({
           key: order.keyId ?? "",
           order_id: order.orderId,
           amount: order.amount,
-          currency: "INR",
+          currency: order.currency,
           name: "StreamlineOS",
           description: `${planLabel(plan)} Plan – ${billingCycle === "annual" ? "Annual" : "Monthly"}`,
           prefill: { email: session?.user?.email ?? undefined },
           handler: async (response: RazorpayPaymentResponse) => {
             try {
-              await verifySubscription({
+              const result = await verifySubscription({
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                plan,
               });
+              setUpgradingPlan(null);
               toast.success(
-                `Upgraded to ${planLabel(plan)} plan successfully!`,
+                `Upgraded to ${planLabel(result.plan)} plan successfully!`,
               );
             } catch (err) {
+              setUpgradingPlan(null);
               toast.error(getErrorMessage(err));
             }
           },
@@ -183,7 +231,7 @@ export function PlanTab() {
         setUpgradingPlan(null);
       }
     },
-    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, planLabel],
+    [scriptState, data?.platformCheckout, data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, selectedPlan, planLabel],
   );
 
   const [now] = useState(Date.now);
@@ -199,7 +247,30 @@ export function PlanTab() {
       )
     : null;
 
-  if (isLoading || plansLoading) {
+  const isDataLoading = isLoading || plansLoading;
+
+  const paymentsReady =
+    (data?.platformCheckout?.configured ?? data?.isConfigured) === true &&
+    scriptState === "ready";
+
+  function getReadinessMessage(): string | null {
+    if (isDataLoading) return null;
+    if (isError) return null;
+    if (data?.platformCheckout !== undefined) {
+      if (data.platformCheckout.configured) return null;
+      const reason = data.platformCheckout.unavailableReason;
+      if (reason === null) return null;
+      return readinessUnavailableMessage(reason);
+    }
+    if (data?.isConfigured === false) {
+      return "Payment gateway is not configured. Contact StreamlineOS support to enable online payments.";
+    }
+    return null;
+  }
+
+  const readinessMessage = getReadinessMessage();
+
+  if (isDataLoading) {
     return <PlanTabSkeleton />;
   }
 
@@ -264,15 +335,34 @@ export function PlanTab() {
         )}
       </div>
 
-      {!data?.isConfigured && (
+      {readinessMessage && (
         <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
-          Payment gateway is not configured. Contact your administrator to enable
-          online payments.
+          {readinessMessage}
+        </div>
+      )}
+
+      {scriptState === "failed" && (
+        <div className="flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
+          <span className="flex-1">
+            Payment checkout failed to load. Check your connection and try again.
+          </span>
+          <LoadingButton
+            type="button"
+            size="sm"
+            variant="outline"
+            isPending={scriptState === "loading"}
+            onClick={handleRetryScript}
+            className="shrink-0"
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+            Retry
+          </LoadingButton>
         </div>
       )}
 
       <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
         <button
+          type="button"
           onClick={handleSetMonthly}
           className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
             billingCycle === "monthly"
@@ -283,6 +373,7 @@ export function PlanTab() {
           Monthly
         </button>
         <button
+          type="button"
           onClick={handleSetAnnual}
           className={`flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
             billingCycle === "annual"
@@ -314,8 +405,10 @@ export function PlanTab() {
                 currentStatus={currentStatus}
                 upgradingPlan={upgradingPlan}
                 isBusy={isBusy}
-                isConfigured={data?.isConfigured}
+                isConfigured={paymentsReady}
+                selectedPlan={selectedPlan}
                 onUpgrade={handleUpgrade}
+                onSelect={handleSelectPlan}
               />
             ))}
           </div>
@@ -327,7 +420,7 @@ export function PlanTab() {
         appliedCoupon={appliedCoupon}
         couponResult={couponResult}
         isValidatingCoupon={isValidatingCoupon}
-        helperText={!selectedPlanForCoupon ? "Select a plan to apply this code." : undefined}
+        helperText={!selectedPlan ? "Select a plan card above to apply this code." : undefined}
         onInputChange={handleCouponInputChange}
         onApply={handleApplyCoupon}
         onRemove={handleRemoveCoupon}

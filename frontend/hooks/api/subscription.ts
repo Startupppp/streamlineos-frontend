@@ -1,19 +1,23 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import type {
   BillingPlansResponse,
   BillingProfile,
   CouponValidationResult,
+  CreateOrderResult,
   SeatInfo,
   SubscriptionPlan,
   SubscriptionResponse,
+  VerifySubscriptionRequest,
+  VerifySubscriptionResult,
 } from "@/hooks/api/subscription-schema";
 
 export type {
@@ -22,11 +26,15 @@ export type {
   SubscriptionPayment,
   Subscription,
   SubscriptionResponse,
+  BillingReadiness,
   PlanDefinition,
   BillingPlansResponse,
   BillingProfile,
   SeatInfo,
   CouponValidationResult,
+  CreateOrderResult,
+  VerifySubscriptionRequest,
+  VerifySubscriptionResult,
 } from "@/hooks/api/subscription-schema";
 
 export type BillingCycle = "monthly" | "annual";
@@ -67,29 +75,9 @@ const verifySubscriptionContract = lazyContract(() =>
 const updateBillingProfileContract = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then((m) => m.billingProfileContract),
 );
-
-interface CreateOrderResponse {
-  orderId: string;
-  amount: number;
-  currency: string;
-  keyId: string | null;
-  plan: string;
-  billingCycle: string;
-  discountAmount: number;
-}
-
-interface VerifySubscriptionInput {
-  orderId: string;
-  paymentId: string;
-  signature: string;
-  plan: SubscriptionPlan;
-}
-
-interface VerifySubscriptionResponse {
-  success: boolean;
-  plan: string;
-  status: "ACTIVE";
-}
+const verifySubscriptionRequestContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.verifySubscriptionRequestContract),
+);
 
 export function useSubscription() {
   const { data: session } = useSession();
@@ -104,7 +92,7 @@ export function useSubscription() {
 }
 
 export function useCreateSubscriptionOrder() {
-  return useAuthorizedMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>("billing:subscription:manage", {
+  return useAuthorizedMutation<CreateOrderResult, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "create-order"],
     mutationFn: (data) => apiClient.post("/billing/checkout", data, undefined, createOrderContract),
   });
@@ -112,7 +100,7 @@ export function useCreateSubscriptionOrder() {
 
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>("billing:subscription:manage", {
+  return useAuthorizedMutation<VerifySubscriptionResult, Error, VerifySubscriptionRequest>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "confirm"],
     mutationFn: (data) => apiClient.patch("/billing/checkout", data, undefined, verifySubscriptionContract),
     onSuccess: () => {
@@ -120,6 +108,8 @@ export function useVerifySubscription() {
       queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
       queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.entitlements() });
       queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.seats() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.orgModules() });
     },
   });
 }
@@ -132,13 +122,14 @@ export function useBillingPlans() {
   });
 }
 
-export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
+export function useValidateCoupon(code: string, plan: SubscriptionPlan | null, billingCycle?: BillingCycle) {
   const canManage = useCan("billing:subscription:manage");
+  const cycleParam = billingCycle ? `&billingCycle=${billingCycle}` : "";
   return useQuery<CouponValidationResult, Error>({
-    queryKey: growthAndSignQueryKeys.billing.coupon(code, plan),
+    queryKey: growthAndSignQueryKeys.billing.coupon(code, plan, billingCycle),
     queryFn: ({ signal }) =>
       apiClient.get(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}${cycleParam}`,
         undefined,
         signal,
         couponContract,

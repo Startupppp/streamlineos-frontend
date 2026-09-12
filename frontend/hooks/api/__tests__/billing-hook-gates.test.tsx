@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { apiClient } from "@/lib/api-client";
 
 jest.mock("next-auth/react", () => ({
@@ -24,6 +25,10 @@ jest.mock("@/lib/api-client", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(false),
   useModuleEnabled: jest.fn().mockReturnValue(true),
+  useAccess: jest.fn().mockReturnValue({
+    data: { permissions: [] },
+    refetch: jest.fn(),
+  }),
 }));
 
 const { useCan } = jest.requireMock("@/hooks/api/access") as {
@@ -231,6 +236,93 @@ describe("billing hook gates — fire when permission granted", () => {
     renderHook(() => useManualMethods(), { wrapper: makeWrapper(client) });
     expect(mockedGet).toHaveBeenCalledWith(
       "/payments/manual-methods",
+      undefined,
+      expect.any(AbortSignal),
+      expect.anything(),
+    );
+  });
+});
+
+const VERIFY_RESPONSE = {
+  success: true as const,
+  plan: "PROFESSIONAL" as const,
+  billingCycle: "monthly" as const,
+  status: "ACTIVE",
+  currentPeriodEnd: "2027-01-01T00:00:00.000Z",
+};
+
+describe("useVerifySubscription — mutation body and invalidation", () => {
+  it("sends only { orderId, paymentId, signature } and does NOT send plan", async () => {
+    useCan.mockReturnValue(true);
+    const mockedPatch = apiClient.patch as jest.Mock;
+    mockedPatch.mockResolvedValueOnce(VERIFY_RESPONSE);
+
+    const { useVerifySubscription } = await import("@/hooks/api/subscription");
+    const client = freshClient();
+    const { result } = renderHook(() => useVerifySubscription(), {
+      wrapper: makeWrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        orderId: "ord_abc",
+        paymentId: "pay_xyz",
+        signature: "sig_123",
+      });
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/billing/checkout",
+      { orderId: "ord_abc", paymentId: "pay_xyz", signature: "sig_123" },
+      undefined,
+      expect.anything(),
+    );
+    const body = mockedPatch.mock.calls[0][1] as Record<string, unknown>;
+    expect(body).not.toHaveProperty("plan");
+    expect(body).not.toHaveProperty("billingCycle");
+    expect(body).not.toHaveProperty("couponId");
+  });
+
+  it("invalidates billing.subscription, billing.summary, billing.entitlements, billing.seats, and access.me on success", async () => {
+    useCan.mockReturnValue(true);
+    const mockedPatch = apiClient.patch as jest.Mock;
+    mockedPatch.mockResolvedValueOnce(VERIFY_RESPONSE);
+
+    const { useVerifySubscription } = await import("@/hooks/api/subscription");
+    const client = freshClient();
+    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
+
+    const { result } = renderHook(() => useVerifySubscription(), {
+      wrapper: makeWrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        orderId: "ord_abc",
+        paymentId: "pay_xyz",
+        signature: "sig_123",
+      });
+    });
+
+    const invalidatedKeyStrings = invalidateSpy.mock.calls.map((c) =>
+      JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+    );
+    expect(invalidatedKeyStrings.some((k) => k.includes('"subscription"'))).toBe(true);
+    expect(invalidatedKeyStrings.some((k) => k.includes('"summary"'))).toBe(true);
+    expect(invalidatedKeyStrings.some((k) => k.includes('"entitlements"'))).toBe(true);
+    expect(invalidatedKeyStrings.some((k) => k.includes('"seats"'))).toBe(true);
+    expect(invalidatedKeyStrings.some((k) => k.includes('"access"'))).toBe(true);
+  });
+
+  it("useValidateCoupon — passes billingCycle to the query URL when provided", async () => {
+    useCan.mockReturnValue(true);
+    const { useValidateCoupon } = await import("@/hooks/api/subscription");
+    const client = freshClient();
+    renderHook(() => useValidateCoupon("SAVE20", "STARTER", "annual"), {
+      wrapper: makeWrapper(client),
+    });
+    expect(mockedGet).toHaveBeenCalledWith(
+      expect.stringContaining("billingCycle=annual"),
       undefined,
       expect.any(AbortSignal),
       expect.anything(),

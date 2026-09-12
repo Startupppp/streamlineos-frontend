@@ -214,6 +214,8 @@ export type FoundationPermissionKey =
   | "billing:referrals:view"
   | "billing:referrals:manage"
   | "billing:coupons:manage"
+  | "billing:promotions:view"
+  | "billing:promotions:manage"
   | "billing:marketplace:view"
   | "onboarding:module-checklists:view"
   | "onboarding:module-checklists:manage"

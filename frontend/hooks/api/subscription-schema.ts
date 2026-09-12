@@ -65,10 +65,22 @@ export const subscriptionContract = z.object({
   payments: z.array(subscriptionPaymentContract),
 });
 
+export const billingReadinessContract = z.object({
+  configured: z.boolean(),
+  providerKey: z.string().nullable(),
+  environment: z.enum(["test", "live"]).nullable(),
+  publicKeyId: z.string().nullable(),
+  webhookConfigured: z.boolean(),
+  unavailableReason: z
+    .enum(["no_credentials", "incomplete_credentials", "unsupported_provider"])
+    .nullable(),
+});
+
 export const subscriptionResponseContract = z.object({
   subscription: subscriptionContract.nullable(),
   publicKeyId: z.string().nullable(),
   isConfigured: z.boolean(),
+  platformCheckout: billingReadinessContract,
 });
 
 export const planDefinitionContract = z.object({
@@ -125,16 +137,28 @@ export const createOrderContract = z.object({
   orderId: z.string(),
   amount: z.number(),
   currency: z.string(),
-  keyId: z.string(),
-  plan: z.string(),
-  billingCycle: z.string(),
+  keyId: z.string().nullable(),
+  environment: z.enum(["test", "live"]).nullable(),
+  plan: subscriptionPlanContract,
+  billingCycle: z.enum(["monthly", "annual"]),
   discountAmount: z.number(),
+  purchaseId: z.number(),
+  expiresAt: z.string(),
+});
+
+export const verifySubscriptionRequestContract = z.object({
+  orderId: z.string(),
+  paymentId: z.string(),
+  signature: z.string(),
 });
 
 export const verifySubscriptionContract = z.object({
   success: z.literal(true),
-  plan: z.string(),
-  status: z.literal("ACTIVE"),
+  plan: subscriptionPlanContract,
+  billingCycle: z.enum(["monthly", "annual"]),
+  status: z.string(),
+  currentPeriodEnd: z.string().nullable(),
+  alreadyActivated: z.boolean(),
 });
 
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanContract>;
@@ -142,8 +166,12 @@ export type SubscriptionStatus = z.infer<typeof subscriptionStatusContract>;
 export type SubscriptionPayment = z.infer<typeof subscriptionPaymentContract>;
 export type Subscription = z.infer<typeof subscriptionContract>;
 export type SubscriptionResponse = z.infer<typeof subscriptionResponseContract>;
+export type BillingReadiness = z.infer<typeof billingReadinessContract>;
 export type PlanDefinition = z.infer<typeof planDefinitionContract>;
 export type BillingPlansResponse = z.infer<typeof billingPlansContract>;
 export type BillingProfile = z.infer<typeof billingProfileContract>;
 export type SeatInfo = z.infer<typeof seatInfoContract>;
 export type CouponValidationResult = z.infer<typeof couponValidationContract>;
+export type CreateOrderResult = z.infer<typeof createOrderContract>;
+export type VerifySubscriptionRequest = z.infer<typeof verifySubscriptionRequestContract>;
+export type VerifySubscriptionResult = z.infer<typeof verifySubscriptionContract>;

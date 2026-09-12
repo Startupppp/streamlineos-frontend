@@ -6,12 +6,13 @@
  *   POST /invoices/{id}/payments      -> accounting:create   (RecordPaymentDialog)
  *   PATCH /invoices/{id}              -> accounting:update   (Edit, Mark Issued, Mark Paid)
  *   POST /invoices/{id}/void          -> accounting:manage   (Void)
- *   POST /billing/subscription/order  -> billing:subscription:manage (PlanCard upgrade)
+ *   POST /billing/checkout            -> billing:subscription:manage (PlanCard upgrade)
  *
  * All five rendered unconditionally before this: no file under
  * `features/billing/` except `ai-credits-settings-page` and `billing-profile-tab`
  * held a `useCan` at all.
  */
+import type { ComponentProps } from "react";
 import { render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -192,9 +193,9 @@ describe("NewInvoiceForm", () => {
 });
 
 describe("PlanCard", () => {
-  const config = { monthlyPrice: 999, label: "Professional", features: ["Everything"] };
+  const config = { monthlyPrice: 999, annualPrice: 9590, label: "Professional", features: ["Everything"] };
 
-  function planCard() {
+  function planCard(overrides?: Partial<ComponentProps<typeof PlanCard>>) {
     return (
       <PlanCard
         plan="PROFESSIONAL"
@@ -205,7 +206,10 @@ describe("PlanCard", () => {
         upgradingPlan={null}
         isBusy={false}
         isConfigured
+        selectedPlan={null}
         onUpgrade={noop}
+        onSelect={noop}
+        {...overrides}
       />
     );
   }
@@ -223,5 +227,20 @@ describe("PlanCard", () => {
     render(planCard());
 
     expect(screen.getByRole("button", { name: /upgrade/i })).toBeInTheDocument();
+  });
+
+  it("disables the upgrade button for every plan while isBusy is true", () => {
+    grantOnly("billing:subscription:manage");
+    render(planCard({ isBusy: true, upgradingPlan: "PROFESSIONAL" }));
+
+    const button = screen.getByRole("button", { name: /processing/i });
+    expect(button).toBeDisabled();
+  });
+
+  it("disables Upgrade when isConfigured is false (payment gateway not ready)", () => {
+    grantOnly("billing:subscription:manage");
+    render(planCard({ isConfigured: false }));
+
+    expect(screen.getByRole("button", { name: /upgrade/i })).toBeDisabled();
   });
 });

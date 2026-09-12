@@ -5,10 +5,10 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
-import { PRICING } from "@/lib/pricing";
 
 interface PlanConfig {
   monthlyPrice: number;
+  annualPrice: number;
   label: string;
   features: string[];
 }
@@ -28,11 +28,9 @@ interface PlanCardProps {
   upgradingPlan: SubscriptionPlan | null;
   isBusy: boolean;
   isConfigured: boolean | undefined;
+  selectedPlan: SubscriptionPlan | null;
   onUpgrade: (plan: SubscriptionPlan) => void;
-}
-
-function getAnnualMonthlyPrice(monthlyPrice: number) {
-  return Math.round(monthlyPrice * (1 - PRICING.annualDiscountPct / 100));
+  onSelect: (plan: SubscriptionPlan) => void;
 }
 
 export function PlanCard({
@@ -44,34 +42,54 @@ export function PlanCard({
   upgradingPlan,
   isBusy,
   isConfigured,
+  selectedPlan,
   onUpgrade,
+  onSelect,
 }: PlanCardProps) {
-  // POST /billing/subscription/order and /verify both declare billing:subscription:manage.
   const canManageSubscription = useCan("billing:subscription:manage");
   const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
   const isEnterprise = plan === "ENTERPRISE";
   const tone = PLAN_TONE[plan];
   const isUpgrading = upgradingPlan === plan && isBusy;
+  const isSelected = selectedPlan === plan;
   const displayPrice =
     billingCycle === "annual"
-      ? getAnnualMonthlyPrice(config.monthlyPrice)
+      ? Math.round(config.annualPrice / 12)
       : config.monthlyPrice;
-  const annualTotal = Math.round(config.monthlyPrice * 12 * 0.8);
+  const annualTotal = config.annualPrice;
 
-  function handleUpgrade() {
+  function handleCardClick() {
+    if (!isCurrentPlan) onSelect(plan);
+  }
+
+  function handleUpgrade(e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation();
     onUpgrade(plan);
   }
 
   return (
     <div
+      role="button"
+      tabIndex={isCurrentPlan ? -1 : 0}
+      aria-label={`Select ${config.label} plan`}
+      aria-pressed={isSelected}
       className={cn(
         "relative flex flex-col rounded-lg border bg-card p-5 transition-shadow",
         isCurrentPlan
-          ? "border-primary ring-1 ring-primary/20"
-          : isEnterprise
-            ? "border-primary/30 hover:shadow-sm"
-            : "border-border hover:shadow-sm",
+          ? "border-primary ring-1 ring-primary/20 cursor-default"
+          : isSelected
+            ? "border-primary/60 ring-1 ring-primary/10 hover:shadow-sm cursor-pointer"
+            : isEnterprise
+              ? "border-primary/30 hover:shadow-sm cursor-pointer"
+              : "border-border hover:shadow-sm cursor-pointer",
       )}
+      onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && !isCurrentPlan) {
+          e.preventDefault();
+          onSelect(plan);
+        }
+      }}
     >
       {isCurrentPlan && (
         <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">
@@ -85,12 +103,12 @@ export function PlanCard({
           </div>
           <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
         </div>
-        <p className="text-2xl font-bold text-foreground">
+        <p className="text-2xl font-bold text-foreground tabular-nums">
           ₹{displayPrice.toLocaleString("en-IN")}
           <span className="text-sm font-normal text-muted-foreground">/mo</span>
         </p>
         {billingCycle === "annual" && (
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
             ₹{annualTotal.toLocaleString("en-IN")} billed annually
           </p>
         )}
@@ -105,9 +123,10 @@ export function PlanCard({
       </ul>
       {canManageSubscription ? (
         <LoadingButton
+          type="button"
           size="sm"
           variant={isCurrentPlan ? "secondary" : "default"}
-          disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
+          disabled={isCurrentPlan || !isConfigured || isBusy}
           isPending={isUpgrading}
           loadingText="Processing…"
           onClick={handleUpgrade}
