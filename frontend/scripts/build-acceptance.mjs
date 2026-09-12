@@ -34,6 +34,8 @@ import {
   renderMarkdownTable,
 } from "./lib/acceptance-matrix.mjs";
 
+const THIRD_PARTY_EXCLUDED_CONTEXT = '{ exclude: [["#feedbucket-root"]] }';
+
 const argv = process.argv.slice(2);
 const SELF_TEST = argv.includes("--self-test");
 const flag = (name, fallback) => {
@@ -267,7 +269,10 @@ async function main() {
       writeFileSync(path, Buffer.from(shot.data, "base64"));
       return path;
     };
-    const runAxe = async (session) => axeVerdict(await evaluate(session, axeExpression(), true));
+    const runAxe = async (session) =>
+      axeVerdict(
+        await evaluate(session, axeExpression(undefined, undefined, THIRD_PARTY_EXCLUDED_CONTEXT), true),
+      );
 
     await setWidth(cdp, 1280);
     log(`browser ${browserPath} · base ${baseUrl} · widths ${widths.join("/")}`);

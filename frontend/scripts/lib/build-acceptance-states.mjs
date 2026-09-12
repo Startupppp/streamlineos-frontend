@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { sleep, cdpSession, newPageTarget } from "./cdp.mjs";
+import { sleep, cdpSession, openPageTarget, closePageTarget } from "./cdp.mjs";
 import { axeVerdict, seriousViolations } from "./axe.mjs";
 import {
   cellFromChecks,
@@ -343,8 +343,10 @@ export async function runCrossTab({
   const checks = [];
   let axe = null;
   let peer = null;
+  let peerTarget = null;
   try {
-    peer = await cdpSession(await newPageTarget(debugPort));
+    peerTarget = await openPageTarget(debugPort);
+    peer = await cdpSession(peerTarget.wsUrl);
     await prepare(peer);
     await peer.send("Page.addScriptToEvaluateOnNewDocument", {
       source: crossTabProbeSource(channelPrefix),
@@ -401,6 +403,7 @@ export async function runCrossTab({
         void 0;
       }
     }
+    if (peerTarget) await closePageTarget(debugPort, peerTarget.id);
   }
   return cellFromChecks(state, width, checks, shots, axe);
 }

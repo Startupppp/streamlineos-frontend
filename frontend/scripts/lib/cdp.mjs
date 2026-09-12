@@ -90,6 +90,18 @@ export async function newPageTarget(debugPort) {
   return targets.webSocketDebuggerUrl;
 }
 
+export async function openPageTarget(debugPort) {
+  const target = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, {
+    method: "PUT",
+  }).then((r) => r.json());
+  return { wsUrl: target.webSocketDebuggerUrl, id: target.id };
+}
+
+export async function closePageTarget(debugPort, targetId) {
+  if (!targetId) return;
+  await fetch(`http://127.0.0.1:${debugPort}/json/close/${targetId}`).catch(() => {});
+}
+
 export async function firstPageTarget(debugPort) {
   const targets = await fetch(`http://127.0.0.1:${debugPort}/json/list`).then((r) => r.json());
   const target = targets.find((t) => t.type === "page");
