@@ -22,3 +22,7 @@ export const sessionDataSchema = z.object({
 });
 
 export type SessionData = z.infer<typeof sessionDataSchema>;
+
+export const sessionExchangeResponseSchema = z.object({
+  token: z.string().min(1),
+});

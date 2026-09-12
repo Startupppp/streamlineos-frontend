@@ -1,7 +1,11 @@
 import { cache } from "react";
 import { randomUUID } from "crypto";
 import { decodeJwt, SignJWT } from "jose";
-import { sessionDataSchema, type SessionData } from "@/lib/auth-session-schema";
+import {
+  sessionDataSchema,
+  sessionExchangeResponseSchema,
+  type SessionData,
+} from "@/lib/auth-session-schema";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { isRecord } from "@/lib/is-record";
@@ -108,8 +112,10 @@ export async function exchangeSessionForBackendJwt(
     });
     if (!res.ok) return null;
     const body: unknown = await res.json();
-    const data = unwrapBackend<{ token?: string }>(body);
-    return typeof data?.token === "string" && data.token.length > 0 ? data.token : null;
+    const parsed = sessionExchangeResponseSchema.safeParse(
+      unwrapBackend<unknown>(body),
+    );
+    return parsed.success ? parsed.data.token : null;
   } catch {
     return null;
   } finally {
