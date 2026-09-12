@@ -142,6 +142,15 @@ Evidence files: `evidence/frontend-data/fd1-onboarding-people.md`,
    `GET /org/members` accepts `limit` (`contracts/openapi.json`: integer 1..100)
    and the frontend never sent one, so the roster and every search keystroke were
    unbounded from the client. Repaired as an explicit bounded limit, keyed.
+1b. **My own correction:** the calendar repair above was first described as fixing an
+   *unbounded* read. It was not. `OrgMembersService.listMembers` does
+   `Math.min(options.limit ?? MAX_MEMBER_RESULTS, MAX_MEMBER_RESULTS)` with
+   `MAX_MEMBER_RESULTS = 100`, so the server always capped at 100 and sending no
+   limit meant taking that 100. The repair's real value is narrower and still
+   worth having: search now asks for 25 instead of inheriting 100 — 4× fewer rows
+   per keystroke against a 5-way leading-wildcard ILIKE — and the key now carries
+   the limit so a future consumer varying it cannot collide on one cache entry.
+   It is not a fix for an unbounded read.
 2. FD1's proposal to gate `useArchivedChannels` on `showArchived` is a
    **capability regression**, not a repair. `features/chat/channel-sidebar.tsx:354`
    uses the archived list to decide whether to show the archived entry point at
@@ -153,7 +162,7 @@ Evidence files: `evidence/frontend-data/fd1-onboarding-people.md`,
 | FD1 | DONE | 6 journeys inventoried. Duplicate HTTP **0** on every journey — repeated use of one hook coalesces and was counted separately, as required. Duplicate React subscriptions **0**: `useNotificationEvents` is a module-level ref-counted SSE singleton. Repeated SQL named per endpoint, deferred to FD4 |
 | FD2 | **DONE** | All four criteria met with evidence (table below). Repaired: inbox key normalization; `useBillingPlans` session gate; onboarding bank-step gate; calendar bounded+keyed limit. Every chat read verified already confined or gated |
 | FD3 | BLOCKED | Calendar writer invalidation added with `orgMembersAll`/`memberSearchAll` prefixes + test. Scope isolation 8/8 and the dehydrate→hydrate contract still pass. **Cannot close: this brief states query scope "does not itself fence in-flight switches or late session updates. Identity I6 owns that contract before switch safety can pass."** |
-| FD4 | DONE (measure/propose) | No unbounded server reads; all list endpoints cap server-side. 3 MEDIUM findings. 2 proposed indexes **BLOCKED** on live `EXPLAIN` |
+| FD4 | BLOCKED on DATASET, not environment | No unbounded server reads; all list endpoints cap server-side. 3 MEDIUM findings. `scratch_local` **was reached** and probed as the RLS-bound role — but the tenant holds **1 active member**, so a plan proves nothing |
 | FD5 | DONE (measure/propose) | **No fail-open cache.** No cache authorizes money or widens access — `assertWithinLimit` reads the DB on miss. 2 MEDIUM post-commit/stampede findings |
 | FD6 | PARTIAL | **`ignoreBuildErrors` REMOVED and the production build passes** (`BUILD_EXIT=0`). Test gate live and green at 0/338. Route JS measured: **6 real budget breaches on 3 routes**. Server response / first usable UI / request waterfall remain BLOCKED on the browser harness |
 | FD7 | PARTIAL | Icon-label gate extended to any button size + 7 real fixes. Remaining findings listed in the evidence file. **No screenshots or browser interaction** — contract gate 8 is BLOCKED |
@@ -285,6 +294,35 @@ Completion criteria: *"never render prior-scope private rows"* — test-proven a
 *"revoked access is denied by server even if the client cache is stale"* — source-proven, no
 fail-open cache. The one honest gap is the same-user/different-session row, which is the
 identity lane's cache and is recorded rather than claimed.
+
+### FD4 — the environment exists; the DATASET is what blocks the plan
+
+This lane first reported FD4/FD5 as blocked for want of a disposable environment.
+**That was wrong** — the access/billing lane's `9f11e3ffc` records `scratch_local`
+on `127.0.0.1:5432`, and it was reached from here and probed read-only:
+
+| Probe | Result |
+| --- | --- |
+| connection | `current_user = streamline_app` (the RLS-bound role, **not** a superuser — a superuser plan would bypass RLS and mislead), PostgreSQL **18.6** |
+| RLS on `organization_members` | **enabled**, policy `tenant_isolation`: `(org_id = app.current_org_id_or_null()) OR (user_id = app.current_user_id_or_null())` |
+| RLS on `users` / `organizations` | **disabled** — `users` is not row-isolated (503 rows visible); membership is the tenant boundary, not the user row |
+| tenant GUC | `app.organization_id`, set via `set_config(..., true)` inside the transaction |
+| `organizations` | 2 rows, readable without the GUC |
+| `organization_members` with GUC set | **1 ACTIVE member, 1 row total** |
+
+The first count without the GUC returned **zero** and would have read as "the table
+is empty". It is not: a tenant policy returns no rows when the GUC is unset, silently.
+Any scan of this schema that reports nothing has probably just forgotten the GUC.
+
+**So FD4 stays open for a precise reason: the fixture holds one member.** An
+`EXPLAIN (ANALYZE, BUFFERS)` over one row shows a trivial plan whichever index
+exists, so it cannot support a `bounded query/page cost on agreed dataset` claim,
+and it cannot tell whether the 5-way leading-wildcard ILIKE on `users` needs the
+proposed trigram index. `idx_org_members_org_status` on `(org_id, status)` exists
+and drives the join; `users` carries no trigram index. What FD4 needs is a **seeded
+tenant with realistic membership**, not an environment. Note also that a trigram
+index may not help here anyway — RLS defeats GIN/trigram unless the predicate is
+LEAKPROOF, which is the constraint recorded for this schema.
 
 ### Gate state at handoff — HEAD is not green, and it was not this lane
 
