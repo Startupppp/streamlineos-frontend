@@ -50,6 +50,7 @@ import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { findBrowser } from "./lib/chrome-launcher.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -59,15 +60,6 @@ const flag = (name, fallback) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
 };
-
-const BROWSER_CANDIDATES = [
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium",
-];
 
 const WCAG_AA_NORMAL = 4.5;
 const WCAG_AA_LARGE = 3;
@@ -749,12 +741,6 @@ const PAGE_PROBE = `(() => {
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-function findBrowser(explicit) {
-  if (explicit) return existsSync(explicit) ? explicit : null;
-  for (const p of BROWSER_CANDIDATES) if (existsSync(p)) return p;
-  return null;
 }
 
 async function waitForDevTools(port, timeoutMs) {

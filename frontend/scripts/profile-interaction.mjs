@@ -16,20 +16,13 @@ import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
+import { findBrowser } from "./lib/chrome-launcher.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (name, fallback) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
 };
-
-const BROWSER_CANDIDATES = [
-  process.env.CHROME_PATH,
-  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-  "/usr/bin/google-chrome",
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-].filter(Boolean);
 
 const MOBILE = {
   width: 390,
@@ -213,8 +206,8 @@ async function main() {
   const port = Number(flag("debug-port", "9231"));
   if (!cookieFile || !existsSync(cookieFile)) throw new Error("--cookie-file=<path> is required");
   const cookieValue = readFileSync(cookieFile, "utf8").trim();
-  const browser = BROWSER_CANDIDATES.find((p) => existsSync(p));
-  if (!browser) throw new Error("no Chrome found; set CHROME_PATH");
+  const browser = findBrowser(flag("browser", ""));
+  if (!browser) throw new Error("no Chrome found; set CHROME_PATH or pass --browser=<path>");
 
   const userDataDir = join(tmpdir(), `sl-profile-${randomBytes(6).toString("hex")}`);
   const proc = spawn(

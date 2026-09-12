@@ -27,6 +27,7 @@ import { join, resolve, dirname } from "node:path";
 import { tmpdir, loadavg, cpus } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { findBrowser, BROWSER_CANDIDATES } from "./lib/chrome-launcher.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -36,17 +37,6 @@ const flag = (name, fallback) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
 };
-
-const BROWSER_CANDIDATES = [
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium",
-  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-];
 
 const MIN_AUTHORIZED_NAV_LINKS = 3;
 const OFF_ROUTE_RETRIES = 3;
@@ -548,12 +538,6 @@ export function withDeadline(promise, ms, label) {
   return Promise.race([promise, deadline]).finally(() => {
     if (timer !== null) clearTimeout(timer);
   });
-}
-
-function findBrowser(explicit) {
-  if (explicit) return existsSync(explicit) ? explicit : null;
-  for (const p of BROWSER_CANDIDATES) if (existsSync(p)) return p;
-  return null;
 }
 
 async function waitForDevTools(port, timeoutMs) {
