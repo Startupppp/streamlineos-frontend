@@ -101,7 +101,8 @@ export default function MovementsPage() {
   );
 
   const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses();
+  const warehouses = warehousesData?.items ?? [];
 
   const canView = useCan("inventory:stock:read");
   const canAdjust = useCan("inventory:stock:adjust");
@@ -211,7 +212,7 @@ export default function MovementsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All warehouses</SelectItem>
-                {(warehouses ?? []).map((w) => (
+                {warehouses.map((w) => (
                   <SelectItem key={w.id} value={String(w.id)}>
                     {w.name}
                   </SelectItem>
@@ -274,7 +275,7 @@ export default function MovementsPage() {
                 value: warehouseParam,
                 options: [
                   { value: "all", label: "All warehouses" },
-                  ...(warehouses ?? []).map((w) => ({
+                  ...warehouses.map((w) => ({
                     value: String(w.id),
                     label: w.name,
                   })),

@@ -159,7 +159,8 @@ export default function TransfersPage() {
     limit: LIMIT,
   });
 
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
 
   const warehouseOptions = useMemo<ComboboxOption[]>(
     () => warehouses.map((w) => ({ value: String(w.id), label: w.name, sublabel: w.code })),

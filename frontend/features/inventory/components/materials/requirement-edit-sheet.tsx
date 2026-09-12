@@ -68,7 +68,8 @@ export function RequirementEditSheet({ requirement, projectId }: RequirementEdit
   const canManage = useCan(REQUIREMENT_MANAGE);
   const [open, setOpen] = useState(false);
   const update = useUpdateRequirement();
-  const { data: warehouses } = useWarehouses({ status: "active" });
+  const { data: warehousesData } = useWarehouses({ status: "active" });
+  const warehouses = warehousesData?.items;
 
   const settableStatus: Output["status"] =
     requirement.status === "DRAFT" || requirement.status === "CANCELLED"

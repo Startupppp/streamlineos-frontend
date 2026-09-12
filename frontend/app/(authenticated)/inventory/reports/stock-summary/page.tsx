@@ -195,7 +195,7 @@ function StockSummaryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const warehousesQuery = useWarehouses();
-  const warehouses = warehousesQuery.data ?? [];
+  const warehouses = warehousesQuery.data?.items ?? [];
 
   const [search, setSearch] = useState<string>(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);

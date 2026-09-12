@@ -21,7 +21,8 @@ import { newTransferSchema, NOTES_MAX, type FormValues } from "./new-transfer-sc
 import { WarehouseLocationPicker, LineRow } from "./new-transfer-line-fields";
 
 export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const { data: variants = [] } = useProductVariants({ activeOnly: true });
   const createMutation = useCreateTransfer();
 

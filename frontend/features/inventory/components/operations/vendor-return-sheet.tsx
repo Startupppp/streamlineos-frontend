@@ -241,7 +241,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                 <SelectValue placeholder="Select warehouse" />
               </SelectTrigger>
               <SelectContent>
-                {(warehousesQuery.data ?? []).map((wh) => (
+                {(warehousesQuery.data?.items ?? []).map((wh) => (
                   <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
                 ))}
               </SelectContent>

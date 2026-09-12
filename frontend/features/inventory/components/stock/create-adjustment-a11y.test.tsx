@@ -39,7 +39,7 @@ jest.mock("@/hooks/api/inventory/stock", () => ({
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
   ...jest.requireActual("@/hooks/api/inventory/warehouses"),
   useWarehouses: () => ({
-    data: [{ id: 1, name: "Central DC", code: "CDC" }],
+    data: { items: [{ id: 1, name: "Central DC", code: "CDC" }], total: 1, page: 1, totalPages: 1 },
     isLoading: false,
   }),
   useLocations: () => ({

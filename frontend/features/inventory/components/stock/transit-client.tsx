@@ -62,7 +62,8 @@ export function TransitClient() {
   const [pageSize, setPageSize] = useState(50);
   const [selected, setSelected] = useState<StrandedTransitRow | null>(null);
 
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const { data, isLoading, isError, error, refetch } = useStrandedTransit({
     view,
     warehouseId,

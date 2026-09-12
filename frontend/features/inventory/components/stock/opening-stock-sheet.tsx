@@ -27,7 +27,8 @@ interface OpeningStockSheetProps {
 
 export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps) {
   const { data: variants = [], isLoading: variantsLoading } = useProductVariants({ activeOnly: true });
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
 
   const openingMutation = useOpeningStock();
 

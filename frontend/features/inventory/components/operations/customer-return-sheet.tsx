@@ -199,7 +199,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                 <SelectValue placeholder="Select warehouse" />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                {(warehousesQuery.data ?? []).map((wh) => (
+                {(warehousesQuery.data?.items ?? []).map((wh) => (
                   <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
                 ))}
               </SelectContent>
