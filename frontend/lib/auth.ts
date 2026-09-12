@@ -17,6 +17,11 @@ import {
 } from "@/lib/auth-session";
 import { resolveSessionClaims } from "@/lib/auth-claims";
 
+function cleanSessionId(raw: string | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  return raw.startsWith("~") ? raw.slice(1) : raw;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   basePath: "/api/auth",
@@ -49,6 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 ...(ua ? { "x-client-user-agent": ua } : {}),
                 ...(ip ? { "x-client-ip": ip } : {}),
               },
+              timeout: 8_000,
             },
           );
           const data = unwrapBackend<{ userId?: string; sessionId?: string }>(
@@ -136,7 +142,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationAccess = user.organizationAccess ?? "none";
         token.suspendedOrganizationName =
           user.suspendedOrganizationName ?? null;
-        token.sessionId = user.sessionId ?? randomUUID();
+        token.sessionId = user.sessionId ?? `~${randomUUID()}`;
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
         token.authProvider = account?.provider ?? "credentials";
@@ -170,7 +176,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (!token.sessionId) {
-        token.sessionId = randomUUID();
+        token.sessionId = `~${randomUUID()}`;
       }
 
       return token;
@@ -194,7 +200,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.isOrgOwner = claims.isOrgOwner;
         }
         session.orgId = claims.orgId;
-        session.sessionId = token.sessionId;
+        session.sessionId = cleanSessionId(token.sessionId);
         session.plan = claims.plan;
         session.enabledModules = claims.enabledModules;
         if (token.daysUntilExpiry !== undefined)
@@ -205,17 +211,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.organizationAccess = claims.organizationAccess;
         session.suspendedOrganizationName = claims.suspendedOrganizationName;
 
-        const sessionId = token.sessionId?.trim();
-        if (token.id && sessionId) {
+        const rawSessionId = token.sessionId?.trim();
+        const sessionIsRegistered =
+          typeof rawSessionId === "string" && !rawSessionId.startsWith("~");
+        if (token.id && rawSessionId && sessionIsRegistered) {
           const userId = token.id;
-          const jwtCacheKey = `${userId}:${claims.orgId ?? ""}`;
+          const jwtCacheKey = `${userId}:${rawSessionId}:${claims.orgId ?? ""}`;
           const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
           if (cachedJwt) {
             session.backendJwt = cachedJwt;
           } else {
             const exchanged = await exchangeSessionForBackendJwt(
               userId,
-              sessionId,
+              rawSessionId,
               claims.orgId,
             );
             if (exchanged) {
@@ -238,7 +246,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.isOrgOwner = claims.isOrgOwner;
         }
         session.orgId = claims.orgId;
-        session.sessionId = token.sessionId;
+        session.sessionId = cleanSessionId(token.sessionId);
         session.plan = claims.plan;
         session.enabledModules = claims.enabledModules;
         session.authProvider = token.authProvider ?? "credentials";

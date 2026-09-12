@@ -9,11 +9,29 @@ import { resolveSessionClaims } from "@/lib/auth-claims";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
+const MAX_STORE_SIZE = 5_000;
+
 interface BackendJwtEntry {
   token: string;
   expiresAt: number;
 }
 const backendJwtStore = new Map<string, BackendJwtEntry>();
+
+function evictExpiredFromStore(): void {
+  const now = Date.now();
+  for (const [k, entry] of backendJwtStore) {
+    if (entry.expiresAt <= now) backendJwtStore.delete(k);
+  }
+}
+
+function enforceSizeBound(): void {
+  if (backendJwtStore.size < MAX_STORE_SIZE) return;
+  evictExpiredFromStore();
+  if (backendJwtStore.size < MAX_STORE_SIZE) return;
+  const sorted = [...backendJwtStore.entries()].sort((a, b) => a[1].expiresAt - b[1].expiresAt);
+  const toRemove = Math.ceil(sorted.length / 2);
+  for (let i = 0; i < toRemove; i += 1) backendJwtStore.delete(sorted[i][0]);
+}
 
 export function getBackendJwtFromStore(key: string): string | null {
   const entry = backendJwtStore.get(key);
@@ -31,10 +49,19 @@ export function setBackendJwtInStore(key: string, token: string): void {
     const exp = typeof claims.exp === "number" ? claims.exp : 0;
     const expiresAt = exp * 1000 - 60_000;
     if (expiresAt > Date.now()) {
+      enforceSizeBound();
       backendJwtStore.set(key, { token, expiresAt });
     }
   } catch {
   }
+}
+
+export function invalidateBackendJwtSession(userId: string, sessionId: string, orgId: string | null): void {
+  backendJwtStore.delete(`${userId}:${sessionId}:${orgId ?? ""}`);
+}
+
+export function clearBackendJwtStoreForTesting(): void {
+  backendJwtStore.clear();
 }
 
 export async function exchangeSessionForBackendJwt(
@@ -79,14 +106,14 @@ export async function exchangeSessionForBackendJwt(
       cache: "no-store",
       signal: controller.signal,
     });
-    clearTimeout(timeout);
     if (!res.ok) return null;
     const body: unknown = await res.json();
     const data = unwrapBackend<{ token?: string }>(body);
     return typeof data?.token === "string" && data.token.length > 0 ? data.token : null;
   } catch {
-    clearTimeout(timeout);
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -101,12 +128,12 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
         cache: "no-store",
         signal: controller.signal,
       });
-      clearTimeout(timeout);
       if (!res.ok) continue;
       const body: unknown = await res.json();
       const parsed = sessionDataSchema.safeParse(unwrapBackend<unknown>(body));
       if (parsed.success) return parsed.data;
     } catch {
+    } finally {
       clearTimeout(timeout);
     }
   }
@@ -141,14 +168,16 @@ export async function resolveGoogleUser(
   name?: string | null,
   image?: string | null,
 ): Promise<GoogleAuthResult | null> {
-  try {
-    const reqHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-      "x-internal-secret": INTERNAL_SECRET,
-    };
-    if (clientUserAgent) reqHeaders["x-client-user-agent"] = clientUserAgent;
-    if (clientIp) reqHeaders["x-client-ip"] = clientIp;
+  const reqHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-internal-secret": INTERNAL_SECRET,
+  };
+  if (clientUserAgent) reqHeaders["x-client-user-agent"] = clientUserAgent;
+  if (clientIp) reqHeaders["x-client-ip"] = clientIp;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
     const res = await fetch(`${BACKEND_URL}/auth/google`, {
       method: "POST",
       headers: withCorrelation(new Headers(reqHeaders)),
@@ -158,6 +187,7 @@ export async function resolveGoogleUser(
         name: name ?? undefined,
         image: image ?? undefined,
       }),
+      signal: controller.signal,
     });
     if (!res.ok) return null;
     const raw: unknown = await res.json();
@@ -169,6 +199,8 @@ export async function resolveGoogleUser(
     return { userId, sessionId };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

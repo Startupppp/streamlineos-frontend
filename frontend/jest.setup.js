@@ -27,3 +27,15 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
     dispatchEvent: () => false,
   });
 }
+
+// jsdom exposes neither TextEncoder/TextDecoder nor a WebCrypto `subtle`, which
+// `jose` needs. Server-only modules that sign a JWT (lib/auth-session.ts) must
+// therefore declare `@jest-environment node` rather than be polyfilled here:
+// under jsdom, jose's browser build throws inside SignJWT.sign(), so a caller
+// returns its failure path BEFORE reaching the network and a "returns null when
+// the response stalls" assertion passes without a request ever being made.
+const { TextEncoder, TextDecoder } = require("node:util");
+if (typeof globalThis.TextEncoder === "undefined")
+  globalThis.TextEncoder = TextEncoder;
+if (typeof globalThis.TextDecoder === "undefined")
+  globalThis.TextDecoder = TextDecoder;
