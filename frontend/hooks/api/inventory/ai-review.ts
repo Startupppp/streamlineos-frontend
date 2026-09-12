@@ -263,6 +263,7 @@ export interface SubmitInvAiFeedbackInput {
  * gateway's own usage log rather than believing the browser.
  */
 export function useSubmitInventoryAiFeedback() {
+  const qc = useQueryClient();
   return useIdempotentMutation<
     { id: number; verdict: InvAiVerdict; surface: string; createdAt: string },
     Error,
@@ -273,5 +274,46 @@ export function useSubmitInventoryAiFeedback() {
       apiClient.post("/inventory/ai/feedback", body, {
         headers: { "Idempotency-Key": idempotencyKey },
       }),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventoryAiReview.feedbackSummary(),
+      });
+    },
+  });
+}
+
+export interface InvAiFeedbackSummary {
+  days: number;
+  surfaces: Array<{
+    surface: string;
+    useful: number;
+    wrong: number;
+    stale: number;
+    unsafe: number;
+    total: number;
+    /** Excludes `unsafe` — an incident is not a low score. */
+    usefulRatio: number | null;
+  }>;
+  unsafeTotal: number;
+}
+
+/**
+ * How every AI surface is scoring, for whoever owns them.
+ *
+ * `GET /inventory/ai/feedback/summary` is still served. Restored after a
+ * mutation-guard sweep deleted it — it is a query, so that sweep could not
+ * legitimately have flagged it — and a second sweep then deleted the key it
+ * reads as unreferenced, taking the invalidation above with it.
+ */
+export function useInventoryAiFeedbackSummary(days = 30) {
+  const canManage = useCan("inventory:ai:manage");
+  return useQuery<InvAiFeedbackSummary, Error>({
+    queryKey: queryKeys.inventoryAiReview.feedbackSummary({ days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<InvAiFeedbackSummary>("/inventory/ai/feedback/summary", {
+        days: String(days),
+      }, signal),
+    enabled: canManage,
+    staleTime: 5 * 60_000,
   });
 }

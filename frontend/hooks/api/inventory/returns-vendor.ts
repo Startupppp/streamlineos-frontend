@@ -94,6 +94,30 @@ export function useVendorReturns(
   });
 }
 
+/**
+ * The detail read, mirroring `useCustomerReturn`.
+ *
+ * `GET /inventory/vendor-returns/:returnId` is still served, and
+ * `invalidateVendorReturn` above still invalidates this exact key after every
+ * approve, post and cancel — an invalidation with nothing to invalidate is what
+ * deleting this hook left behind. It was removed by an AbortSignal sweep that
+ * could only ever have asked for the signal to be threaded, as it now is.
+ */
+export function useVendorReturn(returnId: number | null) {
+  const canView = useCan("inventory:vendor-returns:manage");
+  return useQuery<VendorReturnSummary, Error>({
+    queryKey: queryKeys.inventory.vendorReturn(returnId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<VendorReturnSummary>(
+        `/inventory/vendor-returns/${returnId}`,
+        undefined,
+        signal,
+      ),
+    staleTime: 30_000,
+    enabled: canView && returnId !== null,
+  });
+}
+
 export function useCreateVendorReturn() {
   const qc = useQueryClient();
   return useIdempotentMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({

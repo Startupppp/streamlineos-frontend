@@ -27,5 +27,13 @@ export const inventoryAiReviewQueryKeys = {
     review: [...base, "inventory", "ai-review", "anomalies", "review"] as const,
     demandRisk: [...base, "inventory", "ai-review", "demand-risk"] as const,
     feedback: [...base, "inventory", "ai-review", "feedback"] as const,
+    /**
+     * Restored: `useInventoryAiFeedbackSummary` (`hooks/api/inventory/ai-review.ts`)
+     * reads this and `useSubmitInventoryAiFeedback` invalidates it. It was deleted
+     * as a leaf with no reader in the same second a sibling sweep deleted both, so
+     * each deletion looked justified by the other.
+     */
+    feedbackSummary: (params?: object) =>
+      trimKey(...base, "inventory", "ai-review", "feedback", "summary", params),
   },
 } as const;

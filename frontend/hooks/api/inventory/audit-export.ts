@@ -79,6 +79,29 @@ export function useAuditExportJobs(params?: { page?: number; limit?: number }) {
   });
 }
 
+/**
+ * One settling job, for a caller watching a single export rather than the list.
+ *
+ * `GET /inventory/audit-export/jobs/:jobId` is still served. Restored after the
+ * key it reads was deleted as unreferenced while this hook was calling it, and
+ * this hook was then deleted as collateral of an AbortSignal sweep — which could
+ * only ever have asked for the signal to be threaded, as it now is.
+ */
+export function useAuditExportJob(jobId: number | null) {
+  const canExport = useCan("inventory:audit:export");
+  return useQuery<AuditExportJob, Error>({
+    queryKey: queryKeys.inventoryAuditExport.job(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<AuditExportJob>(
+        `/inventory/audit-export/jobs/${jobId ?? 0}`,
+        undefined,
+        signal,
+      ),
+    staleTime: 0,
+    enabled: canExport && jobId !== null,
+  });
+}
+
 export function useCreateAuditExportJob() {
   const qc = useQueryClient();
   return useIdempotentMutation<AuditExportJob, Error, { from?: string; to?: string }>({

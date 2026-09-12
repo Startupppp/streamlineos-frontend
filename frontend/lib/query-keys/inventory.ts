@@ -269,6 +269,13 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "demandBaseline", productVariantId),
     supplierDelayBriefing: (vendorId?: string) =>
       k(...base, "inventory", "supplierDelayBriefing", vendorId),
+    /**
+     * Restored: `useVariantLabel` (`hooks/api/inventory/labels.ts`) reads this.
+     * It was deleted as a leaf with no reader in the same second a sibling sweep
+     * deleted that hook, so the two deletions each looked justified by the other.
+     */
+    variantLabel: (productVariantId: number, lotId?: number) =>
+      k(...base, "inventory", "variantLabel", productVariantId, lotId),
     qualityHold: (qualityHoldId: number) => k(...base, "inventory", "qualityHold", qualityHoldId),
     webhooks: () => k(...base, "inventory", "webhooks"),
     webhookEvents: (webhookId: number, params?: Record<string, unknown>) =>
