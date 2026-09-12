@@ -19,6 +19,7 @@ import type {
 } from "@/features/timesheets/payroll/types";
 import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const periodSummaryC = lazyContract(() =>
@@ -104,10 +105,15 @@ export function useUpdateTimesheetPayrollSettings() {
 
 export function useCreateTimesheetPayrollExport() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("timesheets:payroll:export", {
+  return useAuthorizedIdempotentMutation<CreateExportResponse, Error, CreateExportBody>("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "createExport"],
-    mutationFn: (data: CreateExportBody) =>
-      apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data, undefined, runExportC),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<CreateExportResponse>(
+        "/timesheets/payroll/export",
+        data,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        runExportC,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.all });
     },
@@ -133,16 +139,24 @@ export function useTimesheetPayrollExports(limit = 20) {
 
 export function useAckPayrollExport() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("timesheets:payroll:export", {
-    mutationKey: ["timesheets", "payroll", "ackExport"],
-    mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }) =>
-      apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data, undefined, ackExportC),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...usersAndCommerceQueryKeys.timesheets.all, "payroll", "exports"] });
-      toast.success("Acknowledgement recorded");
+  return useAuthorizedIdempotentMutation<AckExportResponse, Error, { exportId: number; data: AckExportInput }>(
+    "timesheets:payroll:export",
+    {
+      mutationKey: ["timesheets", "payroll", "ackExport"],
+      mutationFn: ({ exportId, data }, idempotencyKey) =>
+        apiClient.patch<AckExportResponse>(
+          `/timesheets/payroll/exports/${exportId}/ack`,
+          data,
+          { headers: { "Idempotency-Key": idempotencyKey } },
+          ackExportC,
+        ),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exports() });
+        toast.success("Acknowledgement recorded");
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
+  );
 }
 
 export function payrollExportRowsQueryOptions(exportId: number) {
