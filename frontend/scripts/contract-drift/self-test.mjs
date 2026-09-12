@@ -245,6 +245,28 @@ export function runSelfTest() {
       namedAfterContract[0].requestFields?.has("hours") === true,
   );
 
+  const inlineParam = extract(
+    "    mutationFn: (range: { start: string; end: string }) =>\n" +
+      '      apiClient.post<AttendanceDraftResult>("/timesheets/entries/from-attendance", range),\n',
+  );
+  assert(
+    "inline object parameter resolves as a request shape",
+    inlineParam.length === 1 &&
+      inlineParam[0].requestFields?.has("start") === true &&
+      inlineParam[0].requestFields?.has("end") === true,
+  );
+
+  const constParams = extract(
+    "    const params = { userId: input.userId, page: input.page ?? 1, limit: 25 };\n" +
+      '    apiClient.get<OverdueQueueResult>("/timesheets/periods/overdue", params),\n',
+  );
+  assert(
+    "const object params resolve as a request shape",
+    constParams.length === 1 &&
+      constParams[0].requestFields?.has("userId") === true &&
+      constParams[0].requestFields?.has("limit") === true,
+  );
+
   const nestedGeneric = extract(
     '      return apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal, entriesListC);\n',
   );
