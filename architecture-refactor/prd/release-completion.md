@@ -53,6 +53,44 @@ Two of ARCH-003's four gates are closed. The other two are open for stated reaso
 and reverted, because absorbing a failure into a ceiling is the exact failure mode these
 gates exist to catch.
 
+### Backend: production code typechecks, specs do not — 78 errors, no gate watching
+
+Measured 2026-09-12. `tsc -p tsconfig.build.json` is **exit 0**. `tsc -p tsconfig.json`,
+which is the same program plus the specs, is **exit 2 with 78 errors across 15 files —
+every one a spec**. No production file has an error, which is exactly why this went
+unnoticed: `nest build` uses the build config, so nothing in CI ever compiles a spec.
+
+Backend size and cycle gates are green: `check-over-300` **408 of 5122, baseline 413**,
+`check-file-sizes` **0** after three merge-introduced files were split
+(`shopify-admin.adapter.ts` 622 → 332 + a 269-line http module,
+`sign-envelope-sweeps.service.ts` 551 → 468, `channel-job.drizzle-store.ts` 516 → 480),
+and `madge --circular` reports **no circular dependency**. No exception was registered.
+
+The 78 are mostly arity and removed-member breaks, which is the failure mode
+`backend/CLAUDE.md` §8 already warns about — a constructor gains a parameter and only a
+typecheck sees it:
+
+| File | Errors |
+| --- | --- |
+| `inventory/stock-engine/__tests__/quantity.property.spec.ts` | 47 |
+| `auth/register-provisioning.spec.ts` | 9 — calls `AuthService.register`, which was **deleted** with the register route |
+| `inventory/stock-engine/__tests__/available-formula-parity.db.spec.ts` | 4 |
+| `billing/core/platform-provider-reachability.spec.ts` | 3 |
+| 11 further specs | 1–2 each |
+
+Three of the e-sign entries are live work, not rot: `sign-envelopes.service.ts` is being
+split right now and its specs still construct the old arity, so `this.lookup` is
+`undefined` and the suite fails with `Cannot read properties of undefined`. Leave those
+to whoever is mid-split; they are not stale.
+
+**The structural point outranks the count.** The frontend hit exactly this and fixed it —
+`check-test-typecheck` is a hard gate at zero, and it has already caught a spec asserting
+a deleted method and a page that did not compile. The backend has **no equivalent gate**,
+so its spec typecheck can drift indefinitely while every green build says otherwise.
+Repairing the 78 without adding the gate buys nothing; the gate is the deliverable and
+the 78 are its first run. Not started here because another session is mid-split in
+`e-sign`, and a fix landed on top of that would collide.
+
 ### The 10 dead files are one unreachable island — owner: accounting rewrite
 
 `check-dead-code` reports these with "no live importers found in module graph":
