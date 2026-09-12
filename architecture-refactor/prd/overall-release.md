@@ -13,6 +13,37 @@ Scope: Run backend and frontend typecheck/build, unit and focused integration su
 
 Completion: A single release record captures revisions, commands, exit codes, totals, environment, and artifacts; all required checks are green.
 
+### Release ordering is a hard constraint — API first, then the web app
+
+Decided 2026-09-12 by the release owner. This is a deployment requirement, not a
+recommendation, and REL-001 does not pass without it stated in the runbook.
+
+Frontend response contracts require their fields as **non-optional**. Deploying the
+web app ahead of an API that predates a field therefore takes the whole route down
+through its error boundary — not a degraded value, the entire screen. Worked example,
+observed live in a browser on 2026-09-12 against a compiled `backend/dist` that
+predated one field: `GET /billing/plans` returned **200**, the client contract rejected
+it (`plans.N.annualTotalPaise: expected number, received undefined`), `ApiContractError`
+propagated, and `app/(authenticated)/settings/billing/error.tsx` rendered "Billing
+Error — Failed to load billing data." Backend *source* had the field; only the built
+artifact did not. This is the same failure class the retained `/billing`
+`platformCheckout` incident records.
+
+Contract strictness is deliberately **retained**: it is what surfaced both incidents.
+The cost is paid in deploy order instead.
+
+Two consequences for acceptance:
+- A browser capture or screenshot sweep of any route is void unless both artifacts are
+  newer than the source they were built from. The failure renders as a populated error
+  page, so a sweep records it as the route's real state.
+- A green `next build` does not prove every route emitted its client reference manifest.
+  A build over a polluted `.next` exited 0, wrote a `BUILD_ID`, and still left
+  `/settings/billing/ai-credits` and `/settings/roles/simulate` returning 500 with
+  `InvariantError: The client reference manifest for route "<route>" does not exist`.
+  Only `rm -rf .next` plus a full rebuild cleared it, and it surfaces only when the
+  route is actually requested. Smoke-request representative routes before accepting a
+  build as capture-ready.
+
 Completed lane prerequisites are linked from their owning lanes: ARCH-001, CHAT-001,
 CHAT-004, BUILD-001, DOC-001, DOC-003, RBAC-003, RBAC-005 and ARCH-004. Only unresolved prerequisites appear above.
 
@@ -30,25 +61,19 @@ remove in-scope unchecked assertions and stale exception entries; add the missin
 bounded lock timeout to the newly appended placement-policy migration without
 changing its policy. CRM/Inventory implementation remains outside the approved PRD.
 
-Final strict recheck (2026-09-11) found nine integration errors after concurrent
-organization/onboarding extractions: two HR catalog calls still name removed
-hierarchy delete methods, and seven test constructors retain removed arguments.
-The other session has since corrected the seven constructor sites (including its
-intentional deletion of the obsolete seat-limit spec), which were left untouched.
-Three current focused suites / ten tests pass, but their catalog mocks invent the
-two removed methods. A direct probe against the real `OrgHierarchyService`
-prototype reproduces both `TypeError: ... is not a function` failures without any
-database access. Registered `HrOrgStructureCompatController` DELETE routes still
-call them. This is a production break, not merely a type-check inconvenience.
+Historical integration defect (2026-09-11): HR compatibility DELETE routes called
+removed hierarchy methods; a real-prototype probe reproduced TypeErrors while mocks
+missed them. Current 2026-09-12 source recheck finds those DELETE handlers and
+`deleteLocation`/`deleteTeam` callers removed from `hr/core/hr-org-structure-compat.controller.ts`
+and `hr-org-catalog.service.ts`. Do not restore deletion or repeat the old repair.
+Final HTTP/OpenAPI compatibility and integrated type gates remain REL-001 acceptance;
+source retirement alone is not deployed-route proof.
 
-The concurrent org-access PRD's D4 / section 9 explicitly retires six canonical
-`/org-hierarchy/*` DELETE routes, but does not specify the two `/hr/org/locations/*`
-and `/hr/org/teams/*` aliases. Restoring canonical deletion contradicts that
-decision; substituting archive would change the old dependency/removal contract.
-**Owner decision required:** explicitly retire those legacy aliases too, or define
-their surviving behavior. No deletion/retirement behavior or route removal was
-invented, and none of the other session's implementation was overwritten. Repeat
-source/test typechecks and focused HTTP/permission tests after that decision.
+Current reconciliation: all recovery lanes still have residual work in the index.
+REL-001 also depends on their unchecked customer-flow/security/schema/cache/UX gates,
+not only the older stable IDs above. Frontend query-scope passes; request-params,
+file-size/growth and bundle provenance fail in the current targeted recheck.
+Earlier integration passes below are historical and must not override these results.
 
 ### Current integration evidence — 2026-09-10
 
