@@ -131,9 +131,33 @@ describe("resolveWizardGate", () => {
             orgId: "org-1",
             organizationAccess: "active",
           }),
-          withCookie(gateCookieName("onboarding-done", "user-1")),
+          withCookie(gateCookieName("onboarding-done", "user-1--org-1")),
         ),
       ).toBeNull();
+    });
+
+    it("does not accept a cookie scoped to the user alone", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+          }),
+          withCookie(gateCookieName("onboarding-done", "user-1")),
+        ),
+      ).toBe("/employee-onboarding");
+    });
+
+    it("does not accept a cookie scoped to a different organization", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-2",
+            organizationAccess: "active",
+          }),
+          withCookie(gateCookieName("onboarding-done", "user-1--org-1")),
+        ),
+      ).toBe("/employee-onboarding");
     });
 
     it("fires when the DB stamp is absent and no cookie exists (cross-device re-trap without fix)", () => {
