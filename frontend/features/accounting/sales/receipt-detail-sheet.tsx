@@ -20,7 +20,7 @@ import {
   useReverseArReceipt,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
-import type { AllocationLineInput } from "@/types/accounting-ar";
+import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ReceiptStatusBadge } from "./ar-labels";
 

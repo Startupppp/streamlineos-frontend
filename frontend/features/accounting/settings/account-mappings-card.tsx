@@ -17,7 +17,8 @@ import { useCan } from "@/hooks/api/access";
 import { useAccountMappings, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import { useSetAccountSystemTag } from "@/hooks/api/accounting/ledger-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { AccountSystemTagMapping, GlSystemTag } from "@/types/accounting-kernel";
+import type { GlSystemTag } from "@/types/accounting-kernel";
+import type { AccountSystemTagMapping } from "@/types/accounting-kernel-ext";
 
 /**
  * What each role is, in the language of the person mapping it.

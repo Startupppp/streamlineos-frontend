@@ -9,28 +9,8 @@ import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
-import type {
-  ApAgingParams,
-  ApAgingReport,
-  ApAllocationInput,
-  ApDocumentDetail,
-  ApDocumentPage,
-  ApLedgerTieOut,
-  ApPayment,
-  ApPaymentPage,
-  ApPaymentPostResult,
-  ApPostResult,
-  ApTaxPreview,
-  CreateApDocumentInput,
-  ListApDocumentsParams,
-  ListApPaymentsParams,
-  ListVendorsParams,
-  PostApPaymentInput,
-  SaveVendorInput,
-  UpdateApDocumentInput,
-  VendorDetail,
-  VendorPage,
-} from "@/types/accounting-ap";
+import type { ApDocumentDetail, ApDocumentPage, ApTaxPreview, ListVendorsParams, SaveVendorInput, VendorDetail, VendorPage } from "@/types/accounting-ap";
+import type { ApAgingParams, ApAgingReport, ApAllocationInput, ApLedgerTieOut, ApPayment, ApPaymentPage, ApPaymentPostResult, ApPostResult, CreateApDocumentInput, ListApDocumentsParams, ListApPaymentsParams, PostApPaymentInput, UpdateApDocumentInput } from "@/types/accounting-ap-payments";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 

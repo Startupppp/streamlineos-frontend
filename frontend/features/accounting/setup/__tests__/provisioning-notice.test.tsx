@@ -166,8 +166,14 @@ describe("the frontend renders every state the backend can return", () => {
   });
 
   it("keeps the frontend union in step with the backend's", () => {
-    const types = readFileSync(new URL("../../../../types/accounting-kernel.ts", import.meta.url), "utf8");
+    const types = [
+      "../../../../types/accounting-kernel.ts",
+      "../../../../types/accounting-kernel-ext.ts",
+    ]
+      .map((rel) => readFileSync(new URL(rel, import.meta.url), "utf8"))
+      .join("\n");
     const at = types.indexOf("export type AccountingProvisioning");
+    expect(at).toBeGreaterThanOrEqual(0);
     const union = types.slice(at, types.indexOf("export interface AccountingSetupStatusDisabled", at));
     const missing = backendStates().filter((state) => !union.includes(`"${state}"`));
     expect(missing).toEqual([]);

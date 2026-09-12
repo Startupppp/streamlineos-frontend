@@ -55,8 +55,6 @@ const PUTAWAY_QTY = 4;
 /** Picked. Must be available at a single bin or the allocator splits the line. */
 const PICK_QTY = 2;
 
-test.use({ viewport: RF_VIEWPORT });
-
 /**
  * The runner, with its own document on screen.
  *
@@ -147,6 +145,8 @@ const test = base.extend<
     { auto: true },
   ],
 });
+
+test.use({ viewport: RF_VIEWPORT });
 
 /**
  * Runtime-selected, because whether this suite can run is a property of the

@@ -6,7 +6,7 @@ import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { ApAgingPartyRow } from "@/types/accounting-ap";
+import type { ApAgingPartyRow } from "@/types/accounting-ap-payments";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
 
 interface VendorAgingSheetProps {

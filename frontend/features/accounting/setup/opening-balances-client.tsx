@@ -21,7 +21,7 @@ import {
   usePostOpeningBalances,
   usePreviewOpeningBalances,
 } from "@/hooks/api/accounting/ledger-mutations";
-import type { OpeningBalanceLineInput } from "@/types/accounting-kernel";
+import type { OpeningBalanceLineInput } from "@/types/accounting-kernel-ext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);

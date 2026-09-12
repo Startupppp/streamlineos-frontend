@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
-import type { AccountSystemTagMapping } from "@/types/accounting-kernel";
+import type { AccountSystemTagMapping } from "@/types/accounting-kernel-ext";
 import { AccountMappingsCard } from "../account-mappings-card";
 
 /**

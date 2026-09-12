@@ -23,7 +23,7 @@ import {
   useUpdateCreditNoteDraft,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
-import type { AllocationLineInput } from "@/types/accounting-ar";
+import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ArStatusBadge } from "./ar-labels";
 import { ArDraftEditor } from "./ar-draft-editor";

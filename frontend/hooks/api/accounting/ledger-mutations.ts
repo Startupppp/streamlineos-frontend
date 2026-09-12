@@ -7,21 +7,23 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   AccountNode,
   AccountingPeriod,
+  FiscalYear,
+  GlSystemTag,
+  Journal,
+} from "@/types/accounting-kernel";
+import type {
   CreateAccountInput,
   EnableAccountingInput,
   EnableAccountingResult,
-  FiscalYear,
   FxPreview,
   FxRate,
-  GlSystemTag,
-  Journal,
   OpeningBalancesInput,
   OpeningBalancesPreview,
   PostJournalInput,
   TaxRegistration,
   TaxRegime,
   UpdateAccountInput,
-} from "@/types/accounting-kernel";
+} from "@/types/accounting-kernel-ext";
 
 export function useEnableAccounting() {
   const queryClient = useQueryClient();

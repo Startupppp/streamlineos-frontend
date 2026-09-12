@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useAllocateDebitNote, useApDocuments } from "@/hooks/api/accounting/ap";
-import type { ApAllocationInput, ApDocumentDetail } from "@/types/accounting-ap";
+import type { ApDocumentDetail } from "@/types/accounting-ap";
+import type { ApAllocationInput } from "@/types/accounting-ap-payments";
 import { AllocateOpenBillsSheet } from "../shared/allocate-open-bills-sheet";
 
 interface ApplyVendorCreditActionProps {

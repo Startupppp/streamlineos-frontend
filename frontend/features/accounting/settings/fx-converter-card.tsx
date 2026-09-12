@@ -12,7 +12,7 @@ import { usePreviewFx } from "@/hooks/api/accounting/ledger-mutations";
 import { formatRate, parseMoneyInput } from "@/lib/accounting/money";
 import { getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { FxPreview } from "@/types/accounting-kernel";
+import type { FxPreview } from "@/types/accounting-kernel-ext";
 
 export function FxConverterCard({ baseCurrency }: { baseCurrency: string }) {
   const currencies = useCurrencies();

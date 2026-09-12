@@ -7,20 +7,22 @@ import { useCan } from "@/hooks/api/access";
 import type {
   AccountLedger,
   AccountNode,
-  AccountSystemTagMapping,
   AccountingBook,
   AccountingPeriod,
-  AccountingSetupStatus,
-  BookCurrency,
-  Currency,
   FiscalYear,
-  FxRate,
   Journal,
   LocalizationPackSummary,
   PostableAccount,
-  TaxRegistration,
   TrialBalanceReport,
 } from "@/types/accounting-kernel";
+import type {
+  AccountSystemTagMapping,
+  AccountingSetupStatus,
+  BookCurrency,
+  Currency,
+  FxRate,
+  TaxRegistration,
+} from "@/types/accounting-kernel-ext";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 

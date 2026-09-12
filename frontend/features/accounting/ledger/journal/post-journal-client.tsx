@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { LedgerRejectionCode } from "@/types/accounting-kernel-ext";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -218,21 +219,24 @@ export function PostJournalClient() {
   );
 }
 
+const REJECTION_MESSAGES = new Map<string, string>(
+  Object.entries({
+    UNBALANCED:
+      "Debits and credits are not equal, so this entry cannot be posted.",
+    PERIOD_LOCKED:
+      "The accounting period covering this date is locked. Pick a later date, or ask someone with reopen rights to unlock it.",
+    ACCOUNT_IS_HEADER:
+      "One of the accounts on this entry is a grouping row. Grouping rows organise the chart and can never be posted to — pick the account underneath it.",
+    ACCOUNT_INACTIVE:
+      "One of the accounts on this entry has been switched off. Turn it back on in the chart of accounts, or pick another account.",
+    ACCOUNT_CURRENCY_RESTRICTED:
+      "One of the accounts on this entry only accepts a different currency.",
+    PERIOD_NOT_FOUND:
+      "No accounting period covers this date. Open the fiscal year first.",
+  } satisfies Partial<Record<LedgerRejectionCode, string>>),
+);
+
 function rejectionMessage(code: string | undefined, fallback: string): string {
-  switch (code) {
-    case "UNBALANCED":
-      return "Debits and credits are not equal, so this entry cannot be posted.";
-    case "PERIOD_LOCKED":
-      return "The accounting period covering this date is locked. Pick a later date, or ask someone with reopen rights to unlock it.";
-    case "ACCOUNT_IS_HEADER":
-      return "One of the accounts on this entry is a grouping row. Grouping rows organise the chart and can never be posted to — pick the account underneath it.";
-    case "ACCOUNT_INACTIVE":
-      return "One of the accounts on this entry has been switched off. Turn it back on in the chart of accounts, or pick another account.";
-    case "ACCOUNT_CURRENCY_RESTRICTED":
-      return "One of the accounts on this entry only accepts a different currency.";
-    case "PERIOD_NOT_FOUND":
-      return "No accounting period covers this date. Open the fiscal year first.";
-    default:
-      return fallback;
-  }
+  if (code === undefined) return fallback;
+  return REJECTION_MESSAGES.get(code) ?? fallback;
 }

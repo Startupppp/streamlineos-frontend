@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatMinorMoney, moneyInputValue, parseMoneyInput } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { ApAllocationInput, ApDocumentSummary } from "@/types/accounting-ap";
+import type { ApDocumentSummary } from "@/types/accounting-ap";
+import type { ApAllocationInput } from "@/types/accounting-ap-payments";
 
 const allocationFormSchema = z.object({
   amounts: z.array(z.string()),

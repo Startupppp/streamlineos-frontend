@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { TaxRegime } from "@/types/accounting-kernel";
+import type { TaxRegime } from "@/types/accounting-kernel-ext";
 import type { CreatePartyTaxRegistrationInput } from "@/types/accounting-ar";
 
 export const TAX_REGIME_OPTIONS: ReadonlyArray<{ value: TaxRegime; label: string }> = [

@@ -1,5 +1,5 @@
 import { parseMoneyInput } from "@/lib/accounting/money";
-import type { ApDocumentLineInput, CreateApDocumentInput } from "@/types/accounting-ap";
+import type { ApDocumentLineInput, CreateApDocumentInput } from "@/types/accounting-ap-payments";
 import { textOrNull } from "../lib/form-values";
 import type { BillFormValues } from "./bill-form-schema";
 

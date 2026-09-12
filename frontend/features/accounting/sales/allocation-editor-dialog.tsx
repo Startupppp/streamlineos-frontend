@@ -15,7 +15,8 @@ import { formatMinorMoney, parseMoneyInput } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArInvoices } from "@/hooks/api/accounting/ar";
-import type { AllocationLineInput, ArDocumentSummary } from "@/types/accounting-ar";
+import type { ArDocumentSummary } from "@/types/accounting-ar";
+import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
 
 const OPEN_ITEMS_PAGE_SIZE = 50;
 

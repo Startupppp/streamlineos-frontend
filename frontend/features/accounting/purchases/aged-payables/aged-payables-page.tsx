@@ -13,7 +13,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
 import { useApAging } from "@/hooks/api/accounting/ap";
-import { AP_AGING_BUCKETS, type ApAgingPartyRow } from "@/types/accounting-ap";
+import { AP_AGING_BUCKETS, type ApAgingPartyRow } from "@/types/accounting-ap-payments";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
 import { todayIso } from "../lib/ap-dates";
 import { useUrlListState } from "../lib/use-url-list-state";

@@ -1,11 +1,6 @@
 import type { BadgeTone } from "@/components/ui/semantic-badge";
-import type {
-  ApAgingBucket,
-  ApDocumentStatus,
-  ApDocumentType,
-  ApPaymentStatus,
-  TaxCategory,
-} from "@/types/accounting-ap";
+import type { ApDocumentStatus, ApDocumentType, ApPaymentStatus, TaxCategory } from "@/types/accounting-ap";
+import type { ApAgingBucket } from "@/types/accounting-ap-payments";
 
 export const AP_STATUS_LABELS: Readonly<Record<ApDocumentStatus, string>> = {
   DRAFT: "Draft",

@@ -7,12 +7,8 @@ import { EntityFormSheet } from "@/components/shared";
 import { parseMoneyInput } from "@/lib/accounting/money";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useApDocuments, usePostApPayment } from "@/hooks/api/accounting/ap";
-import type {
-  ApAllocationInput,
-  PostApPaymentInput,
-  VendorSummary,
-  WithholdingInstruction,
-} from "@/types/accounting-ap";
+import type { VendorSummary } from "@/types/accounting-ap";
+import type { ApAllocationInput, PostApPaymentInput, WithholdingInstruction } from "@/types/accounting-ap-payments";
 import { todayIso } from "../lib/ap-dates";
 import { textOrNull, textOrUndefined } from "../lib/form-values";
 import { PaymentFormFields } from "./payment-form-fields";

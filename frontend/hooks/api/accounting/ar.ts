@@ -13,27 +13,29 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type { Journal } from "@/types/accounting-kernel";
 import type {
-  AgingQuery,
-  AgingReport,
-  AgingOpenItem,
-  AllocationLineInput,
   ArDocumentPage,
   ArDocumentView,
-  ArReceiptPage,
-  ArReceiptView,
   CreateCreditNoteInput,
   CreateInvoiceInput,
-  CreateReceiptInput,
-  CreditNoteAllocationResult,
   CreditNoteFromInvoiceInput,
   DeletedResult,
-  FrozenTaxLine,
   ListArDocumentsQuery,
+  UpdateArDraftInput,
+} from "@/types/accounting-ar";
+import type {
+  AgingOpenItem,
+  AgingQuery,
+  AgingReport,
+  AllocationLineInput,
+  ArReceiptPage,
+  ArReceiptView,
+  CreateReceiptInput,
+  CreditNoteAllocationResult,
+  FrozenTaxLine,
   ListReceiptsQuery,
   ReverseReceiptInput,
   TaxPreview,
-  UpdateArDraftInput,
-} from "@/types/accounting-ar";
+} from "@/types/accounting-ar-receipts";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 

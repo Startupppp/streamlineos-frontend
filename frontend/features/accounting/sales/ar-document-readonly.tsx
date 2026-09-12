@@ -6,7 +6,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { ArDocumentLineView, ArDocumentView, FrozenTaxLine } from "@/types/accounting-ar";
+import type { ArDocumentLineView, ArDocumentView } from "@/types/accounting-ar";
+import type { FrozenTaxLine } from "@/types/accounting-ar-receipts";
 import { quantityLabel } from "./ar-document-schema";
 
 function AmountRow({

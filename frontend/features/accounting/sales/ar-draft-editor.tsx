@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { ArDocumentView, TaxPreview } from "@/types/accounting-ar";
+import type { ArDocumentView } from "@/types/accounting-ar";
+import type { TaxPreview } from "@/types/accounting-ar-receipts";
 import { ArDocumentForm } from "./ar-document-form";
 import { TaxPreviewPanel } from "./tax-preview-panel";
 import {

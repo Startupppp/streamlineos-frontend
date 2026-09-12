@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import type { AccountingProvisioning } from "@/types/accounting-kernel";
+import type { AccountingProvisioning } from "@/types/accounting-kernel-ext";
 
 /**
  * The provisioning verdict, rendered.

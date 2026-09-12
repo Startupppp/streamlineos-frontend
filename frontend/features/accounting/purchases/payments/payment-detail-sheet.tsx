@@ -18,7 +18,7 @@ import {
   useApPayment,
   useReverseApPayment,
 } from "@/hooks/api/accounting/ap";
-import type { ApAllocationInput } from "@/types/accounting-ap";
+import type { ApAllocationInput } from "@/types/accounting-ap-payments";
 import { AP_PAYMENT_STATUS_LABELS, AP_PAYMENT_STATUS_TONES } from "../lib/ap-labels";
 import { AllocateOpenBillsSheet } from "../shared/allocate-open-bills-sheet";
 

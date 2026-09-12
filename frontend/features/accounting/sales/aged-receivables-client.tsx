@@ -24,7 +24,7 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { RECEIVABLES_READ, useArAging } from "@/hooks/api/accounting/ar";
-import type { AgingBasis, AgingPartyRow } from "@/types/accounting-ar";
+import type { AgingBasis, AgingPartyRow } from "@/types/accounting-ar-receipts";
 import { AGING_BUCKET_KEYS, AGING_BUCKET_LABEL } from "./ar-labels";
 import { AgingOpenItemsSheet } from "./aging-open-items-sheet";
 import { useListUrlState } from "./use-list-url-state";

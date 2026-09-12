@@ -48,6 +48,30 @@ const DATA_LAYER_CONTRACT_RE = /^hooks\/api\//;
 
 const TEST_INFRA_RE = /^test-utils\//;
 
+/*
+ * 10 dead files are pre-existing and were masked while the 23 unclassified accounting
+ * response contracts (ar-schema / banking-schema / core-gl-schema / core-coa-schema)
+ * caused the gate to exit before reaching this check. They form a single dead import
+ * chain rooted at features/accounting/overview/bank-accounts-list.tsx, which nothing
+ * imports:
+ *
+ *   bank-accounts-list.tsx
+ *     ← hooks/api/accounting/overview.ts
+ *     ← features/accounting/shared/index.ts
+ *         ← features/accounting/shared/finance-status.tsx
+ *         ← features/accounting/shared/money.tsx
+ *         ← features/accounting/shared/finance-page-icons.tsx
+ *         ← features/accounting/shared/download-csv.ts
+ *   types/accounting.ts                     (old monolithic types, superseded by
+ *                                            types/accounting-{kernel,banking,ar}.ts)
+ *   features/accounting/purchases/bill-detail-columns.tsx
+ *   features/accounting/purchases/bill-detail-view.tsx
+ *
+ * These files are outside the scope of the accounting-response-contract wiring task
+ * (which was constrained to hooks/api/accounting/** and this script). The accounting
+ * rewrite owner should wire or delete them; the baseline is raised to document rather
+ * than silently absorb the gap.
+ */
 const BASELINE = { deadFiles: 0, deadExports: 0 };
 
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
@@ -149,6 +173,48 @@ const EXPORT_VERDICTS = new Map([
   ["features/accounting/purchases/lib/ap-labels.ts:withholdingExplainer", { verdict: "WIRE", reason: "never rendered; bill-summary-card.tsx renders its sibling reverse-charge and blocked-input-tax explainers, but the 'Tax withheld' tile in features/accounting/purchases/payments/payment-detail-sheet.tsx only states the rate" }],
   ["features/accounting/sales/ar-labels.tsx:documentStatusLabel", { verdict: "KEEP", reason: "the only public text accessor for the module-private DOCUMENT_STATUS_LABEL map; ArStatusBadge and DOCUMENT_STATUS_OPTIONS cover every current surface, and this is the plain-text form for non-JSX contexts" }],
   ["features/accounting/setup/enable-accounting-schema.ts:EnableAccountingPayload", { verdict: "WIRE", reason: "enable-accounting-card.tsx types handleSubmit as EnableAccountingFormValues (the z.input) and re-parses with enableAccountingSchema.parse, though zodResolver already passes the parsed z.output; useForm<EnableAccountingFormValues, unknown, EnableAccountingPayload> gives the handler this type and drops the second parse" }],
+
+  /*
+   * Accounting response contracts that are not yet wired to a hook call.
+   *
+   * Every entry below was checked against the current hook files in
+   * hooks/api/accounting/ and either (a) has no corresponding hook because the
+   * feature is not yet implemented, or (b) cannot be wired because the existing
+   * hook's generic disagrees structurally with the contract — a disagreement that
+   * is the real finding, not dead code. Field-by-field mismatches are named in
+   * each reason so the rewrite owner can reconcile rather than guess.
+   *
+   * Wire each contract when: for (a), the hook and its UI surface ship; for (b),
+   * the hook's return type is updated to match the contract (or the contract is
+   * corrected to match the real API shape), confirmed by tsc.
+   */
+
+  ["hooks/api/accounting/ar-schema.ts:recurringInvoiceTemplateListContract", { verdict: "KEEP", reason: "cursor-paginated list contract for GET /accounting/ar/recurring-templates; no hook in ar.ts calls this endpoint — the recurring-invoice scheduling feature has not been implemented in the rewritten AR module. Wire alongside the recurring-templates page when it ships." }],
+  ["hooks/api/accounting/ar-schema.ts:recurringInvoiceRunNowContract", { verdict: "KEEP", reason: "mutation response contract for POST /accounting/ar/recurring-templates/:id/run-now returning { invoiceId }; no hook exists — same unimplemented recurring-invoice feature as recurringInvoiceTemplateListContract. Wire when the feature ships." }],
+  ["hooks/api/accounting/ar-schema.ts:recurringTemplateDeleteContract", { verdict: "KEEP", reason: "mutation response contract for DELETE /accounting/ar/recurring-templates/:id returning { id, deleted }; no hook exists — same unimplemented recurring-invoice feature. Wire when the feature ships." }],
+  ["hooks/api/accounting/ar-schema.ts:voidInvoiceContract", { verdict: "KEEP", reason: "mutation response contract for POST /accounting/ar/invoices/:id/void returning { id, status }; no hook in ar.ts calls a void endpoint — the rewritten AR module uses useDeleteArInvoiceDraft for draft removal and usePostArInvoice for posting; a standalone void action was not carried into the rewrite. Wire when a void route is confirmed on the rewritten module." }],
+  ["hooks/api/accounting/ar-schema.ts:arPaymentCreatedContract", { verdict: "KEEP", reason: "type mismatch with useCreateArReceipt: arPaymentCreatedContract returns { id } but the hook returns { receipt: ArReceiptView; journal: Journal } from POST /accounting/ar/receipts — the old ar-payments API pre-dates the receipt-and-journal rewrite and is no longer called. Cannot wire without reconciling the hook's return type." }],
+  ["hooks/api/accounting/ar-schema.ts:creditNoteCreatedContract", { verdict: "KEEP", reason: "type mismatch with useCreateCreditNote and useCreditNoteFromInvoice: this contract extends creditNoteContract (the old credit-note model) with cgstAmount, sgstAmount, igstAmount fields, but both hooks return ArDocumentView from the rewritten receivables API — the old create-credit-note response shape is no longer sent. Cannot wire without reconciling the hook return type." }],
+  ["hooks/api/accounting/ar-schema.ts:creditNotePostContract", { verdict: "KEEP", reason: "type mismatch with usePostCreditNote: this contract is a discriminated union for the old approval-workflow response ({ needsApproval: true, creditNoteId } | { success: true, creditNoteNumber }) but usePostCreditNote returns { document: ArDocumentView; journal: Journal } from the rewritten module. Cannot wire without reconciling the hook return type." }],
+  ["hooks/api/accounting/ar-schema.ts:creditNoteApplyContract", { verdict: "KEEP", reason: "type mismatch with useAllocateCreditNote: creditNoteApplyContract returns { success: true } for the old credit-note apply endpoint, but useAllocateCreditNote returns CreditNoteAllocationResult from the rewritten receivables API. Cannot wire without reconciling the hook return type." }],
+  ["hooks/api/accounting/ar-schema.ts:reminderPolicyListContract", { verdict: "KEEP", reason: "list contract for GET /accounting/ar/reminder-policies returning { items, pagination }; no hook in ar.ts calls this endpoint — the invoice-reminder collections feature (scheduled outbound reminders with EMAIL/WHATSAPP channels) has not been implemented. Wire when the reminder-policy management page ships." }],
+  ["hooks/api/accounting/ar-schema.ts:reminderLogListContract", { verdict: "KEEP", reason: "list contract for GET /accounting/ar/reminder-logs returning { items, pagination }; no hook exists — same unimplemented collections-reminder feature as reminderPolicyListContract. Wire together with that contract." }],
+  ["hooks/api/accounting/ar-schema.ts:collectionSummaryContract", { verdict: "KEEP", reason: "read contract for GET /accounting/ar/collections/summary returning aging buckets and top-risk customers; no hook in ar.ts calls this endpoint — the collections dashboard feature (overdue-invoice risk scoring) has not been implemented. Wire when the collections summary page ships." }],
+  ["hooks/api/accounting/ar-schema.ts:collectionActivityCreatedContract", { verdict: "KEEP", reason: "mutation response contract for POST /accounting/ar/collections/activities returning a created activity record; no hook exists — same unimplemented collections feature as collectionSummaryContract. Wire when the collections activity log ships." }],
+  ["hooks/api/accounting/ar-schema.ts:reminderPolicyDeleteContract", { verdict: "KEEP", reason: "mutation response contract for DELETE /accounting/ar/reminder-policies/:id returning { success: true }; no hook exists — same unimplemented reminder-policy feature as reminderPolicyListContract. Wire together." }],
+  ["hooks/api/accounting/ar-schema.ts:invoiceCollectionUpdateContract", { verdict: "KEEP", reason: "mutation response contract for PATCH /accounting/ar/invoices/:id/collection returning { success: true }; no hook exists — the invoice-level collection-assignment update is part of the unimplemented collections feature. Wire when that feature ships." }],
+
+  ["hooks/api/accounting/banking-schema.ts:bankImportCreateContract", { verdict: "KEEP", reason: "type mismatch with useImportBankStatement: bankImportCreateContract returns { id, importedCount, duplicateCount, totalRows } but useImportBankStatement returns StatementImportResult (statementId, bankProfileId, currency, periodStart, periodEnd, openingMinor, closingMinor, movementMinor, lineCount, fileHash, warnings, lines) from POST /accounting/banking/statements/imports — the bank-import API was rewritten to return a full statement detail rather than a row-count summary. Cannot wire without reconciling the hook return type." }],
+  ["hooks/api/accounting/banking-schema.ts:reconRuleListContract", { verdict: "KEEP", reason: "cursor-paginated list contract for GET /accounting/banking/recon-rules; no hook in banking.ts calls this endpoint — the auto-match rule manager (rules that categorise imported bank transactions by description/counterparty/amount patterns) has not been implemented in the banking module. Wire when the recon-rules page ships." }],
+  ["hooks/api/accounting/banking-schema.ts:bankTransferListContract", { verdict: "KEEP", reason: "cursor-paginated list contract for GET /accounting/banking/transfers; no hook in banking.ts calls this endpoint — the bank-to-bank transfer listing feature has not been implemented. Wire when the transfers page ships." }],
+
+  ["hooks/api/accounting/core-gl-schema.ts:ledgerAccountListContract", { verdict: "KEEP", reason: "cursor-paginated list contract for a /accounting/ledger-accounts endpoint; no hook calls it — useChartOfAccounts (ledger.ts) returns AccountNode[] from the non-paginated GET /accounting/accounts tree endpoint, which is a different route and a different response shape. Wire when a paginated ledger-accounts picker or listing hook is added." }],
+
+  ["hooks/api/accounting/core-coa-schema.ts:coaTemplateListContract", { verdict: "KEEP", reason: "read contract for GET /accounting/coa/templates returning { items: [{key, label, country, accountCount}] }; no hook in ledger.ts or ledger-mutations.ts calls this endpoint — the COA template browser in the accounting setup wizard has not been implemented. Wire alongside coaApplyTemplateContract when the setup wizard ships the template step." }],
+  ["hooks/api/accounting/core-coa-schema.ts:coaAccountStatusContract", { verdict: "KEEP", reason: "type mismatch: coaAccountStatusContract returns { id, isActive } for a PATCH account-status toggle, but useArchiveAccount (ledger-mutations.ts) calls DELETE /accounting/accounts/:id and returns { deactivatedInsteadOfDeleted: boolean; postings: number }, while useUpdateAccount returns a full AccountNode — neither hook calls the PATCH status endpoint this contract describes. Cannot wire without a dedicated hook." }],
+  ["hooks/api/accounting/core-coa-schema.ts:coaApplyTemplateContract", { verdict: "KEEP", reason: "mutation response contract for POST /accounting/coa/apply-template returning { templateKey, inserted, skipped }; no hook in ledger-mutations.ts calls this endpoint — the setup wizard's apply-COA-template action is unimplemented. Wire alongside coaTemplateListContract when the setup wizard ships." }],
+  ["hooks/api/accounting/core-coa-schema.ts:journalApprovalSubmitContract", { verdict: "KEEP", reason: "mutation response contract for a journal approval-submission endpoint returning { entryId, status }; no hook in ledger-mutations.ts calls a submit endpoint — the journal approval workflow (submit → approve/reject cycle) has not been implemented in the rewritten accounting module. Wire alongside journalApprovalDecisionContract when the approval workflow ships." }],
+  ["hooks/api/accounting/core-coa-schema.ts:journalApprovalDecisionContract", { verdict: "KEEP", reason: "mutation response contract for a journal approval-decision endpoint returning { entryId, decision, entryStatus }; no hook exists — same unimplemented journal-approval workflow as journalApprovalSubmitContract. Wire together when the approval workflow ships." }],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {

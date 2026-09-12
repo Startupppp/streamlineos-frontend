@@ -9,7 +9,7 @@ import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArOpenItems } from "@/hooks/api/accounting/ar";
-import type { AgingBasis, AgingOpenItem } from "@/types/accounting-ar";
+import type { AgingBasis, AgingOpenItem } from "@/types/accounting-ar-receipts";
 import { AGING_BUCKET_LABEL } from "./ar-labels";
 
 interface AgingOpenItemsSheetProps {

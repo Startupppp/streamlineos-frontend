@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { BookCurrency } from "@/types/accounting-kernel";
+import type { BookCurrency } from "@/types/accounting-kernel-ext";
 
 interface CurrenciesCardProps {
   currencies: BookCurrency[] | undefined;

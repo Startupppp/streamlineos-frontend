@@ -2,13 +2,12 @@ import { Badge } from "@/components/ui/badge";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type {
-  AgingBucketKey,
   ArDocumentStatus,
-  ArReceiptStatus,
   PartyRole,
   SupplyNature,
   TaxCategory,
 } from "@/types/accounting-ar";
+import type { AgingBucketKey, ArReceiptStatus } from "@/types/accounting-ar-receipts";
 
 const DOCUMENT_STATUS_LABEL: Readonly<Record<ArDocumentStatus, string>> = {
   DRAFT: "Draft",

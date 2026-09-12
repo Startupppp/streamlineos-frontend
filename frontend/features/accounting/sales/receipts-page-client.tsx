@@ -24,7 +24,7 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { RECEIVABLES_MANAGE, RECEIVABLES_READ, useArReceipts } from "@/hooks/api/accounting/ar";
-import type { ArReceiptSummary } from "@/types/accounting-ar";
+import type { ArReceiptSummary } from "@/types/accounting-ar-receipts";
 import { usePartyNames } from "../parties/use-party-names";
 import { ReceiptStatusBadge } from "./ar-labels";
 import { ReceiptDetailSheet } from "./receipt-detail-sheet";

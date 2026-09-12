@@ -25,7 +25,7 @@ import { useUpsertFxRate } from "@/hooks/api/accounting/ledger-mutations";
 import { formatRate } from "@/lib/accounting/money";
 import { formatShortDate, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { FxRate } from "@/types/accounting-kernel";
+import type { FxRate } from "@/types/accounting-kernel-ext";
 import { fxRateFormSchema, type FxRateFormValues } from "./fx-rate-schema";
 
 export function FxRatesCard({ baseCurrency }: { baseCurrency: string }) {

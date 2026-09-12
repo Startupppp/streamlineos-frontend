@@ -7,7 +7,7 @@ import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import type { TaxPreview, TaxProblem } from "@/types/accounting-ar";
+import type { TaxPreview, TaxProblem } from "@/types/accounting-ar-receipts";
 
 interface TaxPreviewPanelProps {
   preview: TaxPreview | undefined;

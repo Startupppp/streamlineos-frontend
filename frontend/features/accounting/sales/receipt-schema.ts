@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { parseMoneyInput } from "@/lib/accounting/money";
-import type { CreateReceiptInput, DepositAccountTag } from "@/types/accounting-ar";
+import type { CreateReceiptInput, DepositAccountTag } from "@/types/accounting-ar-receipts";
 
 export const DEPOSIT_ACCOUNT_OPTIONS: ReadonlyArray<{ value: DepositAccountTag; label: string }> = [
   { value: "bank", label: "Straight into the bank" },
