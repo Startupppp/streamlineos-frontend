@@ -239,7 +239,7 @@ export async function runLoadingAndEmpty({ cdp, width, baseUrl, navigate, evalua
 export async function runErrorAndRetry({
   cdp,
   width,
-  projectId,
+  projectPath,
   ticketKey,
   navigate,
   evaluate,
@@ -272,7 +272,7 @@ export async function runErrorAndRetry({
       await cdp.send("Fetch.continueRequest", { requestId: params.requestId }).catch(() => {});
     });
     await cdp.send("Fetch.enable", { patterns: [{ urlPattern: "*" }] });
-    await navigate(cdp, `/build/${projectId}/tickets/${ticketKey}`);
+    await navigate(cdp, `${projectPath}/tickets/${ticketKey}`);
     const probe = await evaluate(cdp, alertExpression());
     shots.push(await screenshot(cdp, state, width, "500"));
     if (probe?.hasAlert) checks.push(passed("500 renders an alert"));
@@ -300,7 +300,7 @@ export async function runErrorAndRetry({
   }
 
   try {
-    await navigate(cdp, `/build/${projectId}/tickets/${MISSING_TICKET_KEY}`);
+    await navigate(cdp, `${projectPath}/tickets/${MISSING_TICKET_KEY}`);
     const probe = await evaluate(cdp, alertExpression());
     shots.push(await screenshot(cdp, state, width, "404"));
     const verdict = notFoundVerdict(probe);
@@ -316,7 +316,7 @@ export async function runCrossTab({
   cdp,
   debugPort,
   width,
-  projectId,
+  projectPath,
   prepare,
   navigate,
   evaluate,
@@ -338,8 +338,8 @@ export async function runCrossTab({
       source: crossTabProbeSource(channelPrefix),
     });
     await setWidth(peer, width);
-    await navigate(peer, `/build/${projectId}`);
-    await navigate(cdp, `/build/${projectId}`);
+    await navigate(peer, `${projectPath}`);
+    await navigate(cdp, `${projectPath}`);
 
     const before = await evaluate(peer, "window.__slCrossTab ? window.__slCrossTab.fetches : -1");
     if (Number(before) < 0) {
@@ -393,13 +393,13 @@ export async function runCrossTab({
   return cellFromChecks(state, width, checks, shots, axe);
 }
 
-export async function runKeyboard({ cdp, width, projectId, navigate, evaluate, screenshot, runAxe }) {
+export async function runKeyboard({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }) {
   const state = "keyboard-and-accessibility";
   const shots = [];
   const checks = [];
   let axe = null;
   try {
-    await navigate(cdp, `/build/${projectId}/risks`);
+    await navigate(cdp, `${projectPath}/risks`);
     const cellNames = await evaluate(cdp, riskCellsExpression());
     if (!Array.isArray(cellNames) || !cellNames.some((n) => RISK_CELL_PATTERN.test(n))) {
       shots.push(await screenshot(cdp, state, width, "risks"));
@@ -455,12 +455,12 @@ export async function runKeyboard({ cdp, width, projectId, navigate, evaluate, s
   return cellFromChecks(state, width, checks, shots, axe);
 }
 
-export async function runResponsive({ cdp, width, projectId, navigate, evaluate, screenshot, runAxe }) {
+export async function runResponsive({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }) {
   const state = "responsive-layout";
   const shots = [];
   const checks = [];
   let axe = null;
-  const routes = ["/build/all", `/build/${projectId}`, `/build/${projectId}/backlog`];
+  const routes = ["/build/all", `${projectPath}`, `${projectPath}/backlog`];
   try {
     for (const route of routes) {
       await navigate(cdp, route);

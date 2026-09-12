@@ -273,6 +273,7 @@ async function main() {
     log(`browser ${browserPath} · base ${baseUrl} · widths ${widths.join("/")}`);
 
     let projectId = flag("project-id", "");
+    let projectPath = "";
     if (!projectId) {
       for (let attempt = 1; attempt <= 4 && !projectId; attempt += 1) {
         await navigate(cdp, "/build/all");
@@ -281,19 +282,30 @@ async function main() {
           `(() => {
             const link = Array.from(document.querySelectorAll('a[href^="/build/"]'))
               .map((a) => a.getAttribute("href"))
-              .find((h) => /^\\/build\\/\\d+/.test(h));
-            return link ? link.match(/^\\/build\\/(\\d+)/)[1] : "";
+              .find((h) => /^\\/build\\/(workspaces\\/[^/]+\\/)?\\d+/.test(h));
+            return link || "";
           })()`,
         );
-        if (found) projectId = String(found);
+        if (found) {
+          projectPath = String(found);
+        } else {
+          await evaluate(cdp, `(() => { const r = document.querySelector('main tbody tr'); if (r) r.click(); return ""; })()`);
+          await sleep(settleMs);
+          const landed = await evaluate(cdp, "location.pathname");
+          if (/^\/build\/(workspaces\/[^/]+\/)?\d+/.test(String(landed))) projectPath = String(landed);
+        }
+        const match = projectPath.match(/^\/build\/(?:workspaces\/[^/]+\/)?(\d+)/);
+        if (match) projectId = match[1];
       }
     }
-    if (!projectId) throw new Error("could not resolve a numeric projectId from /build/all");
-    log(`projectId = ${projectId}`);
+    if (!projectId)
+      throw new Error("could not resolve a project from /build/all — no numeric project link and no navigable row");
+    if (!projectPath) projectPath = `/build/${projectId}`;
+    log(`projectId = ${projectId} · projectPath = ${projectPath}`);
 
     let ticketKey = "";
     for (let attempt = 1; attempt <= 3 && !ticketKey; attempt += 1) {
-      await navigate(cdp, `/build/${projectId}`);
+      await navigate(cdp, projectPath);
       const found = await evaluate(
         cdp,
         `(() => {
@@ -318,7 +330,7 @@ async function main() {
         await runErrorAndRetry({
           cdp,
           width,
-          projectId,
+          projectPath,
           ticketKey,
           navigate,
           evaluate,
@@ -332,7 +344,7 @@ async function main() {
           cdp,
           debugPort,
           width,
-          projectId,
+          projectPath,
           prepare,
           navigate,
           evaluate,
@@ -344,10 +356,10 @@ async function main() {
         }),
       );
       cells.push(
-        await runKeyboard({ cdp, width, projectId, navigate, evaluate, screenshot, runAxe }),
+        await runKeyboard({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }),
       );
       cells.push(
-        await runResponsive({ cdp, width, projectId, navigate, evaluate, screenshot, runAxe }),
+        await runResponsive({ cdp, width, projectPath, navigate, evaluate, screenshot, runAxe }),
       );
     }
 
@@ -357,7 +369,7 @@ async function main() {
       capturedAt: new Date().toISOString(),
       baseUrl,
       widths,
-      projectId,
+      projectPath,
       ticketKey: ticketKey || null,
       planned,
       counts,
