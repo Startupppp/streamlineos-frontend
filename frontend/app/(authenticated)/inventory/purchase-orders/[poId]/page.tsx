@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -189,6 +190,14 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const cancelMutation = useCancelPurchaseOrder(id);
 
   /**
+   * G8. `usePurchaseOrder` gates its query on this exact key (`enabled: canView`),
+   * so a denied user's `query.data` is always undefined — falling through to the
+   * not-found branch below reads as "this PO doesn't exist" rather than "you
+   * don't have access to it". Checked before the not-found branch, not after.
+   */
+  const canRead = useCan("inventory:purchase-orders:read");
+
+  /**
    * B1. The exact key `POST /purchase-orders/:poId/receive` and every goods-receipt
    * route carries. The receive control was offered on document status alone, so a
    * clerk without it was shown a button that could only ever 403.
@@ -279,6 +288,14 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   }
 
   const grnColumns = useMemo(() => buildGrnColumns(handleGrnRowClick), []);
+
+  if (!canRead) {
+    return (
+      <PageWrapper title="Purchase Order" backHref="/inventory/purchase-orders">
+        <NoPermissionState permission="inventory:purchase-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;

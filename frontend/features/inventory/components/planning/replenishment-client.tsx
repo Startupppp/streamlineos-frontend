@@ -92,7 +92,8 @@ export function ReplenishmentClient() {
     limit: PAGE_SIZE,
     ...(warehouseId === ALL_WAREHOUSES ? {} : { warehouseId: Number(warehouseId) }),
   });
-  const { data: warehouses } = useWarehouses({ status: "active" });
+  const { data: warehousesData } = useWarehouses({ status: "active" });
+  const warehouses = warehousesData?.items;
   const createBatch = useCreatePoBatch();
   const refreshProposals = useRefreshProposals();
   const { data: insightsData } = useInventoryInsights({ type: "vendor_delay", limit: 1 });

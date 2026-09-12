@@ -123,7 +123,8 @@ export function ReconciliationClient() {
   const [warehouseFilter, setWarehouseFilter] = useState<number | undefined>(undefined);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const { data, isLoading, isError, error, refetch, isFetching } = useReconciliationReport({
     warehouseId: warehouseFilter,
   });

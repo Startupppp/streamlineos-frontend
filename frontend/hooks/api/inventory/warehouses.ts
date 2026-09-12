@@ -67,6 +67,15 @@ export interface WarehouseListFilters {
   isDefault?: boolean;
   country?: string;
   city?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface WarehouseListResponse {
+  items: Warehouse[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 interface CreateWarehouseInput {
@@ -125,14 +134,21 @@ export function useWarehouses(filters?: WarehouseListFilters) {
   if (filters?.isDefault !== undefined) params.isDefault = filters.isDefault;
   if (filters?.country) params.country = filters.country;
   if (filters?.city) params.city = filters.city;
+  if (filters?.page) params.page = String(filters.page);
+  if (filters?.limit) params.limit = String(filters.limit);
 
   const hasActiveFilters = Object.keys(params).length > 0;
 
-  return useQuery<Warehouse[], Error>({
+  return useQuery<WarehouseListResponse, Error>({
     queryKey: hasActiveFilters
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
-    queryFn: ({ signal }) => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<WarehouseListResponse>(
+        "/inventory/warehouses",
+        hasActiveFilters ? params : undefined,
+        signal,
+      ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -215,17 +231,21 @@ export function useSetDefaultWarehouse() {
     Warehouse,
     Error,
     { warehouseId: number },
-    { previous: Warehouse[] | undefined }
+    { previous: WarehouseListResponse | undefined }
   >("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
       apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
     onMutate: async ({ warehouseId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.inventory.warehouses() });
-      const previous = qc.getQueryData<Warehouse[]>(queryKeys.inventory.warehouses());
-      qc.setQueryData<Warehouse[]>(
-        queryKeys.inventory.warehouses(),
-        (old) => old?.map((wh) => ({ ...wh, isDefault: wh.id === warehouseId })) ?? [],
+      const previous = qc.getQueryData<WarehouseListResponse>(queryKeys.inventory.warehouses());
+      qc.setQueryData<WarehouseListResponse>(queryKeys.inventory.warehouses(), (old) =>
+        old
+          ? {
+              ...old,
+              items: old.items.map((wh) => ({ ...wh, isDefault: wh.id === warehouseId })),
+            }
+          : old,
       );
       return { previous };
     },

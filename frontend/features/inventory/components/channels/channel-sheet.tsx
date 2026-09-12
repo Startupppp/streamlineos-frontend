@@ -81,7 +81,8 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
   const isEdit = channel !== undefined;
   const createMutation = useCreateChannel();
   const updateMutation = useUpdateChannel();
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
 
   const form = useForm<ChannelFormValues>({
     resolver: zodResolver(channelSchema),

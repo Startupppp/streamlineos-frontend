@@ -190,7 +190,7 @@ export default function MovementsReportPage() {
   } = useCursorPagination();
 
   const warehousesQuery = useWarehouses();
-  const warehouses = warehousesQuery.data ?? [];
+  const warehouses = warehousesQuery.data?.items ?? [];
 
   const query = useMovementsReport({
     warehouseId: warehouseId ? Number(warehouseId) : undefined,

@@ -77,7 +77,8 @@ function NewAuditSheet({
   onClose: () => void;
 }) {
   const [warehouseId, setWarehouseId] = useState<string>("");
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: warehousesResponse } = useWarehouses();
+  const warehouses = warehousesResponse?.items ?? [];
   const createMutation = useCreatePhysicalAudit();
 
   function handleWarehouseChange(value: string): void {

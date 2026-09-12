@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
@@ -58,22 +58,45 @@ interface MoveHandlingUnitInput {
   toLocationId: number;
 }
 
+interface NestHandlingUnitInput {
+  handlingUnitId: number;
+  parentHuId: number | null;
+}
+
+export interface HandlingUnitsPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/** Mirrors what `HandlingUnitService.list` actually sends — `{ data, pagination }`, not a bare array. */
+export interface HandlingUnitsPage {
+  data: HandlingUnitSummary[];
+  pagination: HandlingUnitsPagination;
+}
+
 export function useHandlingUnits(filters?: {
   locationId?: number;
   status?: HandlingUnitStatus;
   rootsOnly?: boolean;
+  page?: number;
+  limit?: number;
 }) {
   const canView = useCan("inventory:stock:read");
-  return useQuery<HandlingUnitSummary[], Error>({
+  return useQuery<HandlingUnitsPage, Error>({
     queryKey: queryKeys.inventory.handlingUnits(filters),
-    queryFn: ({ signal }) =>
-      apiClient.get<HandlingUnitSummary[]>("/inventory/handling-units", {
+    queryFn: () =>
+      apiClient.get<HandlingUnitsPage>("/inventory/handling-units", {
         ...(filters?.locationId ? { locationId: String(filters.locationId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.rootsOnly ? { rootsOnly: "true" } : {}),
-      }, signal),
+        ...(filters?.page ? { page: String(filters.page) } : {}),
+        ...(filters?.limit ? { limit: String(filters.limit) } : {}),
+      }),
     enabled: canView,
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -81,12 +104,7 @@ export function useHandlingUnit(handlingUnitId: number | null) {
   const canView = useCan("inventory:stock:read");
   return useQuery<HandlingUnitDetail, Error>({
     queryKey: queryKeys.inventory.handlingUnit(handlingUnitId ?? 0),
-    queryFn: ({ signal }) =>
-      apiClient.get<HandlingUnitDetail>(
-        `/inventory/handling-units/${handlingUnitId}`,
-        undefined,
-        signal,
-      ),
+    queryFn: () => apiClient.get<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}`),
     enabled: canView && (handlingUnitId ?? 0) > 0,
     staleTime: 30_000,
   });
@@ -114,6 +132,22 @@ export function useMoveHandlingUnit() {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnit(vars.handlingUnitId) });
       // Moving a unit posts stock movements, so every level figure is now stale.
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevelsList });
+    },
+  });
+}
+
+export function useNestHandlingUnit() {
+  const qc = useQueryClient();
+  return useMutation<HandlingUnitDetail, Error, NestHandlingUnitInput>({
+    mutationKey: ["inventory", "handling-unit", "nest"],
+    mutationFn: ({ handlingUnitId, ...data }) =>
+      apiClient.patch<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}/nesting`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnitsList });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnit(vars.handlingUnitId) });
+      if (vars.parentHuId !== null) {
+        qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnit(vars.parentHuId) });
+      }
     },
   });
 }

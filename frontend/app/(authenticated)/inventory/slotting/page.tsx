@@ -57,7 +57,7 @@ function SlottingContent() {
 
   const warehouses = useMemo<NameSource>(
     () => ({
-      names: new Map((warehousesQuery.data ?? []).map((row) => [row.id, row.name])),
+      names: new Map((warehousesQuery.data?.items ?? []).map((row) => [row.id, row.name])),
       isLoading: warehousesQuery.isLoading,
       canRead: canReadRules,
       deniedNote: "Needs warehouse access",

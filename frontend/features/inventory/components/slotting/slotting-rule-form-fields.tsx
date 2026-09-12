@@ -120,7 +120,7 @@ export function SlottingRuleFormFields({ form }: SlottingRuleFormFieldsProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                {(warehousesQuery.data ?? []).map((warehouse) => (
+                {(warehousesQuery.data?.items ?? []).map((warehouse) => (
                   <SelectItem key={warehouse.id} value={String(warehouse.id)}>
                     {warehouse.name}
                   </SelectItem>
