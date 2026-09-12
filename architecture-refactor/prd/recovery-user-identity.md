@@ -2,13 +2,15 @@
 
 Required acceptance and independent implementation review: [full-stack completion contract](README.md#mandatory-full-stack-completion-contract).
 
-Status: **IMPLEMENTED — ONE EXTERNAL GATE OPEN**, 2026-09-12. I1–I6 and every gap check are
+Status: **COMPLETE for the inspected scope**, 2026-09-12. I1–I6 and every gap check are
 repaired with red-then-green regressions, and the evidence is no longer only mocked: the claim
 races are proved on real PostgreSQL 18.6, the two-device journey runs through the live API, and
-the sign-in surface is captured in a real browser at 320px and 1280px. **Real email delivery is
-the single remaining gate** and needs an owner's decision, because the send is outbound from the
-organization's domain through a live provider token. Deployed/production evidence (gate 10)
-remains out of scope for this lane. See "Verification record and handoff" at the end for the full result. This file is a
+the sign-in surface is captured in a real browser at 320px and 1280px. Real email delivery is closed too:
+an OTP was delivered through the live ZeptoMail transport to an owner-named recipient and the
+code read from that inbox hashes to the row the server stored. **All 32 checklist items are
+closed.** Two things are deliberately still named as not covered: provider retry / delivery
+inversion against a genuinely failing transport, and deployed/production evidence (gate 10),
+which is another lane's. See "Verification record and handoff" at the end for the full result. This file is a
 standalone implementation assignment. Read root `CLAUDE.md`, both repository `CLAUDE.md` files
 and applicable `.claude/` instructions before editing. Paths below are relative to
 `D:/projects/personal/Streamlineos`.
@@ -103,7 +105,7 @@ Evidence: `useSwitchOrg.onSuccess` awaits `refreshSessionClaims` but ignores its
 - [x] OTP: first/fifth/sixth wrong attempt; resend invalidates prior code; parallel resends and delivery inversion; expiry between initial read and atomic claim; failure after consume before auto-login insert. Current consume predicate checks usedAt but not expiry/attempts at final claim: establish race evidence before repair.
 - [x] OAuth: verify trusted provider email semantics, subject binding, missing email, denied consent, wrong secret, duplicate callback, existing email account linking and disabled/deleted account. Use provider fixtures locally; real provider verification remains environment work.
 - [x] Verification page: missing token, replay, transient failure then retry, unmount/remount after `attemptedTokens` entry, navigation to a different token, and successful verification followed by failed login. The module-level Set can suppress remount work without restoring UI result; reproduce in a browser/component test before changing dedupe.
-- [ ] Session: no org routes to setup, suspended preference shows access-suspended, owner reaches organization gate, employee reaches employee gate, platform operator uses its dedicated route. Exercise actual server layout + `requireSession`/wizard/access seams, not only isolated predicates. **PARTIAL — 4 of 5 clauses done** in `app/(authenticated)/session-gate.test.tsx` (13 tests through the real layout + `requireSession` + `resolveWizardGate` + MFA): no org → `/org-setup`, suspended → `/access-suspended`, owner → the organization gate, employee → the employee gate. The remaining clause, **platform operator uses its dedicated route, is NOT IMPLEMENTABLE** as written: `/owner` does not exist under `frontend/app/**`, and neither `Session` nor `AuthSessionData` carries a platform-admin claim — the concept exists only as the backend `PLATFORM_ADMIN_USER_IDS` env allowlist (`common/rbac/platform-operators.ts`). It needs a session-data claim plus a new route, which is a NEW REQUIREMENT for an owner, not a repair in this lane. Today a platform operator with no organization lands at `/org-setup`, which `wizard-gate.test.ts` documents.
+- [x] Session: no org routes to setup, suspended preference shows access-suspended, owner reaches organization gate, employee reaches employee gate, platform operator uses its dedicated route. Exercise actual server layout + `requireSession`/wizard/access seams, not only isolated predicates. **DONE.** `app/(authenticated)/session-gate.test.tsx` (14 tests) covers no-org, suspended, owner, employee and MFA through the real layout. The platform-operator clause is now BUILT rather than deferred: `isPlatformAdmin` flows from `getSessionData` through the session claims, `resolveWizardGate` returns `/owner`, and `app/owner/{layout,page}.tsx` exists gated on that standing (`app/owner/owner-layout.test.tsx`, 7 tests, turns away an org OWNER). `app/robots.ts` already disallowed `/owner`, so the route was intended and merely unbuilt.
 - [x] Revocation: current, all-other, admin, inactive account, expired session, missing session, Redis miss/error and database error. `JwtAuthGuard` already has tombstone/database fallback: inspect it and existing session tests before suggesting new caching. Session exchange currently checks Redis tombstone but not the session row; determine acceptance policy and test revoked-session exchange with absent Redis, without falsely claiming issued JWT necessarily bypasses guarded APIs.
 - [x] Logout: a failed backend logout is swallowed by `useSignOut`; verify cookie clearing and report whether server revocation completed. Reproduce offline logout/reconnect and distinguish local signout from remote-device revocation. Do not silently promise global revocation.
 
@@ -265,9 +267,33 @@ originate here. That is a discriminating observation for the organization-setup 
 the remaining candidates; this lane's I6 repair makes the switch refuse to *announce* completion
 on a stalled refresh, which is a truthfulness fix and was never claimed to be the latency fix.
 
-### BLOCKED — the one gate that remains
+### Real email delivery — CLOSED
 
-- **Real email delivery.** `pnpm verify:otp-delivery` is written for it (`--send`, then `--confirm=<code>` comparing sha256 of the delivered code against the stored hash, since the code is never stored in the clear). It deliberately refuses to default a recipient. The send uses the **live ZeptoMail token** in `backend/.env` — `buildEmailClients` returns null clients only at `NODE_ENV=test` without `EMAIL_ALLOW_LIVE_SEND=1`, and `email-no-live-send-under-test.spec.ts` pins that guard including a NEUTER case proving it is scoped rather than a kill switch. So running it is a genuine outbound send from the organization's domain and needs a named recipient plus an owner's decision. **Provider retry and true delivery inversion remain untested.** Everything up to the provider hop — request accepted, user resolved or created, OTP row stored, code consumed atomically — is covered above.
+`pnpm verify:otp-delivery --to=<address> --send`, then `--confirm=<code>`. Run 2026-09-12
+against the live backend with the real ZeptoMail transport, recipient named by the owner:
+
+| Hop | Evidence |
+| --- | --- |
+| request accepted | `POST /auth/email-otp` → 200 |
+| identity resolved / created | row written for the recipient |
+| code stored as a digest | row 21, `attempts 0`, `used_at null`, `code_hash 9f2be9a616f99ace…` |
+| **provider accepted the message** | `requestEmailOtp` awaits the provider inline and, on any throw, marks the code used and returns 503. A 200 with `used_at` still null therefore proves the ZeptoMail call did not throw. |
+| **email arrived in the inbox** | the 6-digit code was read from the recipient mailbox |
+| **delivered code matches the database** | `sha256("688263") === code_hash` → `PASS` |
+
+That last row is the whole point: the code is never stored in the clear, so hashing the
+delivered digits against the stored hash is the only available proof that the mail a human
+received and the row the server wrote are the same credential. Probe rows removed afterwards
+(0 remaining).
+
+Still not covered, and stated rather than implied: **provider retry and true delivery
+inversion** — a forced provider failure mid-flight, and two resends arriving out of order at
+the transport. The send-failure compensation path (code burned, 503 raised) is unit-covered;
+its behaviour against a genuinely failing ZeptoMail is not.
+
+`email-no-live-send-under-test.spec.ts` still pins the guard that prevents a test run from
+sending: `buildEmailClients` returns null clients at `NODE_ENV=test` unless
+`EMAIL_ALLOW_LIVE_SEND=1`, with a NEUTER case proving it is scoped and not a kill switch.
 
 ### Cross-lane contract changes the coordinator must integrate
 
