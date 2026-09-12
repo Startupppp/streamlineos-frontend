@@ -11,10 +11,13 @@ import type { ResponseContract } from "@/lib/api-envelope";
  * Not `.strict()`: an added backend field is a compatible deploy. A removed,
  * renamed or retyped one is what these reject.
  *
- * `mfa` and `version` stay optional against a backend that always sends them.
- * Nothing reads either one for a decision, and `/me/access` is the endpoint
- * whose failure locks every screen — the cost of rejecting it is not worth
- * pinning a field no surface consumes.
+ * `mfa`, `version` and `membershipId` stay optional against a backend that
+ * always sends them. `/me/access` is the endpoint whose failure locks every
+ * screen, so a field is pinned only where losing it would be worse than that.
+ * Nothing reads `mfa` or `version` for a decision; `membershipId` is read by
+ * the timesheets delegate banner, which is built to say nothing at all when the
+ * caller has no membership — so its absence degrades to silence rather than to
+ * a false claim, and pinning it would trade that for a lockout.
  */
 
 export const dataScopeContract = z.enum(["all", "team", "own", "none"]);
@@ -25,6 +28,7 @@ export const mfaStateContract = z.object({
 });
 
 export const accessResponseContract = z.object({
+  membershipId: z.number().nullable().optional(),
   scopes: z.record(z.string(), dataScopeContract),
   isOrgOwner: z.boolean(),
   canManageOrganizationMembership: z.boolean(),

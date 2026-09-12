@@ -23,6 +23,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 const GRANTED_SNAPSHOT: AccessResponse = {
+  membershipId: 4711,
   scopes: { "hr:employees:view": "all" },
   isOrgOwner: false,
   canManageOrganizationMembership: false,
