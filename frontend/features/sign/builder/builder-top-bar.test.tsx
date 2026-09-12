@@ -62,6 +62,7 @@ jest.mock("@/components/ui/sheet", () => ({
   SheetTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
   SheetDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
   SheetBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SheetFooter: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 const certificateJson = {
@@ -329,5 +330,58 @@ describe("BuilderTopBar expiry control", () => {
 
     expect(screen.queryByRole("button", { name: /Expires/ })).not.toBeInTheDocument();
     expect(screen.getByText(/Expires/)).toBeInTheDocument();
+  });
+});
+
+describe("BuilderTopBar void control", () => {
+  beforeEach(() => {
+    grantedKeys.clear();
+    idleMutation.mutate.mockClear();
+  });
+
+  it("asks for a reason in a sheet and sends it with the void, never a browser prompt", () => {
+    grantedKeys.add("sign:envelope:void");
+    renderTopBar("sent");
+
+    fireEvent.click(screen.getByRole("button", { name: /Void envelope/ }));
+
+    expect(screen.getByText("Void this envelope?")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("Why this envelope is being voided"), {
+      target: { value: "Signed on paper instead" },
+    });
+    const confirm = screen.getAllByRole("button", { name: "Void envelope" }).at(-1);
+    fireEvent.click(confirm as HTMLElement);
+
+    expect(idleMutation.mutate).toHaveBeenCalledWith("Signed on paper instead", expect.anything());
+  });
+
+  it("refuses to void without a reason", () => {
+    grantedKeys.add("sign:envelope:void");
+    renderTopBar("sent");
+
+    fireEvent.click(screen.getByRole("button", { name: /Void envelope/ }));
+    const confirm = screen.getAllByRole("button", { name: "Void envelope" }).at(-1);
+    fireEvent.click(confirm as HTMLElement);
+
+    expect(confirm).toBeDisabled();
+    expect(idleMutation.mutate).not.toHaveBeenCalled();
+  });
+
+  it("hides the void control from a role without the void permission", () => {
+    renderTopBar("sent");
+
+    expect(screen.queryByRole("button", { name: /Void envelope/ })).not.toBeInTheDocument();
+  });
+
+  it("hides send, reminder and save-as-template from roles without their keys", () => {
+    renderTopBar("draft");
+    expect(screen.queryByRole("button", { name: /^Send$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save as template/ })).not.toBeInTheDocument();
+
+    grantedKeys.add("sign:envelope:send");
+    grantedKeys.add("sign:template:manage");
+    renderTopBar("draft");
+    expect(screen.getByRole("button", { name: /^Send$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save as template/ })).toBeInTheDocument();
   });
 });

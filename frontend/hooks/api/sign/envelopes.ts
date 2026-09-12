@@ -79,13 +79,14 @@ const signFinalPdfUrlContract = lazyContract(() =>
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
   qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(id) });
   qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all });
+  qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.audit(id) });
 }
 
 export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
   return useGatedQuery("sign:envelope:view", {
     queryKey: growthAndSignQueryKeys.signEnvelopes.list(params),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<SignEnvelope>>("/sign/envelopes", params, signal, signEnvelopesListContract)).items,
+    queryFn: ({ signal }) =>
+      apiClient.get<OffsetPage<SignEnvelope>>("/sign/envelopes", params, signal, signEnvelopesListContract),
     staleTime: 30_000,
   });
 }
